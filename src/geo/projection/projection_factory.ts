@@ -1,12 +1,12 @@
 import {warnOnce} from '../../util/util.ts';
 import {MercatorProjection} from './mercator_projection.ts';
-import {MercatorTransform} from './mercator_transform.ts';
+import {createMercatorTransform} from './mercator_transform.ts';
 import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 import {GlobeProjection} from './globe_projection.ts';
-import {GlobeTransform} from './globe_transform.ts';
+import {createGlobeTransform} from './globe_transform.ts';
 import {GlobeCameraHelper} from './globe_camera_helper.ts';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
-import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
+import {createVerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
 import {CrsWorldCoordinateHelper} from './crs.ts';
 import {getRegisteredProjection} from './projection_crud.ts';
@@ -26,14 +26,14 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         const globeProjection = new GlobeProjection({type: name}, globalState);
         return {
             projection: globeProjection,
-            transform: new GlobeTransform(transformOptions),
+            transform: createGlobeTransform(transformOptions),
             cameraHelper: new GlobeCameraHelper(globeProjection),
         };
     }
     const registered = getRegisteredProjection(name);
     if (registered) {
         const worldCoordinateHelper = new CrsWorldCoordinateHelper(registered);
-        const transform = new MercatorTransform(transformOptions);
+        const transform = createMercatorTransform(transformOptions);
         transform.setWorldCoordinateHelper(worldCoordinateHelper);
         return {
             projection: new MercatorProjection(worldCoordinateHelper),
@@ -46,7 +46,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         {
             return {
                 projection: new MercatorProjection(),
-                transform: new MercatorTransform(transformOptions),
+                transform: createMercatorTransform(transformOptions),
                 cameraHelper: new MercatorCameraHelper(),
             };
         }
@@ -63,7 +63,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             ]}, {});
             return {
                 projection: globeProjection,
-                transform: new GlobeTransform(transformOptions),
+                transform: createGlobeTransform(transformOptions),
                 cameraHelper: new GlobeCameraHelper(globeProjection),
             };
         }
@@ -71,7 +71,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         {
             return {
                 projection: new VerticalPerspectiveProjection(),
-                transform: new VerticalPerspectiveTransform(transformOptions),
+                transform: createVerticalPerspectiveTransform(transformOptions),
                 cameraHelper: new VerticalPerspectiveCameraHelper(),
             };
         }
@@ -80,7 +80,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
             return {
                 projection: new MercatorProjection(),
-                transform: new MercatorTransform(transformOptions),
+                transform: createMercatorTransform(transformOptions),
                 cameraHelper: new MercatorCameraHelper(),
             };
         }

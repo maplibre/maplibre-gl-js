@@ -1,7 +1,7 @@
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Tile} from '../tile/tile.ts';
-import type {RenderContext} from './render_context.ts';
+import type {FrameRenderContext} from './frame_render_context.ts';
 
 /**
  * Interface for render-to-texture implementations.
@@ -13,7 +13,7 @@ export interface IRenderToTexture {
      * textures rendered at another zoom, and stale textures beyond the per-frame budget.
      */
     needsFollowUpFrame: boolean;
-    prepareForRender(style: Style, zoom: number): void;
-    renderLayer(layer: StyleLayer, renderContext: RenderContext): boolean;
+    prepareForRender(style: Style, zoom: number, isMoving: boolean): void;
+    renderLayer(layer: StyleLayer, style: Style, frameRenderContext: FrameRenderContext): boolean;
     getTexture(tile: Tile): any;
 }

@@ -1,18 +1,19 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper.ts';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRadians, radiansToDegrees, scaleZoom, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, type Mat4f32} from '../../util/util.ts';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRadians, radiansToDegrees, scaleZoom, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, remapSaturate, warnOnce, zoomScale, type Mat4f32} from '../../util/util.ts';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
-import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
+import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, planetScaleAtLatitude, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
-import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
 
 import type {PointProjection} from '../../symbol/projection.ts';
+import type {Terrain} from '../../render/terrain.ts';
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
@@ -27,6 +28,11 @@ const MAX_MERCATOR_Y = 1 - 1e-9;
 const SAME_POINT_DISTANCE = 1e-12;
 /** A camera whose horizontal offset is this small relative to its distance is straight above the center. */
 const STRAIGHT_ABOVE_RATIO = 1e-9;
+/**
+ * How many times larger than the viewport the area past the mercator edge has grown when the center is back on that edge.
+ * While the area fits in the viewport the center can be on the pole.
+ */
+const POLE_AREA_FADE_SCALE = 4;
 
 /**
  * @internal
@@ -119,8 +125,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    resize(width: number, height: number): void {
-        this._helper.resize(width, height);
+    resize(width: number, height: number, constrain: boolean = true): void {
+        this._helper.resize(width, height, constrain);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
@@ -427,11 +433,11 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     public getPixelScale(): number {
-        return 1.0 / Math.cos(this._helper._center.lat * Math.PI / 180);
+        return 1.0 / planetScaleAtLatitude(this._helper._center.lat);
     }
 
     public getCircleRadiusCorrection(): number {
-        return Math.cos(this._helper._center.lat * Math.PI / 180);
+        return planetScaleAtLatitude(this._helper._center.lat);
     }
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
@@ -682,16 +688,28 @@ export class VerticalPerspectiveTransform implements ITransform {
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
-        const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, lngLat.lat), this.maxZoom);
+        const maxLatitude = this._getMaxLatitude(constrainedZoom);
         return {
             center: new LngLat(
                 lngLat.lng,
-                constrainedLat
+                clamp(lngLat.lat, -maxLatitude, maxLatitude)
             ),
             zoom: constrainedZoom
         };
     };
+
+    /**
+     * Returns how close to a pole the center can be at the given zoom. Past the mercator edge there is no data,
+     * so the center reaches the pole only while that area fits in the viewport, and eases back to the edge as it outgrows it.
+     */
+    private _getMaxLatitude(zoom: number): number {
+        const areaRadians = degreesToRadians(90 - MAX_VALID_LATITUDE);
+        const areaPixels = getGlobeRadiusPixels(this.tileSize * zoomScale(zoom), MAX_VALID_LATITUDE) * areaRadians;
+        const reachPixels = Math.min(this.width, this.height) / 2;
+        const centerPixels = Math.min(areaPixels, reachPixels) * remapSaturate(areaPixels, reachPixels, reachPixels * POLE_AREA_FADE_SCALE, 1, 0);
+        return MAX_VALID_LATITUDE + radiansToDegrees(areaRadians * centerPixels / areaPixels);
+    }
 
     applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         return this._helper.applyConstrain(lngLat, zoom);
@@ -838,7 +856,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         const pos = angularCoordinatesToSurfaceVector(lnglat);
 
         if (terrain) {
-            const elevation = terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom);
+            const elevation = terrain.getElevationForLngLat(lnglat, this);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
 
@@ -1049,6 +1067,13 @@ export class VerticalPerspectiveTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4 {
         return undefined;
     }
+}
+
+/**
+ * Creates a transform for the vertical perspective projection.
+ */
+export function createVerticalPerspectiveTransform(options?: TransformOptions): VerticalPerspectiveTransform {
+    return new VerticalPerspectiveTransform(options);
 }
 
 function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {

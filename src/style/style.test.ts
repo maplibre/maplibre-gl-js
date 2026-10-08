@@ -17,7 +17,7 @@ import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {setNow, restoreNow} from '../util/time_control.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 
 import type {PossiblyEvaluated} from './properties.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
@@ -3014,7 +3014,7 @@ describe('Style.setPaintProperty', () => {
             ]
         }));
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
 
         await style.once('style.load');
@@ -3467,7 +3467,7 @@ describe('Style.queryRenderedFeatures', () => {
 
     beforeEach(() => new Promise<void>(callback => {
         style = new Style(getStubMap());
-        transform = new MercatorTransform();
+        transform = createMercatorTransform();
         transform.resize(512, 512);
         function queryMapLibreFeatures(layers, serializedLayers, getFeatureState, queryGeom, cameraQueryGeom, scale, params) {
             const features = {
@@ -3709,7 +3709,7 @@ describe('Style.query*Features', () => {
     let transform;
 
     beforeEach(() => new Promise<void>(callback => {
-        transform = new MercatorTransform();
+        transform = createMercatorTransform();
         transform.resize(100, 100);
         style = new Style(getStubMap());
         style.loadJSON({

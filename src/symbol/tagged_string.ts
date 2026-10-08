@@ -6,7 +6,7 @@ import {charIsWhitespace} from '../util/script_detection.ts';
 import {codePointAllowsIdeographicBreaking, codePointIsWrittenWithoutSpaces} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
 
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 import type {ImagePosition} from '../render/image_atlas.ts';
 import type {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
@@ -78,13 +78,13 @@ const breakableBefore: Record<number, boolean> = {
 function getGlyphAdvance(
     grapheme: string,
     section: SectionOptions,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    glyphMap: GlyphMap,
     imagePositions: Record<string, ImagePosition>,
     spacing: number,
     layoutTextSize: number
 ): number {
     if ('fontStack' in section) {
-        const positions = glyphMap[section.fontStack];
+        const positions = glyphMap[section.fontStack]?.default;
         const glyph = positions?.[grapheme];
         if (glyph) return glyph.metrics.advance * section.scale + spacing;
 
@@ -388,16 +388,25 @@ export class TaggedString {
      * plus, in scripts that do not space their words and so offer no such character, wherever the
      * word segmenter finds a word. It is not consulted elsewhere, isolating a comma as a word of its
      * own, nor until such a script turns up, costing more than the rest of this put together.
+     *
+     * Text that fits on one line is left unbroken without weighing any break, unless it asks for a
+     * newline, has no width (which ties with every break) or uses negative spacing (which can make
+     * spaces advance backwards).
      */
     determineLineBreaks(
         spacing: number,
         maxWidth: number,
-        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number
     ): number[] {
+        const totalWidth = this.determineTotalWidth(spacing, glyphMap, imagePositions, layoutTextSize);
+        if (spacing >= 0 && totalWidth > 0 && totalWidth <= maxWidth && !/[\n\r]/.test(this.text)) {
+            return [this.length()];
+        }
+
         const potentialLineBreaks = [];
-        const targetWidth = this.determineAverageLineWidth(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
+        const targetWidth = totalWidth / Math.max(1, Math.ceil(totalWidth / maxWidth));
 
         const hasZeroWidthSpaces = this.hasZeroWidthSpaces();
 
@@ -450,10 +459,9 @@ export class TaggedString {
                 true));
     }
 
-    determineAverageLineWidth(
+    determineTotalWidth(
         spacing: number,
-        maxWidth: number,
-        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number): number {
         let totalWidth = 0;
@@ -465,7 +473,6 @@ export class TaggedString {
             index++;
         }
 
-        const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
-        return totalWidth / lineCount;
+        return totalWidth;
     }
 }

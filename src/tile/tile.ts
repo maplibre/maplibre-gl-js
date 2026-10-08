@@ -32,6 +32,7 @@ import type {QueryRenderedFeaturesOptionsStrict, QuerySourceFeatureOptionsStrict
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {Painter, RTTObject} from '../render/painter.ts';
+import type {Style} from '../style/style.ts';
 import type {RTTFingerprint} from '../webgl/rtt_fingerprint.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
@@ -254,10 +255,10 @@ export class Tile {
      * to true. If the data is null, like in the case of an empty
      * GeoJSON tile, no-op but still set loaded to true.
      * @param data - The data from the worker
-     * @param painter - the painter
+     * @param style - the style the tile's layers belong to
      * @param justReloaded - `true` to just reload
      */
-    loadVectorData(data: WorkerTileResult, painter: Painter, justReloaded?: boolean | null): void {
+    loadVectorData(data: WorkerTileResult, style: Style, justReloaded?: boolean | null): void {
         if (data?.etagUnmodified === true) {
             this.state = 'loaded';
             return;
@@ -292,7 +293,7 @@ export class Tile {
             }
         }
         this.collisionBoxArray = data.collisionBoxArray;
-        this.buckets = deserializeBucket(data.buckets, painter?.style);
+        this.buckets = deserializeBucket(data.buckets, style);
 
         this.hasSymbolBuckets = false;
         for (const id in this.buckets) {
@@ -324,7 +325,7 @@ export class Tile {
         this.queryPadding = 0;
         for (const id in this.buckets) {
             const bucket = this.buckets[id];
-            this.queryPadding = Math.max(this.queryPadding, painter.style.getLayer(id).queryRadius(bucket));
+            this.queryPadding = Math.max(this.queryPadding, style.getLayer(id).queryRadius(bucket));
         }
 
         if (data.imageAtlas) {
@@ -518,7 +519,7 @@ export class Tile {
         }
     }
 
-    setFeatureState(states: LayerFeatureStates, painter: Painter, revision: number): void {
+    setFeatureState(states: LayerFeatureStates, style: Style, revision: number): void {
         if (!this.latestFeatureIndex?.rawTileData ||
             Object.keys(states).length === 0) {
             return;
@@ -533,7 +534,7 @@ export class Tile {
         const vtLayers = this.latestFeatureIndex.loadVTLayers();
 
         for (const id in this.buckets) {
-            if (!painter.style.hasLayer(id)) continue;
+            if (!style.hasLayer(id)) continue;
 
             const bucket = this.buckets[id];
             // Buckets are grouped by common source-layer
@@ -543,7 +544,7 @@ export class Tile {
             if (!sourceLayer || !sourceLayerStates || sourceLayerStates.length === 0) continue;
 
             bucket.update(sourceLayerStates, sourceLayer, this.imageAtlas?.patternPositions || {}, this.dashPositions || {});
-            const layer = painter?.style?.getLayer(id);
+            const layer = style.getLayer(id);
             if (layer) {
                 this.queryPadding = Math.max(this.queryPadding, layer.queryRadius(bucket));
             }

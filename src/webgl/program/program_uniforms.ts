@@ -10,7 +10,7 @@ import {layerOpacityUniforms, type LayerOpacityUniformsType} from './layer_opaci
 import {rasterUniforms, type RasterUniformsType} from './raster_program.ts';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms, type SymbolIconUniformsType, type SymbolSDFUniformsType, type symbolTextAndIconUniformsType} from './symbol_program.ts';
 import {backgroundUniforms, backgroundPatternUniforms, type BackgroundUniformsType, type BackgroundPatternUniformsType} from './background_program.ts';
-import {terrainUniforms, terrainDepthUniforms, type TerrainUniformsType, type TerrainDepthUniformsType} from './terrain_program.ts';
+import {terrainUniforms, terrainDepthUniforms, terrainHeightUniforms, type TerrainUniformsType, type TerrainDepthUniformsType, type TerrainHeightUniformsType} from './terrain_program.ts';
 import {atmosphereUniforms, type atmosphereUniformsType} from './atmosphere_program.ts';
 import {skyUniforms, type SkyUniformsType} from './sky_program.ts';
 
@@ -53,6 +53,7 @@ export const programUniforms: {
     backgroundPattern: (context: Context, locations: UniformLocations) => BackgroundPatternUniformsType;
     terrain: (context: Context, locations: UniformLocations) => TerrainUniformsType;
     terrainDepth: (context: Context, locations: UniformLocations) => TerrainDepthUniformsType;
+    terrainHeight: (context: Context, locations: UniformLocations) => TerrainHeightUniformsType;
     atmosphere: (context: Context, locations: UniformLocations) => atmosphereUniformsType;
     sky: (context: Context, locations: UniformLocations) => SkyUniformsType;
 } = {
@@ -87,6 +88,7 @@ export const programUniforms: {
     backgroundPattern: backgroundPatternUniforms,
     terrain: terrainUniforms,
     terrainDepth: terrainDepthUniforms,
+    terrainHeight: terrainHeightUniforms,
     atmosphere: atmosphereUniforms,
     sky: skyUniforms
 };

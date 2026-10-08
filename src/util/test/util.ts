@@ -4,16 +4,20 @@ import {NullWebGL2RenderingContext, createNullGL} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
-import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createMercatorTransform, type MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {CrsWorldCoordinateHelper, simpleCrs, type CrsDefinition} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {Painter} from '../../render/painter.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
+import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
+import {EXTENT} from '../../data/extent.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
 import {RGBAImage} from '../image.ts';
+import {shaders} from '../../shaders/shaders.ts';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../../geo/projection/mercator_projection.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Style} from '../../style/style.ts';
@@ -21,9 +25,11 @@ import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface
 import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SourceEventType} from '../../ui/events.ts';
 import type {IActor} from '../actor.ts';
+import type {FrameRenderData} from '../../render/frame_render_context.ts';
 import type {Dispatcher} from '../../util/dispatcher.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
+import type {TerrainCoverageIndex, TerrainElevationSampler} from '../../render/terrain_coverage.ts';
 
 export class StubMap extends Evented {
     style: Style;
@@ -33,7 +39,7 @@ export class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new MercatorTransform();
+        this.transform = createMercatorTransform();
         this._requestManager = new RequestManager();
     }
 
@@ -251,6 +257,7 @@ export function createTerrain(): Terrain {
         getCoverageIndex: () => null,
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
+        hasElevationForLngLat: () => true,
         getMinTileElevationForLngLatZoom: () => 0,
         resetElevationCache: () => {},
         getFramebuffer: () => ({}),
@@ -318,14 +325,34 @@ export function createDEM(heightFn: (x: number, y: number) => number, dim: numbe
     return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
 }
 
-/** A painter over a null GL context, for code that reads the painter's transform. */
-export function createPainter(transform: IReadonlyTransform = new MercatorTransform()): Painter {
-    return new Painter(createNullGL(), transform);
+/** A painter over a null GL context. */
+export function createPainter(): Painter {
+    return new Painter(createNullGL());
 }
 
 /** A tile manager over a raster-dem source that never loads, for terrain built in tests. */
 export function createRasterDEMTileManager(): TileManager {
     return new TileManager('dem', {type: 'raster-dem', tiles: ['/dem/{z}/{x}/{y}.png'], tileSize: 512}, getMockDispatcher());
+}
+
+/** The margin a terrain's coverage index keeps between its elevation bracket and its tiles' lowest and highest elevation. */
+const COVERAGE_BRACKET_PADDING_M = 10;
+
+/**
+ * The coverage index of a terrain drawn as one world tile whose surface is `height` meters at a location, between
+ * `minElevation` and `maxElevation` meters.
+ */
+export function createCoverageIndex(height: (lng: number, lat: number) => number, minElevation: number, maxElevation: number): TerrainCoverageIndex {
+    const sampler: TerrainElevationSampler = (x, y) => {
+        const {lng, lat} = new MercatorCoordinate(x / EXTENT, y / EXTENT).toLngLat();
+        return height(lng, lat);
+    };
+    return {
+        zooms: [0],
+        samplerPerTile: new globalThis.Map([['0/0/0/0', sampler]]),
+        minElevation: minElevation - COVERAGE_BRACKET_PADDING_M,
+        maxElevation: maxElevation + COVERAGE_BRACKET_PADDING_M
+    };
 }
 
 export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | null, exaggeration: number = 1): Terrain {
@@ -345,7 +372,9 @@ const fakeImages = {
  */
 const fakeGlyphs = {
     'StandardFont-Bold': {
-        e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+        default: {
+            e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+        }
     }
 };
 
@@ -384,7 +413,7 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
  * axes), sized to the given viewport.
  */
 export function createSimpleCrsTransform(width: number, height: number): MercatorTransform {
-    const transform = new MercatorTransform({
+    const transform = createMercatorTransform({
         minZoom: -5,
         maxZoom: 22,
         minPitch: 0,
@@ -412,5 +441,30 @@ export function createRotatedCrs(): CrsDefinition {
             return [x * cos + y * sin, -x * sin + y * cos];
         },
         tileMatrix: {origin: [-150, 150], extentAtZoom0: 300},
+    };
+}
+
+/**
+ * Returns frame data for a still mercator map with every debug option off.
+ */
+export function createFrameRenderData(): FrameRenderData {
+    return {
+        showOverdrawInspector: false,
+        showTileBoundaries: false,
+        showPadding: false,
+        rotating: false,
+        zooming: false,
+        moving: false,
+        fadeDuration: 0,
+        symbolFadeChange: 1,
+        variableOffsets: {},
+        anisotropicFilterPitch: 20,
+        projectionTransition: 0,
+        isRenderingGlobe: false,
+        projectionShaderVariant: {name: MercatorShaderVariantKey, define: MercatorShaderDefine, prelude: shaders.projectionMercator},
+        useSubdivision: false,
+        pixelRatio: 1,
+        light: undefined,
+        sky: undefined
     };
 }

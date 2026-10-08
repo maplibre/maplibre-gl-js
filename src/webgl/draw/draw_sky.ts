@@ -1,70 +1,42 @@
-import posAttributes from '../../data/pos_attributes.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {PosArray, TriangleIndexArray} from '../../data/array_types.g.ts';
-import {SegmentVector} from '../../data/segment.ts';
 import {skyUniformValues} from '../program/sky_program.ts';
 import {atmosphereUniformValues} from '../program/atmosphere_program.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
-import {Mesh} from '../../render/mesh.ts';
 import {mat4, vec3} from 'gl-matrix';
 import {ColorMode} from '../color_mode.ts';
+import {sphericalToCartesian} from '../../util/util.ts';
 
-import type {Sky} from '../../style/sky.ts';
-import type {Light} from '../../style/light.ts';
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
+import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
-import type {Painter} from '../../render/painter.ts';
-import type {Context} from '../context.ts';
+import type {Mesh} from '../../render/mesh.ts';
 
-function getMesh(context: Context, sky: Sky): Mesh {
-    // Create the Sky mesh the first time we need it
-    if (!sky.mesh) {
-        const vertexArray = new PosArray();
-        vertexArray.emplaceBack(-1, -1);
-        vertexArray.emplaceBack(1, -1);
-        vertexArray.emplaceBack(1, 1);
-        vertexArray.emplaceBack(-1, 1);
-
-        const indexArray = new TriangleIndexArray();
-        indexArray.emplaceBack(0, 1, 2);
-        indexArray.emplaceBack(0, 2, 3);
-
-        sky.mesh = new Mesh(
-            context.createVertexBuffer(vertexArray, posAttributes.members),
-            context.createIndexBuffer(indexArray),
-            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        );
-    }
-
-    return sky.mesh;
-}
-
-export function drawSky(painter: Painter, sky: Sky): void {
-    const context = painter.context;
+export function drawSky(mesh: Mesh, frameRenderContext: FrameRenderContext): void {
+    const context = frameRenderContext.context;
     const gl = context.gl;
+    const {sky, pixelRatio} = frameRenderContext.data;
 
-    const skyUniforms = skyUniformValues(sky, painter.transform, painter.pixelRatio);
+    const skyUniforms = skyUniformValues(sky, frameRenderContext.transform, pixelRatio);
 
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const stencilMode = StencilMode.disabled;
-    const colorMode = painter.colorModeForRenderPass();
-    const program = painter.useProgram('sky');
-
-    const mesh = getMesh(context, sky);
+    const colorMode = frameRenderContext.colorModeForRenderPass();
+    const program = frameRenderContext.useProgram('sky');
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
         CullFaceMode.disabled, skyUniforms, null, undefined, 'sky', mesh.vertexBuffer,
         mesh.indexBuffer, mesh.segments);
 }
 
-function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
-    const lightPos = light.getCartesianPosition();
+function getSunPos(light: Readonly<LightPropsPossiblyEvaluated>, transform: IReadonlyTransform): vec3 {
+    const lightPos = sphericalToCartesian(light.position);
     vec3.negate(lightPos, lightPos);
 
     const lightMat = mat4.identity(new Float64Array(16));
 
-    if (light.properties.get('anchor') === 'map') {
+    if (light.anchor === 'map') {
         mat4.rotateZ(lightMat, lightMat, transform.rollInRadians);
         mat4.rotateX(lightMat, lightMat, -transform.pitchInRadians);
         mat4.rotateZ(lightMat, lightMat, transform.bearingInRadians);
@@ -77,20 +49,21 @@ function getSunPos(light: Light, transform: IReadonlyTransform): vec3 {
     return lightPos;
 }
 
-export function drawAtmosphere(painter: Painter, sky: Sky, light: Light): void {
-    const context = painter.context;
+export function drawAtmosphere(mesh: Mesh, frameRenderContext: FrameRenderContext): void {
+    const context = frameRenderContext.context;
     const gl = context.gl;
-    const program = painter.useProgram('atmosphere');
+    const {sky, light} = frameRenderContext.data;
+    const program = frameRenderContext.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
-    const transform = painter.transform;
+    const transform = frameRenderContext.transform;
 
-    const sunPos = getSunPos(light, painter.transform);
+    const sunPos = getSunPos(light, transform);
 
     const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
     const globePosition = getGlobeCenterInViewSpace(transform);
     const altitudeBlend = getAtmosphereAltitudeBlend(vec3.length(globePosition) - globeRadius, globeRadius);
-    const atmosphereBlend = sky.properties.get('atmosphere-blend') * projectionData.projectionTransition * altitudeBlend;
+    const atmosphereBlend = sky['atmosphere-blend'] * projectionData.projectionTransition * altitudeBlend;
 
     if (atmosphereBlend === 0) {
         // Don't draw anything if atmosphere is fully transparent
@@ -98,8 +71,6 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light): void {
     }
 
     const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, transform.inverseProjectionMatrix);
-
-    const mesh = getMesh(context, sky);
 
     program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }

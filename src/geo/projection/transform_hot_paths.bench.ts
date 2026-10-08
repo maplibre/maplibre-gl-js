@@ -1,12 +1,12 @@
 import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
-import {MercatorTransform} from './mercator_transform.ts';
+import {createMercatorTransform, type MercatorTransform} from './mercator_transform.ts';
 import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 import {coveringTiles} from './covering_tiles.ts';
 
 function createTransform(): MercatorTransform {
-    const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+    const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
     transform.resize(1280, 800);
     transform.setCenter(new LngLat(-73.98, 40.75));
     transform.setZoom(12.3);

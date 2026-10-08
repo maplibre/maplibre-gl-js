@@ -289,10 +289,11 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     if (plane && options.maxContentElevation > 0) {
         ({frustum, plane} = expandCullingToContentElevation(frustum, plane, transform.cameraPosition, options.maxContentElevation));
     }
-    const cameraCoord = cameraMercatorCoordinate(transform);
-    const centerCoord = transform.worldCoordinateHelper.worldFromLngLat(transform.center.lng, transform.center.lat, transform.elevation);
-    const elevationForTileCulling = getElevationForTileCulling(transform, options.maxContentElevation);
     const detailsProvider = transform.getCoveringTilesDetailsProvider();
+    const center = detailsProvider.getCenter(transform);
+    const cameraCoord = cameraMercatorCoordinate(transform, center);
+    const centerCoord = transform.worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, transform.elevation);
+    const elevationForTileCulling = getElevationForTileCulling(transform, options.maxContentElevation);
     const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
     
     const desiredZ = coveringZoomLevel(transform, options);
