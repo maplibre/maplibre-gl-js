@@ -1,5 +1,5 @@
 in vec3 v_data;
-flat in float v_visibility;
+in float v_visibility;
 
 #pragma maplibre: define highp vec4 color
 #pragma maplibre: define mediump float radius
