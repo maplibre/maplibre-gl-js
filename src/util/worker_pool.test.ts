@@ -40,5 +40,4 @@ describe('WorkerPool', () => {
         expect(workersTerminated).toBe(4);
         expect(pool.workersPromise).toBeFalsy();
     });
-
 });
