@@ -1065,6 +1065,13 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 }
 
+/**
+ * Creates a transform for the vertical perspective projection.
+ */
+export function createVerticalPerspectiveTransform(options?: TransformOptions): VerticalPerspectiveTransform {
+    return new VerticalPerspectiveTransform(options);
+}
+
 function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {
     const position = createVec3f64();
     vec3.scaleAndAdd(position, ray.origin, ray.direction, t);

@@ -1049,6 +1049,13 @@ export class MercatorTransform implements ITransform {
     }
 }
 
+/**
+ * Creates a transform for the mercator projection.
+ */
+export function createMercatorTransform(options?: TransformOptions): MercatorTransform {
+    return new MercatorTransform(options);
+}
+
 function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
     return sampleAt(ray.index, ray.exaggeration, (ray.near[0] + t * ray.dx) / ray.worldSize, (ray.near[1] + t * ray.dy) / ray.worldSize);
 }

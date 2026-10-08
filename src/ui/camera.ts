@@ -7,7 +7,7 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
 
@@ -492,7 +492,7 @@ export class Camera extends Evented<MapEventType> {
         // For now we will use a temporary MercatorTransform instance.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
-        this.transform = new MercatorTransform();
+        this.transform = createMercatorTransform();
         this.cameraHelper = new MercatorCameraHelper();
         if (options.minZoom !== undefined) {
             this.transform.setMinZoom(options.minZoom);

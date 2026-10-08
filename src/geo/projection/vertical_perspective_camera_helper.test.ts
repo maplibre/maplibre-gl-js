@@ -2,7 +2,7 @@ import {describe, expect, test, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {GlobeTransform} from './globe_transform.ts';
+import {createGlobeTransform} from './globe_transform.ts';
 import {getZoomAdjustment} from './globe_utils.ts';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
 
@@ -10,7 +10,7 @@ import type {MapControlsDeltas} from './camera_helper.ts';
 
 describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
     test('preserves bearing away from the poles', () => {
-        const tr = new GlobeTransform();
+        const tr = createGlobeTransform();
         tr.resize(512, 512);
         tr.setZoom(4);
         tr.setCenter(new LngLat(0, 20));
@@ -26,7 +26,7 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
     });
 
     test('does not zoom in when panning off the pole on the constrained min zoom', () => {
-        const tr = new GlobeTransform();
+        const tr = createGlobeTransform();
         tr.resize(512, 512);
         tr.setCenter(new LngLat(0, 80));
         tr.setMinZoom(3);
@@ -47,7 +47,7 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
 
     describe('anchor', () => {
         function panFrom(around: Point) {
-            const tr = new GlobeTransform();
+            const tr = createGlobeTransform();
             tr.resize(512, 512);
             tr.setZoom(1);
             tr.setCenter(new LngLat(0, 0));
@@ -80,7 +80,7 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
 describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
     test('returns undefined instead of throwing when the padding exceeds the viewport', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const tr = new GlobeTransform();
+        const tr = createGlobeTransform();
         tr.resize(512, 512);
         tr.setZoom(2);
         tr.setCenter(new LngLat(0, 0));
@@ -102,7 +102,7 @@ describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
 
 describe('VerticalPerspectiveCameraHelper.handlePanInertia', () => {
     test('eases onto the pole', () => {
-        const tr = new GlobeTransform();
+        const tr = createGlobeTransform();
         tr.resize(512, 512);
         tr.setCenter(new LngLat(0, 89));
         tr.setTransitionState(1);
