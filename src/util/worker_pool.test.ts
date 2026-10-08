@@ -1,6 +1,7 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Actor} from './actor.ts';
 import {WorkerPool} from './worker_pool.ts';
+
+import type {Dispatcher} from './dispatcher.ts';
 
 describe('WorkerPool', () => {
     test('acquire', async () => {
@@ -42,31 +43,15 @@ describe('WorkerPool', () => {
         expect(pool.workersPromise).toBeFalsy();
     });
 
-    test('a create listener that borrows shares the one actor set instead of building a second', async () => {
+    test('terminating the workers discards the global dispatcher\'s actors', async () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
         const pool = new WorkerPool();
-        const createActor = vi.fn((worker) => new Actor(worker, 'global'));
-        let innerActors: Promise<Actor[]>;
-        pool.on('create', () => { innerActors = pool.borrowActors(createActor); });
-
-        const outerActors = await pool.borrowActors(createActor);
-
-        await expect(innerActors).resolves.toEqual(outerActors);
-        expect(createActor).toHaveBeenCalledTimes(4);
-    });
-
-    test('terminating the workers removes the borrowed actors', async () => {
-        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
-
-        const pool = new WorkerPool();
-        const actors = await pool.borrowActors((worker) => new Actor(worker, 'global'));
+        pool.globalDispatcher = {discardActors: vi.fn()} as any as Dispatcher;
         await pool.acquire('map-1');
-        const removeSpy = vi.spyOn(actors[0], 'remove');
 
         pool.release('map-1');
-        await Promise.resolve();
 
-        expect(removeSpy).toHaveBeenCalled();
+        expect(pool.globalDispatcher.discardActors).toHaveBeenCalled();
     });
 });

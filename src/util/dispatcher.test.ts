@@ -166,6 +166,16 @@ describe('global dispatcher', () => {
         expect(pool.workersPromise).toBeTruthy();
     });
 
+    test('a create listener that uses the global dispatcher shares its one actor set', async () => {
+        let listenerActors: Promise<Actor[]>;
+        const subscription = onGlobalWorkersCreated(() => { listenerActors = getGlobalDispatcher().getActors(); });
+
+        const actors = await getGlobalDispatcher().getActors();
+
+        await expect(listenerActors).resolves.toBe(actors);
+        subscription.unsubscribe();
+    });
+
     test('the global dispatcher hands out fresh actors after its workers terminate', async () => {
         const globalDispatcher = getGlobalDispatcher();
         const actor = await globalDispatcher.getActor();

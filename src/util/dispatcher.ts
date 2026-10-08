@@ -33,8 +33,9 @@ export class Dispatcher extends Evented<ErrorEventType> {
     }
 
     private async initActors(mapId: string | number): Promise<Actor[]> {
-        getGlobalDispatcher();
-        const workers = await this.workerPool.acquire(mapId);
+        const workers = mapId === GLOBAL_DISPATCHER_ID ?
+            await this.workerPool.ensureWorkers() :
+            await this.workerPool.acquire(mapId);
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => this.createActor(worker, i));
         if (!this.actors.length) throw new Error('No actors found');
@@ -54,22 +55,38 @@ export class Dispatcher extends Evented<ErrorEventType> {
     }
 
     /**
-     * Returns this dispatcher's actors, building them on first use. The worker pool owns the
-     * global dispatcher's actors, since they outlive any one map: it removes them when it
-     * terminates the workers, so they are read back from the pool on every call rather than
-     * cached here.
+     * Returns this dispatcher's actors, building them on first use. The promise is assigned
+     * before the build runs, since creating the workers fires the pool's `create` event, and a
+     * listener that broadcasts calls back into this method while the actors are still building.
      */
     getActors(): Promise<Actor[]> {
         if (this.removed) return Promise.resolve([]);
-        if (this.id === GLOBAL_DISPATCHER_ID) {
-            return this.workerPool.borrowActors((worker, index) => this.createActor(worker, index))
-                .then((actors) => {
-                    this.actors = actors;
-                    return actors;
-                });
+        if (!this.actorsPromise) {
+            let resolveActors: (actors: Actor[]) => void;
+            let rejectActors: (error: Error) => void;
+            this.actorsPromise = new Promise((resolve, reject) => {
+                resolveActors = resolve;
+                rejectActors = reject;
+            });
+            this.initActors(this.id).then(resolveActors, rejectActors);
         }
-        this.actorsPromise ||= this.initActors(this.id);
         return this.actorsPromise;
+    }
+
+    /**
+     * Removes the actors and forgets them, so the next use builds fresh ones. The worker pool
+     * calls this when it terminates the workers the actors wrap.
+     */
+    discardActors(): void {
+        for (const actor of this.actors) {
+            actor.remove();
+        }
+        for (const subscription of this.workerErrorSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this.actors = [];
+        this.workerErrorSubscriptions = [];
+        this.actorsPromise = undefined;
     }
 
     /**
@@ -101,14 +118,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     remove(mapRemoved: boolean = true): void {
         this.removed = true;
-        for (const actor of this.actors) {
-            actor.remove();
-        }
-        for (const subscription of this.workerErrorSubscriptions) {
-            subscription.unsubscribe();
-        }
-        this.actors = [];
-        this.workerErrorSubscriptions = [];
+        this.discardActors();
         this.setEventedParent(null);
         if (mapRemoved) this.workerPool.release(this.id);
     }
@@ -129,6 +139,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
 }
 
 const globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
+getGlobalWorkerPool().globalDispatcher = globalDispatcher;
 globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
     return makeRequest(params, abortController);
 });
@@ -213,6 +224,10 @@ export async function importScriptInWorkers(workerUrl: string): Promise<void> {
     scriptsImportedIntoWorkers.add(workerUrl);
     await dispatcher.broadcast(MessageType.importScript, workerUrl);
 }
+
+onGlobalWorkersCreated(() => {
+    globalDispatcher.getActors();
+});
 
 onGlobalWorkersCreated(() => {
     for (const url of scriptsImportedIntoWorkers) {

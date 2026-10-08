@@ -3,7 +3,8 @@ import {browser} from './browser.ts';
 import {isSafari} from './util.ts';
 import {Evented} from './evented.ts';
 
-import type {Actor, ActorTarget} from './actor.ts';
+import type {ActorTarget} from './actor.ts';
+import type {Dispatcher} from './dispatcher.ts';
 import type {Event} from './evented.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
@@ -22,13 +23,13 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
         [_ in number | string]: boolean;
     };
     workersPromise: Promise<ActorTarget[]> | null;
-    private borrowedActorsPromise: Promise<Actor[]> | null;
+    /** The dispatcher whose actors live and die with the pooled workers, set once by dispatcher.ts. */
+    globalDispatcher: Dispatcher | undefined;
 
     constructor() {
         super();
         this.active = {};
         this.workersPromise = null;
-        this.borrowedActorsPromise = null;
     }
 
     /** Claims the shared workers, creating them on the first claim. */
@@ -38,33 +39,11 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     }
 
     /**
-     * Lends out pool-owned actors wrapping the shared workers, without claiming them, the way a
-     * `WeakRef` uses an object without keeping it alive. The pool removes these actors when it
-     * terminates the workers, and the next call runs `createActor` again to build fresh ones
-     * around the replacement workers. Every borrower shares the one set built by the first
-     * call's `createActor`.
-     *
-     * The promise is assigned before the workers are created, since creating them fires `create`,
-     * and a listener that broadcasts borrows these actors again while they are still being built.
+     * Returns the shared workers without claiming them, creating them on first use. The `create`
+     * event fires before the workers boot, so listeners replay only state recorded before the
+     * call that created them.
      */
-    borrowActors(createActor: (worker: ActorTarget, index: number) => Actor): Promise<Actor[]> {
-        if (!this.borrowedActorsPromise) {
-            let resolveActors: (actors: Actor[]) => void;
-            let rejectActors: (error: Error) => void;
-            this.borrowedActorsPromise = new Promise((resolve, reject) => {
-                resolveActors = resolve;
-                rejectActors = reject;
-            });
-            this.ensureWorkers().then((workers) => resolveActors(workers.map(createActor)), rejectActors);
-        }
-        return this.borrowedActorsPromise;
-    }
-
-    /**
-     * Returns the shared workers, creating them on first use. The `create` event fires before the
-     * workers boot, so listeners replay only state recorded before the call that created them.
-     */
-    private async ensureWorkers(): Promise<ActorTarget[]> {
+    async ensureWorkers(): Promise<ActorTarget[]> {
         if (!this.workersPromise) {
             const promises: Array<Promise<Worker>> = [];
             while (promises.length < WorkerPool.workerCount) {
@@ -84,20 +63,14 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     }
 
     /**
-     * Terminates the workers and removes the borrowed actors, regardless of any claims. The next
-     * acquire or borrow builds fresh workers.
+     * Terminates the workers and discards the global dispatcher's actors, regardless of any
+     * claims. The next acquire builds fresh workers.
      */
     terminate(): void {
         if (!this.workersPromise) return;
         const workersPromise = this.workersPromise;
-        const borrowedActorsPromise = this.borrowedActorsPromise;
         this.workersPromise = null;
-        this.borrowedActorsPromise = null;
-        borrowedActorsPromise?.then((actors) => {
-            for (const actor of actors) {
-                actor.remove();
-            }
-        });
+        this.globalDispatcher?.discardActors();
         workersPromise.then(workers => {
             for (const w of workers) {
                 w.terminate();
