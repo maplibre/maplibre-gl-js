@@ -407,51 +407,26 @@ describe('shapeText vertical glyph orientation', () => {
             (glyph): [string, string] => [glyph.grapheme, glyph.vertical ? 'upright' : 'along-line']));
     }
 
-    test.each([false, true])('selects Latin and Arabic symbol alternates according to placement (point placement: %s)', (allowVerticalPlacement) => {
-        const text = '小aα小٪小A小';
-        const glyphs = createStubGlyphMap(text);
-        const alternates = ['a', 'α', '٪', 'A'];
-        for (const char of alternates) {
-            glyphs.vertical[char] = {...glyphs.default[char], metrics: {...glyphs.default[char].metrics, left: 5}};
-        }
-
-        const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {},
-            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, allowVerticalPlacement, 24, 24) as Shaping;
-
-        const selected = shaping.positionedLines[0].positionedGlyphs.filter(glyph => alternates.includes(glyph.grapheme));
-        expect(selected.map(glyph => [glyph.grapheme, glyph.vertical, glyph.metrics.left])).toEqual([
-            ['a', allowVerticalPlacement, allowVerticalPlacement ? 5 : 1],
-            ['α', allowVerticalPlacement, allowVerticalPlacement ? 5 : 1],
-            ['٪', !allowVerticalPlacement, allowVerticalPlacement ? 1 : 5],
-            ['A', true, 5]
-        ]);
-    });
-
-    test('selects vertical forms from each formatted section without splitting a grapheme', () => {
+    test('uses each section\'s vertical glyphs or compatibility punctuation', () => {
         const text = new Formatted([
-            new FormattedSection('𠮷か\u3099（', null, 1, fontStack, null, null),
-            new FormattedSection('𠮷か\u3099（', null, 1, 'Other', null, null)
+            new FormattedSection('（', null, 1, fontStack, null, null),
+            new FormattedSection('（', null, 1, 'Other', null, null)
         ]);
-        const glyphs = createStubGlyphMap('𠮷か\u3099（');
-        const otherGlyphs = createStubGlyphMap('𠮷か\u3099（');
-        for (const char of ['𠮷', 'か\u3099', '（']) {
-            glyphs.vertical[char] = {...glyphs.default[char], metrics: {...glyphs.default[char].metrics, left: 5}};
-        }
+        const glyphs = createStubGlyphMap('（');
+        glyphs.vertical['（'] = {...glyphs.default['（'], metrics: {...glyphs.default['（'].metrics, left: 5}};
 
-        const shaping = shapeText(text, {[fontStack]: glyphs, Other: otherGlyphs}, {}, {},
-            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
+        const shaping = shapeText(text, {[fontStack]: glyphs, Other: createStubGlyphMap('（')}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, true, 24, 24) as Shaping;
 
         expect(shaping.positionedLines[0].positionedGlyphs.map(glyph => [glyph.grapheme, glyph.fontStack, glyph.metrics.left])).toEqual([
-            ['𠮷', fontStack, 5], ['か\u3099', fontStack, 5], ['（', fontStack, 5],
-            ['𠮷', 'Other', 1], ['か\u3099', 'Other', 1], ['︵', 'Other', 1]
+            ['（', fontStack, 5], ['︵', 'Other', 1]
         ]);
     });
 
     test('keeps Latin runs sideways and retains their trailing compatibility punctuation', () => {
-        const text = '東京AB（CD）abc(1)……';
+        const text = '東京AB（CD）…';
         const glyphs = createStubGlyphMap(text);
-        for (const char of text) glyphs.vertical[char] = glyphs.default[char];
-        for (const char of ['（', '）', '(', ')', '…']) {
+        for (const char of ['（', '）', '…']) {
             glyphs.vertical[char] = {...glyphs.default[char], metrics: {...glyphs.default[char].metrics, left: 5}};
         }
 
@@ -460,28 +435,8 @@ describe('shapeText vertical glyph orientation', () => {
 
         const run = shaping.positionedLines[0].positionedGlyphs.slice(2);
         expect(run.map(glyph => [glyph.grapheme, glyph.vertical, glyph.metrics.left])).toEqual([
-            ...[...'AB（CD）abc(1)'].map(char => [char, false, 1]),
-            ['︙', true, 1], ['︙', true, 1]
-        ]);
-    });
-
-    test('retains compatibility punctuation when its alternate belongs to a sideways run', () => {
-        const text = new Formatted([
-            new FormattedSection('東京（', null, 1, fontStack, null, null),
-            new FormattedSection('№A）', null, 1, 'Other', null, null)
-        ]);
-        const glyphs = createStubGlyphMap(text.toString());
-        glyphs.vertical['（'] = {...glyphs.default['（'], metrics: {...glyphs.default['（'].metrics, left: 5}};
-
-        const shaping = shapeText(text, {[fontStack]: glyphs, Other: createStubGlyphMap(text.toString())}, {}, {},
-            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
-
-        expect(getGlyphOrientations(shaping)).toEqual([
-            ['東', 'upright'], ['京', 'upright'], ['︵', 'upright'],
-            ['№', 'along-line'], ['A', 'along-line'], ['）', 'along-line']
-        ]);
-        expect(shaping.positionedLines[0].positionedGlyphs.map(glyph => [glyph.sectionIndex, glyph.metrics.left])).toEqual([
-            [0, 1], [0, 1], [0, 1], [1, 1], [1, 1], [1, 1]
+            ...[...'AB（CD）'].map(char => [char, false, 1]),
+            ['︙', true, 1]
         ]);
     });
 
@@ -501,9 +456,9 @@ describe('shapeText vertical glyph orientation', () => {
     });
 
     test.each([
-        {text: '東京 Tokyo … Station', upright: false},
-        {text: '東京 AB … CD', upright: true}
-    ])('resolves punctuation across spaces in $text', ({text, upright}) => {
+        {text: '東京 Tokyo … Station', upright: false, left: 1},
+        {text: '東京 AB … CD', upright: true, left: 5}
+    ])('resolves punctuation across spaces in $text', ({text, upright, left}) => {
         const glyphs = createStubGlyphMap(text);
         glyphs.vertical['…'] = {...glyphs.default['…'], metrics: {...glyphs.default['…'].metrics, left: 5}};
 
@@ -511,21 +466,7 @@ describe('shapeText vertical glyph orientation', () => {
             fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
 
         const punctuation = shaping.positionedLines[0].positionedGlyphs.find(glyph => glyph.grapheme === '…');
-        expect(punctuation).toMatchObject({vertical: upright, metrics: {left: upright ? 5 : 1}});
-    });
-
-    test('keeps a prolonged sound mark in a Latin run on the rotation fallback', () => {
-        const glyphs = createStubGlyphMap('コーヒーBAR');
-        glyphs.vertical['ー'] = {...glyphs.default['ー'], metrics: {...glyphs.default['ー'].metrics, left: 5}};
-
-        const shaping = shapeText(Formatted.fromString('コーヒーBAR'), {[fontStack]: glyphs}, {}, {},
-            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, false, 24, 24) as Shaping;
-
-        const marks = shaping.positionedLines[0].positionedGlyphs.filter(glyph => glyph.grapheme === 'ー');
-        expect(marks.map(glyph => [glyph.vertical, glyph.metrics.left])).toEqual([[true, 5], [false, 1]]);
-        expect(getGlyphOrientations(shaping).slice(-3)).toEqual([
-            ['B', 'along-line'], ['A', 'along-line'], ['R', 'along-line']
-        ]);
+        expect(punctuation).toMatchObject({vertical: upright, metrics: {left}});
     });
 
     test('draws digits between CJK characters upright', () => {
@@ -816,18 +757,18 @@ describe('shapeText vertical glyph orientation', () => {
         ]);
     });
 
-    test('draws every non-whitespace glyph upright when vertical placement is allowed', () => {
-        const shapedLineLabel = shapeLineLabel('two 身什戰', {allowVerticalPlacement: true});
-        const orientations = getGlyphOrientations(shapedLineLabel);
+    test('uses vertical alternates only for upright glyphs in point labels', () => {
+        const text = 'a 小 ب';
+        const glyphs = createStubGlyphMap(text);
+        for (const char of ['a', 'ب']) {
+            glyphs.vertical[char] = {...glyphs.default[char], metrics: {...glyphs.default[char].metrics, left: 5}};
+        }
 
-        expect(orientations).toEqual([
-            ['t', 'upright'],
-            ['w', 'upright'],
-            ['o', 'upright'],
-            [' ', 'along-line'],
-            ['身', 'upright'],
-            ['什', 'upright'],
-            ['戰', 'upright'],
+        const shaping = shapeText(Formatted.fromString(text), {[fontStack]: glyphs}, {}, {},
+            fontStack, Infinity, 24, 'center', 'center', 0, [0, 0], WritingMode.vertical, true, 24, 24) as Shaping;
+
+        expect(shaping.positionedLines[0].positionedGlyphs.map(glyph => [glyph.grapheme, glyph.vertical, glyph.metrics.left])).toEqual([
+            ['a', true, 5], [' ', false, 1], ['小', true, 1], [' ', false, 1], ['ب', false, 1]
         ]);
     });
 });

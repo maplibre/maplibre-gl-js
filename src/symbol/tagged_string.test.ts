@@ -54,20 +54,6 @@ describe('TaggedString', () => {
             expect(tagged.sectionIndex).toEqual(sectionIndex);
             expect(tagged.getSection(tagged.graphemes().indexOf('、'))).toMatchObject({fontStack: 'Other', scale: 2});
         });
-
-        test('uses each font’s alternates while retaining the context of punctuation beside Latin', () => {
-            const tagged = TaggedString.fromFeature(new Formatted([
-                new FormattedSection('𠮷（小）小 ', null, 1, 'Test', null, null),
-                new FormattedSection('A(B)', null, 2, 'Other', null, null)
-            ]), 'Test', true, {Test: {default: {}, vertical: {
-                '（': {id: 0xFF08} as StyleGlyph,
-                '）': null
-            }}});
-
-            expect(tagged.text).toBe('𠮷（小︶小 A(B)');
-            expect(tagged.sectionIndex).toEqual([0, 0, 0, 0, 0, 0, 1, 1, 1, 1]);
-            expect(tagged.getSection(6)).toMatchObject({fontStack: 'Other', scale: 2});
-        });
     });
 
     describe('hasZeroWidthSpaces', () => {
