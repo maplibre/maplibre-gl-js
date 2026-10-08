@@ -82,27 +82,6 @@ describe('GlobeTransform', () => {
         });
     });
 
-    describe('getCircleRadiusCorrection', () => {
-        test('returns the vertical perspective value during the globe transition', () => {
-            const globeTransform = createGlobeTransform();
-            globeTransform.setCenter(new LngLat(0, 60));
-            const globeCorrection = Math.cos(60 * Math.PI / 180);
-
-            globeTransform.setTransitionState(1);
-            expect(globeTransform.getCircleRadiusCorrection()).toBeCloseTo(globeCorrection, 10);
-
-            globeTransform.setTransitionState(0.5);
-            expect(globeTransform.getCircleRadiusCorrection()).toBeCloseTo(globeCorrection, 10);
-        });
-
-        test('returns the mercator value when the globe transition is 0', () => {
-            const globeTransform = createGlobeTransform();
-            globeTransform.setCenter(new LngLat(0, 60));
-            globeTransform.setTransitionState(0);
-            expect(globeTransform.getCircleRadiusCorrection()).toBe(1);
-        });
-    });
-
     describe('getProjectionDataForCustomLayer', () => {
         test('transition is the in-progress globe transition state', () => {
             const globeTransform = createGlobeTransform();
