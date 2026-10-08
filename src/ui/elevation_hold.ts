@@ -29,22 +29,23 @@ export class ElevationHold {
      */
     lift: {heldElevation: number; height: number} | null = null;
     /**
-     * Whether {@link Camera._keepCameraAboveTerrain} keeps the drawn terrain below the maxZoom center, see
-     * {@link Camera._terrainHeightAboveMaxZoomCenter}: from the start of a hold that starts with the terrain below it, as
-     * on the ground at rest, or from the first frame the terrain is below it. A hold that starts with the terrain above
-     * it, as behind a crest, leaves the terrain there.
+     * Whether {@link Camera._keepCameraAboveTerrain} keeps the drawn terrain below where the center would sit at maxZoom,
+     * see {@link Camera._terrainHeightAboveMaxZoomForCenter}: from the start of a hold that starts with the terrain below
+     * that point, as on the ground at rest, or from the first frame the terrain is below it. A hold that starts with the
+     * terrain above it, as behind a crest, leaves the terrain there.
      */
-    keepsTerrainBelowMaxZoomCenter: boolean;
+    keepsTerrainBelowMaxZoomForCenter: boolean;
     private _terrainChanged = false;
 
     /**
      * @param holder - who holds the elevation
      * @param startedWithoutDem - whether the hold started without DEM data under the center, and so waits for it
-     * @param terrainBelowMaxZoomCenter - whether the drawn terrain is below the maxZoom center when the hold starts
+     * @param terrainBelowMaxZoomForCenter - whether the drawn terrain is below where the center would sit at maxZoom when
+     * the hold starts, see {@link Camera._terrainHeightAboveMaxZoomForCenter}
      */
-    constructor(readonly holder: ElevationHolder, startedWithoutDem: boolean, terrainBelowMaxZoomCenter: boolean) {
+    constructor(readonly holder: ElevationHolder, startedWithoutDem: boolean, terrainBelowMaxZoomForCenter: boolean) {
         this._dem = startedWithoutDem ? 'awaiting' : 'loaded';
-        this.keepsTerrainBelowMaxZoomCenter = terrainBelowMaxZoomCenter;
+        this.keepsTerrainBelowMaxZoomForCenter = terrainBelowMaxZoomForCenter;
     }
 
     /** Whether the hold waited for DEM data under the center and took the data of the tile there. */
