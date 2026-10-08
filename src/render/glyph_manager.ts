@@ -104,6 +104,8 @@ export class GlyphManager {
     lang?: string;
     fontFaceManager: FontFaceManager;
     createRasterizer: CreateRasterizer;
+    /** Default glyphs shared by requests and vertical comparisons, keyed by rasterizer. */
+    rasterizedGlyphs: WeakMap<Rasterizer, Record<string, StyleGlyph>> = new WeakMap();
 
     constructor(
         requestManager: RequestManager,
@@ -228,7 +230,7 @@ export class GlyphManager {
         if (!defaultTinySDF || this.entries[stack] !== entry) return null;
 
         const glyph = this._createGlyph(id, char);
-        const original = this._createGlyph(id, defaultTinySDF.draw(id));
+        const original = this._getRasterizedGlyph(defaultTinySDF, id);
         return glyphsEqual(original, glyph) ? null : glyph;
     }
 
@@ -316,7 +318,18 @@ export class GlyphManager {
      */
     async _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph> {
         const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
-        return this._createGlyph(id, tinySDF.draw(id));
+        return this._getRasterizedGlyph(tinySDF, id);
+    }
+
+    /** Draws each default glyph once per rasterizer, including concurrent requests. */
+    _getRasterizedGlyph(tinySDF: Rasterizer, id: string): StyleGlyph {
+        let glyphs = this.rasterizedGlyphs.get(tinySDF);
+        if (!glyphs) {
+            glyphs = {};
+            this.rasterizedGlyphs.set(tinySDF, glyphs);
+        }
+        glyphs[id] ??= this._createGlyph(id, tinySDF.draw(id));
+        return glyphs[id];
     }
 
     /** Converts a TinySDF bitmap and metrics to a style glyph. */

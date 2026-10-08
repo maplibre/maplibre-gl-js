@@ -368,16 +368,16 @@ describe('GlyphManager', () => {
             }
             const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
             manager.setFontFaces({Noto: 'https://localhost/noto.ttf'});
-            const request = {Noto: {vertical: ['ー', '（', '京']}};
+            const request = {Noto: {default: ['ー', '（', '京'], vertical: ['ー', '（', '京']}};
 
             const glyphs = await manager.getGlyphs(request);
 
             expect(glyphs.Noto.vertical['ー'].bitmap.data[0]).toBe(200);
             expect(glyphs.Noto.vertical['（'].metrics.left).toBe(4.5);
             expect(glyphs.Noto.vertical['京']).toBeNull();
-            const initialDraws = draw.mock.calls.length;
+            expect(draw).toHaveBeenCalledTimes(6);
             await expect(manager.getGlyphs(request)).resolves.toEqual(glyphs);
-            expect(draw).toHaveBeenCalledTimes(initialDraws);
+            expect(draw).toHaveBeenCalledTimes(6);
         });
 
         test('keeps cached PBF glyphs out of font-face comparisons', async () => {
