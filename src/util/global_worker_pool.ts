@@ -55,7 +55,6 @@ export function clearPrewarmedResources(): void {
         // Remove the pool only if all maps that referenced the preloaded global worker pool have been removed.
         if (pool.isPreloaded() && pool.numActive() === 1) {
             pool.release(PRELOAD_POOL_ID);
-            globalWorkerPool = null;
         } else {
             console.warn('Could not clear WebWorkers since there are active Map instances that still reference it. The pre-warmed WebWorker pool can only be cleared when all map instances have been removed with map.remove()');
         }

@@ -168,4 +168,36 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.url).toEqual(url);
         expect(rtlMainThreadPlugin.status).toBe('error');
     });
+
+    test('should re-sync a deferred status to new workers', async () => {
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccessDefer as any);
+        await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
+        broadcastSpy.mockClear();
+
+        await rtlMainThreadPlugin._syncStateToNewWorkers();
+
+        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
+        expect(rtlMainThreadPlugin.status).toBe('deferred');
+    });
+
+    test('should re-import the plugin into new workers once loaded', async () => {
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        broadcastSpy.mockClear();
+
+        await rtlMainThreadPlugin._syncStateToNewWorkers();
+
+        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
+        expect(rtlMainThreadPlugin.status).toBe('loaded');
+    });
+
+    test('should warn instead of throwing when syncing to new workers fails', async () => {
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockFailure as any);
+
+        await expect(rtlMainThreadPlugin._syncStateToNewWorkers()).resolves.toBeUndefined();
+
+        expect(rtlMainThreadPlugin.status).toBe('error');
+    });
 });
