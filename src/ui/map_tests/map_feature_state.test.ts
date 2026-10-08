@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect} from 'vitest';
+import {describe, beforeEach, test, expect, onTestFinished} from 'vitest';
 import {createMap, beforeMapTest, createStyleSource} from '../../util/test/util.ts';
 
 beforeEach(() => {
@@ -130,6 +130,71 @@ describe('setFeatureState', () => {
 });
 
 describe('removeFeatureState', () => {
+
+    test('removing a property without prior state does not break rendering', async () => {
+        const map = createMap({
+            style: {
+                version: 8,
+                sources: {
+                    geojson: {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            id: 42,
+                            properties: {},
+                            geometry: {type: 'Point', coordinates: [0, 0]}
+                        }
+                    }
+                },
+                layers: [{id: 'points', type: 'circle', source: 'geojson'}]
+            }
+        });
+        onTestFinished(() => map.remove());
+        await map.once('load');
+
+        map.removeFeatureState({source: 'geojson', id: 42}, 'hover');
+
+        expect(() => map.redraw()).not.toThrow();
+        expect(map.getFeatureState({source: 'geojson', id: 42})).toEqual({});
+    });
+
+    test('removing a property after a queued update preserves other properties through rendering', async () => {
+        const map = createMap({
+            style: {
+                version: 8,
+                sources: {geojson: createStyleSource()},
+                layers: [{id: 'points', type: 'circle', source: 'geojson'}]
+            }
+        });
+        onTestFinished(() => map.remove());
+        await map.once('load');
+        const target = {source: 'geojson', id: 42};
+
+        map.setFeatureState(target, {hover: true, selected: true});
+        map.removeFeatureState(target, 'hover');
+        map.redraw();
+        expect(map.getFeatureState(target)).toEqual({selected: true});
+    });
+
+    test('setting a property to false after a queued deletion preserves it through rendering', async () => {
+        const map = createMap({
+            style: {
+                version: 8,
+                sources: {geojson: createStyleSource()},
+                layers: [{id: 'points', type: 'circle', source: 'geojson'}]
+            }
+        });
+        onTestFinished(() => map.remove());
+        await map.once('load');
+        const target = {source: 'geojson', id: 42};
+
+        map.setFeatureState(target, {selected: true});
+        map.redraw();
+        map.removeFeatureState(target, 'selected');
+        map.setFeatureState(target, {selected: false});
+        map.redraw();
+        expect(map.getFeatureState(target)).toEqual({selected: false});
+    });
 
     test('accepts "0" id', async () => {
         const map = createMap({
