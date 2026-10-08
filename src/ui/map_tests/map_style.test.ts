@@ -428,7 +428,6 @@ describe('setStyle', () => {
 
         const map = createMap({deleteStyle: true});
         const initialTransform = map._camera.transform;
-        const initialPainterTransform = map.painter.transform;
         const projectionTransitionSpy = vi.fn();
         map.on('projectiontransition', projectionTransitionSpy);
         map.setTransformRequest(() => transformRequest);
@@ -444,7 +443,6 @@ describe('setStyle', () => {
         expect(map.style).toBeUndefined();
         expect(projectionTransitionSpy).not.toHaveBeenCalled();
         expect(map._camera.transform).toBe(initialTransform);
-        expect(map.painter.transform).toBe(initialPainterTransform);
     });
 
     test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', async () => {

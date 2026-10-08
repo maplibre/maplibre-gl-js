@@ -5,7 +5,7 @@ import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LA
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
-import {cameraDirectionFromPitchBearing} from './projection/mercator_utils.ts';
+import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 import {Bounds} from './bounds.ts';
 
@@ -94,6 +94,9 @@ export type TransformOptions = {
 function getTileZoom(zoom: number): number {
     return Math.max(0, Math.floor(zoom));
 }
+
+/** The most passes {@link TransformHelper._centerAlongView} takes to agree on the mercator scale at the center it finds. */
+const MAX_CENTER_PASSES = 10;
 
 /**
  * @internal
@@ -227,7 +230,9 @@ export class TransformHelper implements ITransformGetters {
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number): void {
+        if (ele === this._minElevationForCurrentTile) return;
         this._minElevationForCurrentTile = ele;
+        this._calcMatrices();
     }
 
     get tileSize(): number { return this._tileSize; }
@@ -422,6 +427,7 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = false;
         // Update edge-insets in-place
         this._edgeInsets.interpolate(this._edgeInsets, padding, 1);
+        this.constrainInternal();
         this._calcMatrices();
     }
 
@@ -596,71 +602,75 @@ export class TransformHelper implements ITransformGetters {
         const {distanceToCenter, clampedElevation} = this._distanceToCenterFromAltElevationPitch(alt, this.elevation, cameraPitch);
         const {x, y} = cameraDirectionFromPitchBearing(cameraPitch, cameraBearing);
         
-        // The mercator transform scale changes with latitude. At high latitudes, there are more "Merc units" per meter
-        // than at the equator. We treat the center point as our fundamental quantity. This means we want to convert
-        // elevation to Mercator Z using the scale factor at the center point (not the camera point). Since the center point is
-        // initially unknown, we compute it using the scale factor at the camera point. This gives us a better estimate of the
-        // center point scale factor, which we use to recompute the center point. We repeat until the error is very small.
-        // This typically takes about 5 iterations.
         const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
-        let metersPerMercUnit = altitudeFromMercatorZ(1, camMercator.y);
-        let centerMercator: MercatorCoordinate;
-        let dMercator: number;
-        let iter = 0;
-        const maxIter = 10;
-        do {
-            iter += 1;
-            if (iter > maxIter) {
-                break;
-            }
-            dMercator = distanceToCenter / metersPerMercUnit;
-            const dx = x * dMercator;
-            const dy = y * dMercator;
-            centerMercator = new MercatorCoordinate(camMercator.x + dx, camMercator.y + dy);
-            metersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
-        } while (Math.abs(distanceToCenter - dMercator * metersPerMercUnit) > 1.0e-12);
-
+        const {centerMercator, dMercator} = this._centerAlongView(camMercator, x, y, distanceToCenter, altitudeFromMercatorZ(1, camMercator.y));
         const center = centerMercator.toLngLat();
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
         return {center, elevation: clampedElevation, zoom};
     }
 
+    /**
+     * Moves the center along the view to the given elevation with the camera where it is, and sets the zoom to match.
+     * The center is found along the view from the camera's position, which is kept, by {@link _centerAlongView},
+     * starting from the old center's mercator scale. The matrices are recomputed even where `setZoom` leaves the zoom
+     * as it was, as at a zoom bound, since the center and its elevation have moved.
+     * @param elevation - the elevation in meters for the center
+     */
     recalculateZoomAndCenter(elevation: number): void {
         if (this.elevation - elevation === 0) return;
 
-        // Critical: Stay in pixels and use original center to avoid instability at extreme latitudes when using Mercator-LngLat
-        const mercUnitsPerPixel = 1 / this.worldSize;
-        const originalMercUnitsPerMeter = mercatorZfromAltitude(1, this.center.lat);
-        const originalPixelsPerMeter = originalMercUnitsPerMeter * this.worldSize;
-
-        // Determine camera
-        const originalCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
-        const originalCenterPixelX = originalCenterMercator.x / mercUnitsPerPixel;
-        const originalCenterPixelY = originalCenterMercator.y / mercUnitsPerPixel;
-        const originalCenterPixelZ = originalCenterMercator.z / mercUnitsPerPixel;
-        
         const cameraPitch = this.pitch;
         const cameraBearing = this.bearing;
         const {x, y, z} = cameraDirectionFromPitchBearing(cameraPitch, cameraBearing);
-        const dCamPixel = this.cameraToCenterDistance;
-        const camPixelX = originalCenterPixelX + dCamPixel * -x;
-        const camPixelY = originalCenterPixelY + dCamPixel * -y;
-        const camPixelZ = originalCenterPixelZ + dCamPixel * z;
+        const originalCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
+        const originalMetersPerMercUnit = 1 / mercatorZfromAltitude(1, this.center.lat);
+        const dCamMercator = this.cameraToCenterDistance / this.worldSize;
+        const camMercator = new MercatorCoordinate(originalCenterMercator.x - x * dCamMercator, originalCenterMercator.y - y * dCamMercator, originalCenterMercator.z + z * dCamMercator);
 
-        // Determine corresponding center
-        const {distanceToCenter, clampedElevation} = this._distanceToCenterFromAltElevationPitch(camPixelZ / originalPixelsPerMeter, elevation, cameraPitch);
-        const distanceToCenterPixels = distanceToCenter * originalPixelsPerMeter;
-        const centerPixelX = camPixelX + x * distanceToCenterPixels;
-        const centerPixelY = camPixelY + y * distanceToCenterPixels;
-        const center = new MercatorCoordinate(centerPixelX * mercUnitsPerPixel, centerPixelY * mercUnitsPerPixel, 0).toLngLat();
-
-        const mercUnitsPerMeter = mercatorZfromAltitude(1, center.lat);
-        const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / distanceToCenter / mercUnitsPerMeter / this.tileSize);
+        const {distanceToCenter, clampedElevation} = this._distanceToCenterFromAltElevationPitch(camMercator.z * originalMetersPerMercUnit, elevation, cameraPitch);
+        const {centerMercator, dMercator} = this._centerAlongView(camMercator, x, y, distanceToCenter, originalMetersPerMercUnit);
+        const center = centerMercator.toLngLat();
+        const zoom = scaleZoom(this.cameraToCenterDistance / dMercator / this.tileSize);
 
         // Update matrices
         this._elevation = clampedElevation;
         this._center = center;
+        const previousZoom = this._zoom;
         this.setZoom(zoom);
+        if (this._zoom === previousZoom) {
+            this._unmodified = false;
+            this.constrainInternal();
+            this._calcMatrices();
+        }
+    }
+
+    /**
+     * The center `distanceToCenter` meters from the camera along the view, in mercator units, and that distance in
+     * mercator units. The mercator scale changes with latitude and the center's latitude is unknown until the center
+     * is: each pass places the center with the scale at the center the last pass found, from `metersPerMercUnit`,
+     * and stops once two passes agree. Zoomed far out at a high latitude the scale changes faster along the view than
+     * a pass follows; a pass that would move the center further than the last one did ends the search at the last
+     * stable center instead of oscillating (#6775).
+     * @param cameraMercator - the camera's position
+     * @param x - the view direction's x component, see {@link cameraDirectionFromPitchBearing}
+     * @param y - the view direction's y component
+     * @param distanceToCenter - the camera's distance to the center in meters
+     * @param metersPerMercUnit - the mercator scale to start from
+     */
+    private _centerAlongView(cameraMercator: MercatorCoordinate, x: number, y: number, distanceToCenter: number, metersPerMercUnit: number): {centerMercator: MercatorCoordinate; dMercator: number} {
+        let dMercator = distanceToCenter / metersPerMercUnit;
+        let centerMercator = new MercatorCoordinate(cameraMercator.x + x * dMercator, cameraMercator.y + y * dMercator);
+        let step = Infinity;
+        for (let pass = 1; pass < MAX_CENTER_PASSES; pass++) {
+            const centerMetersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
+            const nextStep = Math.abs(centerMetersPerMercUnit - metersPerMercUnit);
+            if (nextStep <= 1e-12 * metersPerMercUnit || nextStep >= step) break;
+            step = nextStep;
+            metersPerMercUnit = centerMetersPerMercUnit;
+            dMercator = distanceToCenter / metersPerMercUnit;
+            centerMercator = new MercatorCoordinate(cameraMercator.x + x * dMercator, cameraMercator.y + y * dMercator);
+        }
+        return {centerMercator, dMercator};
     }
 
     _distanceToCenterFromAltElevationPitch(alt: number, elevation: number, pitch: number): {distanceToCenter: number; clampedElevation: number} {
@@ -668,7 +678,7 @@ export class TransformHelper implements ITransformGetters {
         const altitudeAGL = alt - elevation;
         let distanceToCenter: number;
         let clampedElevation = elevation;
-        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < 0.1) {
+        if (dzNormalized * altitudeAGL >= 0.0 || Math.abs(dzNormalized) < Math.cos(degreesToRadians(maxMercatorHorizonAngle))) {
             distanceToCenter = 10000;
             clampedElevation = alt + distanceToCenter * dzNormalized;
         } else {

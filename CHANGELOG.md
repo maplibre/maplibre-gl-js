@@ -1,14 +1,124 @@
 ## main
 ### ✨ Features and improvements
-- Speed up fill and fill-extrusion triangulation by looking up each vertex's deduplicated index once instead of hashing every triangle corner, and every outline point of a ring that is not subdivided, again ([#8425](https://github.com/maplibre/maplibre-gl-js/pull/8425)) (by [@cherenkov](https://github.com/cherenkov))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Work around blank, unresponsive maps on affected iPadOS 16 Safari devices ([#8364](https://github.com/maplibre/maplibre-gl-js/pull/8364)) (by [@samuelsmarason](https://github.com/samuelsmarason))
+- Fix circles with `circle-pitch-alignment: map` being drawn too large while the globe transitions to mercator ([#8714](https://github.com/maplibre/maplibre-gl-js/issues/8714)) (by [@heikki](https://github.com/heikki))
+- Fix `map.resize(eventData, false)` constraining the camera with the `vertical-perspective` projection ([#8695](https://github.com/maplibre/maplibre-gl-js/pull/8695)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix an uncaught error when `setStyle` is called while the WebGL context is lost, since 6.12.0 ([#8693](https://github.com/maplibre/maplibre-gl-js/pull/8693)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix the view sliding hundreds of meters off the center when terrain is switched on during a gesture ([#8688](https://github.com/maplibre/maplibre-gl-js/pull/8688)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- _...Add new stuff here..._
+
+## 6.13.0
+
+### ✨ Features and improvements
+
+- Let the globe center reach the poles, where it stopped at 85.05° ([#8629](https://github.com/maplibre/maplibre-gl-js/pull/8629)) (by [@birkskyum](https://github.com/birkskyum))
+- Speed up symbol layout by skipping line breaking for labels that fit on one line ([#8617](https://github.com/maplibre/maplibre-gl-js/pull/8617)) (by [@DoFabien](https://github.com/DoFabien))
+- Add experimental `CustomLayerInterface.renderToTerrainTile`, `CustomLayerInterface.terrainTileRevision` and `renderTerrainHeightMap` in the options of `prerender`, so custom layers can drape what they draw over the terrain and place objects on it on the GPU ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
+
+### 🐞 Bug fixes
+
+- Fix a stale cached worker crashing the map after an upgrade: the worker is self-contained again instead of importing `maplibre-gl-shared.mjs`, and its default URL carries the version as a `v` query parameter. `maplibre-gl-shared.mjs` and `maplibre-gl-shared-dev.mjs` are now empty files, kept so that existing copy steps don't fail; they are deprecated and will be removed in the next major version ([#8621](https://github.com/maplibre/maplibre-gl-js/issues/8621)) (by [@HarelM](https://github.com/HarelM))
+- Fix `globeDistanceOfLocationsPixels` returning `NaN` when two copies of the same point have a dot product slightly above 1 ([#8624](https://github.com/maplibre/maplibre-gl-js/pull/8624))(by [@Dimononon](https://github.com/Dimononon))
+- Keep the camera above the terrain, where a scroll zoom into a mountain could take it under the surface and the zoom's end throw it kilometers up ([#8539](https://github.com/maplibre/maplibre-gl-js/issues/8539)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+
+## 6.12.0
+
+### ✨ Features and improvements
+
+- Add a `zoomToUserAccuracy` option to `GeolocateControlOptions` to allow control over map zoom adjustments in line with the Geolocation Position update accuracy, while `trackUserLocation` is `true` ([#7908](https://github.com/maplibre/maplibre-gl-js/issues/7908), [#8324](https://github.com/maplibre/maplibre-gl-js/pull/8324), continues [#7909](https://github.com/maplibre/maplibre-gl-js/pull/7909)) (by [@timsluis](https://github.com/timsluis))
+- With `fill-extrusion-rounded-corner-distance` set, shade the walls of a rounded corner as one curved surface by sharing the vertex normal between walls that meet at a shallow angle, instead of one flat shade per arc segment ([#8475](https://github.com/maplibre/maplibre-gl-js/issues/8475)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Speed up symbol rendering when the set of visible tiles changes, by rewriting the opacity buffers only of the symbol buckets whose labels actually changed instead of every bucket of every symbol layer ([#8434](https://github.com/maplibre/maplibre-gl-js/pull/8434)) (by [@cherenkov](https://github.com/cherenkov))
+- Add an `absolutePadding` option to `Map#cameraForBounds` and `Map#fitBounds` to treat `padding` as the map's persistent padding instead of adding it to the current one ([#8480](https://github.com/maplibre/maplibre-gl-js/issues/8480)) (by [@sargunv](https://github.com/sargunv))
+
+### 🐞 Bug fixes
+
+- fix(CanvasSource): catch load errors and fire map.error like ImageSource (#8448) ([#8450](https://github.com/maplibre/maplibre-gl-js/pull/8450)) (by [@SatvikMishra08](https://github.com/SatvikMishra08))
+- Fix `GeoJSONSource` still sending its waiting updates to the worker after the source is removed ([#8585](https://github.com/maplibre/maplibre-gl-js/pull/8585)) (by [@clementperon](https://github.com/clementperon))
+- Fix `GeoJSONSource` memory growing until the page crashes when `setData` is called faster than the worker handles it ([#8585](https://github.com/maplibre/maplibre-gl-js/pull/8585)) (by [@clementperon](https://github.com/clementperon))
+- Fix the map rendering at the display rate instead of going idle over a DEM with a minimum below sea level when `centerClampedToGround` is false ([#8605](https://github.com/maplibre/maplibre-gl-js/issues/8605)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix a gesture over terrain throwing the camera when the terrain under the center loads after the gesture begins or the terrain switches off before it ends ([#8548](https://github.com/maplibre/maplibre-gl-js/pull/8548)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix the terrain elevation reading 0 outside the drawn tiles while the camera is below the terrain, and make that read about 40 times cheaper ([#8539](https://github.com/maplibre/maplibre-gl-js/issues/8539)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix a hole around the poles of the globe in background, fill and line layers from zoom 3 ([#8638](https://github.com/maplibre/maplibre-gl-js/pull/8638)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix `jumpTo`, and the setters that use it, pulling the center elevation onto the terrain when `centerClampedToGround` is false ([#8566](https://github.com/maplibre/maplibre-gl-js/issues/8566)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix `GeoJSONSource#updateData` leaving stale clusters on untouched tiles after clustering was turned on with `setClusterOptions` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
+- Fix `GeoJSONSource#setClusterOptions` clustering twice when called while new data is waiting to be sent ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
+- Fix `GeoJSONSource` data set with `setData` being overwritten by the result of an earlier URL load or `updateData` ([#8613](https://github.com/maplibre/maplibre-gl-js/pull/8613)) (by [@clementperon](https://github.com/clementperon))
+- Fix fill-extrusion walls facing exactly east or west skipping `fill-extrusion-vertical-gradient` and rendering brighter than the other walls ([#8604](https://github.com/maplibre/maplibre-gl-js/pull/8604)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix `easeTo` and `flyTo` pulling the center elevation onto the terrain when `centerClampedToGround` is false ([#8566](https://github.com/maplibre/maplibre-gl-js/issues/8566)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix `fill-outline-color`, and the antialiased edge of fills, not being drawn when terrain is enabled ([#4200](https://github.com/maplibre/maplibre-gl-js/issues/4200)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Respect map padding when constraining the camera to max bounds, so the padded viewport can pan fully to its edges ([#8501](https://github.com/maplibre/maplibre-gl-js/issues/8501)) (by [@erenbati](https://github.com/erenbati))
+- Fix an unclosed disallowed tag in one attribution erasing the other attributions, by sanitizing each attribution before joining them ([#8569](https://github.com/maplibre/maplibre-gl-js/issues/8569)) (by [@sx4im](https://github.com/sx4im))
+- Fix `color-relief` with a `custom` DEM encoding whose `redFactor`, `greenFactor` or `blueFactor` is 0, where every elevation stop packed to NaN and the color ramp collapsed ([#6411](https://github.com/maplibre/maplibre-gl-js/issues/6411)) (by [@drakeo338](https://github.com/drakeo338))
+- Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix `line-offset` distorting the line width around joins ([#8570](https://github.com/maplibre/maplibre-gl-js/pull/8570)) (by [@HarelM](https://github.com/HarelM))
+- Cross-fade raster tiles when zooming out from a source's `maxzoom`, where the tiles switched instantly ([#8517](https://github.com/maplibre/maplibre-gl-js/pull/8517)) (by [@cherenkov](https://github.com/cherenkov))
+- Mark a program as failed to create instead of throwing when the WebGL context is lost or a failed link reports zero attached shaders, where a dead GPU process made every query answer dead before `webglcontextlost` arrived ([#8607](https://github.com/maplibre/maplibre-gl-js/issues/8607)) (by [@rubenmarcus](https://github.com/rubenmarcus))
+
+## 6.11.2
+
+### ✨ Features and improvements
+
+- Improve rendering performance by uploading each tile's projection data once per frame instead of before every draw call ([#8545](https://github.com/maplibre/maplibre-gl-js/pull/8545)) (by [@birkskyum](https://github.com/birkskyum))
+- Support multiple glyph variants in requests, caches, and atlases ([#8488](https://github.com/maplibre/maplibre-gl-js/pull/8488)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
+
+### 🐞 Bug fixes
+
+- Fix `Map#once(type, layerId, listener)` unsubscribing on the first event that misses the layer instead of the first event that hits it ([#8499](https://github.com/maplibre/maplibre-gl-js/pull/8499)) (by [@cherenkov](https://github.com/cherenkov))
+- Remove hillshade gradient toward the poles ([#8551](https://github.com/maplibre/maplibre-gl-js/pull/8551)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix camera settings being undone during camera movement with terrain or `transformCameraUpdate` ([#8550](https://github.com/maplibre/maplibre-gl-js/pull/8550)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix zooming and panning with the pointer above the horizon moving the map in the opposite direction ([#8544](https://github.com/maplibre/maplibre-gl-js/pull/8544)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix the camera jumping when a drag over terrain ends at a pitch above 84° ([#8541](https://github.com/maplibre/maplibre-gl-js/pull/8541)) (by [@birkskyum](https://github.com/birkskyum))
+- Ease the center elevation over terrain during `easeTo` and `flyTo` instead of holding it and jumping when the animation ends ([#8543](https://github.com/maplibre/maplibre-gl-js/pull/8543)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix `fitBounds` and `cameraForBounds` throwing on the globe projection when the padding exceeds the viewport, instead of warning and returning `undefined` as on mercator ([#8538](https://github.com/maplibre/maplibre-gl-js/issues/8538)) (by [@drakeo338](https://github.com/drakeo338))
+- Keep raster tiles sharp at a fractional `devicePixelRatio`, where the canvas covered a different number of device pixels than its backing store held and the compositor rescaled it ([#1590](https://github.com/maplibre/maplibre-gl-js/issues/1590)) (by [@zdila](https://github.com/zdila))
+
+## 6.11.1
+
+### 🐞 Bug fixes
+
+- Fix missing promoteId when merging queued updateData diffs in geojson source ([#8500](https://github.com/maplibre/maplibre-gl-js/pull/8500)) (by [@cherenkov](https://github.com/cherenkov))
+- Sanitize attribution with an allow list of tags and attributes rather than a list of known-dangerous ones ([#8532](https://github.com/maplibre/maplibre-gl-js/pull/8532)) (by [@HarelM](https://github.com/HarelM))
+- Fix the camera jumping or bobbing around gestures over terrain, and ignoring terrain that loads after `easeTo`/`flyTo` ([#8471](https://github.com/maplibre/maplibre-gl-js/pull/8471)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Stop sending a vector tile to the worker when it was dropped while its request was being transformed or while the worker was still starting up, which left the parsed tile in the worker for the lifetime of the map ([#8516](https://github.com/maplibre/maplibre-gl-js/pull/8516)) (by [@cherenkov](https://github.com/cherenkov))
+
+## 6.11.0
+
+### ✨ Features and improvements
+
+- Fire a `contextmenu` map event on long press for touch devices ([#373](https://github.com/maplibre/maplibre-gl-js/issues/373)) (by [@kirthi-b](https://github.com/kirthi-b))
+- Transition paint, light and sky properties that read `global-state` from the value they had when the state changes, where they snapped to the new value while holding `idle` for the transition duration ([#8395](https://github.com/maplibre/maplibre-gl-js/issues/8395)) (by [@avosa](https://github.com/avosa))
+- Speed up cross-tile symbol matching for sources with `promoteId` by keying symbols on their feature id as well as their label ([#8470](https://github.com/maplibre/maplibre-gl-js/pull/8470), continues [#7665](https://github.com/maplibre/maplibre-gl-js/pull/7665)) (by [@bradymadden97](https://github.com/bradymadden97) and [@johncarmack1984](https://github.com/johncarmack1984))
+- Add `Map#calculateAnchoredCameraOptions` to calculate camera options that place a geographic anchor at a screen position without moving the map ([#8288](https://github.com/maplibre/maplibre-gl-js/pull/8288)) (by [@xavierjs](https://github.com/xavierjs))
+- Skip the loaded-tile scan for constant `symbol-height-offset` layers when computing tile coverage ([#8424](https://github.com/maplibre/maplibre-gl-js/pull/8424)) (by [@clement-igonet](https://github.com/clement-igonet))
+- Type and document that an `addProtocol` handler may return an `ImageBitmap` or `HTMLImageElement` for an image resource, so decoded pixels are not encoded and decoded again ([#8515](https://github.com/maplibre/maplibre-gl-js/issues/8515)) (by [@MannXo](https://github.com/MannXo))
+
+### 🐞 Bug fixes
+
+- Fade the globe atmosphere in with the camera's altitude, so the sky keeps the horizon until the atmosphere takes over from space ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
+- Report worker script failures through the map `error` event ([#8018](https://github.com/maplibre/maplibre-gl-js/issues/8018)) (by [@xavierjs](https://github.com/xavierjs))
+- Fix slow panning and zooming in Firefox on macOS since 6.8.0 ([#8468](https://github.com/maplibre/maplibre-gl-js/issues/8468)) (by [@timsluis](https://github.com/timsluis) and [@birkskyum](https://github.com/birkskyum))
+- Keep source-specific tile LOD settings from changing internal terrain render-to-texture tile selection ([#8048](https://github.com/maplibre/maplibre-gl-js/pull/8048)) (by [@DoFabien](https://github.com/DoFabien))
+- Fix `map.setSky()` silently keeping the old sky and firing no `error` event when the value included a `-transition` key ([#8375](https://github.com/maplibre/maplibre-gl-js/issues/8375)) (by [@Yasser-Ameur](https://github.com/Yasser-Ameur))
+- Fix markers and popups misplaced after a projection change or by terrain that loads after the map settled. ([#8433](https://github.com/maplibre/maplibre-gl-js/pull/8433)) (by [@patte](https://github.com/patte))
+- Insert sanitized attribution HTML as DOM nodes instead of re-parsing a serialized string ([#8528](https://github.com/maplibre/maplibre-gl-js/pull/8528)) (by [@cherenkov](https://github.com/cherenkov))
+
+## 6.10.0
+
+### ✨ Features and improvements
+
+- Show the sky in globe view, fading out with altitude instead of with the globe to mercator transition ([#8464](https://github.com/maplibre/maplibre-gl-js/pull/8464)) (by [@birkskyum](https://github.com/birkskyum))
+- Speed up fill and fill-extrusion triangulation by looking up each vertex's deduplicated index once instead of hashing every triangle corner, and every outline point of a ring that is not subdivided, again ([#8425](https://github.com/maplibre/maplibre-gl-js/pull/8425)) (by [@cherenkov](https://github.com/cherenkov))
+- Test whether a `Marker` is behind terrain with a CPU ray walk over the DEM instead of a depth-buffer readback, removing a GPU stall per marker while a map with terrain moves ([#8387](https://github.com/maplibre/maplibre-gl-js/pull/8387)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+
+### 🐞 Bug fixes
+
 - Fix partially blank maps in older Safari versions ([#8427](https://github.com/maplibre/maplibre-gl-js/issues/8427)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `setStyle` calling `Map.setTerrain` with the wrong `this`, which made a terrain change in a style diff throw ([#8451](https://github.com/maplibre/maplibre-gl-js/pull/8451)) (by [@HarelM](https://github.com/HarelM))
 - Fix hillshade rendering artifacts on mobile GPUs at high zoom levels ([#8431](https://github.com/maplibre/maplibre-gl-js/pull/8431)) (by [@Turbo87](https://github.com/Turbo87))
 - Free the pooled terrain drape textures once the map is at rest and when terrain is removed, instead of keeping every drape allocated during a pan resident for the life of the map ([#8400](https://github.com/maplibre/maplibre-gl-js/pull/8400)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- _...Add new stuff here..._
 
 ## 6.9.1
 

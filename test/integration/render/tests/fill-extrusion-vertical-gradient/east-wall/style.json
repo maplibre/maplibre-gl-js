@@ -1,0 +1,67 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "description": "An east wall whose southern half runs exactly north-south and whose northern half is turned by about 6 degrees. Both halves must get the vertical gradient, so they are shaded almost alike."
+    }
+  },
+  "light": {
+    "intensity": 1
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -0.0003,
+                -0.0003
+              ],
+              [
+                0.0003,
+                -0.0003
+              ],
+              [
+                0.0003,
+                0
+              ],
+              [
+                0.00033,
+                0.0003
+              ],
+              [
+                -0.0003,
+                0.0003
+              ],
+              [
+                -0.0003,
+                -0.0003
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "pitch": 60,
+  "bearing": -90,
+  "zoom": 15.5,
+  "layers": [
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-height": 30,
+        "fill-extrusion-color": "#ffffff"
+      }
+    }
+  ]
+}

@@ -13,9 +13,10 @@ import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-import {bisect, sampleAt, isBelowTerrainSample, type Terrain, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
 
 import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {Terrain} from '../../render/terrain.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -34,6 +35,19 @@ type RaySegment = {
 const TARGET_WORLD_STEP_PX = 4;
 const MAX_SAMPLES = 512;
 const MERCATOR_BISECT_EPSILON_WORLD_PX = 1e-3;
+/**
+ * How many times {@link MercatorTransform.recalculateZoomAndCenter} picks the terrain under the center and moves the
+ * center onto it, and how far above or below the terrain a center may stay. Each pass keeps the camera where it is,
+ * so the center's latitude changes the mercator scale the next pass sees and the terrain pick moves with it; the
+ * remainder shrinks by the scale difference each pass, from meters to under a millimeter on the second.
+ */
+const CENTER_ON_TERRAIN_PASSES = 3;
+const CENTER_ON_TERRAIN_TOLERANCE_M = 0.0001;
+/**
+ * The clip-space depth of the near clipping plane, where the ray segment through a screen pixel starts for a terrain
+ * pick so that it holds all the view shows; see `getRaySegmentFromPixel`.
+ */
+const NEAR_PLANE_CLIP_Z = -1;
 
 /**
  * @internal
@@ -337,10 +351,14 @@ export class MercatorTransform implements ITransform {
     }
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
-        // find position the camera is looking on
-        const center = this.screenPointToLocation(this.centerPoint, terrain);
-        const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
-        this._helper.recalculateZoomAndCenter(elevation);
+        for (let pass = 0; pass < CENTER_ON_TERRAIN_PASSES; pass++) {
+            // find position the camera is looking on
+            const center = (terrain && this._terrainPointPastMaxZoom(terrain)) || this.screenPointToLocation(this.centerPoint, terrain);
+            const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
+            if (this.pitch < 90 && elevation >= this.getCameraAltitude()) return;
+            this._helper.recalculateZoomAndCenter(elevation);
+            if (!terrain || Math.abs(terrain.getElevationForLngLat(this.center, this) - this.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return;
+        }
     }
 
     /**
@@ -389,12 +407,34 @@ export class MercatorTransform implements ITransform {
         return this.screenPointToMercatorCoordinateAtZ(p);
     }
 
+    /**
+     * Where the center ray meets the terrain beyond the distance at which the center sits from the camera at maxZoom,
+     * if the ray is above the terrain there; null otherwise. A center on nearer terrain needs a zoom past maxZoom, which
+     * `setZoom` clamps by moving the camera back, so once the ray has cleared a bump nearer than that, the center goes
+     * to the terrain behind it. Where maxZoom lets the camera nearer than the near clipping plane, the ray is followed
+     * from that plane, like every terrain pick.
+     */
+    private _terrainPointPastMaxZoom(terrain: Terrain): LngLat | null {
+        const index = terrain.getCoverageIndex();
+        if (!index) return null;
+        const {near, far} = this.getRaySegmentFromPixel(this.centerPoint, NEAR_PLANE_CLIP_Z);
+        const distanceAtMaxZoom = this.cameraToCenterDistance * zoomScale(this.zoom - this.maxZoom);
+        const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - this.nearZ) / (this.farZ - this.nearZ)));
+        if (isBelowTerrainSample(sampleAt(index, terrain.exaggeration, start[0] / this.worldSize, start[1] / this.worldSize), start[2])) return null;
+        return this._raycastTerrain(start, far, terrain)?.toLngLat() ?? null;
+    }
+
     /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        const {near, far} = this.getRaySegmentFromPixel(p, NEAR_PLANE_CLIP_Z);
+        return this._raycastTerrain(near, far, terrain);
+    }
+
+    /** The first point where the segment from `near` to `far` enters the terrain from above, or null. */
+    private _raycastTerrain(near: vec3, far: vec3, terrain: Terrain): MercatorCoordinate | null {
         const index = terrain.getCoverageIndex();
         if (!index) return null;
 
-        const {near, far} = this.getRaySegmentFromPixel(p);
         const worldSize = this.worldSize;
         const dx = far[0] - near[0];
         const dy = far[1] - near[1];
@@ -444,10 +484,13 @@ export class MercatorTransform implements ITransform {
     }
 
     /**
-     * Returns the segment of the ray through the given screen pixel that lies inside the view frustum.
+     * Returns the segment of the ray through the given screen pixel from its point at depth `clipZ` in clip space to the
+     * far clipping plane. The default of 0 lies at about twice the near clipping plane's distance from the camera, which
+     * is all a plane intersection needs; `NEAR_PLANE_CLIP_Z` starts the segment at the near clipping plane, so it holds
+     * all the view shows, as terrain picks need.
      */
-    private getRaySegmentFromPixel(p: Point): RaySegment {
-        const coord0 = [p.x, p.y, 0, 1] as vec4;
+    private getRaySegmentFromPixel(p: Point, clipZ: number = 0): RaySegment {
+        const coord0 = [p.x, p.y, clipZ, 1] as vec4;
         const coord1 = [p.x, p.y, 1, 1] as vec4;
 
         vec4.transformMat4(coord0, coord0, this._pixelMatrixInverse);
@@ -488,13 +531,21 @@ export class MercatorTransform implements ITransform {
      * @returns screen point. Point will be outside the viewport if the coordinate is behind the camera.
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, pixelMatrix);
+        const p = this._coordinateClipPoint(coord, elevation, pixelMatrix);
         const w = p[3];
         if (w > 0) {
             return new Point(p[0] / w, p[1] / w);
         }
         return this._offScreenPointBehindCamera(p[0], p[1], w);
+    }
+
+    /**
+     * The coordinate in the clip space of `pixelMatrix`: pixel x and y and NDC depth, each times `w`, which is positive
+     * in front of the camera.
+     */
+    private _coordinateClipPoint(coord: MercatorCoordinate, elevation: number, pixelMatrix: mat4): vec4 {
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
+        return vec4.transformMat4(p, p, pixelMatrix);
     }
 
     /**
@@ -536,7 +587,7 @@ export class MercatorTransform implements ITransform {
         if (terrain) {
             return this.screenTerrainPointToMercatorCoordinate(p, terrain) != null;
         }
-        return (p.y > this.height / 2 - getMercatorHorizon(this));
+        return (p.y > this.centerPoint.y - getMercatorHorizon(this));
     }
 
     /**
@@ -610,7 +661,9 @@ export class MercatorTransform implements ITransform {
         let maxX = worldSize;
         let scaleY = 0;
         let scaleX = 0;
-        const {x: screenWidth, y: screenHeight} = this.size;
+        const {top = 0, bottom = 0, left = 0, right = 0} = this.padding;
+        const screenWidth = this.width - left - right;
+        const screenHeight = this.height - top - bottom;
 
         if (this._helper._latRange) {
             const latRange = this._helper._latRange;
@@ -878,13 +931,6 @@ export class MercatorTransform implements ITransform {
         return camMercator.toLngLat();
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        const coord = MercatorCoordinate.fromLngLat(lngLat);
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, this._viewProjMatrix);
-        return (p[2] / p[3]);
-    }
-
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
         const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
@@ -908,8 +954,22 @@ export class MercatorTransform implements ITransform {
         };
     }
 
-    isLocationOccluded(_: LngLat): boolean {
-        return false;
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+        if (!terrain?.getCoverageIndex()) return false;
+
+        const location = MercatorCoordinate.fromLngLat(lngLat);
+        elevation ??= terrain.getElevationForLngLat(lngLat, this);
+        const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
+        const w = clip[3];
+        if (w <= 0 || clip[2] > w) return true;
+        const p = new Point(clip[0] / w, clip[1] / w);
+
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        if (hit == null) return false;
+        const segment = this.getRaySegmentFromPixel(p, NEAR_PLANE_CLIP_Z);
+        const tLocation = raySegmentParameter(segment, location.x * this.worldSize, location.y * this.worldSize, elevation);
+        return raySegmentParameter(segment, hit.x * this.worldSize, hit.y * this.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }
 
     getPixelScale(): number {
@@ -989,10 +1049,28 @@ export class MercatorTransform implements ITransform {
     }
 }
 
+/**
+ * Creates a transform for the mercator projection.
+ */
+export function createMercatorTransform(options?: TransformOptions): MercatorTransform {
+    return new MercatorTransform(options);
+}
+
 function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {
     return sampleAt(ray.index, ray.exaggeration, (ray.near[0] + t * ray.dx) / ray.worldSize, (ray.near[1] + t * ray.dy) / ray.worldSize);
 }
 
 function mercatorIsBelowTerrain(ray: MercatorRay, t: number): boolean {
     return isBelowTerrainSample(mercatorSampleAt(ray, t), ray.near[2] + t * ray.dz);
+}
+
+/**
+ * Where the point of `segment` closest to the given world pixel position and elevation lies along it,
+ * as the fraction from `near` (0) to `far` (1).
+ */
+function raySegmentParameter({near, far}: RaySegment, worldX: number, worldY: number, elevation: number): number {
+    const dx = far[0] - near[0];
+    const dy = far[1] - near[1];
+    const dz = far[2] - near[2];
+    return ((worldX - near[0]) * dx + (worldY - near[1]) * dy + (elevation - near[2]) * dz) / (dx * dx + dy * dy + dz * dz);
 }

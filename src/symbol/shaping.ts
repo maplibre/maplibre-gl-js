@@ -18,8 +18,8 @@ import {TextFit} from '../style/style_image.ts';
 import {IMAGE_PADDING} from '../render/image_atlas.ts';
 
 import type {ImagePosition} from '../render/image_atlas.ts';
-import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.ts';
-import type {Rect, GlyphPosition} from '../render/glyph_atlas.ts';
+import type {GlyphMap, GlyphMetrics} from '../style/style_glyph.ts';
+import type {Rect, GlyphPosition, GlyphPositions} from '../render/glyph_atlas.ts';
 import type {Formatted, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
@@ -258,8 +258,8 @@ function taggedLineFromPlugin(
 
 function shapeText(
     text: Formatted,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
     imagePositions: Record<string, ImagePosition>,
     defaultFontStack: string,
     maxWidth: number,
@@ -364,7 +364,7 @@ function getVerticalAlignFactor(
 
 function getRectAndMetrics(
     glyphPosition: GlyphPosition,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    glyphMap: GlyphMap,
     section: TextSectionOptions,
     key: string
 ): GlyphPosition | null {
@@ -372,7 +372,7 @@ function getRectAndMetrics(
         return glyphPosition;
     }
 
-    const glyphs = glyphMap[section.fontStack];
+    const glyphs = glyphMap[section.fontStack]?.default;
     const glyph = glyphs?.[key];
     if (!glyph) return null;
 
@@ -508,8 +508,8 @@ function determineLineVerticals(line: TaggedString): boolean[] {
  * does -- which is what a style declaring no `font-faces` keeps doing.
  */
 function shapeLines(shaping: Shaping,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
     imagePositions: Record<string, ImagePosition>,
     lines: TaggedString[],
     lineHeight: number,
@@ -558,7 +558,7 @@ function shapeLines(shaping: Shaping,
             const codePoint = grapheme.codePointAt(0);
             const vertical = lineVerticals ? lineVerticals[i] : isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
-            const keys = 'fontStack' in section && isCluster(grapheme) && !glyphMap[section.fontStack]?.[grapheme] ?
+            const keys = 'fontStack' in section && isCluster(grapheme) && !glyphMap[section.fontStack]?.default?.[grapheme] ?
                 [...grapheme] :
                 [grapheme];
 
@@ -645,10 +645,10 @@ function shapeTextSection(
     key: string,
     vertical: boolean,
     lineShapingSize: LineShapingSize,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
 ): ShapingSectionAttributes | null {
-    const positions = glyphPositions[section.fontStack];
+    const positions = glyphPositions[section.fontStack]?.default;
     const glyphPosition = positions?.[key];
 
     const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, key);

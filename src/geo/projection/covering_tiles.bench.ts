@@ -1,8 +1,8 @@
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 import {LngLat} from '../lng_lat.ts';
 import {coveringTiles} from './covering_tiles.ts';
-import {MercatorTransform} from './mercator_transform.ts';
-import {GlobeTransform} from './globe_transform.ts';
+import {createMercatorTransform} from './mercator_transform.ts';
+import {createGlobeTransform} from './globe_transform.ts';
 
 import type {ITransform} from '../transform_interface.ts';
 
@@ -21,20 +21,19 @@ function coverWithPitch(transform: ITransform, pitch: number): void {
     }
 }
 
-describe('coveringTiles', () => {
-    bench('mercator', () => {
-        coverWithPitch(new MercatorTransform(), 0);
-    });
-
-    bench('mercator pitched', () => {
-        coverWithPitch(new MercatorTransform(), 60);
-    });
-
-    bench('globe', () => {
-        coverWithPitch(new GlobeTransform(), 0);
-    });
-
-    bench('globe pitched', () => {
-        coverWithPitch(new GlobeTransform(), 60);
-    });
+test('coveringTiles', async ({bench}) => {
+    await bench.compare(
+        bench('mercator', () => {
+            coverWithPitch(createMercatorTransform(), 0);
+        }),
+        bench('mercator pitched', () => {
+            coverWithPitch(createMercatorTransform(), 60);
+        }),
+        bench('globe', () => {
+            coverWithPitch(createGlobeTransform(), 0);
+        }),
+        bench('globe pitched', () => {
+            coverWithPitch(createGlobeTransform(), 60);
+        }),
+    );
 });

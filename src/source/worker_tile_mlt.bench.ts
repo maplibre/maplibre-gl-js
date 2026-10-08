@@ -1,5 +1,5 @@
 import {readFileSync} from 'fs';
-import {bench} from 'vitest';
+import {test} from 'vitest';
 import {derefLayers} from '@maplibre/maplibre-gl-style-spec';
 import {WorkerTile} from './worker_tile.ts';
 import {MLTVectorTile} from './vector_tile_mlt.ts';
@@ -72,11 +72,14 @@ function parseFixture(fixture: MltFixture): () => Promise<unknown> {
     };
 }
 
-for (const fixture of fixtures) {
+const parsers = await Promise.all(fixtures.map(async (fixture) => {
     const parse = parseFixture(fixture);
     await parse();
+    return {name: fixture.name, parse};
+}));
 
-    bench(fixture.name, async () => {
+test('WorkerTile.parse (MLT)', async ({bench}) => {
+    await bench.compare(...parsers.map(({name, parse}) => bench(name, async () => {
         await parse();
-    });
-}
+    })));
+});

@@ -225,7 +225,7 @@ export class TileManager extends Evented<SourceEventType> {
             this._source.prepare();
         }
 
-        this._state.coalesceChanges(this._inViewTiles, this.map ? this.map.painter : null);
+        this._state.coalesceChanges(this._inViewTiles, this.style);
         for (const tile of this._inViewTiles.getAllTiles()) {
             tile.upload(context);
             tile.prepare(this.map.style.imageManager);
@@ -323,7 +323,7 @@ export class TileManager extends Evented<SourceEventType> {
         // Reset feature state revision so initializeTileState re-applies
         // feature state to the tile's new bucket data after a reload.
         tile.featureStateRevision = -1;
-        this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+        this._state.initializeTileState(tile, this.style);
 
         if (!tile.aborted) {
             this._source.fire(new MapSourceDataEvent('data', {tile, coord: tile.tileID}));
@@ -499,7 +499,8 @@ export class TileManager extends Evented<SourceEventType> {
     /**
      * The highest elevation this source's symbols may reach, in meters: `symbol-height-offset`
      * constants read from the visible symbol layers, data-driven maxima tracked by the loaded
-     * buckets at layout time. The value is a high-water mark: a maximum seen once is kept even
+     * buckets at layout time. Only data-driven layers scan the loaded tiles, so styles without
+     * them pay nothing beyond the layer loop. The value is a high-water mark: a maximum seen once is kept even
      * after its tile unloads, otherwise dropping the tile would also drop the reason to keep it,
      * and the tile could not come back while its content is still visible. The mark resets with
      * the tiles in `clearTiles`.
@@ -514,7 +515,9 @@ export class TileManager extends Evented<SourceEventType> {
             if (layer.type !== 'symbol' || layer.source !== this.id || layer.isHidden(this.transform.zoom)) continue;
             const symbolLayer = layer as SymbolStyleLayer;
             if (!symbolLayer.layout) continue;
-            maxElevation = Math.max(maxElevation, symbolLayer.layout.get('symbol-height-offset').constantOr(0));
+            const heightOffset = symbolLayer.layout.get('symbol-height-offset');
+            maxElevation = Math.max(maxElevation, heightOffset.constantOr(0));
+            if (heightOffset.isConstant()) continue;
             for (const tile of tiles) {
                 const bucket = tile.getBucket(layer) as SymbolBucket;
                 if (bucket && bucket.maxHeightOffset > maxElevation) {
@@ -740,7 +743,7 @@ export class TileManager extends Evented<SourceEventType> {
 
             // set the tileID because the cached tile could have had a different wrap value
             tile.tileID = tileID;
-            this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+            this._state.initializeTileState(tile, this.style);
         }
 
         const cached = tile;

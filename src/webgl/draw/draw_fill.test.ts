@@ -4,15 +4,15 @@ import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
 import {Painter} from '../../render/painter.ts';
-import {createRenderContext} from '../../render/render_context.ts';
+import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {Program} from '../program.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {drawFill} from './draw_fill.ts';
 import {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
+import {createFrameRenderData} from '../../util/test/util.ts';
 
 import type {ProgramConfiguration, ProgramConfigurationSet} from '../../data/program_configuration.ts';
-import type {Style} from '../../style/style.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
@@ -36,10 +36,11 @@ describe('drawFill', () => {
     test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
 
         const painterMock: Painter = constructMockPainter();
+        const frameRenderContext = constructFrameRenderContext(painterMock);
         const layer: FillStyleLayer = constructMockLayer();
 
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        (vi.mocked(painterMock.useProgram)).mockReturnValue(programMock);
+        vi.spyOn(frameRenderContext, 'useProgram').mockReturnValue(programMock);
 
         const mockTile = constructMockTile(layer);
 
@@ -47,7 +48,7 @@ describe('drawFill', () => {
         (vi.mocked(tileManagerMock.getTile)).mockReturnValue(mockTile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], painterMock.renderContext);
+        drawFill(painterMock, tileManagerMock, layer, [mockTile.tileID], frameRenderContext);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);
@@ -85,14 +86,19 @@ describe('drawFill', () => {
     }
 
     function constructMockPainter(): Painter {
-        const painterMock = new Painter(null, null);
+        const painterMock = new Painter(null);
         painterMock.context = {
             gl: {},
             activeTexture: {
                 set: () => {}
             }
         } as any;
-        painterMock.transform = {
+
+        return painterMock;
+    }
+
+    function constructFrameRenderContext(painter: Painter): FrameRenderContext {
+        const transform = {
             pitch: 0,
             labelPlaneMatrix: mat4.create(),
             zoom: 0,
@@ -108,16 +114,7 @@ describe('drawFill', () => {
                 };
             },
         } as any as IReadonlyTransform;
-        painterMock.renderContext = createRenderContext(painterMock.transform, undefined, null);
-        painterMock.renderContext.currentPass = 'translucent';
-        painterMock.options = {} as any;
-        painterMock.style = {
-            map: {
-                projection: {}
-            }
-        } as any as Style;
-
-        return painterMock;
+        return new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
     }
 
     function constructMockTile(layer: FillStyleLayer): Tile {

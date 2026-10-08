@@ -299,8 +299,9 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    public isLocationOccluded(location: LngLat): boolean {
-        return this.currentTransform.isLocationOccluded(location);
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+        return this.currentTransform.isLocationOccluded(lngLat, terrain, elevation);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -312,7 +313,7 @@ export class GlobeTransform implements ITransform {
     }
 
     public getCircleRadiusCorrection(): number {
-        return lerp(this._mercatorTransform.getCircleRadiusCorrection(), this._verticalPerspectiveTransform.getCircleRadiusCorrection(), this._globeness);
+        return this.currentTransform.getCircleRadiusCorrection();
     }
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
@@ -377,10 +378,6 @@ export class GlobeTransform implements ITransform {
     /** See {@link getCameraAltitude}. */
     getCameraLngLat(): LngLat {
         return this.currentTransform.getCameraLngLat();
-    }
-
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        return this.currentTransform.lngLatToCameraDepth(lngLat, elevation);
     }
 
     populateCache(coords: OverscaledTileID[]): void {
@@ -468,4 +465,11 @@ export class GlobeTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.currentTransform.getFastPathSimpleProjectionMatrix(tileID);
     }
+}
+
+/**
+ * Creates a transform for the globe projection.
+ */
+export function createGlobeTransform(options?: TransformOptions): GlobeTransform {
+    return new GlobeTransform(options);
 }

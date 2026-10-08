@@ -224,6 +224,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this._setAcceptHeader(params.request);
         params.request.collectResourceTiming = this._collectResourceTiming;
         await this.dispatcher.waitForInitComplete();
+        if (tile.aborted) {
+            return;
+        }
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getReadyActor();
@@ -298,7 +301,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
         tile.etag = data?.etag;
 
-        tile.loadVectorData(data, this.map.painter);
+        tile.loadVectorData(data, this.map.style);
 
         if (tile.reloadPromise) {
             const reloadPromise = tile.reloadPromise;
