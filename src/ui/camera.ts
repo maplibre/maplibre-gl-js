@@ -52,11 +52,11 @@ const MAX_CAMERA_RAISES = 3;
 const MAX_CENTER_OFF_TERRAIN_M = 1;
 
 /**
- * How far the drawn terrain may reach above the maxZoom point on the center ray, see
- * {@link Camera._terrainHeightAboveMaxZoomCenter}, and the point still count as clear: a center on the ground at maxZoom
- * is that point, and two reads of the same surface under it differ by rounding.
+ * How far the drawn terrain may rise above the maxZoom center, see {@link Camera._terrainHeightAboveMaxZoomCenter}, and
+ * still count as below it: a center on the ground at maxZoom is the maxZoom center, and two reads of the same surface
+ * under it differ by rounding.
  */
-const MAX_ZOOM_POINT_CLEARANCE_M = 0.01;
+const MAX_ZOOM_CENTER_TOLERANCE_M = 0.01;
 
 /**
  * Options common to {@link Map.jumpTo}, {@link Map.easeTo}, and {@link Map.flyTo}, controlling the desired location,
@@ -993,8 +993,8 @@ export class Camera extends Evented<MapEventType> {
     holdElevation(tr: ITransform, holder: ElevationHolder): void {
         this.elevationFreeze = true;
         const startedWithoutDem = !!this.terrain && this.getCenterClampedToGround() && !this.terrain.hasElevationForLngLat(tr.center, tr);
-        const reach = this.terrain ? this._terrainHeightAboveMaxZoomCenter(tr) : undefined;
-        this._elevationHold = new ElevationHold(holder, startedWithoutDem, reach !== undefined && reach <= MAX_ZOOM_POINT_CLEARANCE_M);
+        const terrainAboveMaxZoomCenter = this.terrain ? this._terrainHeightAboveMaxZoomCenter(tr) : undefined;
+        this._elevationHold = new ElevationHold(holder, startedWithoutDem, terrainAboveMaxZoomCenter !== undefined && terrainAboveMaxZoomCenter <= MAX_ZOOM_CENTER_TOLERANCE_M);
     }
 
     /**
@@ -1078,11 +1078,11 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Keeps the camera above the terrain for a camera update. While a gesture or an animation holds the center elevation
      * over mercator terrain, below a pitch of 90 degrees with the center clamped to the ground, the held elevation is
-     * lifted on the given transform just far enough that the drawn terrain stays off the maxZoom point on the center ray
-     * once the hold keeps it clear, see {@link ElevationHold.keepsMaxZoomPointClear}, and for a gesture that the camera
-     * and its near clipping plane clear the terrain; the lift is lowered again as the terrain allows, so the hold keeps
-     * its pitch and zoom. The camera of an animation, and of any camera update without a hold, is kept above the
-     * terrain by {@link Camera._raiseCameraByPitchAndZoom} instead.
+     * lifted on the given transform just far enough that the drawn terrain stays below the maxZoom center once the hold
+     * keeps it there, see {@link ElevationHold.keepsTerrainBelowMaxZoomCenter}, so the end does not move the camera
+     * back. A gesture's lift also keeps the camera and its near clipping plane above the terrain, so its pitch and zoom
+     * stay where the user puts them; the camera of an animation, and of any camera update without a hold, is kept above
+     * the terrain by {@link Camera._raiseCameraByPitchAndZoom} instead. The lift is lowered again as the terrain allows.
      * @param tr - the transform the camera update edits
      * @returns the transform to render: `tr`, or its corrected copy
      */
@@ -1093,12 +1093,13 @@ export class Camera extends Evented<MapEventType> {
         }
         const isGesture = hold.holder === 'gesture';
         const lift = hold.lift && hold.lift.heldElevation + hold.lift.height === tr.elevation ? hold.lift : {heldElevation: tr.elevation, height: 0};
-        const reach = this._terrainHeightAboveMaxZoomCenter(tr);
-        if (reach !== undefined && reach <= MAX_ZOOM_POINT_CLEARANCE_M) {
-            hold.keepsMaxZoomPointClear = true;
+        const terrainAboveMaxZoomCenter = this._terrainHeightAboveMaxZoomCenter(tr);
+        if (terrainAboveMaxZoomCenter !== undefined && terrainAboveMaxZoomCenter <= MAX_ZOOM_CENTER_TOLERANCE_M) {
+            hold.keepsTerrainBelowMaxZoomCenter = true;
         }
-        const maxZoomReach = hold.keepsMaxZoomPointClear && reach !== undefined ? reach : -Infinity;
-        const height = Math.max(0, (isGesture ? Math.max(this._terrainHeightAboveCamera(tr), maxZoomReach) : maxZoomReach) + lift.height);
+        const heightForMaxZoomCenter = hold.keepsTerrainBelowMaxZoomCenter && terrainAboveMaxZoomCenter !== undefined ? terrainAboveMaxZoomCenter : -Infinity;
+        const heightForCamera = isGesture ? this._terrainHeightAboveCamera(tr) : -Infinity;
+        const height = Math.max(0, Math.max(heightForCamera, heightForMaxZoomCenter) + lift.height);
         if (height !== lift.height) {
             tr.setElevation(lift.heldElevation + height);
         }
@@ -1170,11 +1171,11 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * How far the drawn terrain reaches above the maxZoom point, the point on the center ray as far from the camera as
-     * the center is at maxZoom, in meters; zero or less while the point is clear, undefined where no terrain is drawn
-     * under it. A hold's end puts the center onto the drawn terrain the center ray meets, with the camera where it is,
-     * see {@link Camera.putCenterBackOnTerrain}; with terrain over the point that is nearer than maxZoom allows, and
-     * `setZoom` clamps the zoom it needs by moving the camera back.
+     * How far the drawn terrain rises above the maxZoom center, the point on the center ray where the center would be
+     * at maxZoom with the camera where it is, in meters; zero or less while the terrain is below it, undefined where no
+     * terrain is drawn under it. A hold's end puts the center onto the drawn terrain the center ray meets, with the
+     * camera where it is, see {@link Camera.putCenterBackOnTerrain}; terrain above the maxZoom center puts it nearer
+     * than maxZoom allows, and `setZoom` clamps the zoom it needs by moving the camera back.
      * @param tr - the transform whose center ray is checked
      */
     _terrainHeightAboveMaxZoomCenter(tr: ITransform): number | undefined {

@@ -29,22 +29,22 @@ export class ElevationHold {
      */
     lift: {heldElevation: number; height: number} | null = null;
     /**
-     * Whether {@link Camera._keepCameraAboveTerrain} keeps the drawn terrain off the maxZoom point on the center ray, see
-     * {@link Camera._terrainHeightAboveMaxZoomCenter}: from the start of a hold that starts with the point clear, as on
-     * the ground at rest, or from the first frame it is clear. A hold that starts with terrain over the point, as behind
-     * a crest, leaves it there.
+     * Whether {@link Camera._keepCameraAboveTerrain} keeps the drawn terrain below the maxZoom center, see
+     * {@link Camera._terrainHeightAboveMaxZoomCenter}: from the start of a hold that starts with the terrain below it, as
+     * on the ground at rest, or from the first frame the terrain is below it. A hold that starts with the terrain above
+     * it, as behind a crest, leaves the terrain there.
      */
-    keepsMaxZoomPointClear: boolean;
+    keepsTerrainBelowMaxZoomCenter: boolean;
     private _terrainChanged = false;
 
     /**
      * @param holder - who holds the elevation
      * @param startedWithoutDem - whether the hold started without DEM data under the center, and so waits for it
-     * @param maxZoomPointClear - whether the maxZoom point is clear of drawn terrain when the hold starts
+     * @param terrainBelowMaxZoomCenter - whether the drawn terrain is below the maxZoom center when the hold starts
      */
-    constructor(readonly holder: ElevationHolder, startedWithoutDem: boolean, maxZoomPointClear: boolean) {
+    constructor(readonly holder: ElevationHolder, startedWithoutDem: boolean, terrainBelowMaxZoomCenter: boolean) {
         this._dem = startedWithoutDem ? 'awaiting' : 'loaded';
-        this.keepsMaxZoomPointClear = maxZoomPointClear;
+        this.keepsTerrainBelowMaxZoomCenter = terrainBelowMaxZoomCenter;
     }
 
     /** Whether the hold waited for DEM data under the center and took the data of the tile there. */
