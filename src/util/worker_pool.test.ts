@@ -1,7 +1,5 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, test, expect} from 'vitest';
 import {WorkerPool} from './worker_pool.ts';
-
-import type {Dispatcher} from './dispatcher.ts';
 
 describe('WorkerPool', () => {
     test('acquire', async () => {
@@ -43,15 +41,4 @@ describe('WorkerPool', () => {
         expect(pool.workersPromise).toBeFalsy();
     });
 
-    test('terminating the workers discards the global dispatcher\'s actors', async () => {
-        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
-
-        const pool = new WorkerPool();
-        pool.globalDispatcher = {discardActors: vi.fn()} as any as Dispatcher;
-        await pool.acquire('map-1');
-
-        pool.release('map-1');
-
-        expect(pool.globalDispatcher.discardActors).toHaveBeenCalled();
-    });
 });

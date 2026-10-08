@@ -50,6 +50,7 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
                 promises.push(workerFactory());
             }
             this.workersPromise = Promise.all(promises);
+            this.globalDispatcher?.getActors();
             this.fire('create');
         }
         return (await this.workersPromise).slice();

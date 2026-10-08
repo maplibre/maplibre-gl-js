@@ -142,13 +142,17 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
 /** The one dispatcher whose use of the workers is not a claim: its actors live and die with them. */
 class GlobalDispatcher extends Dispatcher {
+    constructor(workerPool: WorkerPool) {
+        super(workerPool, GLOBAL_DISPATCHER_ID);
+        workerPool.globalDispatcher = this;
+    }
+
     protected override acquireWorkers(): Promise<ActorTarget[]> {
         return this.workerPool.ensureWorkers();
     }
 }
 
-const globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
-getGlobalWorkerPool().globalDispatcher = globalDispatcher;
+const globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool());
 globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
     return makeRequest(params, abortController);
 });
@@ -233,10 +237,6 @@ export async function importScriptInWorkers(workerUrl: string): Promise<void> {
     scriptsImportedIntoWorkers.add(workerUrl);
     await dispatcher.broadcast(MessageType.importScript, workerUrl);
 }
-
-onGlobalWorkersCreated(() => {
-    globalDispatcher.getActors();
-});
 
 onGlobalWorkersCreated(() => {
     for (const url of scriptsImportedIntoWorkers) {
