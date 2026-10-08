@@ -313,7 +313,7 @@ export class GlobeTransform implements ITransform {
     }
 
     public getCircleRadiusCorrection(): number {
-        return lerp(this._mercatorTransform.getCircleRadiusCorrection(), this._verticalPerspectiveTransform.getCircleRadiusCorrection(), this._globeness);
+        return this.currentTransform.getCircleRadiusCorrection();
     }
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
