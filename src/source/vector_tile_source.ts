@@ -285,10 +285,11 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     }
 
     private _setAcceptHeader(request: RequestParameters) {
-        request.headers ??= {};
-        request.headers.Accept ??= this.encoding === 'mlt'
-            ? 'application/vnd.maplibre-tile'
-            : 'application/vnd.mapbox-vector-tile';
+        // purposely only for MLT and not for MVT/raster: https://github.com/maplibre/maplibre-native/pull/4231#discussion_r4216650681
+        if (this.encoding === 'mlt') {
+            request.headers ??= {};
+            request.headers.Accept ??= 'application/vnd.maplibre-tile';
+        }
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
