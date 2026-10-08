@@ -7,7 +7,7 @@ uniform vec2 u_translate;
 layout(location = 0) in ivec2 a_pos;
 
 out vec3 v_data;
-flat out float v_visibility;
+out float v_visibility;
 
 #pragma maplibre: define highp vec4 color
 #pragma maplibre: define mediump float radius

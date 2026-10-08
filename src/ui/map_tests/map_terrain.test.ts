@@ -4,7 +4,7 @@ import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {LngLat, earthRadius} from '../../geo/lng_lat.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
 import {ImageRequest} from '../../util/image_request.ts';
@@ -358,7 +358,7 @@ describe('getCameraTargetElevation', () => {
 
         map.terrain = {} as Terrain;
 
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
         transform.setCenter(new LngLat(10.0, 50.0));
         transform.setZoom(14);
@@ -1636,7 +1636,7 @@ describe('queryTerrainElevation', () => {
     test('calls getElevationForLngLat with the location and the transform', () => {
         const getElevationForLngLat = vi.fn();
         map.terrain = {getElevationForLngLat} as any as Terrain;
-        map._camera.transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        map._camera.transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 
         map.queryTerrainElevation([1, 2]);
 

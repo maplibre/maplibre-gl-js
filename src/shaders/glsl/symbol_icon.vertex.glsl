@@ -23,7 +23,7 @@ uniform bool u_is_offset;
 uniform bool u_height_anchor_ground;
 
 out vec2 v_tex;
-flat out float v_total_opacity;
+out float v_total_opacity;
 
 #pragma maplibre: define lowp float opacity
 
