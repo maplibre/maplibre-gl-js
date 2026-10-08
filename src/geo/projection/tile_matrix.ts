@@ -13,3 +13,16 @@ export type TileMatrix = {
      */
     extentAtZoom0: number;
 };
+
+/** WGS84 spherical radius used by EPSG:3857, distinct from the mean earth radius MercatorCoordinate is built on. */
+const EPSG3857_RADIUS = 6378137;
+
+/**
+ * @internal
+ * The EPSG:3857 tile matrix in meters, the grid of the mercator, globe and vertical-perspective projections:
+ * tile 0/0/0 spans half the circumference in every direction from the origin.
+ */
+export const mercatorTileMatrix: TileMatrix = {
+    origin: [-Math.PI * EPSG3857_RADIUS, Math.PI * EPSG3857_RADIUS],
+    extentAtZoom0: 2 * Math.PI * EPSG3857_RADIUS,
+};

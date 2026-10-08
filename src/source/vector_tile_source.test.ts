@@ -398,6 +398,42 @@ describe('VectorTileSource', () => {
         expect(source.hasTile(new OverscaledTileID(3, 0, 3, 4, firstRowOnlyMercatorWouldInclude))).toBeFalsy();
     });
 
+    test('expands {bbox} in the map projection\'s tile grid', async () => {
+        const source = new VectorTileSource('id', {
+            type: 'vector',
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/?bbox={bbox}']
+        }, getMockDispatcher(), undefined);
+        source.onAdd({
+            transform: {showCollisionBoxes: false},
+            _getMapId: () => 1,
+            _requestManager: new RequestManager(),
+            style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs))},
+            getGlobalState: () => ({}),
+            getPixelRatio() { return 1; },
+        } as any as Map);
+        let receivedMessage: ActorMessage<MessageType> = null;
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                receivedMessage = message;
+                return Promise.resolve({});
+            }
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(1, 0, 1, 1, 0),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        const northEastQuarterOfTheSimpleGrid = 'http://example.com/?bbox=0,0,90,90';
+        expect((receivedMessage.data as WorkerTileParameters).request.url).toBe(northEastQuarterOfTheSimpleGrid);
+    });
+
     test('respects TileJSON.bounds when loaded from TileJSON', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,

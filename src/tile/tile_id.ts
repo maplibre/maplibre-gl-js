@@ -4,6 +4,7 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {type Mat4f32, MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds.ts';
+import {mercatorTileMatrix, type TileMatrix} from '../geo/projection/tile_matrix.ts';
 
 import type {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 
@@ -34,9 +35,10 @@ export class CanonicalTileID implements ICanonicalTileID {
 
     /**
      * given a list of urls, choose a url template and return a tile URL
+     * @param tileMatrix - the tile grid the `{bbox}` token is expressed in, the map projection's; optional only because
+     * the style spec's `ICanonicalTileID.url` has three parameters, and absent means the EPSG:3857 grid of `{bbox-epsg-3857}`
      */
-    url(urls: string[], pixelRatio: number, scheme?: string | null): string {
-        const bbox = getTileBBox(this.x, this.y, this.z);
+    url(urls: string[], pixelRatio: number, scheme?: string | null, tileMatrix: TileMatrix = mercatorTileMatrix): string {
         const quadkey = getQuadkey(this.z, this.x, this.y);
 
         return urls[(this.x + this.y) % urls.length]
@@ -46,7 +48,8 @@ export class CanonicalTileID implements ICanonicalTileID {
             .replace(/{y}/g, String(scheme === 'tms' ? (Math.pow(2, this.z) - this.y - 1) : this.y))
             .replace(/{ratio}/g, pixelRatio > 1 ? '@2x' : '')
             .replace(/{quadkey}/g, quadkey)
-            .replace(/{bbox-epsg-3857}/g, bbox);
+            .replace(/{bbox-epsg-3857}/g, () => getTileMatrixBBox(this.x, this.y, this.z, mercatorTileMatrix))
+            .replace(/{bbox}/g, () => getTileMatrixBBox(this.x, this.y, this.z, tileMatrix));
     }
 
     isChildOf(parent: ICanonicalTileID): boolean {
@@ -282,33 +285,20 @@ export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x
     return (dim * dim * wrap + dim * y + x).toString(36) + z.toString(36) + overscaledZ.toString(36);
 }
 
-/** WGS84 spherical radius used by EPSG:3857, distinct from the mean earth radius MercatorCoordinate is built on. */
-const EPSG3857_RADIUS = 6378137;
-const EPSG3857_HALF_CIRCUMFERENCE = Math.PI * EPSG3857_RADIUS;
-
 /**
- * Builds the `{bbox-epsg-3857}` token used in WMS tile URLs: the tile's bounding
- * box in EPSG:3857 meters as a `minX,minY,maxX,maxY` string.
+ * Builds the `{bbox}` and `{bbox-epsg-3857}` tokens used in WMS tile URLs: the tile's bounding box in the tile matrix's
+ * CRS units as a `minX,minY,maxX,maxY` string, y up.
  *
- * Inlined from the archived \@mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
+ * The EPSG:3857 form of this formula was inlined from the archived \@mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
  */
-function getTileBBox(x: number, y: number, z: number): string {
-    // for Google/OSM tile scheme we need to alter the y
-    y = Math.pow(2, z) - y - 1;
+function getTileMatrixBBox(x: number, y: number, z: number, tileMatrix: TileMatrix): string {
+    const tilesAtZoom = Math.pow(2, z);
+    const tileExtent = tileMatrix.extentAtZoom0 / tilesAtZoom;
+    const [gridMinX, gridMaxY] = tileMatrix.origin;
+    const gridMinY = gridMaxY - tileMatrix.extentAtZoom0;
+    const rowFromBottom = tilesAtZoom - y - 1;
 
-    const min = getEpsg3857Coords(x * 256, y * 256, z);
-    const max = getEpsg3857Coords((x + 1) * 256, (y + 1) * 256, z);
-
-    return `${min[0]},${min[1]},${max[0]},${max[1]}`;
-}
-
-/** Projects tile pixel coordinates to EPSG:3857 meters. */
-function getEpsg3857Coords(x: number, y: number, z: number): [number, number] {
-    const resolution = (2 * EPSG3857_HALF_CIRCUMFERENCE / 256) / Math.pow(2, z);
-    const mercX = x * resolution - EPSG3857_HALF_CIRCUMFERENCE;
-    const mercY = y * resolution - EPSG3857_HALF_CIRCUMFERENCE;
-
-    return [mercX, mercY];
+    return `${gridMinX + x * tileExtent},${gridMinY + rowFromBottom * tileExtent},${gridMinX + (x + 1) * tileExtent},${gridMinY + (rowFromBottom + 1) * tileExtent}`;
 }
 
 function getQuadkey(z:number, x:number, y:number): string {

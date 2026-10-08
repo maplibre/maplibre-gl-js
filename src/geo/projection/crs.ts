@@ -59,6 +59,9 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
     get name(): string {
         return this._definition.name;
     }
+    get tileMatrix(): TileMatrix {
+        return this._definition.tileMatrix;
+    }
     worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate {
         const [crsX, crsY] = this._definition.project(lng, lat);
         return new MercatorCoordinate((crsX - this._originX) / this._extent, (this._originY - crsY) / this._extent, altitude === undefined ? 0 : altitude / this._extent);
