@@ -1511,42 +1511,59 @@ describe('Terrain changing under and around a gesture', () => {
         expect(Math.max(...southwardMoves)).toBeLessThanOrEqual(0);
     });
 
-    test('a drag at maxZoom toward terrain rising nearer than maxZoom allows eases the camera back at its end instead of jumping', async () => {
+    test('a drag at maxZoom toward terrain rising nearer than maxZoom allows ends with the camera where the drag left it', async () => {
         const slopeRisingNorth: TerrainHeight = (_lng, lat) => Math.max(0, 0.5 * (lat * metersPerDegree - 20));
         const {map, frame} = await createMapOverShapedTerrain({zoom: 18, pitch: 70, maxPitch: 85, maxZoom: 18}, slopeRisingNorth, 0, 1000);
         simulate.dragInMoves(map.getCanvas(), [100, 50], [100, 150], movesPerDrag, frame);
         renderFrames(frame, 10);
+        const camera = cameraPosition(map);
 
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 100, clientY: 150});
-        const moves = cameraMovesOverFrames(map, frame, 40);
+        renderFrames(frame, 30);
 
-        expect(map.isMoving()).toBe(false);
-        expect(Math.max(...moves)).toBeLessThan(6);
+        expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
     });
 
-    test('a flick at maxZoom toward terrain rising nearer than maxZoom allows eases the camera back after its inertia instead of jumping', async () => {
+    test('a flick at maxZoom toward terrain rising nearer than maxZoom allows never moves the camera back, through the inertia after it', async () => {
         const slopeRisingNorth: TerrainHeight = (_lng, lat) => Math.max(0, 0.5 * (lat * metersPerDegree - 20));
         const {map, frame} = await createMapOverShapedTerrain({zoom: 18, pitch: 70, maxPitch: 85, maxZoom: 18}, slopeRisingNorth, 0, 1000);
         simulate.dragInMoves(map.getCanvas(), [100, 50], [100, 150], 6, frame);
 
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 100, clientY: 150});
-        const moves = cameraMovesOverFrames(map, frame, 90);
+        const southwardMoves = southwardCameraMovesOverFrames(map, frame, 90);
 
         expect(map.isMoving()).toBe(false);
-        expect(Math.max(...moves)).toBeLessThan(10);
+        expect(Math.max(...southwardMoves)).toBeLessThanOrEqual(0);
     });
 
-    test('a rotate drag below maxZoom that swings a ridge between the camera and the center, nearer than maxZoom allows, eases the camera back at its end instead of jumping', async () => {
+    test('a rotate drag below maxZoom that swings a ridge between the camera and the center, nearer than maxZoom allows, ends with the camera where the drag left it', async () => {
         const ridgeWestOfTheCenter: TerrainHeight = (lng) => Math.abs(lng * metersPerDegree + 36) < 8 ? 30 : 0;
         const {map, frame} = await createMapOverShapedTerrain({zoom: 17.5, pitch: 75, maxPitch: 85, maxZoom: 18}, ridgeWestOfTheCenter, 0, 30);
         simulate.dragInMoves(map.getCanvas(), [100, 100], [212, 100], movesPerDrag, frame, 2);
         renderFrames(frame, 10);
+        const camera = cameraPosition(map);
 
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 212, clientY: 100});
-        const moves = cameraMovesOverFrames(map, frame, 40);
+        renderFrames(frame, 30);
 
-        expect(map.isMoving()).toBe(false);
-        expect(Math.max(...moves)).toBeLessThan(12);
+        expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
+    });
+
+    test('a drag at maxZoom that starts before terrain is drawn, then runs into terrain rising nearer than maxZoom allows, ends with the camera where the drag left it', async () => {
+        const slopeRisingNorth: TerrainHeight = (_lng, lat) => Math.max(0, 0.5 * (lat * metersPerDegree - 20));
+        const {map, frame} = await createMapOverShapedTerrain({zoom: 18, pitch: 70, maxPitch: 85, maxZoom: 18}, slopeRisingNorth, 0, 1000);
+        const drawn = map.terrain.getCoverageIndex();
+        const coverageIndex = vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(null);
+        simulate.dragInMoves(map.getCanvas(), [100, 50], [100, 55], 1, frame);
+        coverageIndex.mockReturnValue(drawn);
+        simulate.dragInMoves(map.getCanvas(), [100, 55], [100, 150], movesPerDrag, frame);
+        renderFrames(frame, 10);
+        const camera = cameraPosition(map);
+
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 100, clientY: 150});
+        renderFrames(frame, 30);
+
+        expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
     });
 
     test('a wheel zoom over a rise in the terrain under the center that is not drawn yet leaves the held center elevation alone', async () => {

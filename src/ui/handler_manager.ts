@@ -191,9 +191,8 @@ export class HandlerManager {
      * movement end. It holds the center elevation (see {@link Camera.holdElevation}), which
      * {@link Camera._keepCameraAboveTerrain} may raise to keep the camera out of the terrain and lower again, and a
      * frame that zooms in moves the held center onto the terrain the camera looks at, with the camera where it is
-     * (see {@link Camera.moveCenterOntoTerrain}); its end puts the center back onto the terrain, easing the camera there
-     * where that needs a zoom past maxZoom (see {@link Camera.putCenterBackOnTerrain}), or at 0 keeping the zoom with
-     * the terrain off.
+     * (see {@link Camera.moveCenterOntoTerrain}); its end puts the center back onto the terrain, or at 0 keeping the
+     * zoom with the terrain off.
      */
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
     _zoom: {handlerName: string};
@@ -773,14 +772,13 @@ export class HandlerManager {
 
         const stillMoving = isMoving(this._eventsInProgress);
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
-        let endState = null as {center: LngLat; zoom: number} | null;
         if (finishedMoving && this._terrainGesture.inFlight) {
             const tookDem = this._camera.releaseElevation();
             this._terrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
             this._camera.applyTransformChange(tr => {
                 if (!this._map.getCenterClampedToGround()) return;
                 if (this._map.terrain) {
-                    endState = this._camera.putCenterBackOnTerrain(tr, this._map.terrain, tookDem, allowEndAnimation);
+                    this._camera.putCenterBackOnTerrain(tr, this._map.terrain, tookDem);
                 } else {
                     tr.setElevation(0);
                 }
@@ -798,8 +796,6 @@ export class HandlerManager {
                 }
                 inertialEase.freezeElevation = true;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
-            } else if (endState) {
-                this._camera._easeCameraBack(shouldSnapToNorth(this._map.getBearing()) ? {...endState, bearing: 0} : endState, {originalEvent: originalEndEvent});
             } else {
                 this._fireEvent('moveend', originalEndEvent);
                 if (shouldSnapToNorth(this._map.getBearing())) {
