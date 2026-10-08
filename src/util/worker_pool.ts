@@ -24,7 +24,7 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     };
     workersPromise: Promise<ActorTarget[]> | null;
     /** The dispatcher whose actors live and die with the pooled workers, set once by dispatcher.ts. */
-    globalDispatcher: Dispatcher | undefined;
+    globalDispatcher: GlobalDispatcher | undefined;
 
     constructor() {
         super();
