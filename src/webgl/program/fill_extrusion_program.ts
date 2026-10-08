@@ -6,14 +6,15 @@ import {
     Uniform3f
 } from '../uniform_binding.ts';
 import {mat3, vec3} from 'gl-matrix';
-import {extend} from '../../util/util.ts';
+import {extend, sphericalToCartesian} from '../../util/util.ts';
 
 import type {Context} from '../../webgl/context.ts';
-import type {Painter} from '../../render/painter.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 import type {Tile} from '../../tile/tile.ts';
+import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;
@@ -72,26 +73,26 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
 });
 
 const fillExtrusionUniformValues = (
-    painter: Painter,
+    transform: IReadonlyTransform,
+    light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
 ): UniformValues<FillExtrusionUniformsType> => {
-    const light = painter.style.light;
-    const lightPos = light.getCartesianPosition();
+    const lightPos = sphericalToCartesian(light.position);
     const lightMat = mat3.create();
-    if (light.properties.get('anchor') === 'viewport') {
-        mat3.fromRotation(lightMat, painter.frameRenderContext.transform.bearingInRadians);
+    if (light.anchor === 'viewport') {
+        mat3.fromRotation(lightMat, transform.bearingInRadians);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
-    const transformedLightPos = painter.frameRenderContext.transform.transformLightDirection(lightPos);
+    const transformedLightPos = transform.transformLightDirection(lightPos);
 
-    const lightColor = light.properties.get('color');
+    const lightColor = light.color;
 
     return {
         'u_lightpos': lightPos,
         'u_lightpos_globe': transformedLightPos,
-        'u_lightintensity': light.properties.get('intensity'),
+        'u_lightintensity': light.intensity,
         'u_lightcolor': [lightColor.r, lightColor.g, lightColor.b],
         'u_vertical_gradient': +shouldUseVerticalGradient,
         'u_opacity': opacity,
@@ -100,7 +101,8 @@ const fillExtrusionUniformValues = (
 };
 
 const fillExtrusionPatternUniformValues = (
-    painter: Painter,
+    transform: IReadonlyTransform,
+    light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
@@ -108,8 +110,8 @@ const fillExtrusionPatternUniformValues = (
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate),
-        patternUniformValues(crossfade, painter, tile),
+    return extend(fillExtrusionUniformValues(transform, light, shouldUseVerticalGradient, opacity, translate),
+        patternUniformValues(crossfade, transform, tile),
         {
             'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8
         });

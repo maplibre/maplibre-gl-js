@@ -43,9 +43,8 @@ export async function stopCoverageAndReport(pageOrPages: Page | Page[], workers:
 
     await Promise.all(pages.map((page) => page.close()));
 
-    /** The bundles a script URL can belong to. `maplibre-gl-shared-dev.mjs` holds most of the source,
-     * and both the page and the worker load it, so coverage of it is reported from either side. */
-    const bundles = ['maplibre-gl-dev.mjs', 'maplibre-gl-worker-dev.mjs', 'maplibre-gl-shared-dev.mjs'];
+    /** The bundles a script URL can belong to. */
+    const bundles = ['maplibre-gl-dev.mjs', 'maplibre-gl-worker-dev.mjs'];
     const sourceMaps = new Map<string, any>(bundles.map((bundle) =>
         [bundle, JSON.parse(fs.readFileSync(`dist/${bundle}.map`, 'utf-8'))]));
 

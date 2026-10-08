@@ -6,48 +6,46 @@ import {
     fillExtrusionUniformValues,
     fillExtrusionPatternUniformValues,
 } from '../program/fill_extrusion_program.ts';
-import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
 
-import type {Painter} from '../../render/painter.ts';
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawFillExtrusion(painter: Painter, tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+export function drawFillExtrusion(tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
         return;
     }
 
     if (frameRenderContext.currentPass === 'translucent') {
-        const depthMode = new DepthMode(painter.context.gl.LEQUAL, DepthMode.ReadWrite, frameRenderContext.depthRangeFor3D);
+        const depthMode = new DepthMode(frameRenderContext.context.gl.LEQUAL, DepthMode.ReadWrite, frameRenderContext.depthRangeFor3D);
 
         if (opacity === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(1 as any)) {
-            const colorMode = painter.colorModeForRenderPass();
-            drawExtrusionTiles(painter, tileManager, layer, coords, depthMode, StencilMode.disabled, colorMode, frameRenderContext);
+            const colorMode = frameRenderContext.colorModeForRenderPass();
+            drawExtrusionTiles(tileManager, layer, coords, depthMode, StencilMode.disabled, colorMode, frameRenderContext);
 
         } else {
             // Draw transparent buildings in two passes so that only the closest surface is drawn.
             // First draw all the extrusions into only the depth buffer. No colors are drawn.
-            drawExtrusionTiles(painter, tileManager, layer, coords, depthMode,
+            drawExtrusionTiles(tileManager, layer, coords, depthMode,
                 StencilMode.disabled,
                 ColorMode.disabled, frameRenderContext);
 
             // Then draw all the extrusions a second type, only coloring fragments if they have the
             // same depth value as the closest fragment in the previous pass. Use the stencil buffer
             // to prevent the second draw in cases where we have coincident polygons.
-            drawExtrusionTiles(painter, tileManager, layer, coords, depthMode,
-                painter.stencilModeFor3D(),
-                painter.colorModeForRenderPass(), frameRenderContext);
+            drawExtrusionTiles(tileManager, layer, coords, depthMode,
+                frameRenderContext.stencilModeFor3D(),
+                frameRenderContext.colorModeForRenderPass(), frameRenderContext);
         }
     }
 }
 
 function drawExtrusionTiles(
-    painter: Painter,
     tileManager: TileManager,
     layer: FillExtrusionStyleLayer,
     coords: OverscaledTileID[],
@@ -55,7 +53,7 @@ function drawExtrusionTiles(
     stencilMode: Readonly<StencilMode>,
     colorMode: Readonly<ColorMode>,
     frameRenderContext: FrameRenderContext) {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const fillPropertyName = 'fill-extrusion-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
@@ -70,17 +68,17 @@ function drawExtrusionTiles(
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
-        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
+        const terrainData = frameRenderContext.getTerrainDataForTile(coord);
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
+        const program = frameRenderContext.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
 
         if (image) {
-            painter.context.activeTexture.set(gl.TEXTURE0);
+            context.activeTexture.set(gl.TEXTURE0);
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const projectionData = getProjectionDataForTile(frameRenderContext, coord);
+        const projectionData = frameRenderContext.getProjectionDataForTile(coord);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const translate = translatePosition(
@@ -92,8 +90,8 @@ function drawExtrusionTiles(
 
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) :
-            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate);
+            fillExtrusionPatternUniformValues(transform, frameRenderContext.data.light, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) :
+            fillExtrusionUniformValues(transform, frameRenderContext.data.light, shouldUseVerticalGradient, opacity, translate);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,

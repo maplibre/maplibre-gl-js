@@ -642,6 +642,7 @@ export class Map extends Evented<MapEventType> {
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
+    _clampedPixelRatio: number;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     _missingStyleImageResolver: MissingStyleImageResolver | null = null;
     /** @internal */
@@ -1522,7 +1523,7 @@ export class Map extends Evented<MapEventType> {
      * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
      * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/adding-3d-models-using-threejs-on-terrain/)
+     * This method should be used for proper positioning of custom 3d objects. If using maplibre-gl-three, see the example [here](https://maplibre-gl-three.readthedocs.io/latest/getting-started/#programmatically-calculating-terrain-height)
      * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
@@ -1627,19 +1628,20 @@ export class Map extends Evented<MapEventType> {
     _resizeInternal(constrainTransform = true): void {
         const [width, height] = this._containerDimensions();
 
-        const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-        this._resizeCanvas(width, height, clampedPixelRatio);
-        this.painter.resize(width, height, clampedPixelRatio);
+        this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
+        this._resizeCanvas(width, height, this._clampedPixelRatio);
+        this.painter.resize(width, height, this._clampedPixelRatio);
 
         // check if we've reached GL limits, in that case further clamps pixelRatio
         if (this.painter.overLimit()) {
             const gl = this.painter.context.gl;
             // store updated _maxCanvasSize value
             this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
-            const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-            this._resizeCanvas(width, height, clampedPixelRatio);
-            this.painter.resize(width, height, clampedPixelRatio);
+            this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
+            this._resizeCanvas(width, height, this._clampedPixelRatio);
+            this.painter.resize(width, height, this._clampedPixelRatio);
         }
+        this.style?.resize();
 
         this._resizeTransform(constrainTransform);
     }
@@ -4434,7 +4436,8 @@ export class Map extends Evented<MapEventType> {
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
-        const projectionTransition = this.style.projection?.transitionState ?? 0;
+        const projection = this.style.projection;
+        const projectionTransition = projection?.transitionState ?? 0;
 
         // Actually draw
         this.painter.render(this.style, this._camera.transform, {
@@ -4445,10 +4448,16 @@ export class Map extends Evented<MapEventType> {
             moving: this.isMoving(),
             fadeDuration,
             symbolFadeChange: this.style.placement.symbolFadeChange(now()),
+            variableOffsets: this.style.placement.variableOffsets,
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
             projectionTransition,
             isRenderingGlobe: projectionTransition > 0,
+            projectionShaderVariant: projection ? {name: projection.shaderVariantName, define: projection.shaderDefine, prelude: projection.shaderPreludeCode} : undefined,
+            useSubdivision: projection?.useSubdivision ?? false,
+            pixelRatio: this._clampedPixelRatio,
+            light: this.style.light?.getEvaluated(),
+            sky: this.style.sky?.getEvaluated(),
         });
 
         this.fire(new MapLibreEvent('render'));
@@ -4554,7 +4563,7 @@ export class Map extends Evented<MapEventType> {
      * ```ts
      * map.triggerRepaint();
      * ```
-     * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+     * @see [Add 3D Tiles, 3D objects and models using Three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-3d-objects-and-models-using-threejs/)
      * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-animated-icon-to-the-map/)
      */
     triggerRepaint(): void {

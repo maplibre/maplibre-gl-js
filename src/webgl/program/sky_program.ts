@@ -4,7 +4,7 @@ import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPix
 import {vec3} from 'gl-matrix';
 
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
-import type {Sky} from '../../style/sky.ts';
+import type {SkyPropsPossiblyEvaluated} from '../../style/sky_properties.g.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
 
@@ -34,7 +34,7 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
     'u_atmosphere_blend': new Uniform1f(context, locations.u_atmosphere_blend),
 });
 
-const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => {
+const skyUniformValues = (sky: Readonly<SkyPropsPossiblyEvaluated>, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => {
     const cosRoll = Math.cos(transform.rollInRadians);
     const sinRoll = Math.sin(transform.rollInRadians);
     const mercatorHorizon  = getMercatorHorizon(transform);
@@ -43,17 +43,17 @@ const skyUniformValues = (sky: Sky, transform: IReadonlyTransform, pixelRatio: n
     const globePosition = getGlobeCenterInViewSpace(transform);
     const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
     return {
-        'u_sky_color': sky.properties.get('sky-color'),
-        'u_horizon_color': sky.properties.get('horizon-color'),
+        'u_sky_color': sky['sky-color'],
+        'u_horizon_color': sky['horizon-color'],
         'u_horizon': [(transform.width / 2 - mercatorHorizon * sinRoll)  * pixelRatio,
             (transform.height / 2 + mercatorHorizon * cosRoll) * pixelRatio],
         'u_horizon_normal': [-sinRoll, cosRoll],
-        'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
+        'u_sky_horizon_blend': (sky['sky-horizon-blend'] * transform.height / 2) * pixelRatio,
         'u_sky_blend': skyBlend,
         'u_inv_proj_matrix': transform.inverseProjectionMatrix,
         'u_globe_position': globePosition,
         'u_globe_radius': globeRadius,
-        'u_atmosphere_blend': sky.properties.get('atmosphere-blend') * getAtmosphereAltitudeBlend(vec3.length(globePosition) - globeRadius, globeRadius),
+        'u_atmosphere_blend': sky['atmosphere-blend'] * getAtmosphereAltitudeBlend(vec3.length(globePosition) - globeRadius, globeRadius),
     };
 };
 

@@ -1,7 +1,9 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {drawTerrain} from './draw/draw_terrain.ts';
+import {setFrameUniformWorldSize} from './frame_uniform_buffer.ts';
 import {ImageSource} from '../source/image_source.ts';
 import {RTT_DIFFERENCES, RTTFingerprint, type RTTDifference} from './rtt_fingerprint.ts';
+import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
 import type {Tile} from '../tile/tile.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
@@ -23,6 +25,22 @@ const LAYERS_TO_TEXTURES: { [keyof in StyleLayer['type']]?: boolean } = {
     hillshade: true,
     'color-relief': true
 };
+
+/**
+ * Returns the key under which a tile keeps the fingerprint of the layer, which is the layer's source, or its id for a custom layer.
+ */
+function rttFingerprintKey(layer: StyleLayer): string | undefined {
+    return isCustomStyleLayer(layer) ? `custom-layer:${layer.id}` : layer.source;
+}
+
+/**
+ * Whether the layer is drawn into the terrain tiles' textures rather than onto the map: the layer types above, and
+ * custom layers that implement `renderToTerrainTile`.
+ */
+function isRenderedToTexture(layer: StyleLayer): boolean {
+    if (isCustomStyleLayer(layer)) return layer.implementation.renderToTerrainTile !== undefined;
+    return LAYERS_TO_TEXTURES[layer.type] === true;
+}
 
 /**
  * @internal
@@ -54,9 +72,9 @@ export class RenderToTexture {
      */
     _stacks: string[][];
     /**
-     * remember the previous processed layer to check if a new stack is needed
+     * whether the previous processed layer was rendered to texture, to check if a new stack is needed
      */
-    _prevType: string;
+    _prevRenderedToTexture: boolean;
     /**
      * a list of tiles that can potentially rendered
      */
@@ -101,7 +119,7 @@ export class RenderToTexture {
         const zoomChanged = zoom !== this._lastPrepareZoom;
         this._lastPrepareZoom = zoom;
         this._stacks = [];
-        this._prevType = null;
+        this._prevRenderedToTexture = false;
         this._rttTiles = [];
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
@@ -137,6 +155,17 @@ export class RenderToTexture {
             const revision = tileManager.getState().revision;
             for (const key in coordsAscending)
                 fingerprints[key] = new RTTFingerprint(coordsAscending[key], revision, zoom, visibleLayerIds);
+        }
+
+        for (const layerId of this._renderableLayerIds) {
+            const layer = style._layers[layerId];
+            if (!isCustomStyleLayer(layer) || !isRenderedToTexture(layer)) continue;
+            const revision = layer.implementation.terrainTileRevision ?? 0;
+            const fingerprints: Record<string, RTTFingerprint> = {};
+            for (const tile of this._renderableTiles) {
+                fingerprints[tile.tileID.key] = new RTTFingerprint([tile.tileID], revision, zoom, visibleLayerIds);
+            }
+            this._rttFingerprints[rttFingerprintKey(layer)] = fingerprints;
         }
 
         // check tiles to render
@@ -181,32 +210,34 @@ export class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
+     * @param style - the style the stacked layers and their tile managers come from
      * @param frameRenderContext - shared state for the current render
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer, frameRenderContext: FrameRenderContext): boolean {
+    renderLayer(layer: StyleLayer, style: Style, frameRenderContext: FrameRenderContext): boolean {
         if (layer.isHidden(frameRenderContext.transform.zoom)) return false;
 
-        const type = layer.type;
+        const renderedToTexture = isRenderedToTexture(layer);
         const painter = this.painter;
         const isLastLayer = this._renderableLayerIds[this._renderableLayerIds.length - 1] === layer.id;
 
         // remember background, fill, line & raster layer to render into a stack
-        if (LAYERS_TO_TEXTURES[type]) {
+        if (renderedToTexture) {
             // create a new stack if previous layer was not rendered to texture (f.e. symbols)
-            if (!this._prevType || !LAYERS_TO_TEXTURES[this._prevType]) this._stacks.push([]);
+            if (!this._prevRenderedToTexture) this._stacks.push([]);
             // push current render-to-texture layer to render-stack
-            this._prevType = type;
+            this._prevRenderedToTexture = true;
             this._stacks[this._stacks.length - 1].push(layer.id);
             // rendering is done later, all in once
             if (!isLastLayer) return true;
         }
 
         // in case a stack is finished render all collected stack-layers into a texture
-        if (LAYERS_TO_TEXTURES[this._prevType] || (LAYERS_TO_TEXTURES[type] && isLastLayer)) {
-            this._prevType = type;
+        if (this._prevRenderedToTexture || (renderedToTexture && isLastLayer)) {
+            this._prevRenderedToTexture = renderedToTexture;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
             frameRenderContext.isRenderingToTexture = true;
+            setFrameUniformWorldSize(painter.context.frameUniformBuffer, this.rttSize, this.rttSize);
             for (const tile of this._renderableTiles) {
                 this._rttTiles.push(tile);
                 // Cache hit: this tile already has a RTT object for this stack from a previous frame.
@@ -214,22 +245,24 @@ export class RenderToTexture {
                 const obj = tile.acquireRTT(painter, stack, this.rttSize);
                 painter.bindRTT(obj);
                 painter.context.clear({color: Color.transparent, stencil: 0});
-                painter.currentStencilSource = undefined;
+                frameRenderContext.invalidateTileClippingMasks();
                 for (const layerId of layers) {
-                    const layer = painter.style._layers[layerId];
+                    const layer = style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, this.rttSize, this.rttSize]);
-                    painter.renderTileClippingMasks(layer, coords);
-                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, frameRenderContext);
-                    if (layer.source) tile.rttFingerprint[layer.source] = this._rttFingerprints[layer.source][tile.tileID.key];
+                    frameRenderContext.renderTileClippingMasks(layer, coords);
+                    painter.renderLayer(painter, style.tileManagers[layer.source], layer, coords, frameRenderContext);
+                    const fingerprintKey = rttFingerprintKey(layer);
+                    if (fingerprintKey) tile.rttFingerprint[fingerprintKey] = this._rttFingerprints[fingerprintKey][tile.tileID.key];
                 }
                 obj.texture.generateMipmap();
             }
             frameRenderContext.isRenderingToTexture = false;
+            setFrameUniformWorldSize(painter.context.frameUniformBuffer, painter.context.gl.drawingBufferWidth, painter.context.gl.drawingBufferHeight);
             drawTerrain(this.painter, this.terrain, this._rttTiles, frameRenderContext);
             this._rttTiles = [];
 
-            return LAYERS_TO_TEXTURES[type];
+            return renderedToTexture;
         }
 
         return false;

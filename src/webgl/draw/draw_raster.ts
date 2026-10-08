@@ -12,9 +12,8 @@ import {
 import {EXTENT} from '../../data/extent.ts';
 import {FadingDirections} from '../../tile/tile.ts';
 import Point from '@mapbox/point-geometry';
-import {getProjectionDataForTile, getTerrainDataForTile, type FrameRenderContext} from '../../render/frame_render_context.ts';
 
-import type {Painter} from '../../render/painter.ts';
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -41,15 +40,14 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+export function drawRaster(tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     if (frameRenderContext.currentPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
     const source = tileManager.getSource();
 
-    const projection = painter.style.projection;
-    const useSubdivision = projection.useSubdivision;
+    const {useSubdivision} = frameRenderContext.data;
 
     // When rendering globe (or any other subdivided projection), two passes are needed.
     // Subdivided tiles with different granularities might have tiny gaps between them.
@@ -63,21 +61,20 @@ export function drawRaster(painter: Painter, tileManager: TileManager, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - no stencil is used
-        drawTiles(painter, tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, frameRenderContext, source.getMesh(painter.context, useSubdivision));
+        drawTiles(tileManager, layer, tileIDs, null, false, false, source.tileCoords, source.imageWarp, source.flippedWindingOrder, frameRenderContext, source.getMesh(frameRenderContext.context, useSubdivision));
     } else if (useSubdivision) {
         // Two-pass rendering
-        const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw without borders
-        drawTiles(painter, tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw with borders
+        const [stencilBorderless, stencilBorders, coords] = frameRenderContext.stencilConfigForOverlapTwoPass(tileIDs);
+        drawTiles(tileManager, layer, coords, stencilBorderless, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw without borders
+        drawTiles(tileManager, layer, coords, stencilBorders, true, true, cornerCoords, bilinearImageWarp, false, frameRenderContext); // draw with borders
     } else {
         // Simple rendering
-        const [stencil, coords] = painter.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
-        drawTiles(painter, tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext);
+        const [stencil, coords] = frameRenderContext.getStencilConfigForOverlapAndUpdateStencilID(tileIDs);
+        drawTiles(tileManager, layer, coords, stencil, false, true, cornerCoords, bilinearImageWarp, false, frameRenderContext);
     }
 }
 
 function drawTiles(
-    painter: Painter,
     tileManager: TileManager,
     layer: RasterStyleLayer,
     coords: OverscaledTileID[],
@@ -91,13 +88,11 @@ function drawTiles(
     sourceMesh: Mesh | null = null) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
-    const program = painter.useProgram('raster');
+    const program = frameRenderContext.useProgram('raster');
 
-    const projection = painter.style.projection;
-
-    const colorMode = painter.colorModeForRenderPass();
+    const colorMode = frameRenderContext.colorModeForRenderPass();
     const align = !frameRenderContext.data.moving;
     const rasterOpacity = layer.paint.get('raster-opacity');
     const useNearest = layer.paint.get('resampling') === 'nearest' || layer.paint.get('raster-resampling') === 'nearest';
@@ -109,7 +104,7 @@ function drawTiles(
     for (const coord of coords) {
         // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
         // Use gl.LESS to prevent double drawing in areas where tiles overlap.
-        const depthMode = painter.getDepthModeForSublayer(coord.overscaledZ - minTileZ,
+        const depthMode = frameRenderContext.getDepthModeForSublayer(coord.overscaledZ - minTileZ,
             rasterOpacity === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
         const tile = tileManager.getTile(coord);
@@ -136,11 +131,11 @@ function drawTiles(
                 context.extTextureFilterAnisotropicMax);
         }
 
-        const terrainData = getTerrainDataForTile(frameRenderContext, coord);
-        const projectionData = getProjectionDataForTile(frameRenderContext, coord, {aligned: align});
+        const terrainData = frameRenderContext.getTerrainDataForTile(coord);
+        const projectionData = frameRenderContext.getProjectionDataForTile(coord, {aligned: align});
         const uniformValues = rasterUniformValues(parentTopLeft, parentScaleBy, fadeValues.fadeMix, layer, corners, imageWarp);
 
-        const mesh = sourceMesh ?? projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles, 'raster');
+        const mesh = sourceMesh ?? frameRenderContext.getMeshFromTileID(coord.canonical, useBorder, allowPoles, 'raster');
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,

@@ -2,9 +2,9 @@ import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from './smart_wrap.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 
-const transform = new MercatorTransform();
+const transform = createMercatorTransform();
 transform.resize(100, 100);
 transform.isPointOnMapSurface = (p) => p.y > transform.height / 2; // any point below map center is considered to be on the map's surface
 

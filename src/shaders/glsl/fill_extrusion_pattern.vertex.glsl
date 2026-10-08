@@ -101,7 +101,7 @@ void main() {
     float directional = clamp(dot(normal / 16383.0, u_lightpos), 0.0, 1.0);
     directional = mix((1.0 - u_lightintensity), max((0.5 + u_lightintensity), 1.0), directional);
 
-    if (normal.y != 0.0) {
+    if (normal.z == 0.0) {
         // This avoids another branching statement, but multiplies by a constant of 0.84 if no vertical gradient,
         // and otherwise calculates the gradient based on base + height
         directional *= (

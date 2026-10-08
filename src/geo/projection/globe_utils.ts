@@ -1,5 +1,5 @@
 import {type mat4, quat, type ReadonlyVec4, vec3, vec4} from 'gl-matrix';
-import {clamp, createVec3f64, createVec4f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
+import {clamp, createVec3f64, createVec4f64, differenceOfAnglesDegrees, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
 import {LngLat} from '../lng_lat.ts';
 import {EXTENT} from '../../data/extent.ts';
 
@@ -14,7 +14,7 @@ export function getGlobeCircumferencePixels(transform: {worldSize: number; cente
 export function globeDistanceOfLocationsPixels(transform: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
     const vecA = angularCoordinatesToSurfaceVector(a);
     const vecB = angularCoordinatesToSurfaceVector(b);
-    const dot = vec3.dot(vecA, vecB);
+    const dot = clamp(vec3.dot(vecA, vecB), -1, 1);
     const radians = Math.acos(dot);
     const circumference = getGlobeCircumferencePixels(transform);
     return radians / (2.0 * Math.PI) * circumference;
@@ -86,7 +86,7 @@ export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number)
     // This means that the pixel size of features at the map center point
     // should be the same for both globe and flat view.
     // For this reason we scale the globe up when map center is nearer to the poles.
-    return worldSize / (2.0 * Math.PI) / Math.cos(latitudeDegrees * Math.PI / 180);
+    return worldSize / (2.0 * Math.PI) / planetScaleAtLatitude(latitudeDegrees);
 }
 
 /**
@@ -258,7 +258,7 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
 
     const oldLat = tr.center.lat;
     const oldZoom = tr.zoom;
-    const finalLat = clamp(newCenterLat, -90, 90);
+    const finalLat = fixedBearing ? fixedBearingLatitude(tr, newCenterLat, newBearing) : newCenterLat;
     const finalLng = fixedBearing ? fixedBearingLongitude(tr, point, panDelta, newCenterLng) : newCenterLng;
 
     tr.setCenter(new LngLat(wrap(finalLng, -180, 180), finalLat));
@@ -269,12 +269,23 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
 }
 
 /**
+ * Returns the center latitude for a bearing-preserving drag. A swing over a pole turns the bearing around,
+ * so with the bearing held the center stops on that pole.
+ */
+function fixedBearingLatitude(tr: ITransform, newCenterLat: number, newBearing: number): number {
+    if (Math.abs(differenceOfAnglesDegrees(tr.bearing, newBearing)) <= 90) {
+        return newCenterLat;
+    }
+    return newCenterLat > 0 ? 90 : -90;
+}
+
+/**
  * Returns the center longitude for a bearing-preserving drag.
  *
  * The swing longitude becomes ill-conditioned near the pole and the grabbed location slips away
  * from the cursor, so within the last ~12 degrees of latitude the cursor is treated as turning a
- * dial around the pole, blended in with a smoothstep anchored on {@link MAX_VALID_LATITUDE}, the
- * highest latitude the center can reach. The sweep comes from the raw pixel delta rather than a
+ * dial around the pole, blended in with a smoothstep anchored on {@link MAX_VALID_LATITUDE} and in
+ * full from there to the pole. The sweep comes from the raw pixel delta rather than a
  * round-tripped previous cursor position, which would lose its sign to cancellation at the pole,
  * and is damped within {@link DIAL_MIN_RADIUS_PIXELS} so it eases to nothing there instead of
  * being dropped, which would leave a spot where the drag could not move at all.
@@ -345,8 +356,12 @@ export function clampToSphere(center: vec3, radius: number, point: vec3): vec3 {
     return clamped;
 }
 
-function planetScaleAtLatitude(latitudeDegrees: number): number {
-    return Math.cos(latitudeDegrees * Math.PI / 180);
+/**
+ * Returns the cosine of the given center latitude, which the globe radius is divided by so that zoom levels match
+ * mercator at the map center. Mercator ends at {@link MAX_VALID_LATITUDE}, so past it the globe keeps its size there.
+ */
+export function planetScaleAtLatitude(latitudeDegrees: number): number {
+    return Math.cos(Math.min(Math.abs(latitudeDegrees), MAX_VALID_LATITUDE) * Math.PI / 180);
 }
 
 /**
@@ -391,7 +406,7 @@ export function computeGlobePanCenter(panDelta: Point, tr: {
     const panningDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat);
     return new LngLat(
         tr.center.lng - rotatedPanDelta.x * panningDegreesPerPixel * lngSpeed,
-        clamp(tr.center.lat + rotatedPanDelta.y * panningDegreesPerPixel, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
+        clamp(tr.center.lat + rotatedPanDelta.y * panningDegreesPerPixel, -90, 90)
     );
 }
 
@@ -407,6 +422,7 @@ function integrateSecX(x: number): number {
 
 /**
  * Interpolates globe center between two locations while preserving apparent rotation speed during interpolation.
+ * The speed grows without bound towards the poles, so past {@link MAX_VALID_LATITUDE} it stays at its value there.
  * @param start - The starting location of the interpolation.
  * @param deltaLng - Longitude delta to the end of the interpolation.
  * @param deltaLat - Latitude delta to the end of the interpolation.
@@ -419,14 +435,15 @@ export function interpolateLngLatForGlobe(start: LngLat, deltaLng: number, delta
     // Thus we know the derivative of our interpolation function: 1/cos(x)
     // To get our interpolation function, we need to integrate that.
 
-    const interpolatedLat = start.lat + deltaLat * t;
+    const interpolatedLat = clamp(start.lat + deltaLat * t, -90, 90);
+    const startLat = clamp(start.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+    const endLat = clamp(start.lat + deltaLat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
 
-    if (Math.abs(deltaLat) > 1) {
-        const endLat = start.lat + deltaLat;
-        const onDifferentHemispheres = Math.sign(endLat) !== Math.sign(start.lat);
+    if (Math.abs(endLat - startLat) > 1) {
+        const onDifferentHemispheres = Math.sign(endLat) !== Math.sign(startLat);
         // Where do we sample the integrated speed curve?
-        const samplePointStart = (onDifferentHemispheres ? -Math.abs(start.lat) : Math.abs(start.lat)) * Math.PI / 180;
-        const samplePointEnd = Math.abs(start.lat + deltaLat) * Math.PI / 180;
+        const samplePointStart = (onDifferentHemispheres ? -Math.abs(startLat) : Math.abs(startLat)) * Math.PI / 180;
+        const samplePointEnd = Math.abs(endLat) * Math.PI / 180;
         // Read the integrated speed curve at those points, and at the interpolation value "t".
         const valueT = integrateSecX(samplePointStart + t * (samplePointEnd - samplePointStart));
         const valueStart = integrateSecX(samplePointStart);
