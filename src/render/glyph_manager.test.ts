@@ -363,7 +363,7 @@ describe('GlyphManager', () => {
             function createRasterizer(options: TinySDFOptions, padding: number) {
                 return {
                     buffer: padding,
-                    draw(text: string) { return draw(options.fontFamily.includes('-vertical'), text); }
+                    draw(text: string) { return draw(options.fontFamily.includes('-vert'), text); }
                 };
             }
             const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
@@ -407,13 +407,13 @@ describe('GlyphManager', () => {
             const pendingLoad = new Promise<void>(resolve => { finishLoad = resolve; });
             const started = new Promise<void>(resolve => { notifyStarted = resolve; });
             const load = vi.spyOn(document.fonts, 'load').mockImplementation(function (font) {
-                if ((font.includes('-vertical') ? 'vertical' : 'horizontal') !== orientation) return Promise.resolve([]);
+                if ((font.includes('-vert') ? 'vertical' : 'horizontal') !== orientation) return Promise.resolve([]);
                 notifyStarted();
                 return pendingLoad.then(() => []);
             });
             const draw = vi.fn(function (family: string, _text: string) {
                 return {
-                    data: new Uint8ClampedArray(16).fill(family.includes('-vertical') ? 200 : 100),
+                    data: new Uint8ClampedArray(16).fill(family.includes('-vert') ? 200 : 100),
                     width: 4, height: 4, glyphWidth: 2, glyphHeight: 2,
                     glyphLeft: 0, glyphTop: 2, glyphAdvance: 48
                 };
@@ -440,7 +440,7 @@ describe('GlyphManager', () => {
         test('rejects empty vertical substitutions while retaining the original glyph', async () => {
             stubFontFaces();
             const createRasterizer = vi.fn(function (options: TinySDFOptions, padding: number) {
-                const vertical = options.fontFamily.includes('-vertical');
+                const vertical = options.fontFamily.includes('-vert');
                 return {
                     buffer: padding,
                     draw() {

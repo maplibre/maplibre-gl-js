@@ -1,4 +1,4 @@
-import {FontFaceManager} from './font_face_manager.ts';
+import {FontFaceManager, type FontFeature} from './font_face_manager.ts';
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
 import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
 import {isCluster} from '../util/graphemes.ts';
@@ -212,7 +212,7 @@ export class GlyphManager {
 
         const codePoint = id.codePointAt(0);
         const fontFaceFamily = this.fontFaceManager.hasFontFaces() ?
-            await this.fontFaceManager.getFontFamily(stack, codePoint, false) :
+            await this.fontFaceManager.getFontFamily(stack, codePoint, 'normal') :
             null;
 
         if (fontFaceFamily) {
@@ -237,13 +237,13 @@ export class GlyphManager {
      * Returns the vertical glyph, or `null` if it is missing, empty, identical, or its font was replaced.
      */
     async _drawVerticalGlyph(entry: Entry, stack: string, id: string): Promise<StyleGlyph | null> {
-        const verticalTinySDF = await this._getFontFaceTinySDF(entry, stack, id, true);
+        const verticalTinySDF = await this._getFontFaceTinySDF(entry, stack, id, 'vert');
         if (!verticalTinySDF || this.entries[stack] !== entry) return null;
 
         const char = verticalTinySDF.draw(id);
         if (!char.glyphWidth || !char.glyphHeight) return null;
 
-        const defaultTinySDF = await this._getFontFaceTinySDF(entry, stack, id, false);
+        const defaultTinySDF = await this._getFontFaceTinySDF(entry, stack, id, 'normal');
         if (!defaultTinySDF || this.entries[stack] !== entry) return null;
 
         const glyph = this._createGlyph(id, char);
@@ -369,10 +369,10 @@ export class GlyphManager {
     }
 
     /** Resolves a declared font and its rasterizer, skipping obsolete cache entries. */
-    async _getFontFaceTinySDF(entry: Entry, stack: string, id: string, vertical: boolean): Promise<Rasterizer | null> {
+    async _getFontFaceTinySDF(entry: Entry, stack: string, id: string, feature: FontFeature): Promise<Rasterizer | null> {
         if (this.entries[stack] !== entry) return null;
 
-        const family = await this.fontFaceManager.getFontFamily(stack, id.codePointAt(0), vertical);
+        const family = await this.fontFaceManager.getFontFamily(stack, id.codePointAt(0), feature);
         if (!family || this.entries[stack] !== entry) return null;
 
         return this._getTinySDF(entry, stack, id, family);

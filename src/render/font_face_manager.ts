@@ -20,6 +20,9 @@ const MAX_CODE_POINT = 0x10FFFF;
  */
 const DEFAULT_UNICODE_RANGE: UnicodeRange = {start: 0, end: MAX_CODE_POINT};
 
+/** OpenType feature to enable, or `normal` for default settings. */
+export type FontFeature = 'normal' | 'vert';
+
 /**
  * A font file declared by the style, along with the bookkeeping needed to draw with it.
  */
@@ -38,10 +41,8 @@ type DeclaredFontFace = {
      * after one the page uses, and so that each file can be selected on its own.
      */
     family: string;
-    /** Cached load result for the default face: its CSS family, or `null` if unavailable. */
-    defaultLoad?: Promise<string | null>;
-    /** Cached load result for the `vert` face: its CSS family, or `null` if unavailable. */
-    verticalLoad?: Promise<string | null>;
+    /** Cached load results by feature: the CSS family, or `null` if unavailable. */
+    loads: Partial<Record<FontFeature, Promise<string | null>>>;
     /** Font download temporarily shared by overlapping face loads. */
     data?: Promise<ArrayBuffer>;
 };
@@ -146,27 +147,27 @@ export class FontFaceManager {
      * within a name each declared file, until one covers it. A file that fails to load is skipped,
      * the specification asking for unsupported fonts to be ignored.
      *
-     * Vertical requests use that file's `vert` face and return `null` if it fails to load.
+     * Requests with a feature enabled use the normal face's file and return `null` if loading fails.
      *
      * @param fontStack - comma-separated font names, in fallback order
      * @param codePoint - codepoint to match against the declared Unicode ranges
-     * @param vertical - whether to enable the OpenType `vert` feature
+     * @param feature - OpenType feature to enable, or `normal` for default settings
      * @returns the loaded CSS family, or `null` if the requested face is unavailable
      */
-    async getFontFamily(fontStack: string, codePoint: number, vertical: boolean): Promise<string | null> {
+    async getFontFamily(fontStack: string, codePoint: number, feature: FontFeature): Promise<string | null> {
         for (const fontName of fontStack.split(',')) {
             for (const face of this._faces[fontName.trim()] ?? []) {
                 if (!covers(face, codePoint)) continue;
 
-                face.defaultLoad ??= this._loadFontFace(face, false);
+                face.loads.normal ??= this._loadFontFace(face, 'normal');
                 const data = face.data;
-                const family = await face.defaultLoad;
+                const family = await face.loads.normal;
                 if (!family) continue;
 
-                if (!vertical) return family;
+                if (feature === 'normal') return family;
 
-                face.verticalLoad ??= this._loadFontFace(face, true, data);
-                return face.verticalLoad;
+                face.loads[feature] ??= this._loadFontFace(face, feature, data);
+                return face.loads[feature];
             }
         }
         return null;
@@ -188,7 +189,7 @@ export class FontFaceManager {
         const family = `maplibre-gl-font-face-${nextFamilyId++}`;
         const unicodeRange = face['unicode-range'];
         if (!unicodeRange?.length) {
-            return {url: face.url, ranges: [DEFAULT_UNICODE_RANGE], family};
+            return {url: face.url, ranges: [DEFAULT_UNICODE_RANGE], family, loads: {}};
         }
 
         const ranges: UnicodeRange[] = [];
@@ -202,19 +203,19 @@ export class FontFaceManager {
         }
         if (!ranges.length) return null;
 
-        return {url: face.url, ranges, family};
+        return {url: face.url, ranges, family, loads: {}};
     }
 
     /**
-     * Loads and registers a declared font with normal or `vert` feature settings.
+     * Loads and registers a declared font with the requested OpenType feature.
      *
      * @param face - font file declaration and CSS family to register
-     * @param vertical - `true` to enable `vert`, `false` for normal feature settings
+     * @param feature - OpenType feature to enable, or `normal` for default settings
      * @param data - a download retained by a concurrent request while the normal face loads
      * @returns the registered CSS family, or `null` on failure, ignored feature settings or disposal
      */
-    async _loadFontFace(face: DeclaredFontFace, vertical: boolean, data?: Promise<ArrayBuffer>): Promise<string | null> {
-        const description = vertical ? 'vertical font face' : 'font face';
+    async _loadFontFace(face: DeclaredFontFace, feature: FontFeature, data?: Promise<ArrayBuffer>): Promise<string | null> {
+        const description = feature === 'normal' ? 'font face' : `font face with "${feature}" enabled`;
         if (typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) {
             warnOnce(`Ignoring the ${description} at ${face.url}: this environment has no CSS Font Loading API.`);
             return null;
@@ -226,11 +227,11 @@ export class FontFaceManager {
                 face.data ??= this._downloadFontFile(face.url);
                 data = face.data;
             }
-            const family = vertical ? `${face.family}-vertical` : face.family;
+            const family = feature === 'normal' ? face.family : `${face.family}-${feature}`;
             fontFace = new FontFace(family, await data,
-                {featureSettings: vertical ? '"vert" 1' : 'normal'});
+                {featureSettings: feature === 'normal' ? 'normal' : `"${feature}" 1`});
             if (!Object.values(this._faces).some(faces => faces.includes(face))) return null;
-            if (vertical && (!fontFace.featureSettings || fontFace.featureSettings === 'normal')) return null;
+            if (feature !== 'normal' && (!fontFace.featureSettings || fontFace.featureSettings === 'normal')) return null;
             document.fonts.add(fontFace);
             this._registered.add(fontFace);
             await fontFace.load();
