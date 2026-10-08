@@ -59,6 +59,23 @@ const defaultGenericFontFamily = 'sans-serif';
 const textureScale = 2;
 
 /**
+ * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
+ * Server-generated fonts specify "top" relative to an origin above the em box (the origin
+ * comes from FreeType, but I'm unclear on exactly how it's derived)
+ * ref: https://github.com/mapbox/sdf-glyph-foundry
+ *
+ * Server fonts don't yet include baseline information, so we can't line up exactly with them
+ * (and they don't line up with each other)
+ * ref: https://github.com/mapbox/node-fontnik/pull/160
+ *
+ * To approximately align TinySDF glyphs with server-provided glyphs, we use this baseline adjustment
+ * factor calibrated to be in between DIN Pro and Arial Unicode (but closer to Arial Unicode)
+ */
+const topAdjustment = 27.5;
+
+const leftAdjustment = 0.5;
+
+/**
  * The rasterizer, as it really is. TinySDF carries the `buffer` it was built with, which its type
  * declaration leaves out and which the canvas has to be widened through.
  */
@@ -334,23 +351,6 @@ export class GlyphManager {
 
     /** Converts a TinySDF bitmap and metrics to a style glyph. */
     _createGlyph(id: string, char: ReturnType<TinySDF['draw']>): StyleGlyph {
-        /**
-         * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
-         * Server-generated fonts specify "top" relative to an origin above the em box (the origin
-         * comes from FreeType, but I'm unclear on exactly how it's derived)
-         * ref: https://github.com/mapbox/sdf-glyph-foundry
-         *
-         * Server fonts don't yet include baseline information, so we can't line up exactly with them
-         * (and they don't line up with each other)
-         * ref: https://github.com/mapbox/node-fontnik/pull/160
-         *
-         * To approximately align TinySDF glyphs with server-provided glyphs, we use this baseline adjustment
-         * factor calibrated to be in between DIN Pro and Arial Unicode (but closer to Arial Unicode)
-         */
-        const topAdjustment = 27.5;
-
-        const leftAdjustment = 0.5;
-
         // By definition, control characters are invisible and nonspacing.
         const isControl = /^\p{gc=Cf}+$/u.test(id);
 
