@@ -32,10 +32,12 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.workerErrorSubscriptions = [];
     }
 
-    private async initActors(mapId: string | number): Promise<Actor[]> {
-        const workers = mapId === GLOBAL_DISPATCHER_ID ?
-            await this.workerPool.ensureWorkers() :
-            await this.workerPool.acquire(mapId);
+    protected acquireWorkers(): Promise<ActorTarget[]> {
+        return this.workerPool.acquire(this.id);
+    }
+
+    private async initActors(): Promise<Actor[]> {
+        const workers = await this.acquireWorkers();
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => this.createActor(worker, i));
         if (!this.actors.length) throw new Error('No actors found');
@@ -68,7 +70,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
                 resolveActors = resolve;
                 rejectActors = reject;
             });
-            this.initActors(this.id).then(resolveActors, rejectActors);
+            this.initActors().then(resolveActors, rejectActors);
         }
         return this.actorsPromise;
     }
@@ -138,7 +140,14 @@ export class Dispatcher extends Evented<ErrorEventType> {
     }
 }
 
-const globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
+/** The one dispatcher whose use of the workers is not a claim: its actors live and die with them. */
+class GlobalDispatcher extends Dispatcher {
+    protected override acquireWorkers(): Promise<ActorTarget[]> {
+        return this.workerPool.ensureWorkers();
+    }
+}
+
+const globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
 getGlobalWorkerPool().globalDispatcher = globalDispatcher;
 globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
     return makeRequest(params, abortController);
