@@ -86,6 +86,41 @@ Register the projection before constructing a map whose style selects it; a styl
 
 Zoom levels are the CRS's own. Zoom 6 in NZTM2000Quad covers a different ground area than zoom 6 in Web Mercator, so `minzoom`, `maxzoom` and camera zooms need to be tuned for the tile matrix set rather than copied from a Mercator style.
 
+## A grid whose level 0 has more than one tile
+
+Some national grids start with several tiles at level 0. The Danish grid in EPSG:25832 is 3 by 2 tiles at level 0, and each level after it doubles. Register the smallest power-of-two square of level 0 tiles that holds the grid, here 4 by 4, so that map zoom 2 is the service's level 0. Then set `minzoom: 2` on the source, so the map never asks for the levels above it, and subtract 2 from the level in the tile URL with `transformRequest`:
+
+```js
+proj4.defs('EPSG:25832', '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+
+maplibregl.addProjection({
+    name: 'EPSG:25832',
+    projection: proj4('EPSG:4326', 'EPSG:25832'),
+    // 4 by 4 tiles of the service's level 0, each 256 px at 1638.4 m per pixel, from the grid's top-left corner.
+    tileMatrixSet: {origin: [120000, 6500000], extentAtZoom0: 4 * 256 * 1638.4}
+});
+
+const map = new maplibregl.Map({
+    container: 'map',
+    style: {
+        version: 8,
+        projection: {type: 'EPSG:25832'},
+        sources: {
+            denmark: {
+                type: 'raster',
+                // The service's WMTS template, with the level, row and column in the query string.
+                tiles: ['https://example.com/wmts?SERVICE=WMTS&REQUEST=GetTile&TileMatrix={z}&TileRow={y}&TileCol={x}'],
+                tileSize: 256,
+                minzoom: 2
+            }
+        },
+        layers: [{id: 'denmark', type: 'raster', source: 'denmark'}]
+    },
+    // Map zoom 2 is the service's level 0.
+    transformRequest: url => ({url: url.replace(/TileMatrix=(\d+)/, (match, z) => `TileMatrix=${z - 2}`)})
+});
+```
+
 ## Example: an image plane with `identity`
 
 The built-in `identity` projection uses lng/lat degrees unchanged as CRS coordinates: tile 0/0/0 spans -90..90 on both axes, and one unit is one meter. Coordinates go in as plain plane coordinates and come out without any latitude stretch, so an image placed by its four corners is shown undistorted:
@@ -138,7 +173,7 @@ Everything that speaks lng/lat goes through the CRS definition's `projection`, s
 
 - GeoJSON sources, for now. Their data does not go through the projection yet, so on a map in a registered CRS it renders in the wrong place, and the map logs a warning. Serve such data as vector tiles in the CRS's grid instead.
 - Mixing CRSs. A Mercator tile source on an EPSG:2193 map, or a projected raster layer over Mercator base tiles, renders in the wrong place. Reprojecting tiles on the GPU is the subject of [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
-- Non-quad tile matrix sets: grids whose zoom 0 is not a single square, whose levels are not powers of two, or whose tiles are not square.
+- Non-quad tile matrix sets: grids whose levels are not powers of two, or whose tiles are not square. A grid whose level 0 has more than one tile works with the recipe above.
 - Globe and world copies, as described above.
 - Converters whose `inverse` does not undo `forward`. The camera constraint and every query rely on the round trip being stable.
 - Switching to or from a registered CRS with `setProjection` after the sources have loaded, for now. Tile `bounds` and the corners of image, video and canvas sources are placed in the projection the map has when each source loads, so register the projection first and name it in the style, as the examples do.
