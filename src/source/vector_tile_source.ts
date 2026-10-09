@@ -13,6 +13,7 @@ import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {RequestParameters} from '../util/ajax';
 import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding} from './worker_source.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
@@ -220,6 +221,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             overzoomParameters: await this._getOverzoomParameters(tile),
             etag: tile.etag
         };
+        this._setAcceptHeader(params.request);
         params.request.collectResourceTiming = this._collectResourceTiming;
         await this.dispatcher.waitForInitComplete();
         if (tile.aborted) {
@@ -274,10 +276,20 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
         const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
 
+        const overzoomRequest = await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
+        this._setAcceptHeader(overzoomRequest);
         return {
             maxZoomTileID,
-            overzoomRequest: await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile)
+            overzoomRequest
         };
+    }
+
+    private _setAcceptHeader(request: RequestParameters) {
+        // purposely only for MLT and not for MVT/raster: https://github.com/maplibre/maplibre-native/pull/4231#discussion_r4216650681
+        if (this.encoding === 'mlt') {
+            request.headers ??= {};
+            request.headers.Accept ??= 'application/vnd.maplibre-tile';
+        }
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
