@@ -7,9 +7,10 @@ import {MercatorTransform, createMercatorTransform} from './mercator_transform.t
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
-import {createCoverageIndex, createDEM, createDEMTerrain, createTerrain, expectToBeCloseToArray} from '../../util/test/util.ts';
+import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsTransform} from '../../util/test/util.ts';
+import {Terrain} from '../../render/terrain.ts';
 import {EXTENT} from '../../data/extent.ts';
-import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorWorldCoordinateHelper, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 
 import type {Tile} from '../../tile/tile.ts';
 
@@ -938,6 +939,7 @@ function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Mer
 function createRayTransform(near: number[], far: number[], worldSize: number): MercatorTransform {
     const transform = Object.create(MercatorTransform.prototype);
     Object.defineProperty(transform, 'worldSize', {value: worldSize});
+    Object.defineProperty(transform, 'worldCoordinateHelper', {value: mercatorWorldCoordinateHelper});
     transform.getRaySegmentFromPixel = () => ({near, far});
     return transform as MercatorTransform;
 }
@@ -1092,10 +1094,10 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         const edgeTransform = createTransformAt(new LngLat(0, 0), 1, 0);
         expect(edgeTransform.screenTerrainPointToMercatorCoordinate(new Point(400, 400), edgeTerrain)).toBeNull();
 
-        // Staying below the terrain surface the whole way.
+        // Staying below the terrain surface the whole way: at zoom 22 the camera sits about 28 meters up, under a 100 meter plateau.
         const submergedTerrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 100));
-        const submergedTransform = createRayTransform([256, 256, -100], [300, 256, 100], 512);
-        expect(submergedTransform.screenTerrainPointToMercatorCoordinate(new Point(0, 0), submergedTerrain)).toBeNull();
+        const submergedTransform = createTransformAt(new LngLat(0, 0), 22, 0);
+        expect(submergedTransform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), submergedTerrain)).toBeNull();
     });
 
     test('returns null when the terrain has no renderable tiles', () => {
@@ -1194,6 +1196,215 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
     });
 });
 
+// Outputs captured from main at 379b3673a, where lng/lat math does not go through the world coordinate helper; main's
+// center search changed after the first capture (407a8ce9e). Each row is 11 inputs followed by 9 outputs, compared exactly.
+const bitIdentityRows: number[][] = [
+    [-47.66947732307017, -31.891872510313988, 12.335080658085644, 44.56127839162946, 336.473432360217, 2708.1988365389407, 633.7583729997277, 333.5038125514984, -48.08538376772776, -32.09453024622053, 6542.761099524796, 0.06608625848037492, -47.635173521078315, -0.07879338518436896, -48.10138014914466, -32.06339765398657, 2708.1988365389407, 13.435703555287997, -47.63887852731972, 0.006589276563389035],
+    [29.529827423393726, -44.010491259396076, 4.350916175171733, 40.40351155679673, 295.4289326816797, 742.9703597445041, 119.00203712284565, 341.0222121980041, 30.327826311811805, -44.438611211720854, 11584.925448521972, 0.0002609985923233138, 47.682901433135356, -8.598491341610824, 30.222915348529853, -44.402985754807105, 742.9703597445041, 11.78582078869319, 27.14136282768186, -9.145886234506918],
+    [-175.4359111469239, -60.00771701335907, 11.576151768676937, 56.23234930448234, 272.34073103405535, 2335.907760076225, 152.67861243337393, 567.1612800098956, -174.8650802965276, -59.31432515755296, 16009.216147474945, 0.039052676546020515, -175.26376370720283, -0.007036734336963946, -175.22507664128196, -59.30681470736939, 2335.907760076225, 10.511814234993166, -175.36093089187702, -0.042540721064781906],
+    [-144.41486184485257, 7.587629780173302, 19.653839827515185, 37.38076251000166, 167.28623329661787, 1020.5210256390274, 658.2415254786611, 348.03880993276834, -144.6090480950661, 8.191629043780267, 13963.913300074637, 10.550601155815519, -144.4149643458768, 0.0004543238948713224, -144.5892778507015, 8.104884388547887, 1020.5210256390274, 12.062291260316952, -144.41507905283308, 0.0000017517999424399022],
+    [-89.8710085451603, 64.21592768281698, 1.8496395740658045, 48.10014402028173, 158.33662692457438, 657.6341448817402, 48.85685257613659, 331.04150402359664, -90.20058967545629, 64.65715769259259, 19041.576908901334, 0.00004609766002574671, -138.11462647842262, 76.308455124853, -90.04266543186203, 64.48644307922882, 657.6341448817402, 10.104601204958538, -31.785299776317714, 30.85807805159577]
+];
+
+describe('mercator transform bit identity with the pre-refactor transform', () => {
+    test.each(bitIdentityRows)('center %f,%f zoom %f pitch %f bearing %f', (lng, lat, zoom, pitch, bearing, elevation, px, py, camLng, camLat, alt, ...expected) => {
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(800, 600);
+        transform.setCenter(new LngLat(lng, lat));
+        transform.setZoom(zoom);
+        transform.setPitch(pitch);
+        transform.setBearing(bearing);
+        transform.setElevation(elevation);
+
+        const camera = transform.getCameraLngLat();
+        const fromCamera = transform.calculateCenterFromCameraLngLatAlt(new LngLat(camLng, camLat), alt, bearing, pitch);
+        const screen = transform.screenPointToLocation(new Point(px, py));
+
+        expect([
+            transform.pixelsPerMeter, camera.lng, camera.lat,
+            fromCamera.center.lng, fromCamera.center.lat, fromCamera.elevation, fromCamera.zoom,
+            screen.lng, screen.lat,
+        ]).toEqual(expected);
+    });
+});
+
+describe('MercatorTransform over the identity CRS', () => {
+    test('uses a non-wrapping helper', () => {
+        const transform = createIdentityCrsTransform(200, 200);
+        expect(transform.worldCoordinateHelper.wraps).toBe(false);
+    });
+
+    test('keeps the helper across clone', () => {
+        const transform = createIdentityCrsTransform(200, 200);
+        expect(transform.clone().worldCoordinateHelper).toBe(transform.worldCoordinateHelper);
+    });
+
+    test('sets no max bounds', () => {
+        const transform = createIdentityCrsTransform(200, 200);
+        expect(transform.getMaxBounds()).toBeNull();
+    });
+
+    describe('constrain', () => {
+        test('keeps a center inside the square where the viewport reaches past the square', () => {
+            const transform = createIdentityCrsTransform(200, 200);
+            transform.setZoom(1);
+
+            transform.setCenter(new LngLat(89, 89));
+
+            expect(transform.center.lat).toBeCloseTo(89, 6);
+        });
+
+        test('leaves the zoom to minZoom when the square is smaller than the viewport', () => {
+            const transform = createIdentityCrsTransform(200, 200);
+
+            transform.setZoom(-2);
+
+            expect(transform.zoom).toBe(-2);
+        });
+
+        test('keeps the viewport inside explicit max bounds set inside the square', () => {
+            const transform = createIdentityCrsTransform(200, 200);
+            transform.setZoom(4);
+            transform.setMaxBounds(new LngLatBounds([-10, -10], [10, 10]));
+            const worldSizeAtZoom4 = 8192;
+            const degreesPerPixel = 180 / worldSizeAtZoom4;
+            const halfViewport = 100;
+
+            transform.setCenter(new LngLat(80, 80));
+
+            expect(transform.center.lng).toBeCloseTo(10 - halfViewport * degreesPerPixel, 6);
+            expect(transform.center.lat).toBeCloseTo(10 - halfViewport * degreesPerPixel, 6);
+        });
+
+        test('keeps the viewport inside max bounds that replace earlier ones', () => {
+            const transform = createIdentityCrsTransform(200, 200);
+            transform.setZoom(4);
+            transform.setMaxBounds(new LngLatBounds([-10, -10], [10, 10]));
+            transform.setCenter(new LngLat(0, 0));
+            transform.setMaxBounds(new LngLatBounds([30, 30], [50, 50]));
+            const worldSizeAtZoom4 = 8192;
+            const degreesPerPixel = 180 / worldSizeAtZoom4;
+            const halfViewport = 100;
+
+            transform.setCenter(new LngLat(80, 80));
+
+            expect(transform.center.lng).toBeCloseTo(50 - halfViewport * degreesPerPixel, 6);
+            expect(transform.center.lat).toBeCloseTo(50 - halfViewport * degreesPerPixel, 6);
+        });
+
+        test('stops a center past the east edge of the square at the edge instead of wrapping it', () => {
+            const transform = createIdentityCrsTransform(200, 200);
+            transform.setZoom(4);
+
+            transform.setCenter(new LngLat(200, 0));
+
+            expect(transform.center.lng).toBeCloseTo(90, 6);
+        });
+
+        test('setLocationAtPoint keeps the longitude it was given instead of wrapping it', () => {
+            const transform = createIdentityCrsTransform(200, 200);
+            transform.setZoom(4);
+
+            transform.setLocationAtPoint(new LngLat(85, 0), transform.centerPoint);
+
+            expect(transform.center.lng).toBeCloseTo(85, 6);
+        });
+    });
+
+    test('returns only the main world from getVisibleUnwrappedCoordinates while renderWorldCopies is on', () => {
+        const transform = createIdentityCrsTransform(512, 512);
+        transform.setZoom(0);
+        transform.setCenter(new LngLat(0, 0));
+        expect(transform.renderWorldCopies).toBe(true);
+        expect(transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0))).toHaveLength(1);
+    });
+
+    test('apply carries a renderWorldCopies of false through the non-wrapping transform and back', () => {
+        const identity = createIdentityCrsTransform(200, 200);
+        identity.apply(createMercatorTransform({renderWorldCopies: false}), false);
+        expect(identity.renderWorldCopies).toBe(false);
+
+        const mercator = createMercatorTransform({renderWorldCopies: true});
+        mercator.apply(identity, false);
+        expect(mercator.renderWorldCopies).toBe(false);
+    });
+
+    describe('lng/lat and screen points', () => {
+        test('round trips a location through screen space with the identity mapping', () => {
+            const transform = createIdentityCrsTransform(200, 200);
+            transform.setZoom(2);
+            transform.setCenter(new LngLat(30, -20));
+            const point = transform.locationToScreenPoint(new LngLat(35, -25));
+            const back = transform.screenPointToLocation(point);
+            expect(back.lng).toBeCloseTo(35, 6);
+            expect(back.lat).toBeCloseTo(-25, 6);
+        });
+
+        test('places lng/lat 45,45 in the top-right quarter of the square', () => {
+            const transform = createIdentityCrsTransform(512, 512);
+            transform.setZoom(0);
+            transform.setCenter(new LngLat(0, 0));
+            const worldSizeAtZoom0 = 512;
+            const point = transform.locationToScreenPoint(new LngLat(45, 45));
+            expect(point.x).toBeCloseTo(0.75 * worldSizeAtZoom0, 6);
+            expect(point.y).toBeCloseTo(0.25 * worldSizeAtZoom0, 6);
+        });
+
+        test('bounds of a pitched view that reaches past the world square stop at the poles instead of throwing', () => {
+            const transform = createIdentityCrsTransform(512, 512);
+            transform.setZoom(0);
+            transform.setCenter(new LngLat(0, 0));
+            transform.setPitch(60);
+
+            const bounds = transform.getBounds();
+
+            expect(bounds.getNorth()).toBe(90);
+            expect(bounds.getSouth()).toBe(-90);
+        });
+
+        test('puts the camera above the center when unpitched', () => {
+            const transform = createIdentityCrsTransform(512, 512);
+            transform.setZoom(3);
+            transform.setCenter(new LngLat(10, 20));
+            const camera = transform.getCameraLngLat();
+            expect(camera.lng).toBeCloseTo(10, 6);
+            expect(camera.lat).toBeCloseTo(20, 6);
+        });
+    });
+
+    describe('calculateCameraOptionsFromTo', () => {
+        test('bearing and zoom follow the identity CRS, where lng and lat are the world axes and equal steps make a 45 degree bearing', () => {
+            const transform = createIdentityCrsTransform(512, 512);
+            transform.setZoom(1);
+
+            const options = transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0);
+
+            expect(options.bearing).toBeCloseTo(45, 10);
+            expect(options.pitch).toBeCloseTo(90, 10);
+            expect(options.center).toEqual(new LngLat(10, 10));
+            expect(options.zoom).toBeCloseTo(4.254888, 6);
+        });
+
+        test('mercator tilts the bearing of the same step by its latitude stretch', () => {
+            const transform = createMercatorTransform();
+            transform.resize(512, 512);
+            transform.setZoom(1);
+
+            expect(transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0).bearing).not.toBeCloseTo(45, 1);
+        });
+
+        test('altitude is scaled by the CRS meters per world unit, so 90 meters down in a 180 meter world is half a world unit', () => {
+            const transform = createIdentityCrsTransform(512, 512);
+            transform.setZoom(1);
+
+            const options = transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 90, {lng: 0, lat: 0}, 0);
+
+            expect(options.pitch).toBeCloseTo(0, 10);
+            expect(options.zoom).toBeCloseTo(1.584963, 6);
+        });
+    });
+});
+
 describe('MercatorTransform.isLocationOccluded', () => {
     test('a location behind a ridge is hidden and one in front of it is in view', () => {
         const tileSpanAtZoom12 = 360 / (1 << 12);
@@ -1244,5 +1455,22 @@ describe('MercatorTransform.isLocationOccluded', () => {
         const transform = createTransformAt(new LngLat(0, 0), 12, 75);
 
         expect(transform.isLocationOccluded(new LngLat(0, 0.01), terrain)).toBe(false);
+    });
+
+    test('a location behind a ridge on the identity CRS is hidden, where mercator math would place it in front of the ridge', () => {
+        const tileSpanAtZoom2 = 45;
+        const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 14 : 0);
+        const transform = createIdentityCrsTransform(512, 512);
+        const terrain = new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem'}, 'auto', () => transform.worldCoordinateHelper);
+        terrain.tileManager.getRenderableTiles = () => [{tileID: new OverscaledTileID(2, 0, 2, 2, 1)} as Tile];
+        terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: ridgeAcrossTheTwoMiddleRows}) as Tile;
+        transform.setCenter(new LngLat(tileSpanAtZoom2 / 2, tileSpanAtZoom2 * 0.25));
+        transform.setZoom(2);
+        transform.setPitch(75);
+        const behindRidge = new LngLat(tileSpanAtZoom2 / 2, 30);
+        const inFrontOfRidge = new LngLat(tileSpanAtZoom2 / 2, tileSpanAtZoom2 * 0.3);
+
+        expect(transform.isLocationOccluded(behindRidge, terrain)).toBe(true);
+        expect(transform.isLocationOccluded(inFrontOfRidge, terrain)).toBe(false);
     });
 });

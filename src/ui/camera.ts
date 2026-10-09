@@ -5,7 +5,6 @@ import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
@@ -1161,7 +1160,7 @@ export class Camera extends Evented<MapEventType> {
                 const x = w0 * p0[0] + w1 * p1[0] + w2 * p2[0] + w3 * p3[0];
                 const y = w0 * p0[1] + w1 * p1[1] + w2 * p2[1] + w3 * p3[1];
                 const altitude = w0 * p0[2] + w1 * p1[2] + w2 * p2[2] + w3 * p3[2];
-                const sample = sampleAt(index, this.terrain.exaggeration, x, y);
+                const sample = sampleAt(index, this.terrain.exaggeration, x, y, tr.worldCoordinateHelper.wraps);
                 if (sample.covered) {
                     height = Math.max(height, sample.elevation - altitude);
                 }
@@ -1184,10 +1183,12 @@ export class Camera extends Evented<MapEventType> {
         if (!index) {
             return undefined;
         }
-        const camera = MercatorCoordinate.fromLngLat(tr.getCameraLngLat());
-        const center = MercatorCoordinate.fromLngLat(tr.center);
+        const worldCoordinateHelper = tr.worldCoordinateHelper;
+        const cameraLngLat = tr.getCameraLngLat();
+        const camera = worldCoordinateHelper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat);
+        const center = worldCoordinateHelper.worldFromLngLat(tr.center.lng, tr.center.lat);
         const distanceFractionAtMaxZoom = zoomScale(tr.zoom - tr.maxZoom);
-        const sample = sampleAt(index, this.terrain.exaggeration, lerp(camera.x, center.x, distanceFractionAtMaxZoom), lerp(camera.y, center.y, distanceFractionAtMaxZoom));
+        const sample = sampleAt(index, this.terrain.exaggeration, lerp(camera.x, center.x, distanceFractionAtMaxZoom), lerp(camera.y, center.y, distanceFractionAtMaxZoom), worldCoordinateHelper.wraps);
         return sample.covered ? sample.elevation - lerp(tr.getCameraAltitude(), tr.elevation, distanceFractionAtMaxZoom) : undefined;
     }
 

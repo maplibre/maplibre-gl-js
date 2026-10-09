@@ -71,6 +71,7 @@ export class ScaleControl implements IControl {
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-scale', map.getContainer());
 
         this._map.on('move', this._onMove);
+        this._map.on('projectiontransition', this._onMove);
         this._onMove();
 
         return this._container;
@@ -80,6 +81,7 @@ export class ScaleControl implements IControl {
     onRemove(): void {
         this._container.remove();
         this._map.off('move', this._onMove);
+        this._map.off('projectiontransition', this._onMove);
         this._map = undefined;
     }
 

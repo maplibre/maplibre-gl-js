@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a map in a polar stereographic projection</title>
+    <meta property="og:description" content="Register the EPSG:3413 polar stereographic CRS with addProjection and proj4, and draw NASA GIBS imagery requested with the {bbox} tile URL token." />
+    <meta property="og:category" content="Raster & Imagery" />
+    <meta property="og:created" content="2026-10-09" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/proj4@2.15.0/dist/proj4.js'></script>
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    // NSIDC Sea Ice Polar Stereographic North. Swap in the proj4 definition of your own CRS.
+    proj4.defs('EPSG:3413', '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
+
+    maplibregl.addProjection({
+        name: 'EPSG:3413',
+        // A proj4 converter: forward([lng, lat]) gives [x, y] in meters, inverse goes back.
+        projection: proj4('EPSG:4326', 'EPSG:3413'),
+        // The square tile grid over the CRS: the top-left corner of tile 0/0/0 and its width in meters.
+        // These match the grid NASA GIBS serves EPSG:3413 in, centered on the North Pole.
+        tileMatrixSet: {origin: [-4194304, 4194304], extentAtZoom0: 8388608}
+    });
+
+    // A WMS that speaks the CRS: {bbox} expands to each tile's bounds in EPSG:3413 meters.
+    const gibs = layer => `https://gibs.earthdata.nasa.gov/wms/epsg3413/best/wms.cgi?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:3413&BBOX={bbox}&WIDTH=512&HEIGHT=512&FORMAT=image/png&TRANSPARENT=TRUE&LAYERS=${layer}`;
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            projection: {type: 'EPSG:3413'},
+            sources: {
+                'blue-marble': {
+                    type: 'raster',
+                    tiles: [gibs('BlueMarble_ShadedRelief_Bathymetry')],
+                    tileSize: 512,
+                    maxzoom: 6,
+                    attribution: 'Imagery: NASA GIBS'
+                },
+                'coastlines': {
+                    type: 'raster',
+                    tiles: [gibs('Coastlines')],
+                    tileSize: 512,
+                    maxzoom: 6
+                }
+            },
+            layers: [
+                {id: 'blue-marble', type: 'raster', source: 'blue-marble'},
+                {id: 'coastlines', type: 'raster', source: 'coastlines'}
+            ]
+        },
+        center: [-40, 78],
+        zoom: 1.2
+    });
+    map.addControl(new maplibregl.NavigationControl());
+
+    // Markers and popups take lng/lat as usual; the map converts them through the CRS.
+    for (const [name, lng, lat] of [['Longyearbyen', 15.63, 78.22], ['Nuuk', -51.72, 64.18], ['North Pole', 0, 90]]) {
+        new maplibregl.Marker().setLngLat([lng, lat]).setPopup(new maplibregl.Popup({offset: 25}).setText(name)).addTo(map);
+    }
+</script>
+</body>
+</html>
