@@ -301,13 +301,35 @@ export class TerrainTileManager extends Evented {
         return tile;
     }
 
+    /**
+     * Starts loading the DEM tile that covers a terrain tile before the view reaches it, where the source serves one,
+     * see {@link TileManager.loadTileAhead}. Before the source has loaded, its zoom range and tile URLs are unknown, and
+     * the view loads the tile when it gets there.
+     * @param tileID - the terrain tile
+     */
+    loadDemAhead(tileID: OverscaledTileID): void {
+        const source = this.tileManager._source;
+        if (!source.loaded()) return;
+        const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
+        if (z < source.minzoom) return;
+        const sourceTileID = tileID.scaledTo(z);
+        if (source.hasTile && !source.hasTile(sourceTileID)) return;
+        this.tileManager.loadTileAhead(sourceTileID);
+    }
+
+    /**
+     * Finds a source tile in view, in the out-of-view cache, or loading ahead of the view, see
+     * {@link TileManager.loadTileAhead}, which keeps it there until its load settles.
+     * @param key - the source tile's key
+     * @returns the tile
+     */
     findTileInCaches(key: string): Tile | undefined {
         let tile = this.tileManager.getTileByID(key);
         if (tile) {
             return tile;
         }
         tile = this.tileManager._outOfViewCache.getByKey(key);
-        return tile;
+        return tile ?? this.tileManager._tilesLoadingAhead[key];
     }
 
     /**

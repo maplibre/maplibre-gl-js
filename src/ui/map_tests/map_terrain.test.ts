@@ -1067,6 +1067,53 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
+    test('flyTo right after terrain is switched on eases toward the elevation under its destination once the DEM loaded ahead for it lands, before the view gets there', async () => {
+        const {map, dem} = await createMapWithWaitingDem({zoom: 13, pitch: 60});
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const destination = new LngLat(20, 20);
+        const elevationUnderTheDestination = 2000;
+
+        map.flyTo({center: destination, zoom: 13, duration: 1000, easing: k => k});
+        await landDemTiles(dem, elevationUnderTheDestination, tile => tileCovers(tile, destination));
+        renderFrameAt(map, now, 500);
+        renderFrameAt(map, now, 1000);
+
+        expect(map.getCameraTargetElevation()).toBeCloseTo(elevationUnderTheDestination, 6);
+    });
+
+    test('easeTo right after terrain is switched on eases toward the elevation under its destination once the DEM loaded ahead for it lands, before the view gets there', async () => {
+        const {map, dem} = await createMapWithWaitingDem({zoom: 13, pitch: 60});
+        map.setTerrain({source: 'dem'});
+        map.redraw();
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const destination = new LngLat(20, 20);
+        const elevationUnderTheDestination = 2000;
+
+        map.easeTo({center: destination, duration: 1000, easing: k => k});
+        await landDemTiles(dem, elevationUnderTheDestination, tile => tileCovers(tile, destination));
+        renderFrameAt(map, now, 500);
+        renderFrameAt(map, now, 1000);
+
+        expect(map.getCameraTargetElevation()).toBeCloseTo(elevationUnderTheDestination, 6);
+    });
+
+    test('flyTo right after a DEM source is added and terrain is switched on fires no error while the source loads', async () => {
+        const map = createMap({interactive: true, zoom: 13});
+        await map.once('load');
+        const errorMessages: string[] = [];
+        map.on('error', e => errorMessages.push(e.error.message));
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/dem/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+
+        map.flyTo({center: new LngLat(20, 20), zoom: 13, duration: 1000});
+        await waitForMetadataEvent(map.getSource<RasterDEMTileSource>('dem'));
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(errorMessages).toEqual([]);
+    });
+
     test('easeTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
         const map = await createMapOverTerrain(60);
         map.setCenterClampedToGround(false);

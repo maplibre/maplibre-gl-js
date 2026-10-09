@@ -78,6 +78,8 @@ export class TileManager extends Evented<SourceEventType> {
     _inViewTiles: InViewTiles;
     _prevLng: number;
     _outOfViewCache: TileCache;
+    /** The tiles {@link TileManager.loadTileAhead} is loading, by key; each holds one use until it lands. */
+    _tilesLoadingAhead: Record<string, Tile>;
     _timers: Record<string, ReturnType<typeof setTimeout>>;
     _maxTileCacheSize: number;
     _maxTileCacheZoomLevels: number;
@@ -117,6 +119,7 @@ export class TileManager extends Evented<SourceEventType> {
 
         this._inViewTiles = new InViewTiles();
         this._outOfViewCache = new TileCache(0, (tile) => this._unloadTile(tile));
+        this._tilesLoadingAhead = {};
         this._timers = {};
         this._maxTileCacheSize = null;
         this._maxTileCacheZoomLevels = null;
@@ -269,6 +272,7 @@ export class TileManager extends Evented<SourceEventType> {
         }
 
         this._outOfViewCache.reset();
+        this._abortTilesLoadingAhead();
 
         for (const id of this._inViewTiles.getAllIds()) {
             const tile = this._inViewTiles.getTileById(id);
@@ -748,6 +752,7 @@ export class TileManager extends Evented<SourceEventType> {
 
         const cached = tile;
 
+        tile ||= this._tilesLoadingAhead[tileID.key];
         if (!tile) {
             tile = new Tile(tileID, this._source.tileSize * tileID.overscaleFactor());
             this._loadTile(tile, tileID.key, tile.state, false);
@@ -760,6 +765,45 @@ export class TileManager extends Evented<SourceEventType> {
         }
 
         return tile;
+    }
+
+    /**
+     * Loads a tile before the view reaches it, so a camera animation can read it on the way. The load holds one use of
+     * the tile, so a view that takes it on the way, see {@link TileManager._addTile}, and passes on cannot abort it.
+     * Landed outside the view, it waits in the out-of-view cache, which the view takes it from when it arrives. A tile
+     * already in view, cached, or on its way is left alone.
+     * @param tileID - the tile to load
+     */
+    async loadTileAhead(tileID: OverscaledTileID): Promise<void> {
+        const key = tileID.key;
+        if (this._inViewTiles.getTileById(key) || this._outOfViewCache.has(tileID) || this._tilesLoadingAhead[key]) return;
+        const tile = new Tile(tileID, this._source.tileSize * tileID.overscaleFactor());
+        tile.uses++;
+        this._tilesLoadingAhead[key] = tile;
+        await this._loadTile(tile, key, tile.state, false);
+        if (this._tilesLoadingAhead[key] === tile) delete this._tilesLoadingAhead[key];
+        tile.uses--;
+        if (tile.aborted || tile.uses > 0) return;
+        if (tile.hasData()) {
+            this._outOfViewCache.add(tileID, tile, tile.getExpiryTimeout());
+        } else {
+            this._unloadTile(tile);
+        }
+    }
+
+    /**
+     * Aborts the loads {@link TileManager.loadTileAhead} started for tiles the view has not taken, as their data would
+     * land after the out-of-view cache was cleared or reset. A tile the view holds stays, for the view to reload.
+     */
+    private _abortTilesLoadingAhead(): void {
+        for (const key in this._tilesLoadingAhead) {
+            const tile = this._tilesLoadingAhead[key];
+            if (this._inViewTiles.getTileById(key) === tile) continue;
+            delete this._tilesLoadingAhead[key];
+            tile.aborted = true;
+            this._abortTile(tile);
+            this._unloadTile(tile);
+        }
     }
 
     /**
@@ -880,6 +924,7 @@ export class TileManager extends Evented<SourceEventType> {
         for (const id of this._inViewTiles.getAllIds()) {
             this._removeTile(id);
         }
+        this._abortTilesLoadingAhead();
 
         this._outOfViewCache.reset();
     }
