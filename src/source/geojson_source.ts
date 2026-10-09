@@ -618,7 +618,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         const {buffer, extent} = this.workerOptions.geojsonVtOptions;
         const tileBounds = tileIdToLngLatBounds(
             tile.tileID.canonical,
-            buffer / extent
+            buffer / extent,
+            this.map.style.projection.worldCoordinateHelper
         );
         for (const bounds of affectedBounds) {
             if (tileBounds.intersects(bounds)) {

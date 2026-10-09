@@ -1,23 +1,24 @@
 import {LngLat, type LngLatLike} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom} from '../util/util.ts';
+import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom, warnOnce} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
-import {altitudeFromMercatorZ, MercatorCoordinate, mercatorZfromAltitude} from './mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 import {Bounds} from './bounds.ts';
 
+import type {WorldCoordinateHelper} from './transform_interface.ts';
 import type {PaddingOptions} from './edge_insets.ts';
 import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
- * interpolating between the two endpoints will cross it.
+ * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
  * @param center - The LngLat object of the desired center. This object will be mutated.
  */
 export function normalizeCenter(tr: IReadonlyTransform, center: LngLat): void {
-    if (!tr.renderWorldCopies || tr.lngRange) return;
+    if (!tr.renderWorldCopies || !tr.worldCoordinateHelper.wraps || tr.lngRange) return;
     const delta = center.lng - tr.center.lng;
     center.lng +=
         delta > 180 ? -360 :
@@ -110,7 +111,12 @@ export class TransformHelper implements ITransformGetters {
     _tileSize: number; // constant
     _tileZoom: number; // integer zoom level for tiles
     _lngRange: [number, number];
-    _latRange: [number, number];
+    /**
+     * The latitude range the center is constrained to: the max bounds' when set, otherwise the valid mercator range
+     * for a wrapping world, and `null` for a world that does not wrap (a planar CRS), which is constrained to its
+     * world square instead.
+     */
+    _latRange: [number, number] | null;
     _scale: number; // computed based on zoom
     _width: number;
     _height: number;
@@ -160,9 +166,12 @@ export class TransformHelper implements ITransformGetters {
 
     _constrainOverride: TransformConstrainFunction;
 
+    _worldCoordinateHelper: WorldCoordinateHelper;
+
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._tileSize = 512; // constant
+        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
 
         this._renderWorldCopies = options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies;
         this._minZoom = options?.minZoom || 0;
@@ -255,7 +264,8 @@ export class TransformHelper implements ITransformGetters {
     get bearingInRadians(): number { return this._bearingInRadians; }
 
     get lngRange(): [number, number] { return this._lngRange; }
-    get latRange(): [number, number] { return this._latRange; }
+    get latRange(): [number, number] | null { return this._latRange; }
+    get worldCoordinateHelper(): WorldCoordinateHelper { return this._worldCoordinateHelper; }
 
     get pixelsToGLUnits(): [number, number] { return this._pixelsToGLUnits; }
 
@@ -303,6 +313,9 @@ export class TransformHelper implements ITransformGetters {
             renderWorldCopies = false;
         }
 
+        if (renderWorldCopies && !this._worldCoordinateHelper.wraps) {
+            warnOnce('renderWorldCopies has no effect in a projection whose world does not wrap.');
+        }
         this._renderWorldCopies = renderWorldCopies;
     }
 
@@ -508,6 +521,16 @@ export class TransformHelper implements ITransformGetters {
      * Sets or clears the map's geographical constraints.
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
+    /**
+     * Replaces the lng/lat to world coordinate mapping, mercator by default. The projection factory calls this on a
+     * transform it just built for a registered CRS, and `clone` calls it to keep the mapping. Without max bounds the
+     * latitude range is derived again, since it depends on whether the world wraps.
+     */
+    setWorldCoordinateHelper(worldCoordinateHelper: WorldCoordinateHelper): void {
+        this._worldCoordinateHelper = worldCoordinateHelper;
+        if (!this._lngRange) this.setMaxBounds();
+    }
+
     setMaxBounds(bounds?: LngLatBounds | null): void {
         if (bounds) {
             this._lngRange = [bounds.getWest(), bounds.getEast()];
@@ -515,7 +538,7 @@ export class TransformHelper implements ITransformGetters {
             this.constrainInternal();
         } else {
             this._lngRange = null;
-            this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
+            this._latRange = this._worldCoordinateHelper.wraps ? [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE] : null;
         }
     }
 
@@ -574,7 +597,7 @@ export class TransformHelper implements ITransformGetters {
      * While either dimension is zero there is no view to build, so the derived function is not called at all.
      */
     private _calcMatrices(): void {
-        this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+        this._pixelPerMeter = this.worldCoordinateHelper.worldZFromAltitude(1, this.center) * this.worldSize;
         if (!this._width || !this._height) {
             return;
         }
@@ -602,9 +625,11 @@ export class TransformHelper implements ITransformGetters {
         const {distanceToCenter, clampedElevation} = this._distanceToCenterFromAltElevationPitch(alt, this.elevation, cameraPitch);
         const {x, y} = cameraDirectionFromPitchBearing(cameraPitch, cameraBearing);
         
-        const camMercator = MercatorCoordinate.fromLngLat(lnglat, alt);
-        const {centerMercator, dMercator} = this._centerAlongView(camMercator, x, y, distanceToCenter, altitudeFromMercatorZ(1, camMercator.y));
-        const center = centerMercator.toLngLat();
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const cameraLngLat = LngLat.convert(lnglat);
+        const camMercator = worldCoordinateHelper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat, alt);
+        const {centerMercator, dMercator} = this._centerAlongView(camMercator, x, y, distanceToCenter, worldCoordinateHelper.metersPerWorldUnit(camMercator.x, camMercator.y));
+        const center = worldCoordinateHelper.lngLatFromWorld(centerMercator.x, centerMercator.y);
         const zoom = scaleZoom(this.height / 2 / Math.tan(this.fovInRadians / 2) / dMercator / this.tileSize);
         return {center, elevation: clampedElevation, zoom};
     }
@@ -622,14 +647,15 @@ export class TransformHelper implements ITransformGetters {
         const cameraPitch = this.pitch;
         const cameraBearing = this.bearing;
         const {x, y, z} = cameraDirectionFromPitchBearing(cameraPitch, cameraBearing);
-        const originalCenterMercator = MercatorCoordinate.fromLngLat(this.center, this.elevation);
-        const originalMetersPerMercUnit = 1 / mercatorZfromAltitude(1, this.center.lat);
+        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const originalCenterMercator = worldCoordinateHelper.worldFromLngLat(this.center.lng, this.center.lat, this.elevation);
+        const originalMetersPerMercUnit = 1 / worldCoordinateHelper.worldZFromAltitude(1, this.center);
         const dCamMercator = this.cameraToCenterDistance / this.worldSize;
         const camMercator = new MercatorCoordinate(originalCenterMercator.x - x * dCamMercator, originalCenterMercator.y - y * dCamMercator, originalCenterMercator.z + z * dCamMercator);
 
         const {distanceToCenter, clampedElevation} = this._distanceToCenterFromAltElevationPitch(camMercator.z * originalMetersPerMercUnit, elevation, cameraPitch);
         const {centerMercator, dMercator} = this._centerAlongView(camMercator, x, y, distanceToCenter, originalMetersPerMercUnit);
-        const center = centerMercator.toLngLat();
+        const center = worldCoordinateHelper.lngLatFromWorld(centerMercator.x, centerMercator.y);
         const zoom = scaleZoom(this.cameraToCenterDistance / dMercator / this.tileSize);
 
         // Update matrices
@@ -645,8 +671,8 @@ export class TransformHelper implements ITransformGetters {
     }
 
     /**
-     * The center `distanceToCenter` meters from the camera along the view, in mercator units, and that distance in
-     * mercator units. The mercator scale changes with latitude and the center's latitude is unknown until the center
+     * The center `distanceToCenter` meters from the camera along the view, in world units, and that distance in
+     * world units. The mercator scale changes with latitude and the center's latitude is unknown until the center
      * is: each pass places the center with the scale at the center the last pass found, from `metersPerMercUnit`,
      * and stops once two passes agree. Zoomed far out at a high latitude the scale changes faster along the view than
      * a pass follows; a pass that would move the center further than the last one did ends the search at the last
@@ -662,7 +688,7 @@ export class TransformHelper implements ITransformGetters {
         let centerMercator = new MercatorCoordinate(cameraMercator.x + x * dMercator, cameraMercator.y + y * dMercator);
         let step = Infinity;
         for (let pass = 1; pass < MAX_CENTER_PASSES; pass++) {
-            const centerMetersPerMercUnit = 1 / centerMercator.meterInMercatorCoordinateUnits();
+            const centerMetersPerMercUnit = this.worldCoordinateHelper.metersPerWorldUnit(centerMercator.x, centerMercator.y);
             const nextStep = Math.abs(centerMetersPerMercUnit - metersPerMercUnit);
             if (nextStep <= 1e-12 * metersPerMercUnit || nextStep >= step) break;
             step = nextStep;

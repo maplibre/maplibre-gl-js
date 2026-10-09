@@ -1,4 +1,5 @@
 import {beforeEach, describe, test, expect, vi} from 'vitest';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {FrameRenderContext} from '../render/frame_render_context.ts';
@@ -74,7 +75,7 @@ describe('render to texture', () => {
             size
         };
     }
-    const transform = {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) { return {}; }, calculateFogMatrix: () => {}} as any as IReadonlyTransform;
+    const transform = {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) { return {}; }, calculateFogMatrix: () => {}, worldCoordinateHelper: mercatorWorldCoordinateHelper} as any as IReadonlyTransform;
     const painter = {
         context: new Context(gl),
         renderLayer: vi.fn(),

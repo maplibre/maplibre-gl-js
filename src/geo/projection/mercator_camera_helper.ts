@@ -93,8 +93,9 @@ export class MercatorCameraHelper implements ICameraHelper {
         );
         normalizeCenter(tr, center);
 
-        const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
-        const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
+        const worldCoordinateHelper = tr.worldCoordinateHelper;
+        const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset, worldCoordinateHelper);
+        const delta = projectToWorldCoordinates(tr.worldSize, center, worldCoordinateHelper).sub(from);
 
         const finalScale = zoomScale(endZoom - startZoom);
         isZooming = (endZoom !== startZoom);
@@ -126,7 +127,8 @@ export class MercatorCameraHelper implements ICameraHelper {
                     Math.min(2, finalScale) :
                     Math.max(0.5, finalScale);
                 const speedup = Math.pow(base, 1 - k);
-                const newCenter = unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(k * speedup)).mult(scale));
+                const newCenterWorld = from.add(delta.mult(k * speedup)).mult(scale);
+                const newCenter = unprojectFromWorldCoordinates(tr.worldSize, newCenterWorld, worldCoordinateHelper);
                 tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
             }
         };
@@ -160,9 +162,10 @@ export class MercatorCameraHelper implements ICameraHelper {
 
         normalizeCenter(tr, constrainedCenter);
 
+        const worldCoordinateHelper = tr.worldCoordinateHelper;
         const startWorldSize = tr.worldSize;
-        const from = projectToWorldCoordinates(startWorldSize, options.locationAtOffset);
-        const delta = projectToWorldCoordinates(startWorldSize, constrainedCenter).sub(from);
+        const from = projectToWorldCoordinates(startWorldSize, options.locationAtOffset, worldCoordinateHelper);
+        const delta = projectToWorldCoordinates(startWorldSize, constrainedCenter, worldCoordinateHelper).sub(from);
 
         const pixelPathLength = delta.mag();
 
@@ -178,7 +181,7 @@ export class MercatorCameraHelper implements ICameraHelper {
             tr.setZoom(k === 1 ? targetZoom : startZoom + scaleZoom(scale));
             const newCenter = k === 1
                 ? constrainedCenter
-                : unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)));
+                : unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)), worldCoordinateHelper);
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
         };
 

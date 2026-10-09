@@ -1,4 +1,5 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {RasterTileSource} from './raster_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
@@ -16,7 +17,8 @@ function createSource(options, transformCallback?) {
         transform: {angle: 0, pitch: 0, showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
-        getPixelRatio() { return 1; }
+        getPixelRatio() { return 1; },
+        style: {projection: new MercatorProjection()}
     } as any);
 
     source.on('error', () => { }); // to prevent console log of errors

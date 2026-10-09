@@ -173,10 +173,11 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
     // Consider all corners of the rotated bounding box derived from the given points
     // when find the camera position that fits the given points.
 
-    const nwWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthWest());
-    const neWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthEast());
-    const seWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthEast());
-    const swWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthWest());
+    const worldCoordinateHelper = tr.worldCoordinateHelper;
+    const nwWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthWest(), worldCoordinateHelper);
+    const neWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthEast(), worldCoordinateHelper);
+    const seWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthEast(), worldCoordinateHelper);
+    const swWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthWest(), worldCoordinateHelper);
 
     const bearingRadians = degreesToRadians(-bearing);
 
@@ -222,7 +223,8 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
     const center = unprojectFromWorldCoordinates(
         tr.worldSize,
         // either world diagonal can be used (NW-SE or NE-SW)
-        nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
+        nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom),
+        worldCoordinateHelper
     );
 
     return {
