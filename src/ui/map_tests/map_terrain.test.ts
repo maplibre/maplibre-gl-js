@@ -1428,6 +1428,25 @@ describe('Terrain changing under and around a gesture', () => {
         expect(cameraMove(camera, cameraPosition(map))).toBeLessThan(0.01);
     });
 
+    test('a pitch drag into terrain on a globe raises the camera onto the terrain and no higher', async () => {
+        const map = createMap({interactive: true, zoom: 8, pitch: 45, center: [10, 45]});
+        await map.once('load');
+        map.setProjection({type: 'globe'});
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        map.setTerrain({source: 'dem'});
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lngLat: LngLat) => lngLat.lat < 44.999 ? 40000 : 0);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(() => 40000, 40000, 40000));
+        map.redraw();
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 100, clientY: 190});
+        for (let i = 1; i <= 20; i++) {
+            simulate.mousemove(window.document.body, {buttons: 2, clientX: 100, clientY: 190 - 9 * i});
+            map._renderTaskQueue.run();
+        }
+
+        expect(map._camera.transform.getCameraAltitude()).toBeCloseTo(40000, 1);
+    });
+
     function ridges(list: Array<{y: number; height: number; width: number}>): TerrainHeight {
         return (_lng, lat) => list.reduce((elevation, ridge) => {
             const d = (lat * metersPerDegree - ridge.y) / ridge.width;
@@ -1590,6 +1609,17 @@ describe('Terrain changing under and around a gesture', () => {
         wheelNotches(map, frame, -4 * wheelNotch, [100, 100], 4);
 
         expect(map.getCameraTargetElevation()).toBe(0);
+    });
+
+    test('a jumpTo on a globe, from a zoom it draws as a globe to one it draws as mercator, keeps its pitch and zoom with the camera above the terrain', async () => {
+        const {map} = await createMapOverFlatTerrain({zoom: 11, pitch: 0, maxPitch: 85}, 600);
+        map.setProjection({type: 'globe'});
+        map.redraw();
+
+        map.jumpTo({zoom: 14.6, pitch: 80});
+
+        expect(map.getPitch()).toBe(80);
+        expect(map.getZoom()).toBeCloseTo(14.6, 6);
     });
 
 });

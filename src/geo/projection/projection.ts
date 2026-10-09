@@ -92,6 +92,14 @@ export interface Projection {
 
     /**
      * @internal
+     * The transition state the projection has at a zoom, as {@link transitionState} reads once the map renders at that
+     * zoom, for a transform that is not rendered yet.
+     * @param zoom - the zoom
+     */
+    transitionStateAt(zoom: number): number;
+
+    /**
+     * @internal
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;

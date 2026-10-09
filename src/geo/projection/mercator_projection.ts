@@ -20,6 +20,10 @@ export class MercatorProjection implements Projection {
         return 'mercator';
     }
 
+    transitionStateAt(): number {
+        return 0;
+    }
+
     get useSubdivision(): boolean {
         // Mercator never uses subdivision.
         return false;

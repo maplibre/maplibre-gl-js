@@ -326,6 +326,13 @@ export type CameraInitOptions = {
      * with a way to stop them rather than holding a reference to the `HandlerManager`.
      */
     stopHandlers?: () => void;
+    /**
+     * @internal
+     * The projection transition the map draws at a zoom, 0 for mercator to 1 for a globe, see
+     * `Projection.transitionStateAt`. The `Camera` does not own the style's projection (the `Map` does), so it is
+     * injected with a way to read it; without it, a camera update keeps the transition its transform has.
+     */
+    projectionTransitionAt?: (zoom: number) => number;
 };
 
 export class Camera extends Evented<MapEventType> {
@@ -343,6 +350,11 @@ export class Camera extends Evented<MapEventType> {
      * a reference to the `HandlerManager`. See {@link CameraInitOptions.stopHandlers}.
      */
     _stopHandlers: () => void;
+    /**
+     * @internal
+     * See {@link CameraInitOptions.projectionTransitionAt}.
+     */
+    _projectionTransitionAt: ((zoom: number) => number) | undefined;
 
     _moving: boolean;
     _zooming: boolean;
@@ -452,6 +464,7 @@ export class Camera extends Evented<MapEventType> {
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
         this._stopHandlers = options.stopHandlers ?? (() => {});
+        this._projectionTransitionAt = options.projectionTransitionAt;
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
@@ -1114,12 +1127,12 @@ export class Camera extends Evented<MapEventType> {
      * above it at the same ground position, still looking at the same center at the same elevation, and the transform
      * the update edits keeps what it asked for; over mercator terrain high enough that its near clipping plane clears the terrain too. Without
      * terrain the camera is kept above sea level, which only needs checking where the center elevation is negative or
-     * the pitch passes 90 degrees. On a globe the camera is left where it is.
+     * the pitch passes 90 degrees.
      * @param tr - the transform the camera update edits
      * @returns `tr` while the camera is clear, else the corrected copy
      */
     _raiseCameraByPitchAndZoom(tr: ITransform): ITransform {
-        if ((!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) || tr.getClippingPlane()) {
+        if (!this.terrain && tr.elevation >= 0 && tr.pitch <= 90) {
             return tr;
         }
         const cameraLngLat = tr.getCameraLngLat();
@@ -1218,13 +1231,18 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Called after the camera is done being manipulated. A hold on the center elevation takes DEM data that landed, see
-     * {@link ElevationHold.take}; then the camera is kept above the terrain, see {@link Camera._keepCameraAboveTerrain};
+     * Called after the camera is done being manipulated. The transform first takes the projection transition the map
+     * draws at its zoom, since a copy of a globe's transform keeps the one it was copied under and would measure that
+     * projection; a hold on the center elevation takes DEM data that landed, see {@link ElevationHold.take}; then the
+     * camera is kept above the terrain, see {@link Camera._keepCameraAboveTerrain};
      * `transformCameraUpdate`, if present, proposes its changes on a copy, and the "approved" result is applied to the
      * rendered transform.
      * @param tr - the requested camera end state
      */
     applyUpdatedTransform(tr: ITransform): void {
+        if (this._projectionTransitionAt && tr !== this.transform) {
+            tr.setTransitionState(this._projectionTransitionAt(tr.zoom));
+        }
         this._takeLandedElevation(tr);
         const corrected = this._keepCameraAboveTerrain(tr);
         if (!this.transformCameraUpdate) {
