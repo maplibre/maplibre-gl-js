@@ -771,7 +771,7 @@ export class MercatorTransform implements ITransform {
         const worldCoordinateHelper = this.worldCoordinateHelper;
         const lngRange = this._helper._lngRange;
         const latRange = this._helper._latRange;
-        const box = lngRange && latRange ? this._projectMaxBounds(lngRange, latRange) : {minX: 0, minY: 0, maxX: 1, maxY: 1};
+        const box = lngRange ? this._projectMaxBounds(lngRange, latRange) : {minX: 0, minY: 0, maxX: 1, maxY: 1};
         const worldSize = this.tileSize * zoomScale(zoom);
         const minX = Math.max(box.minX, 0) * worldSize;
         const maxX = Math.min(box.maxX, 1) * worldSize;

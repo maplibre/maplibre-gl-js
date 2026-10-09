@@ -111,12 +111,7 @@ export class TransformHelper implements ITransformGetters {
     _tileSize: number; // constant
     _tileZoom: number; // integer zoom level for tiles
     _lngRange: [number, number];
-    /**
-     * The latitude range the center is constrained to: the max bounds' when set, otherwise the valid mercator range
-     * for a wrapping world, and `null` for a world that does not wrap (a planar CRS), which is constrained to its
-     * world square instead.
-     */
-    _latRange: [number, number] | null;
+    _latRange: [number, number];
     _scale: number; // computed based on zoom
     _width: number;
     _height: number;
@@ -264,7 +259,7 @@ export class TransformHelper implements ITransformGetters {
     get bearingInRadians(): number { return this._bearingInRadians; }
 
     get lngRange(): [number, number] { return this._lngRange; }
-    get latRange(): [number, number] | null { return this._latRange; }
+    get latRange(): [number, number] { return this._latRange; }
     get worldCoordinateHelper(): WorldCoordinateHelper { return this._worldCoordinateHelper; }
 
     get pixelsToGLUnits(): [number, number] { return this._pixelsToGLUnits; }
@@ -518,19 +513,17 @@ export class TransformHelper implements ITransformGetters {
     }
 
     /**
-     * Sets or clears the map's geographical constraints.
-     * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
-     */
-    /**
      * Replaces the lng/lat to world coordinate mapping, mercator by default. The projection factory calls this on a
-     * transform it just built for a registered CRS, and `clone` calls it to keep the mapping. Without max bounds the
-     * latitude range is derived again, since it depends on whether the world wraps.
+     * transform it just built for a registered CRS, and `clone` calls it to keep the mapping.
      */
     setWorldCoordinateHelper(worldCoordinateHelper: WorldCoordinateHelper): void {
         this._worldCoordinateHelper = worldCoordinateHelper;
-        if (!this._lngRange) this.setMaxBounds();
     }
 
+    /**
+     * Sets or clears the map's geographical constraints.
+     * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
+     */
     setMaxBounds(bounds?: LngLatBounds | null): void {
         if (bounds) {
             this._lngRange = [bounds.getWest(), bounds.getEast()];
@@ -538,7 +531,7 @@ export class TransformHelper implements ITransformGetters {
             this.constrainInternal();
         } else {
             this._lngRange = null;
-            this._latRange = this._worldCoordinateHelper.wraps ? [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE] : null;
+            this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
         }
     }
 

@@ -37,6 +37,17 @@ describe('Map in the identity projection', () => {
         expect(map.getProjection()).toEqual({type: 'identity'});
     });
 
+    test('keeps mercator between its latitude limits after max bounds were cleared in the identity projection', async () => {
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, zoom: 3});
+        await map.once('style.load');
+        map.setMaxBounds(null);
+        map.setProjection({type: 'mercator'});
+
+        map.setCenter([0, 89]);
+
+        expect(map.getCenter().lat).toBeCloseTo(84.231948, 6);
+    });
+
     test('stops the center where the viewport reaches the east edge of the world square', async () => {
         const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, zoom: 3});
         await map.once('style.load');

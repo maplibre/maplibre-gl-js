@@ -1221,10 +1221,8 @@ describe('MercatorTransform over the identity CRS', () => {
         expect(transform.clone().worldCoordinateHelper).toBe(transform.worldCoordinateHelper);
     });
 
-    test('sets no default lng/lat ranges', () => {
+    test('sets no max bounds', () => {
         const transform = createIdentityCrsTransform(200, 200);
-        expect(transform.latRange).toBeNull();
-        expect(transform.lngRange).toBeNull();
         expect(transform.getMaxBounds()).toBeNull();
     });
 
