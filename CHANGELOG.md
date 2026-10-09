@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Allow `Map#setMaxBounds` to constrain only one axis by passing `undefined` for both endpoints of the other axis ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

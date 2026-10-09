@@ -170,6 +170,20 @@ describe('LngLatBounds', () => {
         expect(
             LngLatBounds.convert([bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()])
         ).toEqual(bounds);
+        expect(LngLatBounds.convert([[undefined, -50], [undefined, 65]]).toArray())
+            .toEqual([[-Infinity, -50], [Infinity, 65]]);
+        expect(LngLatBounds.convert([[-30, undefined], [30, undefined]]).toArray())
+            .toEqual([[-30, -90], [30, 90]]);
+        expect(LngLatBounds.convert([undefined, -50, undefined, 65]).toArray())
+            .toEqual([[-Infinity, -50], [Infinity, 65]]);
+        expect(LngLatBounds.convert([-Infinity, -50, Infinity, 65]).toArray())
+            .toEqual([[-Infinity, -50], [Infinity, 65]]);
+        expect(() => LngLatBounds.convert([[undefined, -50], [30, 65]])).toThrow(
+            'Both west and east maxBounds values must be defined or undefined together'
+        );
+        expect(() => LngLatBounds.convert([[-30, undefined], [30, 65]])).toThrow(
+            'Both south and north maxBounds values must be defined or undefined together'
+        );
     });
 
     test('toArray', () => {
