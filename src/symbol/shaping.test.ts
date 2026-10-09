@@ -3,7 +3,7 @@ import {toGraphemes} from '../util/graphemes.ts';
 import {type PositionedIcon, type Box, type Shaping, applyTextFit, shapeIcon, fitIconToText, shapeText, WritingMode} from './shaping.ts';
 import {ImagePosition} from '../render/image_atlas.ts';
 import {type StyleImage, TextFit} from '../style/style_image.ts';
-import {Formatted} from '@maplibre/maplibre-gl-style-spec';
+import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
 
@@ -385,7 +385,7 @@ describe('shapeText vertical glyph orientation', () => {
 
     /** Keyed by grapheme cluster, which is what layout looks glyphs up by. */
     function createStubGlyphMap(text: string): Record<string, Record<string, StyleGlyph>> {
-        const glyphs: Record<string, Record<string, StyleGlyph>> = {default: {}};
+        const glyphs: Record<string, Record<string, StyleGlyph>> = {default: {}, vertical: {}};
         const verticalizedChars = Object.entries(verticalizedCharacterMap)
             .filter(([char]) => text.includes(char))
             .map(([, verticalizedChar]) => verticalizedChar);
@@ -406,6 +406,97 @@ describe('shapeText vertical glyph orientation', () => {
         return (shaping as Shaping).positionedLines.flatMap(line => line.positionedGlyphs.map(
             (glyph): [string, string] => [glyph.grapheme, glyph.vertical ? 'upright' : 'along-line']));
     }
+
+    describe('font-provided vertical forms', () => {
+        const verticalMetrics = {width: 10, height: 18, left: 5, top: -8, advance: 12};
+
+        test('uses each section\'s font to choose vertical forms or compatibility characters', () => {
+            const text = new Formatted([
+                new FormattedSection('（', null, 1, fontStack, null, null),
+                new FormattedSection('（', null, 1, 'Other', null, null)
+            ]);
+            const glyphs = createStubGlyphMap('（');
+            glyphs.vertical['（'] = {...glyphs.default['（'], metrics: verticalMetrics};
+
+            const shaping = shapeVerticalText(text, {
+                [fontStack]: glyphs,
+                Other: createStubGlyphMap('（')
+            }, {allowVerticalPlacement: true});
+
+            expect(shaping.positionedLines[0].positionedGlyphs).toMatchObject([
+                {grapheme: '（', fontStack, metrics: {left: 5}},
+                {grapheme: '︵', fontStack: 'Other', metrics: {left: 1}}
+            ]);
+        });
+
+        test('keeps a Latin run sideways when its brackets have vertical forms', () => {
+            const text = '東京AB（CD）';
+            const glyphs = createStubGlyphMap(text);
+            glyphs.vertical['（'] = {...glyphs.default['（'], metrics: verticalMetrics};
+            glyphs.vertical['）'] = {...glyphs.default['）'], metrics: verticalMetrics};
+
+            const shaping = shapeVerticalText(Formatted.fromString(text), {[fontStack]: glyphs});
+
+            expect(shaping.positionedLines[0].positionedGlyphs).toMatchObject([
+                {grapheme: '東', vertical: true},
+                {grapheme: '京', vertical: true},
+                {grapheme: 'A', vertical: false},
+                {grapheme: 'B', vertical: false},
+                {grapheme: '（', vertical: false, metrics: {left: 1}},
+                {grapheme: 'C', vertical: false},
+                {grapheme: 'D', vertical: false},
+                {grapheme: '）', vertical: false, metrics: {left: 1}}
+            ]);
+        });
+
+        test('rechecks digit orientation after replacing unused vertical punctuation', () => {
+            const text = '東京12（…）ABC';
+            const glyphs = createStubGlyphMap(text);
+            glyphs.vertical['…'] = {...glyphs.default['…'], metrics: verticalMetrics};
+
+            const shaping = shapeVerticalText(Formatted.fromString(text), {[fontStack]: glyphs});
+
+            expect(shaping.positionedLines[0].positionedGlyphs).toMatchObject([
+                {grapheme: '東', vertical: true},
+                {grapheme: '京', vertical: true},
+                {grapheme: '1', vertical: true},
+                {grapheme: '2', vertical: true},
+                {grapheme: '︵', vertical: true},
+                {grapheme: '︙', vertical: true},
+                {grapheme: '）', vertical: false},
+                {grapheme: 'A', vertical: false},
+                {grapheme: 'B', vertical: false},
+                {grapheme: 'C', vertical: false}
+            ]);
+        });
+
+        test('keeps punctuation sideways between space-separated Latin words', () => {
+            const text = '東京 Tokyo … Station';
+            const glyphs = createStubGlyphMap(text);
+            glyphs.vertical['…'] = {...glyphs.default['…'], metrics: verticalMetrics};
+
+            const shaping = shapeVerticalText(Formatted.fromString(text), {[fontStack]: glyphs});
+
+            const punctuation = shaping.positionedLines[0].positionedGlyphs.find(glyph => glyph.grapheme === '…');
+            expect(punctuation).toMatchObject({vertical: false, metrics: {left: 1}});
+        });
+
+        test('uses vertical punctuation between space-separated upright codes', () => {
+            const text = '東京 AB … CD';
+            const glyphs = createStubGlyphMap(text);
+            glyphs.vertical['…'] = {...glyphs.default['…'], metrics: verticalMetrics};
+
+            const shaping = shapeVerticalText(Formatted.fromString(text), {[fontStack]: glyphs});
+
+            const punctuation = shaping.positionedLines[0].positionedGlyphs.find(glyph => glyph.grapheme === '…');
+            expect(punctuation).toMatchObject({vertical: true, metrics: {left: 5}});
+        });
+
+        function shapeVerticalText(text: Formatted, glyphMap: GlyphMap, {allowVerticalPlacement = false} = {}): Shaping {
+            return shapeText(text, glyphMap, {}, {}, fontStack, Infinity, 24, 'center', 'center',
+                0, [0, 0], WritingMode.vertical, allowVerticalPlacement, 24, 24) as Shaping;
+        }
+    });
 
     test('draws digits between CJK characters upright', () => {
         // The label reported in https://github.com/maplibre/maplibre-gl-js/issues/5404

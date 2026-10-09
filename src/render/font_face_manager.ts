@@ -20,6 +20,9 @@ const MAX_CODE_POINT = 0x10FFFF;
  */
 const DEFAULT_UNICODE_RANGE: UnicodeRange = {start: 0, end: MAX_CODE_POINT};
 
+/** OpenType feature to enable, or `normal` for default settings. */
+export type FontFeature = 'normal' | 'vert';
+
 /**
  * A font file declared by the style, along with the bookkeeping needed to draw with it.
  */
@@ -38,11 +41,10 @@ type DeclaredFontFace = {
      * after one the page uses, and so that each file can be selected on its own.
      */
     family: string;
-    /**
-     * Resolves to whether the file loaded and can be drawn with. Started the first time a codepoint
-     * needs this file, so that a style may declare more fonts than any one map ever draws with.
-     */
-    loaded?: Promise<boolean>;
+    /** Cached load results by feature: the CSS family, or `null` if unavailable. */
+    loads: Partial<Record<FontFeature, Promise<string | null>>>;
+    /** Font download temporarily shared by overlapping face loads. */
+    data?: Promise<ArrayBuffer>;
 };
 
 /**
@@ -145,15 +147,27 @@ export class FontFaceManager {
      * within a name each declared file, until one covers it. A file that fails to load is skipped,
      * the specification asking for unsupported fonts to be ignored.
      *
-     * @returns the CSS family to draw with, or `null` to leave the codepoint to the `glyphs` URL
+     * Requests with a feature enabled use the normal face's file and return `null` if loading fails.
+     *
+     * @param fontStack - comma-separated font names, in fallback order
+     * @param codePoint - codepoint to match against the declared Unicode ranges
+     * @param feature - OpenType feature to enable, or `normal` for default settings
+     * @returns the loaded CSS family, or `null` if the requested face is unavailable
      */
-    async getFontFamily(fontStack: string, codePoint: number): Promise<string | null> {
+    async getFontFamily(fontStack: string, codePoint: number, feature: FontFeature): Promise<string | null> {
         for (const fontName of fontStack.split(',')) {
             for (const face of this._faces[fontName.trim()] ?? []) {
                 if (!covers(face, codePoint)) continue;
 
-                face.loaded ??= this._loadFontFace(face);
-                if (await face.loaded) return face.family;
+                face.loads.normal ??= this._loadFontFace(face, 'normal');
+                const data = face.data;
+                const family = await face.loads.normal;
+                if (!family) continue;
+
+                if (feature === 'normal') return family;
+
+                face.loads[feature] ??= this._loadFontFace(face, feature, data);
+                return face.loads[feature];
             }
         }
         return null;
@@ -175,7 +189,7 @@ export class FontFaceManager {
         const family = `maplibre-gl-font-face-${nextFamilyId++}`;
         const unicodeRange = face['unicode-range'];
         if (!unicodeRange?.length) {
-            return {url: face.url, ranges: [DEFAULT_UNICODE_RANGE], family};
+            return {url: face.url, ranges: [DEFAULT_UNICODE_RANGE], family, loads: {}};
         }
 
         const ranges: UnicodeRange[] = [];
@@ -189,31 +203,45 @@ export class FontFaceManager {
         }
         if (!ranges.length) return null;
 
-        return {url: face.url, ranges, family};
+        return {url: face.url, ranges, family, loads: {}};
     }
 
     /**
-     * Downloads a declared file and hands it to the browser, reporting whether it can be drawn with.
-     * A failure is not an error: its codepoints fall through to the next file, then to `glyphs`.
+     * Loads and registers a declared font with the requested OpenType feature.
+     *
+     * @param face - font file declaration and CSS family to register
+     * @param feature - OpenType feature to enable, or `normal` for default settings
+     * @param data - a download retained by a concurrent request while the normal face loads
+     * @returns the registered CSS family, or `null` on failure, ignored feature settings or disposal
      */
-    async _loadFontFace(face: DeclaredFontFace): Promise<boolean> {
+    async _loadFontFace(face: DeclaredFontFace, feature: FontFeature, data?: Promise<ArrayBuffer>): Promise<string | null> {
+        const description = feature === 'normal' ? 'font face' : `font face with "${feature}" enabled`;
         if (typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) {
-            warnOnce(`Ignoring the font face at ${face.url}: this environment has no CSS Font Loading API.`);
-            return false;
+            warnOnce(`Ignoring the ${description} at ${face.url}: this environment has no CSS Font Loading API.`);
+            return null;
         }
 
         let fontFace: FontFace;
         try {
-            fontFace = new FontFace(face.family, await this._downloadFontFile(face.url));
-            if (!Object.values(this._faces).some(faces => faces.includes(face))) return false;
+            if (!data) {
+                face.data ??= this._downloadFontFile(face.url);
+                data = face.data;
+            }
+            const family = feature === 'normal' ? face.family : `${face.family}-${feature}`;
+            fontFace = new FontFace(family, await data,
+                {featureSettings: feature === 'normal' ? 'normal' : `"${feature}" 1`});
+            if (!Object.values(this._faces).some(faces => faces.includes(face))) return null;
+            if (feature !== 'normal' && (!fontFace.featureSettings || fontFace.featureSettings === 'normal')) return null;
             document.fonts.add(fontFace);
             this._registered.add(fontFace);
             await fontFace.load();
-            return true;
+            return this._registered.has(fontFace) ? family : null;
         } catch (e) {
             if (fontFace) this._unregister(fontFace);
-            warnOnce(`Ignoring the font face at ${face.url}: ${ensureError(e).message}`);
-            return false;
+            warnOnce(`Ignoring the ${description} at ${face.url}: ${ensureError(e).message}`);
+            return null;
+        } finally {
+            if (face.data === data) delete face.data;
         }
     }
 
@@ -236,6 +264,9 @@ export class FontFaceManager {
     }
 
     _unregisterAll(): void {
+        for (const faces of Object.values(this._faces)) {
+            for (const face of faces) delete face.data;
+        }
         for (const fontFace of this._registered) {
             document.fonts?.delete(fontFace);
         }

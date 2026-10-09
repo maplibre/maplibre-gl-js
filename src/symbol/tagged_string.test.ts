@@ -19,7 +19,7 @@ describe('TaggedString', () => {
                 new FormattedSection('b', null, 2, null, null, null),
             ]);
 
-            const tagged = TaggedString.fromFeature(formatted, 'Test');
+            const tagged = TaggedString.fromFeature(formatted, 'Test', false);
 
             expect(tagged.graphemes()).toEqual(['a\u0301', 'b']);
             expect(tagged.sectionIndex).toEqual([0, 2]);
@@ -30,6 +30,26 @@ describe('TaggedString', () => {
         test('counts a surrogate pair as a single character', () => {
             const tagged = new TaggedString('茹𦨭');
             expect(tagged.length()).toBe(2);
+        });
+    });
+
+    describe('verticalizePunctuation', () => {
+        test('preserves spacing marks and section ownership when later sections need segmentation', () => {
+            const formatted = new Formatted([
+                new FormattedSection('လား', null, 1, 'Burmese', null, null),
+                new FormattedSection('、a\u0301', null, 2, 'Other', null, null)
+            ]);
+            const tagged = TaggedString.fromFeature(formatted, 'Test', false);
+            const glyphMap = {
+                Burmese: {default: {}, vertical: {'လ': {id: 0x101C} as StyleGlyph}},
+                Other: {default: {}, vertical: {'、': {id: 0x3001} as StyleGlyph}}
+            };
+
+            tagged.verticalizePunctuation(glyphMap);
+
+            expect(tagged.text).toBe('လား、a\u0301');
+            expect(tagged.graphemes()).toEqual(['လ', 'ာ', 'း', '、', 'a\u0301']);
+            expect(tagged.sectionIndex).toEqual([0, 0, 0, 1, 1]);
         });
     });
 

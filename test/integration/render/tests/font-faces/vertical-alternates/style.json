@@ -1,0 +1,265 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 1000,
+      "height": 400,
+      "description": "Top: horizontal; bottom: vertical. From left to right: square units, small kana, punctuation, quotation marks, consecutive ellipses. Ellipses cover both point (left) and line (right) placement."
+    }
+  },
+  "zoom": 1,
+  "center": [
+    0,
+    0
+  ],
+  "font-faces": {
+    "Noto Serif": "local://font/NotoSerifCJKjp-Regular.woff2"
+  },
+  "sources": {
+    "horizontal": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "㍍㌔㌢"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -140.625,
+                42.811522
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "小っゃャ"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -70.3125,
+                42.811522
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "小、。"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                0,
+                42.811522
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "〝小〟"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                70.3125,
+                42.811522
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "東京……"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                140.625,
+                42.811522
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "vertical": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "㍍㌔㌢"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -140.625,
+                -18.979026
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "小っゃャ"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -70.3125,
+                -18.979026
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "小、。"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                0,
+                -18.979026
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "〝小〟"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                70.3125,
+                -18.979026
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "text": "東京……"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                130.078125,
+                -18.979026
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "vertical-line": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {
+          "text": "東京……"
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              151.171875,
+              -55.379110448010486
+            ],
+            [
+              151.171875,
+              27.059125784374057
+            ]
+          ]
+        }
+      },
+      "maxzoom": 0
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "horizontal",
+      "type": "symbol",
+      "source": "horizontal",
+      "layout": {
+        "text-field": [
+          "get",
+          "text"
+        ],
+        "text-font": [
+          "Noto Serif"
+        ],
+        "text-size": 48,
+        "text-writing-mode": [
+          "horizontal"
+        ],
+        "text-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#111111"
+      }
+    },
+    {
+      "id": "vertical",
+      "type": "symbol",
+      "source": "vertical",
+      "layout": {
+        "text-field": [
+          "get",
+          "text"
+        ],
+        "text-font": [
+          "Noto Serif"
+        ],
+        "text-size": 48,
+        "text-writing-mode": [
+          "vertical"
+        ],
+        "text-allow-overlap": true
+      },
+      "paint": {
+        "text-color": "#111111"
+      }
+    },
+    {
+      "id": "vertical-line",
+      "type": "symbol",
+      "source": "vertical-line",
+      "layout": {
+        "text-field": [
+          "get",
+          "text"
+        ],
+        "text-font": [
+          "Noto Serif"
+        ],
+        "text-size": 48,
+        "text-writing-mode": [
+          "vertical"
+        ],
+        "text-allow-overlap": true,
+        "symbol-placement": "line"
+      },
+      "paint": {
+        "text-color": "#111111"
+      }
+    }
+  ]
+}
