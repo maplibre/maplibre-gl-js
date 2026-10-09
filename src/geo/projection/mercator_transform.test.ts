@@ -3,14 +3,14 @@ import Point from '@mapbox/point-geometry';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed.ts';
-import {type MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
+import {MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
 import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsTransform} from '../../util/test/util.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {EXTENT} from '../../data/extent.ts';
-import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorWorldCoordinateHelper, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 
 import type {Tile} from '../../tile/tile.ts';
 
@@ -936,6 +936,14 @@ function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Mer
     return transform;
 }
 
+function createRayTransform(near: number[], far: number[], worldSize: number): MercatorTransform {
+    const transform = Object.create(MercatorTransform.prototype);
+    Object.defineProperty(transform, 'worldSize', {value: worldSize});
+    Object.defineProperty(transform, 'worldCoordinateHelper', {value: mercatorWorldCoordinateHelper});
+    transform.getRaySegmentFromPixel = () => ({near, far});
+    return transform as MercatorTransform;
+}
+
 function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCoordinate, worldSize: number): void {
     expect(Math.abs(actual.x - expected.x) * worldSize).toBeLessThan(1e-3);
     expect(Math.abs(actual.y - expected.y) * worldSize).toBeLessThan(1e-3);
@@ -1175,6 +1183,17 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         expect(transform.screenTerrainPointToMercatorCoordinate(new Point(384, 384), terrain).z).toBeCloseTo(100, 6);
     });
 
+    test('handles a ray with no vertical component', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const terrain = createDEMTerrain([tileID], createDEM((x) => x * 200));
+        const worldSize = 512;
+
+        const crossing = createRayTransform([0, 256, 500], [512, 256, 500], worldSize);
+        expect(crossing.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).not.toBeNull();
+
+        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000], worldSize);
+        expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
+    });
 });
 
 // Outputs captured from main at 379b3673a, where lng/lat math does not go through the world coordinate helper; main's
