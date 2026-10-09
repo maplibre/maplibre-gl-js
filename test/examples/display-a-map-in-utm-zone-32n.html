@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a map in UTM zone 32N</title>
+    <meta property="og:description" content="Register the EPSG:25832 (UTM zone 32N) CRS with addProjection and proj4, and draw WMTS tiles from a national mapping agency in their native grid." />
+    <meta property="og:category" content="Raster & Imagery" />
+    <meta property="og:created" content="2026-10-09" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/proj4@2.15.0/dist/proj4.js'></script>
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    // ETRS89 / UTM zone 32N. Swap in the proj4 definition of your own CRS.
+    proj4.defs('EPSG:25832', '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+
+    maplibregl.addProjection({
+        name: 'EPSG:25832',
+        // A proj4 converter: forward([lng, lat]) gives [easting, northing] in meters, inverse goes back.
+        projection: proj4('EPSG:4326', 'EPSG:25832'),
+        // The WMTS tile matrix set the tiles come in, here Kartverket's utm32n: level 0 is a single
+        // 256 px tile at 21664 m per pixel (5545984 m wide) with its top-left corner at (-2000000, 9045984),
+        // and every level splits each tile in four. Take these numbers from your service's WMTS capabilities.
+        tileMatrix: {origin: [-2000000, 9045984], extentAtZoom0: 5545984}
+    });
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            projection: {type: 'EPSG:25832'},
+            sources: {
+                'topo': {
+                    type: 'raster',
+                    // The WMTS template with {z}/{y}/{x} for TileMatrix/TileRow/TileCol.
+                    tiles: ['https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/utm32n/{z}/{y}/{x}.png'],
+                    tileSize: 256,
+                    maxzoom: 18,
+                    attribution: '&copy; <a href="https://www.kartverket.no/">Kartverket</a>'
+                }
+            },
+            layers: [{id: 'topo', type: 'raster', source: 'topo'}]
+        },
+        center: [10.75, 59.91],
+        zoom: 6
+    });
+    map.addControl(new maplibregl.NavigationControl());
+    map.addControl(new maplibregl.ScaleControl());
+</script>
+</body>
+</html>

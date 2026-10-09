@@ -39,6 +39,8 @@ World y grows downwards, like tile rows do, which is why `origin` is the top-lef
 
 Take `origin` and `extentAtZoom0` from the tile matrix set definition published with the tiles, never from the CRS's area of use. The numbers in your tile server's definition are the ones that count. Tile matrix set documents may list corners northing-first (LINZ's NZTM2000Quad does), so reorder them to `[easting, northing]`.
 
+Two complete pages to start from: [Display a map in a polar stereographic projection](../examples/display-a-map-in-a-polar-stereographic-projection.md) (EPSG:3413, NASA GIBS imagery through the `{bbox}` token) and [Display a map in UTM zone 32N](../examples/display-a-map-in-utm-zone-32n.md) (EPSG:25832, a national mapping agency's WMTS). Swap in the proj4 definition, the tile matrix and the tile URL of your own service.
+
 ## Example: NZTM2000 (EPSG:2193) with proj4js
 
 [Land Information New Zealand (LINZ)](https://basemaps.linz.govt.nz/) serves its basemaps in the NZTM2000Quad tile matrix set, a quad tree grid over EPSG:2193. The projection math comes from [proj4js](https://proj4js.org/), so the page needs `proj4` loaded alongside `maplibre-gl`. The LINZ endpoint needs an API key, which you can get from the LINZ Basemaps site.
