@@ -971,7 +971,7 @@ export class Camera extends Evented<MapEventType> {
      * Eases the center elevation towards the terrain under `_elevationCenter`, on the transform the
      * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform. A center
      * that is not clamped to the ground keeps its elevation.
-     * @param k - the animation's progress, 0 to 1
+     * @param k - how far the center elevation has come from its start to the target, 0 to 1
      * @param tr - the transform the animation edits
      */
     _updateElevation(k: number, tr: ITransform): void {
@@ -1500,7 +1500,9 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            // The center elevation moves with the center along the path, so it reaches the destination's while the camera
+            // is still high instead of as the flight zooms in; a flight that does not move the center moves it with k.
+            if (this.terrain && !options.freezeElevation) this._updateElevation(Math.max(k, centerFactor), tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {

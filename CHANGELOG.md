@@ -9,7 +9,7 @@
 - Fix an uncaught error when `setStyle` is called while the WebGL context is lost, since 6.12.0 ([#8693](https://github.com/maplibre/maplibre-gl-js/pull/8693)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix the view sliding hundreds of meters off the center when terrain is switched on during a gesture ([#8688](https://github.com/maplibre/maplibre-gl-js/pull/8688)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix the camera jumping back at the end of a pan, flick or rotation into terrain ([#8692](https://github.com/maplibre/maplibre-gl-js/pull/8692)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- Fix `flyTo` and `easeTo` started right after terrain is switched on flying toward sea level while the DEM under the destination loads ([#8732](https://github.com/maplibre/maplibre-gl-js/pull/8732)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix the camera climbing or sinking at the end of a `flyTo` over terrain, and `flyTo` and `easeTo` heading for sea level while the DEM under the destination loads ([#8732](https://github.com/maplibre/maplibre-gl-js/pull/8732)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ## 6.13.0
