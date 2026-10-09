@@ -593,6 +593,24 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
     });
 
+    test('keeps an expired tile on the worker that loaded it', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        await waitForMetadataEvent(source);
+
+        const originalActor = {sendAsync: vi.fn().mockResolvedValue({})};
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'expired',
+            actor: originalActor,
+            loadVectorData: vi.fn()
+        } as any as Tile;
+
+        await source.loadTile(tile);
+
+        expect(tile.actor).toBe(originalActor);
+        expect(originalActor.sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: MessageType.loadTile}), expect.anything());
+    });
+
     test('stores worker etag on tile when present', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']

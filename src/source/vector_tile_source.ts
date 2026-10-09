@@ -227,7 +227,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
-            tile.actor = this.dispatcher.getReadyActor();
+            tile.actor ??= this.dispatcher.getReadyActor();
             messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
             return new Promise<void>((resolve, reject) => {
