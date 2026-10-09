@@ -17,7 +17,7 @@ import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {setNow, restoreNow} from '../util/time_control.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
-import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 
 import type {PossiblyEvaluated} from './properties.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
@@ -27,6 +27,7 @@ import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {AJAXError} from '../util/ajax.ts';
 import type Point from '@mapbox/point-geometry';
 import type {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
+import type {Transform} from '../geo/transform.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -3463,7 +3464,7 @@ describe('Style.getLayersOrder', () => {
 describe('Style.queryRenderedFeatures', () => {
 
     let style: Style;
-    let transform: MercatorTransform;
+    let transform: Transform;
 
     beforeEach(() => new Promise<void>(callback => {
         style = new Style(getStubMap());

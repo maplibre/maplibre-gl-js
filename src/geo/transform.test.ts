@@ -1,30 +1,24 @@
 import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
-import {TransformHelper} from './transform_helper.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {expectToBeCloseToArray} from '../util/test/util.ts';
 import {EXTENT} from '../data/extent.ts';
+import {createMercatorTransform} from './projection/mercator_transform.ts';
 
-const emptyCallbacks = {
-    calcMatrices: () => {},
-    defaultConstrain: (center, zoom) => { return {center, zoom}; },
-};
-
-describe('TransformHelper', () => {
+describe('Transform', () => {
     test('does not calculate the projection matrices while the width or height is zero', () => {
-        let calls = 0;
-        const helper = new TransformHelper({...emptyCallbacks, calcMatrices: () => { calls++; }});
-        helper.resize(0, 480, false);
-        helper.resize(640, 0, false);
-        helper.resize(0, 0, false);
-        expect(calls).toBe(0);
-        helper.resize(640, 480, false);
-        expect(calls).toBe(1);
+        const transform = createMercatorTransform();
+        transform.resize(0, 480, false);
+        transform.resize(640, 0, false);
+        transform.resize(0, 0, false);
+        expect(transform.modelViewProjectionMatrix).toBeUndefined();
+        transform.resize(640, 480, false);
+        expect(transform.modelViewProjectionMatrix).toBeDefined();
     });
 
     test('apply', () => {
-        const original = new TransformHelper(emptyCallbacks);
+        const original = createMercatorTransform();
         original.setConstrainOverride((lngLat, zoom) => {
             return {center: lngLat, zoom: zoom ?? 0};
         });
@@ -49,7 +43,7 @@ describe('TransformHelper', () => {
         original.setRenderWorldCopies(false);
         original.setZoom(2.3);
 
-        const cloned = new TransformHelper(emptyCallbacks);
+        const cloned = createMercatorTransform();
         cloned.apply(original, false);
 
         // Check all getters from the ITransformGetters interface
@@ -82,15 +76,15 @@ describe('TransformHelper', () => {
 
     describe('getMercatorTilesCoordinates', () => {
         test('mercator tile extents are set', () => {
-            const helper = new TransformHelper(emptyCallbacks);
+            const transform = createMercatorTransform();
 
-            let tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(0, 0, 0, 0, 0));
+            let tileMercatorCoords = transform.getMercatorTileCoordinates(new OverscaledTileID(0, 0, 0, 0, 0));
             expectToBeCloseToArray(tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
 
-            tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 0, 0));
+            tileMercatorCoords = transform.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 0, 0));
             expectToBeCloseToArray(tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
 
-            tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 1, 0));
+            tileMercatorCoords = transform.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 1, 0));
             expectToBeCloseToArray(tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
     });

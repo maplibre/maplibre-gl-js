@@ -12,6 +12,7 @@ import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 
 import type {Tile} from '../../tile/tile.ts';
+import type {Transform} from '../transform.ts';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -57,7 +58,7 @@ describe('transform', () => {
         expect([...transform.modelViewProjectionMatrix]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, -0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
         expect(fixedLngLat(transform.screenPointToLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.screenPointToMercatorCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
-        expect(fixedCoord(transform.screenPointToMercatorCoordinateAtZ(new Point(250, 250), 1))).toEqual({x: 0.5, y: 0.5000000044, z: 1});
+        expect(fixedLngLat(transform.screenPointToLocationAtElevation(new Point(250, 250), 1))).toEqual({lng: 0, lat: -0.000001586});
         expect(transform.locationToScreenPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
     });
 
@@ -676,7 +677,7 @@ describe('transform', () => {
         expect(projection.isOccluded).toBe(false);
     });
 
-    function createPitchedTransform(): MercatorTransform {
+    function createPitchedTransform(): Transform {
         const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(512, 512);
         transform.setZoom(10);
@@ -926,7 +927,7 @@ describe('transform', () => {
     });
 });
 
-function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): MercatorTransform {
+function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Transform {
     const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
     transform.resize(512, 512);
     transform.setCenter(center);
@@ -935,11 +936,10 @@ function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Mer
     return transform;
 }
 
-function createRayTransform(near: number[], far: number[], worldSize: number): MercatorTransform {
-    const transform = Object.create(MercatorTransform.prototype);
-    Object.defineProperty(transform, 'worldSize', {value: worldSize});
-    transform.getRaySegmentFromPixel = () => ({near, far});
-    return transform as MercatorTransform;
+function createRayTransform(near: number[], far: number[]): MercatorTransform {
+    const part = new MercatorTransform(createMercatorTransform());
+    Object.defineProperty(part, 'getRaySegmentFromPixel', {value: () => ({near, far})});
+    return part;
 }
 
 function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCoordinate, worldSize: number): void {
@@ -1019,7 +1019,7 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         for (const p of [new Point(256, 256), new Point(100, 400), new Point(400, 300)]) {
             const result = transform.screenTerrainPointToMercatorCoordinate(p, terrain);
             expect(result).not.toBeNull();
-            expectWorldPixelsClose(result, transform.screenPointToMercatorCoordinateAtZ(p, height), transform.worldSize);
+            expectWorldPixelsClose(result, MercatorCoordinate.fromLngLat(transform.screenPointToLocationAtElevation(p, height)), transform.worldSize);
             expect(result.z).toBeCloseTo(height, 10);
         }
     });
@@ -1034,7 +1034,7 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
 
         expect(result).not.toBeNull();
         expect(result.z).toBeCloseTo(height, 6);
-        expectWorldPixelsClose(result, transform.screenPointToMercatorCoordinateAtZ(center, height), transform.worldSize);
+        expectWorldPixelsClose(result, MercatorCoordinate.fromLngLat(transform.screenPointToLocationAtElevation(center, height)), transform.worldSize);
     });
 
     test('applies the terrain exaggeration to the hit elevation', () => {
@@ -1045,7 +1045,7 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         const result = transform.screenTerrainPointToMercatorCoordinate(new Point(256, 256), terrain);
 
         expect(result.z).toBeCloseTo(height * 2.5, 10);
-        expectWorldPixelsClose(result, transform.screenPointToMercatorCoordinateAtZ(new Point(256, 256), height * 2.5), transform.worldSize);
+        expectWorldPixelsClose(result, MercatorCoordinate.fromLngLat(transform.screenPointToLocationAtElevation(new Point(256, 256), height * 2.5)), transform.worldSize);
     });
 
     test('the hit elevation matches the terrain elevation at the hit position', () => {
@@ -1094,7 +1094,7 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
 
         // Staying below the terrain surface the whole way.
         const submergedTerrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 100));
-        const submergedTransform = createRayTransform([256, 256, -100], [300, 256, 100], 512);
+        const submergedTransform = createRayTransform([256, 256, -100], [300, 256, 100]);
         expect(submergedTransform.screenTerrainPointToMercatorCoordinate(new Point(0, 0), submergedTerrain)).toBeNull();
     });
 
@@ -1113,7 +1113,7 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         const result = transform.screenTerrainPointToMercatorCoordinate(p, terrain);
 
         expect(result.z).toBe(0);
-        expectWorldPixelsClose(result, transform.screenPointToMercatorCoordinateAtZ(p, 0), transform.worldSize);
+        expectWorldPixelsClose(result, MercatorCoordinate.fromLngLat(transform.screenPointToLocationAtElevation(p, 0)), transform.worldSize);
     });
 
     test('returns coordinates outside the central world for wrapped copies', () => {
@@ -1129,8 +1129,8 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
 
         expect(left.x).toBeLessThan(0);
         expect(right.x).toBeGreaterThan(1);
-        expectWorldPixelsClose(left, transform.screenPointToMercatorCoordinateAtZ(leftPoint, 0), transform.worldSize);
-        expectWorldPixelsClose(right, transform.screenPointToMercatorCoordinateAtZ(rightPoint, 0), transform.worldSize);
+        expectWorldPixelsClose(left, MercatorCoordinate.fromLngLat(transform.screenPointToLocationAtElevation(leftPoint, 0)), transform.worldSize);
+        expectWorldPixelsClose(right, MercatorCoordinate.fromLngLat(transform.screenPointToLocationAtElevation(rightPoint, 0)), transform.worldSize);
     });
 
     test('samples overscaled tiles from their parent DEM', () => {
@@ -1184,12 +1184,11 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
     test('handles a ray with no vertical component', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const terrain = createDEMTerrain([tileID], createDEM((x) => x * 200));
-        const worldSize = 512;
 
-        const crossing = createRayTransform([0, 256, 500], [512, 256, 500], worldSize);
+        const crossing = createRayTransform([0, 256, 500], [512, 256, 500]);
         expect(crossing.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).not.toBeNull();
 
-        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000], worldSize);
+        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000]);
         expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
 });
@@ -1224,7 +1223,7 @@ describe('MercatorTransform.isLocationOccluded', () => {
         const height = 449;
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => height));
         const transform = createTransformAt(new LngLat(0, 0), 16, 60);
-        const drawnAtTheScreenCenter = transform.screenPointToMercatorCoordinateAtZ(new Point(256, 256), height).toLngLat();
+        const drawnAtTheScreenCenter = transform.screenPointToLocationAtElevation(new Point(256, 256), height);
 
         expect(transform.isLocationOccluded(drawnAtTheScreenCenter, terrain)).toBe(false);
     });

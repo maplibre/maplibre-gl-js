@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {PACKED_HIDDEN_OPACITY, PACKED_VISIBLE_OPACITY, Placement, RetainedQueryData} from './placement.ts';
-import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -12,6 +12,7 @@ import {loadVectorTile} from '../../test/unit/lib/tile.ts';
 import type {IndexedFeature} from '../data/bucket.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import type {Transform} from '../geo/transform.ts';
 
 const collisionBoxArray = new CollisionBoxArray();
 
@@ -36,7 +37,7 @@ const SENTINEL = 12345;
 
 describe('placement', () => {
     let placement: Placement;
-    let transform: MercatorTransform;
+    let transform: Transform;
     beforeEach(() => {
         transform = createMercatorTransform();
         transform.resize(512, 512);

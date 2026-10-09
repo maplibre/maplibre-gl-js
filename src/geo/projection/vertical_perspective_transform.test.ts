@@ -5,11 +5,13 @@ import {LngLat, earthRadius} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
-import {type VerticalPerspectiveTransform, createVerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
+import {createVerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {createMercatorTransform} from './mercator_transform.ts';
 
+import type {Transform} from '../transform.ts';
+
 describe('VerticalPerspectiveTransform.screenTerrainPointToMercatorCoordinate', () => {
-    function createTransform(center: LngLat, zoom: number): VerticalPerspectiveTransform {
+    function createTransform(center: LngLat, zoom: number): Transform {
         const transform = createVerticalPerspectiveTransform();
         transform.resize(512, 512);
         transform.setCenter(center);

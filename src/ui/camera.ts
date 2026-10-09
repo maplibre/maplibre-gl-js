@@ -419,7 +419,7 @@ export class Camera extends Evented<MapEventType> {
 
     constructor(options: CameraInitOptions) {
         super();
-        // For now we will use a temporary MercatorTransform instance.
+        // For now we will use a temporary mercator transform.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
         this.transform = createMercatorTransform();

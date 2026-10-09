@@ -40,7 +40,7 @@ function splitmix32(a: number): () => number {
 
 const symbolCount = 20000;
 
-function createSymbols(transform: ITransform, calculatePosMatrix: (tileID: UnwrappedTileID) => mat4 | undefined): TestSymbol[] {
+function createSymbols(transform: ITransform, getSimpleProjectionMatrix: (tileID: OverscaledTileID) => mat4 | undefined): TestSymbol[] {
     transform.resize(1024, 1024, true);
 
     const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -70,7 +70,7 @@ function createSymbols(transform: ITransform, calculatePosMatrix: (tileID: Unwra
                 rndRange(-20, 20)
             ],
             shift: rng() > 0.5 ? new Point(rndRange(-20, 20), rndRange(-20, 20)) : undefined,
-            simpleProjectionMatrix: calculatePosMatrix(unwrappedTileID),
+            simpleProjectionMatrix: getSimpleProjectionMatrix(tileID),
         });
     }
 
@@ -100,7 +100,7 @@ function placeAll(transform: ITransform, symbols: TestSymbol[]): void {
 }
 
 const mercatorTransform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-const mercatorSymbols = createSymbols(mercatorTransform, (tileID) => mercatorTransform.calculatePosMatrix(tileID, false));
+const mercatorSymbols = createSymbols(mercatorTransform, (tileID) => mercatorTransform.getFastPathSimpleProjectionMatrix(tileID));
 
 const globeTransform = createGlobeTransform();
 const globeSymbols = createSymbols(globeTransform, () => undefined);

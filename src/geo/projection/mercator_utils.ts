@@ -4,12 +4,12 @@ import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale, type Mat4f64} fr
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
 
-import type {UnwrappedTileIDType} from '../transform_helper.ts';
+import type {UnwrappedTileIDType} from '../transform.ts';
 import type {LngLat} from '../lng_lat.ts';
 
 /*
 * The maximum angle to use for the Mercator horizon. This must be less than 90
-* to prevent errors in `MercatorTransform::_calcMatrices()`. It shouldn't be too close
+* to prevent errors in `MercatorTransform::calcMatrices()`. It shouldn't be too close
 * to 90, or the distance to the horizon will become very large, unnecessarily increasing
 * the number of tiles needed to render the map.
 */

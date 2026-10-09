@@ -1,10 +1,10 @@
-import {TransformHelper} from '../transform_helper.ts';
+import {Transform} from '../transform.ts';
 import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {lerp} from '../../util/util.ts';
 
-import type {LngLat, LngLatLike,} from '../lng_lat.ts';
-import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
+import type {LngLat, LngLatLike} from '../lng_lat.ts';
+import type {mat4, vec3, vec4} from 'gl-matrix';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
 import type Point from '@mapbox/point-geometry';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
@@ -12,221 +12,18 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
-import type {TransformOptions} from '../transform_helper.ts';
-import type {PaddingOptions} from '../edge_insets.ts';
+import type {CameraOptionsFromTo, TransformConstrainFunction} from '../transform_interface.ts';
+import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
- * Globe transform is a transform that moves between vertical perspective and mercator projections.
- *
- * The two child transforms share this transform's {@link TransformHelper}, so the camera exists exactly once:
- * a child that moves itself - as {@link setLocationAtPoint} has it do, since only the child knows its own
- * projection's geometry - has moved this transform too, with no copying back. The children own only what they
- * derive from that shared camera, such as their matrices, and this transform drives their `_calcMatrices`
- * because a helper has a single `calcMatrices` callback.
+ * @internal
+ * The part of a globe transform, which moves between the vertical perspective and mercator projections.
+ * Both child parts belong to the same {@link Transform}, and this part drives their `calcMatrices`.
  */
-export class GlobeTransform implements ITransform {
-    private _helper: TransformHelper;
-
-    //
-    // Implementation of transform getters and setters
-    //
-
-    get pixelsToClipSpaceMatrix(): mat4 {
-        return this._helper.pixelsToClipSpaceMatrix;
-    }
-    get clipSpaceToPixelsMatrix(): mat4 {
-        return this._helper.clipSpaceToPixelsMatrix;
-    }
-    get pixelsToGLUnits(): [number, number] {
-        return this._helper.pixelsToGLUnits;
-    }
-    get centerOffset(): Point {
-        return this._helper.centerOffset;
-    }
-    get size(): Point {
-        return this._helper.size;
-    }
-    get rotationMatrix(): mat2 {
-        return this._helper.rotationMatrix;
-    }
-    get centerPoint(): Point {
-        return this._helper.centerPoint;
-    }
-    get pixelsPerMeter(): number {
-        return this._helper.pixelsPerMeter;
-    }
-    setMinZoom(zoom: number): void {
-        this._helper.setMinZoom(zoom);
-    }
-    setMaxZoom(zoom: number): void {
-        this._helper.setMaxZoom(zoom);
-    }
-    setMinPitch(pitch: number): void {
-        this._helper.setMinPitch(pitch);
-    }
-    setMaxPitch(pitch: number): void {
-        this._helper.setMaxPitch(pitch);
-    }
-    setRenderWorldCopies(renderWorldCopies: boolean): void {
-        this._helper.setRenderWorldCopies(renderWorldCopies);
-    }
-    setBearing(bearing: number): void {
-        this._helper.setBearing(bearing);
-    }
-    setPitch(pitch: number): void {
-        this._helper.setPitch(pitch);
-    }
-    setRoll(roll: number): void {
-        this._helper.setRoll(roll);
-    }
-    setFov(fov: number): void {
-        this._helper.setFov(fov);
-    }
-    setZoom(zoom: number): void {
-        this._helper.setZoom(zoom);
-    }
-    setCenter(center: LngLat): void {
-        this._helper.setCenter(center);
-    }
-    setElevation(elevation: number): void {
-        this._helper.setElevation(elevation);
-    }
-    setMinElevationForCurrentTile(elevation: number): void {
-        this._helper.setMinElevationForCurrentTile(elevation);
-    }
-    setPadding(padding: PaddingOptions): void {
-        this._helper.setPadding(padding);
-    }
-    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
-        this._helper.interpolatePadding(start, target, t);
-    }
-    isPaddingEqual(padding: PaddingOptions): boolean {
-        return this._helper.isPaddingEqual(padding);
-    }
-    resize(width: number, height: number, constrainTransform: boolean = true): void {
-        this._helper.resize(width, height, constrainTransform);
-    }
-    getMaxBounds(): LngLatBounds {
-        return this._helper.getMaxBounds();
-    }
-    setMaxBounds(bounds?: LngLatBounds): void {
-        this._helper.setMaxBounds(bounds);
-    }
-    setConstrainOverride(constrain?: TransformConstrainFunction | null): void {
-        this._helper.setConstrainOverride(constrain);
-    }
-    overrideNearFarZ(nearZ: number, farZ: number): void {
-        this._helper.overrideNearFarZ(nearZ, farZ);
-    }
-    clearNearFarZOverride(): void {
-        this._helper.clearNearFarZOverride();
-    }
-    getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
-    }
-
-    get tileSize(): number {
-        return this._helper.tileSize;
-    }
-    get tileZoom(): number {
-        return this._helper.tileZoom;
-    }
-    get scale(): number {
-        return this._helper.scale;
-    }
-    get worldSize(): number {
-        return this._helper.worldSize;
-    }
-    get width(): number {
-        return this._helper.width;
-    }
-    get height(): number {
-        return this._helper.height;
-    }
-    get lngRange(): [number, number] {
-        return this._helper.lngRange;
-    }
-    get latRange(): [number, number] {
-        return this._helper.latRange;
-    }
-    get minZoom(): number {
-        return this._helper.minZoom;
-    }
-    get maxZoom(): number {
-        return this._helper.maxZoom;
-    }
-    get zoom(): number {
-        return this._helper.zoom;
-    }
-    get center(): LngLat {
-        return this._helper.center;
-    }
-    get minPitch(): number {
-        return this._helper.minPitch;
-    }
-    get maxPitch(): number {
-        return this._helper.maxPitch;
-    }
-    get pitch(): number {
-        return this._helper.pitch;
-    }
-    get pitchInRadians(): number {
-        return this._helper.pitchInRadians;
-    }
-    get roll(): number {
-        return this._helper.roll;
-    }
-    get rollInRadians(): number {
-        return this._helper.rollInRadians;
-    }
-    get bearing(): number {
-        return this._helper.bearing;
-    }
-    get bearingInRadians(): number {
-        return this._helper.bearingInRadians;
-    }
-    get fov(): number {
-        return this._helper.fov;
-    }
-    get fovInRadians(): number {
-        return this._helper.fovInRadians;
-    }
-    get elevation(): number {
-        return this._helper.elevation;
-    }
-    get minElevationForCurrentTile(): number {
-        return this._helper.minElevationForCurrentTile;
-    }
-    get padding(): PaddingOptions {
-        return this._helper.padding;
-    }
-    get unmodified(): boolean {
-        return this._helper.unmodified;
-    }
-    get renderWorldCopies(): boolean {
-        return this._helper.renderWorldCopies;
-    }
-    get cameraToCenterDistance(): number {
-        return this._helper.cameraToCenterDistance;
-    }
-    get constrainOverride(): TransformConstrainFunction {
-        return this._helper.constrainOverride;
-    }
-    public get nearZ(): number {
-        return this._helper.nearZ;
-    }
-    public get farZ(): number {
-        return this._helper.farZ;
-    }
-    public get autoCalculateNearFarZ(): boolean {
-        return this._helper.autoCalculateNearFarZ;
-    }
-    //
-    // Implementation of globe transform
-    //
+export class GlobeTransform implements IProjectionTransform {
+    private _transform: Transform;
 
     /**
      * True when globe render path should be used instead of the old but simpler mercator rendering.
@@ -239,12 +36,12 @@ export class GlobeTransform implements ITransform {
 
     setTransitionState(globeness: number): void {
         this._globeness = globeness;
-        this._calcMatrices();
+        this.calcMatrices();
         this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
         this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
     }
 
-    private get currentTransform(): ITransform {
+    private get currentTransform(): IProjectionTransform {
         return this.isGlobeRendering ? this._verticalPerspectiveTransform : this._mercatorTransform;
     }
 
@@ -256,25 +53,20 @@ export class GlobeTransform implements ITransform {
     private _mercatorTransform: MercatorTransform;
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
 
-    public constructor(options?: TransformOptions) {
-        this._helper = new TransformHelper({
-            calcMatrices: () => this._calcMatrices(),
-            defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
-        }, options);
+    /**
+     * @param transform - The transform whose camera state this part's children derive their matrices from.
+     */
+    public constructor(transform: Transform) {
+        this._transform = transform;
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
-        this._mercatorTransform = new MercatorTransform(undefined, this._helper);
-        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(undefined, this._helper);
+        this._mercatorTransform = new MercatorTransform(transform);
+        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(transform);
     }
 
-    clone(): ITransform {
-        const clone = new GlobeTransform();
+    clone(transform: Transform): GlobeTransform {
+        const clone = new GlobeTransform(transform);
         clone._globeness = this._globeness;
-        clone.apply(this, false);
         return clone;
-    }
-
-    public apply(that: IReadonlyTransform, constrain: boolean): void {
-        this._helper.apply(that, constrain);
     }
 
     public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
@@ -282,6 +74,10 @@ export class GlobeTransform implements ITransform {
     public get modelViewProjectionMatrix(): mat4 { return this.currentTransform.modelViewProjectionMatrix; }
 
     public get inverseProjectionMatrix(): mat4 { return this.currentTransform.inverseProjectionMatrix; }
+
+    public get nearZ(): number { return this.currentTransform.nearZ; }
+
+    public get farZ(): number { return this.currentTransform.farZ; }
 
     public get cameraPosition(): vec3 { return this.currentTransform.cameraPosition; }
 
@@ -327,16 +123,15 @@ export class GlobeTransform implements ITransform {
     }
 
     /**
-     * Both children write their near/far Z into the shared helper, so the order here is what keeps the two render
-     * paths at the same depth across the globe-to-mercator transition: vertical perspective computes the globe's Z
-     * first, and while the globe is rendering mercator is made to reuse that result instead of computing its own.
+     * Vertical perspective computes the globe's depth range first. While the globe renders, mercator is given that range
+     * instead of computing its own, which keeps the two render paths at the same depth across the globe-to-mercator transition.
      */
-    private _calcMatrices(): void {
-        if (!this._helper._width || !this._helper._height) {
+    calcMatrices(): void {
+        if (!this._transform.width || !this._transform.height) {
             return;
         }
-        this._verticalPerspectiveTransform._calcMatrices();
-        this._mercatorTransform._calcMatrices(this.autoCalculateNearFarZ && !this.isGlobeRendering);
+        this._verticalPerspectiveTransform.calcMatrices();
+        this._mercatorTransform.calcMatrices(this.isGlobeRendering ? this._verticalPerspectiveTransform : this._transform.nearFarZOverride);
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
@@ -366,10 +161,6 @@ export class GlobeTransform implements ITransform {
         return this._mercatorTransform.maxPitchScaleFactor();
     }
 
-    getCameraPoint(): Point {
-        return this._helper.getCameraPoint();
-    }
-
     /** The camera of the child that renders the current frame. */
     getCameraAltitude(): number {
         return this.currentTransform.getCameraAltitude();
@@ -392,14 +183,6 @@ export class GlobeTransform implements ITransform {
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         return this.currentTransform.defaultConstrain(lngLat, zoom);
     };
-
-    applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        return this._helper.applyConstrain(lngLat, zoom);
-    };
-
-    calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
-        return this._helper.calculateCenterFromCameraLngLatAlt(lngLat, alt, bearing, pitch);
-    }
 
     /** See {@link getCameraAltitude}. */
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
@@ -470,6 +253,6 @@ export class GlobeTransform implements ITransform {
 /**
  * Creates a transform for the globe projection.
  */
-export function createGlobeTransform(options?: TransformOptions): GlobeTransform {
-    return new GlobeTransform(options);
+export function createGlobeTransform(options?: TransformOptions): Transform {
+    return new Transform((transform) => new GlobeTransform(transform), options);
 }
