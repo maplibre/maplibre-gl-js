@@ -1,7 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add experimental `CustomLayerInterface.renderToTerrainTile`, `CustomLayerInterface.terrainTileRevision` and `renderTerrainHeightMap` in the options of `prerender`, so custom layers can drape what they draw over the terrain and place objects on it on the GPU ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
-- Allow calling `new Map({ globalState: { ... }})`, `new Map({ transformStyle: ... })` and `setStyle({ globalState: ... })` to provide an initial global state and style transformation for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
+- Allow calling `new Map({ globalState: { ... }})` and `setStyle({ globalState: ... })` to provide an initial global state for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

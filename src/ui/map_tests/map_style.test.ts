@@ -624,23 +624,6 @@ describe('setStyle', () => {
         await map.once('load');
     });
 
-    test('map loads with a transform style function', async () => {
-        const map = createMap({
-            transformStyle: (prevStyle, nextStyle) => {
-                expect(prevStyle).toBeUndefined();
-                expect(nextStyle).toBeDefined();
-                return {
-                    ...nextStyle,
-                    zoom: 13,
-                };
-            }
-        });
-
-        await map.once('load');
-
-        expect(map.getStyle().zoom).toBe(13);
-    });
-
     test('Override default style validation', () => {
         let validationOption = true;
         vi.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {
