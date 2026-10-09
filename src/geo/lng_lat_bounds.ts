@@ -384,7 +384,7 @@ export class LngLatBounds {
                 ? [input[0][0], input[0][1], input[1][0], input[1][1]]
                 : null;
 
-        if (!partialBounds || !partialBounds.some(value => value === undefined)) {
+        if (!partialBounds?.some(value => value === undefined)) {
             return new LngLatBounds(input);
         }
 
