@@ -1879,6 +1879,7 @@ describe('Style.setGlobalState', () => {
         const style = new Style(getStubMap());
         expect(() => style.setGlobalState({})).toThrow(/load/i);
     });
+
     test('sets global state', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());

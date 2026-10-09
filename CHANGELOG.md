@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Allow calling `new Map({ globalState: { ... }})` and `setStyle({ globalState: ... })` to provide an initial global state for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
