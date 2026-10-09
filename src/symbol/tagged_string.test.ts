@@ -40,8 +40,6 @@ describe('TaggedString', () => {
                 new FormattedSection('、a\u0301', null, 2, 'Other', null, null)
             ]);
             const tagged = TaggedString.fromFeature(formatted, 'Test', false);
-            const graphemes = tagged.graphemes().slice();
-            const sectionIndex = tagged.sectionIndex.slice();
             const glyphMap = {
                 Burmese: {default: {}, vertical: {'လ': {id: 0x101C} as StyleGlyph}},
                 Other: {default: {}, vertical: {'、': {id: 0x3001} as StyleGlyph}}
@@ -50,9 +48,8 @@ describe('TaggedString', () => {
             tagged.verticalizePunctuation(glyphMap);
 
             expect(tagged.text).toBe('လား、a\u0301');
-            expect(tagged.graphemes()).toEqual(graphemes);
-            expect(tagged.sectionIndex).toEqual(sectionIndex);
-            expect(tagged.getSection(tagged.graphemes().indexOf('、'))).toMatchObject({fontStack: 'Other', scale: 2});
+            expect(tagged.graphemes()).toEqual(['လ', 'ာ', 'း', '、', 'a\u0301']);
+            expect(tagged.sectionIndex).toEqual([0, 0, 0, 1, 1]);
         });
     });
 

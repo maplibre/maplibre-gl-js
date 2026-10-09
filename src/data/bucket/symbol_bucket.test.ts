@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, beforeAll} from 'vitest';
+import {describe, test, expect, vi, beforeAll, beforeEach} from 'vitest';
 import {CollisionBoxArray} from '../../data/array_types.g.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 import {Placement} from '../../symbol/placement.ts';
@@ -255,25 +255,66 @@ describe('SymbolBucket', () => {
         expect(glyphsRequestedFor('東京ー').sort()).toEqual(['東', '京', 'ー'].sort());
     });
 
-    test.each([
-        {placement: 'point', keepUpright: false, vertical: ['か\u3099', 'か', '\u3099', '（', 'a', 'A']},
-        {placement: 'line', keepUpright: true, vertical: ['か\u3099', 'か', '\u3099', '（', 'A']},
-        {placement: 'line', keepUpright: false, vertical: []}
-    ] as const)('requests vertical glyph candidates for $placement labels with keep-upright=$keepUpright', ({placement, keepUpright, vertical}) => {
-        const bucket = createSymbolBucket('vertical', 'Test', 'か\u3099（ aAب', collisionBoxArray, {
-            'symbol-placement': placement,
-            'text-keep-upright': keepUpright,
-            'text-writing-mode': ['horizontal', 'vertical']
+    describe('vertical glyph requests', () => {
+        let options: PopulateParameters;
+        const canonical = new CanonicalTileID(0, 0, 0);
+        const lineFeature = {
+            feature: {
+                type: 2,
+                properties: {},
+                loadGeometry() { return [[{x: 0, y: 0}, {x: 0, y: 1000}]]; }
+            },
+            id: 1, index: 0, sourceLayerIndex: 0
+        } as unknown as IndexedFeature;
+
+        beforeEach(() => {
+            options = createPopulateOptions([]);
         });
-        const options = createPopulateOptions([]);
-        const feature = {
-            type: placement === 'point' ? 1 : 2, properties: {},
-            loadGeometry() { return [[{x: 0, y: 0}, {x: 0, y: 1000}]]; }
-        };
 
-        bucket.populate([{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature], options, new CanonicalTileID(0, 0, 0));
+        test('requests upright point glyphs even when keep-upright is false', () => {
+            const bucket = createSymbolBucket('vertical', 'Test', 'か\u3099（ aAب', collisionBoxArray, {
+                'symbol-placement': 'point',
+                'text-keep-upright': false,
+                'text-writing-mode': ['horizontal', 'vertical']
+            });
 
-        expect(Object.keys(options.glyphDependencies.Test.vertical).sort()).toEqual([...vertical].sort());
+            bucket.populate([createIndexedFeature(1, 0, '')], options, canonical);
+
+            expect(options.glyphDependencies.Test.vertical).toEqual({
+                'か\u3099': true,
+                'か': true,
+                '\u3099': true,
+                '（': true,
+                a: true,
+                A: true
+            });
+        });
+
+        test('omits sideways letters and complex scripts from vertical line glyphs', () => {
+            const bucket = createSymbolBucket('vertical', 'Test', '小（ aAب', collisionBoxArray, {
+                'symbol-placement': 'line',
+                'text-keep-upright': true
+            });
+
+            bucket.populate([lineFeature], options, canonical);
+
+            expect(options.glyphDependencies.Test.vertical).toEqual({
+                '小': true,
+                '（': true,
+                A: true
+            });
+        });
+
+        test('does not request vertical line glyphs when keep-upright is false', () => {
+            const bucket = createSymbolBucket('vertical', 'Test', '東京ー', collisionBoxArray, {
+                'symbol-placement': 'line',
+                'text-keep-upright': false
+            });
+
+            bucket.populate([lineFeature], options, canonical);
+
+            expect(options.glyphDependencies.Test.vertical).toEqual({});
+        });
     });
 
     test('SymbolBucket asks for a cluster as a whole, and for its codepoints to fall back to', () => {
