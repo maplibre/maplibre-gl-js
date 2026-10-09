@@ -18,8 +18,8 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
 /**
  * @experimental
  * Registers a planar coordinate reference system so it can be used as a map projection.
- * After registration the CRS name is accepted by `map.setProjection({type: name})` and by the
- * style's `projection.type`. Every source of such a map is expected to serve tiles in the CRS's
+ * After registration the CRS name is accepted by the style's `projection.type` and by
+ * `map.setProjection({type: name})`. Every source of such a map is expected to serve tiles in the CRS's
  * own quad tile grid, described by `tileMatrixSet`; the map does not reproject tile content.
  * The pre-registered `'identity'` projection is an identity CRS over lng/lat degrees, where tile 0/0/0
  * spans -90..90 on both axes.
@@ -42,7 +42,10 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  *         extentAtZoom0: 10018754.1714 // width of tile 0/0/0 in meters, from the NZTM2000Quad TileMatrixSet
  *     }
  * });
- * map.setProjection({type: 'EPSG:2193'});
+ * const map = new Map({
+ *     container: 'map',
+ *     style: {version: 8, projection: {type: 'EPSG:2193'}, sources: {}, layers: []}
+ * });
  * ```
  */
 export function addProjection(def: CrsDefinition): void {

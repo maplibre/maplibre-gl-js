@@ -10,9 +10,9 @@ The map never reprojects tile content on the GPU. It positions the CRS's own til
 
 A registered CRS is a square, power-of-two quad tile grid laid over a plane, the shape the OGC Two Dimensional Tile Matrix Set standard calls a quad tree tile matrix set. Tile 0/0/0 is one square, every zoom level splits each tile into four, and every source of the map serves tiles in that grid. Within that fence:
 
-- The map has exactly one CRS at a time, selected by `map.setProjection({type: name})` or the style's `projection.type`.
+- The map has exactly one CRS at a time, selected by the style's `projection.type` or `map.setProjection({type: name})`.
 - There are no world copies and no antimeridian wrap: the map renders a single world whatever `renderWorldCopies` is set to, and coordinates never wrap.
-- The map is always flat. There is no globe transition from a registered CRS; `setProjection({type: 'globe'})` swaps back to rendering Mercator tiles on the globe.
+- The map is always flat. There is no globe transition from a registered CRS.
 - Mercator behavior is untouched. Registering a CRS changes nothing until a map selects it.
 
 ## Defining a CRS

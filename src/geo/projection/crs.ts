@@ -9,8 +9,8 @@ import type {TileMatrixSet} from './tile_matrix_set.ts';
  * @experimental
  * Describes a planar coordinate reference system (CRS) together with the square, power-of-two
  * quad tile grid laid over it, so a map can render tiles that were pre-projected in that CRS.
- * Register a definition with {@link addProjection} and select it with `map.setProjection({type: name})`
- * or the style's `projection.type`.
+ * Register a definition with {@link addProjection} and select it with the style's `projection.type`
+ * or `map.setProjection({type: name})`.
  *
  * Tiles are used as-is: the map never reprojects tile content, it only positions the CRS's own
  * tile grid on screen and maps lng/lat to and from it through `projection`. CRS units are
