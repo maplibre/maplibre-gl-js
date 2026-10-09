@@ -1067,6 +1067,96 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
+    test('jumpTo keeps the center elevation while no DEM data covers the new center, and moves the camera once its DEM lands', async () => {
+        const map = await createMapOverTerrain(60);
+        const startElevation = 3750;
+        const elevationForWantOfDem = 0;
+        const landedElevation = 4800;
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(startElevation);
+        map.redraw();
+        terrainElevation.mockReturnValue(elevationForWantOfDem);
+
+        map.jumpTo({center: [1, 1]});
+        map.redraw();
+        expect(map.getCenterElevation()).toBe(startElevation);
+        demTileLands(map);
+        expect(map.getCenterElevation()).toBe(startElevation);
+
+        terrainElevation.mockReturnValue(landedElevation);
+        demTileLands(map);
+        expect(map.getCenterElevation()).toBe(landedElevation);
+    });
+
+    test('jumpTo puts the center at sea level when the new center lies outside the DEM source bounds', async () => {
+        const map = createMap({interactive: true, zoom: 11, pitch: 60});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], bounds: [-1, -1, 0.5, 0.5]});
+        await waitForMetadataEvent(map.getSource<RasterDEMTileSource>('dem'));
+        map.setTerrain({source: 'dem'});
+        const startElevation = 3750;
+        const elevationOutsideTheDem = 0;
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(startElevation);
+        map.redraw();
+        terrainElevation.mockReturnValue(elevationOutsideTheDem);
+
+        map.jumpTo({center: [1, 1]});
+        map.redraw();
+
+        expect(map.getCenterElevation()).toBe(elevationOutsideTheDem);
+    });
+
+    test('jumpTo puts the center at sea level when the map is zoomed out below the DEM source minzoom', async () => {
+        const map = createMap({interactive: true, zoom: 5, pitch: 60});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], minzoom: 8});
+        await waitForMetadataEvent(map.getSource<RasterDEMTileSource>('dem'));
+        map.setTerrain({source: 'dem'});
+        const startElevation = 3750;
+        const elevationWithoutDem = 0;
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(startElevation);
+        map.redraw();
+        terrainElevation.mockReturnValue(elevationWithoutDem);
+
+        map.jumpTo({center: [1, 1]});
+        map.redraw();
+
+        expect(map.getCenterElevation()).toBe(elevationWithoutDem);
+    });
+
+    test('easeTo keeps the center elevation while no DEM data covers the destination', async () => {
+        const map = await createMapOverTerrain(60);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const startElevation = 1000;
+        const elevationForWantOfDem = 0;
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lnglat: LngLat) => lnglat.lat > 0.5 ? elevationForWantOfDem : startElevation);
+        map.redraw();
+
+        map.easeTo({center: [1, 1], duration: 1000, easing: k => k});
+        now.mockReturnValue(500);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(startElevation);
+        now.mockReturnValue(1000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(startElevation);
+    });
+
+    test('flyTo keeps the center elevation while no DEM data covers the destination', async () => {
+        const map = await createMapOverTerrain(60);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const startElevation = 1000;
+        const elevationForWantOfDem = 0;
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lnglat: LngLat) => lnglat.lat > 0.5 ? elevationForWantOfDem : startElevation);
+        map.redraw();
+
+        map.flyTo({center: [1, 1], duration: 1000, easing: k => k});
+        now.mockReturnValue(500);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(startElevation);
+        now.mockReturnValue(1000);
+        map.redraw();
+        expect(map.getCameraTargetElevation()).toBe(startElevation);
+    });
+
     test('easeTo leaves the center elevation alone when the center is not clamped to the ground', async () => {
         const map = await createMapOverTerrain(60);
         map.setCenterClampedToGround(false);
@@ -1599,6 +1689,7 @@ describe('Keep camera outside terrain', () => {
         let terrainElevation = 10;
         const terrainStub = {} as Terrain;
         terrainStub.getElevationForLngLat = vi.fn(() => terrainElevation);
+        terrainStub.getLoadedElevationForLngLat = vi.fn(() => terrainElevation);
         terrainStub.getCoverageIndex = () => null;
         map.terrain = terrainStub;
         map._camera.terrain = terrainStub;

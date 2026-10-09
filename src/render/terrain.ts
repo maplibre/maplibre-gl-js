@@ -239,6 +239,23 @@ export class Terrain {
     }
 
     /**
+     * {@link getElevationForLngLat}, or undefined while it gives 0 for want of DEM data that can still arrive, see
+     * {@link hasElevationForLngLat} and {@link TerrainTileManager.canLoadDem}. Any other elevation comes from DEM data,
+     * so only a 0 is checked.
+     * @param lnglat - the location
+     * @param transform - the transform {@link getElevationForLngLat} is given
+     * @returns the elevation, or undefined while the DEM data for the location is still to come
+     */
+    getLoadedElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number | undefined {
+        const elevation = this.getElevationForLngLat(lnglat, transform);
+        if (elevation !== 0 || this.hasElevationForLngLat(lnglat, transform)) return elevation;
+        const zoom = this._getFallbackZoom(transform);
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return elevation;
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.tileManager.canLoadDem(tileID) ? undefined : elevation;
+    }
+
+    /**
      * Whether {@link getElevationForLngLat} finds DEM data at the given {@link LngLat}, drawn or in the tile it falls
      * back to, rather than giving 0 for want of any.
      * @param lnglat - the location

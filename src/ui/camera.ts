@@ -737,7 +737,8 @@ export class Camera extends Evented<MapEventType> {
 
         const oldZoom = tr.zoom;
         if (this.terrain && this.getCenterClampedToGround()) {
-            tr.setElevation(this.terrain.getElevationForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr));
+            const elevation = this.terrain.getLoadedElevationForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr);
+            if (elevation !== undefined) tr.setElevation(elevation);
         }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
 
@@ -944,14 +945,15 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Starts easing the center elevation: records where it stands on the transform the animation edits and
-     * samples the terrain under the map center the animation ends on.
+     * samples the terrain under the map center the animation ends on. While no DEM data covers that center
+     * the target is the elevation the center starts at.
      * @param center - the map center when the animation ends
      * @param tr - the transform the animation edits
      */
     _prepareElevation(center: LngLat, tr: ITransform): void {
         this._elevationCenter = center;
         this._elevationStart = tr.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLat(center, tr);
+        this._elevationTarget = this.terrain.getLoadedElevationForLngLat(center, tr) ?? tr.elevation;
         this.elevationFreeze = true;
     }
 
@@ -959,7 +961,8 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Eases the center elevation towards the terrain under `_elevationCenter`, on the transform the
      * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform. A center
-     * that is not clamped to the ground keeps its elevation.
+     * that is not clamped to the ground keeps its elevation, and the target stays put while no DEM data
+     * covers `_elevationCenter`.
      * @param k - the animation's progress, 0 to 1
      * @param tr - the transform the animation edits
      */
@@ -969,7 +972,7 @@ export class Camera extends Evented<MapEventType> {
         }
 
         tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
-        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
+        const elevation = this.terrain.getLoadedElevationForLngLat(this._elevationCenter, tr) ?? this._elevationTarget;
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -1041,9 +1044,10 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Applies a change of the terrain under the center (terrain set or removed, a DEM tile landed): at rest the
-     * camera moves with the center's elevation, as on every rendered frame; a hold keeps the camera where the user
-     * put it unless it waits for DEM data. A gesture's hold takes here, on the requested camera state its frames
-     * read; an animation's takes on its next frame, on the transform it edits, see {@link ElevationHold.take}.
+     * camera moves with the center's elevation once DEM data covers the center, as on every rendered frame; a hold
+     * keeps the camera where the user put it unless it waits for DEM data. A gesture's hold takes here, on the
+     * requested camera state its frames read; an animation's takes on its next frame, on the transform it edits,
+     * see {@link ElevationHold.take}.
      */
     applyTerrainChange(): void {
         if (this.elevationFreeze) {
@@ -1054,7 +1058,8 @@ export class Camera extends Evented<MapEventType> {
         const tr = this.transform;
         tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
         if (this.getCenterClampedToGround()) {
-            tr.setElevation(this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0);
+            const elevation = this.terrain ? this.terrain.getLoadedElevationForLngLat(tr.center, tr) : 0;
+            if (elevation !== undefined) tr.setElevation(elevation);
         }
     }
 
