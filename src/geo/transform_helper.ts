@@ -532,9 +532,10 @@ export class TransformHelper implements ITransformGetters {
         }
 
         this._lngRange = longitudeUnconstrained ? null : [west, east];
-        this._latRange = south <= -MAX_VALID_LATITUDE && north >= MAX_VALID_LATITUDE
-            ? [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE]
-            : [south, north];
+        this._latRange = [
+            clamp(south, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE),
+            clamp(north, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
+        ];
         this.constrainInternal();
     }
 
