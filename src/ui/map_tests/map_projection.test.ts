@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, test, expect} from 'vitest';
-import {createMap, beforeMapTest, createPolarStereographicCrs, createRotatedCrs} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs} from '../../util/test/util.ts';
 import {addProjection, removeProjection} from '../../geo/projection/projection_crud.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
@@ -112,5 +112,24 @@ describe('Map in a polar stereographic CRS', () => {
 
         expect(map.getCenter().lng).toBeCloseTo(45, 6);
         expect(map.getCenter().lat).toBeCloseTo(70, 6);
+    });
+});
+
+describe('Map in a CRS whose converter answers only inside its tile matrix set', () => {
+    afterEach(() => {
+        removeProjection(createIdentityCrsAnsweringInside(null).name);
+    });
+
+    test('unprojects a point past the west edge of the world square to the edge', async () => {
+        const crs = createIdentityCrsAnsweringInside(null);
+        addProjection(crs);
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}});
+        await map.once('style.load');
+        const containerMiddle = 100;
+
+        const pastTheWestEdge = map.unproject([-1000, containerMiddle]);
+
+        expect(pastTheWestEdge.lng).toBeCloseTo(-90, 6);
+        expect(pastTheWestEdge.lat).toBeCloseTo(0, 6);
     });
 });

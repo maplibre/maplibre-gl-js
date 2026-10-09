@@ -22,7 +22,7 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 | Field | Meaning |
 |-------|---------|
 | `name` | The name used in `projection.type`, for example `'EPSG:2193'`. The built-in names `'mercator'`, `'globe'` and `'vertical-perspective'` are reserved. |
-| `projection` | Converts between lng/lat degrees and CRS coordinates: `forward([lng, lat])` returns `[x, y]`, for example meters easting/northing, and `inverse([x, y])` returns `[lng, lat]`. A proj4js converter such as `proj4('EPSG:4326', 'EPSG:2193')` has this shape, and deck.gl's custom projection view takes the same object. |
+| `projection` | Converts between lng/lat degrees and CRS coordinates: `forward([lng, lat])` returns `[x, y]`, for example meters easting/northing, and `inverse([x, y])` returns `[lng, lat]`. A proj4js converter such as `proj4('EPSG:4326', 'EPSG:2193')` has this shape, and deck.gl's custom projection view takes the same object. Outside the tile matrix set `inverse` may return `null` or values that are not finite; the map then uses the nearest position inside it. |
 | `tileMatrixSet.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
 | `tileMatrixSet.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
 

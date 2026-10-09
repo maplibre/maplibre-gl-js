@@ -26,10 +26,12 @@ export type CrsDefinition = {
      * Converts between lng/lat (degrees) and CRS coordinates (e.g. meters easting/northing): `forward([lng, lat])`
      * returns `[x, y]` and `inverse([x, y])` returns `[lng, lat]`. This is the shape of a proj4 converter such as
      * `proj4('EPSG:4326', 'EPSG:2193')`, which deck.gl's custom projection view takes as well.
+     * Outside the tile matrix set `inverse` may have no answer, `null` or a value that is not finite, and the map
+     * then uses the nearest position inside it; inside the tile matrix set it must answer.
      */
     projection: {
         forward(position: number[]): number[];
-        inverse(position: number[]): number[];
+        inverse(position: number[]): number[] | null;
     };
     /**
      * The quad tile matrix set over the CRS plane.
@@ -69,14 +71,26 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
         return new MercatorCoordinate((crsX - this._originX) / this._extent, (this._originY - crsY) / this._extent, altitude === undefined ? 0 : altitude / this._extent);
     }
     /**
-     * World square coordinates to lng/lat. The definition's inverse has a finite domain, and a position
-     * outside the world square (the far edge of a pitched view, the buffer of a tile at the square's edge) can
-     * come back with a latitude past the poles; it is clamped to the range {@link LngLat} accepts, so the
-     * mapping is total the way the mercator inverse is.
+     * World square coordinates to lng/lat. The definition's inverse is relied on only inside the tile matrix set:
+     * a position outside it (the far edge of a pitched view, a drag past the edge, the buffer of a tile at the
+     * square's edge) may have no answer, and then the nearest position inside the world square is used instead.
+     * A latitude past the poles is clamped to the range {@link LngLat} accepts, so the mapping is total the way
+     * the mercator inverse is.
      */
     lngLatFromWorld(x: number, y: number): LngLat {
-        const [lng, lat] = this._definition.projection.inverse([this._originX + x * this._extent, this._originY - y * this._extent]);
-        return new LngLat(lng, clamp(lat, -90, 90));
+        const position = this._inverse(x, y) ?? this._inverse(clamp(x, 0, 1), clamp(y, 0, 1));
+        if (!position) {
+            throw new Error(`The inverse of the projection "${this._definition.name}" has no answer inside its tile matrix set.`);
+        }
+        return new LngLat(position[0], clamp(position[1], -90, 90));
+    }
+    /**
+     * The definition's inverse at a world position, or `null` where it has no answer: `null`, or a value that
+     * is not finite, as proj4 gives far outside some projections.
+     */
+    private _inverse(x: number, y: number): number[] | null {
+        const position = this._definition.projection.inverse([this._originX + x * this._extent, this._originY - y * this._extent]);
+        return position && Number.isFinite(position[0]) && Number.isFinite(position[1]) ? position : null;
     }
     metersPerWorldUnit(_x: number, _y: number): number {
         return this._extent;

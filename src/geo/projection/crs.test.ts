@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {CrsWorldCoordinateHelper, identityCrs, type CrsDefinition} from './crs.ts';
-import {createRotatedCrs} from '../../util/test/util.ts';
+import {createIdentityCrsAnsweringInside, createRotatedCrs} from '../../util/test/util.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 
@@ -37,6 +37,23 @@ function createMercatorAsCrs(): CrsDefinition {
 }
 
 describe('CrsWorldCoordinateHelper', () => {
+    describe('a converter without an answer outside its tile matrix set', () => {
+        test('maps a position past the east edge to the nearest position inside where inverse returns null', () => {
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createIdentityCrsAnsweringInside(null));
+            expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
+        });
+
+        test('maps a position past the east edge to the nearest position inside where inverse returns NaN', () => {
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createIdentityCrsAnsweringInside([NaN, NaN]));
+            expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
+        });
+
+        test('throws when inverse has no answer inside the tile matrix set either', () => {
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper({...createIdentityCrsAnsweringInside(null), projection: {forward: ([lng, lat]) => [lng, lat], inverse: () => null}});
+            expect(() => worldCoordinateHelper.lngLatFromWorld(0.5, 0.5)).toThrow('has no answer inside its tile matrix set');
+        });
+    });
+
     describe('identity', () => {
         test('maps the tile 0 square to lng/lat -90..90', () => {
             const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);

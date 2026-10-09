@@ -447,6 +447,25 @@ export function createRotatedCrs(): CrsDefinition {
 }
 
 /**
+ * The identity CRS with a converter that answers only inside its tile matrix set, -90..90 on both axes,
+ * and gives `answerOutside` everywhere else.
+ */
+export function createIdentityCrsAnsweringInside(answerOutside: number[] | null): CrsDefinition {
+    return {
+        name: 'identity-answering-inside',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return Math.abs(x) <= 90 && Math.abs(y) <= 90 ? [x, y] : answerOutside;
+            },
+        },
+        tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+    };
+}
+
+/**
  * A north polar stereographic CRS on a sphere, oriented like EPSG:3413 (lng -45 points down) and true to scale
  * at 70N, with tile 0/0/0 spanning the EPSG:3413 grid NASA GIBS serves. Parallels are circles around the pole.
  */
