@@ -141,6 +141,7 @@ Everything that speaks lng/lat goes through the CRS definition's `projection`, s
 - Non-quad tile matrix sets: grids whose zoom 0 is not a single square, whose levels are not powers of two, or whose tiles are not square.
 - Globe and world copies, as described above.
 - Converters whose `inverse` does not undo `forward`. The camera constraint and every query rely on the round trip being stable.
+- Switching to or from a registered CRS with `setProjection` after the sources have loaded, for now. Tile `bounds` and the corners of image, video and canvas sources are placed in the projection the map has when each source loads, so register the projection first and name it in the style, as the examples do.
 
 ## Removing a projection
 
