@@ -294,6 +294,109 @@ describe('TileManager.addTile', () => {
     });
 });
 
+describe('TileManager.loadTileAhead', () => {
+    function createTileManagerWithCache() {
+        const tileManager = createTileManager();
+        const transform = createMercatorTransform();
+        transform.resize(512, 512);
+        tileManager.updateCacheSize(transform);
+        return tileManager;
+    }
+
+    test('keeps a tile it loaded outside the view in the out-of-view cache', async () => {
+        const tileID = new OverscaledTileID(3, 0, 3, 1, 2);
+        const tileManager = createTileManagerWithCache();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        await tileManager.loadTileAhead(tileID);
+
+        expect(tileManager._outOfViewCache.has(tileID)).toBe(true);
+    });
+
+    test('gives the view the tile it is loading instead of loading it a second time', async () => {
+        const tileID = new OverscaledTileID(3, 0, 3, 1, 2);
+        const tileManager = createTileManagerWithCache();
+        let loads = 0;
+        let land: () => void;
+        tileManager._source.loadTile = (tile) => {
+            loads++;
+            return new Promise<void>((resolve) => {
+                land = () => {
+                    tile.state = 'loaded';
+                    resolve();
+                };
+            });
+        };
+
+        const loading = tileManager.loadTileAhead(tileID);
+        tileManager._addTile(tileID);
+        land();
+        await loading;
+
+        expect(loads).toBe(1);
+    });
+
+    test('lets its load finish when the view takes the tile and passes on before it lands', async () => {
+        const tileID = new OverscaledTileID(3, 0, 3, 1, 2);
+        const tileManager = createTileManagerWithCache();
+        let land: () => void;
+        tileManager._source.loadTile = (tile) => new Promise<void>((resolve) => {
+            land = () => {
+                tile.state = 'loaded';
+                resolve();
+            };
+        });
+
+        const loading = tileManager.loadTileAhead(tileID);
+        tileManager._addTile(tileID);
+        tileManager._removeTile(tileID.key);
+        land();
+        await loading;
+
+        expect(tileManager._outOfViewCache.has(tileID)).toBe(true);
+    });
+
+    test('drops a tile it is loading outside the view when the source reloads', async () => {
+        const tileID = new OverscaledTileID(3, 0, 3, 1, 2);
+        const tileManager = createTileManagerWithCache();
+        let land: () => void;
+        tileManager._source.loadTile = (tile) => new Promise<void>((resolve) => {
+            land = () => {
+                tile.state = 'loaded';
+                resolve();
+            };
+        });
+
+        const loading = tileManager.loadTileAhead(tileID);
+        tileManager.reload();
+        land();
+        await loading;
+
+        expect(tileManager._outOfViewCache.has(tileID)).toBe(false);
+    });
+
+    test('drops a tile it is loading outside the view when the tiles are cleared', async () => {
+        const tileID = new OverscaledTileID(3, 0, 3, 1, 2);
+        const tileManager = createTileManagerWithCache();
+        let land: () => void;
+        tileManager._source.loadTile = (tile) => new Promise<void>((resolve) => {
+            land = () => {
+                tile.state = 'loaded';
+                resolve();
+            };
+        });
+
+        const loading = tileManager.loadTileAhead(tileID);
+        tileManager.clearTiles();
+        land();
+        await loading;
+
+        expect(tileManager._outOfViewCache.has(tileID)).toBe(false);
+    });
+});
+
 describe('TileManager.removeTile', () => {
     test('removes tile', async () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);

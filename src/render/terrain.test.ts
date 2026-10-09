@@ -154,6 +154,7 @@ describe('Terrain', () => {
             _outOfViewCache: {
                 getByKey: () => null,
             },
+            _tilesLoadingAhead: {},
         } as any as TileManager;
         const terrain = new Terrain(
             painter,
