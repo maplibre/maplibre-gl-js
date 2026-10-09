@@ -42,6 +42,7 @@ export class GeoJSONFeature {
 
     _vectorTileFeature: VectorTileFeatureLike;
     /**
+     * @internal
      * The map projection's world-to-lng/lat mapping, stored only when it is not the mercator one so mercator
      * query output stays float-identical to the inline formula in `projectPoint`.
      */
