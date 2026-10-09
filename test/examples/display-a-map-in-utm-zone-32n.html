@@ -30,7 +30,7 @@
         // The WMTS tile matrix set the tiles come in, here Kartverket's utm32n: level 0 is a single
         // 256 px tile at 21664 m per pixel (5545984 m wide) with its top-left corner at (-2000000, 9045984),
         // and every level splits each tile in four. Take these numbers from your service's WMTS capabilities.
-        tileMatrix: {origin: [-2000000, 9045984], extentAtZoom0: 5545984}
+        tileMatrixSet: {origin: [-2000000, 9045984], extentAtZoom0: 5545984}
     });
 
     const map = new maplibregl.Map({

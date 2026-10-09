@@ -4,7 +4,7 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {type Mat4f32, MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds.ts';
-import {mercatorTileMatrix, type TileMatrix} from '../geo/projection/tile_matrix.ts';
+import {mercatorTileMatrixSet, type TileMatrixSet} from '../geo/projection/tile_matrix_set.ts';
 
 import type {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 
@@ -35,10 +35,10 @@ export class CanonicalTileID implements ICanonicalTileID {
 
     /**
      * given a list of urls, choose a url template and return a tile URL
-     * @param tileMatrix - the tile grid the `{bbox}` token is expressed in, the map projection's; optional only because
+     * @param tileMatrixSet - the tile grid the `{bbox}` token is expressed in, the map projection's; optional only because
      * the style spec's `ICanonicalTileID.url` has three parameters, and absent means the EPSG:3857 grid of `{bbox-epsg-3857}`
      */
-    url(urls: string[], pixelRatio: number, scheme?: string | null, tileMatrix: TileMatrix = mercatorTileMatrix): string {
+    url(urls: string[], pixelRatio: number, scheme?: string | null, tileMatrixSet: TileMatrixSet = mercatorTileMatrixSet): string {
         const quadkey = getQuadkey(this.z, this.x, this.y);
 
         return urls[(this.x + this.y) % urls.length]
@@ -48,8 +48,8 @@ export class CanonicalTileID implements ICanonicalTileID {
             .replace(/{y}/g, String(scheme === 'tms' ? (Math.pow(2, this.z) - this.y - 1) : this.y))
             .replace(/{ratio}/g, pixelRatio > 1 ? '@2x' : '')
             .replace(/{quadkey}/g, quadkey)
-            .replace(/{bbox-epsg-3857}/g, () => getTileMatrixBBox(this.x, this.y, this.z, mercatorTileMatrix))
-            .replace(/{bbox}/g, () => getTileMatrixBBox(this.x, this.y, this.z, tileMatrix));
+            .replace(/{bbox-epsg-3857}/g, () => getTileBBox(this.x, this.y, this.z, mercatorTileMatrixSet))
+            .replace(/{bbox}/g, () => getTileBBox(this.x, this.y, this.z, tileMatrixSet));
     }
 
     isChildOf(parent: ICanonicalTileID): boolean {
@@ -286,16 +286,16 @@ export function calculateTileKey(wrap: number, overscaledZ: number, z: number, x
 }
 
 /**
- * Builds the `{bbox}` and `{bbox-epsg-3857}` tokens used in WMS tile URLs: the tile's bounding box in the tile matrix's
+ * Builds the `{bbox}` and `{bbox-epsg-3857}` tokens used in WMS tile URLs: the tile's bounding box in the tile matrix set's
  * CRS units as a `minX,minY,maxX,maxY` string, y up.
  *
  * The EPSG:3857 form of this formula was inlined from the archived \@mapbox/whoots-js (ISC, Copyright (c) 2017 Mapbox).
  */
-function getTileMatrixBBox(x: number, y: number, z: number, tileMatrix: TileMatrix): string {
+function getTileBBox(x: number, y: number, z: number, tileMatrixSet: TileMatrixSet): string {
     const tilesAtZoom = Math.pow(2, z);
-    const tileExtent = tileMatrix.extentAtZoom0 / tilesAtZoom;
-    const [gridMinX, gridMaxY] = tileMatrix.origin;
-    const gridMinY = gridMaxY - tileMatrix.extentAtZoom0;
+    const tileExtent = tileMatrixSet.extentAtZoom0 / tilesAtZoom;
+    const [gridMinX, gridMaxY] = tileMatrixSet.origin;
+    const gridMinY = gridMaxY - tileMatrixSet.extentAtZoom0;
     const rowFromBottom = tilesAtZoom - y - 1;
 
     return `${gridMinX + x * tileExtent},${gridMinY + rowFromBottom * tileExtent},${gridMinX + (x + 1) * tileExtent},${gridMinY + (rowFromBottom + 1) * tileExtent}`;

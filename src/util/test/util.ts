@@ -442,7 +442,7 @@ export function createRotatedCrs(): CrsDefinition {
                 return [x * cos + y * sin, -x * sin + y * cos];
             },
         },
-        tileMatrix: {origin: [-150, 150], extentAtZoom0: 300},
+        tileMatrixSet: {origin: [-150, 150], extentAtZoom0: 300},
     };
 }
 

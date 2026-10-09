@@ -20,14 +20,14 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  * Registers a planar coordinate reference system so it can be used as a map projection.
  * After registration the CRS name is accepted by `map.setProjection({type: name})` and by the
  * style's `projection.type`. Every source of such a map is expected to serve tiles in the CRS's
- * own quad tile grid, described by `tileMatrix`; the map does not reproject tile content.
+ * own quad tile grid, described by `tileMatrixSet`; the map does not reproject tile content.
  * The pre-registered `'simple'` projection is an identity CRS over lng/lat degrees, where tile 0/0/0
  * spans -90..90 on both axes.
  *
  * A map in a registered projection never renders world copies and never wraps across an antimeridian.
  *
  * @param def - the CRS definition
- * @throws Error if the name is already registered or is one of the built-in projections, or if `tileMatrix.extentAtZoom0` is not positive
+ * @throws Error if the name is already registered or is one of the built-in projections, or if `tileMatrixSet.extentAtZoom0` is not positive
  * @example
  * ```ts
  * // NZTM2000 (EPSG:2193) with the LINZ NZTM2000Quad tile matrix set, using proj4js for the math.
@@ -37,7 +37,7 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  * addProjection({
  *     name: 'EPSG:2193',
  *     projection: proj4('EPSG:4326', 'EPSG:2193'),
- *     tileMatrix: {
+ *     tileMatrixSet: {
  *         origin: [-3260586.7284, 10438190.1652], // top-left of tile 0/0/0, from the NZTM2000Quad TileMatrixSet
  *         extentAtZoom0: 10018754.1714 // width of tile 0/0/0 in meters, from the NZTM2000Quad TileMatrixSet
  *     }
@@ -52,8 +52,8 @@ export function addProjection(def: CrsDefinition): void {
     if (registeredProjections[def.name]) {
         throw new Error(`A projection called "${def.name}" already exists.`);
     }
-    if (!(def.tileMatrix.extentAtZoom0 > 0)) {
-        throw new Error(`The projection "${def.name}" needs a tileMatrix.extentAtZoom0 greater than zero.`);
+    if (!(def.tileMatrixSet.extentAtZoom0 > 0)) {
+        throw new Error(`The projection "${def.name}" needs a tileMatrixSet.extentAtZoom0 greater than zero.`);
     }
     registeredProjections[def.name] = def;
 }

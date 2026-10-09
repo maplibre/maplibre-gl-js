@@ -3,7 +3,7 @@ import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {clamp} from '../../util/util.ts';
 
 import type {WorldCoordinateHelper} from '../transform_interface.ts';
-import type {TileMatrix} from './tile_matrix.ts';
+import type {TileMatrixSet} from './tile_matrix_set.ts';
 
 /**
  * @experimental
@@ -34,13 +34,13 @@ export type CrsDefinition = {
     /**
      * The quad tile matrix set over the CRS plane.
      */
-    tileMatrix: TileMatrix;
+    tileMatrixSet: TileMatrixSet;
 };
 
 /**
  * @internal
  * The world coordinate mapping for a CRS definition: world x/y are the CRS coordinates relative
- * to the tile matrix origin, scaled so tile 0/0/0 is the 0..1 square, with y growing down.
+ * to the tile matrix set origin, scaled so tile 0/0/0 is the 0..1 square, with y growing down.
  * One world unit is the zoom 0 extent, so meters per world unit is constant across the plane.
  */
 export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
@@ -53,16 +53,16 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
 
     constructor(definition: CrsDefinition) {
         this._definition = definition;
-        this._originX = definition.tileMatrix.origin[0];
-        this._originY = definition.tileMatrix.origin[1];
-        this._extent = definition.tileMatrix.extentAtZoom0;
+        this._originX = definition.tileMatrixSet.origin[0];
+        this._originY = definition.tileMatrixSet.origin[1];
+        this._extent = definition.tileMatrixSet.extentAtZoom0;
     }
 
     get name(): string {
         return this._definition.name;
     }
-    get tileMatrix(): TileMatrix {
-        return this._definition.tileMatrix;
+    get tileMatrixSet(): TileMatrixSet {
+        return this._definition.tileMatrixSet;
     }
     worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate {
         const [crsX, crsY] = this._definition.projection.forward([lng, lat]);
@@ -107,7 +107,7 @@ class IdentityConversion {
 class SimpleCrs implements CrsDefinition {
     readonly name = 'simple';
     readonly projection = new IdentityConversion();
-    readonly tileMatrix: TileMatrix = {origin: [-90, 90], extentAtZoom0: 180};
+    readonly tileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
 }
 
 /**

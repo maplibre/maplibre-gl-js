@@ -1,5 +1,5 @@
 import {LngLat, earthRadius} from '../geo/lng_lat.ts';
-import {mercatorTileMatrix} from './projection/tile_matrix.ts';
+import {mercatorTileMatrixSet} from './projection/tile_matrix_set.ts';
 
 import type {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 import type {LngLatLike} from '../geo/lng_lat.ts';
@@ -183,7 +183,7 @@ class MercatorWorldCoordinateHelper implements WorldCoordinateHelper {
     }
     /** The world wraps in longitude: copies, wrapping, and the mercator latitude clamp all apply. */
     readonly wraps = true;
-    readonly tileMatrix = mercatorTileMatrix;
+    readonly tileMatrixSet = mercatorTileMatrixSet;
 }
 
 /**

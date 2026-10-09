@@ -6,7 +6,7 @@ function createDefinition(name: string): CrsDefinition {
     return {
         name,
         projection: {forward: ([lng, lat]) => [lng, lat], inverse: ([x, y]) => [x, y]},
-        tileMatrix: {origin: [-90, 90], extentAtZoom0: 180},
+        tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
     };
 }
 
@@ -35,8 +35,8 @@ describe('addProjection', () => {
     });
 
     test('throws for a non-positive zoom 0 extent', () => {
-        expect(() => addProjection({...createDefinition('test-crs'), tileMatrix: {origin: [0, 0], extentAtZoom0: 0}})).toThrow(/extentAtZoom0/);
-        expect(() => addProjection({...createDefinition('test-crs'), tileMatrix: {origin: [0, 0], extentAtZoom0: -1}})).toThrow(/extentAtZoom0/);
+        expect(() => addProjection({...createDefinition('test-crs'), tileMatrixSet: {origin: [0, 0], extentAtZoom0: 0}})).toThrow(/extentAtZoom0/);
+        expect(() => addProjection({...createDefinition('test-crs'), tileMatrixSet: {origin: [0, 0], extentAtZoom0: -1}})).toThrow(/extentAtZoom0/);
         expect(getRegisteredProjection('test-crs')).toBeUndefined();
     });
 });

@@ -32,7 +32,7 @@ function createMercatorAsCrs(): CrsDefinition {
                 return [x / earthRadius * 180 / Math.PI, (2 * Math.atan(Math.exp(y / earthRadius)) - Math.PI / 2) * 180 / Math.PI];
             },
         },
-        tileMatrix: {origin: [-halfCircumference, halfCircumference], extentAtZoom0: 2 * halfCircumference},
+        tileMatrixSet: {origin: [-halfCircumference, halfCircumference], extentAtZoom0: 2 * halfCircumference},
     };
 }
 
@@ -93,7 +93,7 @@ describe('CrsWorldCoordinateHelper', () => {
             expect(simpleCrs.name).toBe('simple');
             expect(simpleCrs.projection.forward([12.5, -41.9])).toEqual([12.5, -41.9]);
             expect(simpleCrs.projection.inverse([12.5, -41.9])).toEqual([12.5, -41.9]);
-            expect(simpleCrs.tileMatrix).toEqual({origin: [-90, 90], extentAtZoom0: 180});
+            expect(simpleCrs.tileMatrixSet).toEqual({origin: [-90, 90], extentAtZoom0: 180});
         });
     });
 
@@ -108,13 +108,13 @@ describe('CrsWorldCoordinateHelper', () => {
             }
         });
 
-        test('measures world coordinates from the tile matrix origin with y growing down', () => {
+        test('measures world coordinates from the tile matrix set origin with y growing down', () => {
             const definition = createRotatedCrs();
             const worldCoordinateHelper = new CrsWorldCoordinateHelper(definition);
             const quarterAcross = 0.25;
             const threeQuartersDown = 0.75;
-            const [originX, originY] = definition.tileMatrix.origin;
-            const extent = definition.tileMatrix.extentAtZoom0;
+            const [originX, originY] = definition.tileMatrixSet.origin;
+            const extent = definition.tileMatrixSet.extentAtZoom0;
             const lngLat = worldCoordinateHelper.lngLatFromWorld(quarterAcross, threeQuartersDown);
             const [x, y] = definition.projection.forward([lngLat.lng, lngLat.lat]);
             expect(x).toBeCloseTo(originX + quarterAcross * extent, 10);

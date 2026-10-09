@@ -3,7 +3,7 @@ import {CanonicalTileID, OverscaledTileID} from './tile_id.ts';
 import {EXTENT} from '../data/extent.ts';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 
-import type {TileMatrix} from '../geo/projection/tile_matrix.ts';
+import type {TileMatrixSet} from '../geo/projection/tile_matrix_set.ts';
 
 describe('CanonicalTileID', () => {
     test('constructor', () => {
@@ -52,20 +52,20 @@ describe('CanonicalTileID', () => {
         expect(new CanonicalTileID(1, 0, 0).url(['bbox={bbox-epsg-3857}'], 1)).toBe('bbox=-20037508.342789244,0,0,20037508.342789244');
     });
 
-    test('.url replaces {bbox} with the EPSG:3857 bounds without a tile matrix', () => {
+    test('.url replaces {bbox} with the EPSG:3857 bounds without a tile matrix set', () => {
         expect(new CanonicalTileID(1, 0, 0).url(['bbox={bbox}'], 1)).toBe('bbox=-20037508.342789244,0,0,20037508.342789244');
     });
 
-    test('.url replaces {bbox} with the tile bounds in a tile matrix whose root tile spans -90..90', () => {
-        const simpleTileMatrix: TileMatrix = {origin: [-90, 90], extentAtZoom0: 180};
-        expect(new CanonicalTileID(1, 1, 0).url(['bbox={bbox}'], 1, null, simpleTileMatrix)).toBe('bbox=0,0,90,90');
-        expect(new CanonicalTileID(1, 0, 1).url(['bbox={bbox}'], 1, null, simpleTileMatrix)).toBe('bbox=-90,-90,0,0');
-        expect(new CanonicalTileID(2, 3, 3).url(['bbox={bbox}'], 1, null, simpleTileMatrix)).toBe('bbox=45,-90,90,-45');
+    test('.url replaces {bbox} with the tile bounds in a tile matrix set whose root tile spans -90..90', () => {
+        const simpleTileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
+        expect(new CanonicalTileID(1, 1, 0).url(['bbox={bbox}'], 1, null, simpleTileMatrixSet)).toBe('bbox=0,0,90,90');
+        expect(new CanonicalTileID(1, 0, 1).url(['bbox={bbox}'], 1, null, simpleTileMatrixSet)).toBe('bbox=-90,-90,0,0');
+        expect(new CanonicalTileID(2, 3, 3).url(['bbox={bbox}'], 1, null, simpleTileMatrixSet)).toBe('bbox=45,-90,90,-45');
     });
 
     test('.url keeps {bbox} on the tile the ID names under the tms scheme, which flips only {y}', () => {
-        const simpleTileMatrix: TileMatrix = {origin: [-90, 90], extentAtZoom0: 180};
-        expect(new CanonicalTileID(1, 1, 0).url(['{y}:{bbox}'], 1, 'tms', simpleTileMatrix)).toBe('1:0,0,90,90');
+        const simpleTileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
+        expect(new CanonicalTileID(1, 1, 0).url(['{y}:{bbox}'], 1, 'tms', simpleTileMatrixSet)).toBe('1:0,0,90,90');
     });
 
     test('.url replaces {ratio}', () => {

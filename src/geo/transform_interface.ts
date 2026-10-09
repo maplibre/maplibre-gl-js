@@ -9,7 +9,7 @@ import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
-import type {TileMatrix} from './projection/tile_matrix.ts';
+import type {TileMatrixSet} from './projection/tile_matrix_set.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
 
 /**
@@ -52,10 +52,10 @@ export interface WorldCoordinateHelper {
      */
     wraps: boolean;
     /**
-     * The quad tile grid whose tile 0/0/0 is the world square, in CRS units: EPSG:3857 meters for mercator, the
-     * registered definition's `tileMatrix` for a planar CRS. The `{bbox}` tile URL token is expressed in it.
+     * The quad tile matrix set whose tile 0/0/0 is the world square, in CRS units: EPSG:3857 meters for mercator, the
+     * registered definition's `tileMatrixSet` for a planar CRS. The `{bbox}` tile URL token is expressed in it.
      */
-    tileMatrix: TileMatrix;
+    tileMatrixSet: TileMatrixSet;
 }
 
 /**

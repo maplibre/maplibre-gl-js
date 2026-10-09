@@ -10,7 +10,7 @@ The transform, camera, covering tiles, terrain, sources and queries used to call
 - `metersPerWorldUnit(x, y)` is the local scale at a world position, used by the camera-to-center search and terrain skirts. Mercator returns the latitude-dependent value; a planar CRS returns a constant (`extentAtZoom0`, its units taken as meters) and ignores the arguments.
 - `worldZFromAltitude(altitude, lngLat)` is the same idea for the vertical axis: an altitude in meters to world z.
 - `wraps` is `true` only for Mercator. It gates world copies, `LngLat.wrap()`, antimeridian handling, the `MAX_VALID_LATITUDE` clamp and the hillshade latitude correction. With a non-wrapping helper `MercatorTransform._constrainToWorldSquare` clamps the camera to tile 0/0/0, or to the `maxBounds` box inside it.
-- `tileMatrix` is the grid whose tile 0/0/0 is the world square, in CRS units, which the `{bbox}` tile URL token is expressed in; EPSG:3857 meters for Mercator.
+- `tileMatrixSet` is the grid whose tile 0/0/0 is the world square, in CRS units, which the `{bbox}` tile URL token is expressed in; EPSG:3857 meters for Mercator.
 
 A `CrsDefinition` becomes a helper through `new CrsWorldCoordinateHelper(definition)`, which applies the world-coordinate formula from the user guide.
 

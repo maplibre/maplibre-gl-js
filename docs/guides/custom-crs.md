@@ -23,8 +23,8 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 |-------|---------|
 | `name` | The name used in `projection.type`, for example `'EPSG:2193'`. The built-in names `'mercator'`, `'globe'` and `'vertical-perspective'` are reserved. |
 | `projection` | Converts between lng/lat degrees and CRS coordinates: `forward([lng, lat])` returns `[x, y]`, for example meters easting/northing, and `inverse([x, y])` returns `[lng, lat]`. A proj4js converter such as `proj4('EPSG:4326', 'EPSG:2193')` has this shape, and deck.gl's custom projection view takes the same object. |
-| `tileMatrix.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
-| `tileMatrix.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
+| `tileMatrixSet.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
+| `tileMatrixSet.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
 
 CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `simple` projection it means "one unit". The camera is constrained to the tile 0/0/0 square, or to `maxBounds` inside it.
 
@@ -39,7 +39,7 @@ World y grows downwards, like tile rows do, which is why `origin` is the top-lef
 
 Take `origin` and `extentAtZoom0` from the tile matrix set definition published with the tiles, never from the CRS's area of use. The numbers in your tile server's definition are the ones that count. Tile matrix set documents may list corners northing-first (LINZ's NZTM2000Quad does), so reorder them to `[easting, northing]`.
 
-Two complete pages to start from: [Display a map in a polar stereographic projection](../examples/display-a-map-in-a-polar-stereographic-projection.md) (EPSG:3413, NASA GIBS imagery through the `{bbox}` token) and [Display a map in UTM zone 32N](../examples/display-a-map-in-utm-zone-32n.md) (EPSG:25832, a national mapping agency's WMTS). Swap in the proj4 definition, the tile matrix and the tile URL of your own service.
+Two complete pages to start from: [Display a map in a polar stereographic projection](../examples/display-a-map-in-a-polar-stereographic-projection.md) (EPSG:3413, NASA GIBS imagery through the `{bbox}` token) and [Display a map in UTM zone 32N](../examples/display-a-map-in-utm-zone-32n.md) (EPSG:25832, a national mapping agency's WMTS). Swap in the proj4 definition, the tile matrix set and the tile URL of your own service.
 
 ## Example: NZTM2000 (EPSG:2193) with proj4js
 
@@ -52,7 +52,7 @@ maplibregl.addProjection({
     name: 'EPSG:2193',
     // proj4js converts [lng, lat] to [easting, northing] for the definition above.
     projection: proj4('EPSG:4326', 'EPSG:2193'),
-    tileMatrix: {
+    tileMatrixSet: {
         // Top-left corner of tile 0/0/0 in NZTM2000Quad: easting, northing.
         origin: [-3260586.7284, 10438190.1652],
         // Width of tile 0/0/0 in meters.
@@ -110,11 +110,11 @@ const map = new maplibregl.Map({
 });
 ```
 
-The [Display an image in the simple projection](../examples/display-an-image-in-the-simple-projection.md) example shows this in a complete page. Coordinates outside -90..90 lie outside tile 0/0/0 and are never rendered; scale a larger coordinate space into that range, or register your own identity CRS with a different `tileMatrix`.
+The [Display an image in the simple projection](../examples/display-an-image-in-the-simple-projection.md) example shows this in a complete page. Coordinates outside -90..90 lie outside tile 0/0/0 and are never rendered; scale a larger coordinate space into that range, or register your own identity CRS with a different `tileMatrixSet`.
 
 ## The `{bbox}` URL token
 
-Tile servers that speak WMS or WMTS-style requests want each tile's bounding box rather than z/x/y. The `{bbox}` token in a `tiles` URL template expands to `minX,minY,maxX,maxY` in the map projection's CRS units, computed from the tile matrix, with y pointing up as in the CRS itself:
+Tile servers that speak WMS or WMTS-style requests want each tile's bounding box rather than z/x/y. The `{bbox}` token in a `tiles` URL template expands to `minX,minY,maxX,maxY` in the map projection's CRS units, computed from the tile matrix set, with y pointing up as in the CRS itself:
 
 ```js
 tiles: ['https://example.com/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:2193&BBOX={bbox}&WIDTH=256&HEIGHT=256&LAYERS=topo&FORMAT=image/png']

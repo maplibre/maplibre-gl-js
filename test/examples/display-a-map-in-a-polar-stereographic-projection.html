@@ -29,7 +29,7 @@
         projection: proj4('EPSG:4326', 'EPSG:3413'),
         // The square tile grid over the CRS: the top-left corner of tile 0/0/0 and its width in meters.
         // These match the grid NASA GIBS serves EPSG:3413 in, centered on the North Pole.
-        tileMatrix: {origin: [-4194304, 4194304], extentAtZoom0: 8388608}
+        tileMatrixSet: {origin: [-4194304, 4194304], extentAtZoom0: 8388608}
     });
 
     // A WMS that speaks the CRS: {bbox} expands to each tile's bounds in EPSG:3413 meters.
