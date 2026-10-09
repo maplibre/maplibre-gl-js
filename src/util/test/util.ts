@@ -434,11 +434,13 @@ export function createRotatedCrs(): CrsDefinition {
     const sin = Math.sin(Math.PI / 6);
     return {
         name: 'rotated-test',
-        project(lng, lat) {
-            return [lng * cos - lat * sin, lng * sin + lat * cos];
-        },
-        unproject(x, y) {
-            return [x * cos + y * sin, -x * sin + y * cos];
+        projection: {
+            forward([lng, lat]) {
+                return [lng * cos - lat * sin, lng * sin + lat * cos];
+            },
+            inverse([x, y]) {
+                return [x * cos + y * sin, -x * sin + y * cos];
+            },
         },
         tileMatrix: {origin: [-150, 150], extentAtZoom0: 300},
     };

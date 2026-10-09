@@ -5,7 +5,7 @@
 export type TileMatrix = {
     /**
      * CRS coordinates of the top-left corner of tile 0/0/0 (min x, max y); x and y are in the order
-     * `CrsDefinition.project` returns (easting, northing for a projected CRS).
+     * the definition's `projection.forward` returns (easting, northing for a projected CRS).
      */
     origin: [number, number];
     /**

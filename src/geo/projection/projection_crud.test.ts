@@ -5,8 +5,7 @@ import {simpleCrs, type CrsDefinition} from './crs.ts';
 function createDefinition(name: string): CrsDefinition {
     return {
         name,
-        project: (lng, lat) => [lng, lat],
-        unproject: (x, y) => [x, y],
+        projection: {forward: ([lng, lat]) => [lng, lat], inverse: ([x, y]) => [x, y]},
         tileMatrix: {origin: [-90, 90], extentAtZoom0: 180},
     };
 }

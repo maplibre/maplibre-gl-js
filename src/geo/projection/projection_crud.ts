@@ -36,8 +36,7 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  * proj4.defs('EPSG:2193', '+proj=tmerc +lat_0=0 +lon_0=173 +k=0.9996 +x_0=1600000 +y_0=10000000 +ellps=GRS80 +units=m +no_defs');
  * addProjection({
  *     name: 'EPSG:2193',
- *     project: (lng, lat) => proj4('EPSG:4326', 'EPSG:2193', [lng, lat]),
- *     unproject: (x, y) => proj4('EPSG:2193', 'EPSG:4326', [x, y]),
+ *     projection: proj4('EPSG:4326', 'EPSG:2193'),
  *     tileMatrix: {
  *         origin: [-3260586.7284, 10438190.1652], // top-left of tile 0/0/0, from the NZTM2000Quad TileMatrixSet
  *         extentAtZoom0: 10018754.1714 // width of tile 0/0/0 in meters, from the NZTM2000Quad TileMatrixSet

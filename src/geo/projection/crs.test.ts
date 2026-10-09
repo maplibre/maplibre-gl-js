@@ -23,12 +23,14 @@ function createMercatorAsCrs(): CrsDefinition {
     const halfCircumference = Math.PI * earthRadius;
     return {
         name: 'mercator-as-crs',
-        project(lng, lat) {
-            const phi = lat * Math.PI / 180;
-            return [lng * Math.PI / 180 * earthRadius, earthRadius * Math.log(Math.tan(Math.PI / 4 + phi / 2))];
-        },
-        unproject(x, y) {
-            return [x / earthRadius * 180 / Math.PI, (2 * Math.atan(Math.exp(y / earthRadius)) - Math.PI / 2) * 180 / Math.PI];
+        projection: {
+            forward([lng, lat]) {
+                const phi = lat * Math.PI / 180;
+                return [lng * Math.PI / 180 * earthRadius, earthRadius * Math.log(Math.tan(Math.PI / 4 + phi / 2))];
+            },
+            inverse([x, y]) {
+                return [x / earthRadius * 180 / Math.PI, (2 * Math.atan(Math.exp(y / earthRadius)) - Math.PI / 2) * 180 / Math.PI];
+            },
         },
         tileMatrix: {origin: [-halfCircumference, halfCircumference], extentAtZoom0: 2 * halfCircumference},
     };
@@ -89,8 +91,8 @@ describe('CrsWorldCoordinateHelper', () => {
     describe('simple CRS definition', () => {
         test('is the identity over lng/lat with tile 0/0/0 spanning -90..90', () => {
             expect(simpleCrs.name).toBe('simple');
-            expect(simpleCrs.project(12.5, -41.9)).toEqual([12.5, -41.9]);
-            expect(simpleCrs.unproject(12.5, -41.9)).toEqual([12.5, -41.9]);
+            expect(simpleCrs.projection.forward([12.5, -41.9])).toEqual([12.5, -41.9]);
+            expect(simpleCrs.projection.inverse([12.5, -41.9])).toEqual([12.5, -41.9]);
             expect(simpleCrs.tileMatrix).toEqual({origin: [-90, 90], extentAtZoom0: 180});
         });
     });
@@ -114,7 +116,7 @@ describe('CrsWorldCoordinateHelper', () => {
             const [originX, originY] = definition.tileMatrix.origin;
             const extent = definition.tileMatrix.extentAtZoom0;
             const lngLat = worldCoordinateHelper.lngLatFromWorld(quarterAcross, threeQuartersDown);
-            const [x, y] = definition.project(lngLat.lng, lngLat.lat);
+            const [x, y] = definition.projection.forward([lngLat.lng, lngLat.lat]);
             expect(x).toBeCloseTo(originX + quarterAcross * extent, 10);
             expect(y).toBeCloseTo(originY - threeQuartersDown * extent, 10);
         });

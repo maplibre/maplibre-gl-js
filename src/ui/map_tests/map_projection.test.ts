@@ -77,7 +77,8 @@ describe('Map in a CRS registered with addProjection', () => {
         const {origin, extentAtZoom0} = crs.tileMatrix;
         const crsPoint = {x: origin[0] + worldFractionOfCrsPoint.x * extentAtZoom0, y: origin[1] - worldFractionOfCrsPoint.y * extentAtZoom0};
 
-        const screenPoint = map.project(crs.unproject(crsPoint.x, crsPoint.y));
+        const [lng, lat] = crs.projection.inverse([crsPoint.x, crsPoint.y]);
+        const screenPoint = map.project([lng, lat]);
 
         expect(screenPoint.x).toBeCloseTo(worldFractionOfCrsPoint.x * worldSizeAtZoom0 - worldOffsetInContainer, 6);
         expect(screenPoint.y).toBeCloseTo(worldFractionOfCrsPoint.y * worldSizeAtZoom0 - worldOffsetInContainer, 6);

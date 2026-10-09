@@ -13,28 +13,29 @@ import type {TileMatrix} from './tile_matrix.ts';
  * or the style's `projection.type`.
  *
  * Tiles are used as-is: the map never reprojects tile content, it only positions the CRS's own
- * tile grid on screen and maps lng/lat to and from it through `project`/`unproject`. CRS units are
+ * tile grid on screen and maps lng/lat to and from it through `projection`. CRS units are
  * taken as meters wherever the map converts meters: altitudes, elevations, and the camera distance.
  */
-export interface CrsDefinition {
+export type CrsDefinition = {
     /**
      * Name used in `projection.type`, e.g. `'EPSG:2193'`.
      * `'simple'` is pre-registered; `'mercator'`, `'globe'` and `'vertical-perspective'` are reserved.
      */
     name: string;
     /**
-     * lng/lat (degrees) to CRS coordinates (e.g. meters easting/northing).
+     * Converts between lng/lat (degrees) and CRS coordinates (e.g. meters easting/northing): `forward([lng, lat])`
+     * returns `[x, y]` and `inverse([x, y])` returns `[lng, lat]`. This is the shape of a proj4 converter such as
+     * `proj4('EPSG:4326', 'EPSG:2193')`, which deck.gl's custom projection view takes as well.
      */
-    project(lng: number, lat: number): [number, number];
-    /**
-     * CRS coordinates to `[lng, lat]`.
-     */
-    unproject(x: number, y: number): [number, number];
+    projection: {
+        forward(position: number[]): number[];
+        inverse(position: number[]): number[];
+    };
     /**
      * The quad tile matrix set over the CRS plane.
      */
     tileMatrix: TileMatrix;
-}
+};
 
 /**
  * @internal
@@ -64,17 +65,17 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
         return this._definition.tileMatrix;
     }
     worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate {
-        const [crsX, crsY] = this._definition.project(lng, lat);
+        const [crsX, crsY] = this._definition.projection.forward([lng, lat]);
         return new MercatorCoordinate((crsX - this._originX) / this._extent, (this._originY - crsY) / this._extent, altitude === undefined ? 0 : altitude / this._extent);
     }
     /**
-     * World square coordinates to lng/lat. The definition's `unproject` has a finite domain, and a position
+     * World square coordinates to lng/lat. The definition's inverse has a finite domain, and a position
      * outside the world square (the far edge of a pitched view, the buffer of a tile at the square's edge) can
      * come back with a latitude past the poles; it is clamped to the range {@link LngLat} accepts, so the
      * mapping is total the way the mercator inverse is.
      */
     lngLatFromWorld(x: number, y: number): LngLat {
-        const [lng, lat] = this._definition.unproject(this._originX + x * this._extent, this._originY - y * this._extent);
+        const [lng, lat] = this._definition.projection.inverse([this._originX + x * this._extent, this._originY - y * this._extent]);
         return new LngLat(lng, clamp(lat, -90, 90));
     }
     metersPerWorldUnit(_x: number, _y: number): number {
@@ -86,21 +87,27 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
 }
 
 /**
+ * The identity conversion of the built-in `'simple'` projection, whose CRS coordinates are lng/lat degrees.
+ */
+class IdentityConversion {
+    forward(position: number[]): number[] {
+        return [position[0], position[1]];
+    }
+
+    inverse(position: number[]): number[] {
+        return [position[0], position[1]];
+    }
+}
+
+/**
  * The identity CRS behind the built-in `'simple'` projection: CRS coordinates are lng/lat degrees and
  * tile 0/0/0 spans -90..90 on both axes. It exists for image-space maps (the analogue of Leaflet's
  * `CRS.Simple`), where a square root tile keeps the quad tree uniform in both directions.
  */
 class SimpleCrs implements CrsDefinition {
     readonly name = 'simple';
+    readonly projection = new IdentityConversion();
     readonly tileMatrix: TileMatrix = {origin: [-90, 90], extentAtZoom0: 180};
-
-    project(lng: number, lat: number): [number, number] {
-        return [lng, lat];
-    }
-
-    unproject(x: number, y: number): [number, number] {
-        return [x, y];
-    }
 }
 
 /**

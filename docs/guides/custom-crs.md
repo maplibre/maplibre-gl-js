@@ -2,7 +2,7 @@
 
 MapLibre GL JS renders Web Mercator (EPSG:3857) tiles by default. Some tile sets are published in a different planar coordinate reference system (CRS): national grids such as NZTM2000 (EPSG:2193), polar stereographic grids for the Arctic and Antarctic, or a plain image plane for floor plans, game maps and scanned artwork. `addProjection` registers such a CRS so a map can render tiles that were pre-projected in it, with the map's lng/lat API working as usual on top.
 
-The map never reprojects tile content on the GPU. It positions the CRS's own tile grid on screen and converts lng/lat to and from that grid through the two functions you supply. Reprojecting Mercator tiles into another CRS is a separate problem, tracked in [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
+The map never reprojects tile content on the GPU. It positions the CRS's own tile grid on screen and converts lng/lat to and from that grid through the converter you supply. Reprojecting Mercator tiles into another CRS is a separate problem, tracked in [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 
 `addProjection`, `removeProjection` and `CrsDefinition` are experimental: they can still change in a minor release.
 
@@ -22,9 +22,8 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 | Field | Meaning |
 |-------|---------|
 | `name` | The name used in `projection.type`, for example `'EPSG:2193'`. The built-in names `'mercator'`, `'globe'` and `'vertical-perspective'` are reserved. |
-| `project(lng, lat)` | Converts lng/lat degrees to CRS coordinates, for example meters easting/northing. |
-| `unproject(x, y)` | Converts CRS coordinates back to `[lng, lat]`. |
-| `tileMatrix.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `project` returns. |
+| `projection` | Converts between lng/lat degrees and CRS coordinates: `forward([lng, lat])` returns `[x, y]`, for example meters easting/northing, and `inverse([x, y])` returns `[lng, lat]`. A proj4js converter such as `proj4('EPSG:4326', 'EPSG:2193')` has this shape, and deck.gl's custom projection view takes the same object. |
+| `tileMatrix.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
 | `tileMatrix.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
 
 CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `simple` projection it means "one unit". The camera is constrained to the tile 0/0/0 square, or to `maxBounds` inside it.
@@ -36,7 +35,7 @@ worldX = (crsX - origin[0]) / extentAtZoom0
 worldY = (origin[1] - crsY) / extentAtZoom0
 ```
 
-World y grows downwards, like tile rows do, which is why `origin` is the top-left corner. Web Mercator expressed in these terms has `project` = spherical Mercator meters, `origin` = `[-πR, πR]` and `extentAtZoom0` = `2πR` with `R` = 6378137, which is a useful sanity check when you derive numbers from a tile matrix set document.
+World y grows downwards, like tile rows do, which is why `origin` is the top-left corner. Web Mercator expressed in these terms has `projection` = spherical Mercator meters, `origin` = `[-πR, πR]` and `extentAtZoom0` = `2πR` with `R` = 6378137, which is a useful sanity check when you derive numbers from a tile matrix set document.
 
 Take `origin` and `extentAtZoom0` from the tile matrix set definition published with the tiles, never from the CRS's area of use. The numbers in your tile server's definition are the ones that count. Tile matrix set documents may list corners northing-first (LINZ's NZTM2000Quad does), so reorder them to `[easting, northing]`.
 
@@ -49,9 +48,8 @@ proj4.defs('EPSG:2193', '+proj=tmerc +lat_0=0 +lon_0=173 +k=0.9996 +x_0=1600000 
 
 maplibregl.addProjection({
     name: 'EPSG:2193',
-    // proj4js returns [easting, northing] for the definition above.
-    project: (lng, lat) => proj4('EPSG:4326', 'EPSG:2193', [lng, lat]),
-    unproject: (x, y) => proj4('EPSG:2193', 'EPSG:4326', [x, y]),
+    // proj4js converts [lng, lat] to [easting, northing] for the definition above.
+    projection: proj4('EPSG:4326', 'EPSG:2193'),
     tileMatrix: {
         // Top-left corner of tile 0/0/0 in NZTM2000Quad: easting, northing.
         origin: [-3260586.7284, 10438190.1652],
@@ -120,13 +118,13 @@ Tile servers that speak WMS or WMTS-style requests want each tile's bounding box
 tiles: ['https://example.com/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:2193&BBOX={bbox}&WIDTH=256&HEIGHT=256&LAYERS=topo&FORMAT=image/png']
 ```
 
-`{bbox}` is x,y in the order your `project` returns (easting, northing); WMS 1.3.0 expects northing first for EPSG:2193 and EPSG:4326, so use `VERSION=1.1.1` with `SRS=`, which is always x,y, or reorder the values in a `transformRequest`.
+`{bbox}` is x,y in the order your `projection.forward` returns (easting, northing); WMS 1.3.0 expects northing first for EPSG:2193 and EPSG:4326, so use `VERSION=1.1.1` with `SRS=`, which is always x,y, or reorder the values in a `transformRequest`.
 
 On a Mercator map `{bbox}` expands to the same string as the existing `{bbox-epsg-3857}` token, which stays available and always means EPSG:3857 meters. `scheme: "tms"` flips only `{y}`; `{bbox}` always describes the tile the id names, as `{bbox-epsg-3857}` does.
 
 ## What keeps working
 
-Everything that speaks lng/lat goes through the CRS definition's `project` and `unproject`, so the map API is unchanged:
+Everything that speaks lng/lat goes through the CRS definition's `projection`, so the map API is unchanged:
 
 - `map.project`, `map.unproject`, `map.getBounds`, `fitBounds`, `flyTo` and markers all take and return lng/lat.
 - `queryRenderedFeatures` and `querySourceFeatures` return GeoJSON in lng/lat.
@@ -140,7 +138,7 @@ Everything that speaks lng/lat goes through the CRS definition's `project` and `
 - Mixing CRSs. A Mercator tile source on an EPSG:2193 map, or a projected raster layer over Mercator base tiles, renders in the wrong place. Reprojecting tiles on the GPU is the subject of [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 - Non-quad tile matrix sets: grids whose zoom 0 is not a single square, whose levels are not powers of two, or whose tiles are not square.
 - Globe and world copies, as described above.
-- Non-invertible `project`/`unproject` pairs. The camera constraint and every query rely on the round trip being stable.
+- Converters whose `inverse` does not undo `forward`. The camera constraint and every query rely on the round trip being stable.
 
 ## Removing a projection
 

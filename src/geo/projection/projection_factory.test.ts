@@ -27,8 +27,7 @@ describe('createProjectionFromName', () => {
         beforeEach(() => {
             addProjection({
                 name: 'factory-test-crs',
-                project: (lng, lat) => [lng * 2, lat * 2],
-                unproject: (x, y) => [x / 2, y / 2],
+                projection: {forward: ([lng, lat]) => [lng * 2, lat * 2], inverse: ([x, y]) => [x / 2, y / 2]},
                 tileMatrix: {origin: [-180, 180], extentAtZoom0: 360},
             });
         });
