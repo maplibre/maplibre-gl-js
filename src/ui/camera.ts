@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {extend, wrap, defaultEasing, pick, evaluateZoomSnap, lerp, zoomScale} from '../util/util.ts';
+import {extend, wrap, defaultEasing, evaluateZoomSnap, lerp, zoomScale} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
@@ -1325,10 +1325,9 @@ export class Camera extends Evented<MapEventType> {
     }
 
     flyTo(options: FlyToOptions, eventData?: any): this {
-        // Fall through to jumpTo if user has set prefers-reduced-motion
+        // easeTo keeps `offset` and `around` under reduced motion; a picked jumpTo dropped them
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll', 'elevation', 'padding']) as JumpToOptions;
-            return this.jumpTo(coercedOptions, eventData);
+            return this.easeTo(options, eventData);
         }
 
         // This method implements an “optimal path” animation, as detailed in:
