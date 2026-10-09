@@ -1087,6 +1087,42 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCenterElevation()).toBe(landedElevation);
     });
 
+    test('jumpTo puts the center at sea level when the new center lies outside the DEM source bounds', async () => {
+        const map = createMap({interactive: true, zoom: 11, pitch: 60});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], bounds: [-1, -1, 0.5, 0.5]});
+        await waitForMetadataEvent(map.getSource<RasterDEMTileSource>('dem'));
+        map.setTerrain({source: 'dem'});
+        const startElevation = 3750;
+        const elevationOutsideTheDem = 0;
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(startElevation);
+        map.redraw();
+        terrainElevation.mockReturnValue(elevationOutsideTheDem);
+
+        map.jumpTo({center: [1, 1]});
+        map.redraw();
+
+        expect(map.getCenterElevation()).toBe(elevationOutsideTheDem);
+    });
+
+    test('jumpTo puts the center at sea level when the map is zoomed out below the DEM source minzoom', async () => {
+        const map = createMap({interactive: true, zoom: 5, pitch: 60});
+        await map.once('load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], minzoom: 8});
+        await waitForMetadataEvent(map.getSource<RasterDEMTileSource>('dem'));
+        map.setTerrain({source: 'dem'});
+        const startElevation = 3750;
+        const elevationWithoutDem = 0;
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(startElevation);
+        map.redraw();
+        terrainElevation.mockReturnValue(elevationWithoutDem);
+
+        map.jumpTo({center: [1, 1]});
+        map.redraw();
+
+        expect(map.getCenterElevation()).toBe(elevationWithoutDem);
+    });
+
     test('easeTo keeps the center elevation while no DEM data covers the destination', async () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);

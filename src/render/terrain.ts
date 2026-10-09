@@ -239,15 +239,20 @@ export class Terrain {
     }
 
     /**
-     * {@link getElevationForLngLat}, or undefined where it gives 0 for want of DEM data, see
-     * {@link hasElevationForLngLat}. Any other elevation comes from DEM data, so only a 0 is checked.
+     * {@link getElevationForLngLat}, or undefined while it gives 0 for want of DEM data that can still arrive, see
+     * {@link hasElevationForLngLat} and {@link TerrainTileManager.canLoadDem}. Any other elevation comes from DEM data,
+     * so only a 0 is checked.
      * @param lnglat - the location
      * @param transform - the transform {@link getElevationForLngLat} is given
-     * @returns the elevation, or undefined while no DEM data covers the location
+     * @returns the elevation, or undefined while the DEM data for the location is still to come
      */
     getLoadedElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number | undefined {
         const elevation = this.getElevationForLngLat(lnglat, transform);
-        return elevation !== 0 || this.hasElevationForLngLat(lnglat, transform) ? elevation : undefined;
+        if (elevation !== 0 || this.hasElevationForLngLat(lnglat, transform)) return elevation;
+        const zoom = this._getFallbackZoom(transform);
+        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return elevation;
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.tileManager.canLoadDem(tileID) ? undefined : elevation;
     }
 
     /**

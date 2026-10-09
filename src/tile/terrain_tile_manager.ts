@@ -301,6 +301,21 @@ export class TerrainTileManager extends Evented {
         return tile;
     }
 
+    /**
+     * Whether DEM data for a terrain tile can still arrive: the source tile covering it lies within the source's zoom
+     * range and bounds, and has not failed to load.
+     * @param tileID - the terrain tile
+     * @returns false where the source will not serve DEM data for the tile
+     */
+    canLoadDem(tileID: OverscaledTileID): boolean {
+        const source = this.tileManager._source;
+        const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
+        if (z < source.minzoom) return false;
+        const sourceTileID = tileID.scaledTo(z);
+        if (source.hasTile && !source.hasTile(sourceTileID)) return false;
+        return this.findTileInCaches(sourceTileID.key)?.state !== 'errored';
+    }
+
     findTileInCaches(key: string): Tile | undefined {
         let tile = this.tileManager.getTileByID(key);
         if (tile) {
