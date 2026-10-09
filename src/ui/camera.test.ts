@@ -2275,6 +2275,76 @@ describe('stop', () => {
 });
 
 describe('cameraForBounds', () => {
+    test('warns when padding exactly exhausts the viewport height', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const {camera} = createCamera();
+        camera.transform.resize(400, 100, true);
+
+        try {
+            camera.cameraForBounds([[-71.5, 41.7], [-71.3, 41.9]], {padding: 50});
+            expect(warn).toHaveBeenCalledWith('Map cannot fit within canvas with the given bounds, padding, and/or offset.');
+        } finally {
+            warn.mockRestore();
+        }
+    });
+
+    test.each([
+        ['height equals padding', 50],
+        ['height is less than padding', 51]
+    ])('returns no camera when %s', (_description, padding) => {
+        const {camera} = createCamera();
+        camera.transform.resize(400, 100, true);
+
+        expect(camera.cameraForBounds([[-71.5, 41.7], [-71.3, 41.9]], {padding})).toBeUndefined();
+    });
+
+    test.each([
+        ['width equals padding', {left: 200, right: 200}],
+        ['width is less than padding', {left: 201, right: 200}]
+    ])('returns no camera when %s', (_description, padding) => {
+        const {camera} = createCamera();
+        camera.transform.resize(400, 100, true);
+
+        expect(camera.cameraForBounds([[-71.5, 41.7], [-71.3, 41.9]], {padding})).toBeUndefined();
+    });
+
+    test.each([
+        {description: 'point', bounds: [[-71.4, 41.8], [-71.4, 41.8]] as [LngLatLike, LngLatLike]},
+        {description: 'horizontal line', bounds: [[-71.5, 41.8], [-71.3, 41.8]] as [LngLatLike, LngLatLike]},
+        {description: 'vertical line', bounds: [[-71.4, 41.7], [-71.4, 41.9]] as [LngLatLike, LngLatLike]}
+    ])('returns no camera for $description bounds when padding exhausts the height', ({bounds}) => {
+        const {camera} = createCamera();
+        camera.transform.resize(400, 100, true);
+
+        expect(camera.cameraForBounds(bounds, {padding: 50})).toBeUndefined();
+    });
+
+    test.each([
+        {description: 'point', bounds: [[-71.4, 41.8], [-71.4, 41.8]] as [LngLatLike, LngLatLike]},
+        {description: 'horizontal line', bounds: [[-71.5, 41.8], [-71.3, 41.8]] as [LngLatLike, LngLatLike]},
+        {description: 'vertical line', bounds: [[-71.4, 41.7], [-71.4, 41.9]] as [LngLatLike, LngLatLike]}
+    ])('fits $description bounds when the viewport has space', ({bounds}) => {
+        const {camera} = createCamera();
+        camera.transform.resize(400, 100, true);
+
+        const result = camera.cameraForBounds(bounds, {padding: 49});
+        const center = result?.center && LngLat.convert(result.center);
+
+        expect([result?.zoom, center?.lng, center?.lat].every(Number.isFinite)).toBe(true);
+    });
+
+    test.each([
+        ['symmetric padding', 49],
+        ['asymmetric padding', {top: 0, bottom: 99}]
+    ])('fits when %s leaves a positive viewport height', (_description, padding) => {
+        const {camera} = createCamera();
+        camera.transform.resize(400, 100, true);
+
+        const result = camera.cameraForBounds([[-71.5, 41.7], [-71.3, 41.9]], {padding});
+
+        expect(result).toBeDefined();
+    });
+
     test('no options passed', () => {
         const {camera} = createCamera();
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
@@ -2416,6 +2486,32 @@ describe('absolutePadding', () => {
 });
 
 describe('fitBounds', () => {
+    test.each([
+        ['height', 50],
+        ['width', {left: 200, right: 200}]
+    ])('leaves the camera unchanged when padding exhausts the %s', (_description, padding) => {
+        const {camera} = createCamera();
+        camera.transform.resize(400, 100, true);
+        camera.jumpTo({center: [-73, 42], zoom: 4, bearing: 17, pitch: 20});
+        const initial = {
+            center: camera.getCenter().toArray(),
+            zoom: camera.getZoom(),
+            bearing: camera.getBearing(),
+            pitch: camera.getPitch(),
+            padding: {...camera.getPadding()}
+        };
+
+        camera.fitBounds([[-71.5, 41.7], [-71.3, 41.9]], {padding, duration: 0});
+
+        expect({
+            center: camera.getCenter().toArray(),
+            zoom: camera.getZoom(),
+            bearing: camera.getBearing(),
+            pitch: camera.getPitch(),
+            padding: camera.getPadding()
+        }).toEqual(initial);
+    });
+
     test('no padding passed', () => {
         const {camera} = createCamera();
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
