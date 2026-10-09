@@ -376,41 +376,32 @@ export class LngLatBounds {
         if (input instanceof LngLatBounds) return input;
         if (!input) return input as null;
 
-        if (Array.isArray(input)) {
-            let partialBounds:
-                | [number | undefined, number | undefined, number | undefined, number | undefined]
-                | null = null;
+        if (!Array.isArray(input)) return new LngLatBounds(input);
 
-            if (input.length === 4 && input.some(value => value === undefined)) {
-                partialBounds = input;
-            } else if (input.length === 2) {
-                const southwest = input[0];
-                const northeast = input[1];
-                if (Array.isArray(southwest) && Array.isArray(northeast) &&
-                    (southwest.includes(undefined) || northeast.includes(undefined))) {
-                    partialBounds = [southwest[0], southwest[1], northeast[0], northeast[1]];
-                }
-            }
+        const partialBounds = input.length === 4
+            ? input
+            : Array.isArray(input[0]) && Array.isArray(input[1])
+                ? [input[0][0], input[0][1], input[1][0], input[1][1]]
+                : null;
 
-            if (partialBounds) {
-                const [west, south, east, north] = partialBounds;
-                if ((west === undefined) !== (east === undefined)) {
-                    throw new Error('Both west and east maxBounds values must be defined or undefined together');
-                }
-                if ((south === undefined) !== (north === undefined)) {
-                    throw new Error('Both south and north maxBounds values must be defined or undefined together');
-                }
-
-                return new LngLatBounds([
-                    west ?? -Infinity,
-                    south ?? -90,
-                    east ?? Infinity,
-                    north ?? 90
-                ]);
-            }
+        if (!partialBounds || !partialBounds.some(value => value === undefined)) {
+            return new LngLatBounds(input);
         }
 
-        return new LngLatBounds(input);
+        const [west, south, east, north] = partialBounds;
+        if ((west === undefined) !== (east === undefined)) {
+            throw new Error('Both west and east maxBounds values must be defined or undefined together');
+        }
+        if ((south === undefined) !== (north === undefined)) {
+            throw new Error('Both south and north maxBounds values must be defined or undefined together');
+        }
+
+        return new LngLatBounds([
+            west ?? -Infinity,
+            south ?? -90,
+            east ?? Infinity,
+            north ?? 90
+        ]);
     }
 
     /**
