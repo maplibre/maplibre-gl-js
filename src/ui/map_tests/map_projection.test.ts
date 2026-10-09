@@ -1,7 +1,8 @@
 import {afterEach, beforeEach, describe, test, expect} from 'vitest';
-import {createMap, beforeMapTest, createRotatedCrs} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, createPolarStereographicCrs, createRotatedCrs} from '../../util/test/util.ts';
 import {addProjection, removeProjection} from '../../geo/projection/projection_crud.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -82,5 +83,34 @@ describe('Map in a CRS registered with addProjection', () => {
 
         expect(screenPoint.x).toBeCloseTo(worldFractionOfCrsPoint.x * worldSizeAtZoom0 - worldOffsetInContainer, 6);
         expect(screenPoint.y).toBeCloseTo(worldFractionOfCrsPoint.y * worldSizeAtZoom0 - worldOffsetInContainer, 6);
+    });
+});
+
+describe('Map in a polar stereographic CRS', () => {
+    afterEach(() => {
+        removeProjection(createPolarStereographicCrs().name);
+    });
+
+    test('fits the cap north of 60N with the pole at the center', async () => {
+        const crs = createPolarStereographicCrs();
+        addProjection(crs);
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}});
+        await map.once('style.load');
+
+        const camera = map.cameraForBounds([[-180, 60], [180, 90]]);
+
+        expect(LngLat.convert(camera.center).lat).toBeCloseTo(90, 6);
+    });
+
+    test('keeps a center on the far side of the pole inside maxBounds of the cap north of 60N', async () => {
+        const crs = createPolarStereographicCrs();
+        addProjection(crs);
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}, maxBounds: [[-180, 60], [180, 90]], zoom: 3});
+        await map.once('style.load');
+
+        map.setCenter([45, 70]);
+
+        expect(map.getCenter().lng).toBeCloseTo(45, 6);
+        expect(map.getCenter().lat).toBeCloseTo(70, 6);
     });
 });

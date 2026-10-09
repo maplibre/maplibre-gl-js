@@ -287,6 +287,8 @@ export class MercatorTransform implements ITransform {
     private _fogMatrixCacheF32: Map<string, mat4> = new Map();
 
     private _coveringTilesDetailsProvider;
+    /** The last `maxBounds` projected into the world square, and the ranges it was projected from. */
+    private _maxBoundsWorldBox: {lngRange: [number, number]; latRange: [number, number]; box: {minX: number; minY: number; maxX: number; maxY: number}} | null = null;
 
     /**
      * @param options - Initial state. Ignored when `sharedHelper` is given, which already carries it.
@@ -320,6 +322,7 @@ export class MercatorTransform implements ITransform {
      */
     setWorldCoordinateHelper(worldCoordinateHelper: WorldCoordinateHelper): void {
         this._helper.setWorldCoordinateHelper(worldCoordinateHelper);
+        this._maxBoundsWorldBox = null;
     }
 
     public apply(that: IReadonlyTransform, constrain: boolean): void {
@@ -768,9 +771,7 @@ export class MercatorTransform implements ITransform {
         const worldCoordinateHelper = this.worldCoordinateHelper;
         const lngRange = this._helper._lngRange;
         const latRange = this._helper._latRange;
-        const box = lngRange && latRange ?
-            lngLatBoxToWorldBox(worldCoordinateHelper, lngRange[0], latRange[0], lngRange[1], latRange[1]) :
-            {minX: 0, minY: 0, maxX: 1, maxY: 1};
+        const box = lngRange && latRange ? this._projectMaxBounds(lngRange, latRange) : {minX: 0, minY: 0, maxX: 1, maxY: 1};
         const worldSize = this.tileSize * zoomScale(zoom);
         const minX = Math.max(box.minX, 0) * worldSize;
         const maxX = Math.min(box.maxX, 1) * worldSize;
@@ -793,6 +794,18 @@ export class MercatorTransform implements ITransform {
             return {center: unprojectFromWorldCoordinates(worldSize, new Point(constrainedX, constrainedY), worldCoordinateHelper), zoom};
         }
         return {center: new LngLat(lngLat.lng, lngLat.lat), zoom};
+    }
+
+    /**
+     * `maxBounds` in the world square. Projecting a box samples it on a grid and every constrain reads it,
+     * so the result is kept until the bounds change.
+     */
+    private _projectMaxBounds(lngRange: [number, number], latRange: [number, number]): {minX: number; minY: number; maxX: number; maxY: number} {
+        const cached = this._maxBoundsWorldBox;
+        if (cached?.lngRange === lngRange && cached.latRange === latRange) return cached.box;
+        const box = lngLatBoxToWorldBox(this.worldCoordinateHelper, lngRange[0], latRange[0], lngRange[1], latRange[1]);
+        this._maxBoundsWorldBox = {lngRange, latRange, box};
+        return box;
     }
 
     applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {

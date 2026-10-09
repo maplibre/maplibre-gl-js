@@ -1270,6 +1270,22 @@ describe('MercatorTransform over the identity CRS', () => {
             expect(transform.center.lat).toBeCloseTo(10 - halfViewport * degreesPerPixel, 6);
         });
 
+        test('keeps the viewport inside max bounds that replace earlier ones', () => {
+            const transform = createIdentityCrsTransform(200, 200);
+            transform.setZoom(4);
+            transform.setMaxBounds(new LngLatBounds([-10, -10], [10, 10]));
+            transform.setCenter(new LngLat(0, 0));
+            transform.setMaxBounds(new LngLatBounds([30, 30], [50, 50]));
+            const worldSizeAtZoom4 = 8192;
+            const degreesPerPixel = 180 / worldSizeAtZoom4;
+            const halfViewport = 100;
+
+            transform.setCenter(new LngLat(80, 80));
+
+            expect(transform.center.lng).toBeCloseTo(50 - halfViewport * degreesPerPixel, 6);
+            expect(transform.center.lat).toBeCloseTo(50 - halfViewport * degreesPerPixel, 6);
+        });
+
         test('stops the center at the east edge of the square instead of wrapping', () => {
             const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(4);

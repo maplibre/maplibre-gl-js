@@ -447,6 +447,30 @@ export function createRotatedCrs(): CrsDefinition {
 }
 
 /**
+ * A north polar stereographic CRS on a sphere, oriented like EPSG:3413 (lng -45 points down) and true to scale
+ * at 70N, with tile 0/0/0 spanning the EPSG:3413 grid NASA GIBS serves. Parallels are circles around the pole.
+ */
+export function createPolarStereographicCrs(): CrsDefinition {
+    const degrees = 180 / Math.PI;
+    const scale = 6378137 * (1 + Math.sin(70 / degrees));
+    const centralLng = -45;
+    return {
+        name: 'polar-test',
+        projection: {
+            forward([lng, lat]) {
+                const rho = scale * Math.tan(Math.PI / 4 - lat / degrees / 2);
+                const angle = (lng - centralLng) / degrees;
+                return [rho * Math.sin(angle), -rho * Math.cos(angle)];
+            },
+            inverse([x, y]) {
+                return [centralLng + Math.atan2(x, -y) * degrees, 90 - 2 * Math.atan(Math.hypot(x, y) / scale) * degrees];
+            },
+        },
+        tileMatrixSet: {origin: [-4194304, 4194304], extentAtZoom0: 8388608},
+    };
+}
+
+/**
  * Returns frame data for a still mercator map with every debug option off.
  */
 export function createFrameRenderData(): FrameRenderData {

@@ -20,6 +20,8 @@ The projection factory checks the registry populated by `addProjection` before i
 
 Readers take the helper from what they already hold: the transform, camera and covering tiles from the transform; sources and queries from `map.style.projection.worldCoordinateHelper`; the terrain from a reader the `Map` passes it, since the painter holds no transform.
 
+A lng/lat box, such as a source's `bounds`, `maxBounds` or a `fitBounds` box, goes into the world square through `lngLatBoxToWorldSamples`, which projects a 17 by 17 grid over the box and reports how far its edges curve between the samples. Corners alone are not enough in a CRS: a parallel around a pole is a circle, and transverse mercator runs off to infinity inside a box that spans its equator 90 degrees from the central meridian. Mercator edges project straight, so a mercator box comes out exactly as its corners did.
+
 A registered CRS shares the mercator shader variant, prelude and tile mesh. A tile's own coordinates are already in the CRS's quad grid, so tiles are drawn exactly as mercator tiles are, and only the lng/lat mapping around the edges differs.
 
 ## Why Mercator keeps its own functions

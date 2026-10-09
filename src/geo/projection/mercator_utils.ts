@@ -137,30 +137,79 @@ export function cameraDirectionFromPitchBearing(pitch: number, bearing: number):
 }
 
 /**
- * Projects the four corners of a lng/lat box and returns the world rectangle that contains them.
- * For a cylindrical mapping like mercator this is exactly the projected box; for a mapping where
- * `x` and `y` both depend on `lng` and `lat` it is the axis-aligned hull of the corners, which is
- * correct for axis-aligned lng/lat boxes up to the curvature of the box edges.
+ * The number of steps a lng/lat box is cut into along each axis by {@link lngLatBoxToWorldSamples}.
  */
-export function lngLatBoxToWorldBox(worldCoordinateHelper: WorldCoordinateHelper, west: number, south: number, east: number, north: number): {minX: number; minY: number; maxX: number; maxY: number} {
-    const corners = [
-        worldCoordinateHelper.worldFromLngLat(west, north),
-        worldCoordinateHelper.worldFromLngLat(east, north),
-        worldCoordinateHelper.worldFromLngLat(east, south),
-        worldCoordinateHelper.worldFromLngLat(west, south),
-    ];
-    return {
-        minX: Math.min(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
-        minY: Math.min(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
-        maxX: Math.max(corners[0].x, corners[1].x, corners[2].x, corners[3].x),
-        maxY: Math.max(corners[0].y, corners[1].y, corners[2].y, corners[3].y),
+const BOX_SAMPLE_STEPS = 16;
+
+/**
+ * Projects a lng/lat box into the world square as a grid of points, {@link BOX_SAMPLE_STEPS} + 1 on a side,
+ * edges and corners included. The corners alone miss most of a box whose edges curve, as a parallel does
+ * around a pole, and the inside of the box matters where the projection runs off to infinity, as transverse
+ * mercator does on the equator 90 degrees from its central meridian.
+ * `bulge` is the farthest an edge strays from the line between two neighboring points, measured halfway
+ * between them, which bounds how far an edge reaches past the points. It is 0 where every edge projects to
+ * a straight line, as in mercator.
+ */
+export function lngLatBoxToWorldSamples(worldCoordinateHelper: WorldCoordinateHelper, west: number, south: number, east: number, north: number): {points: Point[]; bulge: number} {
+    const toPoint = (lng: number, lat: number) => {
+        const {x, y} = worldCoordinateHelper.worldFromLngLat(lng, lat);
+        return new Point(x, y);
     };
+    const lngAt = (step: number) => step === BOX_SAMPLE_STEPS ? east : west + (east - west) * step / BOX_SAMPLE_STEPS;
+    const latAt = (step: number) => step === BOX_SAMPLE_STEPS ? south : north + (south - north) * step / BOX_SAMPLE_STEPS;
+    const points: Point[] = [];
+    for (let row = 0; row <= BOX_SAMPLE_STEPS; row++) {
+        for (let column = 0; column <= BOX_SAMPLE_STEPS; column++) {
+            points.push(toPoint(lngAt(column), latAt(row)));
+        }
+    }
+    const pointAt = (row: number, column: number) => points[row * (BOX_SAMPLE_STEPS + 1) + column];
+    let bulge = 0;
+    for (let step = 0; step < BOX_SAMPLE_STEPS; step++) {
+        const lngHalfway = (lngAt(step) + lngAt(step + 1)) / 2;
+        const latHalfway = (latAt(step) + latAt(step + 1)) / 2;
+        const edges: Array<[Point, Point, Point]> = [
+            [pointAt(0, step), pointAt(0, step + 1), toPoint(lngHalfway, north)],
+            [pointAt(BOX_SAMPLE_STEPS, step), pointAt(BOX_SAMPLE_STEPS, step + 1), toPoint(lngHalfway, south)],
+            [pointAt(step, 0), pointAt(step + 1, 0), toPoint(west, latHalfway)],
+            [pointAt(step, BOX_SAMPLE_STEPS), pointAt(step + 1, BOX_SAMPLE_STEPS), toPoint(east, latHalfway)],
+        ];
+        for (const [start, end, halfway] of edges) {
+            const chord = end.sub(start);
+            const toHalfway = halfway.sub(start);
+            const chordLength = chord.mag();
+            const distance = chordLength > 0 ? Math.abs(chord.x * toHalfway.y - chord.y * toHalfway.x) / chordLength : toHalfway.mag();
+            if (distance > bulge) bulge = distance;
+        }
+    }
+    return {points, bulge};
 }
 
 /**
- * Maps the four corners of a world rectangle back to lng/lat and returns the box that contains them:
- * the inverse of {@link lngLatBoxToWorldBox}, with the same axis-aligned hull where `x` and `y` both
- * depend on `lng` and `lat`.
+ * Projects a lng/lat box into the world square and returns the axis-aligned rectangle that contains it:
+ * the rectangle around {@link lngLatBoxToWorldSamples}, grown by their bulge. In mercator that is exactly
+ * the rectangle of the projected corners.
+ */
+export function lngLatBoxToWorldBox(worldCoordinateHelper: WorldCoordinateHelper, west: number, south: number, east: number, north: number): {minX: number; minY: number; maxX: number; maxY: number} {
+    const {points, bulge} = lngLatBoxToWorldSamples(worldCoordinateHelper, west, south, east, north);
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const {x, y} of points) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+    }
+    return {minX: minX - bulge, minY: minY - bulge, maxX: maxX + bulge, maxY: maxY + bulge};
+}
+
+/**
+ * Maps the four corners of a world rectangle back to lng/lat and returns the box that contains them.
+ * That is exact in mercator. Where `x` and `y` both depend on `lng` and `lat` it can miss a curved edge
+ * or a pole inside the rectangle; its one caller is the GeoJSON reload check, and GeoJSON does not follow
+ * a registered CRS yet.
  */
 export function worldBoxToLngLatBox(worldCoordinateHelper: WorldCoordinateHelper, minX: number, minY: number, maxX: number, maxY: number): {west: number; south: number; east: number; north: number} {
     const corners = [
