@@ -635,6 +635,9 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     async loadTile(tile: Tile): Promise<void> {
+        if (!this.map.style.projection.worldCoordinateHelper.wraps) {
+            warnOnce(`GeoJSON sources do not follow a registered projection yet, so source "${this.id}" is drawn in the wrong place.`);
+        }
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = await this.actorPromise;
         const params: WorkerTileParameters = {

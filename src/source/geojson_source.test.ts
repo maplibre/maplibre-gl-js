@@ -1,4 +1,4 @@
-import {describe, test, expect, vi, beforeEach} from 'vitest';
+import {afterEach, describe, test, expect, vi, beforeEach} from 'vitest';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
@@ -275,6 +275,24 @@ describe('GeoJSONSource.loadTile', () => {
         showCollisionBoxes: false,
         style: {projection: new MercatorProjection()}
     } as any;
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    test('warns that GeoJSON does not follow a registered projection yet', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const source = new GeoJSONSource('in-identity', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return Promise.reject(new AbortError());
+            }
+        }), undefined);
+        source.map = {...mapStub, style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(identityCrs))}};
+
+        await source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize));
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('GeoJSON sources do not follow a registered projection yet'));
+    });
 
     test('swallows an AbortError from the worker request', async () => {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({

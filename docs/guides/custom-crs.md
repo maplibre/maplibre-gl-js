@@ -136,7 +136,7 @@ Everything that speaks lng/lat goes through the CRS definition's `projection`, s
 
 ## What does not work
 
-- GeoJSON sources, for now. Their data does not go through the projection yet, so on a map in a registered CRS it renders in the wrong place. Serve such data as vector tiles in the CRS's grid instead.
+- GeoJSON sources, for now. Their data does not go through the projection yet, so on a map in a registered CRS it renders in the wrong place, and the map logs a warning. Serve such data as vector tiles in the CRS's grid instead.
 - Mixing CRSs. A Mercator tile source on an EPSG:2193 map, or a projected raster layer over Mercator base tiles, renders in the wrong place. Reprojecting tiles on the GPU is the subject of [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 - Non-quad tile matrix sets: grids whose zoom 0 is not a single square, whose levels are not powers of two, or whose tiles are not square.
 - Globe and world copies, as described above.
