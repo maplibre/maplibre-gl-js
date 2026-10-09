@@ -2034,6 +2034,16 @@ describe('flyTo', () => {
         expect(camera.getPadding()).toEqual({top: 50, bottom: 0, left: 0, right: 30});
     });
 
+    test('applies the offset option when prefers-reduce-motion:reduce is set', async () => {
+        const {camera} = createCamera();
+        Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
+
+        camera.flyTo({center: [100, 0], offset: [100, 0]});
+
+        // Same end center as the animated flyTo and easeTo with this offset
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
+    });
+
     test('check elevation events freezeElevation=false', async () => {
         const terrain = createTerrain();
         const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
