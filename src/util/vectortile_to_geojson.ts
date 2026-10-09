@@ -33,19 +33,19 @@ export type MapGeoJSONFeature = GeoJSONFeature & {
  */
 export class GeoJSONFeature {
     type: 'Feature';
-    private _geometry: GeoJSON.Geometry;
+    _geometry: GeoJSON.Geometry;
     properties: { [name: string]: any };
     id: number | string | undefined;
-    private _x: number;
-    private _y: number;
-    private _z: number;
+    _x: number;
+    _y: number;
+    _z: number;
 
-    private _vectorTileFeature: VectorTileFeatureLike;
+    _vectorTileFeature: VectorTileFeatureLike;
     /**
      * The map projection's world-to-lng/lat mapping, stored only when it is not the mercator one so mercator
      * query output stays float-identical to the inline formula in `projectPoint`.
      */
-    private _worldCoordinateHelper: WorldCoordinateHelper | undefined;
+    _worldCoordinateHelper: WorldCoordinateHelper | undefined;
 
     constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined, worldCoordinateHelper: WorldCoordinateHelper) {
         this.type = 'Feature';
