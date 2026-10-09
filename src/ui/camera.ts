@@ -1045,8 +1045,9 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Applies a change of the terrain under the center (terrain set or removed, a DEM tile landed): at rest the
      * camera moves with the center's elevation once DEM data covers the center, as on every rendered frame; a hold
-     * keeps the camera where the user put it unless it waits for DEM data. A gesture's hold takes here, on the requested camera state its frames
-     * read; an animation's takes on its next frame, on the transform it edits, see {@link ElevationHold.take}.
+     * keeps the camera where the user put it unless it waits for DEM data. A gesture's hold takes here, on the
+     * requested camera state its frames read; an animation's takes on its next frame, on the transform it edits,
+     * see {@link ElevationHold.take}.
      */
     applyTerrainChange(): void {
         if (this.elevationFreeze) {

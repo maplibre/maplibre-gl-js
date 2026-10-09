@@ -1087,7 +1087,7 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCenterElevation()).toBe(landedElevation);
     });
 
-    test('easeTo and flyTo keep the center elevation while no DEM data covers the destination', async () => {
+    test('easeTo keeps the center elevation while no DEM data covers the destination', async () => {
         const map = await createMapOverTerrain(60);
         const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
         const startElevation = 1000;
@@ -1102,12 +1102,21 @@ describe('Terrain changing under and around a gesture', () => {
         now.mockReturnValue(1000);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(startElevation);
+    });
 
-        map.flyTo({center: [2, 2], duration: 1000, easing: k => k});
-        now.mockReturnValue(1500);
+    test('flyTo keeps the center elevation while no DEM data covers the destination', async () => {
+        const map = await createMapOverTerrain(60);
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const startElevation = 1000;
+        const elevationForWantOfDem = 0;
+        vi.spyOn(map.terrain, 'getElevationForLngLat').mockImplementation((lnglat: LngLat) => lnglat.lat > 0.5 ? elevationForWantOfDem : startElevation);
+        map.redraw();
+
+        map.flyTo({center: [1, 1], duration: 1000, easing: k => k});
+        now.mockReturnValue(500);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(startElevation);
-        now.mockReturnValue(2000);
+        now.mockReturnValue(1000);
         map.redraw();
         expect(map.getCameraTargetElevation()).toBe(startElevation);
     });
