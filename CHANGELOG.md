@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add `addProjection`, `removeProjection`, a built-in `simple` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
+- Add `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

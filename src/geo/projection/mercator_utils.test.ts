@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {cameraMercatorCoordinate, getMercatorHorizon, lngLatBoxToWorldBox, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates, worldBoxToLngLatBox} from './mercator_utils.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from './crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from './crs.ts';
 import {createMercatorTransform} from './mercator_transform.ts';
 import {createGlobeTransform} from './globe_transform.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
@@ -27,7 +27,7 @@ describe('mercator utils', () => {
     });
 
     test('projectToWorldCoordinates does not clamp latitude for a non-wrapping helper', () => {
-        const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+        const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
         const worldSize = 1024;
         const pixelsPerDegree = worldSize / 180;
         const projected = projectToWorldCoordinates(worldSize, new LngLat(0, 89), worldCoordinateHelper);
@@ -183,8 +183,8 @@ describe('lngLatBoxToWorldBox and worldBoxToLngLatBox', () => {
         expect(back.north).toBeCloseTo(60, 10);
     });
 
-    test('map the whole world square of the simple CRS to lng/lat -90..90', () => {
-        const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+    test('map the whole world square of the identity CRS to lng/lat -90..90', () => {
+        const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
         expect(worldBoxToLngLatBox(worldCoordinateHelper, 0, 0, 1, 1)).toEqual({west: -90, south: -90, east: 90, north: 90});
         expect(lngLatBoxToWorldBox(worldCoordinateHelper, -90, -90, 90, 90)).toEqual({minX: 0, minY: 0, maxX: 1, maxY: 1});
     });

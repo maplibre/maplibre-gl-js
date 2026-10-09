@@ -8,36 +8,36 @@ beforeEach(() => {
     global.fetch = null;
 });
 
-describe('Map in the simple projection', () => {
-    test('loads a style that declares the simple projection', async () => {
-        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'simple'}}});
+describe('Map in the identity projection', () => {
+    test('loads a style that declares the identity projection', async () => {
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}});
         await map.once('style.load');
 
-        expect(map.getProjection()).toEqual({type: 'simple'});
+        expect(map.getProjection()).toEqual({type: 'identity'});
     });
 
     test('keeps an initial center north of the mercator latitude limit', async () => {
         const latitudeNorthOfMercatorLimit = MAX_VALID_LATITUDE + 1;
-        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'simple'}}, center: [0, latitudeNorthOfMercatorLimit], zoom: 6});
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, center: [0, latitudeNorthOfMercatorLimit], zoom: 6});
         await map.once('style.load');
 
         expect(map.getCenter().lat).toBeCloseTo(latitudeNorthOfMercatorLimit, 6);
     });
 
-    test('returns to the simple projection after a round trip through globe', async () => {
+    test('returns to the identity projection after a round trip through globe', async () => {
         const map = createMap();
         await map.once('style.load');
 
-        map.setProjection({type: 'simple'});
+        map.setProjection({type: 'identity'});
         map.setProjection({type: 'globe'});
         expect(map.getProjection()).toEqual({type: 'globe'});
 
-        map.setProjection({type: 'simple'});
-        expect(map.getProjection()).toEqual({type: 'simple'});
+        map.setProjection({type: 'identity'});
+        expect(map.getProjection()).toEqual({type: 'identity'});
     });
 
     test('stops the center where the viewport reaches the east edge of the world square', async () => {
-        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'simple'}}, zoom: 3});
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, zoom: 3});
         await map.once('style.load');
         const worldSizeAtZoom3 = 4096;
         const degreesPerPixel = 180 / worldSizeAtZoom3;

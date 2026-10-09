@@ -4,8 +4,8 @@ import {LngLat} from '../lng_lat.ts';
 import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type CoveringTilesOptions} from './covering_tiles.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {type MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from './crs.ts';
-import {createSimpleCrsTransform} from '../../util/test/util.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from './crs.ts';
+import {createIdentityCrsTransform} from '../../util/test/util.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {
@@ -661,13 +661,13 @@ describe('coveringTiles', () => {
         });
 
         test('only includes tiles for a single world over a non-wrapping CRS, even where a pitched view sees past its edge', () => {
-            const simpleTransform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            simpleTransform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
-            simpleTransform.resize(512, 512);
-            simpleTransform.setZoom(1);
-            simpleTransform.setPitch(60);
-            simpleTransform.setCenter(new LngLat(80, 0));
-            const tiles = coveringTiles(simpleTransform, options);
+            const identityTransform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+            identityTransform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(identityCrs));
+            identityTransform.resize(512, 512);
+            identityTransform.setZoom(1);
+            identityTransform.setPitch(60);
+            identityTransform.setCenter(new LngLat(80, 0));
+            const tiles = coveringTiles(identityTransform, options);
             expect(tiles.length).toBeGreaterThan(0);
             expect(tiles.every((tileID) => tileID.wrap === 0)).toBe(true);
         });
@@ -822,7 +822,7 @@ describe('coveringTiles', () => {
     
     });
 
-    describe('planar CRS (simple projection)', () => {
+    describe('planar CRS (identity projection)', () => {
         const options = {
             minzoom: 0,
             maxzoom: 10,
@@ -830,7 +830,7 @@ describe('coveringTiles', () => {
         };
 
         test('covers the root tile at zoom 0', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setCenter(new LngLat(-0.01, 0.01));
             transform.setZoom(0);
 
@@ -838,7 +838,7 @@ describe('coveringTiles', () => {
         });
 
         test('covers the four children of the root tile at zoom 1 around the center of the square', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setCenter(new LngLat(-0.01, 0.01));
             transform.setZoom(1);
 
@@ -851,7 +851,7 @@ describe('coveringTiles', () => {
         });
 
         test('addresses tiles by the CRS grid, where lng/lat 45,45 is the top-right quadrant, not by mercator', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setCenter(new LngLat(45, 45));
             transform.setZoom(2.5);
 
@@ -864,7 +864,7 @@ describe('coveringTiles', () => {
         });
 
         test('never produces wrapped tiles at the edge of the square', () => {
-            const transform = createSimpleCrsTransform(1024, 200);
+            const transform = createIdentityCrsTransform(1024, 200);
             transform.setCenter(new LngLat(89, 0));
             transform.setZoom(2);
             const tiles = coveringTiles(transform, options);

@@ -5,7 +5,7 @@ import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {createMercatorTransform, type MercatorTransform} from '../../geo/projection/mercator_transform.ts';
-import {CrsWorldCoordinateHelper, simpleCrs, type CrsDefinition} from '../../geo/projection/crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs, type CrsDefinition} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {Painter} from '../../render/painter.ts';
@@ -409,10 +409,10 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
 }
 
 /**
- * A transform over the built-in simple CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
+ * A transform over the built-in identity CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
  * axes), sized to the given viewport.
  */
-export function createSimpleCrsTransform(width: number, height: number): MercatorTransform {
+export function createIdentityCrsTransform(width: number, height: number): MercatorTransform {
     const transform = createMercatorTransform({
         minZoom: -5,
         maxZoom: 22,
@@ -420,7 +420,7 @@ export function createSimpleCrsTransform(width: number, height: number): Mercato
         maxPitch: 85,
         renderWorldCopies: true,
     });
-    transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(simpleCrs));
+    transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(identityCrs));
     transform.resize(width, height);
     return transform;
 }

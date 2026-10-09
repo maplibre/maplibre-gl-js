@@ -7,7 +7,7 @@ import {type MercatorTransform, createMercatorTransform} from './mercator_transf
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
-import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createSimpleCrsTransform} from '../../util/test/util.ts';
+import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsTransform} from '../../util/test/util.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
@@ -1210,19 +1210,19 @@ describe('mercator transform bit identity with the pre-refactor transform', () =
     });
 });
 
-describe('MercatorTransform over the simple CRS', () => {
+describe('MercatorTransform over the identity CRS', () => {
     test('uses a non-wrapping helper', () => {
-        const transform = createSimpleCrsTransform(200, 200);
+        const transform = createIdentityCrsTransform(200, 200);
         expect(transform.worldCoordinateHelper.wraps).toBe(false);
     });
 
     test('keeps the helper across clone', () => {
-        const transform = createSimpleCrsTransform(200, 200);
+        const transform = createIdentityCrsTransform(200, 200);
         expect(transform.clone().worldCoordinateHelper).toBe(transform.worldCoordinateHelper);
     });
 
     test('sets no default lng/lat ranges', () => {
-        const transform = createSimpleCrsTransform(200, 200);
+        const transform = createIdentityCrsTransform(200, 200);
         expect(transform.latRange).toBeNull();
         expect(transform.lngRange).toBeNull();
         expect(transform.getMaxBounds()).toBeNull();
@@ -1230,7 +1230,7 @@ describe('MercatorTransform over the simple CRS', () => {
 
     describe('constrain', () => {
         test('clamps the center so the viewport stays inside the square', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(1);
             const worldSizeAtZoom1 = 1024;
             const halfViewport = 100;
@@ -1246,7 +1246,7 @@ describe('MercatorTransform over the simple CRS', () => {
         });
 
         test('zooms in so the square fills the viewport when zoomed out too far', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(-2);
             transform.setCenter(new LngLat(0, 0));
             const viewport = 200;
@@ -1257,7 +1257,7 @@ describe('MercatorTransform over the simple CRS', () => {
         });
 
         test('keeps the viewport inside explicit max bounds set inside the square', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(4);
             transform.setMaxBounds(new LngLatBounds([-10, -10], [10, 10]));
             const worldSizeAtZoom4 = 8192;
@@ -1271,7 +1271,7 @@ describe('MercatorTransform over the simple CRS', () => {
         });
 
         test('stops the center at the east edge of the square instead of wrapping', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(4);
             const worldSizeAtZoom4 = 8192;
             const degreesPerPixel = 180 / worldSizeAtZoom4;
@@ -1283,7 +1283,7 @@ describe('MercatorTransform over the simple CRS', () => {
         });
 
         test('setLocationAtPoint keeps the longitude it was given instead of wrapping it', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(4);
 
             transform.setLocationAtPoint(new LngLat(85, 0), transform.centerPoint);
@@ -1293,7 +1293,7 @@ describe('MercatorTransform over the simple CRS', () => {
     });
 
     test('returns only the main world from getVisibleUnwrappedCoordinates while renderWorldCopies is on', () => {
-        const transform = createSimpleCrsTransform(512, 512);
+        const transform = createIdentityCrsTransform(512, 512);
         transform.setZoom(0);
         transform.setCenter(new LngLat(0, 0));
         expect(transform.renderWorldCopies).toBe(true);
@@ -1301,18 +1301,18 @@ describe('MercatorTransform over the simple CRS', () => {
     });
 
     test('apply carries a renderWorldCopies of false through the non-wrapping transform and back', () => {
-        const simple = createSimpleCrsTransform(200, 200);
-        simple.apply(createMercatorTransform({renderWorldCopies: false}), false);
-        expect(simple.renderWorldCopies).toBe(false);
+        const identity = createIdentityCrsTransform(200, 200);
+        identity.apply(createMercatorTransform({renderWorldCopies: false}), false);
+        expect(identity.renderWorldCopies).toBe(false);
 
         const mercator = createMercatorTransform({renderWorldCopies: true});
-        mercator.apply(simple, false);
+        mercator.apply(identity, false);
         expect(mercator.renderWorldCopies).toBe(false);
     });
 
     describe('lng/lat and screen points', () => {
         test('round trips a location through screen space with the identity mapping', () => {
-            const transform = createSimpleCrsTransform(200, 200);
+            const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(2);
             transform.setCenter(new LngLat(30, -20));
             const point = transform.locationToScreenPoint(new LngLat(35, -25));
@@ -1322,7 +1322,7 @@ describe('MercatorTransform over the simple CRS', () => {
         });
 
         test('places lng/lat 45,45 in the top-right quarter of the square', () => {
-            const transform = createSimpleCrsTransform(512, 512);
+            const transform = createIdentityCrsTransform(512, 512);
             transform.setZoom(0);
             transform.setCenter(new LngLat(0, 0));
             const worldSizeAtZoom0 = 512;
@@ -1332,7 +1332,7 @@ describe('MercatorTransform over the simple CRS', () => {
         });
 
         test('bounds of a pitched view that reaches past the world square stop at the poles instead of throwing', () => {
-            const transform = createSimpleCrsTransform(512, 512);
+            const transform = createIdentityCrsTransform(512, 512);
             transform.setZoom(0);
             transform.setCenter(new LngLat(0, 0));
             transform.setPitch(60);
@@ -1344,7 +1344,7 @@ describe('MercatorTransform over the simple CRS', () => {
         });
 
         test('puts the camera above the center when unpitched', () => {
-            const transform = createSimpleCrsTransform(512, 512);
+            const transform = createIdentityCrsTransform(512, 512);
             transform.setZoom(3);
             transform.setCenter(new LngLat(10, 20));
             const camera = transform.getCameraLngLat();
@@ -1355,7 +1355,7 @@ describe('MercatorTransform over the simple CRS', () => {
 
     describe('calculateCameraOptionsFromTo', () => {
         test('bearing and zoom follow the identity CRS, where lng and lat are the world axes and equal steps make a 45 degree bearing', () => {
-            const transform = createSimpleCrsTransform(512, 512);
+            const transform = createIdentityCrsTransform(512, 512);
             transform.setZoom(1);
 
             const options = transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0);
@@ -1375,7 +1375,7 @@ describe('MercatorTransform over the simple CRS', () => {
         });
 
         test('altitude is scaled by the CRS meters per world unit, so 90 meters down in a 180 meter world is half a world unit', () => {
-            const transform = createSimpleCrsTransform(512, 512);
+            const transform = createIdentityCrsTransform(512, 512);
             transform.setZoom(1);
 
             const options = transform.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 90, {lng: 0, lat: 0}, 0);
@@ -1438,10 +1438,10 @@ describe('MercatorTransform.isLocationOccluded', () => {
         expect(transform.isLocationOccluded(new LngLat(0, 0.01), terrain)).toBe(false);
     });
 
-    test('a location behind a ridge on the simple CRS is hidden, where mercator math would place it in front of the ridge', () => {
+    test('a location behind a ridge on the identity CRS is hidden, where mercator math would place it in front of the ridge', () => {
         const tileSpanAtZoom2 = 45;
         const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 14 : 0);
-        const transform = createSimpleCrsTransform(512, 512);
+        const transform = createIdentityCrsTransform(512, 512);
         const terrain = new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem'}, 'auto', () => transform.worldCoordinateHelper);
         terrain.tileManager.getRenderableTiles = () => [{tileID: new OverscaledTileID(2, 0, 2, 2, 1)} as Tile];
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: ridgeAcrossTheTwoMiddleRows}) as Tile;

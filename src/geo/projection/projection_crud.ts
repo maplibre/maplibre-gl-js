@@ -1,10 +1,10 @@
-import {simpleCrs, type CrsDefinition} from './crs.ts';
+import {identityCrs, type CrsDefinition} from './crs.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const BUILT_IN_PROJECTION_NAMES = ['mercator', 'globe', 'vertical-perspective'];
 
-const registeredProjections: Record<string, CrsDefinition> = {simple: simpleCrs};
+const registeredProjections: Record<string, CrsDefinition> = {identity: identityCrs};
 
 /**
  * @internal
@@ -21,7 +21,7 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  * After registration the CRS name is accepted by `map.setProjection({type: name})` and by the
  * style's `projection.type`. Every source of such a map is expected to serve tiles in the CRS's
  * own quad tile grid, described by `tileMatrixSet`; the map does not reproject tile content.
- * The pre-registered `'simple'` projection is an identity CRS over lng/lat degrees, where tile 0/0/0
+ * The pre-registered `'identity'` projection is an identity CRS over lng/lat degrees, where tile 0/0/0
  * spans -90..90 on both axes.
  *
  * A map in a registered projection never renders world copies and never wraps across an antimeridian.
@@ -61,7 +61,7 @@ export function addProjection(def: CrsDefinition): void {
 /**
  * @experimental
  * Removes a projection registered with {@link addProjection}. Maps currently using it keep working
- * until their projection changes; the pre-registered `'simple'` projection can be removed too.
+ * until their projection changes; the pre-registered `'identity'` projection can be removed too.
  *
  * @param name - the name the projection was registered with
  * @example

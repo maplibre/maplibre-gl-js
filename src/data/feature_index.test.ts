@@ -7,8 +7,8 @@ import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
-import {createSimpleCrsTransform} from '../util/test/util.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
+import {createIdentityCrsTransform} from '../util/test/util.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -118,7 +118,7 @@ describe('FeatureIndex in a planar projection', () => {
 
     test('query returns geometry through the transform projection', () => {
         const {featureIndex, layer} = createIndexWithFeature();
-        const transform = createSimpleCrsTransform(500, 500);
+        const transform = createIdentityCrsTransform(500, 500);
 
         const result = featureIndex.query({
             queryPadding: 0,
@@ -134,7 +134,7 @@ describe('FeatureIndex in a planar projection', () => {
 
     test('lookupSymbolFeatures returns geometry through the helper in its filter params', () => {
         const {featureIndex, layer} = createIndexWithFeature();
-        const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+        const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
         const result = featureIndex.lookupSymbolFeatures([0], {}, 0, 0, {filterSpec: undefined, globalState: {}, worldCoordinateHelper}, null, [], {layer});
         expect((result.layer[0].feature.geometry as GeoJSON.MultiPoint).coordinates[0]).toEqual([-45, 0]);
     });

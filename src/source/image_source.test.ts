@@ -6,7 +6,7 @@ import {beforeMapTest, createMap, getMockDispatcher, sleep, stubAjaxGetImage, wa
 import {Tile} from '../tile/tile.ts';
 import {EXTENT} from '../data/extent.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 
 import type {Texture} from '../webgl/texture.ts';
@@ -850,7 +850,7 @@ describe('ImageSource', () => {
         });
 
         test('places the corners with the map projection on a planar map, a third of a tile above and below tile 2/2/1', () => {
-            map.style.projection = new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs));
+            map.style.projection = new MercatorProjection(new CrsWorldCoordinateHelper(identityCrs));
             const source = createSource({type: 'image', url: '/image.png', coordinates});
             const thirdOfATile = 2731;
 

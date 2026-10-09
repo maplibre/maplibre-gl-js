@@ -1,6 +1,6 @@
 import {afterEach, describe, test, expect} from 'vitest';
 import {addProjection, getRegisteredProjection, removeProjection} from './projection_crud.ts';
-import {simpleCrs, type CrsDefinition} from './crs.ts';
+import {identityCrs, type CrsDefinition} from './crs.ts';
 
 function createDefinition(name: string): CrsDefinition {
     return {
@@ -42,8 +42,8 @@ describe('addProjection', () => {
 });
 
 describe('getRegisteredProjection', () => {
-    test('finds the pre-registered simple projection', () => {
-        expect(getRegisteredProjection('simple')).toBe(simpleCrs);
+    test('finds the pre-registered identity projection', () => {
+        expect(getRegisteredProjection('identity')).toBe(identityCrs);
     });
 
     test('returns undefined for a name nothing registered', () => {

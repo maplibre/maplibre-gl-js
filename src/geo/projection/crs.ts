@@ -19,7 +19,7 @@ import type {TileMatrixSet} from './tile_matrix_set.ts';
 export type CrsDefinition = {
     /**
      * Name used in `projection.type`, e.g. `'EPSG:2193'`.
-     * `'simple'` is pre-registered; `'mercator'`, `'globe'` and `'vertical-perspective'` are reserved.
+     * `'identity'` is pre-registered; `'mercator'`, `'globe'` and `'vertical-perspective'` are reserved.
      */
     name: string;
     /**
@@ -87,7 +87,7 @@ export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
 }
 
 /**
- * The identity conversion of the built-in `'simple'` projection, whose CRS coordinates are lng/lat degrees.
+ * The identity conversion of the built-in `'identity'` projection, whose CRS coordinates are lng/lat degrees.
  */
 class IdentityConversion {
     forward(position: number[]): number[] {
@@ -100,18 +100,18 @@ class IdentityConversion {
 }
 
 /**
- * The identity CRS behind the built-in `'simple'` projection: CRS coordinates are lng/lat degrees and
- * tile 0/0/0 spans -90..90 on both axes. It exists for image-space maps (the analogue of Leaflet's
- * `CRS.Simple`), where a square root tile keeps the quad tree uniform in both directions.
+ * The CRS behind the built-in `'identity'` projection: CRS coordinates are lng/lat degrees unchanged and
+ * tile 0/0/0 spans -90..90 on both axes. It exists for image-space maps, where a square root tile keeps
+ * the quad tree uniform in both directions; image coordinates are scaled into -90..90.
  */
-class SimpleCrs implements CrsDefinition {
-    readonly name = 'simple';
+class IdentityCrs implements CrsDefinition {
+    readonly name = 'identity';
     readonly projection = new IdentityConversion();
     readonly tileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
 }
 
 /**
  * @internal
- * The one simple CRS: it holds no state, so the registry and every test share this instance.
+ * The one identity CRS: it holds no state, so the registry and every test share this instance.
  */
-export const simpleCrs: CrsDefinition = new SimpleCrs();
+export const identityCrs: CrsDefinition = new IdentityCrs();

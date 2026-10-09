@@ -109,7 +109,7 @@ describe('renderWorldCopies with a registered planar projection', () => {
         await map.once('style.load');
         expect(map.coveringTiles({tileSize: 512}).some((tileID) => tileID.wrap !== 0)).toBe(true);
 
-        map.setProjection({type: 'simple'});
+        map.setProjection({type: 'identity'});
 
         expect(map.coveringTiles({tileSize: 512}).every((tileID) => tileID.wrap === 0)).toBe(true);
     });
@@ -118,28 +118,28 @@ describe('renderWorldCopies with a registered planar projection', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const map = createMap({renderWorldCopies: true});
         await map.once('style.load');
-        map.setProjection({type: 'simple'});
+        map.setProjection({type: 'identity'});
 
         map.setRenderWorldCopies(true);
 
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('renderWorldCopies has no effect'));
     });
 
-    test('keeps renderWorldCopies true across a round trip through simple and back to mercator', async () => {
+    test('keeps renderWorldCopies true across a round trip through identity and back to mercator', async () => {
         const map = createMap({renderWorldCopies: true});
         await map.once('style.load');
 
-        map.setProjection({type: 'simple'});
+        map.setProjection({type: 'identity'});
         map.setProjection({type: 'mercator'});
 
         expect(map.getRenderWorldCopies()).toBe(true);
     });
 
-    test('keeps renderWorldCopies false across a round trip through simple and back to mercator', async () => {
+    test('keeps renderWorldCopies false across a round trip through identity and back to mercator', async () => {
         const map = createMap({renderWorldCopies: false});
         await map.once('style.load');
 
-        map.setProjection({type: 'simple'});
+        map.setProjection({type: 'identity'});
         map.setProjection({type: 'mercator'});
 
         expect(map.getRenderWorldCopies()).toBe(false);

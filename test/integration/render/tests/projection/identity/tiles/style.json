@@ -2,14 +2,14 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Vector tiles in the built-in simple projection, whose tile 1/1/0 spans lng 0..90 and lat 0..90. Centered on 45,45 at zoom 1, a 512px canvas is exactly that tile: the north-east quarter of the world tile fills the canvas edge to edge, with the equator along the bottom edge and the prime meridian along the left edge. In mercator the same style puts the equator 400px down and the top edge at 80N.",
+      "description": "Vector tiles in the built-in identity projection, whose tile 1/1/0 spans lng 0..90 and lat 0..90. Centered on 45,45 at zoom 1, a 512px canvas is exactly that tile: the north-east quarter of the world tile fills the canvas edge to edge, with the equator along the bottom edge and the prime meridian along the left edge. In mercator the same style puts the equator 400px down and the top edge at 80N.",
       "width": 512,
       "height": 512
     }
   },
   "center": [45, 45],
   "zoom": 1,
-  "projection": {"type": "simple"},
+  "projection": {"type": "identity"},
   "sources": {
     "maplibre": {
       "type": "vector",

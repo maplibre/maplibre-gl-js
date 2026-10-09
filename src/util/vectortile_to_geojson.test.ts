@@ -2,7 +2,7 @@ import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {GeoJSONFeature} from './vectortile_to_geojson.ts';
 import {EXTENT} from '../data/extent.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
@@ -28,7 +28,7 @@ describe('GeoJSONFeature.geometry', () => {
     });
 
     test('unprojects a point a quarter into tile 0/0/0 with the map projection on a planar map', () => {
-        const feature = new GeoJSONFeature(createPointFeature(EXTENT / 4, EXTENT / 4), 0, 0, 0, undefined, new CrsWorldCoordinateHelper(simpleCrs));
+        const feature = new GeoJSONFeature(createPointFeature(EXTENT / 4, EXTENT / 4), 0, 0, 0, undefined, new CrsWorldCoordinateHelper(identityCrs));
 
         expect((feature.geometry as GeoJSON.Point).coordinates).toEqual([-45, 45]);
     });

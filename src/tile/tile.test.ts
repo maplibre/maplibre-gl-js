@@ -9,7 +9,7 @@ import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {extend} from '../util/util.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
 import type {Style} from '../style/style.ts';
@@ -407,7 +407,7 @@ describe('querySourceFeatures geometry of the top-left point of tile 2/1/2', () 
     test('is lng/lat in the map projection on a planar map', () => {
         const result = [];
 
-        tile.querySourceFeatures(result, {worldCoordinateHelper: new CrsWorldCoordinateHelper(simpleCrs)});
+        tile.querySourceFeatures(result, {worldCoordinateHelper: new CrsWorldCoordinateHelper(identityCrs)});
 
         expect(result[0].geometry.coordinates[0]).toEqual([-45, 0]);
     });

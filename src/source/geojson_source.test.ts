@@ -9,7 +9,7 @@ import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
@@ -1393,9 +1393,9 @@ describe('GeoJSONSource.shoudReloadTile', () => {
     });
 
     test('reloads a tile that contains an added feature in the map projection', async () => {
-        source.map = {style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs))}} as any as Map;
-        const tileOfLng0To90Lat0To90InTheSimpleCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
-        tileOfLng0To90Lat0To90InTheSimpleCrs.state = 'loaded';
+        source.map = {style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(identityCrs))}} as any as Map;
+        const tileOfLng0To90Lat0To90InTheIdentityCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
+        tileOfLng0To90Lat0To90InTheIdentityCrs.state = 'loaded';
         const diff: GeoJSONSourceDiff = {add: [{id: 1, type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}}]};
         let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
         source.on('data', (e) => {
@@ -1405,13 +1405,13 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         });
         await source.updateData(diff);
 
-        expect(source.shouldReloadTile(tileOfLng0To90Lat0To90InTheSimpleCrs, shouldReloadTileOptions)).toBe(true);
+        expect(source.shouldReloadTile(tileOfLng0To90Lat0To90InTheIdentityCrs, shouldReloadTileOptions)).toBe(true);
     });
 
     test('does not reload a tile for an added feature that only mercator would place inside it', async () => {
-        source.map = {style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs))}} as any as Map;
-        const tileOfLng0To90Lat0To90InTheSimpleCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
-        tileOfLng0To90Lat0To90InTheSimpleCrs.state = 'loaded';
+        source.map = {style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(identityCrs))}} as any as Map;
+        const tileOfLng0To90Lat0To90InTheIdentityCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
+        tileOfLng0To90Lat0To90InTheIdentityCrs.state = 'loaded';
         const insideTheMercatorTileOfLng0To180 = [125, 15];
         const diff: GeoJSONSourceDiff = {add: [{id: 1, type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: insideTheMercatorTileOfLng0To180}}]};
         let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
@@ -1422,7 +1422,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         });
         await source.updateData(diff);
 
-        expect(source.shouldReloadTile(tileOfLng0To90Lat0To90InTheSimpleCrs, shouldReloadTileOptions)).toBe(false);
+        expect(source.shouldReloadTile(tileOfLng0To90Lat0To90InTheIdentityCrs, shouldReloadTileOptions)).toBe(false);
     });
 
     test('returns false when diff is empty', async () => {

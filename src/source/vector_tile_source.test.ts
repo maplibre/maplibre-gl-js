@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {VectorTileSource} from './vector_tile_source.ts';
 import {AJAXError} from '../util/ajax.ts';
@@ -387,14 +387,14 @@ describe('VectorTileSource', () => {
         source.onAdd({
             _getMapId: () => 1,
             _requestManager: new RequestManager(),
-            style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs))}
+            style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(identityCrs))}
         } as any as Map);
 
         await waitForMetadataEvent(source);
-        const lastRowInsideLat45To80InTheSimpleCrs = 1;
+        const lastRowInsideLat45To80InTheIdentityCrs = 1;
         const firstRowOnlyMercatorWouldInclude = 2;
 
-        expect(source.hasTile(new OverscaledTileID(3, 0, 3, 4, lastRowInsideLat45To80InTheSimpleCrs))).toBeTruthy();
+        expect(source.hasTile(new OverscaledTileID(3, 0, 3, 4, lastRowInsideLat45To80InTheIdentityCrs))).toBeTruthy();
         expect(source.hasTile(new OverscaledTileID(3, 0, 3, 4, firstRowOnlyMercatorWouldInclude))).toBeFalsy();
     });
 
@@ -409,7 +409,7 @@ describe('VectorTileSource', () => {
             transform: {showCollisionBoxes: false},
             _getMapId: () => 1,
             _requestManager: new RequestManager(),
-            style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(simpleCrs))},
+            style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(identityCrs))},
             getGlobalState: () => ({}),
             getPixelRatio() { return 1; },
         } as any as Map);
@@ -430,8 +430,8 @@ describe('VectorTileSource', () => {
         } as any as Tile;
         await source.loadTile(tile);
 
-        const northEastQuarterOfTheSimpleGrid = 'http://example.com/?bbox=0,0,90,90';
-        expect((receivedMessage.data as WorkerTileParameters).request.url).toBe(northEastQuarterOfTheSimpleGrid);
+        const northEastQuarterOfTheIdentityGrid = 'http://example.com/?bbox=0,0,90,90';
+        expect((receivedMessage.data as WorkerTileParameters).request.url).toBe(northEastQuarterOfTheIdentityGrid);
     });
 
     test('respects TileJSON.bounds when loaded from TileJSON', async () => {

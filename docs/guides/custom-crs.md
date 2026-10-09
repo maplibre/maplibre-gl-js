@@ -26,7 +26,7 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 | `tileMatrixSet.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
 | `tileMatrixSet.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
 
-CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `simple` projection it means "one unit". The camera is constrained to the tile 0/0/0 square, or to `maxBounds` inside it.
+CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `identity` projection it means "one unit". The camera is constrained to the tile 0/0/0 square, or to `maxBounds` inside it.
 
 Internally the map works in world coordinates: the unit square that tile 0/0/0 covers and that the quad tree subdivides. A CRS position maps to it as:
 
@@ -86,16 +86,16 @@ Register the projection before constructing a map whose style selects it; a styl
 
 Zoom levels are the CRS's own. Zoom 6 in NZTM2000Quad covers a different ground area than zoom 6 in Web Mercator, so `minzoom`, `maxzoom` and camera zooms need to be tuned for the tile matrix set rather than copied from a Mercator style.
 
-## Example: an image plane with `simple`
+## Example: an image plane with `identity`
 
-The built-in `simple` projection is an identity CRS: CRS coordinates are lng/lat degrees, tile 0/0/0 spans -90..90 on both axes, and one unit is one meter. It is the equivalent of an image-space map. Coordinates go in as plain plane coordinates and come out without any latitude stretch, so an image placed by its four corners is shown undistorted:
+The built-in `identity` projection uses lng/lat degrees unchanged as CRS coordinates: tile 0/0/0 spans -90..90 on both axes, and one unit is one meter. Coordinates go in as plain plane coordinates and come out without any latitude stretch, so an image placed by its four corners is shown undistorted:
 
 ```js
 const map = new maplibregl.Map({
     container: 'map',
     style: {
         version: 8,
-        projection: {type: 'simple'},
+        projection: {type: 'identity'},
         sources: {
             plan: {
                 type: 'image',
@@ -110,7 +110,7 @@ const map = new maplibregl.Map({
 });
 ```
 
-The [Display an image in the simple projection](../examples/display-an-image-in-the-simple-projection.md) example shows this in a complete page. Coordinates outside -90..90 lie outside tile 0/0/0 and are never rendered; scale a larger coordinate space into that range, or register your own identity CRS with a different `tileMatrixSet`.
+The [Display an image in the identity projection](../examples/display-an-image-in-the-identity-projection.md) example shows this in a complete page. Unlike Leaflet's `CRS.Simple`, which is unbounded and in pixels, the plane is the fixed 180-unit square of tile 0/0/0 and coordinates are still lng/lat: anything outside -90..90 is never rendered, so scale an image's pixel coordinates into that range, or register your own identity CRS with a different `tileMatrixSet`.
 
 ## The `{bbox}` URL token
 

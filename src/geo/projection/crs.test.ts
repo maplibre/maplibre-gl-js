@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {CrsWorldCoordinateHelper, simpleCrs, type CrsDefinition} from './crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs, type CrsDefinition} from './crs.ts';
 import {createRotatedCrs} from '../../util/test/util.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
@@ -37,9 +37,9 @@ function createMercatorAsCrs(): CrsDefinition {
 }
 
 describe('CrsWorldCoordinateHelper', () => {
-    describe('simple', () => {
+    describe('identity', () => {
         test('maps the tile 0 square to lng/lat -90..90', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
             expect(worldCoordinateHelper.worldFromLngLat(-90, 90)).toMatchObject({x: 0, y: 0});
             expect(worldCoordinateHelper.worldFromLngLat(90, -90)).toMatchObject({x: 1, y: 1});
             expect(worldCoordinateHelper.worldFromLngLat(0, 0)).toMatchObject({x: 0.5, y: 0.5});
@@ -47,7 +47,7 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('round trips lng/lat through world coordinates', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
             for (const [lng, lat] of createSamplePoints()) {
                 const world = worldCoordinateHelper.worldFromLngLat(lng, lat);
                 const back = worldCoordinateHelper.lngLatFromWorld(world.x, world.y);
@@ -58,24 +58,24 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('uses a constant meters per world unit equal to the zoom 0 extent', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBe(180);
             expect(worldCoordinateHelper.metersPerWorldUnit(0.95, 0.05)).toBe(180);
         });
 
         test('scales altitude to world z by the zoom 0 extent wherever the location is', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
             expect(worldCoordinateHelper.worldZFromAltitude(360, new LngLat(80, 80))).toBe(2);
         });
 
         test('puts the altitude in z and leaves z at 0 without one', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
             expect(worldCoordinateHelper.worldFromLngLat(0, 0).z).toBe(0);
             expect(worldCoordinateHelper.worldFromLngLat(0, 0, 90).z).toBe(0.5);
         });
 
         test('clamps a latitude past the poles to the range LngLat accepts, for a position outside the world square', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(simpleCrs);
+            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
             const aTenthOfTheSquareNorthOfIt = -0.1;
             const aTenthOfTheSquareSouthOfIt = 1.1;
 
@@ -84,16 +84,16 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('does not wrap', () => {
-            expect(new CrsWorldCoordinateHelper(simpleCrs).wraps).toBe(false);
+            expect(new CrsWorldCoordinateHelper(identityCrs).wraps).toBe(false);
         });
     });
 
-    describe('simple CRS definition', () => {
+    describe('identity CRS definition', () => {
         test('is the identity over lng/lat with tile 0/0/0 spanning -90..90', () => {
-            expect(simpleCrs.name).toBe('simple');
-            expect(simpleCrs.projection.forward([12.5, -41.9])).toEqual([12.5, -41.9]);
-            expect(simpleCrs.projection.inverse([12.5, -41.9])).toEqual([12.5, -41.9]);
-            expect(simpleCrs.tileMatrixSet).toEqual({origin: [-90, 90], extentAtZoom0: 180});
+            expect(identityCrs.name).toBe('identity');
+            expect(identityCrs.projection.forward([12.5, -41.9])).toEqual([12.5, -41.9]);
+            expect(identityCrs.projection.inverse([12.5, -41.9])).toEqual([12.5, -41.9]);
+            expect(identityCrs.tileMatrixSet).toEqual({origin: [-90, 90], extentAtZoom0: 180});
         });
     });
 

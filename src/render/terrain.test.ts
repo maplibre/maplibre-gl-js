@@ -14,7 +14,7 @@ import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 import {createVerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager} from '../util/test/util.ts';
-import {CrsWorldCoordinateHelper, simpleCrs} from '../geo/projection/crs.ts';
+import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -469,8 +469,8 @@ describe('Terrain', () => {
 
 describe('Terrain in a planar projection', () => {
     function createPlanarTerrain() {
-        const simpleCrsWorld = new CrsWorldCoordinateHelper(simpleCrs);
-        return new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem'}, 'auto', () => simpleCrsWorld);
+        const identityCrsWorld = new CrsWorldCoordinateHelper(identityCrs);
+        return new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem'}, 'auto', () => identityCrsWorld);
     }
 
     test('getElevationForLngLatZoom samples tile 1/1/0 at its center for 45,45 at zoom 1', () => {
@@ -500,7 +500,7 @@ describe('Terrain in a planar projection', () => {
         expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(0, 0), 0)).toBe(1);
     });
 
-    test('skirt length is a fifth of the tile width in CRS meters, 36 at zoom 0 of the 180 meter simple world and 18 at zoom 1', () => {
+    test('skirt length is a fifth of the tile width in CRS meters, 36 at zoom 0 of the 180 meter identity world and 18 at zoom 1', () => {
         const terrain = createPlanarTerrain();
 
         expect(terrain.getSkirtLength(0)).toBe(36);

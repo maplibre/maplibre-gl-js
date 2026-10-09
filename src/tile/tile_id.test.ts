@@ -57,15 +57,15 @@ describe('CanonicalTileID', () => {
     });
 
     test('.url replaces {bbox} with the tile bounds in a tile matrix set whose root tile spans -90..90', () => {
-        const simpleTileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
-        expect(new CanonicalTileID(1, 1, 0).url(['bbox={bbox}'], 1, null, simpleTileMatrixSet)).toBe('bbox=0,0,90,90');
-        expect(new CanonicalTileID(1, 0, 1).url(['bbox={bbox}'], 1, null, simpleTileMatrixSet)).toBe('bbox=-90,-90,0,0');
-        expect(new CanonicalTileID(2, 3, 3).url(['bbox={bbox}'], 1, null, simpleTileMatrixSet)).toBe('bbox=45,-90,90,-45');
+        const identityTileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
+        expect(new CanonicalTileID(1, 1, 0).url(['bbox={bbox}'], 1, null, identityTileMatrixSet)).toBe('bbox=0,0,90,90');
+        expect(new CanonicalTileID(1, 0, 1).url(['bbox={bbox}'], 1, null, identityTileMatrixSet)).toBe('bbox=-90,-90,0,0');
+        expect(new CanonicalTileID(2, 3, 3).url(['bbox={bbox}'], 1, null, identityTileMatrixSet)).toBe('bbox=45,-90,90,-45');
     });
 
     test('.url keeps {bbox} on the tile the ID names under the tms scheme, which flips only {y}', () => {
-        const simpleTileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
-        expect(new CanonicalTileID(1, 1, 0).url(['{y}:{bbox}'], 1, 'tms', simpleTileMatrixSet)).toBe('1:0,0,90,90');
+        const identityTileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
+        expect(new CanonicalTileID(1, 1, 0).url(['{y}:{bbox}'], 1, 'tms', identityTileMatrixSet)).toBe('1:0,0,90,90');
     });
 
     test('.url replaces {ratio}', () => {
