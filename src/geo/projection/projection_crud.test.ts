@@ -12,6 +12,7 @@ function createDefinition(name: string): CrsDefinition {
 
 afterEach(() => {
     removeProjection('test-crs');
+    removeProjection('toString');
 });
 
 describe('addProjection', () => {
@@ -19,6 +20,12 @@ describe('addProjection', () => {
         const definition = createDefinition('test-crs');
         addProjection(definition);
         expect(getRegisteredProjection('test-crs')).toBe(definition);
+    });
+
+    test('registers a name that Object.prototype also has', () => {
+        const definition = createDefinition('toString');
+        addProjection(definition);
+        expect(getRegisteredProjection('toString')).toBe(definition);
     });
 
     test('throws when the name is already registered', () => {

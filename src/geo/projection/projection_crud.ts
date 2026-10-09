@@ -4,7 +4,7 @@ import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const BUILT_IN_PROJECTION_NAMES = ['mercator', 'globe', 'vertical-perspective'];
 
-const registeredProjections: Record<string, CrsDefinition> = {identity: identityCrs};
+const registeredProjections = new Map<string, CrsDefinition>([[identityCrs.name, identityCrs]]);
 
 /**
  * @internal
@@ -12,7 +12,7 @@ const registeredProjections: Record<string, CrsDefinition> = {identity: identity
  * (an unset or expression-valued projection type is never registered).
  */
 export function getRegisteredProjection(name: ProjectionSpecification['type']): CrsDefinition | undefined {
-    return typeof name === 'string' ? registeredProjections[name] : undefined;
+    return typeof name === 'string' ? registeredProjections.get(name) : undefined;
 }
 
 /**
@@ -49,13 +49,13 @@ export function addProjection(def: CrsDefinition): void {
     if (BUILT_IN_PROJECTION_NAMES.includes(def.name)) {
         throw new Error(`A projection called "${def.name}" is built in and cannot be replaced.`);
     }
-    if (registeredProjections[def.name]) {
+    if (registeredProjections.has(def.name)) {
         throw new Error(`A projection called "${def.name}" already exists.`);
     }
     if (!(def.tileMatrixSet.extentAtZoom0 > 0)) {
         throw new Error(`The projection "${def.name}" needs a tileMatrixSet.extentAtZoom0 greater than zero.`);
     }
-    registeredProjections[def.name] = def;
+    registeredProjections.set(def.name, def);
 }
 
 /**
@@ -70,5 +70,5 @@ export function addProjection(def: CrsDefinition): void {
  * ```
  */
 export function removeProjection(name: string): void {
-    delete registeredProjections[name];
+    registeredProjections.delete(name);
 }

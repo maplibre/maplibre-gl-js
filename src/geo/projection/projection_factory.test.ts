@@ -1,4 +1,4 @@
-import {afterEach, beforeEach, describe, test, expect} from 'vitest';
+import {afterEach, beforeEach, describe, test, expect, vi} from 'vitest';
 import {createProjectionFromName} from './projection_factory.ts';
 import {addProjection, removeProjection} from './projection_crud.ts';
 import {MercatorProjection} from './mercator_projection.ts';
@@ -7,6 +7,7 @@ import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 
 afterEach(() => {
     removeProjection('factory-test-crs');
+    vi.restoreAllMocks();
 });
 
 describe('createProjectionFromName', () => {
@@ -21,6 +22,12 @@ describe('createProjectionFromName', () => {
         expect(transform).toBeInstanceOf(MercatorTransform);
         expect(transform.worldCoordinateHelper.wraps).toBe(false);
         expect(cameraHelper).toBeInstanceOf(MercatorCameraHelper);
+    });
+
+    test('falls back to mercator for a name that only Object.prototype has', () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const {projection} = createProjectionFromName('constructor', undefined, {});
+        expect(projection.name).toBe('mercator');
     });
 
     describe('for a registered CRS', () => {
