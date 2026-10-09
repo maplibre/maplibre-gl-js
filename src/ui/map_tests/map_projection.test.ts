@@ -48,16 +48,13 @@ describe('Map in the identity projection', () => {
         expect(map.getCenter().lat).toBeCloseTo(84.231948, 6);
     });
 
-    test('stops the center where the viewport reaches the east edge of the world square', async () => {
+    test('stops the center at the east edge of the world square', async () => {
         const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, zoom: 3});
         await map.once('style.load');
-        const worldSizeAtZoom3 = 4096;
-        const degreesPerPixel = 180 / worldSizeAtZoom3;
-        const halfContainer = map.getContainer().clientWidth / 2;
 
         map.setCenter([170, 0]);
 
-        expect(map.getCenter().lng).toBeCloseTo(90 - halfContainer * degreesPerPixel, 6);
+        expect(map.getCenter().lng).toBeCloseTo(90, 6);
     });
 });
 

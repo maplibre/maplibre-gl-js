@@ -26,7 +26,7 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 | `tileMatrixSet.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
 | `tileMatrixSet.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
 
-CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `identity` projection it means "one unit". The camera is constrained to the tile 0/0/0 square, or to `maxBounds` inside it.
+CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `identity` projection it means "one unit". The map's center stays inside the tile 0/0/0 square and the zoom is limited only by `minZoom`, since the square is the grid the tile matrix set picked and can be much larger than the area of interest or narrower than the window. Set `maxBounds` to keep the whole view inside an area.
 
 Internally the map works in world coordinates: the unit square that tile 0/0/0 covers and that the quad tree subdivides. A CRS position maps to it as:
 

@@ -1245,31 +1245,21 @@ describe('MercatorTransform over the identity CRS', () => {
     });
 
     describe('constrain', () => {
-        test('clamps the center so the viewport stays inside the square', () => {
+        test('keeps a center inside the square where the viewport reaches past the square', () => {
             const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(1);
-            const worldSizeAtZoom1 = 1024;
-            const halfViewport = 100;
-            const maxOffset = 180 * (1 - halfViewport / worldSizeAtZoom1) - 90;
 
             transform.setCenter(new LngLat(89, 89));
-            expect(transform.center.lng).toBeCloseTo(maxOffset, 6);
-            expect(transform.center.lat).toBeCloseTo(maxOffset, 6);
 
-            transform.setCenter(new LngLat(-89, -89));
-            expect(transform.center.lng).toBeCloseTo(-maxOffset, 6);
-            expect(transform.center.lat).toBeCloseTo(-maxOffset, 6);
+            expect(transform.center.lat).toBeCloseTo(89, 6);
         });
 
-        test('zooms in so the square fills the viewport when zoomed out too far', () => {
+        test('leaves the zoom to minZoom when the square is smaller than the viewport', () => {
             const transform = createIdentityCrsTransform(200, 200);
+
             transform.setZoom(-2);
-            transform.setCenter(new LngLat(0, 0));
-            const viewport = 200;
-            const worldSizeAtZoom0 = 512;
-            expect(transform.zoom).toBeCloseTo(Math.log2(viewport / worldSizeAtZoom0), 6);
-            expect(transform.center.lng).toBeCloseTo(0, 6);
-            expect(transform.center.lat).toBeCloseTo(0, 6);
+
+            expect(transform.zoom).toBe(-2);
         });
 
         test('keeps the viewport inside explicit max bounds set inside the square', () => {
@@ -1302,16 +1292,13 @@ describe('MercatorTransform over the identity CRS', () => {
             expect(transform.center.lat).toBeCloseTo(50 - halfViewport * degreesPerPixel, 6);
         });
 
-        test('stops the center at the east edge of the square instead of wrapping', () => {
+        test('stops a center past the east edge of the square at the edge instead of wrapping it', () => {
             const transform = createIdentityCrsTransform(200, 200);
             transform.setZoom(4);
-            const worldSizeAtZoom4 = 8192;
-            const degreesPerPixel = 180 / worldSizeAtZoom4;
-            const halfViewport = 100;
 
-            transform.setCenter(new LngLat(89, 0));
+            transform.setCenter(new LngLat(200, 0));
 
-            expect(transform.center.lng).toBeCloseTo(90 - halfViewport * degreesPerPixel, 6);
+            expect(transform.center.lng).toBeCloseTo(90, 6);
         });
 
         test('setLocationAtPoint keeps the longitude it was given instead of wrapping it', () => {

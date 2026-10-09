@@ -666,7 +666,8 @@ export class MercatorTransform implements ITransform {
      * 2) a given lngLat is as near the center as possible
      *
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
-     * A non-wrapping world (a registered planar CRS) is constrained to its world square instead.
+     * A non-wrapping world (a registered planar CRS) keeps its center inside its world square instead, see
+     * {@link MercatorTransform._constrainToWorldSquare}.
      */
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
@@ -763,16 +764,26 @@ export class MercatorTransform implements ITransform {
     };
 
     /**
-     * The constrain for a projection whose world does not wrap: the view may not leave the 0..1 world square
-     * (or the max bounds inside it, projected as a box since both world axes may depend on lng and lat),
-     * and the map zooms in until the constrained square fills the screen.
+     * The constrain for a projection whose world does not wrap. Without max bounds only the center stays inside the
+     * 0..1 world square and the zoom is left to `minZoom`: the square is the grid the tile matrix set picked, which
+     * can be much larger than the area of interest or narrower than the window. With max bounds, projected as a box
+     * since both world axes may depend on lng and lat, the view may not leave them and the map zooms in until they
+     * fill the screen.
      */
     private _constrainToWorldSquare(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
         const worldCoordinateHelper = this.worldCoordinateHelper;
         const lngRange = this._helper._lngRange;
-        const latRange = this._helper._latRange;
-        const box = lngRange ? this._projectMaxBounds(lngRange, latRange) : {minX: 0, minY: 0, maxX: 1, maxY: 1};
         const worldSize = this.tileSize * zoomScale(zoom);
+        if (!lngRange) {
+            const {x, y} = projectToWorldCoordinates(worldSize, lngLat, worldCoordinateHelper);
+            const clampedX = clamp(x, 0, worldSize);
+            const clampedY = clamp(y, 0, worldSize);
+            if (clampedX !== x || clampedY !== y) {
+                return {center: unprojectFromWorldCoordinates(worldSize, new Point(clampedX, clampedY), worldCoordinateHelper), zoom};
+            }
+            return {center: new LngLat(lngLat.lng, lngLat.lat), zoom};
+        }
+        const box = this._projectMaxBounds(lngRange, this._helper._latRange);
         const minX = Math.max(box.minX, 0) * worldSize;
         const maxX = Math.min(box.maxX, 1) * worldSize;
         const minY = Math.max(box.minY, 0) * worldSize;
