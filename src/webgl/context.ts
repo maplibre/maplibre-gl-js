@@ -1,7 +1,7 @@
 import {IndexBuffer} from './index_buffer.ts';
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
-import {createProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {createProjectionUniformBuffer, destroyProjectionUniformBuffers} from './projection_uniform_buffer.ts';
 import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
 import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import {ColorMode} from './color_mode.ts';
@@ -66,7 +66,10 @@ export class Context {
     pixelStoreUnpack: PixelStoreUnpack;
     pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
     pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
+    boundUniformBuffers: WebGLBuffer[];
     projectionUniformBuffer: UniformBuffer;
+    keyedProjectionUniformBuffers: Map<string, UniformBuffer>;
+    freeProjectionUniformBuffers: UniformBuffer[];
     terrainUniformBuffer: UniformBuffer;
     frameUniformBuffer: UniformBuffer;
 
@@ -118,9 +121,19 @@ export class Context {
         gl.getExtension('EXT_color_buffer_half_float');
         gl.getExtension('EXT_color_buffer_float');
 
+        this.boundUniformBuffers = [];
         this.projectionUniformBuffer = createProjectionUniformBuffer(this);
+        this.keyedProjectionUniformBuffers = new Map();
+        this.freeProjectionUniformBuffers = [];
         this.terrainUniformBuffer = createTerrainUniformBuffer(this);
         this.frameUniformBuffer = createFrameUniformBuffer(this);
+    }
+
+    /** Destroys the uniform buffers the context created. */
+    destroy(): void {
+        destroyProjectionUniformBuffers(this);
+        this.terrainUniformBuffer.destroy();
+        this.frameUniformBuffer.destroy();
     }
 
     setDefault(): void {
@@ -185,9 +198,7 @@ export class Context {
         this.pixelStoreUnpack.dirty = true;
         this.pixelStoreUnpackPremultiplyAlpha.dirty = true;
         this.pixelStoreUnpackFlipY.dirty = true;
-        this.projectionUniformBuffer.bindingDirty = true;
-        this.terrainUniformBuffer.bindingDirty = true;
-        this.frameUniformBuffer.bindingDirty = true;
+        this.boundUniformBuffers = [];
     }
 
     /**

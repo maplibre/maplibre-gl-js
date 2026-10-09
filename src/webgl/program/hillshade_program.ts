@@ -14,7 +14,7 @@ import {EXTENT} from '../../data/extent.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Tile} from '../../tile/tile.ts';
-import type {Painter} from '../../render/painter.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';
 import type {DEMData} from '../../data/dem_data.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -60,7 +60,7 @@ const hillshadePrepareUniforms = (context: Context, locations: UniformLocations)
 });
 
 const hillshadeUniformValues = (
-    painter: Painter,
+    transform: IReadonlyTransform,
     tile: Tile,
     layer: HillshadeStyleLayer,
 ): UniformValues<HillshadeUniformsType> => {
@@ -90,12 +90,12 @@ const hillshadeUniformValues = (
     for (let i = 0; i < illumination.directionRadians.length; i++) {
         // modify azimuthal angle by map rotation if light is anchored at the viewport
         if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
-            illumination.directionRadians[i] += painter.transform.bearingInRadians;
+            illumination.directionRadians[i] += transform.bearingInRadians;
         }
     }
     return {
         'u_image': 0,
-        'u_latrange': getTileLatRange(painter, tile.tileID),
+        'u_latrange': getTileLatRange(transform, tile.tileID),
         'u_exaggeration': layer.paint.get('hillshade-exaggeration'),
         'u_altitudes': illumination.altitudeRadians,
         'u_azimuths': illumination.directionRadians,
@@ -129,8 +129,8 @@ const hillshadeUniformPrepareValues = (tileID: OverscaledTileID, dem: DEMData): 
  * with latitude; any other plane is rendered in its own units and gets `[0, 0]`: `cos(0)` is 1 and the shader
  * applies no correction.
  */
-function getTileLatRange(painter: Painter, tileID: OverscaledTileID): [number, number] {
-    const worldCoordinateHelper = painter.transform.worldCoordinateHelper;
+function getTileLatRange(transform: IReadonlyTransform, tileID: OverscaledTileID): [number, number] {
+    const worldCoordinateHelper = transform.worldCoordinateHelper;
     if (!worldCoordinateHelper.wraps) return [0, 0];
     // for scaling the magnitude of a points slope by its latitude
     const tilesAtZoom = Math.pow(2, tileID.canonical.z);

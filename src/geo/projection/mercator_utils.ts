@@ -107,6 +107,7 @@ export function cameraMercatorCoordinateFromCenterAndRotation(centerMercator: Me
 /**
  * Returns the position of the camera in mercator coordinates, with its altitude in `z`.
  * Computed from the center, pitch, bearing and camera distance, so it holds for any projection.
+ * @param center - The center to compute from, the transform's own by default.
  */
 export function cameraMercatorCoordinate(transform: {
     center: LngLat;
@@ -116,9 +117,8 @@ export function cameraMercatorCoordinate(transform: {
     cameraToCenterDistance: number;
     worldSize: number;
     worldCoordinateHelper: WorldCoordinateHelper;
-}): MercatorCoordinate {
+}, center: LngLat = transform.center): MercatorCoordinate {
     const worldCoordinateHelper = transform.worldCoordinateHelper;
-    const center = transform.center;
     const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
     const pixelPerMeter = mercUnitsPerMeter * transform.worldSize;
     const distance = transform.cameraToCenterDistance / pixelPerMeter;
