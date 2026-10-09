@@ -239,6 +239,18 @@ export class Terrain {
     }
 
     /**
+     * {@link getElevationForLngLat}, or undefined where it gives 0 for want of DEM data, see
+     * {@link hasElevationForLngLat}. Any other elevation comes from DEM data, so only a 0 is checked.
+     * @param lnglat - the location
+     * @param transform - the transform {@link getElevationForLngLat} is given
+     * @returns the elevation, or undefined while no DEM data covers the location
+     */
+    getLoadedElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number | undefined {
+        const elevation = this.getElevationForLngLat(lnglat, transform);
+        return elevation !== 0 || this.hasElevationForLngLat(lnglat, transform) ? elevation : undefined;
+    }
+
+    /**
      * Whether {@link getElevationForLngLat} finds DEM data at the given {@link LngLat}, drawn or in the tile it falls
      * back to, rather than giving 0 for want of any.
      * @param lnglat - the location
