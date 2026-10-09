@@ -15,11 +15,10 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         return;
     }
 
-    const {isRenderingGlobe} = frameRenderContext.data;
+    const {isRenderingGlobe, projectionShaderVariant} = frameRenderContext.data;
     const {terrain} = frameRenderContext;
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const implementation = layer.implementation;
-    const projection = painter.style.projection;
     const transform = frameRenderContext.transform;
 
     const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
@@ -31,9 +30,9 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         modelViewProjectionMatrix: transform.modelViewProjectionMatrix,
         projectionMatrix: transform.projectionMatrix,
         shaderData: {
-            variantName: projection.shaderVariantName,
-            vertexShaderPrelude: `const float PI = 3.141592653589793;\nuniform mat4 u_projection_matrix;\n${projection.shaderPreludeCode.vertexSource}`,
-            define: projection.shaderDefine,
+            variantName: projectionShaderVariant.name,
+            vertexShaderPrelude: `const float PI = 3.141592653589793;\nuniform mat4 u_projection_matrix;\n${projectionShaderVariant.prelude.vertexSource}`,
+            define: projectionShaderVariant.define,
         },
         defaultProjectionData: projectionData,
         getProjectionData: (params: CustomLayerProjectionDataParams) => {
@@ -58,7 +57,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
     if (frameRenderContext.currentPass === 'offscreen') {
         const prerender = implementation.prerender;
         if (prerender) {
-            painter.setCustomLayerDefaults();
+            context.setCustomLayerDefaults();
             context.setColorMode(frameRenderContext.colorModeForRenderPass());
 
             prerender.call(implementation, context.gl, customLayerArgs);
@@ -68,7 +67,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         }
     } else if (frameRenderContext.currentPass === 'translucent') {
 
-        painter.setCustomLayerDefaults();
+        context.setCustomLayerDefaults();
 
         context.setColorMode(frameRenderContext.colorModeForRenderPass());
         context.setStencilMode(StencilMode.disabled);
@@ -92,11 +91,11 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
  * and binds that texture again for the layers after it.
  */
 function drawCustomTerrainTile(painter: Painter, layer: CustomStyleLayer, tileID: OverscaledTileID, frameRenderContext: FrameRenderContext): void {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const framebuffer = context.bindFramebuffer.get();
     const viewport = context.viewport.get();
 
-    painter.setCustomLayerDefaults();
+    context.setCustomLayerDefaults();
     context.setColorMode(frameRenderContext.colorModeForRenderPass());
     context.setDepthMode(DepthMode.disabled);
     context.setStencilMode(StencilMode.disabled);

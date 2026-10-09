@@ -210,10 +210,11 @@ export class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
+     * @param style - the style the stacked layers and their tile managers come from
      * @param frameRenderContext - shared state for the current render
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer, frameRenderContext: FrameRenderContext): boolean {
+    renderLayer(layer: StyleLayer, style: Style, frameRenderContext: FrameRenderContext): boolean {
         if (layer.isHidden(frameRenderContext.transform.zoom)) return false;
 
         const renderedToTexture = isRenderedToTexture(layer);
@@ -246,11 +247,11 @@ export class RenderToTexture {
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 frameRenderContext.invalidateTileClippingMasks();
                 for (const layerId of layers) {
-                    const layer = painter.style._layers[layerId];
+                    const layer = style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, this.rttSize, this.rttSize]);
                     frameRenderContext.renderTileClippingMasks(layer, coords);
-                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, frameRenderContext);
+                    painter.renderLayer(painter, style.tileManagers[layer.source], layer, coords, frameRenderContext);
                     const fingerprintKey = rttFingerprintKey(layer);
                     if (fingerprintKey) tile.rttFingerprint[fingerprintKey] = this._rttFingerprints[fingerprintKey][tile.tileID.key];
                 }

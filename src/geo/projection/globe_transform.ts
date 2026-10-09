@@ -313,7 +313,7 @@ export class GlobeTransform implements ITransform {
     }
 
     public getCircleRadiusCorrection(): number {
-        return lerp(this._mercatorTransform.getCircleRadiusCorrection(), this._verticalPerspectiveTransform.getCircleRadiusCorrection(), this._globeness);
+        return this.currentTransform.getCircleRadiusCorrection();
     }
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
@@ -465,4 +465,11 @@ export class GlobeTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return this.currentTransform.getFastPathSimpleProjectionMatrix(tileID);
     }
+}
+
+/**
+ * Creates a transform for the globe projection.
+ */
+export function createGlobeTransform(options?: TransformOptions): GlobeTransform {
+    return new GlobeTransform(options);
 }

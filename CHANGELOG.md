@@ -1,11 +1,31 @@
 ## main
 ### ✨ Features and improvements
-- Allow calling `new Map({ globalState: { ... }})`, `new Map({ transformStyle: ... })` and `setStyle({ globalState: ... })` to provide an initial global state and style transformation for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
 - Add experimental `CustomLayerInterface.renderToTerrainTile`, `CustomLayerInterface.terrainTileRevision` and `renderTerrainHeightMap` in the options of `prerender`, so custom layers can drape what they draw over the terrain and place objects on it on the GPU ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
+- Allow calling `new Map({ globalState: { ... }})`, `new Map({ transformStyle: ... })` and `setStyle({ globalState: ... })` to provide an initial global state and style transformation for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Work around blank, unresponsive maps on affected iPadOS 16 Safari devices ([#8364](https://github.com/maplibre/maplibre-gl-js/pull/8364)) (by [@samuelsmarason](https://github.com/samuelsmarason))
+- Fix circles with `circle-pitch-alignment: map` being drawn too large while the globe transitions to mercator ([#8714](https://github.com/maplibre/maplibre-gl-js/issues/8714)) (by [@heikki](https://github.com/heikki))
+- Fix `map.resize(eventData, false)` constraining the camera with the `vertical-perspective` projection ([#8695](https://github.com/maplibre/maplibre-gl-js/pull/8695)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix an uncaught error when `setStyle` is called while the WebGL context is lost, since 6.12.0 ([#8693](https://github.com/maplibre/maplibre-gl-js/pull/8693)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix the view sliding hundreds of meters off the center when terrain is switched on during a gesture ([#8688](https://github.com/maplibre/maplibre-gl-js/pull/8688)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix the camera jumping back at the end of a pan, flick or rotation into terrain ([#8692](https://github.com/maplibre/maplibre-gl-js/pull/8692)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
+
+## 6.13.0
+
+### ✨ Features and improvements
+
+- Let the globe center reach the poles, where it stopped at 85.05° ([#8629](https://github.com/maplibre/maplibre-gl-js/pull/8629)) (by [@birkskyum](https://github.com/birkskyum))
+- Speed up symbol layout by skipping line breaking for labels that fit on one line ([#8617](https://github.com/maplibre/maplibre-gl-js/pull/8617)) (by [@DoFabien](https://github.com/DoFabien))
+- Add experimental `CustomLayerInterface.renderToTerrainTile`, `CustomLayerInterface.terrainTileRevision` and `renderTerrainHeightMap` in the options of `prerender`, so custom layers can drape what they draw over the terrain and place objects on it on the GPU ([#8588](https://github.com/maplibre/maplibre-gl-js/pull/8588)) (by [@birkskyum](https://github.com/birkskyum))
+
+### 🐞 Bug fixes
+
+- Fix a stale cached worker crashing the map after an upgrade: the worker is self-contained again instead of importing `maplibre-gl-shared.mjs`, and its default URL carries the version as a `v` query parameter. `maplibre-gl-shared.mjs` and `maplibre-gl-shared-dev.mjs` are now empty files, kept so that existing copy steps don't fail; they are deprecated and will be removed in the next major version ([#8621](https://github.com/maplibre/maplibre-gl-js/issues/8621)) (by [@HarelM](https://github.com/HarelM))
+- Fix `globeDistanceOfLocationsPixels` returning `NaN` when two copies of the same point have a dot product slightly above 1 ([#8624](https://github.com/maplibre/maplibre-gl-js/pull/8624))(by [@Dimononon](https://github.com/Dimononon))
+- Keep the camera above the terrain, where a scroll zoom into a mountain could take it under the surface and the zoom's end throw it kilometers up ([#8539](https://github.com/maplibre/maplibre-gl-js/issues/8539)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 
 ## 6.12.0
 
@@ -38,6 +58,7 @@
 - Fix `queryRenderedFeatures` missing fill-extrusions on globe once it renders as mercator ([#8560](https://github.com/maplibre/maplibre-gl-js/pull/8560)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix `line-offset` distorting the line width around joins ([#8570](https://github.com/maplibre/maplibre-gl-js/pull/8570)) (by [@HarelM](https://github.com/HarelM))
 - Cross-fade raster tiles when zooming out from a source's `maxzoom`, where the tiles switched instantly ([#8517](https://github.com/maplibre/maplibre-gl-js/pull/8517)) (by [@cherenkov](https://github.com/cherenkov))
+- Mark a program as failed to create instead of throwing when the WebGL context is lost or a failed link reports zero attached shaders, where a dead GPU process made every query answer dead before `webglcontextlost` arrived ([#8607](https://github.com/maplibre/maplibre-gl-js/issues/8607)) (by [@rubenmarcus](https://github.com/rubenmarcus))
 
 ## 6.11.2
 

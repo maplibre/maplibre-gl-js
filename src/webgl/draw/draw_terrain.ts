@@ -14,20 +14,21 @@ import type {Painter} from '../../render/painter.ts';
  * Redraw the Depth Framebuffer
  * @param painter - the painter
  * @param terrain - the terrain
+ * @param frameRenderContext - shared state for the current render
  */
-function drawDepth(painter: Painter, terrain: Terrain): void {
-    const context = painter.context;
+function drawDepth(painter: Painter, terrain: Terrain, frameRenderContext: FrameRenderContext): void {
+    const context = frameRenderContext.context;
     const gl = context.gl;
-    const tr = painter.frameRenderContext.transform;
+    const tr = frameRenderContext.transform;
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const tiles = terrain.tileManager.getRenderableTiles();
-    const program = painter.frameRenderContext.useProgram('terrainDepth');
+    const program = frameRenderContext.useProgram('terrainDepth');
     context.bindFramebuffer.set(terrain.getFramebuffer().framebuffer);
     context.viewport.set([0, 0, painter.width  / devicePixelRatio, painter.height / devicePixelRatio]);
     context.clear({color: Color.white, depth: 1});
     for (const tile of tiles) {
-        const mesh = terrain.getTerrainMesh(tile.tileID);
+        const mesh = terrain.getTerrainMesh(tile.tileID, frameRenderContext.data.isRenderingGlobe);
         const terrainData = terrain.getTerrainData(tile.tileID);
         const projectionData = tr.getProjectionData({overscaledTileID: tile.tileID, applyTerrainMatrix: false, applyGlobeMatrix: true});
         const uniformValues = terrainDepthUniformValues(terrain.getSkirtLength(tr.zoom));
@@ -39,7 +40,7 @@ function drawDepth(painter: Painter, terrain: Terrain): void {
 
 function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], frameRenderContext: FrameRenderContext): void {
     const {isRenderingGlobe} = frameRenderContext.data;
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const tr = frameRenderContext.transform;
     const colorMode = frameRenderContext.colorModeForRenderPass();
@@ -50,7 +51,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], frameRen
     context.viewport.set([0, 0, painter.width, painter.height]);
 
     for (const tile of tiles) {
-        const mesh = terrain.getTerrainMesh(tile.tileID);
+        const mesh = terrain.getTerrainMesh(tile.tileID, isRenderingGlobe);
         const texture = painter.renderToTexture.getTexture(tile);
         const terrainData = terrain.getTerrainData(tile.tileID);
         context.activeTexture.set(gl.TEXTURE0);
@@ -87,7 +88,7 @@ function drawTerrainHeightMap(frameRenderContext: FrameRenderContext, terrain: T
             tileSize / (maxX - minX),
             tileSize / (maxY - minY)
         ]);
-        const mesh = terrain.getTerrainMesh(tile.tileID);
+        const mesh = terrain.getTerrainMesh(tile.tileID, frameRenderContext.data.isRenderingGlobe);
         program.draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, ColorMode.unblended, CullFaceMode.disabled, uniformValues, terrainData, null, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
     framebuffer.colorAttachment.set(null);

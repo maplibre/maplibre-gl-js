@@ -6,7 +6,7 @@ import {EXTENT} from '../data/extent.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
@@ -414,7 +414,7 @@ describe('GeoJSONSource.onRemove', () => {
 });
 
 describe('GeoJSONSource.update', () => {
-    const transform = new MercatorTransform();
+    const transform = createMercatorTransform();
     transform.resize(200, 200);
     const lngLat = LngLat.convert([-122.486052, 37.830348]);
     const point = transform.locationToScreenPoint(lngLat);
@@ -834,7 +834,7 @@ describe('GeoJSONSource.update', () => {
                 if (message.type === MessageType.loadData) {
                     spy();
                 }
-                return new Promise((resolve) => setTimeout(() => resolve({}), 0));
+                return new Promise((resolve) => setTimeout(() => resolve(message.type === MessageType.loadData ? {} : null), 0));
             }
         });
 
