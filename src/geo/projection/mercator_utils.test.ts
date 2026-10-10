@@ -2,8 +2,8 @@ import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {cameraMercatorCoordinate, getMercatorHorizon, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
-import {MercatorTransform} from './mercator_transform.ts';
-import {GlobeTransform} from './globe_transform.ts';
+import {createMercatorTransform} from './mercator_transform.ts';
+import {createGlobeTransform} from './globe_transform.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
 import {EXTENT} from '../../data/extent.ts';
@@ -11,20 +11,20 @@ import {createIdentityMat4f32, MAX_VALID_LATITUDE} from '../../util/util.ts';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setZoom(10);
         expect(projectToWorldCoordinates(transform.worldSize, transform.center)).toEqual(new Point(262144, 262144));
     });
 
     test('projectToWorldCoordinates clamps latitude', () => {
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 
         expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -MAX_VALID_LATITUDE)));
         expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, 90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, MAX_VALID_LATITUDE)));
     });
 
     test('getMercatorHorizon', () => {
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setPitch(75);
         const horizon = getMercatorHorizon(transform);
@@ -33,7 +33,7 @@ describe('mercator utils', () => {
     });
 
     test('getMercatorHorizon90', () => {
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setPitch(90);
         const horizon = getMercatorHorizon(transform);
@@ -42,7 +42,7 @@ describe('mercator utils', () => {
     });
 
     test('getMercatorHorizon95', () => {
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setPitch(95);
         const horizon = getMercatorHorizon(transform);
@@ -51,7 +51,7 @@ describe('mercator utils', () => {
     });
     describe('cameraMercatorCoordinate', () => {
         test('places the camera above the ground', () => {
-            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+            const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
             transform.setElevation(200);
             transform.setCenter(new LngLat(15.0, 55.0));
             transform.setZoom(14);
@@ -68,7 +68,7 @@ describe('mercator utils', () => {
 
         test('does not depend on the projection', () => {
             const precisionDigits = 10;
-            const globeTransform = new GlobeTransform();
+            const globeTransform = createGlobeTransform();
             globeTransform.resize(512, 512);
             globeTransform.setZoom(5);
             globeTransform.setCenter(new LngLat(15, 55));
@@ -76,7 +76,7 @@ describe('mercator utils', () => {
             globeTransform.setPitch(55);
             globeTransform.setBearing(75);
 
-            const mercatorTransform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+            const mercatorTransform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
             mercatorTransform.resize(512, 512);
             mercatorTransform.setZoom(5);
             mercatorTransform.setCenter(new LngLat(15, 55));
@@ -98,7 +98,7 @@ describe('mercator utils', () => {
 
     describe('getProjectionData', () => {
         test('return identity matrix when not passing overscaledTileID', () => {
-            const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+            const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
             const projectionData = transform.getProjectionData({overscaledTileID: null});
             expect(projectionData.fallbackMatrix).toEqual(createIdentityMat4f32());
         });

@@ -6,7 +6,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from '../source/raster_dem_tile_source.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {StubMap} from '../util/test/util.ts';
 
@@ -14,7 +14,7 @@ import type {DEMData} from '../data/dem_data.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Painter, RTTObject} from '../render/painter.ts';
 
-const transform = new MercatorTransform();
+const transform = createMercatorTransform();
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);
@@ -96,7 +96,7 @@ describe('TerrainTileManager', () => {
     describe('update', () => {
         test('reports whether the renderable tiles changed', () => {
             const manager = new TerrainTileManager(style.tileManagers.terrain);
-            const transform = new MercatorTransform();
+            const transform = createMercatorTransform();
             transform.resize(512, 512);
             transform.setCenter(new LngLat(-46, -6));
             transform.setZoom(8);

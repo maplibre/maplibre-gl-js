@@ -3,7 +3,7 @@ import {readFileSync} from 'fs';
 import {describe, expect, test} from 'vitest';
 import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index.ts';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper, type VectorTileFeatureLike} from '@maplibre/vt-pbf';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
@@ -36,7 +36,7 @@ describe('FeatureIndex', () => {
 
     describe('query', () => {
         const tileID = new OverscaledTileID(3, 0, 2, 1, 2);
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(500, 500);
 
         test('filter with global-state', () => {
