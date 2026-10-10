@@ -201,6 +201,7 @@ export class TileManager extends Evented<SourceEventType> {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
                 this.update(this.transform, this.terrain);
             }
+            this.map?.triggerRepaint();
         }
     }
 
