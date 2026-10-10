@@ -50,6 +50,8 @@ export class StubMap extends Evented {
         return 1;
     }
 
+    triggerRepaint(): void {}
+
     setTerrain(terrain: TerrainSpecification): void { this._terrain = terrain; }
     getTerrain(): TerrainSpecification { return this._terrain; }
 
