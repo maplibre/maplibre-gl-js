@@ -501,7 +501,6 @@ export class SymbolBucket implements Bucket {
 
             if (!needGeometry)  evaluationFeature.geometry = loadGeometry(feature);
 
-            // A point outside the tile is labelled by the neighbouring tile, so skip it before requesting its glyphs and icons.
             if (pointPlacement && feature.type === 1 && isOutsideTile(evaluationFeature.geometry)) continue;
 
             let text: Formatted | void;
@@ -996,7 +995,7 @@ export class SymbolBucket implements Bucket {
     }
 }
 
-// Mirrors the anchor check in symbol_layout.ts, which drops these points after shaping.
+/** Whether every point lies outside the tile, where the neighbouring tile labels it; matches the anchor check in symbol_layout.ts. */
 function isOutsideTile(geometry: Point[][]): boolean {
     for (const ring of geometry) {
         for (const p of ring) {
