@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect} from 'vitest';
+import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
 import {ScaleControl} from './scale_control.ts';
 
@@ -208,5 +208,35 @@ describe('ScaleControl', () => {
         const scale3 = new ScaleControl();
         expect(scale3.options.maxWidth).toBe(100);
         expect(scale3.options.unit).toBe('metric');
+    });
+    test('keeps the last scale when the sample points miss the globe', () => {
+        const map = createMap();
+        const scale = new ScaleControl();
+        const selector = '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale';
+        map.addControl(scale);
+
+        const el = map.getContainer().querySelector<HTMLElement>(selector);
+        const contents = el.innerHTML;
+        const width = el.style.width;
+
+        // Globe projection returns no location for a screen point off the globe.
+        vi.spyOn(map, 'unproject').mockReturnValue(undefined);
+        expect(() => map.fire('move')).not.toThrow();
+        expect(() => scale.setUnit('imperial')).not.toThrow();
+
+        expect(el.innerHTML).toBe(contents);
+        expect(el.style.width).toBe(width);
+    });
+
+    test('setUnit before the control is added does not throw and applies on add', () => {
+        const map = createMap();
+        const scale = new ScaleControl();
+        const selector = '.maplibregl-ctrl-bottom-left .maplibregl-ctrl-scale';
+
+        expect(() => scale.setUnit('imperial')).not.toThrow();
+        map.addControl(scale);
+
+        const contents = map.getContainer().querySelector(selector).innerHTML;
+        expect(contents).toMatch(/mi/);
     });
 });

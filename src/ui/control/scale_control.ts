@@ -90,6 +90,9 @@ export class ScaleControl implements IControl {
      */
     setUnit = (unit: Unit): void => {
         this.options.unit = unit;
+        // Not added to a map yet (or already removed): onAdd draws the scale
+        // with the new unit.
+        if (!this._map) return;
         updateScale(this._map, this._container, this.options);
     };
 }
@@ -106,6 +109,9 @@ function updateScale(map: Map, container: HTMLElement, options: ScaleControlOpti
     const x = containerWidth / 2;
     const left = map.unproject([x - optWidth / 2, y]);
     const right = map.unproject([x + optWidth / 2, y]);
+    // On the globe, a point that misses the globe has no location, so there is
+    // nothing to measure. Keep the last scale instead of throwing on every move.
+    if (!left || !right) return;
 
     const globeWidth = Math.round(map.project(right).x - map.project(left).x);
     const maxWidth = Math.min(optWidth, globeWidth, containerWidth);
