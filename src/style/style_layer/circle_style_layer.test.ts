@@ -2,8 +2,8 @@ import {describe, test, expect} from 'vitest';
 import {CircleStyleLayer} from './circle_style_layer.ts';
 import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {GlobeTransform} from '../../geo/projection/globe_transform.ts';
-import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createGlobeTransform} from '../../geo/projection/globe_transform.ts';
+import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 
 import type {EvaluationParameters} from '../evaluation_parameters.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -48,7 +48,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
     }
 
     describe('Mercator projection', () => {
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(400, 300);
 
         describe('map pitch alignment', () => {
@@ -130,7 +130,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
     });
 
     describe('globe projection', () => {
-        const transform = new GlobeTransform();
+        const transform = createGlobeTransform();
         transform.resize(400, 300);
 
         describe('map pitch alignment', () => {

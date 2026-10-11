@@ -13,7 +13,7 @@ import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
 import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
-import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions, type CenterZoomBearing} from './camera.ts';
+import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -387,6 +387,10 @@ export type MapOptions = {
      */
     validateStyle?: boolean;
     /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the map. Subsequent calls to {@link Map.setStyle} will use the same defaults if the {@link StyleOptions.globalState} option is not set.
+     */
+    globalState?: Record<string, any>;
+    /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
      * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
@@ -549,6 +553,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     pitchSpeed: -0.5,
     reduceMotion: undefined,
     validateStyle: true,
+    globalState: undefined,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
@@ -570,18 +575,18 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
  *
  * @example
  * ```ts
- * let map = new Map({
+ * const map = new Map({
  *   container: 'map',
  *   center: [-122.420679, 37.772537],
  *   zoom: 13,
  *   style: style_object,
  *   hash: true,
- *   transformRequest: (url, resourceType)=> {
- *     if(resourceType === 'Source' && url.startsWith('http://myHost')) {
+ *   transformRequest: (url, resourceType) => {
+ *     if (resourceType === 'Source' && url.startsWith('http://myHost')) {
  *       return {
  *        url: url.replace('http', 'https'),
  *        headers: { 'my-custom-header': true},
- *        credentials: 'include'  // Include cookies for cross-origin requests
+ *        credentials: 'include', // Include cookies for cross-origin requests
  *      }
  *     }
  *   }
@@ -634,6 +639,7 @@ export class Map extends Evented<MapEventType> {
     _mapId: number = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
+    _initialGlobalState: Record<string, any>;
     _styleUrl: string | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
@@ -642,6 +648,7 @@ export class Map extends Evented<MapEventType> {
     _clickTolerance: number;
     _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
+    _clampedPixelRatio: number;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
     _missingStyleImageResolver: MissingStyleImageResolver | null = null;
     /** @internal */
@@ -858,6 +865,7 @@ export class Map extends Evented<MapEventType> {
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
+        this._initialGlobalState = resolvedOptions.globalState;
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
@@ -1335,7 +1343,8 @@ export class Map extends Evented<MapEventType> {
      * in the viewport. LngLatBounds represent a box that is always axis-aligned with bearing 0.
      * Bounds will be taken in `[sw, ne]` order. Southwest point will always be to the left of the northeast point.
      * @param options - Options object
-     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
+     * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`,
+     * plus `padding` when `absolutePadding` is set.
      * If map is unable to fit, method will warn and return undefined.
      * @example
      * ```ts
@@ -1345,7 +1354,7 @@ export class Map extends Evented<MapEventType> {
      * });
      * ```
      */
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined { return this._camera.cameraForBounds(bounds, options); }
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): JumpToOptions | undefined { return this._camera.cameraForBounds(bounds, options); }
     /**
      * Pans and zooms the map to contain its visible area within the specified geographical bounds.
      * This function will also reset the map's bearing to 0 if bearing is nonzero.
@@ -1521,7 +1530,7 @@ export class Map extends Evented<MapEventType> {
      * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
      * If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value.
-     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/adding-3d-models-using-threejs-on-terrain/)
+     * This method should be used for proper positioning of custom 3d objects. If using maplibre-gl-three, see the example [here](https://maplibre-gl-three.readthedocs.io/latest/getting-started/#programmatically-calculating-terrain-height)
      * @param lngLatLike - `[x, y]` or LngLat coordinates of the location
      * @returns elevation in meters
      */
@@ -1626,19 +1635,20 @@ export class Map extends Evented<MapEventType> {
     _resizeInternal(constrainTransform = true): void {
         const [width, height] = this._containerDimensions();
 
-        const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-        this._resizeCanvas(width, height, clampedPixelRatio);
-        this.painter.resize(width, height, clampedPixelRatio);
+        this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
+        this._resizeCanvas(width, height, this._clampedPixelRatio);
+        this.painter.resize(width, height, this._clampedPixelRatio);
 
         // check if we've reached GL limits, in that case further clamps pixelRatio
         if (this.painter.overLimit()) {
             const gl = this.painter.context.gl;
             // store updated _maxCanvasSize value
             this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
-            const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-            this._resizeCanvas(width, height, clampedPixelRatio);
-            this.painter.resize(width, height, clampedPixelRatio);
+            this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
+            this._resizeCanvas(width, height, this._clampedPixelRatio);
+            this.painter.resize(width, height, this._clampedPixelRatio);
         }
+        this.style?.resize();
 
         this._resizeTransform(constrainTransform);
     }
@@ -2673,13 +2683,20 @@ export class Map extends Evented<MapEventType> {
      *       ]
      *   })
      * });
+     *
+     * map.setStyle('https://demotiles.maplibre.org/style.json', {
+     *   globalState: {
+     *     showCircles: true,
+     *   }
+     * });
      * ```
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
         options = extend({},
             {
                 localIdeographFontFamily: this._localIdeographFontFamily,
-                validate: this._validateStyle
+                validate: this._validateStyle,
+                globalState: this._initialGlobalState,
             }, options);
         this._styleUrl = typeof style === 'string' ? style : null;
 
@@ -2728,6 +2745,7 @@ export class Map extends Evented<MapEventType> {
 
         const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
+            this.style.off('error', this._onStyleError);
             this.style.setEventedParent(null);
 
             // Only release workers when map is getting disposed
@@ -2747,6 +2765,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         this.style.setEventedParent(this, {style: this.style});
+        this.style.on('error', this._onStyleError);
 
         if (typeof style === 'string') {
             this.style.loadURL(style, options, previousStyle);
@@ -2761,6 +2780,7 @@ export class Map extends Evented<MapEventType> {
         if (!this.style) {
             this.style = new Style(this, {});
             this.style.setEventedParent(this, {style: this.style});
+            this.style.on('error', this._onStyleError);
             this.style.loadEmpty();
         }
     }
@@ -4261,6 +4281,7 @@ export class Map extends Evented<MapEventType> {
             }
         }
 
+        this.style.off('error', this._onStyleError);
         this.style.destroy();
         this.style = null;
 
@@ -4433,6 +4454,9 @@ export class Map extends Evented<MapEventType> {
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
+        const projection = this.style.projection;
+        const projectionTransition = projection?.transitionState ?? 0;
+
         // Actually draw
         this.painter.render(this.style, this._camera.transform, {
             showTileBoundaries: this.showTileBoundaries,
@@ -4441,8 +4465,17 @@ export class Map extends Evented<MapEventType> {
             zooming: this.isZooming(),
             moving: this.isMoving(),
             fadeDuration,
+            symbolFadeChange: this.style.placement.symbolFadeChange(now()),
+            variableOffsets: this.style.placement.variableOffsets,
             showPadding: this.showPadding,
             anisotropicFilterPitch: this.getAnisotropicFilterPitch(),
+            projectionTransition,
+            isRenderingGlobe: projectionTransition > 0,
+            projectionShaderVariant: projection ? {name: projection.shaderVariantName, define: projection.shaderDefine, prelude: projection.shaderPreludeCode} : undefined,
+            useSubdivision: projection?.useSubdivision ?? false,
+            pixelRatio: this._clampedPixelRatio,
+            light: this.style.light?.getEvaluated(),
+            sky: this.style.sky?.getEvaluated(),
         });
 
         this.fire(new MapLibreEvent('render'));
@@ -4548,7 +4581,7 @@ export class Map extends Evented<MapEventType> {
      * ```ts
      * map.triggerRepaint();
      * ```
-     * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+     * @see [Add 3D Tiles, 3D objects and models using Three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-3d-objects-and-models-using-threejs/)
      * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-animated-icon-to-the-map/)
      */
     triggerRepaint(): void {
@@ -4571,6 +4604,15 @@ export class Map extends Evented<MapEventType> {
             );
         }
     }
+
+    /**
+     * @internal
+     * A tile that fails to load fires an error event and no data event, so when it was the last tile loading,
+     * no frame would run to fire `load` and `idle`.
+     */
+    _onStyleError = (event: ErrorEvent & {tile?: unknown}): void => {
+        if (event.tile) this.triggerRepaint();
+    };
 
     _onWindowOnline = (): void => {
         this._update();

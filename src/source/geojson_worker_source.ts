@@ -48,7 +48,7 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
      */
     dataDiff?: GeoJSONSourceDiff;
     /**
-     * Update the supercluster using the latest worker cluster options.
+     * Update the supercluster using the latest worker cluster options, after applying {@link dataDiff} if there is one.
      */
     updateCluster?: boolean;
 };
@@ -256,7 +256,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (params.dataDiff) {
             this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
             this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter, params.source));
-            return;
         }
 
         if (params.updateCluster) {

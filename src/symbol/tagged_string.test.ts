@@ -111,6 +111,7 @@ describe('TaggedString', () => {
                     'a': {id: 0x61, metrics, rect},
                     'b': {id: 0x62, metrics, rect},
                     'c': {id: 0x63, metrics, rect},
+                    ' ': {id: 0x20, metrics: {...metrics, advance: 7}, rect},
                     '\u9EB5': {id: 0x9EB5, metrics, rect},
                     '\u{30EDE}': {id: 0x30EDE, metrics, rect},
                 } as unknown as Record<string, StyleGlyph>
@@ -130,6 +131,12 @@ describe('TaggedString', () => {
         test('keeps ideographic characters together', () => {
             const tagged = new TaggedString('𰻞𰻞麵', [textSection], Array(3).fill(0));
             expect(tagged.determineLineBreaks(0, 300, glyphs, {}, 30)).toEqual([3]);
+        });
+
+        test('breaks lines even when negative spacing shrinks the text below the max width', () => {
+            const spacingNarrowerThanGlyphs = -14;
+            const tagged = new TaggedString('a b', [textSection], Array(3).fill(0));
+            expect(tagged.determineLineBreaks(spacingNarrowerThanGlyphs, 300, glyphs, {}, 30)).toEqual([2, 3]);
         });
     });
 });

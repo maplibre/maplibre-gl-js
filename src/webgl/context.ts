@@ -1,7 +1,7 @@
 import {IndexBuffer} from './index_buffer.ts';
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
-import {createProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {createProjectionUniformBuffer, destroyProjectionUniformBuffers} from './projection_uniform_buffer.ts';
 import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
 import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import {ColorMode} from './color_mode.ts';
@@ -127,6 +127,13 @@ export class Context {
         this.freeProjectionUniformBuffers = [];
         this.terrainUniformBuffer = createTerrainUniformBuffer(this);
         this.frameUniformBuffer = createFrameUniformBuffer(this);
+    }
+
+    /** Destroys the uniform buffers the context created. */
+    destroy(): void {
+        destroyProjectionUniformBuffers(this);
+        this.terrainUniformBuffer.destroy();
+        this.frameUniformBuffer.destroy();
     }
 
     setDefault(): void {

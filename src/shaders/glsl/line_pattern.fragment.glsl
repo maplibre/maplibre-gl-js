@@ -8,10 +8,10 @@ uniform mediump vec3 u_scale;
 uniform sampler2D u_image;
 
 in vec2 v_normal;
-flat in vec2 v_width2;
+in vec2 v_width2;
 in float v_linesofar;
 in float v_gamma_scale;
-flat in float v_width;
+in float v_width;
 #ifdef GLOBE
 in float v_depth;
 #endif

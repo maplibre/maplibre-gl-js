@@ -1,0 +1,62 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that a map-aligned circle keeps its size halfway through the globe to mercator transition. It should match the viewport-aligned outline of the same radius.",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0,
+    60
+  ],
+  "projection": { "type": "globe" },
+  "zoom": 11.5,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [
+          0,
+          60
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "gray"
+      }
+    },
+    {
+      "id": "circle-map",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-radius": 80,
+        "circle-color": "blue",
+        "circle-pitch-alignment": "map"
+      }
+    },
+    {
+      "id": "circle-viewport",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-radius": 80,
+        "circle-opacity": 0,
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "white",
+        "circle-pitch-alignment": "viewport"
+      }
+    }
+  ]
+}

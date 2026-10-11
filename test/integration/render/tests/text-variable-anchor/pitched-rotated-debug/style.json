@@ -4,14 +4,12 @@
     "test": {
       "height": 256,
       "collisionDebug": true,
-      "operations": [
-        ["wait", 100]
-      ]
+      "description": "Variable-anchor collision boxes depend on the order tiles load in, so the source has a single tile."
     }
   },
   "center": [
-    13.418056,
-    52.499167
+    13.4143,
+    52.4895
   ],
   "zoom": 14,
   "pitch": 60,
@@ -20,6 +18,7 @@
     "maplibre": {
       "type": "vector",
       "maxzoom": 14,
+      "bounds": [13.4034, 52.4829, 13.4252, 52.4961],
       "tiles": [
         "local://tiles/{z}-{x}-{y}.mvt"
       ]

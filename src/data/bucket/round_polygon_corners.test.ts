@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {getTileUnitsForMeters, roundPolygonCornersIfNeeded} from './round_polygon_corners.ts';
+import {getTileUnitsForMeters, roundPolygonCornersIfNeeded, roundedWallNormals} from './round_polygon_corners.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
 
 function round(p: Point):GeoJSON.Position {
@@ -8,6 +8,10 @@ function round(p: Point):GeoJSON.Position {
     const x = Math.round(p.x * 100) / 100 + 0;
     const y = Math.round(p.y * 100) / 100 + 0;
     return [x, y];
+}
+
+function normals(ring: Point[]): Array<{start: GeoJSON.Position; end: GeoJSON.Position} | null> {
+    return roundedWallNormals(ring).map(wall => wall && {start: round(wall.start), end: round(wall.end)});
 }
 
 const square = [
@@ -203,6 +207,52 @@ describe('roundPolygonCornersIfNeeded', () => {
 
         expect(points).toEqual([
             [2, 1], [2, 0], [98, 0], [98, 1], [52, 19], [50, 20], [48, 19], [2, 1]
+        ]);
+    });
+});
+
+describe('roundedWallNormals', () => {
+    test('averages the normals of two walls meeting at a shallow turn', () => {
+        expect(normals([new Point(0, 0), new Point(10, 0), new Point(20, 5)])).toEqual([
+            null,
+            {start: [0, 1], end: [-0.24, 0.97]},
+            {start: [-0.24, 0.97], end: [-0.45, 0.89]}
+        ]);
+    });
+
+    test('keeps the normal of a long wall where it meets a short one', () => {
+        expect(normals([new Point(0, 0), new Point(100, 0), new Point(102, 1)])).toEqual([
+            null,
+            {start: [0, 1], end: [0, 1]},
+            {start: [0, 1], end: [-0.45, 0.89]}
+        ]);
+    });
+
+    test('keeps each wall its own normal at a sharp turn', () => {
+        expect(normals([new Point(0, 0), new Point(10, 0), new Point(20, 10)])).toEqual([
+            null,
+            {start: [0, 1], end: [0, 1]},
+            {start: [-0.71, 0.71], end: [-0.71, 0.71]}
+        ]);
+    });
+
+    test('blends the last wall of a closed ring into the first', () => {
+        expect(normals([new Point(0, 0), new Point(10, 0), new Point(20, 5), new Point(-10, 5), new Point(0, 0)])).toEqual([
+            null,
+            {start: [0.24, 0.97], end: [-0.24, 0.97]},
+            {start: [-0.24, 0.97], end: [-0.45, 0.89]},
+            {start: [0, -1], end: [0, -1]},
+            {start: [0.45, 0.89], end: [0.24, 0.97]}
+        ]);
+    });
+
+    test('skips boundary and zero-length walls and does not blend into them', () => {
+        expect(normals([new Point(-10, 0), new Point(-10, 10), new Point(0, 10), new Point(0, 10), new Point(10, 12)])).toEqual([
+            null,
+            null,
+            {start: [0, 1], end: [0, 1]},
+            null,
+            {start: [-0.2, 0.98], end: [-0.2, 0.98]}
         ]);
     });
 });

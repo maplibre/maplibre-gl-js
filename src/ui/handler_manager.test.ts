@@ -404,7 +404,6 @@ describe('terrain gesture anchoring', () => {
         map.terrain = {
             ...createTerrain(),
             getElevationForLngLat: (lngLat: LngLat) => elevationAt(lngLat),
-            getElevationForLngLatZoom: (lngLat: LngLat) => elevationAt(lngLat),
         } as any as Terrain;
         vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 2000));
         map._camera.transform.setElevation(300);

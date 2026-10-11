@@ -388,6 +388,10 @@ export class TaggedString {
      * plus, in scripts that do not space their words and so offer no such character, wherever the
      * word segmenter finds a word. It is not consulted elsewhere, isolating a comma as a word of its
      * own, nor until such a script turns up, costing more than the rest of this put together.
+     *
+     * Text that fits on one line is left unbroken without weighing any break, unless it asks for a
+     * newline, has no width (which ties with every break) or uses negative spacing (which can make
+     * spaces advance backwards).
      */
     determineLineBreaks(
         spacing: number,
@@ -396,8 +400,13 @@ export class TaggedString {
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number
     ): number[] {
+        const totalWidth = this.determineTotalWidth(spacing, glyphMap, imagePositions, layoutTextSize);
+        if (spacing >= 0 && totalWidth > 0 && totalWidth <= maxWidth && !/[\n\r]/.test(this.text)) {
+            return [this.length()];
+        }
+
         const potentialLineBreaks = [];
-        const targetWidth = this.determineAverageLineWidth(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
+        const targetWidth = totalWidth / Math.max(1, Math.ceil(totalWidth / maxWidth));
 
         const hasZeroWidthSpaces = this.hasZeroWidthSpaces();
 
@@ -450,9 +459,8 @@ export class TaggedString {
                 true));
     }
 
-    determineAverageLineWidth(
+    determineTotalWidth(
         spacing: number,
-        maxWidth: number,
         glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number): number {
@@ -465,7 +473,6 @@ export class TaggedString {
             index++;
         }
 
-        const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
-        return totalWidth / lineCount;
+        return totalWidth;
     }
 }
