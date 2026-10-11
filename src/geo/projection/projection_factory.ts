@@ -8,6 +8,8 @@ import {GlobeCameraHelper} from './globe_camera_helper.ts';
 import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
 import {createVerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
+import {CRSWorldCoordinateHelper} from './crs.ts';
+import {getRegisteredProjection} from './projection_crud.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
@@ -21,11 +23,26 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
 } {
     const transformOptions = {constrainOverride: transformConstrain};
     if (Array.isArray(name)) {
+        const registeredName = findRegisteredProjectionName(name);
+        if (registeredName) {
+            warnOnce(`Projection expressions cannot use the registered projection "${registeredName}", which only works as a plain name. Falling back to the globe projection.`);
+        }
         const globeProjection = new GlobeProjection({type: name}, globalState);
         return {
             projection: globeProjection,
             transform: createGlobeTransform(transformOptions),
             cameraHelper: new GlobeCameraHelper(globeProjection),
+        };
+    }
+    const registered = getRegisteredProjection(name);
+    if (registered) {
+        const worldCoordinateHelper = new CRSWorldCoordinateHelper(registered);
+        const transform = createMercatorTransform(transformOptions);
+        transform.setWorldCoordinateHelper(worldCoordinateHelper);
+        return {
+            projection: new MercatorProjection(worldCoordinateHelper),
+            transform,
+            cameraHelper: new MercatorCameraHelper(),
         };
     }
     switch (name) {
@@ -72,4 +89,11 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             };
         }
     }
+}
+
+/**
+ * The first registered projection named anywhere in a projection expression, or `undefined` if it names none.
+ */
+function findRegisteredProjectionName(expression: unknown[]): string | undefined {
+    return expression.flat(Infinity).find((item): item is string => typeof item === 'string' && getRegisteredProjection(item) !== undefined);
 }
