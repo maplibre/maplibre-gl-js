@@ -496,8 +496,9 @@ export class Style extends Evented<MapEventType> {
     }
 
     /**
-     * Loads a style. The projection is created before the sources, which read it as they are added, and the map
-     * migrates to it once the layers and the light exist, so `projectiontransition` handlers can read them.
+     * Loads a style. The global state is set first, since the projection and the layers read it. The projection is
+     * created before the sources, which read it as they are added, and the map migrates to it once the layers and the
+     * light exist, so `projectiontransition` handlers can read them.
      */
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification): void {
         let nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
@@ -510,6 +511,7 @@ export class Style extends Evented<MapEventType> {
         this._loaded = true;
         this.stylesheet = nextState;
 
+        this.setGlobalState(this.stylesheet.state ?? null);
         const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', this.map._camera?.transform.constrainOverride, this._globalState);
         this.projection = projectionObjects.projection;
 
@@ -542,8 +544,6 @@ export class Style extends Evented<MapEventType> {
 
     private _createLayers() {
         const dereferencedLayers = derefLayers(this.stylesheet.layers);
-
-        this.setGlobalState(this.stylesheet.state ?? null);
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
