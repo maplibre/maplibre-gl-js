@@ -102,6 +102,11 @@ export default class Worker {
     };
     referrer: string;
     globalStates: Map<string, Record<string, any>>;
+    /**
+     * The scripts that were imported into this worker, by url, so that a script that is sent again is not executed twice.
+     * This happens when the global dispatcher replays the scripts while this worker is still alive.
+     */
+    importedScripts: Map<string, Promise<void>>;
 
     constructor(self: WorkerGlobalScopeInterface & ActorTarget) {
         this.self = self;
@@ -115,6 +120,7 @@ export default class Worker {
         this.externalWorkerSourceTypes = {};
 
         this.globalStates = new Map<string, Record<string, any>>();
+        this.importedScripts = new Map<string, Promise<void>>();
 
         this.self.registerWorkerSource = (name: string, WorkerSource: WorkerSourceConstructor) => {
             if (this.externalWorkerSourceTypes[name]) {
@@ -208,8 +214,8 @@ export default class Worker {
             return this._syncRTLPluginState(mapId, params);
         });
 
-        this.actor.registerMessageHandler(MessageType.importScript, async (_mapId: string, params: string) => {
-            await loadScript(params);
+        this.actor.registerMessageHandler(MessageType.importScript, (_mapId: string, params: string) => {
+            return this._importScript(params);
         });
 
         this.actor.registerMessageHandler(MessageType.setImages, (mapId: string, params: string[]) => {
@@ -230,6 +236,18 @@ export default class Worker {
         this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: LayerSpecification[]) => {
             this._getLayerIndex(mapId).replace(params, this._getGlobalState(mapId));
         });
+    }
+
+    private _importScript(url: string): Promise<void> {
+        let importPromise = this.importedScripts.get(url);
+        if (!importPromise) {
+            importPromise = loadScript(url).catch((error) => {
+                this.importedScripts.delete(url);
+                throw error;
+            });
+            this.importedScripts.set(url, importPromise);
+        }
+        return importPromise;
     }
 
     private _getGlobalState(mapId: string): Record<string, any> {

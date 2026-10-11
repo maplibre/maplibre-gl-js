@@ -153,6 +153,18 @@ describe('global dispatcher', () => {
         expect((await globalDispatcher.getActor()).messageHandlers[MessageType.importScript]).toBe(handler);
     });
 
+    test('registers and unregisters a handler for a plugin-defined message type', async () => {
+        const handler = vi.fn();
+        const globalDispatcher = getGlobalDispatcher();
+
+        await globalDispatcher.registerMessageHandler('my-plugin-message', handler);
+        const actor = await globalDispatcher.getActor();
+        expect(actor.messageHandlers['my-plugin-message']).toBe(handler);
+
+        await globalDispatcher.unregisterMessageHandler('my-plugin-message');
+        expect(actor.messageHandlers['my-plugin-message']).toBeUndefined();
+    });
+
     test('prewarm keeps the workers alive once the last map is removed, until they are cleared', () => {
         prewarm();
         const pool = getGlobalWorkerPool();
