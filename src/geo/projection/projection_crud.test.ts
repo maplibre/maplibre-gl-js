@@ -52,6 +52,11 @@ describe('getRegisteredProjection', () => {
 });
 
 describe('removeProjection', () => {
+    test('throws for a name without a colon and keeps the built-in identity projection', () => {
+        expect(() => removeProjection('identity')).toThrow('The projection name "identity" has no colon');
+        expect(getRegisteredProjection('identity')).toBe(identityCrs);
+    });
+
     test('removing a name lets it be registered again', () => {
         addProjection(createDefinition('test:crs'));
         removeProjection('test:crs');

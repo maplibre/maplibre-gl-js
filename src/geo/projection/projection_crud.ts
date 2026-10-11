@@ -63,14 +63,18 @@ export function addProjection(def: CRSDefinition): void {
 /**
  * @experimental
  * Removes a projection registered with {@link addProjection}. Maps currently using it keep working
- * until their projection changes; the pre-registered `'identity'` projection can be removed too.
+ * until their projection changes. Built-in projections, whose names have no colon, cannot be removed.
  *
  * @param name - the name the projection was registered with
+ * @throws Error if the name has no colon
  * @example
  * ```ts
  * removeProjection('EPSG:2193');
  * ```
  */
 export function removeProjection(name: string): void {
+    if (!name.includes(':')) {
+        throw new Error(`The projection name "${name}" has no colon, so it is reserved for built-in projections, which cannot be removed.`);
+    }
     registeredProjections.delete(name);
 }

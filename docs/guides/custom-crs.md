@@ -180,4 +180,4 @@ Everything that speaks lng/lat goes through the CRS definition's `projection`, s
 
 ## Removing a projection
 
-`removeProjection(name)` unregisters a CRS. A map currently using it keeps working until its projection changes. To replace a definition, remove it and register the new one.
+`removeProjection(name)` unregisters a CRS. A map currently using it keeps working until its projection changes. To replace a definition, remove it and register the new one. Built-in projections, like `identity`, cannot be removed.
