@@ -32,14 +32,13 @@ export class Dispatcher extends Evented<ErrorEventType> {
         this.workerErrorSubscriptions = [];
     }
 
+    protected acquireWorkers(): Promise<ActorTarget[]> {
+        getGlobalDispatcher();
+        return this.workerPool.acquire(this.id);
+    }
+
     private async initActors(mapId: string | number): Promise<Actor[]> {
-        let workers: ActorTarget[];
-        if (mapId === GLOBAL_DISPATCHER_ID) {
-            workers = await this.workerPool.weakAcquire(() => this.discardActors());
-        } else {
-            getGlobalDispatcher();
-            workers = await this.workerPool.acquire(mapId);
-        }
+        const workers = await this.acquireWorkers();
         if (this.removed) return [];
         this.actors = workers.map((worker: ActorTarget, i: number) => {
             this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
@@ -56,7 +55,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
         return this.actors;
     }
 
-    private discardActors(): void {
+    protected discardActors(): void {
         for (const actor of this.actors) {
             actor.remove();
         }
@@ -145,7 +144,18 @@ export class Dispatcher extends Evented<ErrorEventType> {
  */
 export type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
 
-const globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
+/** The one dispatcher whose use of the workers is not a claim: its actors live and die with them. */
+export class GlobalDispatcher extends Dispatcher {
+    constructor(workerPool: WorkerPool) {
+        super(workerPool, GLOBAL_DISPATCHER_ID);
+    }
+
+    protected override acquireWorkers(): Promise<ActorTarget[]> {
+        return this.workerPool.weakAcquire(() => this.discardActors());
+    }
+}
+
+const globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool());
 globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
     return makeRequest(params, abortController);
 });
