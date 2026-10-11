@@ -1,4 +1,8 @@
 import {describe, expect, test} from 'vitest';
+import fs from 'fs';
+import path from 'path';
+import {PbfReader} from 'pbf';
+import {VectorTile} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
 import {GeoJSONFeature} from './vectortile_to_geojson.ts';
 import {EXTENT} from '../data/extent.ts';
@@ -31,5 +35,20 @@ describe('GeoJSONFeature.geometry', () => {
         const feature = new GeoJSONFeature(createPointFeature(EXTENT / 4, EXTENT / 4), 0, 0, 0, undefined, new CRSWorldCoordinateHelper(identityCrs));
 
         expect((feature.geometry as GeoJSON.Point).coordinates).toEqual([-45, 45]);
+    });
+});
+
+describe('GeoJSONFeature', () => {
+    test('can be cloned on a map in a registered projection', () => {
+        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+        const placeLabel = new VectorTile(new PbfReader(rawTileData)).layers['place_label'].feature(0);
+        const worldCoordinateHelper = new CRSWorldCoordinateHelper({
+            name: 'test:clone',
+            projection: {forward: ([lng, lat]) => [lng, lat], inverse: ([x, y]) => [x, y]},
+            tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180}
+        });
+        const feature = new GeoJSONFeature(placeLabel, 6, 18, 23, undefined, worldCoordinateHelper);
+
+        expect(() => structuredClone(feature)).not.toThrow();
     });
 });

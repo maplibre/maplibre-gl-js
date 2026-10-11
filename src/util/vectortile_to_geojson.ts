@@ -32,6 +32,14 @@ export type MapGeoJSONFeature = GeoJSONFeature & {
  * A geojson feature
  */
 export class GeoJSONFeature {
+    /**
+     * The map projection's world-to-lng/lat mapping of each feature, kept only when it is not the mercator one so
+     * mercator query output stays float-identical to the inline formula in `projectPoint`. It is held here and not
+     * on the feature because a registered projection's definition holds functions, which would keep the feature
+     * from being cloned with `structuredClone` or sent with `postMessage`.
+     */
+    private static readonly worldCoordinateHelpers = new WeakMap<GeoJSONFeature, WorldCoordinateHelper>();
+
     type: 'Feature';
     _geometry: GeoJSON.Geometry;
     properties: { [name: string]: any };
@@ -41,12 +49,6 @@ export class GeoJSONFeature {
     _z: number;
 
     _vectorTileFeature: VectorTileFeatureLike;
-    /**
-     * @internal
-     * The map projection's world-to-lng/lat mapping, stored only when it is not the mercator one so mercator
-     * query output stays float-identical to the inline formula in `projectPoint`.
-     */
-    private _worldCoordinateHelper: WorldCoordinateHelper | undefined;
 
     constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined, worldCoordinateHelper: WorldCoordinateHelper) {
         this.type = 'Feature';
@@ -54,7 +56,9 @@ export class GeoJSONFeature {
         this._x = x;
         this._y = y;
         this._z = z;
-        this._worldCoordinateHelper = worldCoordinateHelper === mercatorWorldCoordinateHelper ? undefined : worldCoordinateHelper;
+        if (worldCoordinateHelper !== mercatorWorldCoordinateHelper) {
+            GeoJSONFeature.worldCoordinateHelpers.set(this, worldCoordinateHelper);
+        }
 
         for (const key in vectorTileFeature.properties) {
             if (typeof vectorTileFeature.properties[key] !== 'string' || !vectorTileFeature.properties[key].startsWith(JSON_PREFIX)) {
@@ -67,9 +71,9 @@ export class GeoJSONFeature {
         this.id = id;
     }
 
-    private projectPoint(p: Point, x0: number, y0: number, size: number): [number, number] {
-        if (this._worldCoordinateHelper) {
-            const lngLat = this._worldCoordinateHelper.lngLatFromWorld((p.x + x0) / size, (p.y + y0) / size);
+    private projectPoint(p: Point, x0: number, y0: number, size: number, worldCoordinateHelper: WorldCoordinateHelper | undefined): [number, number] {
+        if (worldCoordinateHelper) {
+            const lngLat = worldCoordinateHelper.lngLatFromWorld((p.x + x0) / size, (p.y + y0) / size);
             return [lngLat.lng, lngLat.lat];
         }
         return [
@@ -78,14 +82,15 @@ export class GeoJSONFeature {
         ];
     }
 
-    private projectLine(line: Point[], x0: number, y0: number, size: number) {
-        return line.map(p => this.projectPoint(p, x0, y0, size));
+    private projectLine(line: Point[], x0: number, y0: number, size: number, worldCoordinateHelper: WorldCoordinateHelper | undefined) {
+        return line.map(p => this.projectPoint(p, x0, y0, size, worldCoordinateHelper));
     }
 
     get geometry(): GeoJSON.Geometry {
         if (this._geometry) return this._geometry;
 
         const feature = this._vectorTileFeature;
+        const worldCoordinateHelper = GeoJSONFeature.worldCoordinateHelpers.get(this);
 
         // Copied from https://github.com/mapbox/vector-tile-js/blob/f1457ee47d0a261e6246d68c959fbd12bf56aeeb/index.js
         const size = feature.extent * Math.pow(2, this._z);
@@ -99,14 +104,14 @@ export class GeoJSONFeature {
                 for (const line of vtCoords) {
                     points.push(line[0]);
                 }
-                const coordinates = this.projectLine(points, x0, y0, size);
+                const coordinates = this.projectLine(points, x0, y0, size, worldCoordinateHelper);
                 this._geometry = points.length === 1 ?
                     {type: 'Point', coordinates: coordinates[0]} :
                     {type: 'MultiPoint', coordinates};
                 break;
             }
             case 2: {
-                const coordinates = vtCoords.map(coord => this.projectLine(coord, x0, y0, size));
+                const coordinates = vtCoords.map(coord => this.projectLine(coord, x0, y0, size, worldCoordinateHelper));
                 this._geometry = coordinates.length === 1 ?
                     {type: 'LineString', coordinates: coordinates[0]} :
                     {type: 'MultiLineString', coordinates};
@@ -116,7 +121,7 @@ export class GeoJSONFeature {
                 const polygons = classifyRings(vtCoords);
                 const coordinates = [];
                 for (const polygon of polygons) {
-                    coordinates.push(polygon.map(coord => this.projectLine(coord, x0, y0, size)));
+                    coordinates.push(polygon.map(coord => this.projectLine(coord, x0, y0, size, worldCoordinateHelper)));
                 }
                 this._geometry = coordinates.length === 1 ?
                     {type: 'Polygon', coordinates: coordinates[0]} :
@@ -139,7 +144,7 @@ export class GeoJSONFeature {
             geometry: this.geometry
         };
         for (const i in this) {
-            if (i === '_geometry' || i === '_vectorTileFeature' || i === '_x' || i === '_y' || i === '_z' || i === '_worldCoordinateHelper') continue;
+            if (i === '_geometry' || i === '_vectorTileFeature' || i === '_x' || i === '_y' || i === '_z') continue;
             json[i] = (this)[i];
         }
         return json;
