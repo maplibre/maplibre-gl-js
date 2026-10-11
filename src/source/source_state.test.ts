@@ -6,6 +6,18 @@ import type {InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
 import type {Style} from '../style/style.ts';
 
 describe('SourceFeatureState', () => {
+    test('coalesceChanges tolerates removing a property without prior feature state', () => {
+        const sourceState = new SourceFeatureState();
+        const inViewTilesMock = {
+            setFeatureState: vi.fn()
+        } as unknown as InViewTiles;
+
+        sourceState.removeFeatureState('layer1', 'feature1', 'hover');
+
+        expect(() => sourceState.coalesceChanges(inViewTilesMock, {} as unknown as Style)).not.toThrow();
+        expect(sourceState.getState('layer1', 'feature1')).toEqual({});
+    });
+
     test('coalesceChanges updates revision when changes occur', () => {
         const sourceState = new SourceFeatureState();
         expect(sourceState.revision).toBe(0);
