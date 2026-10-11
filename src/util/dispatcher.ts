@@ -144,6 +144,25 @@ export class Dispatcher extends Evented<ErrorEventType> {
  */
 export type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
 
+/**
+ * The global dispatcher as plugins see it, see {@link getGlobalDispatcher}.
+ */
+export interface IGlobalDispatcher {
+    /**
+     * Broadcast a message to all Workers.
+     * The type can be any string, to allow sending messages that are handled by a script that was imported using {@link importScriptInWorkers}.
+     */
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>>;
+    broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
+    /**
+     * Registers a handler for messages that the workers send to this dispatcher.
+     * The type can be any string, to allow handling messages that are sent by a script that was imported using {@link importScriptInWorkers}.
+     */
+    registerMessageHandler<T extends MessageType>(type: T, handler: CustomMessageHandler<RequestResponseMessageMap[T][0], RequestResponseMessageMap[T][1]>): Promise<void>;
+    registerMessageHandler<TData = any, TResult = any>(type: string, handler: CustomMessageHandler<TData, TResult>): Promise<void>;
+    unregisterMessageHandler(type: MessageType | string): Promise<void>;
+}
+
 /** The one dispatcher whose use of the workers is not a claim: its actors live and die with them. */
 export class GlobalDispatcher extends Dispatcher {
     constructor(workerPool: WorkerPool) {
@@ -195,7 +214,7 @@ export function onGlobalWorkersCreated(listener: () => void): Subscription {
  * you broadcast into the workers does not, so send that from {@link onGlobalWorkersCreated}.
  * @returns The global dispatcher instance.
  */
-export function getGlobalDispatcher(): Dispatcher {
+export function getGlobalDispatcher(): IGlobalDispatcher {
     globalDispatcher.getActors();
     return globalDispatcher;
 }

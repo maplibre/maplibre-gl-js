@@ -135,7 +135,7 @@ describe('global dispatcher', () => {
     });
 
     test('the global dispatcher hands out fresh actors after its workers terminate', async () => {
-        const globalDispatcher = getGlobalDispatcher();
+        const globalDispatcher = getGlobalDispatcher() as Dispatcher;
         const actor = await globalDispatcher.getActor();
 
         terminateGlobalWorkers();
@@ -145,7 +145,7 @@ describe('global dispatcher', () => {
 
     test('a message handler registered on the global dispatcher comes back with the new workers', async () => {
         const handler = vi.fn();
-        const globalDispatcher = getGlobalDispatcher();
+        const globalDispatcher = getGlobalDispatcher() as Dispatcher;
         await globalDispatcher.registerMessageHandler(MessageType.importScript, handler);
 
         terminateGlobalWorkers();
@@ -155,7 +155,7 @@ describe('global dispatcher', () => {
 
     test('registers and unregisters a handler for a plugin-defined message type', async () => {
         const handler = vi.fn();
-        const globalDispatcher = getGlobalDispatcher();
+        const globalDispatcher = getGlobalDispatcher() as Dispatcher;
 
         await globalDispatcher.registerMessageHandler('my-plugin-message', handler);
         const actor = await globalDispatcher.getActor();

@@ -3,13 +3,13 @@ import {browser} from '../util/browser.ts';
 import {Event, Evented} from '../util/evented.ts';
 import {warnOnce} from '../util/util.ts';
 import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status.ts';
-import {type Dispatcher, getGlobalDispatcher, onGlobalWorkersCreated} from '../util/dispatcher.ts';
+import {type IGlobalDispatcher, getGlobalDispatcher, onGlobalWorkersCreated} from '../util/dispatcher.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
     url: string = null;
-    dispatcher: Dispatcher = getGlobalDispatcher();
+    dispatcher: IGlobalDispatcher = getGlobalDispatcher();
 
     async _syncStateToNewWorkers(): Promise<void> {
         try {
