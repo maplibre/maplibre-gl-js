@@ -18,8 +18,9 @@ import type {TileMatrixSet} from './tile_matrix_set.ts';
  */
 export type CrsDefinition = {
     /**
-     * Name used in `projection.type`, e.g. `'EPSG:2193'`.
-     * `'identity'` is pre-registered; `'mercator'`, `'globe'` and `'vertical-perspective'` are reserved.
+     * Name used in `projection.type`, e.g. `'EPSG:2193'` or `'custom:floor-plan'`. It must contain a colon: names
+     * without one, like `'mercator'`, `'globe'`, `'vertical-perspective'` and the pre-registered `'identity'`, are
+     * reserved for built-in projections.
      */
     name: string;
     /**

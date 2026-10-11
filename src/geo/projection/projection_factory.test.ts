@@ -6,7 +6,7 @@ import {MercatorTransform} from './mercator_transform.ts';
 import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 
 afterEach(() => {
-    removeProjection('factory-test-crs');
+    removeProjection('test:factory');
     vi.restoreAllMocks();
 });
 
@@ -33,22 +33,22 @@ describe('createProjectionFromName', () => {
     describe('for a registered CRS', () => {
         beforeEach(() => {
             addProjection({
-                name: 'factory-test-crs',
+                name: 'test:factory',
                 projection: {forward: ([lng, lat]) => [lng * 2, lat * 2], inverse: ([x, y]) => [x / 2, y / 2]},
                 tileMatrixSet: {origin: [-180, 180], extentAtZoom0: 360},
             });
         });
 
         test('resolves its name to a mercator projection under that name over its definition', () => {
-            const {projection} = createProjectionFromName('factory-test-crs', undefined, {});
+            const {projection} = createProjectionFromName('test:factory', undefined, {});
             expect(projection).toBeInstanceOf(MercatorProjection);
-            expect(projection.name).toBe('factory-test-crs');
+            expect(projection.name).toBe('test:factory');
             const world = projection.worldCoordinateHelper.worldFromLngLat(90, 90);
             expect([world.x, world.y]).toEqual([1, 0]);
         });
 
         test('runs its transform on the projection\'s own mapping', () => {
-            const {projection, transform} = createProjectionFromName('factory-test-crs', undefined, {});
+            const {projection, transform} = createProjectionFromName('test:factory', undefined, {});
             expect(transform.worldCoordinateHelper).toBe(projection.worldCoordinateHelper);
         });
     });

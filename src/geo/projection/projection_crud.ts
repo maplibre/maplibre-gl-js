@@ -2,8 +2,6 @@ import {identityCrs, type CrsDefinition} from './crs.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-const BUILT_IN_PROJECTION_NAMES = ['mercator', 'globe', 'vertical-perspective'];
-
 const registeredProjections = new Map<string, CrsDefinition>([[identityCrs.name, identityCrs]]);
 
 /**
@@ -22,12 +20,13 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  * `map.setProjection({type: name})`. Every source of such a map is expected to serve tiles in the CRS's
  * own quad tile grid, described by `tileMatrixSet`; the map does not reproject tile content.
  * The pre-registered `'identity'` projection is an identity CRS over lng/lat degrees, where tile 0/0/0
- * spans -90..90 on both axes.
+ * spans -90..90 on both axes. The name of a registered CRS needs a colon, like `'EPSG:2193'` or
+ * `'custom:floor-plan'`: names without one are reserved for built-in projections.
  *
  * A map in a registered projection never renders world copies and never wraps across an antimeridian.
  *
  * @param def - the CRS definition
- * @throws Error if the name is already registered or is one of the built-in projections, or if `tileMatrixSet.extentAtZoom0` is not positive
+ * @throws Error if the name has no colon, is already registered, or if `tileMatrixSet.extentAtZoom0` is not positive
  * @example
  * ```ts
  * // NZTM2000 (EPSG:2193) with the LINZ NZTM2000Quad tile matrix set, using proj4js for the math.
@@ -49,8 +48,8 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  * ```
  */
 export function addProjection(def: CrsDefinition): void {
-    if (BUILT_IN_PROJECTION_NAMES.includes(def.name)) {
-        throw new Error(`A projection called "${def.name}" is built in and cannot be replaced.`);
+    if (!def.name.includes(':')) {
+        throw new Error(`The projection name "${def.name}" needs a colon, like "EPSG:2193" or "custom:equal-earth": names without one are reserved for built-in projections.`);
     }
     if (registeredProjections.has(def.name)) {
         throw new Error(`A projection called "${def.name}" already exists.`);

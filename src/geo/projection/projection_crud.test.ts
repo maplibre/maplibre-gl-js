@@ -11,40 +11,33 @@ function createDefinition(name: string): CrsDefinition {
 }
 
 afterEach(() => {
-    removeProjection('test-crs');
-    removeProjection('toString');
+    removeProjection('test:crs');
 });
 
 describe('addProjection', () => {
     test('registers a definition under its name', () => {
-        const definition = createDefinition('test-crs');
+        const definition = createDefinition('test:crs');
         addProjection(definition);
-        expect(getRegisteredProjection('test-crs')).toBe(definition);
-    });
-
-    test('registers a name that Object.prototype also has', () => {
-        const definition = createDefinition('toString');
-        addProjection(definition);
-        expect(getRegisteredProjection('toString')).toBe(definition);
+        expect(getRegisteredProjection('test:crs')).toBe(definition);
     });
 
     test('throws when the name is already registered', () => {
-        addProjection(createDefinition('test-crs'));
-        expect(() => addProjection(createDefinition('test-crs'))).toThrow('A projection called "test-crs" already exists.');
+        addProjection(createDefinition('test:crs'));
+        expect(() => addProjection(createDefinition('test:crs'))).toThrow('A projection called "test:crs" already exists.');
     });
 
-    test('throws for each built-in projection name and registers nothing', () => {
-        const builtInNames = ['mercator', 'globe', 'vertical-perspective'];
-        for (const name of builtInNames) {
-            expect(() => addProjection(createDefinition(name))).toThrow(`A projection called "${name}" is built in and cannot be replaced.`);
+    test('throws for a name without a colon, built in or not, and registers nothing', () => {
+        const namesWithoutColon = ['mercator', 'globe', 'vertical-perspective', 'equal-earth'];
+        for (const name of namesWithoutColon) {
+            expect(() => addProjection(createDefinition(name))).toThrow(`The projection name "${name}" needs a colon`);
             expect(getRegisteredProjection(name)).toBeUndefined();
         }
     });
 
     test('throws for a non-positive zoom 0 extent', () => {
-        expect(() => addProjection({...createDefinition('test-crs'), tileMatrixSet: {origin: [0, 0], extentAtZoom0: 0}})).toThrow(/extentAtZoom0/);
-        expect(() => addProjection({...createDefinition('test-crs'), tileMatrixSet: {origin: [0, 0], extentAtZoom0: -1}})).toThrow(/extentAtZoom0/);
-        expect(getRegisteredProjection('test-crs')).toBeUndefined();
+        expect(() => addProjection({...createDefinition('test:crs'), tileMatrixSet: {origin: [0, 0], extentAtZoom0: 0}})).toThrow(/extentAtZoom0/);
+        expect(() => addProjection({...createDefinition('test:crs'), tileMatrixSet: {origin: [0, 0], extentAtZoom0: -1}})).toThrow(/extentAtZoom0/);
+        expect(getRegisteredProjection('test:crs')).toBeUndefined();
     });
 });
 
@@ -54,18 +47,18 @@ describe('getRegisteredProjection', () => {
     });
 
     test('returns undefined for a name nothing registered', () => {
-        expect(getRegisteredProjection('test-crs')).toBeUndefined();
+        expect(getRegisteredProjection('test:crs')).toBeUndefined();
     });
 });
 
 describe('removeProjection', () => {
     test('removing a name lets it be registered again', () => {
-        addProjection(createDefinition('test-crs'));
-        removeProjection('test-crs');
-        expect(getRegisteredProjection('test-crs')).toBeUndefined();
+        addProjection(createDefinition('test:crs'));
+        removeProjection('test:crs');
+        expect(getRegisteredProjection('test:crs')).toBeUndefined();
 
-        const replacement = createDefinition('test-crs');
+        const replacement = createDefinition('test:crs');
         addProjection(replacement);
-        expect(getRegisteredProjection('test-crs')).toBe(replacement);
+        expect(getRegisteredProjection('test:crs')).toBe(replacement);
     });
 });

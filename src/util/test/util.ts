@@ -433,7 +433,7 @@ export function createRotatedCrs(): CrsDefinition {
     const cos = Math.cos(Math.PI / 6);
     const sin = Math.sin(Math.PI / 6);
     return {
-        name: 'rotated-test',
+        name: 'test:rotated',
         projection: {
             forward([lng, lat]) {
                 return [lng * cos - lat * sin, lng * sin + lat * cos];
@@ -452,7 +452,7 @@ export function createRotatedCrs(): CrsDefinition {
  */
 export function createIdentityCrsAnsweringInside(answerOutside: number[] | null): CrsDefinition {
     return {
-        name: 'identity-answering-inside',
+        name: 'test:identity-answering-inside',
         projection: {
             forward([lng, lat]) {
                 return [lng, lat];
@@ -474,7 +474,7 @@ export function createPolarStereographicCrs(): CrsDefinition {
     const scale = 6378137 * (1 + Math.sin(70 / degrees));
     const centralLng = -45;
     return {
-        name: 'polar-test',
+        name: 'test:polar',
         projection: {
             forward([lng, lat]) {
                 const rho = scale * Math.tan(Math.PI / 4 - lat / degrees / 2);
