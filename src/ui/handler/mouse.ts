@@ -1,5 +1,4 @@
 import Point from '@mapbox/point-geometry';
-
 import {type DragMoveHandler, type DragPanResult, type DragRotateResult, type DragPitchResult, DragHandler, type DragRollResult} from './drag_handler.ts';
 import {MouseMoveStateManager} from './drag_move_state_manager.ts';
 import {getAngleDelta} from '../../util/util.ts';

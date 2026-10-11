@@ -8,7 +8,6 @@ import {
 } from './ajax.ts';
 import {isAbortError} from './abort_error.ts';
 import {ensureError} from './util.ts';
-
 import {fakeServer, type FakeServer} from 'nise';
 
 function readAsText(blob) {

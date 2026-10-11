@@ -17,24 +17,27 @@ const dtsBundle: RolldownOptions = {
     plugins: [dts({emitDtsOnly: true, generator: 'oxc'})],
 };
 
-const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [
-    {
-        input: {
-            'maplibre-gl': 'src/index.ts',
-            'maplibre-gl-worker': 'src/source/worker.ts',
-        },
-        platform: 'browser',
-        treeshake: production,
-        output: {
-            dir: 'dist',
-            format: 'es',
-            sourcemap: true,
-            banner,
-            minify: production ? true : 'dce-only',
-            entryFileNames: `[name]${outputPostfix}.mjs`,
-            chunkFileNames: `maplibre-gl-shared${outputPostfix}.mjs`,
-        },
+/**
+ * The main bundle and the worker are built separately so that each one is a single self-contained
+ * file: a chunk shared between them would be a second file that browsers cache independently of
+ * the worker, see https://github.com/maplibre/maplibre-gl-js/issues/8621.
+ */
+const bundleOptions: RolldownOptions = {
+    platform: 'browser',
+    treeshake: production,
+    output: {
+        dir: 'dist',
+        format: 'es',
+        sourcemap: true,
+        banner,
+        minify: production ? true : 'dce-only',
+        entryFileNames: `[name]${outputPostfix}.mjs`,
     },
+};
+
+const config: RolldownOptions[] = defineConfig(typesOnly ? [dtsBundle] : [
+    {...bundleOptions, input: {'maplibre-gl': 'src/index.ts'}},
+    {...bundleOptions, input: {'maplibre-gl-worker': 'src/source/worker.ts'}},
     ...(production ? [dtsBundle] : []),
 ]);
 

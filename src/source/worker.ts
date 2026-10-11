@@ -7,8 +7,15 @@ import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_
 import {isWorker} from '../util/util.ts';
 import {addProtocol, removeProtocol} from './protocol_crud.ts';
 import {makeRequest} from '../util/ajax.ts';
+import {
+    MessageType,
+    type ClusterIDAndSource,
+    type GetClusterLeavesParams,
+    type RemoveSourceParams,
+    type UpdateLayersParameters
+} from '../util/actor_messages.ts';
 
-import {type PluginState} from './rtl_text_plugin_status.ts';
+import type {PluginState} from './rtl_text_plugin_status.ts';
 import type {
     WorkerSource,
     WorkerSourceConstructor,
@@ -18,13 +25,6 @@ import type {
 } from '../source/worker_source.ts';
 import type {WorkerGlobalScopeInterface} from '../util/web_worker.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {
-    MessageType,
-    type ClusterIDAndSource,
-    type GetClusterLeavesParams,
-    type RemoveSourceParams,
-    type UpdateLayersParameters
-} from '../util/actor_messages.ts';
 
 /**
  * Loads an external script into worker (global) scope. The loader picks a

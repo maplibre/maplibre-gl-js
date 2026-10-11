@@ -1,5 +1,4 @@
 import {FillExtrusionLayoutArray, PosArray} from '../array_types.g.ts';
-
 import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes.ts';
 import {type Segment, SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
@@ -13,6 +12,9 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision.ts';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
+import {getTileUnitsForMeters, roundPolygonCornersIfNeeded, roundedWallNormals} from './round_polygon_corners.ts';
 
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
@@ -23,7 +25,6 @@ import type {
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
-
 import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {IndexBuffer} from '../../webgl/index_buffer.ts';
@@ -31,12 +32,8 @@ import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
-import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
-
-import {getTileUnitsForMeters, roundPolygonCornersIfNeeded} from './round_polygon_corners.ts';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -273,12 +270,14 @@ export class FillExtrusionBucket implements Bucket {
      */
     private _generateSideFaces(geometry: Point[], segmentReference: {segment: Segment}): void {
         let edgeDistance = 0;
+        const hasRoundedCorners = this.layers[0].layout.get('fill-extrusion-rounded-corner-distance') > 0;
+        const wallNormals = hasRoundedCorners ? roundedWallNormals(geometry) : null;
 
         for (let p = 1; p < geometry.length; p++) {
             const p1 = geometry[p];
             const p2 = geometry[p - 1];
 
-            if (isBoundaryEdge(p1, p2)) {
+            if (isBoundaryEdge(p1, p2) || (wallNormals && !wallNormals[p])) {
                 continue;
             }
 
@@ -287,16 +286,17 @@ export class FillExtrusionBucket implements Bucket {
             }
 
             const perp = p1.sub(p2)._perp()._unit();
+            const {start, end} = wallNormals ? wallNormals[p] : {start: perp, end: perp};
             const dist = p2.dist(p1);
             if (edgeDistance + dist > 32768) edgeDistance = 0;
 
-            addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
-            addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
+            addVertex(this.layoutVertexArray, p1.x, p1.y, end.x, end.y, 0, 0, edgeDistance);
+            addVertex(this.layoutVertexArray, p1.x, p1.y, end.x, end.y, 0, 1, edgeDistance);
 
             edgeDistance += dist;
 
-            addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
-            addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
+            addVertex(this.layoutVertexArray, p2.x, p2.y, start.x, start.y, 0, 0, edgeDistance);
+            addVertex(this.layoutVertexArray, p2.x, p2.y, start.x, start.y, 0, 1, edgeDistance);
 
             const bottomRight = segmentReference.segment.vertexLength;
 

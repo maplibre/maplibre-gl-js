@@ -1,5 +1,4 @@
 import {AlphaImage} from '../util/image.ts';
-
 import {PbfReader} from 'pbf';
 const border = 3;
 

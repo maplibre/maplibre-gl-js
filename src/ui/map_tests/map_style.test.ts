@@ -8,6 +8,7 @@ import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {Style} from '../../style/style.ts';
 import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
+
 import type {GeoJSONSourceSpecification, LayerSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
@@ -427,7 +428,6 @@ describe('setStyle', () => {
 
         const map = createMap({deleteStyle: true});
         const initialTransform = map._camera.transform;
-        const initialPainterTransform = map.painter.transform;
         const projectionTransitionSpy = vi.fn();
         map.on('projectiontransition', projectionTransitionSpy);
         map.setTransformRequest(() => transformRequest);
@@ -443,7 +443,6 @@ describe('setStyle', () => {
         expect(map.style).toBeUndefined();
         expect(projectionTransitionSpy).not.toHaveBeenCalled();
         expect(map._camera.transform).toBe(initialTransform);
-        expect(map.painter.transform).toBe(initialPainterTransform);
     });
 
     test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', async () => {

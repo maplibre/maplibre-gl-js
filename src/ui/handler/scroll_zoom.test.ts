@@ -621,6 +621,32 @@ describe('ScrollZoomHandler', () => {
         map.remove();
     });
 
+    test('Zooms around the center when pointing above the horizon', () => {
+        const timeControlNow = vi.spyOn(timeControl, 'now');
+        let now = 1555555555555;
+        timeControlNow.mockReturnValue(now);
+
+        const map = createMap();
+        map._renderTaskQueue.run();
+        map.setZoom(5);
+        map.setMaxPitch(85);
+        map.setPitch(80);
+        map._renderTaskQueue.run();
+
+        simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta, clientX: map.getCanvas().width / 2, clientY: 10});
+        map._renderTaskQueue.run();
+
+        now += 400;
+        timeControlNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lat).toBeCloseTo(0, 10);
+        expect(map.getCenter().lng).toBeCloseTo(0, 10);
+        expect(map.getZoom()).toBeCloseTo(5.02856, 3);
+
+        map.remove();
+    });
+
     test('Clamps zoom at high latitude to keep globe consistent size', async () => {
         const timeControlNow = vi.spyOn(timeControl, 'now');
         const map = createMap();

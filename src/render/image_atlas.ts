@@ -4,8 +4,8 @@ import {register} from '../util/web_worker_transfer.ts';
 import {isStyleImageWebGLData} from '../style/style_image.ts';
 import potpack from 'potpack';
 
+import type {TextFit} from '../style/style_image.ts';
 import type {StyleImage} from '../style/style_image.ts';
-import {type TextFit} from '../style/style_image.ts';
 import type {ImageManager} from './image_manager.ts';
 import type {Texture} from '../webgl/texture.ts';
 import type {Rect} from './glyph_atlas.ts';

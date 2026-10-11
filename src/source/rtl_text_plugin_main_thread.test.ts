@@ -4,8 +4,9 @@ import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread.ts';
 import {sleep} from '../util/test/util.ts';
 import {browser} from '../util/browser.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
-import {type PluginState} from './rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
+
+import type {PluginState} from './rtl_text_plugin_status.ts';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
 describe('RTLMainThreadPlugin', () => {

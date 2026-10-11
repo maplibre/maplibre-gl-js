@@ -1,5 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
-import {DEMData} from './dem_data.ts';
+import {DEMData, packDEMData} from './dem_data.ts';
 import {RGBAImage} from '../util/image.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
 
@@ -317,5 +317,24 @@ describe('DEMData pack and unpack', () => {
 
         expect(dem.unpack(255, 0, 255)).toEqual(4170983.75);
         expect(dem.pack(4170983.75)).toEqual({r: 255, g: 0, b: 255});
+    });
+
+    test('custom with a zero factor packs that channel as 0 and the others by their own scale', () => {
+        const dem = new DEMData('0', imageData, 'custom', 0, 25.6, 0.1, 10000);
+        expect(dem.unpack(0, 123, 177)).toBeCloseTo(-6833.5);
+        expect(dem.pack(-6833.5)).toEqual({r: 0, g: 123, b: 177});
+
+        expect(dem.unpack(0, 0, 0)).toBe(-10000);
+        expect(dem.pack(-10000)).toEqual({r: 0, g: 0, b: 0});
+
+        expect(dem.unpack(0, 255, 255)).toBeCloseTo(-3446.5);
+        expect(dem.pack(-3446.5)).toEqual({r: 0, g: 255, b: 255});
+
+        expect(packDEMData(100.5, [1, 0, 1 / 256, 0])).toEqual({r: 100, g: 0, b: 128});
+        expect(packDEMData(-29662, [256, 1, 0, 32768])).toEqual({r: 12, g: 34, b: 0});
+    });
+
+    test('all factors zero packs to black', () => {
+        expect(packDEMData(123, [0, 0, 0, 5])).toEqual({r: 0, g: 0, b: 0});
     });
 });

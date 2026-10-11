@@ -4,13 +4,14 @@ import {
     querySourceFeatures
 } from './query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+
 import type Point from '@mapbox/point-geometry';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 
 describe('QueryFeatures.rendered', () => {
     test('returns empty object if source returns no tiles', () => {
         const mockTileManager = {tilesIn () { return []; }} as any as TileManager;
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         const result = queryRenderedFeatures(mockTileManager, {}, undefined, [] as Point[], undefined, transform, undefined);
         expect(result).toEqual({});
     });

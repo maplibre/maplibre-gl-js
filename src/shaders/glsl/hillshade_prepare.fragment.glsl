@@ -66,9 +66,10 @@ void main() {
         (g + h + h + i) - (a + b + b + c)
     ) * tileSize / pow(2.0, exaggeration + (28.2562 - u_zoom));
 
+    // Flat ground is stored as 128/255, which 8 bits hold exactly, so that it reads back as no slope at all.
     fragColor = clamp(vec4(
-        deriv.x / 8.0 + 0.5,
-        deriv.y / 8.0 + 0.5,
+        deriv.x / 8.0 + 128.0 / 255.0,
+        deriv.y / 8.0 + 128.0 / 255.0,
         1.0,
         1.0), 0.0, 1.0);
 

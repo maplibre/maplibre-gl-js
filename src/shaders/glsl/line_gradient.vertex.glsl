@@ -8,15 +8,16 @@
 
 layout(location = 0) in ivec2 a_pos_normal;
 layout(location = 1) in uvec4 a_data;
-layout(location = 2) in float a_uv_x;
-layout(location = 3) in float a_split_index;
+layout(location = 2) in vec2 a_offset_normal;
+layout(location = 3) in float a_uv_x;
+layout(location = 4) in float a_split_index;
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
 uniform float u_image_height;
 
 out vec2 v_normal;
-flat out vec2 v_width2;
+out vec2 v_width2;
 out float v_gamma_scale;
 out highp vec2 v_uv;
 #ifdef GLOBE
@@ -47,7 +48,6 @@ void main() {
     float ANTIALIASING = 1.0 / u_device_pixel_ratio / 2.0;
 
     vec2 a_extrude = vec2(ivec2(a_data.xy) - 128);
-    float a_direction = float(int(a_data.z & 3u) - 1);
 
     highp float texel_height = 1.0 / u_image_height;
     highp float half_texel_height = 0.5 * texel_height;
@@ -76,12 +76,9 @@ void main() {
     mediump vec2 dist = outset * a_extrude * scale;
 
     // Calculate the offset when drawing a line that is to the side of the actual line.
-    // We do this by creating a vector that points towards the extrude, but rotate
-    // it when we're drawing round end points (a_direction = -1 or 1) since their
-    // extrude vector points in another direction.
-    mediump float u = 0.5 * a_direction;
-    mediump float t = 1.0 - abs(u);
-    mediump vec2 offset2 = offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);
+    // a_offset_normal is where the corner of the offset line belongs: the same normal as the extrude
+    // for a plain vertex, the miter vector of the join for every vertex of a join.
+    mediump vec2 offset2 = offset * a_offset_normal * scale * normal.y;
 
     float adjustedThickness = projectLineThickness(pos.y);
     vec4 projected_no_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation);

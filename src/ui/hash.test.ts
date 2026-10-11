@@ -1,6 +1,7 @@
 import {describe, beforeEach,  afterEach,  test, expect} from 'vitest';
 import {Hash} from './hash.ts';
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util.ts';
+
 import type {Map} from './map.ts';
 
 describe('hash', () => {

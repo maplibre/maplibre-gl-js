@@ -6,18 +6,19 @@ import {ImageAtlas} from '../render/image_atlas.ts';
 import {GlyphAtlas} from '../render/glyph_atlas.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {type GetDashesResponse, MessageType, type GetImagesResponse} from '../util/actor_messages.ts';
 
 import type {Bucket, PopulateParameters} from '../data/bucket.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 import type {
     WorkerTileParameters,
     WorkerTileResult,
 } from './worker_source.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileLike} from '@maplibre/vt-pbf';
-import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages.ts';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -125,14 +126,14 @@ export class WorkerTile {
             }
         }
 
-        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
+        const stacks = mapObject(options.glyphDependencies, variants => mapObject(variants, glyphs => Object.keys(glyphs)));
 
         for (const request of this.inFlightDependencies) {
             request?.abort();
         }
         this.inFlightDependencies = [];
 
-        let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});
+        let getGlyphsPromise = Promise.resolve<GlyphMap>({});
         if (Object.keys(stacks).length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);

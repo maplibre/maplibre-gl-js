@@ -3,8 +3,9 @@ import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {type Mat4f32, MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
-import {type ICanonicalTileID, type IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 import {isInBoundsForTileZoomXY} from '../util/world_bounds.ts';
+
+import type {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * A canonical way to define a tile ID

@@ -1,8 +1,9 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util.ts';
-import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Style} from '../../style/style.ts';
 import {config} from '../../util/config.ts';
+
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
 beforeEach(() => {
     beforeMapTest();

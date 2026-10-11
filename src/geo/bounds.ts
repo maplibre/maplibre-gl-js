@@ -1,5 +1,6 @@
 import Point from '@mapbox/point-geometry';
-import {type Point2D} from '@maplibre/maplibre-gl-style-spec';
+
+import type {Point2D} from '@maplibre/maplibre-gl-style-spec';
 
 export interface ReadOnlyBounds {
     readonly minX: number;

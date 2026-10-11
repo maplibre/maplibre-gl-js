@@ -1,12 +1,13 @@
-import {
-    type Uniform1i,
-    type Uniform1f,
-    type Uniform2f,
-    type Uniform3f
-} from '../uniform_binding.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 
-import type {Painter} from '../../render/painter.ts';
+import type {
+    Uniform1i,
+    Uniform1f,
+    Uniform2f,
+    Uniform3f
+} from '../uniform_binding.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {PatternAtlas} from '../../render/pattern_atlas.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {CrossFaded} from '../../style/properties.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
@@ -41,12 +42,12 @@ export type PatternUniformsType = {
     'u_pixel_coord_lower': Uniform2f;
 };
 
-function patternUniformValues(crossfade: CrossfadeParameters, painter: Painter, tile: Tile): UniformValues<PatternUniformsType> {
+function patternUniformValues(crossfade: CrossfadeParameters, transform: IReadonlyTransform, tile: Tile): UniformValues<PatternUniformsType> {
 
-    const tileRatio = 1 / pixelsToTileUnits(tile, 1, painter.transform.tileZoom);
+    const tileRatio = 1 / pixelsToTileUnits(tile, 1, transform.tileZoom);
 
     const numTiles = Math.pow(2, tile.tileID.overscaledZ);
-    const tileSizeAtNearestZoom = tile.tileSize * Math.pow(2, painter.transform.tileZoom) / numTiles;
+    const tileSizeAtNearestZoom = tile.tileSize * Math.pow(2, transform.tileZoom) / numTiles;
 
     const pixelX = tileSizeAtNearestZoom * (tile.tileID.canonical.x + tile.tileID.wrap * numTiles);
     const pixelY = tileSizeAtNearestZoom * tile.tileID.canonical.y;
@@ -65,18 +66,19 @@ function patternUniformValues(crossfade: CrossfadeParameters, painter: Painter, 
 function bgPatternUniformValues(
     image: CrossFaded<ResolvedImage>,
     crossfade: CrossfadeParameters,
-    painter: Painter,
+    patternAtlas: PatternAtlas,
+    transform: IReadonlyTransform,
     tile: {
         tileID: OverscaledTileID;
         tileSize: number;
     }
 ): UniformValues<BackgroundPatternUniformsType> {
-    const imagePosA = painter.patternAtlas.getPattern(image.from.toString());
-    const imagePosB = painter.patternAtlas.getPattern(image.to.toString());
-    const {width, height} = painter.patternAtlas.getPixelSize();
+    const imagePosA = patternAtlas.getPattern(image.from.toString());
+    const imagePosB = patternAtlas.getPattern(image.to.toString());
+    const {width, height} = patternAtlas.getPixelSize();
 
     const numTiles = Math.pow(2, tile.tileID.overscaledZ);
-    const tileSizeAtNearestZoom = tile.tileSize * Math.pow(2, painter.transform.tileZoom) / numTiles;
+    const tileSizeAtNearestZoom = tile.tileSize * Math.pow(2, transform.tileZoom) / numTiles;
 
     const pixelX = tileSizeAtNearestZoom * (tile.tileID.canonical.x + tile.tileID.wrap * numTiles);
     const pixelY = tileSizeAtNearestZoom * tile.tileID.canonical.y;
@@ -93,7 +95,7 @@ function bgPatternUniformValues(
         'u_pattern_size_b': (imagePosB as any).displaySize,
         'u_scale_a': crossfade.fromScale,
         'u_scale_b': crossfade.toScale,
-        'u_tile_units_to_pixels': 1 / pixelsToTileUnits(tile, 1, painter.transform.tileZoom),
+        'u_tile_units_to_pixels': 1 / pixelsToTileUnits(tile, 1, transform.tileZoom),
         // split the pixel coord into two pairs of 16 bit numbers. The glsl spec only guarantees 16 bits of precision.
         'u_pixel_coord_upper': [pixelX >> 16, pixelY >> 16],
         'u_pixel_coord_lower': [pixelX & 0xFFFF, pixelY & 0xFFFF]

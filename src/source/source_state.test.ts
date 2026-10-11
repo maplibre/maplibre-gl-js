@@ -1,8 +1,9 @@
 
 import {describe, test, expect, vi} from 'vitest';
 import {SourceFeatureState} from './source_state.ts';
-import {type InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
-import type {Painter} from '../render/painter.ts';
+
+import type {InViewTiles} from '../tile/tile_manager_in_view_tiles.ts';
+import type {Style} from '../style/style.ts';
 
 describe('SourceFeatureState', () => {
     test('coalesceChanges updates revision when changes occur', () => {
@@ -12,13 +13,13 @@ describe('SourceFeatureState', () => {
         const inViewTilesMock = {
             setFeatureState: vi.fn()
         } as unknown as InViewTiles;
-        const painterMock = {} as unknown as Painter;
+        const styleMock = {} as unknown as Style;
 
-        sourceState.coalesceChanges(inViewTilesMock, painterMock);
+        sourceState.coalesceChanges(inViewTilesMock, styleMock);
         expect(sourceState.revision).toBe(0);
 
         sourceState.updateState('layer1', 'feature1', {prop: true});
-        sourceState.coalesceChanges(inViewTilesMock, painterMock);
+        sourceState.coalesceChanges(inViewTilesMock, styleMock);
         expect(sourceState.revision).toBe(1);
     });
 
@@ -30,7 +31,7 @@ describe('SourceFeatureState', () => {
 
         sourceState.updateState('layer1', 'feature1', {a: 1, b: 2});
         sourceState.updateState('layer1', 'feature2', {c: 3});
-        sourceState.coalesceChanges(inViewTilesMock, {} as unknown as Painter);
+        sourceState.coalesceChanges(inViewTilesMock, {} as unknown as Style);
 
         sourceState.removeFeatureState('layer1');
 
@@ -49,7 +50,7 @@ describe('SourceFeatureState', () => {
         } as unknown as InViewTiles;
 
         sourceState.updateState('layer1', 'feature1', {a: 1, b: 2, c: 3});
-        sourceState.coalesceChanges(inViewTilesMock, {} as unknown as Painter);
+        sourceState.coalesceChanges(inViewTilesMock, {} as unknown as Style);
 
         sourceState.removeFeatureState('layer1', 'feature1');
         expect(sourceState.deletedStates['layer1']['feature1']).toBeNull();

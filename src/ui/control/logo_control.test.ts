@@ -1,5 +1,6 @@
 import {describe, beforeEach, test, expect} from 'vitest';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
+
 import type {ControlPosition} from './control.ts';
 
 function createMap(logoPosition?: ControlPosition, maplibreLogo?: boolean) {

@@ -16,12 +16,12 @@ async function createSet(blocks: string[], scripts: string[]): Promise<regenerat
 
     for (const block of blocks) {
         const slug = block.replace(/[- ]/g, '_');
-        set.add((await import(`@unicode/unicode-${unicodeVersion}/Block/${slug}/code-points.js`)).default);
+        set.add((await import(`@unicode/unicode-${unicodeVersion}/Block/${slug}/code-points.mjs`)).default);
     }
 
     for (const script of scripts) {
         const slug = script.replace(/[- ]/g, '_');
-        set.add((await import(`@unicode/unicode-${unicodeVersion}/Script/${slug}/code-points.js`)).default);
+        set.add((await import(`@unicode/unicode-${unicodeVersion}/Script/${slug}/code-points.mjs`)).default);
     }
 
     return set;
@@ -40,10 +40,10 @@ async function isInCursiveScript(): Promise<string> {
     const joins = (codePoint: number) => ['D', 'L', 'R', 'C'].includes(joiningTypes.get(codePoint));
 
     const set = await createSet([], ['Duployan']);
-    const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.js`)).default.Script;
+    const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.mjs`)).default.Script;
     for (const script of scripts) {
         if (script === 'Common' || script === 'Inherited') continue;
-        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.js`)).default;
+        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.mjs`)).default;
         if (codePoints.some(joins)) set.add(codePoints);
     }
 
@@ -61,15 +61,15 @@ async function isInCursiveScript(): Promise<string> {
 async function isInRTLScript(): Promise<string> {
     const readRightToLeft = new Set<number>();
     for (const bidiClass of ['Right_To_Left', 'Arabic_Letter']) {
-        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Bidi_Class/${bidiClass}/code-points.js`)).default;
+        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Bidi_Class/${bidiClass}/code-points.mjs`)).default;
         for (const codePoint of codePoints) readRightToLeft.add(codePoint);
     }
 
-    const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.js`)).default.Script;
+    const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.mjs`)).default.Script;
     const set = regenerate.default();
     for (const script of scripts) {
         if (script === 'Common') continue;
-        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.js`)).default;
+        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.mjs`)).default;
         if (codePoints.some((codePoint: number) => readRightToLeft.has(codePoint))) set.add(codePoints);
     }
 
@@ -121,7 +121,7 @@ async function usesLocalIdeographFontFamily(): Promise<string> {
         'Yi',
     ]);
 
-    set.add((await import(`@unicode/unicode-${unicodeVersion}/Binary_Property/Ideographic/code-points.js`)).default);
+    set.add((await import(`@unicode/unicode-${unicodeVersion}/Binary_Property/Ideographic/code-points.mjs`)).default);
 
     return set.toString();
 }
@@ -173,7 +173,7 @@ async function allowsIdeographicBreaking(): Promise<string> {
 async function hasUprightVerticalOrientation(): Promise<string> {
     const set = regenerate.default();
     for (const orientation of ['U', 'Tu']) {
-        set.add((await import(`@unicode/unicode-${unicodeVersion}/Vertical_Orientation/${orientation}/code-points.js`)).default);
+        set.add((await import(`@unicode/unicode-${unicodeVersion}/Vertical_Orientation/${orientation}/code-points.mjs`)).default);
     }
     set.remove(await neutralVerticalOrientationSet());
     set.add(await createSet([
@@ -316,7 +316,7 @@ async function neutralVerticalOrientationSet(): Promise<regenerate.regenerate> {
 async function canFormGraphemeCluster(): Promise<string> {
     const set = regenerate.default();
     for (const category of ['CR', 'Extend', 'L', 'LV', 'LVT', 'Prepend', 'Regional_Indicator', 'SpacingMark', 'T', 'V', 'ZWJ']) {
-        set.add((await import(`@unicode/unicode-${unicodeVersion}/Grapheme_Cluster_Break/${category}/code-points.js`)).default);
+        set.add((await import(`@unicode/unicode-${unicodeVersion}/Grapheme_Cluster_Break/${category}/code-points.mjs`)).default);
     }
 
     return set.toString();
@@ -335,7 +335,7 @@ async function canFormGraphemeCluster(): Promise<string> {
  */
 async function isWrittenWithoutSpaces(): Promise<string> {
     const set = regenerate.default();
-    set.add((await import(`@unicode/unicode-${unicodeVersion}/Line_Break/Complex_Context/code-points.js`)).default);
+    set.add((await import(`@unicode/unicode-${unicodeVersion}/Line_Break/Complex_Context/code-points.mjs`)).default);
 
     return set.add(await createSet([], [
         'Balinese',
@@ -354,7 +354,7 @@ async function isWrittenWithoutSpaces(): Promise<string> {
  */
 async function joinsToTheFollowingGrapheme(): Promise<string> {
     const set = regenerate.default();
-    set.add((await import(`@unicode/unicode-${unicodeVersion}/Indic_Syllabic_Category/Invisible_Stacker/code-points.js`)).default);
+    set.add((await import(`@unicode/unicode-${unicodeVersion}/Indic_Syllabic_Category/Invisible_Stacker/code-points.mjs`)).default);
     set.add(0x200d);
 
     return set.toString();

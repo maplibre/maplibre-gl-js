@@ -1,14 +1,17 @@
 import {
     Uniform1i,
     Uniform1f,
+    Uniform4f,
     UniformMatrix4f,
     UniformColor
 } from '../uniform_binding.ts';
-import type {Context} from '../../webgl/context.ts';
-import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
-import {type Sky} from '../../style/sky.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {type mat4} from 'gl-matrix';
+import {calculateFogBlendOpacity} from '../../style/sky.ts';
+
+import type {SkyPropsPossiblyEvaluated} from '../../style/sky_properties.g.ts';
+import type {mat4} from 'gl-matrix';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Context} from '../../webgl/context.ts';
 
 export type TerrainPreludeUniformsType = {
     'u_depth': Uniform1i;
@@ -29,6 +32,10 @@ export type TerrainUniformsType = {
 
 export type TerrainDepthUniformsType = {
     'u_ele_delta': Uniform1f;
+};
+
+export type TerrainHeightUniformsType = {
+    'u_tile_bounds': Uniform4f;
 };
 
 const terrainPreludeUniforms = (context: Context, locations: UniformLocations): TerrainPreludeUniformsType => ({
@@ -52,21 +59,25 @@ const terrainDepthUniforms = (context: Context, locations: UniformLocations): Te
     'u_ele_delta': new Uniform1f(context, locations.u_ele_delta)
 });
 
+const terrainHeightUniforms = (context: Context, locations: UniformLocations): TerrainHeightUniformsType => ({
+    'u_tile_bounds': new Uniform4f(context, locations.u_tile_bounds)
+});
+
 const terrainUniformValues = (
     eleDelta: number,
     fogMatrix: mat4,
-    sky: Sky,
+    sky: Readonly<SkyPropsPossiblyEvaluated> | undefined,
     pitch: number,
     isGlobeMode: boolean): UniformValues<TerrainUniformsType> => ({
     'u_texture': 0,
     'u_ele_delta': eleDelta,
     'u_fog_matrix': fogMatrix,
-    'u_fog_color': sky ? sky.properties.get('fog-color') : Color.white,
-    'u_fog_ground_blend': sky ? sky.properties.get('fog-ground-blend') : 1,
+    'u_fog_color': sky ? sky['fog-color'] : Color.white,
+    'u_fog_ground_blend': sky ? sky['fog-ground-blend'] : 1,
     // Set opacity to 0 when in globe mode to disable fog
-    'u_fog_ground_blend_opacity': isGlobeMode ? 0 : (sky ? sky.calculateFogBlendOpacity(pitch) : 0),
-    'u_horizon_color': sky ? sky.properties.get('horizon-color') : Color.white,
-    'u_horizon_fog_blend': sky ? sky.properties.get('horizon-fog-blend') : 1,
+    'u_fog_ground_blend_opacity': isGlobeMode ? 0 : (sky ? calculateFogBlendOpacity(pitch) : 0),
+    'u_horizon_color': sky ? sky['horizon-color'] : Color.white,
+    'u_horizon_fog_blend': sky ? sky['horizon-fog-blend'] : 1,
     'u_is_globe_mode': isGlobeMode ? 1 : 0
 });
 
@@ -76,4 +87,13 @@ const terrainDepthUniformValues = (
     'u_ele_delta': eleDelta
 });
 
-export {terrainUniforms, terrainDepthUniforms, terrainPreludeUniforms, terrainUniformValues, terrainDepthUniformValues};
+/**
+ * @param tileBounds - the tile's west and north edge and its width and height, as fractions of the height map
+ */
+const terrainHeightUniformValues = (
+    tileBounds: [number, number, number, number]
+): UniformValues<TerrainHeightUniformsType> => ({
+    'u_tile_bounds': tileBounds
+});
+
+export {terrainUniforms, terrainDepthUniforms, terrainHeightUniforms, terrainPreludeUniforms, terrainUniformValues, terrainDepthUniformValues, terrainHeightUniformValues};

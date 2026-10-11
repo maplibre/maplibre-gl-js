@@ -3,7 +3,6 @@ import type {
     StructArray,
     StructArrayMember
 } from '../util/struct_array.ts';
-
 import type {Program} from './program.ts';
 import type {Context} from './context.ts';
 

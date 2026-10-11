@@ -1,8 +1,8 @@
 import KDBush from 'kdbush';
 import {EXTENT} from '../data/extent.ts';
 
+import type {SymbolInstanceArray} from '../data/array_types.g.ts';
 import type {SymbolInstance} from '../data/array_types.g.ts';
-import {type SymbolInstanceArray} from '../data/array_types.g.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
@@ -11,7 +11,8 @@ import type {Tile} from '../tile/tile.ts';
 /*
     The CrossTileSymbolIndex generally works on the assumption that
     a conceptual "unique symbol" can be identified by the text of
-    the label combined with the anchor point. The goal is to assign
+    the label combined with the anchor point (and, for sources with
+    `promoteId`, the feature id, see `symbol_layout.ts`). The goal is to assign
     these conceptual "unique symbols" a shared crossTileID that can be
     used by Placement to keep fading opacity states consistent and to
     deduplicate labels.

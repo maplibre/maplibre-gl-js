@@ -1,5 +1,4 @@
-import {type RGBAImage} from '../util/image.ts';
-
+import type {RGBAImage} from '../util/image.ts';
 import type {Map} from '../ui/map.ts';
 
 export type SpriteJSON = {[id: string]: StyleImageMetadata & {

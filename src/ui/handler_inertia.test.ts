@@ -4,8 +4,9 @@ import {DOM} from '../util/dom.ts';
 import {beforeMapTest} from '../util/test/util.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
 import {Map} from './map.ts';
-import type {EaseToOptions} from './camera.ts';
 import {HandlerInertia} from './handler_inertia.ts';
+
+import type {EaseToOptions} from './camera.ts';
 
 type PanGesture = {
     /**

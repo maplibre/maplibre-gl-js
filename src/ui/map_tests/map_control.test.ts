@@ -1,6 +1,7 @@
 import {beforeEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
-import {type IControl} from '../control/control.ts';
+
+import type {IControl} from '../control/control.ts';
 
 beforeEach(() => {
     beforeMapTest();

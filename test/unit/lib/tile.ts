@@ -4,8 +4,9 @@ import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import {OverscaledTileID} from '../../../src/tile/tile_id.ts';
 import {FeatureIndex} from '../../../src/data/feature_index.ts';
-import type {IndexedFeature, PopulateParameters} from '../../../src/data/bucket.ts';
 import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings.ts';
+
+import type {IndexedFeature, PopulateParameters} from '../../../src/data/bucket.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 export type CreateBucketParameters = {

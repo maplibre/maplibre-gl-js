@@ -1,8 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Source} from './source.ts';
 import {VectorTileSource} from './vector_tile_source.ts';
-import {type Tile} from '../tile/tile.ts';
 import {AJAXError} from '../util/ajax.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -10,11 +8,14 @@ import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
-import {type Map} from '../ui/map.ts';
-import {type WorkerTileParameters} from './worker_source.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
-import {type MapSourceDataEvent} from '../ui/events.ts';
+
+import type {Map} from '../ui/map.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {Source} from './source.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
 
 class StubbedEvented extends Evented {}
 
@@ -512,6 +513,31 @@ describe('VectorTileSource', () => {
         const e: MapSourceDataEvent = await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
         expect(e.sourceDataChanged).toBe(true);
         expect(clearTiles).not.toHaveBeenCalled();
+    });
+
+    test('does not send loadTile to the worker if the tile was aborted before getting an actor', async () => {
+        let releaseTransform: () => void;
+        const transformPending = new Promise<void>((resolve) => { releaseTransform = resolve; });
+        const source = createSource(
+            {tiles: ['http://example.com/{z}/{x}/{y}.png']},
+            (url: string) => transformPending.then(() => ({url}))
+        );
+
+        const sendAsync = vi.fn().mockResolvedValue({});
+        source.dispatcher = getWrapDispatcher()({sendAsync});
+        await waitForMetadataEvent(source);
+
+        const tile = {tileID: new OverscaledTileID(10, 0, 10, 5, 5), unloadVectorData() {}} as any as Tile;
+        const loadPromise = source.loadTile(tile);
+
+        tile.aborted = true;
+        await source.abortTile(tile);
+        await source.unloadTile(tile);
+
+        releaseTransform();
+        await loadPromise;
+
+        expect(sendAsync).not.toHaveBeenCalled();
     });
 
     test('returns early after worker response if tile was aborted', async () => {

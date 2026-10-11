@@ -4,12 +4,13 @@ import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment.ts';
 import {FillBucket} from './fill_bucket.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import {type ZoomHistory} from '../../style/zoom_history.ts';
-import {type BucketDependencyParameters, type BucketFeature, type BucketParameters} from '../bucket.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
+
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {ZoomHistory} from '../../style/zoom_history.ts';
+import type {BucketDependencyParameters, BucketFeature, BucketParameters} from '../bucket.ts';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {StyleImage} from '../../style/style_image.ts';
 

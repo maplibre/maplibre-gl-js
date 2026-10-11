@@ -1,0 +1,132 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 460,
+      "height": 360,
+      "allowed": 0.0005
+    }
+  },
+  "zoom": 5,
+  "center": [
+    0,
+    0
+  ],
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -4.378509,
+              2.800221
+            ],
+            [
+              -2.416992,
+              2.086941
+            ],
+            [
+              -0.455476,
+              2.800221
+            ]
+          ],
+          [
+            [
+              0.707092,
+              3.282889
+            ],
+            [
+              2.416992,
+              2.086941
+            ],
+            [
+              4.126892,
+              3.282889
+            ]
+          ],
+          [
+            [
+              -3.758749,
+              -0.048906
+            ],
+            [
+              -2.416992,
+              -1.647722
+            ],
+            [
+              -1.075236,
+              -0.048906
+            ]
+          ],
+          [
+            [
+              1.295432,
+              0.112548
+            ],
+            [
+              2.416992,
+              -1.647722
+            ],
+            [
+              3.538553,
+              0.112548
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "offset-positive",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-width": 8,
+        "line-color": "#1f78b4",
+        "line-offset": 10
+      }
+    },
+    {
+      "id": "offset-negative",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-width": 8,
+        "line-color": "#e3211c",
+        "line-offset": -10
+      }
+    },
+    {
+      "id": "centerline",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-width": 1,
+        "line-color": "#999999",
+        "line-offset": 0
+      }
+    }
+  ]
+}

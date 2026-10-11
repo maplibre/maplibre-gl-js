@@ -1,7 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import {createStyleLayer} from '../create_style_layer.ts';
 import {extend} from '../../util/util.ts';
-import {type LineStyleLayer} from './line_style_layer.ts';
+
+import type {LineStyleLayer} from './line_style_layer.ts';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {

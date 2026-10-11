@@ -1,10 +1,10 @@
 import {Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding.ts';
 import {extend} from '../../util/util.ts';
 
+import type {mat4} from 'gl-matrix';
 import type {Context} from '../../webgl/context.ts';
-import type {Painter} from '../../render/painter.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
-import {type mat4} from 'gl-matrix';
 
 export type SymbolIconUniformsType = {
     'u_is_size_zoom_constant': Uniform1i;
@@ -150,7 +150,6 @@ const symbolIconUniformValues = (
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
-    painter: Painter,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     translation: [number, number],
@@ -191,7 +190,7 @@ const symbolSDFUniformValues = (
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
-    painter: Painter,
+    transform: IReadonlyTransform,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     translation: [number, number],
@@ -202,10 +201,8 @@ const symbolSDFUniformValues = (
     isOffset: boolean,
     heightAnchorGround: boolean
 ): UniformValues<SymbolSDFUniformsType> => {
-    const transform = painter.transform;
-
     return extend(symbolIconUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
+        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, labelPlaneMatrix,
         glCoordMatrix, translation, isText, texSize, pitchedScale, isOffset, heightAnchorGround), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_is_halo': isHalo ? 1 : 0,
@@ -223,7 +220,7 @@ const symbolTextAndIconUniformValues = (
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
-    painter: Painter,
+    transform: IReadonlyTransform,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     translation: [number, number],
@@ -234,7 +231,7 @@ const symbolTextAndIconUniformValues = (
     heightAnchorGround: boolean
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, labelPlaneMatrix,
+        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, transform, labelPlaneMatrix,
         glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale, isOffset, heightAnchorGround), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1

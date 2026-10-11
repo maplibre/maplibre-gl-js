@@ -1,0 +1,48 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that the background and a fill both reach the north pole, seen pitched from 85 degrees north.",
+      "width": 256,
+      "height": 512
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0.0,
+    85.0
+  ],
+  "zoom": 4,
+  "pitch": 60,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "east": {
+      "type": "geojson",
+      "data": {
+        "type": "Polygon",
+        "coordinates": [[[0, 60], [180, 60], [180, 85.051129], [0, 85.051129], [0, 60]]]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "green"
+      }
+    },
+    {
+      "id": "east",
+      "type": "fill",
+      "source": "east",
+      "paint": {
+        "fill-color": "blue"
+      }
+    }
+  ]
+}

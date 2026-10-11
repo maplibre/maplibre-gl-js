@@ -1,4 +1,4 @@
-import {type PluginState, type RTLPluginStatus} from './rtl_text_plugin_status.ts';
+import type {PluginState, RTLPluginStatus} from './rtl_text_plugin_status.ts';
 
 /**
  * The three functions a right-to-left text plugin supplies.

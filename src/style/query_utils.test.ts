@@ -1,6 +1,5 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-
 import {offsetLine} from './query_utils.ts';
 
 const defaultPrecision = 10;

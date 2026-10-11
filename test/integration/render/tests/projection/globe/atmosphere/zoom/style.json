@@ -2,7 +2,7 @@
     "version": 8,
     "metadata": {
       "test": {
-        "description": "Tests atmosphere with high zoom level."
+        "description": "Tests that the atmosphere is faded out at a zoom where the camera is inside it."
       }
     },
     "projection": { "type": "globe" },

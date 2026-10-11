@@ -1,5 +1,6 @@
 import {TapRecognizer} from './tap_recognizer.ts';
 import {evaluateZoomSnap} from '../../util/util.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {Map} from '../map.ts';
 import type {TransformProvider} from './transform-provider.ts';
@@ -59,7 +60,7 @@ export class TapZoomHandler implements Handler {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
                     zoom: evaluateZoomSnap(tr.zoom + 1, map.getZoomSnap()),
-                    around: tr.unproject(zoomInPoint)
+                    around: tr.transform.isPointOnMapSurface(zoomInPoint) ? tr.unproject(zoomInPoint) : undefined
                 }, {originalEvent: e})
             };
         } else if (zoomOutPoint) {
@@ -70,7 +71,7 @@ export class TapZoomHandler implements Handler {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
                     zoom: evaluateZoomSnap(tr.zoom - 1, map.getZoomSnap()),
-                    around: tr.unproject(zoomOutPoint)
+                    around: tr.transform.isPointOnMapSurface(zoomOutPoint) ? tr.unproject(zoomOutPoint) : undefined
                 }, {originalEvent: e})
             };
         }

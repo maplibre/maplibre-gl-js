@@ -5,9 +5,10 @@ import {Tile} from '../../tile/tile.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {fixedLngLat} from '../../../test/unit/lib/fixed.ts';
 import {type RequestTransformFunction, ResourceType} from '../../util/request_manager.ts';
-import {type MapSourceDataEvent} from '../events.ts';
 import {MessageType} from '../../util/actor_messages.ts';
 import {Style} from '../../style/style.ts';
+
+import type {MapSourceDataEvent} from '../events.ts';
 
 beforeEach(() => {
     beforeMapTest();

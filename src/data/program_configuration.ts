@@ -11,7 +11,6 @@ import {FeaturePositionMap} from './feature_position_map.ts';
 import {type Uniform, Uniform1f, UniformColor, Uniform4f} from '../webgl/uniform_binding.ts';
 
 import type {UniformLocations} from '../webgl/uniform_binding.ts';
-
 import type {CanonicalTileID} from '../tile/tile_id.ts';
 import type {Context} from '../webgl/context.ts';
 import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer.ts';

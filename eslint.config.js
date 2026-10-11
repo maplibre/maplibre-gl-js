@@ -5,6 +5,7 @@ import vitest from '@vitest/eslint-plugin';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import html from 'eslint-plugin-html';
+import importX from 'eslint-plugin-import-x';
 import preferTypeForDataShapes from './build/eslint-rules/prefer-type-for-data-shapes.js';
 
 export default [
@@ -17,6 +18,7 @@ export default [
         plugins: {
             '@typescript-eslint': typescriptEslint,
             '@stylistic': stylisticTs,
+            'import-x': importX,
             tsdoc,
             vitest,
             'local': {rules: {'prefer-type-for-data-shapes': preferTypeForDataShapes}},
@@ -51,8 +53,17 @@ export default [
         },
 
         rules: {
+            'import-x/order': ['error', {
+                groups: [
+                    ['builtin', 'external', 'internal', 'unknown', 'parent', 'sibling', 'index', 'object'],
+                    'type'
+                ],
+                'newlines-between': 'always',
+                alphabetize: {order: 'ignore'}
+            }],
             'no-dupe-class-members': 'off',
             '@typescript-eslint/no-dupe-class-members': ['error'],
+            '@typescript-eslint/no-import-type-side-effects': 'error',
             '@typescript-eslint/consistent-type-imports': ['error',{
                 'fixStyle': 'inline-type-imports'
             }],
