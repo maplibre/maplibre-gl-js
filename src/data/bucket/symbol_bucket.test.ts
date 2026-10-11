@@ -1,4 +1,5 @@
 import {describe, test, expect, vi, beforeAll} from 'vitest';
+import Point from '@mapbox/point-geometry';
 import {CollisionBoxArray} from '../../data/array_types.g.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 import {Placement} from '../../symbol/placement.ts';
@@ -269,6 +270,39 @@ describe('SymbolBucket', () => {
     test('SymbolBucket asks for no glyphs for a point outside the tile', () => {
         expect(glyphsRequestedFor('abc', {x: -1, y: 100})).toEqual([]);
         expect(glyphsRequestedFor('abc', {x: 100, y: 8192})).toEqual([]);
+    });
+
+    test('SymbolBucket asks for the icons of points on the tile edge but not beyond it', () => {
+        const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray);
+        const options = createPopulateOptions([]);
+        const inside = createIndexedFeature(0, 0, 'inside');
+        inside.feature.loadGeometry = () => [[new Point(8191, 8191)]];
+        const outside = createIndexedFeature(1, 1, 'outside');
+        outside.feature.loadGeometry = () => [[new Point(8192, 100)]];
+
+        bucket.populate([inside, outside], options, new CanonicalTileID(0, 0, 0));
+
+        expect(Object.keys(options.iconDependencies)).toEqual(['inside']);
+    });
+
+    test('SymbolBucket asks for the glyphs of a polygon that surrounds the tile', () => {
+        const bucket = createSymbolBucket('test', 'Test', 'abc', collisionBoxArray);
+        const options = createPopulateOptions([]);
+        const feature = {
+            extent: 8192,
+            type: 3,
+            id: 1,
+            properties: {},
+            loadGeometry: () => [[new Point(-100, -100), new Point(9000, -100), new Point(9000, 9000), new Point(-100, 9000), new Point(-100, -100)]],
+        };
+
+        bucket.populate(
+            [{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature],
+            options,
+            new CanonicalTileID(0, 0, 0),
+        );
+
+        expect(Object.keys(options.glyphDependencies.Test.default).sort()).toEqual(['a', 'b', 'c']);
     });
 });
 
