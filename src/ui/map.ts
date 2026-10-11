@@ -2731,6 +2731,7 @@ export class Map extends Evented<MapEventType> {
 
         const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
+            this.style.off('error', this._onStyleError);
             this.style.setEventedParent(null);
 
             // Only release workers when map is getting disposed
@@ -4266,6 +4267,7 @@ export class Map extends Evented<MapEventType> {
             }
         }
 
+        this.style.off('error', this._onStyleError);
         this.style.destroy();
         this.style = null;
 
