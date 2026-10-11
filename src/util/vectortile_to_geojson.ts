@@ -46,7 +46,7 @@ export class GeoJSONFeature {
      * The map projection's world-to-lng/lat mapping, stored only when it is not the mercator one so mercator
      * query output stays float-identical to the inline formula in `projectPoint`.
      */
-    _worldCoordinateHelper: WorldCoordinateHelper | undefined;
+    private _worldCoordinateHelper: WorldCoordinateHelper | undefined;
 
     constructor(vectorTileFeature: VectorTileFeatureLike, z: number, x: number, y: number, id: string | number | undefined, worldCoordinateHelper: WorldCoordinateHelper) {
         this.type = 'Feature';
