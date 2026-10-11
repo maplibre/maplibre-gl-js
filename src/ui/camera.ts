@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {extend, wrap, defaultEasing, pick, evaluateZoomSnap, lerp, zoomScale} from '../util/util.ts';
+import {extend, wrap, defaultEasing, evaluateZoomSnap, lerp, zoomScale} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
@@ -1342,20 +1342,19 @@ export class Camera extends Evented<MapEventType> {
         this.fire(new MapMovementEvent('moveend', eventData));
     }
 
+    /*
+     * This method implements an “optimal path” animation, as detailed in:
+     *
+     * Van Wijk, Jarke J.; Nuij, Wim A. A. “Smooth and efficient zooming and panning.” INFOVIS
+     * ’03. pp. 15–22. <https://www.win.tue.nl/~vanwijk/zoompan.pdf#page=5>.
+     *
+     * Where applicable, local variable documentation begins with the associated variable or
+     * function in van Wijk (2003).
+     */
     flyTo(options: FlyToOptions, eventData?: any): this {
-        // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll', 'elevation', 'padding']) as JumpToOptions;
-            return this.jumpTo(coercedOptions, eventData);
+            return this.easeTo(options, eventData);
         }
-
-        // This method implements an “optimal path” animation, as detailed in:
-        //
-        // Van Wijk, Jarke J.; Nuij, Wim A. A. “Smooth and efficient zooming and panning.” INFOVIS
-        //   ’03. pp. 15–22. <https://www.win.tue.nl/~vanwijk/zoompan.pdf#page=5>.
-        //
-        // Where applicable, local variable documentation begins with the associated variable or
-        // function in van Wijk (2003).
 
         this.stop();
 
