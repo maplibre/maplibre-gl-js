@@ -30,6 +30,12 @@ describe('createProjectionFromName', () => {
         expect(projection.name).toBe('mercator');
     });
 
+    test('does not warn for a projection expression of built-in projections', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        createProjectionFromName(['interpolate', ['linear'], ['zoom'], 10, 'vertical-perspective', 12, 'mercator'], undefined, {});
+        expect(warn).not.toHaveBeenCalled();
+    });
+
     describe('for a registered CRS', () => {
         beforeEach(() => {
             addProjection({
@@ -50,6 +56,12 @@ describe('createProjectionFromName', () => {
         test('runs its transform on the projection\'s own mapping', () => {
             const {projection, transform} = createProjectionFromName('test:factory', undefined, {});
             expect(transform.worldCoordinateHelper).toBe(projection.worldCoordinateHelper);
+        });
+
+        test('warns that a projection expression naming it falls back to the globe projection', () => {
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            createProjectionFromName(['step', ['zoom'], 'test:factory', 10, 'mercator'], undefined, {});
+            expect(warn).toHaveBeenCalledWith('Projection expressions cannot use the registered projection "test:factory", which only works as a plain name. Falling back to the globe projection.');
         });
     });
 });

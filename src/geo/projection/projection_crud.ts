@@ -16,7 +16,7 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
 /**
  * @experimental
  * Registers a planar coordinate reference system so it can be used as a map projection.
- * After registration the CRS name is accepted by the style's `projection.type` and by
+ * After registration the CRS name is accepted, as a plain name, by the style's `projection.type` and by
  * `map.setProjection({type: name})`. Every source of such a map is expected to serve tiles in the CRS's
  * own quad tile grid, described by `tileMatrixSet`; the map does not reproject tile content.
  * The pre-registered `'identity'` projection is an identity CRS over lng/lat degrees, where tile 0/0/0

@@ -23,6 +23,10 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
 } {
     const transformOptions = {constrainOverride: transformConstrain};
     if (Array.isArray(name)) {
+        const registeredName = findRegisteredProjectionName(name);
+        if (registeredName) {
+            warnOnce(`Projection expressions cannot use the registered projection "${registeredName}", which only works as a plain name. Falling back to the globe projection.`);
+        }
         const globeProjection = new GlobeProjection({type: name}, globalState);
         return {
             projection: globeProjection,
@@ -85,4 +89,11 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             };
         }
     }
+}
+
+/**
+ * The first registered projection named anywhere in a projection expression, or `undefined` if it names none.
+ */
+function findRegisteredProjectionName(expression: unknown[]): string | undefined {
+    return expression.flat(Infinity).find((item): item is string => typeof item === 'string' && getRegisteredProjection(item) !== undefined);
 }
