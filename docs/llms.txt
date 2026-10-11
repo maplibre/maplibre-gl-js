@@ -231,7 +231,7 @@
 
 - [3D Terrain](<https://maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/index.md>)
 - [Add 3D terrain from quantized-mesh tiles](<https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-terrain-from-quantized-mesh-tiles/index.md>)
-- [Add 3D Tiles, 3D objects and models using Three.JS](<https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-3d-objects-and-models-using-threejs/index.md>)
+- [Add 3D Tiles, 3D objects and models using Three.js](<https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-3d-objects-and-models-using-threejs/index.md>)
 - [Add a 3D model with babylon.js](<https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-with-babylonjs/index.md>)
 - [Add a canvas source](<https://maplibre.org/maplibre-gl-js/docs/examples/add-a-canvas-source/index.md>)
 - [Add a COG raster source](<https://maplibre.org/maplibre-gl-js/docs/examples/add-a-cog-raster-source/index.md>)
@@ -338,7 +338,7 @@
 - [Navigate the map with game-like controls](<https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/index.md>)
 - [Offset the vanishing point using padding](<https://maplibre.org/maplibre-gl-js/docs/examples/offset-the-vanishing-point-using-padding/index.md>)
 - [PMTiles source and protocol](<https://maplibre.org/maplibre-gl-js/docs/examples/pmtiles-source-and-protocol/index.md>)
-- [Raycast 3D Tiles using ThreeJS](<https://maplibre.org/maplibre-gl-js/docs/examples/raycast-3d-tiles-using-threejs/index.md>)
+- [Raycast 3D Tiles using Three.js](<https://maplibre.org/maplibre-gl-js/docs/examples/raycast-3d-tiles-using-threejs/index.md>)
 - [Render world copies](<https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/index.md>)
 - [Restrict map panning to an area](<https://maplibre.org/maplibre-gl-js/docs/examples/restrict-map-panning-to-an-area/index.md>)
 - [Select features with boxZoomEnd callback](<https://maplibre.org/maplibre-gl-js/docs/examples/select-features-with-boxzoomend-callback/index.md>)

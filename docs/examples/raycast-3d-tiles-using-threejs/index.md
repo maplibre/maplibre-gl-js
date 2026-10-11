@@ -1,4 +1,4 @@
-# Raycast 3D Tiles using ThreeJS
+# Raycast 3D Tiles using Three.js
 
 Use maplibre-gl-three to raycast against 3D Tiles and display the impact location.
 
@@ -84,18 +84,6 @@ map.on('load', async () => {
         }
     });
 
-    function renderHit(ecef_origin, ecef_impactPoint) {
-        const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
-        const ecef_rayLength = ecef_direction.length();
-        ecef_direction.normalize();
-
-        drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
-
-        // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
-        const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
-        updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
-    }
-
     function raycastFromOriginAndDirection(ecef_origin, ecef_direction) {
         ecef_direction = ecef_direction.clone();
         if (ecef_direction.lengthSq() === 0) {
@@ -134,7 +122,20 @@ map.on('load', async () => {
         }
     }
 
-    // Functions used by renderHit are below. 
+    // For More raycasting functions (e.g. lngLatAlt to lngLatAlt), see:
+    // https://github.com/safwat-halaby/maplibre-gl-three/blob/master/www/examples/other/raycast/script.js
+
+    function renderHit(ecef_origin, ecef_impactPoint) {
+        const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
+        const ecef_rayLength = ecef_direction.length();
+        ecef_direction.normalize();
+
+        drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
+
+        // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
+        const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
+        updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
+    }
     function drawArrow(origin, direction, length) {
         rayArrow.position.copy(origin);
         rayArrow.setDirection(direction);
@@ -156,13 +157,13 @@ map.on('load', async () => {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Raycast 3D Tiles using ThreeJS</title>
+    <title>Raycast 3D Tiles using Three.js</title>
     <meta property="og:description" content="Use maplibre-gl-three to raycast against 3D Tiles and display the impact location." />
     <meta property="og:category" content="3D Models & Buildings" />
     <meta property="og:created" content="2026-10-05" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -194,7 +195,7 @@ map.on('load', async () => {
             "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
             "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
             "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.plugins.js",
-            "maplibre-gl": "https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs",
+            "maplibre-gl": "https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.mjs",
             "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/proj4-wrapper.js",
             "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/geotiff-wrapper.js",
             "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/maplibre-gl-three.js"
@@ -286,18 +287,6 @@ map.on('load', async () => {
             }
         });
 
-        function renderHit(ecef_origin, ecef_impactPoint) {
-            const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
-            const ecef_rayLength = ecef_direction.length();
-            ecef_direction.normalize();
-
-            drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
-
-            // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
-            const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
-            updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
-        }
-
         function raycastFromOriginAndDirection(ecef_origin, ecef_direction) {
             ecef_direction = ecef_direction.clone();
             if (ecef_direction.lengthSq() === 0) {
@@ -336,7 +325,20 @@ map.on('load', async () => {
             }
         }
 
-        // Functions used by renderHit are below. 
+        // For More raycasting functions (e.g. lngLatAlt to lngLatAlt), see:
+        // https://github.com/safwat-halaby/maplibre-gl-three/blob/master/www/examples/other/raycast/script.js
+
+        function renderHit(ecef_origin, ecef_impactPoint) {
+            const ecef_direction = ecef_impactPoint.clone().sub(ecef_origin);
+            const ecef_rayLength = ecef_direction.length();
+            ecef_direction.normalize();
+
+            drawArrow(ecef_origin, ecef_direction, ecef_rayLength);
+
+            // Display the more familiar lngLatAlt WGS84 format in the GUI along with ECEF.
+            const lngLatAlt_impactPoint = threeDManager.ecefToLngLatAlt(ecef_impactPoint);
+            updateHtmlImpactText(lngLatAlt_impactPoint, ecef_impactPoint);
+        }
         function drawArrow(origin, direction, length) {
             rayArrow.position.copy(origin);
             rayArrow.setDirection(direction);

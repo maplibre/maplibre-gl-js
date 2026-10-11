@@ -2,7 +2,7 @@
 
 > **prewarm**(): `void`
 
-Defined in: [util/global\_worker\_pool.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/global_worker_pool.ts#L36>)
+Defined in: [util/global\_worker\_pool.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/util/global_worker_pool.ts#L36>)
 
 Initializes resources like WebWorkers that can be shared across maps to lower load times in some situations. `setWorkerUrl()` and `setWorkerCount()`, if being used, must be set before `prewarm()` is called to have an effect.
 

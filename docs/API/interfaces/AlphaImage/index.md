@@ -1,5 +1,5 @@
 # AlphaImage
 
-Defined in: [util/image.ts:89](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/image.ts#L89>)
+Defined in: [util/image.ts:89](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/util/image.ts#L89>)
 
 An image with alpha color value

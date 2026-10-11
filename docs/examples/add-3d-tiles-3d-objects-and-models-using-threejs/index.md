@@ -1,6 +1,6 @@
-# Add 3D Tiles, 3D objects and models using Three.JS
+# Add 3D Tiles, 3D objects and models using Three.js
 
-Use maplibre-gl-three to add 3D Tiles, 3D objects, and a 3D model to a map. maplibre-gl-three glues MapLibre, Three.js and 3d-tiles-renderer together.
+Add 3D Tiles, 3D objects, and a 3D model to a map. maplibre-gl-three glues MapLibre, Three.js, and 3d-tiles-renderer together.
 
 ```js
 import * as maplibregl from 'maplibre-gl';
@@ -112,17 +112,17 @@ map.on('load', async () => {
     await threeDManager.init();
     map.on('remove', () => threeDManager.destroy());
 
-    // Add the Three.JS scene below the "rivers" Style Spec layer
+    // Add the Three.js scene below the "rivers" Style Spec layer.
     const layer = threeDManager.createLayer();
     map.addLayer(layer, 'rivers');
 
-    // Add 3D Tiles to the scene
+    // Add 3D Tiles to the scene.
     const tilesAsset = await layer.load3dTiles({
         tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
         offset: { east: 0, up: -234, south: 0 }
     });
 
-    // Add a pink sphere
+    // Add a pink sphere.
     const sphere = new THREE.Mesh(
         new THREE.SphereGeometry(10, 32, 16),
         new THREE.MeshStandardMaterial({ color: 0xff00ff })
@@ -130,9 +130,9 @@ map.on('load', async () => {
     sphere.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.598, 40.040], height: 130 }));
     layer.three.getScene().add(sphere);
 
-    // Add a group of 4 spheres, with offsets in meter from a geographical center 
+    // Add a group of 4 spheres, with offsets in meter from a geographical center.
     const placement = new THREE.Group();
-    placement.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.594, 40.040], height: 110 }));
+    placement.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.5975, 40.0377], height: 102 }));
     const geometry = new THREE.SphereGeometry(10, 32, 16);
     const northSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xff0000 }));
     const southSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x00ff00 }));
@@ -145,7 +145,7 @@ map.on('load', async () => {
     placement.add(northSphere, southSphere, eastSphere, westSphere);
     layer.three.getScene().add(placement);
 
-    // Add a 3d model to the group.
+    // Add a 3D model to the sphere group.
     const model = await new GLTFLoader().loadAsync(
         'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf'
     );
@@ -158,13 +158,13 @@ map.on('load', async () => {
 <html lang="en">
 
 <head>
-    <title>Add 3D Tiles, 3D objects and models using Three.JS</title>
-    <meta property="og:description" content="Use maplibre-gl-three to add 3D Tiles, 3D objects, and a 3D model to a map. maplibre-gl-three glues MapLibre, Three.js and 3d-tiles-renderer together." />
+    <title>Add 3D Tiles, 3D objects and models using Three.js</title>
+    <meta property="og:description" content="Add 3D Tiles, 3D objects, and a 3D model to a map. maplibre-gl-three glues MapLibre, Three.js, and 3d-tiles-renderer together." />
     <meta property="og:category" content="3D Models & Buildings" />
     <meta property="og:created" content="2026-10-05" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.css' />
 
     <style>
         body {
@@ -191,7 +191,7 @@ map.on('load', async () => {
             "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
             "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
             "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.plugins.js",
-            "maplibre-gl": "https://unpkg.com/maplibre-gl@6.13.0/dist/maplibre-gl.mjs",
+            "maplibre-gl": "https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.mjs",
             "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/proj4-wrapper.js",
             "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/geotiff-wrapper.js",
             "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/maplibre-gl-three.js"
@@ -310,17 +310,17 @@ map.on('load', async () => {
             await threeDManager.init();
             map.on('remove', () => threeDManager.destroy());
 
-            // Add the Three.JS scene below the "rivers" Style Spec layer
+            // Add the Three.js scene below the "rivers" Style Spec layer.
             const layer = threeDManager.createLayer();
             map.addLayer(layer, 'rivers');
 
-            // Add 3D Tiles to the scene
+            // Add 3D Tiles to the scene.
             const tilesAsset = await layer.load3dTiles({
                 tilesetUrl: 'https://pelican-public.s3.amazonaws.com/3dtiles/agi-hq/tileset.json',
                 offset: { east: 0, up: -234, south: 0 }
             });
 
-            // Add a pink sphere
+            // Add a pink sphere.
             const sphere = new THREE.Mesh(
                 new THREE.SphereGeometry(10, 32, 16),
                 new THREE.MeshStandardMaterial({ color: 0xff00ff })
@@ -328,9 +328,9 @@ map.on('load', async () => {
             sphere.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.598, 40.040], height: 130 }));
             layer.three.getScene().add(sphere);
 
-            // Add a group of 4 spheres, with offsets in meter from a geographical center 
+            // Add a group of 4 spheres, with offsets in meter from a geographical center.
             const placement = new THREE.Group();
-            placement.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.594, 40.040], height: 110 }));
+            placement.applyMatrix4(threeDManager.getEcefMatrix({ point: [-75.5975, 40.0377], height: 102 }));
             const geometry = new THREE.SphereGeometry(10, 32, 16);
             const northSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xff0000 }));
             const southSphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x00ff00 }));
@@ -343,7 +343,7 @@ map.on('load', async () => {
             placement.add(northSphere, southSphere, eastSphere, westSphere);
             layer.three.getScene().add(placement);
 
-            // Add a 3d model to the group.
+            // Add a 3D model to the sphere group.
             const model = await new GLTFLoader().loadAsync(
                 'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf'
             );

@@ -2,7 +2,7 @@
 
 > **CustomTerrainRenderInput** = `object`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:184](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L184>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:184](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style_layer/custom_style_layer.ts#L184>)
 
 **`Experimental`**
 
@@ -14,7 +14,7 @@ Input for [CustomLayerInterface.renderToTerrainTile](<https://maplibre.org/mapli
 
 > **height**: `number`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:190](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L190>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:190](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style_layer/custom_style_layer.ts#L190>)
 
 The height of the tile's framebuffer in pixels.
 
@@ -24,7 +24,7 @@ The height of the tile's framebuffer in pixels.
 
 > **tileID**: [`UnwrappedTileIDLiteral`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/UnwrappedTileIDLiteral/index.md>)
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:186](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L186>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:186](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style_layer/custom_style_layer.ts#L186>)
 
 The terrain tile to draw.
 
@@ -34,6 +34,6 @@ The terrain tile to draw.
 
 > **width**: `number`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:188](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L188>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:188](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style_layer/custom_style_layer.ts#L188>)
 
 The width of the tile's framebuffer in pixels.

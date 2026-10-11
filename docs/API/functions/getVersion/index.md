@@ -2,7 +2,7 @@
 
 > **getVersion**(): `string`
 
-Defined in: [index.ts:124](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/index.ts#L124>)
+Defined in: [index.ts:124](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/index.ts#L124>)
 
 Returns the package version of the library
 

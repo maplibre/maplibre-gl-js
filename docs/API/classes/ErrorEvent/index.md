@@ -1,6 +1,6 @@
 # ErrorEvent
 
-Defined in: [util/evented.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L66>)
+Defined in: [util/evented.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/util/evented.ts#L66>)
 
 An error event
 
@@ -14,7 +14,7 @@ An error event
 
 > `optional` **target?**: `unknown`
 
-Defined in: [util/evented.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/util/evented.ts#L51>)
+Defined in: [util/evented.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/util/evented.ts#L51>)
 
 The object that fired the event. Set when the event is fired, and narrowed to a more specific type (e.g. `Map`, `Marker`) by the event subclasses.
 

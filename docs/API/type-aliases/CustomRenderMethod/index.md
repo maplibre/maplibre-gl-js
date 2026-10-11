@@ -2,7 +2,7 @@
 
 > **CustomRenderMethod** = (`gl`: `WebGL2RenderingContext`, `options`: [`CustomRenderMethodInput`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomRenderMethodInput/index.md>)) =\> `void`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:178](<https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/style/style_layer/custom_style_layer.ts#L178>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:178](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style_layer/custom_style_layer.ts#L178>)
 
 ## Parameters
 

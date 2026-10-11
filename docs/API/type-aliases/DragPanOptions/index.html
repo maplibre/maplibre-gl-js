@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.67">
+      <meta name="generator" content="zensical-0.0.68">
     
     
       
@@ -34,12 +34,12 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.4ae390e2.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.595f2bf5.min.css">
       
         
           
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/modern/palette.96d1a7e4.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/modern/palette.b27955a4.min.css">
       
       
 
@@ -93,14 +93,11 @@
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
     <div data-md-component="skip">
-      
-        
-        <a href="#dragpanoptions" class="md-skip">
-          Skip to content
-        </a>
-      
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
     </div>
     <div data-md-component="announce">
       
@@ -6834,7 +6831,7 @@
   <span class="md-ellipsis">
     
   
-  Add 3D Tiles, 3D objects and models using Three.JS
+  Add 3D Tiles, 3D objects and models using Three.js
 
     
   </span>
@@ -9744,7 +9741,7 @@
   <span class="md-ellipsis">
     
   
-  Raycast 3D Tiles using ThreeJS
+  Raycast 3D Tiles using Three.js
 
     
   </span>
@@ -10879,6 +10876,7 @@
             <div class="md-content" data-md-component="content">
               
               <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
                 
                   
 
@@ -10890,14 +10888,14 @@
 <blockquote>
 <p><strong>DragPanOptions</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/drag_pan.ts#L7">ui/handler/shim/drag_pan.ts:7</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_pan.ts#L7">ui/handler/shim/drag_pan.ts:7</a></p>
 <p>A <a href="../../classes/DragPanHandler/">DragPanHandler</a> options object</p>
 <h2 id="properties">Properties</h2>
 <h3 id="deceleration">deceleration?</h3>
 <blockquote>
 <p><code>optional</code> <strong>deceleration?</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/drag_pan.ts#L23">ui/handler/shim/drag_pan.ts:23</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_pan.ts#L23">ui/handler/shim/drag_pan.ts:23</a></p>
 <p>the maximum value of the drag velocity.</p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="mf">1400</span>
@@ -10907,7 +10905,7 @@
 <blockquote>
 <p><code>optional</code> <strong>easing?</strong>: (<code>t</code>: <code>number</code>) =&gt; <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/drag_pan.ts#L18">ui/handler/shim/drag_pan.ts:18</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_pan.ts#L18">ui/handler/shim/drag_pan.ts:18</a></p>
 <p>easing function applied to <code>map.panTo</code> when applying the drag.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
@@ -10936,7 +10934,7 @@
 <blockquote>
 <p><code>optional</code> <strong>linearity?</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/drag_pan.ts#L12">ui/handler/shim/drag_pan.ts:12</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_pan.ts#L12">ui/handler/shim/drag_pan.ts:12</a></p>
 <p>factor used to scale the drag velocity</p>
 <h4 id="default-value_2">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="mf">0</span>
@@ -10946,7 +10944,7 @@
 <blockquote>
 <p><code>optional</code> <strong>maxSpeed?</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/f67ac5e45ce441c6eef7c395ad2bbde7ed717c5d/src/ui/handler/shim/drag_pan.ts#L28">ui/handler/shim/drag_pan.ts:28</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_pan.ts#L28">ui/handler/shim/drag_pan.ts:28</a></p>
 <p>the rate at which the speed reduces after the pan ends.</p>
 <h4 id="default-value_3">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="mf">2500</span>
@@ -11088,7 +11086,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../../assets/javascripts/workers/search.7d14d953.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.67a597eb.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.3c842f4c.min.js"></script>
       
     
   </body>
