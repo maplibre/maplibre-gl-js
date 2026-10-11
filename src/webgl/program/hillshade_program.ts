@@ -37,6 +37,7 @@ export type HillshadePrepareUniformsType = {
     'u_dimension': Uniform2f;
     'u_zoom': Uniform1f;
     'u_unpack': Uniform4f;
+    'u_log2_world_width': Uniform1f;
 };
 
 const hillshadeUniforms = (context: Context, locations: UniformLocations): HillshadeUniformsType => ({
@@ -56,7 +57,8 @@ const hillshadePrepareUniforms = (context: Context, locations: UniformLocations)
     'u_image': new Uniform1i(context, locations.u_image),
     'u_dimension': new Uniform2f(context, locations.u_dimension),
     'u_zoom': new Uniform1f(context, locations.u_zoom),
-    'u_unpack': new Uniform4f(context, locations.u_unpack)
+    'u_unpack': new Uniform4f(context, locations.u_unpack),
+    'u_log2_world_width': new Uniform1f(context, locations.u_log2_world_width)
 });
 
 const hillshadeUniformValues = (
@@ -106,7 +108,7 @@ const hillshadeUniformValues = (
     };
 };
 
-const hillshadeUniformPrepareValues = (tileID: OverscaledTileID, dem: DEMData): UniformValues<HillshadePrepareUniformsType> => {
+const hillshadeUniformPrepareValues = (transform: IReadonlyTransform, tileID: OverscaledTileID, dem: DEMData): UniformValues<HillshadePrepareUniformsType> => {
 
     const stride = dem.stride;
     const matrix = mat4.create();
@@ -119,9 +121,21 @@ const hillshadeUniformPrepareValues = (tileID: OverscaledTileID, dem: DEMData): 
         'u_image': 1,
         'u_dimension': [stride, stride],
         'u_zoom': tileID.overscaledZ,
-        'u_unpack': dem.getUnpackVector()
+        'u_unpack': dem.getUnpackVector(),
+        'u_log2_world_width': getLog2WorldWidth(transform)
     };
 };
+
+/**
+ * The log2 of the zoom 0 world's width in meters, from which the prepare shader gets the meters per DEM pixel that
+ * it divides elevation differences by. A registered CRS's world is its zoom 0 extent wide, in CRS units taken as
+ * meters. Mercator keeps 25.2562, which with the shader's 3 for the 8 in its slope kernel is the 28.2562 the shader
+ * used before, so its hillshade does not change.
+ */
+function getLog2WorldWidth(transform: IReadonlyTransform): number {
+    const worldCoordinateHelper = transform.worldCoordinateHelper;
+    return worldCoordinateHelper.wraps ? 25.2562 : Math.log2(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5));
+}
 
 /**
  * The latitudes of the tile's top and bottom edges, which the hillshade shader uses to correct the mercator
