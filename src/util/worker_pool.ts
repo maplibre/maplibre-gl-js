@@ -3,7 +3,7 @@ import {browser} from './browser.ts';
 import {isSafari} from './util.ts';
 
 import type {ActorTarget} from './actor.ts';
-import type {Dispatcher} from './dispatcher.ts';
+import type {GlobalDispatcher} from './dispatcher.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
 
@@ -18,7 +18,7 @@ export class WorkerPool {
     };
     workersPromise: Promise<ActorTarget[]> | null;
     /** The dispatcher whose actors live and die with the pooled workers, set once by dispatcher.ts. */
-    globalDispatcher: Dispatcher | undefined;
+    globalDispatcher: GlobalDispatcher | undefined;
     /** Called each time the workers are created, so dispatcher.ts can replay worker state. */
     workersCreatedCallbacks: Set<() => void>;
 

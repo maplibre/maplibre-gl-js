@@ -155,7 +155,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
 export type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
 
 /** The one dispatcher whose use of the workers is not a claim: its actors live and die with them. */
-class GlobalDispatcher extends Dispatcher {
+export class GlobalDispatcher extends Dispatcher {
     constructor(workerPool: WorkerPool) {
         super(workerPool, GLOBAL_DISPATCHER_ID);
         workerPool.globalDispatcher = this;
