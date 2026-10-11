@@ -6,6 +6,8 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
+import {setProjectionPlugin} from './projection_plugin_worker.ts';
+import {identityCrs} from '../geo/projection/crs.ts';
 
 import type {GeoJSONVT} from '@maplibre/geojson-vt';
 import type {Actor, IActor} from '../util/actor.ts';
@@ -693,5 +695,61 @@ describe('loadData', () => {
         expect(updateDataSpy.mock.invocationCallOrder[0]).toBeLessThan(updateSpy.mock.invocationCallOrder[0]);
         expect(updateSpy.mock.calls[0][1].map).toBeInstanceOf(Function);
         expect(updateSpy.mock.calls[0][1].reduce).toBeInstanceOf(Function);
+    });
+});
+
+describe('loadData in a registered projection', () => {
+    const pointAt45 = {type: 'Feature', id: 'p', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}} as GeoJSON.Feature;
+    const identityParameters = {name: 'identity', tileMatrixSet: identityCrs.tileMatrixSet};
+    const planarParameters = {name: 'EPSG:test', wkt: 'PROJCS["test"]', tileMatrixSet: {origin: [-1000, 1000], extentAtZoom0: 2000}};
+
+    afterEach(() => {
+        setProjectionPlugin(null);
+    });
+
+    function firstFeatureInRootTile(source: GeoJSONWorkerSource) {
+        const {vectorTile} = source.loadVectorTile({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
+        return vectorTile.layers[GEOJSON_TILE_LAYER_NAME].feature(0);
+    }
+
+    test('tiles the data where the built-in identity projection puts it', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+
+        expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 3072, y: 1024});
+    });
+
+    test('tiles the data where the projection plugin puts it', async () => {
+        setProjectionPlugin(() => ({forward: ([lng, lat]) => [lng * 10, lat * 10], inverse: ([x, y]) => [x / 10, y / 10]}));
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
+
+        expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 2970, y: 1126});
+    });
+
+    test('reports a wkt that no projection plugin can project', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        const result = await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
+
+        expect(result.missingProjectionPlugin).toBe(true);
+    });
+
+    test('tiles a feature a diff adds where the projection puts it', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        await source.loadData({source: 'source', data: {type: 'FeatureCollection', features: []}, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+        await source.loadData({source: 'source', dataDiff: {add: [pointAt45]}, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+
+        expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 3072, y: 1024});
+    });
+
+    test('returns cluster leaves in lng/lat', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        const twoPointsAt45 = {type: 'FeatureCollection', features: [pointAt45, {...pointAt45, id: 'q'}]} as GeoJSON.FeatureCollection;
+        await source.loadData({source: 'source', data: twoPointsAt45, geojsonVtOptions: {cluster: true, clusterOptions: {}}, crs: identityParameters} as LoadGeoJSONParameters);
+        const clusterId = firstFeatureInRootTile(source).properties.cluster_id as number;
+
+        const leaves = source.getClusterLeaves({clusterId, limit: 10, offset: 0});
+
+        expect((leaves[0].geometry as GeoJSON.Point).coordinates).toEqual([expect.closeTo(45, 9), expect.closeTo(45, 9)]);
     });
 });

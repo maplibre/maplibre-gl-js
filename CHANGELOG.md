@@ -1,6 +1,7 @@
 ## main
 ### ✨ Features and improvements
 - Add `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
+- Project GeoJSON sources on a map in a registered CRS, in the workers, from the definition's `wkt` and a projection plugin ([#8736](https://github.com/maplibre/maplibre-gl-js/issues/8736)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

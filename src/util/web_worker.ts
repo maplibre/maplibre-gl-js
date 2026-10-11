@@ -4,6 +4,7 @@ import {type AddProtocolAction, config} from './config.ts';
 import type {default as MaplibreWorker} from '../source/worker.ts';
 import type {WorkerSourceConstructor} from '../source/worker_source.ts';
 import type {GetResourceResponse, RequestParameters} from './ajax.ts';
+import type {ProjectionPlugin} from '../source/projection_plugin_worker.ts';
 
 export interface WorkerGlobalScopeInterface {
     registerWorkerSource: (sourceName: string, sourceConstructor: WorkerSourceConstructor) => void;
@@ -11,6 +12,7 @@ export interface WorkerGlobalScopeInterface {
     addProtocol: (customProtocol: string, loadFn: AddProtocolAction) => void;
     removeProtocol: (customProtocol: string) => void;
     makeRequest: (request: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>;
+    registerProjectionPlugin: (plugin: ProjectionPlugin) => void;
     worker: MaplibreWorker;
 }
 

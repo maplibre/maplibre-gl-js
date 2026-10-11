@@ -10,6 +10,8 @@ import {isAbortError} from '../util/abort_error.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
 import {UpdateQueue} from '../util/update_queue.ts';
+import {getRegisteredProjection} from '../geo/projection/projection_crud.ts';
+import {identityCrs} from '../geo/projection/crs.ts';
 
 import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import type {Source} from './source.ts';
@@ -470,6 +472,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      */
     private async _getLoadGeoJSONParameters(update: GeoJSONWorkerUpdate): Promise<LoadGeoJSONParameters> {
         const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
+        const crs = this._getWorkerCRS();
+        if (crs) params.crs = crs;
 
         if (!('data' in update)) {
             if (update.diff) params.dataDiff = update.diff;
@@ -485,6 +489,21 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
 
         params.data = update.data;
         return params;
+    }
+
+    /**
+     * The map's registered projection as the workers take it, see {@link LoadGeoJSONParameters.crs}. The workers can
+     * build a definition's converter from its `wkt`, or the built-in identity one without, so any other definition is
+     * left out with a warning.
+     */
+    private _getWorkerCRS(): LoadGeoJSONParameters['crs'] | undefined {
+        const definition = getRegisteredProjection(this.map?.style?.projection?.name);
+        if (!definition) return undefined;
+        if (!definition.wkt && definition !== identityCrs) {
+            warnOnce(`GeoJSON source "${this.id}" is drawn in the wrong place: the projection "${definition.name}" has no \`wkt\` to project its data with.`);
+            return undefined;
+        }
+        return {name: definition.name, wkt: definition.wkt, tileMatrixSet: definition.tileMatrixSet};
     }
 
     /**
@@ -517,6 +536,10 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
 
         if (result.data && !replaced) {
             this._data = {geojson: result.data};
+        }
+
+        if (result.missingProjectionPlugin) {
+            warnOnce(`GeoJSON source "${this.id}" is drawn in the wrong place: no projection plugin is registered in the workers, see \`registerProjectionPlugin\` in the custom CRS guide.`);
         }
 
         const diff = 'data' in update || replaced ? undefined : update.diff;
@@ -635,9 +658,6 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     async loadTile(tile: Tile): Promise<void> {
-        if (!this.map.style.projection.worldCoordinateHelper.wraps) {
-            warnOnce(`GeoJSON sources do not follow a registered projection yet, so source "${this.id}" is drawn in the wrong place.`);
-        }
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = await this.actorPromise;
         const params: WorkerTileParameters = {
