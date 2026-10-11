@@ -176,7 +176,9 @@ Everything that speaks lng/lat goes through the CRS definition's `projection`, s
 - Non-quad tile matrix sets: grids whose levels are not powers of two, or whose tiles are not square. A grid whose level 0 has more than one tile works with the recipe above.
 - Globe and world copies, as described above.
 - Converters whose `inverse` does not undo `forward`. The camera constraint and every query rely on the round trip being stable.
-- Switching to or from a registered CRS with `setProjection` after the sources have loaded, for now. Tile `bounds` and the corners of image, video and canvas sources are placed in the projection the map has when each source loads, so register the projection first and name it in the style, as the examples do.
+- Custom layers. They get the grid's matrix, so positions from `MercatorCoordinate` end up in the wrong place.
+- The `within` and `distance` expressions, which compute in mercator.
+- Switching to or from a registered CRS after the sources have loaded, with `setProjection` or with `setStyle` to a style in another projection, for now. Tile `bounds` and the corners of image, video and canvas sources are placed in the projection the map has when each source loads, so register the projection first and name it in the style, as the examples do.
 
 ## Removing a projection
 
