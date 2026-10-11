@@ -387,6 +387,10 @@ export type MapOptions = {
      */
     validateStyle?: boolean;
     /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the map. Subsequent calls to {@link Map.setStyle} will use the same defaults if the {@link StyleOptions.globalState} option is not set.
+     */
+    globalState?: Record<string, any>;
+    /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
      * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
@@ -549,6 +553,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     pitchSpeed: -0.5,
     reduceMotion: undefined,
     validateStyle: true,
+    globalState: undefined,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
@@ -570,18 +575,18 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
  *
  * @example
  * ```ts
- * let map = new Map({
+ * const map = new Map({
  *   container: 'map',
  *   center: [-122.420679, 37.772537],
  *   zoom: 13,
  *   style: style_object,
  *   hash: true,
- *   transformRequest: (url, resourceType)=> {
- *     if(resourceType === 'Source' && url.startsWith('http://myHost')) {
+ *   transformRequest: (url, resourceType) => {
+ *     if (resourceType === 'Source' && url.startsWith('http://myHost')) {
  *       return {
  *        url: url.replace('http', 'https'),
  *        headers: { 'my-custom-header': true},
- *        credentials: 'include'  // Include cookies for cross-origin requests
+ *        credentials: 'include', // Include cookies for cross-origin requests
  *      }
  *     }
  *   }
@@ -634,6 +639,7 @@ export class Map extends Evented<MapEventType> {
     _mapId: number = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
+    _initialGlobalState: Record<string, any>;
     _styleUrl: string | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
@@ -859,6 +865,7 @@ export class Map extends Evented<MapEventType> {
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
+        this._initialGlobalState = resolvedOptions.globalState;
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
@@ -2676,13 +2683,20 @@ export class Map extends Evented<MapEventType> {
      *       ]
      *   })
      * });
+     *
+     * map.setStyle('https://demotiles.maplibre.org/style.json', {
+     *   globalState: {
+     *     showCircles: true,
+     *   }
+     * });
      * ```
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
         options = extend({},
             {
                 localIdeographFontFamily: this._localIdeographFontFamily,
-                validate: this._validateStyle
+                validate: this._validateStyle,
+                globalState: this._initialGlobalState,
             }, options);
         this._styleUrl = typeof style === 'string' ? style : null;
 
@@ -2731,6 +2745,7 @@ export class Map extends Evented<MapEventType> {
 
         const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
+            this.style.off('error', this._onStyleError);
             this.style.setEventedParent(null);
 
             // Only release workers when map is getting disposed
@@ -2750,6 +2765,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         this.style.setEventedParent(this, {style: this.style});
+        this.style.on('error', this._onStyleError);
 
         if (typeof style === 'string') {
             this.style.loadURL(style, options, previousStyle);
@@ -2764,6 +2780,7 @@ export class Map extends Evented<MapEventType> {
         if (!this.style) {
             this.style = new Style(this, {});
             this.style.setEventedParent(this, {style: this.style});
+            this.style.on('error', this._onStyleError);
             this.style.loadEmpty();
         }
     }
@@ -4264,6 +4281,7 @@ export class Map extends Evented<MapEventType> {
             }
         }
 
+        this.style.off('error', this._onStyleError);
         this.style.destroy();
         this.style = null;
 
@@ -4586,6 +4604,15 @@ export class Map extends Evented<MapEventType> {
             );
         }
     }
+
+    /**
+     * @internal
+     * A tile that fails to load fires an error event and no data event, so when it was the last tile loading,
+     * no frame would run to fire `load` and `idle`.
+     */
+    _onStyleError = (event: ErrorEvent & {tile?: unknown}): void => {
+        if (event.tile) this.triggerRepaint();
+    };
 
     _onWindowOnline = (): void => {
         this._update();

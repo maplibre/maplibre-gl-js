@@ -2,7 +2,7 @@ import {describe, expect, test} from 'vitest';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
-import {GlobeTransform} from './globe_transform.ts';
+import {createGlobeTransform} from './globe_transform.ts';
 import {coveringTiles} from './covering_tiles.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 
@@ -121,7 +121,7 @@ describe('elevated content above terrain', () => {
 
 describe('elevated content tile retention', () => {
     test('far corner translation keeps ground tiles retained at moderate pitch', () => {
-        const transform = new GlobeTransform();
+        const transform = createGlobeTransform();
         transform.resize(1400, 800);
         transform.setCenter(new LngLat(2.3522, 52.0566));
         transform.setZoom(4.3);
@@ -136,7 +136,7 @@ describe('elevated content tile retention', () => {
     });
 
     test('maxContentElevation keeps tiles that the horizon culling would drop', () => {
-        const transform = new GlobeTransform();
+        const transform = createGlobeTransform();
         transform.resize(1400, 800);
         transform.setCenter(new LngLat(2.35, 48.85));
         transform.setZoom(4.3);
@@ -155,7 +155,7 @@ describe('elevated content tile retention', () => {
 
 describe('poles', () => {
     test('covers the tiles around the south pole', () => {
-        const transform = new GlobeTransform();
+        const transform = createGlobeTransform();
         transform.resize(512, 512);
         transform.setCenter(new LngLat(0, -90));
         transform.setZoom(1.6);

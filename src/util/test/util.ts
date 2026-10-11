@@ -4,7 +4,7 @@ import {NullWebGL2RenderingContext} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
-import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {RequestManager} from '../request_manager.ts';
 import {getGlobalWorkerPool} from '../global_worker_pool.ts';
 import {Terrain} from '../../render/terrain.ts';
@@ -39,7 +39,7 @@ export class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new MercatorTransform();
+        this.transform = createMercatorTransform();
         this._requestManager = new RequestManager();
     }
 

@@ -3,11 +3,27 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Terminate the pooled web workers when the last map is removed, so a new map is not handed workers the browser already killed. Call `prewarm()` to keep them alive between maps, and re-send any state your plugin broadcasts into the workers from `onGlobalWorkersCreated`. ([#8706](https://github.com/maplibre/maplibre-gl-js/pull/8706)) (by [@lucaswoj](https://github.com/lucaswoj))
+- Terminate the pooled web workers when the last map is removed, so a new map is not handed workers the browser already killed. Call `prewarm()` to keep them alive between maps, re-send any state your plugin broadcasts into the workers from `onGlobalWorkersCreated`, and use your own string message types on the global dispatcher without casting. ([#8706](https://github.com/maplibre/maplibre-gl-js/pull/8706), [#8735](https://github.com/maplibre/maplibre-gl-js/pull/8735)) (by [@lucaswoj](https://github.com/lucaswoj) and [@HarelM](https://github.com/HarelM))
+- _...Add new stuff here..._
+
+## 6.14.0
+
+### ✨ Features and improvements
+
+- Allow calling `new Map({ globalState: { ... }})` and `setStyle({ globalState: ... })` to provide an initial global state for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
+
+### 🐞 Bug fixes
+
+- fix: `ScaleControl` throwing when its sample points miss the globe ([#8720](https://github.com/maplibre/maplibre-gl-js/pull/8720)) (by [@SatvikMishra08](https://github.com/SatvikMishra08))
+- Fix a rendering crash when `removeFeatureState` removes a property before feature state is set ([#8715](https://github.com/maplibre/maplibre-gl-js/pull/8715)) (by [@yeomin4242](https://github.com/yeomin4242))
+- Work around blank, unresponsive maps on affected iPadOS 16 Safari devices ([#8364](https://github.com/maplibre/maplibre-gl-js/pull/8364)) (by [@samuelsmarason](https://github.com/samuelsmarason))
+- Fix circles with `circle-pitch-alignment: map` being drawn too large while the globe transitions to mercator ([#8714](https://github.com/maplibre/maplibre-gl-js/issues/8714)) (by [@heikki](https://github.com/heikki))
 - Fix `map.resize(eventData, false)` constraining the camera with the `vertical-perspective` projection ([#8695](https://github.com/maplibre/maplibre-gl-js/pull/8695)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix an uncaught error when `setStyle` is called while the WebGL context is lost, since 6.12.0 ([#8693](https://github.com/maplibre/maplibre-gl-js/pull/8693)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix the view sliding hundreds of meters off the center when terrain is switched on during a gesture ([#8688](https://github.com/maplibre/maplibre-gl-js/pull/8688)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- _...Add new stuff here..._
+- Fix the camera jumping back at the end of a pan, flick or rotation into terrain ([#8692](https://github.com/maplibre/maplibre-gl-js/pull/8692)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix `flyTo` dropping the `offset` and `around` options under `prefers-reduced-motion`, so a reduced-motion fly lands at the same camera as the animated one ([#8730](https://github.com/maplibre/maplibre-gl-js/pull/8730)) (by [@maartenla](https://github.com/maartenla))
+- Fix `load` and `idle` never firing when the last tile fails with a status other than 404 ([#8733](https://github.com/maplibre/maplibre-gl-js/pull/8733)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 
 ## 6.13.0
 
