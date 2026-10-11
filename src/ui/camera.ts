@@ -1324,19 +1324,19 @@ export class Camera extends Evented<MapEventType> {
         this.fire(new MapMovementEvent('moveend', eventData));
     }
 
+    /*
+     * This method implements an “optimal path” animation, as detailed in:
+     *
+     * Van Wijk, Jarke J.; Nuij, Wim A. A. “Smooth and efficient zooming and panning.” INFOVIS
+     * ’03. pp. 15–22. <https://www.win.tue.nl/~vanwijk/zoompan.pdf#page=5>.
+     *
+     * Where applicable, local variable documentation begins with the associated variable or
+     * function in van Wijk (2003).
+     */
     flyTo(options: FlyToOptions, eventData?: any): this {
-        // easeTo keeps `offset` and `around` under reduced motion; a picked jumpTo dropped them
         if (!options.essential && browser.prefersReducedMotion) {
             return this.easeTo(options, eventData);
         }
-
-        // This method implements an “optimal path” animation, as detailed in:
-        //
-        // Van Wijk, Jarke J.; Nuij, Wim A. A. “Smooth and efficient zooming and panning.” INFOVIS
-        //   ’03. pp. 15–22. <https://www.win.tue.nl/~vanwijk/zoompan.pdf#page=5>.
-        //
-        // Where applicable, local variable documentation begins with the associated variable or
-        // function in van Wijk (2003).
 
         this.stop();
 
