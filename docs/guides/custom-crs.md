@@ -25,6 +25,7 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 | `projection` | Converts between lng/lat degrees and CRS coordinates: `forward([lng, lat])` returns `[x, y]`, for example meters easting/northing, and `inverse([x, y])` returns `[lng, lat]`. A proj4js converter such as `proj4('EPSG:4326', 'EPSG:2193')` has this shape, and deck.gl's custom projection view takes the same object. Outside the tile matrix set `inverse` may return `null` or values that are not finite; the map then uses the nearest position inside it. |
 | `tileMatrixSet.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
 | `tileMatrixSet.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
+| `wkt` | Optional. The CRS as WKT, or as another string the workers' projection plugin accepts, such as a PROJ string. GeoJSON sources need it, see [GeoJSON sources](#geojson-sources). |
 
 CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `identity` projection it means "one unit". The map's center stays inside the tile 0/0/0 square and the zoom is limited only by `minZoom`, since the square is the grid the tile matrix set picked and can be much larger than the area of interest or narrower than the window. Set `maxBounds` to keep the whole view inside an area.
 
@@ -159,6 +160,32 @@ tiles: ['https://example.com/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EP
 
 On a Mercator map `{bbox}` expands to the same string as the existing `{bbox-epsg-3857}` token, which stays available and always means EPSG:3857 meters. `scheme: "tms"` flips only `{y}`; `{bbox}` always describes the tile the id names, as `{bbox-epsg-3857}` does.
 
+## GeoJSON sources
+
+A GeoJSON source's data is parsed and tiled in the map's web workers, where the definition's `projection` object cannot go. Give the definition a `wkt`, and register a projection plugin in the workers that builds the same converter from it. With proj4js the plugin is two lines:
+
+```js
+// proj4-plugin.mjs
+import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.15.0/+esm';
+self.registerProjectionPlugin(wkt => proj4(wkt));
+```
+
+Load it into the workers before the map's sources load, and pass the same string to proj4 on the page:
+
+```js
+await maplibregl.importScriptInWorkers(new URL('proj4-plugin.mjs', location.href).href);
+
+const nztm = '+proj=tmerc +lat_0=0 +lon_0=173 +k=0.9996 +x_0=1600000 +y_0=10000000 +ellps=GRS80 +units=m +no_defs';
+maplibregl.addProjection({
+    name: 'EPSG:2193',
+    wkt: nztm,
+    projection: proj4('EPSG:4326', nztm),
+    tileMatrixSet: {origin: [-3260586.7284, 10438190.1652], extentAtZoom0: 10018754.1714}
+});
+```
+
+The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. The built-in `identity` projection needs neither a `wkt` nor a plugin. Without a `wkt`, or without a plugin in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
+
 ## What keeps working
 
 Everything that speaks lng/lat goes through the CRS definition's `projection`, so the map API is unchanged:
@@ -171,7 +198,6 @@ Everything that speaks lng/lat goes through the CRS definition's `projection`, s
 
 ## What does not work
 
-- GeoJSON sources, for now. Their data does not go through the projection yet, so on a map in a registered CRS it renders in the wrong place, and the map logs a warning. Serve such data as vector tiles in the CRS's grid instead.
 - Mixing CRSs. A Mercator tile source on an EPSG:2193 map, or a projected raster layer over Mercator base tiles, renders in the wrong place. Reprojecting tiles on the GPU is the subject of [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 - Non-quad tile matrix sets: grids whose levels are not powers of two, or whose tiles are not square. A grid whose level 0 has more than one tile works with the recipe above.
 - Globe and world copies, as described above.
