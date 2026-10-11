@@ -157,11 +157,11 @@ export class SourceFeatureState {
                 for (const feature in this.deletedStates[sourceLayer]) {
                     const deleteWholeFeatureState = this.deletedStates[sourceLayer][feature] === null;
                     if (deleteWholeFeatureState) this.state[sourceLayer][feature] = {};
-                    else {
+                    else if (this.state[sourceLayer][feature]) {
                         for (const key of Object.keys(this.deletedStates[sourceLayer][feature])) {
                             delete this.state[sourceLayer][feature][key];
                         }
-                    }
+                    } else continue;
                     featuresChangedMap[sourceLayer][feature] = this.state[sourceLayer][feature];
                 }
             }
