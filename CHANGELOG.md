@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix web workers never being terminated when the last map is removed. `getGlobalDispatcher()` now returns a claim that keeps the workers alive until its `release()` is called, and requests that a worker can't make itself are sent to the map they belong to, `self.makeRequest` in a worker accepts that map's id as a third argument ([#XXXX](https://github.com/maplibre/maplibre-gl-js/pull/XXXX)) (by [@HarelM](https://github.com/HarelM))
+- Fix web workers never being terminated when the last map is removed. `getGlobalDispatcher()` now returns a claim that keeps the workers alive until its `release()` is called, and requests that a worker can't make itself are sent to the map they belong to, `self.makeRequest` in a worker accepts that map's id as a third argument ([#8735](https://github.com/maplibre/maplibre-gl-js/pull/8735)) (by [@HarelM](https://github.com/HarelM))
 - Work around blank, unresponsive maps on affected iPadOS 16 Safari devices ([#8364](https://github.com/maplibre/maplibre-gl-js/pull/8364)) (by [@samuelsmarason](https://github.com/samuelsmarason))
 - Fix circles with `circle-pitch-alignment: map` being drawn too large while the globe transitions to mercator ([#8714](https://github.com/maplibre/maplibre-gl-js/issues/8714)) (by [@heikki](https://github.com/heikki))
 - Fix `map.resize(eventData, false)` constraining the camera with the `vertical-perspective` projection ([#8695](https://github.com/maplibre/maplibre-gl-js/pull/8695)) (by [@birkskyum](https://github.com/birkskyum))
