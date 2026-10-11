@@ -222,6 +222,7 @@ function isVisible(p: Point,
  */
 export function updateLineLabels(bucket: SymbolBucket,
     painter: Painter,
+    transform: IReadonlyTransform,
     isText: boolean,
     pitchedLabelPlaneMatrix: mat4,
     pitchedLabelPlaneMatrixInverse: mat4,
@@ -229,13 +230,11 @@ export function updateLineLabels(bucket: SymbolBucket,
     keepUpright: boolean,
     rotateToLine: boolean,
     unwrappedTileID: UnwrappedTileID,
-    viewportWidth: number,
-    viewportHeight: number,
     translation: [number, number],
     getElevation: GetElevation | undefined): void {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
-    const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.frameRenderContext.transform.zoom);
+    const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, transform.zoom);
 
     const clippingBuffer: [number, number] = [256 / painter.width * 2 + 1, 256 / painter.height * 2 + 1];
 
@@ -247,7 +246,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     const lineVertexArray = bucket.lineVertexArray;
     const placedSymbols = isText ? bucket.text.placedSymbolArray : bucket.icon.placedSymbolArray;
 
-    const aspectRatio = painter.frameRenderContext.transform.width / painter.frameRenderContext.transform.height;
+    const aspectRatio = transform.width / transform.height;
 
     let useVertical = false;
 
@@ -273,11 +272,11 @@ export function updateLineLabels(bucket: SymbolBucket,
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            transform: painter.frameRenderContext.transform,
+            transform,
             tileAnchorPoint,
             unwrappedTileID,
-            width: viewportWidth,
-            height: viewportHeight,
+            width: transform.width,
+            height: transform.height,
             translation
         };
 
@@ -290,10 +289,10 @@ export function updateLineLabels(bucket: SymbolBucket,
         }
 
         const cameraToAnchorDistance = anchorPos.signedDistanceFromCamera;
-        const perspectiveRatio = getPerspectiveRatio(painter.frameRenderContext.transform.cameraToCenterDistance, cameraToAnchorDistance);
+        const perspectiveRatio = getPerspectiveRatio(transform.cameraToCenterDistance, cameraToAnchorDistance);
 
         const fontSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
-        const pitchScaledFontSize = pitchWithMap ? (fontSize * painter.frameRenderContext.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
+        const pitchScaledFontSize = pitchWithMap ? (fontSize * transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
 
         const placeUnflipped = placeGlyphsAlongLine({
             projectionContext,

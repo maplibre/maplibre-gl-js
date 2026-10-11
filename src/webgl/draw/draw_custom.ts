@@ -17,7 +17,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
 
     const {isRenderingGlobe, projectionShaderVariant} = frameRenderContext.data;
     const {terrain} = frameRenderContext;
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const implementation = layer.implementation;
     const transform = frameRenderContext.transform;
 
@@ -91,7 +91,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
  * and binds that texture again for the layers after it.
  */
 function drawCustomTerrainTile(painter: Painter, layer: CustomStyleLayer, tileID: OverscaledTileID, frameRenderContext: FrameRenderContext): void {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const framebuffer = context.bindFramebuffer.get();
     const viewport = context.viewport.get();
 

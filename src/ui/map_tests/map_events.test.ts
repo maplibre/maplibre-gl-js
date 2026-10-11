@@ -1139,6 +1139,18 @@ describe('map events', () => {
     });
 
     describe('projectiontransition event', () => {
+        test('projectiontransition on the first style load fires once the style\'s layers exist', async () => {
+            const map = createMap({style: {version: 8, sources: {}, layers: [{id: 'background', type: 'background'}]}});
+            let layerIdAtTransition: string | undefined;
+            map.on('projectiontransition', () => {
+                layerIdAtTransition = map.getLayer('background')?.id;
+            });
+
+            await map.once('style.load');
+
+            expect(layerIdAtTransition).toBe('background');
+        });
+
         test('projectiontransition events is fired when setProjection is called', async () => {
             const map = createMap();
 

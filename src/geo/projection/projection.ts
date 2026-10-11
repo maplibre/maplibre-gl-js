@@ -5,6 +5,7 @@ import type {Mesh} from '../../render/mesh.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {WorldCoordinateHelper} from '../transform_interface.ts';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -39,6 +40,14 @@ export interface Projection {
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
      */
     get name(): ProjectionSpecification['type'];
+
+    /**
+     * @internal
+     * The mapping between geographic coordinates and the world plane the projection's tiles sit in:
+     * mercator for the built-in projections, the CRS's own mapping for a projection registered with `addProjection`.
+     * The transform built for the projection runs on this same instance.
+     */
+    get worldCoordinateHelper(): WorldCoordinateHelper;
 
     /**
      * @internal

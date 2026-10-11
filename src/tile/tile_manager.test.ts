@@ -8,10 +8,11 @@ import Point from '@mapbox/point-geometry';
 import {ErrorEvent, Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
 import {TileBounds} from './tile_bounds.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util.ts';
 import {now, restoreNow, setNow} from '../util/time_control.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {GlobeTransform} from '../geo/projection/globe_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 
 import type {TileCache} from './tile_cache.ts';
@@ -175,7 +176,7 @@ describe('TileManager.addTile', () => {
         };
         tileManager.on('dataloading', () => add++);
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         tileManager.updateCacheSize(tr);
         tileManager._addTile(tileID);
@@ -195,7 +196,7 @@ describe('TileManager.addTile', () => {
             tile.state = 'loaded';
         };
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         tileManager.updateCacheSize(tr);
 
@@ -224,7 +225,7 @@ describe('TileManager.addTile', () => {
             tileManager._setTileReloadTimer(tileID.key, tile);
         };
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         tileManager.updateCacheSize(tr);
 
@@ -312,7 +313,7 @@ describe('TileManager.removeTile', () => {
         };
         tileManager._source.unloadTile = vi.fn();
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         tileManager.updateCacheSize(tr);
 
@@ -480,7 +481,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('requests the parent when an ideal tile loads without data and without an error', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
         const tileManager = createTileManager();
@@ -512,7 +513,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('loaded() true after tile error', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
         const tileManager = createTileManager();
@@ -557,7 +558,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('reloads tiles after a data event where source is updated', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
 
@@ -581,7 +582,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('does not reload errored tiles', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
 
@@ -607,7 +608,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('does reload errored tiles, if event is source data change', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
 
@@ -634,7 +635,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('reloads errored tiles as loading, not expired, on source data change', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
 
@@ -662,7 +663,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('keeps the self fade timer when reloading a tile that has data', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -694,7 +695,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('bases the self fade timer on when tile data lands, even if a reload was requested prior to arrival', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -732,7 +733,7 @@ describe('TileManager / Source lifecycle', () => {
 
 describe('TileManager.update', () => {
     test('loads no tiles if used is false', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(0);
 
@@ -746,7 +747,7 @@ describe('TileManager.update', () => {
     });
 
     test('loads covering tiles', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
 
@@ -759,7 +760,7 @@ describe('TileManager.update', () => {
     });
 
     test('adds ideal (covering) tiles only once for zoom level on raster maps', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(1);
 
@@ -809,7 +810,7 @@ describe('TileManager.update', () => {
     });
 
     test('respects Source.hasTile method if it is present', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
 
@@ -828,7 +829,7 @@ describe('TileManager.update', () => {
     });
 
     test('removes unused tiles', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
 
@@ -855,7 +856,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains parent tiles for pending children', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         (transform as any)._test = 'retains';
         transform.resize(511, 511);
         transform.setZoom(0);
@@ -885,7 +886,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains parent tiles for pending children (wrapped)', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
         transform.setCenter(new LngLat(360, 0));
@@ -914,7 +915,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains children tiles for pending parents', async () => {
-        const transform = new GlobeTransform();
+        const transform = createGlobeTransform();
         transform.resize(511, 511);
         transform.setZoom(1);
         transform.setCenter(new LngLat(360, 0));
@@ -949,7 +950,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains overscaled loaded children', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(16);
 
@@ -985,7 +986,7 @@ describe('TileManager.update', () => {
 
     test('reassigns tiles for large jumps in longitude', async () => {
 
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(0);
 
@@ -1007,7 +1008,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains fading children and applies fading logic when zooming out', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(1024, 1024);
         transform.setZoom(10);
 
@@ -1045,7 +1046,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains fading children and applies fading logic when zooming out from the source maxzoom', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(1024, 1024);
         transform.setZoom(10);
 
@@ -1079,7 +1080,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains fading grandchildren and applies fading logic when zooming out', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(10);
 
@@ -1117,7 +1118,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains fading grandchildren and applies fading logic when zooming out from the source maxzoom', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(10);
 
@@ -1151,7 +1152,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains fading parent and applies fading logic when zooming in', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(10);
 
@@ -1197,7 +1198,7 @@ describe('TileManager.update', () => {
     });
 
     test('retains fading grandparent and applies fading logic when zooming in', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(10);
 
@@ -1329,7 +1330,7 @@ describe('TileManager._updateRetainedTiles', () => {
 
     for (const pitch of [0, 20, 40, 65, 75, 85]) {
         test(`retains loaded children for pitch: ${pitch}`, () => {
-            const transform = new MercatorTransform();
+            const transform = createMercatorTransform();
             transform.resize(512, 512);
             transform.setZoom(10);
             transform.setMaxPitch(90);
@@ -1891,7 +1892,7 @@ describe('TileManager.clearTiles', () => {
 
 describe('TileManager.tilesIn', () => {
     test('graceful response before source loaded', () => {
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         const tileManager = createTileManager({noLoad: true});
         tileManager.transform = tr;
@@ -1910,7 +1911,7 @@ describe('TileManager.tilesIn', () => {
     }
 
     test('regular tiles', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(1);
         transform.setCenter(new LngLat(0, 1));
@@ -1968,7 +1969,7 @@ describe('TileManager.tilesIn', () => {
         tileManager.onAdd(undefined);
         await metadataPromise;
 
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(1024, 1024);
         transform.setZoom(2);
         transform.setCenter(new LngLat(0, 1));
@@ -2016,7 +2017,7 @@ describe('TileManager.tilesIn', () => {
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
         await dataPromise;
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(2.0);
         tileManager.update(transform);
@@ -2030,7 +2031,7 @@ describe('TileManager.tilesIn', () => {
     });
 
     test('globe wrap', async () => {
-        const transform = new GlobeTransform();
+        const transform = createGlobeTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
@@ -2083,7 +2084,7 @@ describe('TileManager.tilesIn', () => {
     });
 
     test('globe wrap bounding box spanning antimeridian from 179.9°E', async () => {
-        const transform = new GlobeTransform();
+        const transform = createGlobeTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
@@ -2139,7 +2140,7 @@ describe('TileManager.tilesIn', () => {
     });
 
     test('globe wrap bounding box spanning antimeridian from 179.9°W', async () => {
-        const transform = new GlobeTransform();
+        const transform = createGlobeTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
@@ -2195,7 +2196,7 @@ describe('TileManager.tilesIn', () => {
     });
 
     test('mercator wrap', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
@@ -2248,7 +2249,7 @@ describe('TileManager.tilesIn', () => {
     });
 
     test('mercator wrap bounding box spanning antimeridian from 179.9°E', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(179.9, 0.1));
@@ -2304,7 +2305,7 @@ describe('TileManager.tilesIn', () => {
     });
 
     test('mercator wrap bounding box spanning antimeridian from 179.9°W', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         transform.setZoom(1.05);
         transform.setCenter(new LngLat(-179.9, 0.1));
@@ -2370,7 +2371,7 @@ describe('tile manager loaded', () => {
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
         await dataPromise;
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         tileManager.update(tr);
 
@@ -2390,7 +2391,7 @@ describe('tile manager loaded', () => {
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
         await dataPromise;
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         tileManager.update(tr);
 
@@ -2455,7 +2456,7 @@ describe('tile manager loaded', () => {
             return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
         };
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.setZoom(10);
         tr.resize(512, 512);
 
@@ -2471,7 +2472,7 @@ describe('tile manager loaded', () => {
     });
 
     test('TileManager.loaded (tiles outside bounds, idle)', async () => {
-        const japan = new TileBounds([122.74, 19.33, 149.0, 45.67]);
+        const japan = new TileBounds([122.74, 19.33, 149.0, 45.67], null, null, mercatorWorldCoordinateHelper);
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
             tile.state = 'loading';
@@ -2503,7 +2504,7 @@ describe('tile manager loaded', () => {
         });
 
         tileManager.onAdd(undefined);
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.setZoom(10);
         tr.resize(512, 512);
         tileManager.update(tr);
@@ -2521,7 +2522,7 @@ describe('tile manager get ids', () => {
         ];
 
         const tileManager = createTileManager({});
-        tileManager.transform = new MercatorTransform();
+        tileManager.transform = createMercatorTransform();
         for (const id of ids) {
             tileManager._inViewTiles.setTile(id.key, {tileID: id} as any as Tile);
         }
@@ -2572,7 +2573,7 @@ describe('TileManager sets max cache size correctly', () => {
             tileSize: 256
         });
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         tileManager.updateCacheSize(tr);
 
@@ -2585,7 +2586,7 @@ describe('TileManager sets max cache size correctly', () => {
             tileSize: 512
         });
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
         tileManager.updateCacheSize(tr);
 
@@ -2619,7 +2620,7 @@ describe('TileManager.onRemove', () => {
 
 describe('TileManager.usedForTerrain', () => {
     test('loads covering tiles with usedForTerrain with source zoom 0-14', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(10);
 
@@ -2637,7 +2638,7 @@ describe('TileManager.usedForTerrain', () => {
     });
 
     test('loads covering tiles with usedForTerrain with source zoom 8-14', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(10);
 
@@ -2654,7 +2655,7 @@ describe('TileManager.usedForTerrain', () => {
     });
 
     test('loads covering tiles with usedForTerrain with source zoom 0-4', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(10);
 
@@ -2671,7 +2672,7 @@ describe('TileManager.usedForTerrain', () => {
     });
 
     test('loads covering tiles with usedForTerrain with source zoom 4-4', async () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(511, 511);
         transform.setZoom(10);
 
@@ -2825,7 +2826,7 @@ describe('TileManager content elevation', () => {
             }
         });
         tileManager.onAdd(map);
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(512, 512);
         tileManager.update(transform);
         await vi.waitFor(() => expect(tileManager.loaded()).toBe(true));
@@ -2872,7 +2873,7 @@ describe('TileManager content elevation', () => {
             });
             tileManager.onAdd(map);
 
-            const transform = new GlobeTransform();
+            const transform = createGlobeTransform();
             transform.resize(1400, 800);
             transform.setZoom(4.3);
             transform.setMaxPitch(85);

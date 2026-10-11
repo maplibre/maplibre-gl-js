@@ -3,8 +3,8 @@ import Point from '@mapbox/point-geometry';
 import {CollisionIndex} from './collision_index.ts';
 import {EXTENT} from '../data/extent.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {GlobeTransform} from '../geo/projection/globe_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {ITransform} from '../geo/transform_interface.ts';
@@ -99,10 +99,10 @@ function placeAll(transform: ITransform, symbols: TestSymbol[]): void {
     }
 }
 
-const mercatorTransform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+const mercatorTransform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 const mercatorSymbols = createSymbols(mercatorTransform, (tileID) => mercatorTransform.calculatePosMatrix(tileID, false));
 
-const globeTransform = new GlobeTransform();
+const globeTransform = createGlobeTransform();
 const globeSymbols = createSymbols(globeTransform, () => undefined);
 
 test('placeCollisionBox', async ({bench}) => {

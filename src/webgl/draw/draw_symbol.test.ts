@@ -72,7 +72,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -89,7 +89,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        vi.spyOn(painterMock.frameRenderContext, 'useProgram').mockReturnValue(programMock);
+        vi.spyOn(frameRenderContext, 'useProgram').mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -114,7 +114,7 @@ describe('drawSymbol', () => {
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
         tileManagerMock.getTile = (_a) => tile;
 
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], painterMock.frameRenderContext);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], frameRenderContext);
 
         expect(programMock.draw).toHaveBeenCalledTimes(1);
     });
@@ -128,7 +128,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -149,7 +149,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        vi.spyOn(painterMock.frameRenderContext, 'useProgram').mockReturnValue(programMock);
+        vi.spyOn(frameRenderContext, 'useProgram').mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -175,9 +175,9 @@ describe('drawSymbol', () => {
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
         const spy = vi.spyOn(symbolProjection, 'updateLineLabels');
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], painterMock.frameRenderContext);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], frameRenderContext);
 
-        expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
+        expect(spy.mock.calls[0][8]).toBeFalsy(); // rotateToLine === false
     });
 
     test('transparent tile optimization should prevent program.draw from being called', () => {
@@ -189,7 +189,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        painterMock.frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -206,7 +206,7 @@ describe('drawSymbol', () => {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
         const programMock = new Program(null, null, null, null, null, null, null, null);
-        vi.spyOn(painterMock.frameRenderContext, 'useProgram').mockReturnValue(programMock);
+        vi.spyOn(frameRenderContext, 'useProgram').mockReturnValue(programMock);
         const bucketMock = new SymbolBucket(null);
         bucketMock.icon = {
             programConfigurations: {
@@ -231,7 +231,7 @@ describe('drawSymbol', () => {
         (vi.mocked(tileManagerMock.getTile)).mockReturnValue(tile);
         tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawSymbols(painterMock, tileManagerMock, layer, [tileId], painterMock.frameRenderContext);
+        drawSymbols(painterMock, tileManagerMock, layer, [tileId], frameRenderContext);
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });
