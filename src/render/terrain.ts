@@ -240,7 +240,7 @@ export class Terrain {
 
     /**
      * {@link getElevationForLngLat}, or undefined while it gives 0 for want of DEM data that can still arrive, see
-     * {@link hasElevationForLngLat} and {@link TerrainTileManager.canLoadDem}. Any other elevation comes from DEM data,
+     * {@link hasElevationForLngLat} and {@link TerrainTileManager.canLoadDEM}. Any other elevation comes from DEM data,
      * so only a 0 is checked.
      * @param lnglat - the location
      * @param transform - the transform {@link getElevationForLngLat} is given
@@ -252,7 +252,7 @@ export class Terrain {
         const zoom = this._getFallbackZoom(transform);
         if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return elevation;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
-        return this.tileManager.canLoadDem(tileID) ? undefined : elevation;
+        return this.tileManager.canLoadDEM(tileID) ? undefined : elevation;
     }
 
     /**

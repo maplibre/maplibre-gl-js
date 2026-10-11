@@ -307,7 +307,7 @@ export class TerrainTileManager extends Evented {
      * @param tileID - the terrain tile
      * @returns false where the source will not serve DEM data for the tile
      */
-    canLoadDem(tileID: OverscaledTileID): boolean {
+    canLoadDEM(tileID: OverscaledTileID): boolean {
         const source = this.tileManager._source;
         const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
         if (z < source.minzoom) return false;
