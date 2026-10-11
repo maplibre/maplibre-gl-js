@@ -184,7 +184,7 @@ maplibregl.addProjection({
 });
 ```
 
-The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. The built-in `identity` projection needs neither a `wkt` nor a plugin. Without a `wkt`, or without a plugin in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
+The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. [Display GeoJSON in a polar stereographic projection](../examples/display-geojson-in-a-polar-stereographic-projection.md) puts it together in a complete page, with the plugin inlined as a Blob. The built-in `identity` projection needs neither a `wkt` nor a plugin. Without a `wkt`, or without a plugin in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
 
 ## What keeps working
 
