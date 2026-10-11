@@ -1,6 +1,8 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer, type FakeServer} from 'nise';
 import {VectorTileSource} from './vector_tile_source.ts';
+import {VectorTileWorkerSource} from './vector_tile_worker_source.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {AJAXError} from '../util/ajax.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -16,8 +18,19 @@ import type {WorkerTileParameters} from './worker_source.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {Source} from './source.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {IActor} from '../util/actor.ts';
 
 class StubbedEvented extends Evented {}
+
+/** Creates an actor whose worker source retains its own tile state between messages. */
+function createWorkerActor(): IActor {
+    const workerSource = new VectorTileWorkerSource({sendAsync: vi.fn()} as IActor, new StyleLayerIndex([]), []);
+    return {
+        sendAsync({type, data}: ActorMessage<MessageType.loadTile | MessageType.reloadTile>) {
+            return type === MessageType.loadTile ? workerSource.loadTile(data) : workerSource.reloadTile(data);
+        }
+    } as IActor;
+}
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -593,22 +606,34 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
     });
 
-    test('keeps an expired tile on the worker that loaded it', async () => {
-        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png']});
-        await waitForMetadataEvent(source);
+    test('reloads a tile after an expiry refresh found its etag unchanged', async () => {
+        const emptyTileData = new ArrayBuffer(0);
+        server.respondImmediately = true;
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf', 'ETag': '"v1"'}, emptyTileData as any);
+        });
 
-        const originalActor = {sendAsync: vi.fn().mockResolvedValue({})};
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+        await waitForMetadataEvent(source);
+        source.dispatcher.getReadyActor = vi.fn()
+            .mockReturnValueOnce(createWorkerActor())
+            .mockReturnValueOnce(createWorkerActor());
+
         const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'expired',
-            actor: originalActor,
+            uid: 1,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            state: 'loading',
             loadVectorData: vi.fn()
         } as any as Tile;
 
         await source.loadTile(tile);
+        expect(tile.etag).toBe('"v1"');
 
-        expect(tile.actor).toBe(originalActor);
-        expect(originalActor.sendAsync).toHaveBeenCalledWith(expect.objectContaining({type: MessageType.loadTile}), expect.anything());
+        tile.state = 'expired';
+        await expect(source.loadTile(tile)).resolves.toEqual({unmodified: true});
+
+        tile.state = 'reloading';
+        await expect(source.loadTile(tile)).resolves.toEqual({});
     });
 
     test('stores worker etag on tile when present', async () => {
