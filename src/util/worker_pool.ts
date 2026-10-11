@@ -1,22 +1,16 @@
 import {workerFactory} from './web_worker.ts';
 import {browser} from './browser.ts';
 import {isSafari} from './util.ts';
-import {Evented} from './evented.ts';
 
 import type {ActorTarget} from './actor.ts';
 import type {Dispatcher} from './dispatcher.ts';
-import type {Event} from './evented.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
-
-export type WorkerPoolEventType = {
-    create: Event;
-};
 
 /**
  * Constructs a worker pool.
  */
-export class WorkerPool extends Evented<WorkerPoolEventType> {
+export class WorkerPool {
     static workerCount: number;
 
     active: {
@@ -25,11 +19,13 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     workersPromise: Promise<ActorTarget[]> | null;
     /** The dispatcher whose actors live and die with the pooled workers, set once by dispatcher.ts. */
     globalDispatcher: Dispatcher | undefined;
+    /** Called each time the workers are created, so dispatcher.ts can replay worker state. */
+    workersCreatedCallbacks: Set<() => void>;
 
     constructor() {
-        super();
         this.active = {};
         this.workersPromise = null;
+        this.workersCreatedCallbacks = new Set();
     }
 
     /** Claims the shared workers, creating them on the first claim. */
@@ -39,9 +35,9 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     }
 
     /**
-     * Returns the shared workers without claiming them, creating them on first use. The `create`
-     * event fires before the workers boot, so listeners replay only state recorded before the
-     * call that created them.
+     * Returns the shared workers without claiming them, creating them on first use. The created
+     * callbacks run before the workers boot, so they replay only state recorded before the call
+     * that created them.
      */
     async ensureWorkers(): Promise<ActorTarget[]> {
         if (!this.workersPromise) {
@@ -51,7 +47,9 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
             }
             this.workersPromise = Promise.all(promises);
             this.globalDispatcher?.getActors();
-            this.fire('create');
+            for (const callback of this.workersCreatedCallbacks) {
+                callback();
+            }
         }
         return (await this.workersPromise).slice();
     }

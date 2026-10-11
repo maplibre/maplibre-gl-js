@@ -128,6 +128,22 @@ describe('Worker generic testing', () => {
         server.restore();
     });
 
+    test('imports a script sent twice only once, and retries one that failed', async () => {
+        const server = fakeServer.create();
+        const first = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
+        const second = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
+        expect(second).toBe(first);
+
+        server.respond();
+        await expect(first).rejects.toBeDefined();
+
+        const third = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
+        expect(third).not.toBe(first);
+        server.respond();
+        await expect(third).rejects.toBeDefined();
+        server.restore();
+    });
+
     test('set images', () => {
         expect(worker.availableImages['0']).toBeUndefined();
         worker.actor.messageHandlers[MessageType.setImages]('0', ['availableImages']);

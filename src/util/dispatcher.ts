@@ -58,8 +58,8 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     /**
      * Returns this dispatcher's actors, building them on first use. The promise is assigned
-     * before the build runs, since creating the workers fires the pool's `create` event, and a
-     * listener that broadcasts calls back into this method while the actors are still building.
+     * before the build runs, since creating the workers runs the pool's created callbacks, and a
+     * callback that broadcasts calls back into this method while the actors are still building.
      */
     getActors(): Promise<Actor[]> {
         if (this.removed) return Promise.resolve([]);
@@ -93,10 +93,13 @@ export class Dispatcher extends Evented<ErrorEventType> {
 
     /**
      * Broadcast a message to all Workers.
+     * The type can be any string, to allow sending messages that are handled by a script that was imported using {@link importScriptInWorkers}.
      */
-    async broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>> {
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>>;
+    broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
+    async broadcast(type: string, data: unknown): Promise<unknown[]> {
         const actors = await this.getActors();
-        return Promise.all(actors.map(actor => actor.sendAsync({type, data})));
+        return Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data: data as any})));
     }
 
     /**
@@ -125,20 +128,31 @@ export class Dispatcher extends Evented<ErrorEventType> {
         if (mapRemoved) this.workerPool.release(this.id);
     }
 
-    public async registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void> {
-        (this.messageHandlers as Record<T, MessageHandler<T>>)[type] = handler;
+    /**
+     * Registers a handler for messages that the workers send to this dispatcher.
+     * The type can be any string, to allow handling messages that are sent by a script that was imported using {@link importScriptInWorkers}.
+     */
+    public registerMessageHandler<T extends MessageType>(type: T, handler: CustomMessageHandler<RequestResponseMessageMap[T][0], RequestResponseMessageMap[T][1]>): Promise<void>;
+    public registerMessageHandler<TData = any, TResult = any>(type: string, handler: CustomMessageHandler<TData, TResult>): Promise<void>;
+    public async registerMessageHandler(type: string, handler: CustomMessageHandler<any, any>): Promise<void> {
+        (this.messageHandlers as Record<string, MessageHandler<MessageType>>)[type] = handler as MessageHandler<MessageType>;
         for (const actor of this.actors) {
-            actor.registerMessageHandler(type, handler);
+            actor.registerMessageHandler(type as MessageType, handler as MessageHandler<MessageType>);
         }
     }
 
-    public async unregisterMessageHandler<T extends MessageType>(type: T): Promise<void> {
-        delete this.messageHandlers[type];
+    public async unregisterMessageHandler(type: MessageType | string): Promise<void> {
+        delete this.messageHandlers[type as MessageType];
         for (const actor of this.actors) {
-            actor.unregisterMessageHandler(type);
+            actor.unregisterMessageHandler(type as MessageType);
         }
     }
 }
+
+/**
+ * A handler for a message that is not one of the built-in {@link MessageType}s, e.g. a message that is sent by a plugin.
+ */
+export type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
 
 /** The one dispatcher whose use of the workers is not a claim: its actors live and die with them. */
 class GlobalDispatcher extends Dispatcher {
@@ -178,7 +192,9 @@ const scriptsImportedIntoWorkers: Set<string> = new Set();
  * ```
  */
 export function onGlobalWorkersCreated(listener: () => void): Subscription {
-    return getGlobalWorkerPool().on('create', listener);
+    const callbacks = getGlobalWorkerPool().workersCreatedCallbacks;
+    callbacks.add(listener);
+    return {unsubscribe: () => callbacks.delete(listener)};
 }
 
 /**

@@ -661,7 +661,7 @@ describe('Style._load', () => {
 
     test('layers are broadcasted to worker', () => {
         const style = new Style(getStubMap());
-        let dispatchType: MessageType;
+        let dispatchType: string;
         let dispatchData;
         const styleSpec = createStyleJSON({
             layers: [{
