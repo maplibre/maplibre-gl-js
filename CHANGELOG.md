@@ -1,7 +1,21 @@
 ## main
 ### ✨ Features and improvements
-- Allow calling `new Map({ globalState: { ... }})` and `setStyle({ globalState: ... })` to provide an initial global state for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- feat: Allow providing initial global state and style transform for map ([#8264](https://github.com/maplibre/maplibre-gl-js/pull/8264)) (by [@hiddewie](https://github.com/hiddewie))
+- fix: `ScaleControl` throwing when its sample points miss the globe ([#8720](https://github.com/maplibre/maplibre-gl-js/pull/8720)) (by [@SatvikMishra08](https://github.com/SatvikMishra08))
+- Fix circles swelling during the globe to mercator transition ([#8717](https://github.com/maplibre/maplibre-gl-js/pull/8717)) (by [@heikki](https://github.com/heikki))
+- CSC-1.2 Create transforms through a factory per projection ([#8707](https://github.com/maplibre/maplibre-gl-js/pull/8707)) (by [@birkskyum](https://github.com/birkskyum))
+- Final touches for the new 3D examples ([#8704](https://github.com/maplibre/maplibre-gl-js/pull/8704)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+- Add link to lngLatAlt raycaster in raycast example ([#8701](https://github.com/maplibre/maplibre-gl-js/pull/8701)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+- More broken link fixes following 3D tile example updates ([#8691](https://github.com/maplibre/maplibre-gl-js/pull/8691)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+- Fix broken link and Three.js capitalization ([#8687](https://github.com/maplibre/maplibre-gl-js/pull/8687)) (by [@safwat-halaby](https://github.com/safwat-halaby))
+## 6.14.0
+### ✨ Features and improvements
+- Allow calling `new Map({ globalState: { ... }})` and `setStyle({ globalState: ... })` to provide an initial global state for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
 
 ### 🐞 Bug fixes
 - Fix a rendering crash when `removeFeatureState` removes a property before feature state is set ([#8715](https://github.com/maplibre/maplibre-gl-js/pull/8715)) (by [@yeomin4242](https://github.com/yeomin4242))
@@ -13,7 +27,6 @@
 - Fix the camera jumping back at the end of a pan, flick or rotation into terrain ([#8692](https://github.com/maplibre/maplibre-gl-js/pull/8692)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `flyTo` dropping the `offset` and `around` options under `prefers-reduced-motion`, so a reduced-motion fly lands at the same camera as the animated one ([#8730](https://github.com/maplibre/maplibre-gl-js/pull/8730)) (by [@maartenla](https://github.com/maartenla))
 - Fix `load` and `idle` never firing when the last tile fails with a status other than 404 ([#8733](https://github.com/maplibre/maplibre-gl-js/pull/8733)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- _...Add new stuff here..._
 
 ## 6.13.0
 
