@@ -200,13 +200,13 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
 
     const availableWidth = (tr.width - (mapPadding.left + mapPadding.right + fitPadding.left + fitPadding.right));
     const availableHeight = (tr.height - (mapPadding.top + mapPadding.bottom + fitPadding.top + fitPadding.bottom));
-    const scaleX = availableWidth / size.x;
-    const scaleY = availableHeight / size.y;
-
-    if (scaleY < 0 || scaleX < 0) {
+    if (availableWidth <= 0 || availableHeight <= 0) {
         cameraBoundsWarning();
         return undefined;
     }
+
+    const scaleX = availableWidth / size.x;
+    const scaleY = availableHeight / size.y;
 
     const zoom = Math.min(scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
 
