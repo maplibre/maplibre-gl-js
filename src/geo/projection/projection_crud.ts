@@ -1,15 +1,15 @@
-import {identityCrs, type CrsDefinition} from './crs.ts';
+import {identityCrs, type CRSDefinition} from './crs.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-const registeredProjections = new Map<string, CrsDefinition>([[identityCrs.name, identityCrs]]);
+const registeredProjections = new Map<string, CRSDefinition>([[identityCrs.name, identityCrs]]);
 
 /**
  * @internal
  * Returns the registered CRS definition for a projection name, or `undefined` if the name is not registered
  * (an unset or expression-valued projection type is never registered).
  */
-export function getRegisteredProjection(name: ProjectionSpecification['type']): CrsDefinition | undefined {
+export function getRegisteredProjection(name: ProjectionSpecification['type']): CRSDefinition | undefined {
     return typeof name === 'string' ? registeredProjections.get(name) : undefined;
 }
 
@@ -47,7 +47,7 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  * });
  * ```
  */
-export function addProjection(def: CrsDefinition): void {
+export function addProjection(def: CRSDefinition): void {
     if (!def.name.includes(':')) {
         throw new Error(`The projection name "${def.name}" needs a colon, like "EPSG:2193" or "custom:equal-earth": names without one are reserved for built-in projections.`);
     }

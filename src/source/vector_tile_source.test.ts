@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
-import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
+import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {VectorTileSource} from './vector_tile_source.ts';
 import {AJAXError} from '../util/ajax.ts';
@@ -387,7 +387,7 @@ describe('VectorTileSource', () => {
         source.onAdd({
             _getMapId: () => 1,
             _requestManager: new RequestManager(),
-            style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(identityCrs))}
+            style: {projection: new MercatorProjection(new CRSWorldCoordinateHelper(identityCrs))}
         } as any as Map);
 
         await waitForMetadataEvent(source);
@@ -409,7 +409,7 @@ describe('VectorTileSource', () => {
             transform: {showCollisionBoxes: false},
             _getMapId: () => 1,
             _requestManager: new RequestManager(),
-            style: {projection: new MercatorProjection(new CrsWorldCoordinateHelper(identityCrs))},
+            style: {projection: new MercatorProjection(new CRSWorldCoordinateHelper(identityCrs))},
             getGlobalState: () => ({}),
             getPixelRatio() { return 1; },
         } as any as Map);

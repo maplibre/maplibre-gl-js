@@ -3,7 +3,7 @@ import {CanonicalTileID} from './tile_id.ts';
 import {tileIdToLngLatBounds} from './tile_id_to_lng_lat_bounds.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import {CrsWorldCoordinateHelper} from '../geo/projection/crs.ts';
+import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 import {createRotatedCrs} from '../util/test/util.ts';
 
 describe('tileIdToLngLatBounds', () => {
@@ -37,7 +37,7 @@ describe('tileIdToLngLatBounds', () => {
 
 describe('tileIdToLngLatBounds with a non-cylindrical world coordinate helper', () => {
     test('follows the helper, not mercator', () => {
-        const rotatedWorldCoordinates = new CrsWorldCoordinateHelper(createRotatedCrs());
+        const rotatedWorldCoordinates = new CRSWorldCoordinateHelper(createRotatedCrs());
         const z = 3;
         const worldSize = Math.pow(2, z);
         const {x, y} = rotatedWorldCoordinates.worldFromLngLat(105, 45);
@@ -51,7 +51,7 @@ describe('tileIdToLngLatBounds with a non-cylindrical world coordinate helper', 
     });
 
     test('contains every corner of the tile', () => {
-        const rotatedWorldCoordinates = new CrsWorldCoordinateHelper(createRotatedCrs());
+        const rotatedWorldCoordinates = new CRSWorldCoordinateHelper(createRotatedCrs());
         const z = 3;
         const worldSize = Math.pow(2, z);
         const {x, y} = rotatedWorldCoordinates.worldFromLngLat(105, 45);

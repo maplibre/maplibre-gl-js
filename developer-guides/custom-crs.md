@@ -12,11 +12,11 @@ The transform, camera, covering tiles, terrain, sources and queries used to call
 - `wraps` is `true` only for Mercator. It gates world copies, `LngLat.wrap()`, antimeridian handling, the `MAX_VALID_LATITUDE` clamp and the hillshade latitude correction. With a non-wrapping helper `MercatorTransform._constrainToWorldSquare` keeps the center inside tile 0/0/0 and leaves the zoom to `minZoom`, or keeps the view inside the `maxBounds` box.
 - `tileMatrixSet` is the grid whose tile 0/0/0 is the world square, in CRS units, which the `{bbox}` tile URL token is expressed in; EPSG:3857 meters for Mercator.
 
-A `CrsDefinition` becomes a helper through `new CrsWorldCoordinateHelper(definition)`, which applies the world-coordinate formula from the user guide.
+A `CRSDefinition` becomes a helper through `new CRSWorldCoordinateHelper(definition)`, which applies the world-coordinate formula from the user guide.
 
 ## Who holds the helper
 
-The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CrsWorldCoordinateHelper` and gives it to both halves of the map's projection: the `MercatorProjection` it constructs, and the `MercatorTransform`, through `setWorldCoordinateHelper`, which `clone()` carries along. Mercator, globe and vertical-perspective share the one mercator helper.
+The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to both halves of the map's projection: the `MercatorProjection` it constructs, and the `MercatorTransform`, through `setWorldCoordinateHelper`, which `clone()` carries along. Mercator, globe and vertical-perspective share the one mercator helper.
 
 Readers take the helper from what they already hold: the transform, camera and covering tiles from the transform; sources and queries from `map.style.projection.worldCoordinateHelper`; the terrain from a reader the `Map` passes it, since the painter holds no transform.
 

@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createRotatedCrs, expectToBeCloseToArray} from '../util/test/util.ts';
 import {EXTENT} from '../data/extent.ts';
 import {createMercatorTransform} from './projection/mercator_transform.ts';
-import {CrsWorldCoordinateHelper} from './projection/crs.ts';
+import {CRSWorldCoordinateHelper} from './projection/crs.ts';
 
 const emptyCallbacks = {
     calcMatrices: () => {},
@@ -94,7 +94,7 @@ describe('TransformHelper', () => {
 
         test('leaves the target alone in a world that does not wrap', () => {
             const transform = createMercatorTransform({renderWorldCopies: true});
-            transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(createRotatedCrs()));
+            transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(createRotatedCrs()));
             transform.resize(200, 200);
             transform.setZoom(4);
             transform.setCenter(new LngLat(140, 0));

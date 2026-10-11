@@ -2,12 +2,12 @@ import {describe, test, expect} from 'vitest';
 import {TileBounds} from './tile_bounds.ts';
 import {CanonicalTileID} from './tile_id.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
-import {CrsWorldCoordinateHelper} from '../geo/projection/crs.ts';
+import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 import {createPolarStereographicCrs, createRotatedCrs} from '../util/test/util.ts';
 
 describe('TileBounds.contains', () => {
     test('follows the helper, not mercator', () => {
-        const rotatedWorldCoordinates = new CrsWorldCoordinateHelper(createRotatedCrs());
+        const rotatedWorldCoordinates = new CRSWorldCoordinateHelper(createRotatedCrs());
         const bounds: [number, number, number, number] = [100, 40, 110, 50];
         const z = 3;
         const worldSize = Math.pow(2, z);
@@ -27,7 +27,7 @@ describe('TileBounds.contains', () => {
     });
 
     test('covers every tile touched by the corners of a box in a non-cylindrical helper', () => {
-        const rotatedWorldCoordinates = new CrsWorldCoordinateHelper(createRotatedCrs());
+        const rotatedWorldCoordinates = new CRSWorldCoordinateHelper(createRotatedCrs());
         const bounds: [number, number, number, number] = [-10, -10, 10, 10];
         const z = 5;
         const worldSize = Math.pow(2, z);
@@ -39,7 +39,7 @@ describe('TileBounds.contains', () => {
     });
 
     test('contains every zoom 2 tile of the cap north of 60N in a polar stereographic CRS', () => {
-        const polar = new CrsWorldCoordinateHelper(createPolarStereographicCrs());
+        const polar = new CRSWorldCoordinateHelper(createPolarStereographicCrs());
         const capNorthOf60 = new TileBounds([-180, 60, 180, 90], null, null, polar);
         const tilesPerSideAtZoom2 = 4;
         for (let x = 0; x < tilesPerSideAtZoom2; x++) {
@@ -50,7 +50,7 @@ describe('TileBounds.contains', () => {
     });
 
     test('contains the tile at the rightmost point of 60N when no sample of the box lands on it', () => {
-        const polar = new CrsWorldCoordinateHelper(createPolarStereographicCrs());
+        const polar = new CRSWorldCoordinateHelper(createPolarStereographicCrs());
         const capFrom170WTo170E = new TileBounds([-170, 60, 170, 90], null, null, polar);
         const rightmostLngOf60N = 45;
         const z = 13;

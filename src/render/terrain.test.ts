@@ -14,7 +14,7 @@ import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 import {createVerticalPerspectiveTransform} from '../geo/projection/vertical_perspective_transform.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager} from '../util/test/util.ts';
-import {CrsWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
+import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -469,7 +469,7 @@ describe('Terrain', () => {
 
 describe('Terrain in a planar projection', () => {
     function createPlanarTerrain() {
-        const identityCrsWorld = new CrsWorldCoordinateHelper(identityCrs);
+        const identityCrsWorld = new CRSWorldCoordinateHelper(identityCrs);
         return new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem'}, 'auto', () => identityCrsWorld);
     }
 

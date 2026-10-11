@@ -5,7 +5,7 @@ import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {createMercatorTransform, type MercatorTransform} from '../../geo/projection/mercator_transform.ts';
-import {CrsWorldCoordinateHelper, identityCrs, type CrsDefinition} from '../../geo/projection/crs.ts';
+import {CRSWorldCoordinateHelper, identityCrs, type CRSDefinition} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {Painter} from '../../render/painter.ts';
@@ -420,7 +420,7 @@ export function createIdentityCrsTransform(width: number, height: number): Merca
         maxPitch: 85,
         renderWorldCopies: true,
     });
-    transform.setWorldCoordinateHelper(new CrsWorldCoordinateHelper(identityCrs));
+    transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(identityCrs));
     transform.resize(width, height);
     return transform;
 }
@@ -429,7 +429,7 @@ export function createIdentityCrsTransform(width: number, height: number): Merca
  * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
  * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
  */
-export function createRotatedCrs(): CrsDefinition {
+export function createRotatedCrs(): CRSDefinition {
     const cos = Math.cos(Math.PI / 6);
     const sin = Math.sin(Math.PI / 6);
     return {
@@ -450,7 +450,7 @@ export function createRotatedCrs(): CrsDefinition {
  * The identity CRS with a converter that answers only inside its tile matrix set, -90..90 on both axes,
  * and gives `answerOutside` everywhere else.
  */
-export function createIdentityCrsAnsweringInside(answerOutside: number[] | null): CrsDefinition {
+export function createIdentityCrsAnsweringInside(answerOutside: number[] | null): CRSDefinition {
     return {
         name: 'test:identity-answering-inside',
         projection: {
@@ -469,7 +469,7 @@ export function createIdentityCrsAnsweringInside(answerOutside: number[] | null)
  * A north polar stereographic CRS on a sphere, oriented like EPSG:3413 (lng -45 points down) and true to scale
  * at 70N, with tile 0/0/0 spanning the EPSG:3413 grid NASA GIBS serves. Parallels are circles around the pole.
  */
-export function createPolarStereographicCrs(): CrsDefinition {
+export function createPolarStereographicCrs(): CRSDefinition {
     const degrees = 180 / Math.PI;
     const scale = 6378137 * (1 + Math.sin(70 / degrees));
     const centralLng = -45;

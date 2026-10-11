@@ -4,7 +4,7 @@ MapLibre GL JS renders Web Mercator (EPSG:3857) tiles by default. Some tile sets
 
 The map never reprojects tile content on the GPU. It positions the CRS's own tile grid on screen and converts lng/lat to and from that grid through the converter you supply. Reprojecting Mercator tiles into another CRS is a separate problem, tracked in [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 
-`addProjection`, `removeProjection` and `CrsDefinition` are experimental: they can still change in a minor release.
+`addProjection`, `removeProjection` and `CRSDefinition` are experimental: they can still change in a minor release.
 
 ## What is supported
 
@@ -17,7 +17,7 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 
 ## Defining a CRS
 
-`addProjection` takes a `CrsDefinition`:
+`addProjection` takes a `CRSDefinition`:
 
 | Field | Meaning |
 |-------|---------|

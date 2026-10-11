@@ -3,7 +3,7 @@ import {isInBoundsForTileZoomXY, isInBoundsForZoomLngLat} from './world_bounds.t
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from './util.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
-import {CrsWorldCoordinateHelper} from '../geo/projection/crs.ts';
+import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 import {createRotatedCrs} from './test/util.ts';
 
 describe('isInBoundsForTileZoomXY', () => {
@@ -63,10 +63,10 @@ describe('isInBoundsForZoomLngLat', () => {
 });
 
 describe('isInBoundsForZoomLngLat with a rotated world coordinate helper', () => {
-    let rotatedWorldCoordinates: CrsWorldCoordinateHelper;
+    let rotatedWorldCoordinates: CRSWorldCoordinateHelper;
 
     beforeEach(() => {
-        rotatedWorldCoordinates = new CrsWorldCoordinateHelper(createRotatedCrs());
+        rotatedWorldCoordinates = new CRSWorldCoordinateHelper(createRotatedCrs());
     });
 
     test('accepts a location beyond the mercator pole that lies inside the rotated square', () => {

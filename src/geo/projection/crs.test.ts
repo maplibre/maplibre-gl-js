@@ -1,5 +1,5 @@
 import {describe, test, expect} from 'vitest';
-import {CrsWorldCoordinateHelper, identityCrs, type CrsDefinition} from './crs.ts';
+import {CRSWorldCoordinateHelper, identityCrs, type CRSDefinition} from './crs.ts';
 import {createIdentityCrsAnsweringInside, createRotatedCrs} from '../../util/test/util.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
@@ -19,7 +19,7 @@ function createSamplePoints(): Array<[number, number]> {
  * Spherical mercator written as a CRS definition, so its world coordinates can be checked against
  * the mercator helper's own math.
  */
-function createMercatorAsCrs(): CrsDefinition {
+function createMercatorAsCrs(): CRSDefinition {
     const halfCircumference = Math.PI * earthRadius;
     return {
         name: 'mercator-as-crs',
@@ -36,27 +36,27 @@ function createMercatorAsCrs(): CrsDefinition {
     };
 }
 
-describe('CrsWorldCoordinateHelper', () => {
+describe('CRSWorldCoordinateHelper', () => {
     describe('a converter without an answer outside its tile matrix set', () => {
         test('maps a position past the east edge to the nearest position inside where inverse returns null', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createIdentityCrsAnsweringInside(null));
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createIdentityCrsAnsweringInside(null));
             expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
         });
 
         test('maps a position past the east edge to the nearest position inside where inverse returns NaN', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createIdentityCrsAnsweringInside([NaN, NaN]));
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createIdentityCrsAnsweringInside([NaN, NaN]));
             expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
         });
 
         test('throws when inverse has no answer inside the tile matrix set either', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper({...createIdentityCrsAnsweringInside(null), projection: {forward: ([lng, lat]) => [lng, lat], inverse: () => null}});
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper({...createIdentityCrsAnsweringInside(null), projection: {forward: ([lng, lat]) => [lng, lat], inverse: () => null}});
             expect(() => worldCoordinateHelper.lngLatFromWorld(0.5, 0.5)).toThrow('has no answer inside its tile matrix set');
         });
     });
 
     describe('identity', () => {
         test('maps the tile 0 square to lng/lat -90..90', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
             expect(worldCoordinateHelper.worldFromLngLat(-90, 90)).toMatchObject({x: 0, y: 0});
             expect(worldCoordinateHelper.worldFromLngLat(90, -90)).toMatchObject({x: 1, y: 1});
             expect(worldCoordinateHelper.worldFromLngLat(0, 0)).toMatchObject({x: 0.5, y: 0.5});
@@ -64,7 +64,7 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('round trips lng/lat through world coordinates', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
             for (const [lng, lat] of createSamplePoints()) {
                 const world = worldCoordinateHelper.worldFromLngLat(lng, lat);
                 const back = worldCoordinateHelper.lngLatFromWorld(world.x, world.y);
@@ -75,24 +75,24 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('uses a constant meters per world unit equal to the zoom 0 extent', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBe(180);
             expect(worldCoordinateHelper.metersPerWorldUnit(0.95, 0.05)).toBe(180);
         });
 
         test('scales altitude to world z by the zoom 0 extent wherever the location is', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
             expect(worldCoordinateHelper.worldZFromAltitude(360, new LngLat(80, 80))).toBe(2);
         });
 
         test('puts the altitude in z and leaves z at 0 without one', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
             expect(worldCoordinateHelper.worldFromLngLat(0, 0).z).toBe(0);
             expect(worldCoordinateHelper.worldFromLngLat(0, 0, 90).z).toBe(0.5);
         });
 
         test('clamps a latitude past the poles to the range LngLat accepts, for a position outside the world square', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
             const aTenthOfTheSquareNorthOfIt = -0.1;
             const aTenthOfTheSquareSouthOfIt = 1.1;
 
@@ -101,7 +101,7 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('does not wrap', () => {
-            expect(new CrsWorldCoordinateHelper(identityCrs).wraps).toBe(false);
+            expect(new CRSWorldCoordinateHelper(identityCrs).wraps).toBe(false);
         });
     });
 
@@ -116,7 +116,7 @@ describe('CrsWorldCoordinateHelper', () => {
 
     describe('rotated CRS', () => {
         test('round trips lng/lat through world coordinates', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createRotatedCrs());
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createRotatedCrs());
             for (const [lng, lat] of createSamplePoints()) {
                 const world = worldCoordinateHelper.worldFromLngLat(lng, lat);
                 const back = worldCoordinateHelper.lngLatFromWorld(world.x, world.y);
@@ -127,7 +127,7 @@ describe('CrsWorldCoordinateHelper', () => {
 
         test('measures world coordinates from the tile matrix set origin with y growing down', () => {
             const definition = createRotatedCrs();
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(definition);
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(definition);
             const quarterAcross = 0.25;
             const threeQuartersDown = 0.75;
             const [originX, originY] = definition.tileMatrixSet.origin;
@@ -139,19 +139,19 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('takes the zoom 0 extent as meters per world unit', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createRotatedCrs());
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createRotatedCrs());
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBe(300);
         });
 
         test('scales altitude to world z by the zoom 0 extent', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createRotatedCrs());
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createRotatedCrs());
             expect(worldCoordinateHelper.worldZFromAltitude(300, new LngLat(0, 0))).toBe(1);
         });
     });
 
     describe('mercator written as a CRS', () => {
         test('projects lng/lat to the same world coordinates as the mercator helper', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createMercatorAsCrs());
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createMercatorAsCrs());
             for (const [lng, lat] of [...createSamplePoints(), [-180, -85], [180, 85]]) {
                 const expected = mercatorWorldCoordinateHelper.worldFromLngLat(lng, lat);
                 const actual = worldCoordinateHelper.worldFromLngLat(lng, lat);
@@ -161,7 +161,7 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('unprojects world coordinates to the same lng/lat as the mercator helper', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createMercatorAsCrs());
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createMercatorAsCrs());
             for (const [x, y] of [[0.5, 0.5], [0.1, 0.9], [0.999, 0.001], [0.25, 0.75]]) {
                 const expected = mercatorWorldCoordinateHelper.lngLatFromWorld(x, y);
                 const actual = worldCoordinateHelper.lngLatFromWorld(x, y);
@@ -171,7 +171,7 @@ describe('CrsWorldCoordinateHelper', () => {
         });
 
         test('reports the same meters per world unit as the mercator helper at the equator', () => {
-            const worldCoordinateHelper = new CrsWorldCoordinateHelper(createMercatorAsCrs());
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createMercatorAsCrs());
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBeCloseTo(mercatorWorldCoordinateHelper.metersPerWorldUnit(0.5, 0.5), 6);
         });
     });

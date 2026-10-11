@@ -1,8 +1,8 @@
 import {afterEach, describe, test, expect} from 'vitest';
 import {addProjection, getRegisteredProjection, removeProjection} from './projection_crud.ts';
-import {identityCrs, type CrsDefinition} from './crs.ts';
+import {identityCrs, type CRSDefinition} from './crs.ts';
 
-function createDefinition(name: string): CrsDefinition {
+function createDefinition(name: string): CRSDefinition {
     return {
         name,
         projection: {forward: ([lng, lat]) => [lng, lat], inverse: ([x, y]) => [x, y]},

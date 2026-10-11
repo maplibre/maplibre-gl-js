@@ -16,7 +16,7 @@ import type {TileMatrixSet} from './tile_matrix_set.ts';
  * tile grid on screen and maps lng/lat to and from it through `projection`. CRS units are
  * taken as meters wherever the map converts meters: altitudes, elevations, and the camera distance.
  */
-export type CrsDefinition = {
+export type CRSDefinition = {
     /**
      * Name used in `projection.type`, e.g. `'EPSG:2193'` or `'custom:floor-plan'`. It must contain a colon: names
      * without one, like `'mercator'`, `'globe'`, `'vertical-perspective'` and the pre-registered `'identity'`, are
@@ -46,15 +46,15 @@ export type CrsDefinition = {
  * to the tile matrix set origin, scaled so tile 0/0/0 is the 0..1 square, with y growing down.
  * One world unit is the zoom 0 extent, so meters per world unit is constant across the plane.
  */
-export class CrsWorldCoordinateHelper implements WorldCoordinateHelper {
-    private readonly _definition: CrsDefinition;
+export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
+    private readonly _definition: CRSDefinition;
     private readonly _originX: number;
     private readonly _originY: number;
     private readonly _extent: number;
     /** A CRS is a bounded plane: no world copies, no wrapping, and no latitude clamp. */
     readonly wraps = false;
 
-    constructor(definition: CrsDefinition) {
+    constructor(definition: CRSDefinition) {
         this._definition = definition;
         this._originX = definition.tileMatrixSet.origin[0];
         this._originY = definition.tileMatrixSet.origin[1];
@@ -119,7 +119,7 @@ class IdentityConversion {
  * tile 0/0/0 spans -90..90 on both axes. It exists for image-space maps, where a square root tile keeps
  * the quad tree uniform in both directions; image coordinates are scaled into -90..90.
  */
-class IdentityCrs implements CrsDefinition {
+class IdentityCRS implements CRSDefinition {
     readonly name = 'identity';
     readonly projection = new IdentityConversion();
     readonly tileMatrixSet: TileMatrixSet = {origin: [-90, 90], extentAtZoom0: 180};
@@ -129,4 +129,4 @@ class IdentityCrs implements CrsDefinition {
  * @internal
  * The one identity CRS: it holds no state, so the registry and every test share this instance.
  */
-export const identityCrs: CrsDefinition = new IdentityCrs();
+export const identityCrs: CRSDefinition = new IdentityCRS();

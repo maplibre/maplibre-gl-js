@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {cameraMercatorCoordinate, getMercatorHorizon, lngLatBoxToWorldBox, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates, worldBoxToLngLatBox} from './mercator_utils.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
-import {CrsWorldCoordinateHelper, identityCrs} from './crs.ts';
+import {CRSWorldCoordinateHelper, identityCrs} from './crs.ts';
 import {createMercatorTransform} from './mercator_transform.ts';
 import {createGlobeTransform} from './globe_transform.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
@@ -27,7 +27,7 @@ describe('mercator utils', () => {
     });
 
     test('projectToWorldCoordinates does not clamp latitude for a non-wrapping helper', () => {
-        const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
+        const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
         const worldSize = 1024;
         const pixelsPerDegree = worldSize / 180;
         const projected = projectToWorldCoordinates(worldSize, new LngLat(0, 89), worldCoordinateHelper);
@@ -184,13 +184,13 @@ describe('lngLatBoxToWorldBox and worldBoxToLngLatBox', () => {
     });
 
     test('map the whole world square of the identity CRS to lng/lat -90..90', () => {
-        const worldCoordinateHelper = new CrsWorldCoordinateHelper(identityCrs);
+        const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
         expect(worldBoxToLngLatBox(worldCoordinateHelper, 0, 0, 1, 1)).toEqual({west: -90, south: -90, east: 90, north: 90});
         expect(lngLatBoxToWorldBox(worldCoordinateHelper, -90, -90, 90, 90)).toEqual({minX: 0, minY: 0, maxX: 1, maxY: 1});
     });
 
     test('round trip through a rotated CRS contains the original box, since each direction takes the axis-aligned hull', () => {
-        const worldCoordinateHelper = new CrsWorldCoordinateHelper(createRotatedCrs());
+        const worldCoordinateHelper = new CRSWorldCoordinateHelper(createRotatedCrs());
         const world = lngLatBoxToWorldBox(worldCoordinateHelper, -20, -10, 30, 40);
         const back = worldBoxToLngLatBox(worldCoordinateHelper, world.minX, world.minY, world.maxX, world.maxY);
         expect(back.west).toBeLessThan(-20);
