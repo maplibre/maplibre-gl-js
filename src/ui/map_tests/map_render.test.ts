@@ -7,6 +7,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
 
@@ -61,6 +62,36 @@ test('no render after idle event', async () => {
     map.on('render', spy);
     await sleep(100);
     expect(spy).not.toHaveBeenCalled();
+});
+
+describe('when every tile request fails with a server error', () => {
+    let style: StyleSpecification;
+
+    beforeEach(() => {
+        server.respondWith(/example\.com/, [500, {}, '']);
+        server.respondImmediately = true;
+        style = createStyle();
+        style.sources.maplibre = {
+            type: 'vector',
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        };
+        style.layers.push({
+            id: 'layerId',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        });
+    });
+
+    test('load fires', async () => {
+        const map = createMap({style});
+        await expect(map.once('load')).resolves.toBeDefined();
+    });
+
+    test('idle fires', async () => {
+        const map = createMap({style});
+        await expect(map.once('idle')).resolves.toBeDefined();
+    });
 });
 
 test('no render before style loaded', async () => {
