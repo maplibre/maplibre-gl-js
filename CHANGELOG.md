@@ -1,10 +1,21 @@
 ## main
 ### ✨ Features and improvements
-- Allow calling `new Map({ globalState: { ... }})` and `setStyle({ globalState: ... })` to provide an initial global state for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
 - Add `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.14.0
+
+### ✨ Features and improvements
+
+- Allow calling `new Map({ globalState: { ... }})` and `setStyle({ globalState: ... })` to provide an initial global state for the map style, overriding the global state defaults from the style ([#7632](https://github.com/maplibre/maplibre-gl-js/issues/7632)) (by [@hiddewie](https://github.com/hiddewie))
+
+### 🐞 Bug fixes
+
+- fix: `ScaleControl` throwing when its sample points miss the globe ([#8720](https://github.com/maplibre/maplibre-gl-js/pull/8720)) (by [@SatvikMishra08](https://github.com/SatvikMishra08))
+- Fix a rendering crash when `removeFeatureState` removes a property before feature state is set ([#8715](https://github.com/maplibre/maplibre-gl-js/pull/8715)) (by [@yeomin4242](https://github.com/yeomin4242))
 - Work around blank, unresponsive maps on affected iPadOS 16 Safari devices ([#8364](https://github.com/maplibre/maplibre-gl-js/pull/8364)) (by [@samuelsmarason](https://github.com/samuelsmarason))
 - Fix circles with `circle-pitch-alignment: map` being drawn too large while the globe transitions to mercator ([#8714](https://github.com/maplibre/maplibre-gl-js/issues/8714)) (by [@heikki](https://github.com/heikki))
 - Fix `map.resize(eventData, false)` constraining the camera with the `vertical-perspective` projection ([#8695](https://github.com/maplibre/maplibre-gl-js/pull/8695)) (by [@birkskyum](https://github.com/birkskyum))
@@ -12,7 +23,7 @@
 - Fix the view sliding hundreds of meters off the center when terrain is switched on during a gesture ([#8688](https://github.com/maplibre/maplibre-gl-js/pull/8688)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix the camera jumping back at the end of a pan, flick or rotation into terrain ([#8692](https://github.com/maplibre/maplibre-gl-js/pull/8692)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `flyTo` dropping the `offset` and `around` options under `prefers-reduced-motion`, so a reduced-motion fly lands at the same camera as the animated one ([#8730](https://github.com/maplibre/maplibre-gl-js/pull/8730)) (by [@maartenla](https://github.com/maartenla))
-- _...Add new stuff here..._
+- Fix `load` and `idle` never firing when the last tile fails with a status other than 404 ([#8733](https://github.com/maplibre/maplibre-gl-js/pull/8733)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 
 ## 6.13.0
 
