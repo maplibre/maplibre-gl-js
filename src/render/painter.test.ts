@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
 import {FrameRenderContext} from './frame_render_context.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
@@ -19,7 +19,7 @@ describe('render', () => {
 
     beforeEach(() => {
         const gl = createNullGL();
-        transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
         painter = new Painter(gl);
         map = new StubMap() as any;
