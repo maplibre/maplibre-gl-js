@@ -1,13 +1,14 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type Mock} from 'vitest';
-import {GLOBAL_DISPATCHER_ID, type GlobalDispatcher, getGlobalDispatcher, importScriptInWorkers} from './global_dispatcher.ts';
+import {GLOBAL_DISPATCHER_ID, getGlobalDispatcher, importScriptInWorkers} from './global_dispatcher.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {MessageType} from './actor_messages.ts';
 
 import type MaplibreWorker from '../source/worker.ts';
 
-async function getWorker(globalDispatcher: GlobalDispatcher): Promise<MaplibreWorker> {
-    const actor = await globalDispatcher.getActor();
-    return (actor.target as any).worker;
+async function getWorker(): Promise<MaplibreWorker> {
+    const workers = await getGlobalWorkerPool().acquire('test');
+    getGlobalWorkerPool().release('test');
+    return (workers[0] as any).worker;
 }
 
 describe('global dispatcher', () => {
@@ -43,7 +44,7 @@ describe('global dispatcher', () => {
 
     test('exchanges messages with a type that is not built-in with the workers', async () => {
         const globalDispatcher = getGlobalDispatcher();
-        const worker = await getWorker(globalDispatcher);
+        const worker = await getWorker();
         const workerHandler = vi.fn().mockResolvedValue('from worker');
         worker.actor.registerMessageHandler('my-plugin-message' as MessageType, workerHandler);
         const mainHandler = vi.fn().mockResolvedValue('from main');

@@ -3,7 +3,7 @@ import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {MessageType} from './actor_messages.ts';
 import {warnOnce} from './util.ts';
 
-import type {Actor, MessageHandler} from './actor.ts';
+import type {MessageHandler} from './actor.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
 
 /**
@@ -60,18 +60,10 @@ export class GlobalDispatcher {
     }
 
     /**
-     * Acquires an actor to dispatch messages to. The actors are distributed in round-robin fashion.
-     * @returns An actor object backed by a web worker for processing messages.
-     */
-    getActor(): Promise<Actor> {
-        return this.dispatcher.getActor();
-    }
-
-    /**
      * Registers a handler for messages that the workers send to the global dispatcher.
      * The type can be any string, to allow handling messages that are sent by a script that was imported using {@link importScriptInWorkers}.
      */
-    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void>;
+    registerMessageHandler<T extends MessageType>(type: T, handler: CustomMessageHandler<RequestResponseMessageMap[T][0], RequestResponseMessageMap[T][1]>): Promise<void>;
     registerMessageHandler<TData = any, TResult = any>(type: string, handler: CustomMessageHandler<TData, TResult>): Promise<void>;
     registerMessageHandler(type: string, handler: CustomMessageHandler<any, any>): Promise<void> {
         return this.dispatcher.registerMessageHandler(type as MessageType, handler as MessageHandler<MessageType>);
