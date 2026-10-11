@@ -13,7 +13,7 @@ import {Sky} from './sky.ts';
 import {LineAtlas} from '../render/line_atlas.ts';
 import {clone, ensureError, extend, deepEqual, filterObject, mapObject} from '../util/util.ts';
 import {coerceSpriteToArray} from '../util/style.ts';
-import {getJSON, getReferrer} from '../util/ajax.ts';
+import {getJSON, getReferrer, makeRequest} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
@@ -252,6 +252,9 @@ export class Style extends Evented<MapEventType> {
         });
         this.dispatcher.registerMessageHandler(MessageType.getDashes, (mapId, params) => {
             return this.getDashes(mapId, params);
+        });
+        this.dispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
+            return makeRequest(params, abortController);
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
@@ -2201,6 +2204,7 @@ export class Style extends Evented<MapEventType> {
         this.dispatcher.unregisterMessageHandler(MessageType.getGlyphs);
         this.dispatcher.unregisterMessageHandler(MessageType.getImages);
         this.dispatcher.unregisterMessageHandler(MessageType.getDashes);
+        this.dispatcher.unregisterMessageHandler(MessageType.getResource);
         this.dispatcher.remove(true);
         this._listeners = {};
         this._oneTimeListeners = {};

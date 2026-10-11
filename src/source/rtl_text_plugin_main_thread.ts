@@ -2,17 +2,19 @@
 import {browser} from '../util/browser.ts';
 import {Event, Evented} from '../util/evented.ts';
 import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status.ts';
-import {type Dispatcher, getGlobalDispatcher} from '../util/dispatcher.ts';
+import {type GlobalDispatcher, getGlobalDispatcher} from '../util/global_dispatcher.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
     url: string = null;
-    dispatcher: Dispatcher = getGlobalDispatcher();
+    /** Claimed on the first sync and kept, since from then on the workers hold the plugin's state. */
+    dispatcher: GlobalDispatcher | null = null;
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
         this.status = statusToSend;
+        this.dispatcher ||= getGlobalDispatcher();
         return this.dispatcher.broadcast(MessageType.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})
             .catch((e: any) => {
                 this.status = 'error';
@@ -28,6 +30,8 @@ class RTLMainThreadPlugin extends Evented {
     clearRTLTextPlugin(): void {
         this.status = 'unavailable';
         this.url = null;
+        this.dispatcher?.release();
+        this.dispatcher = null;
     }
 
     async setRTLTextPlugin(url: string, deferred: boolean = false): Promise<void> {

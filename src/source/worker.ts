@@ -102,6 +102,11 @@ export default class Worker {
     };
     referrer: string;
     globalStates: Map<string, Record<string, any>>;
+    /**
+     * The scripts that were imported into this worker, by url, so that a script that is sent again is not executed twice.
+     * This happens when the global dispatcher is recreated while the workers are still alive.
+     */
+    importedScripts: Map<string, Promise<void>>;
 
     constructor(self: WorkerGlobalScopeInterface & ActorTarget) {
         this.self = self;
@@ -115,6 +120,7 @@ export default class Worker {
         this.externalWorkerSourceTypes = {};
 
         this.globalStates = new Map<string, Record<string, any>>();
+        this.importedScripts = new Map<string, Promise<void>>();
 
         this.self.registerWorkerSource = (name: string, WorkerSource: WorkerSourceConstructor) => {
             if (this.externalWorkerSourceTypes[name]) {
@@ -137,7 +143,7 @@ export default class Worker {
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
 
-        this.self.makeRequest = makeRequest;
+        this.self.makeRequest = (request, abortController, mapId) => makeRequest(request, abortController, mapId ?? this._getAnyMapId());
 
         this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);
@@ -208,8 +214,8 @@ export default class Worker {
             return this._syncRTLPluginState(mapId, params);
         });
 
-        this.actor.registerMessageHandler(MessageType.importScript, async (_mapId: string, params: string) => {
-            await loadScript(params);
+        this.actor.registerMessageHandler(MessageType.importScript, (_mapId: string, params: string) => {
+            return this._importScript(params);
         });
 
         this.actor.registerMessageHandler(MessageType.setImages, (mapId: string, params: string[]) => {
@@ -239,6 +245,26 @@ export default class Worker {
             this.globalStates.set(mapId, state);
         }
         return state;
+    }
+
+    /**
+     * Used for requests that were made without a map id, e.g. from an imported script,
+     * since any map in the main thread can make the request for the worker.
+     */
+    private _getAnyMapId(): string | number | undefined {
+        return this.globalStates.keys().next().value;
+    }
+
+    private _importScript(url: string): Promise<void> {
+        let importPromise = this.importedScripts.get(url);
+        if (!importPromise) {
+            importPromise = loadScript(url).catch((error) => {
+                this.importedScripts.delete(url);
+                throw error;
+            });
+            this.importedScripts.set(url, importPromise);
+        }
+        return importPromise;
     }
 
     private async _setImages(mapId: string, images: string[]): Promise<void> {
@@ -284,6 +310,7 @@ export default class Worker {
             // use a wrapped actor so that we can attach a target mapId param
             // to any messages invoked by the WorkerSource, this is very important when there are multiple maps
             const actor: IActor = {
+                mapId,
                 sendAsync: (message, abortController) => {
                     message.targetMapId = mapId;
                     return this.actor.sendAsync(message, abortController);

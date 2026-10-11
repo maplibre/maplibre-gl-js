@@ -85,7 +85,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         workerTile.abort = abortController;
         try {
             // Download the tile data from the network.
-            const tileResponse = await getArrayBuffer(params.request, abortController);
+            const tileResponse = await getArrayBuffer(params.request, abortController, this.actor.mapId);
 
             // Tile data hasn't changed (etag support) - return an unmodified result
             if (params.etag && params.etag === tileResponse.etag) {

@@ -10,7 +10,7 @@ export interface WorkerGlobalScopeInterface {
     registerRTLTextPlugin: (_: any) => void;
     addProtocol: (customProtocol: string, loadFn: AddProtocolAction) => void;
     removeProtocol: (customProtocol: string) => void;
-    makeRequest: (request: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>;
+    makeRequest: (request: RequestParameters, abortController: AbortController, mapId?: string | number) => Promise<GetResourceResponse<any>>;
     worker: MaplibreWorker;
 }
 

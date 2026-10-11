@@ -244,7 +244,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
      */
     async loadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
         if (params.request) {
-            params.data = (await getJSON<GeoJSON.GeoJSON>(params.request, abortController)).data;
+            params.data = (await getJSON<GeoJSON.GeoJSON>(params.request, abortController, this.actor.mapId)).data;
         }
 
         if (params.data) {

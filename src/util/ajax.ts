@@ -4,11 +4,6 @@ import {getProtocol} from '../source/protocol_crud.ts';
 import {MessageType} from './actor_messages.ts';
 
 /**
- * This is used to identify the global dispatcher id when sending a message from the worker without a target map id.
- */
-export const GLOBAL_DISPATCHER_ID = 'global-dispatcher';
-
-/**
  * A type used to store the tile's expiration date and cache control definition
  */
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null; etag?: string};
@@ -257,9 +252,11 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
  * This method can also use the registered method if `addProtocol` was called.
  * @param requestParameters - The request parameters
  * @param abortController - The abort controller allowing to cancel the request
+ * @param mapId - When in a worker, the id of the map this request is made for. That map makes the request in the main thread
+ * when the worker can't make it itself, e.g. when the protocol was only added in the main thread.
  * @returns a promise resolving to the response, including cache control and expiry data
  */
-export const makeRequest = async function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+export const makeRequest = async function(requestParameters: RequestParameters, abortController: AbortController, mapId?: string | number): Promise<GetResourceResponse<any>> {
     if (requestParameters.url.includes('://') && !(/^https?:|^file:/.test(requestParameters.url))) {
         const protocolLoadFn = getProtocol(requestParameters.url);
         if (protocolLoadFn) {
@@ -270,27 +267,27 @@ export const makeRequest = async function(requestParameters: RequestParameters, 
             }
             return response;
         }
-        if (isWorker(self) && self.worker?.actor) {
-            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
+        if (mapId != null && isWorker(self) && self.worker?.actor) {
+            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: mapId}, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {
         if (fetch && Request && AbortController && Object.hasOwn(Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, abortController);
         }
-        if (isWorker(self) && self.worker?.actor) {
-            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, mustQueue: true, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
+        if (mapId != null && isWorker(self) && self.worker?.actor) {
+            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, mustQueue: true, targetMapId: mapId}, abortController);
         }
     }
     return makeXMLHttpRequest(requestParameters, abortController);
 };
 
-export const getJSON = <T>(requestParameters: RequestParameters, abortController: AbortController): Promise<{data: T} & ExpiryData> => {
-    return makeRequest(extend(requestParameters, {type: 'json'}), abortController);
+export const getJSON = <T>(requestParameters: RequestParameters, abortController: AbortController, mapId?: string | number): Promise<{data: T} & ExpiryData> => {
+    return makeRequest(extend(requestParameters, {type: 'json'}), abortController, mapId);
 };
 
-export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<{data: ArrayBuffer} & ExpiryData> => {
-    return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), abortController);
+export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController, mapId?: string | number): Promise<{data: ArrayBuffer} & ExpiryData> => {
+    return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), abortController, mapId);
 };
 
 /** 

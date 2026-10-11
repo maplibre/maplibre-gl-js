@@ -42,6 +42,10 @@ type ResolveReject = {
  * This interface allowing to substitute only the sendAsync method of the Actor class.
  */
 export interface IActor {
+    /**
+     * The id of the map this actor sends its messages to, when it is used in a worker.
+     */
+    readonly mapId?: string | number | null;
     sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
 }
 
