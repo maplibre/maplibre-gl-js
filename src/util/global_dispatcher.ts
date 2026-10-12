@@ -155,10 +155,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     }
 }
 
-const globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool());
-globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
-    return makeRequest(params, abortController);
-});
+let globalDispatcher: GlobalDispatcher;
 
 /**
  * This function is used to get the global dispatcher that is shared across all maps instances.
@@ -172,5 +169,11 @@ globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): GlobalDispatcher {
+    if (!globalDispatcher) {
+        globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool());
+        globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
+            return makeRequest(params, abortController);
+        });
+    }
     return globalDispatcher;
 }
