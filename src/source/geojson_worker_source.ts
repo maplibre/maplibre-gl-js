@@ -7,7 +7,7 @@ import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-
 import {isAbortError} from '../util/abort_error.ts';
 import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
-import {extend, JSON_PREFIX} from '../util/util.ts';
+import {extend, JSON_PREFIX, warnOnce} from '../util/util.ts';
 import {createWorkerCRSHelper} from './projection_plugin_worker.ts';
 import {reprojectFeatureToPseudoLngLat, reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from '../util/geojson_reproject.ts';
 import {applySourceDiff, getFeatureId, toUpdateable} from './geojson_source_diff.ts';
@@ -201,12 +201,14 @@ export class GeoJSONWorkerSource implements WorkerSource {
             await this.loadAndProcessGeoJSON(params, this._pendingRequest);
             delete this._pendingRequest;
             this.tileState.clearLoaded();
+            if (this._crsHelper === null) {
+                warnOnce(`GeoJSON source "${params.source}" is drawn in the wrong place: no projection plugin is registered in the workers, see \`registerProjectionPlugin\` in the custom CRS guide.`);
+            }
 
             // Sending a large GeoJSON payload from the worker to the main thread is slow so only do if necessary.
             // Send data only if it was loaded from a URL, otherwise the main thread already has a copy of this data.
             const result: GeoJSONWorkerSourceLoadDataResult = {};
             if (params.request) result.data = params.data;
-            if (this._crsHelper === null) result.missingProjectionPlugin = true;
 
             this._finishRequestTiming(timing, params, result);
             return result;

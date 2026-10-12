@@ -30,10 +30,6 @@ export type GeoJSONWorkerSourceLoadDataResult = {
     resourceTiming?: {[_: string]: PerformanceResourceTiming[]};
     abandoned?: boolean;
     data?: GeoJSON.GeoJSON;
-    /**
-     * The map's registered projection has a WKT, but the worker has no projection plugin to project the data with.
-     */
-    missingProjectionPlugin?: boolean;
 };
 
 /**

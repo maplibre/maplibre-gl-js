@@ -387,12 +387,12 @@ describe('GeoJSONSource in a registered projection', () => {
         vi.restoreAllMocks();
     });
 
-    function loadSourceInProjection(definition: CRSDefinition, result: GeoJSONWorkerSourceLoadDataResult) {
+    function loadSourceInProjection(definition: CRSDefinition) {
         const sent: LoadGeoJSONParameters[] = [];
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<any>) {
                 sent.push(message.data);
-                return Promise.resolve(result);
+                return Promise.resolve({});
             }
         }), undefined);
         source.map = {style: {projection: new MercatorProjection(new CRSWorldCoordinateHelper(definition))}} as any as Map;
@@ -401,7 +401,7 @@ describe('GeoJSONSource in a registered projection', () => {
     }
 
     test('sends the built-in identity projection to the worker without a wkt', async () => {
-        const {source, sent} = loadSourceInProjection(identityCrs, {});
+        const {source, sent} = loadSourceInProjection(identityCrs);
         await waitForMetadataEvent(source);
 
         expect(sent[0].crs).toEqual({name: 'identity', wkt: undefined, tileMatrixSet: identityCrs.tileMatrixSet});
@@ -410,7 +410,7 @@ describe('GeoJSONSource in a registered projection', () => {
     test('sends a registered projection to the worker with its wkt', async () => {
         const definition = {...planarCrs, wkt: 'PROJCS["test"]'};
         addProjection(definition);
-        const {source, sent} = loadSourceInProjection(definition, {});
+        const {source, sent} = loadSourceInProjection(definition);
         await waitForMetadataEvent(source);
 
         expect(sent[0].crs).toEqual({name: 'EPSG:test', wkt: 'PROJCS["test"]', tileMatrixSet: planarCrs.tileMatrixSet});
@@ -419,21 +419,11 @@ describe('GeoJSONSource in a registered projection', () => {
     test('warns and sends no projection when a registered projection has no wkt', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         addProjection(planarCrs);
-        const {source, sent} = loadSourceInProjection(planarCrs, {});
+        const {source, sent} = loadSourceInProjection(planarCrs);
         await waitForMetadataEvent(source);
 
         expect(sent[0].crs).toBeUndefined();
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('the projection "EPSG:test" has no `wkt`'));
-    });
-
-    test('warns when the workers have no projection plugin', async () => {
-        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const definition = {...planarCrs, wkt: 'PROJCS["test"]'};
-        addProjection(definition);
-        const {source} = loadSourceInProjection(definition, {missingProjectionPlugin: true});
-        await waitForMetadataEvent(source);
-
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining('no projection plugin is registered in the workers'));
     });
 });
 

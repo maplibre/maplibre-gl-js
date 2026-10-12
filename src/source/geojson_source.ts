@@ -538,10 +538,6 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             this._data = {geojson: result.data};
         }
 
-        if (result.missingProjectionPlugin) {
-            warnOnce(`GeoJSON source "${this.id}" is drawn in the wrong place: no projection plugin is registered in the workers, see \`registerProjectionPlugin\` in the custom CRS guide.`);
-        }
-
         const diff = 'data' in update || replaced ? undefined : update.diff;
         const affectedGeometries = this._applyDiffToSource(diff);
         const refreshesClusters = !('data' in update) && update.updateCluster;

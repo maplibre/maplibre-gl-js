@@ -705,6 +705,7 @@ describe('loadData in a registered projection', () => {
 
     afterEach(() => {
         setProjectionPlugin(null);
+        vi.restoreAllMocks();
     });
 
     function firstFeatureInRootTile(source: GeoJSONWorkerSource) {
@@ -732,11 +733,12 @@ describe('loadData in a registered projection', () => {
         expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 2970, y: 1126});
     });
 
-    test('reports a wkt that no projection plugin can project', async () => {
+    test('warns about a wkt that no projection plugin can project', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
-        const result = await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
+        await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
 
-        expect(result.missingProjectionPlugin).toBe(true);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('no projection plugin is registered in the workers'));
     });
 
     test('tiles a feature a diff adds where the projection puts it', async () => {
