@@ -7,7 +7,7 @@ import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-
 import {isAbortError} from '../util/abort_error.ts';
 import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
-import {extend, JSON_PREFIX, warnOnce} from '../util/util.ts';
+import {extend, JSON_PREFIX} from '../util/util.ts';
 import {createWorkerCRSHelper} from './projection_handler_worker.ts';
 import {reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONSourceDiffToPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from '../util/geojson_reproject.ts';
 
@@ -80,10 +80,9 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _createGeoJSONIndex: typeof createGeoJSONIndex;
     /**
      * The world coordinate helper of the registered projection the index holds its data in, see
-     * {@link LoadGeoJSONParameters.crs}: `undefined` without a registered projection, `null` when the worker has no
-     * projection handler to build one with.
+     * {@link LoadGeoJSONParameters.crs}: `undefined` without one, or without a projection handler to build it with.
      */
-    _crsHelper: CRSWorldCoordinateHelper | null;
+    _crsHelper: CRSWorldCoordinateHelper | undefined;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
@@ -194,9 +193,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
             await this.loadAndProcessGeoJSON(params, this._pendingRequest);
             delete this._pendingRequest;
             this.tileState.clearLoaded();
-            if (this._crsHelper === null) {
-                warnOnce(`GeoJSON source "${params.source}" is drawn in the wrong place: no projection handler is set in the workers, see \`setProjectionHandler\` in the custom CRS guide.`);
-            }
 
             // Sending a large GeoJSON payload from the worker to the main thread is slow so only do if necessary.
             // Send data only if it was loaded from a URL, otherwise the main thread already has a copy of this data.

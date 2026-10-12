@@ -1,4 +1,5 @@
 import {CRSWorldCoordinateHelper, identityCrs, type CRSDefinition} from '../geo/projection/crs.ts';
+import {warnOnce} from '../util/util.ts';
 
 /**
  * Builds the converter for a coordinate reference system from its WKT, the way `proj4(wkt)` does: `forward` takes
@@ -28,12 +29,15 @@ export function setProjectionHandler(handler: ProjectionHandler | null): void {
 /**
  * @internal
  * The world coordinate helper a worker builds for a registered projection the main thread describes: from the
- * definition's WKT through the projection handler, or the built-in identity CRS when there is no WKT. `null` when a
- * WKT comes with no handler set.
+ * definition's WKT through the projection handler, or the built-in identity CRS when there is no WKT. `undefined`,
+ * with a warning, when a WKT comes with no handler set.
  */
-export function createWorkerCRSHelper(crs: Pick<CRSDefinition, 'name' | 'wkt' | 'tileMatrixSet'>): CRSWorldCoordinateHelper | null {
+export function createWorkerCRSHelper(crs: Pick<CRSDefinition, 'name' | 'wkt' | 'tileMatrixSet'>): CRSWorldCoordinateHelper | undefined {
     if (!crs.wkt) return new CRSWorldCoordinateHelper(identityCrs);
-    if (!projectionHandler) return null;
+    if (!projectionHandler) {
+        warnOnce('GeoJSON sources are drawn in the wrong place: no projection handler is set in the workers, see `setProjectionHandler` in the custom CRS guide.');
+        return undefined;
+    }
     if (!projections.has(crs.wkt)) projections.set(crs.wkt, projectionHandler(crs.wkt));
     return new CRSWorldCoordinateHelper({name: crs.name, wkt: crs.wkt, projection: projections.get(crs.wkt), tileMatrixSet: crs.tileMatrixSet});
 }
