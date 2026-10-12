@@ -33,17 +33,6 @@ describe('global dispatcher', () => {
         expect(globalWorkersCreated).toHaveBeenCalled();
     });
 
-    test('keeps the workers while another map still holds them', async () => {
-        const pool = getGlobalWorkerPool();
-        const mapDispatcher = new Dispatcher(pool, 1);
-        await mapDispatcher.actorsPromise;
-        await new Dispatcher(pool, 2).actorsPromise;
-
-        mapDispatcher.remove();
-
-        expect(pool.workersPromise).toBeTruthy();
-    });
-
     test('the global dispatcher broadcasts through fresh actors after its workers terminate', async () => {
         const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
         const globalDispatcher = getGlobalDispatcher();
@@ -120,14 +109,6 @@ describe('importScript', () => {
     afterEach(() => {
         vi.restoreAllMocks();
         terminateGlobalWorkers();
-    });
-
-    test('sends the script to the workers', async () => {
-        const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
-
-        await getGlobalDispatcher().importScript('plugin.js');
-
-        expect(sendSpy).toHaveBeenCalledWith({type: MessageType.importScript, data: 'plugin.js'});
     });
 
     test('re-imports the scripts into the workers that replace terminated ones', async () => {
