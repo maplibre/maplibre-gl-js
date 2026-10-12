@@ -901,7 +901,7 @@ export class Camera extends Evented<MapEventType> {
         this._elevation ||= (startElevation !== elevation);
         this._easeId = options.easeId;
 
-        this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation, targetOverride: options.elevation});
+        this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation});
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
@@ -924,7 +924,7 @@ export class Camera extends Evented<MapEventType> {
      */
     _prepareEase(eventData: any, noMoveStart: boolean,
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {},
-        elevation?: {tr: ITransform; center: LngLat; freeze: boolean; targetOverride?: number }): void {
+        elevation?: {tr: ITransform; center: LngLat; freeze: boolean }): void {
         this._moving = true;
         if (this.terrain && elevation) {
             this._prepareElevation(elevation.center, elevation.tr);
@@ -1472,7 +1472,7 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
         this._elevation = (startElevation !== elevation);
 
-        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation, targetOverride: options.elevation});
+        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
