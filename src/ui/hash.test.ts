@@ -194,10 +194,6 @@ describe('hash', () => {
                 .addTo(map);
         });
 
-        afterEach(() => {
-            removeProjection(createPolarStereographicCrs().name);
-        });
-
         test('mapFeedback=true', () => {
             map.setZoom(10);
             map.setCenter([2.5, 3.75]);
@@ -235,6 +231,8 @@ describe('hash', () => {
             map.setCenter([45.1234, 70.5678]);
 
             expect(hash.getHashString()).toBe('#4/70.568/45.123');
+
+            removeProjection(crs.name);
         });
     });
 
