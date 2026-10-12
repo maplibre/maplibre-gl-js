@@ -79,11 +79,10 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
     /**
-     * The registered projection the index holds its data in, see {@link LoadGeoJSONParameters.crs}, and its world
-     * coordinate helper: `undefined` without a registered projection, `null` when the worker has no projection handler
-     * to build one with.
+     * The world coordinate helper of the registered projection the index holds its data in, see
+     * {@link LoadGeoJSONParameters.crs}: `undefined` without a registered projection, `null` when the worker has no
+     * projection handler to build one with.
      */
-    _crs: LoadGeoJSONParameters['crs'];
     _crsHelper: CRSWorldCoordinateHelper | null;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
@@ -265,7 +264,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
             params.data = (await getJSON<GeoJSON.GeoJSON>(params.request, abortController)).data;
         }
 
-        this._setCRS(params.crs);
+        this._crsHelper = params.crs ? createWorkerCRSHelper(params.crs) : undefined;
 
         if (params.data) {
             params.data = this._filterGeoJSON(params.data, params.filter, params.source);
@@ -287,16 +286,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (this._geoJSONIndex == null) {
             throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
         }
-    }
-
-    /**
-     * Keeps the world coordinate helper for the registered projection the data comes for, building it only when the
-     * projection changes, since a projection handler may parse the WKT each time.
-     */
-    _setCRS(crs: LoadGeoJSONParameters['crs']): void {
-        if (crs?.name === this._crs?.name && crs?.wkt === this._crs?.wkt && this._crsHelper !== null) return;
-        this._crs = crs;
-        this._crsHelper = crs ? createWorkerCRSHelper(crs) : undefined;
     }
 
     /**

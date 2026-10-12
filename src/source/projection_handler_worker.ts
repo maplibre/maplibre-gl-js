@@ -11,11 +11,18 @@ export type ProjectionHandler = (wkt: string) => CRSDefinition['projection'];
 let projectionHandler: ProjectionHandler | null = null;
 
 /**
+ * The converters the projection handler has built, by the string it built each from, so that data loaded again in the
+ * same projection does not make it parse the string again.
+ */
+const projections = new Map<string, CRSDefinition['projection']>();
+
+/**
  * @internal
  * Sets the worker's projection handler; a later call replaces it, and `null` removes it.
  */
 export function setProjectionHandler(handler: ProjectionHandler | null): void {
     projectionHandler = handler;
+    projections.clear();
 }
 
 /**
@@ -27,5 +34,6 @@ export function setProjectionHandler(handler: ProjectionHandler | null): void {
 export function createWorkerCRSHelper(crs: Pick<CRSDefinition, 'name' | 'wkt' | 'tileMatrixSet'>): CRSWorldCoordinateHelper | null {
     if (!crs.wkt) return new CRSWorldCoordinateHelper(identityCrs);
     if (!projectionHandler) return null;
-    return new CRSWorldCoordinateHelper({name: crs.name, wkt: crs.wkt, projection: projectionHandler(crs.wkt), tileMatrixSet: crs.tileMatrixSet});
+    if (!projections.has(crs.wkt)) projections.set(crs.wkt, projectionHandler(crs.wkt));
+    return new CRSWorldCoordinateHelper({name: crs.name, wkt: crs.wkt, projection: projections.get(crs.wkt), tileMatrixSet: crs.tileMatrixSet});
 }

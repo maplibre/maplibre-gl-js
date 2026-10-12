@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
-import {setProjectionHandler} from './projection_handler_worker.ts';
+import {setProjectionHandler, type ProjectionHandler} from './projection_handler_worker.ts';
 import {identityCrs} from '../geo/projection/crs.ts';
 
 import type {GeoJSONVT} from '@maplibre/geojson-vt';
@@ -726,6 +726,16 @@ describe('loadData in a registered projection', () => {
         await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
 
         expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 2970, y: 1126});
+    });
+
+    test('calls the projection handler once for data loaded twice in the same projection', async () => {
+        const handler = vi.fn<ProjectionHandler>(() => ({forward: ([lng, lat]) => [lng * 10, lat * 10], inverse: ([x, y]) => [x / 10, y / 10]}));
+        setProjectionHandler(handler);
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
+        await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
+
+        expect(handler).toHaveBeenCalledTimes(1);
     });
 
     test('warns about a wkt that no projection handler can project', async () => {
