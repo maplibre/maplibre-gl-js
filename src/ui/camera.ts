@@ -924,7 +924,7 @@ export class Camera extends Evented<MapEventType> {
      */
     _prepareEase(eventData: any, noMoveStart: boolean,
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {},
-        elevation?: {tr: ITransform; center: LngLat; freeze: boolean }): void {
+        elevation?: {tr: ITransform; center: LngLat; freeze: boolean}): void {
         this._moving = true;
         if (this.terrain && elevation) {
             this._prepareElevation(elevation.center, elevation.tr);
@@ -976,7 +976,6 @@ export class Camera extends Evented<MapEventType> {
 
         tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
         const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
-
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -984,7 +983,6 @@ export class Camera extends Evented<MapEventType> {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-
         if (this.getCenterClampedToGround()) {
             tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
         }
