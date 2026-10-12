@@ -1,32 +1,8 @@
 import {throttle} from '../util/throttle.ts';
 import {LngLat} from '../geo/lng_lat.ts';
+import {degreesPerWorldUnit} from '../geo/projection/mercator_utils.ts';
 
 import type {Map} from './map.ts';
-import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
-
-/**
- * The step in degrees over which the size of a degree is measured.
- */
-const DEGREE_STEP = 1e-4;
-
-/**
- * Returns how many degrees one world unit spans at a location. A world that wraps is 360 degrees wide.
- * Any other world is measured at the location along longitude and along latitude, and the direction
- * with the fewest degrees counts.
- */
-function degreesPerWorldUnit(worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat): number {
-    if (worldCoordinateHelper.wraps) return 360;
-
-    const latStep = lngLat.lat > 0 ? -DEGREE_STEP : DEGREE_STEP;
-    const world = worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
-    const alongLng = worldCoordinateHelper.worldFromLngLat(lngLat.lng + DEGREE_STEP, lngLat.lat);
-    const alongLat = worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat + latStep);
-    const worldUnits = Math.max(
-        Math.hypot(alongLng.x - world.x, alongLng.y - world.y),
-        Math.hypot(alongLat.x - world.x, alongLat.y - world.y)
-    );
-    return DEGREE_STEP / worldUnits;
-}
 
 /**
  * Adds the map's position to its page's location hash.
