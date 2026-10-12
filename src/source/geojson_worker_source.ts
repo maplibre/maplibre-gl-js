@@ -9,10 +9,9 @@ import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
 import {extend, JSON_PREFIX, warnOnce} from '../util/util.ts';
 import {createWorkerCRSHelper} from './projection_handler_worker.ts';
-import {reprojectFeatureToPseudoLngLat, reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from '../util/geojson_reproject.ts';
-import {applySourceDiff, getFeatureId, toUpdateable} from './geojson_source_diff.ts';
+import {reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONSourceDiffToPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from '../util/geojson_reproject.ts';
 
-import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff.ts';
+import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source.ts';
 import type {LoadVectorTileResult} from './vector_tile_worker_source.ts';
 import type {RequestParameters} from '../util/ajax.ts';
@@ -86,11 +85,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
      */
     _crs: LoadGeoJSONParameters['crs'];
     _crsHelper: CRSWorldCoordinateHelper | null;
-    /**
-     * The index's data in lng/lat, kept in a registered projection only: the index holds only what lies inside the
-     * world square, so a diff that moves a feature hands it the whole feature again, see {@link _toPseudoLngLatDiff}.
-     */
-    _crsData: Map<GeoJSONFeatureId, GeoJSON.Feature> | undefined;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
@@ -275,7 +269,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
         if (params.data) {
             params.data = this._filterGeoJSON(params.data, params.filter, params.source);
-            this._crsData = this._crsHelper ? toUpdateable(params.data, params.geojsonVtOptions?.promoteId ?? undefined) : undefined;
             const indexData = this._crsHelper ? reprojectGeoJSONToPseudoLngLat(params.data, this._crsHelper) : params.data;
             this._geoJSONIndex = this._createGeoJSONIndex(indexData, params);
             return;
@@ -283,7 +276,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
         if (params.dataDiff) {
             this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
-            const indexDiff = this._crsHelper ? this._toPseudoLngLatDiff(params.dataDiff, params.geojsonVtOptions?.promoteId ?? undefined) : params.dataDiff;
+            const indexDiff = this._crsHelper ? reprojectGeoJSONSourceDiffToPseudoLngLat(params.dataDiff, this._crsHelper) : params.dataDiff;
             this._geoJSONIndex.updateData(indexDiff, this._getFilterPredicate(params.filter, params.source));
         }
 
@@ -294,43 +287,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (this._geoJSONIndex == null) {
             throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
         }
-    }
-
-    /**
-     * The diff the index gets in a registered projection. A feature the diff adds or moves goes to the index whole,
-     * from {@link _crsData}, cut to the world square and in pseudo lng/lat, or is removed from it when nothing of the
-     * feature is left inside: the index can only move a feature it holds, and it holds none wholly outside the square.
-     */
-    _toPseudoLngLatDiff(diff: GeoJSONSourceDiff, promoteId: string | undefined): GeoJSONSourceDiff {
-        this._crsData ??= new Map();
-        const moved = new Set<GeoJSONFeatureId>();
-        const add: GeoJSON.Feature[] = [];
-        for (const feature of diff.add ?? []) {
-            const id = getFeatureId(feature, promoteId);
-            if (id != null) {
-                moved.add(id);
-                continue;
-            }
-            const indexFeature = reprojectFeatureToPseudoLngLat(feature, this._crsHelper);
-            if (indexFeature) add.push(indexFeature);
-        }
-        for (const update of diff.update ?? []) {
-            if (update.newGeometry) moved.add(update.id);
-        }
-        applySourceDiff(this._crsData, diff, promoteId);
-
-        const remove = [...(diff.remove ?? [])];
-        for (const id of moved) {
-            const feature = this._crsData.get(id);
-            if (!feature) continue;
-            const indexFeature = reprojectFeatureToPseudoLngLat(feature, this._crsHelper);
-            if (indexFeature) {
-                add.push(indexFeature);
-            } else {
-                remove.push(id);
-            }
-        }
-        return {removeAll: diff.removeAll, remove, add, update: diff.update?.filter(update => !update.newGeometry)};
     }
 
     /**

@@ -55,7 +55,7 @@ export type GeoJSONFeatureDiff = {
 
 export type UpdateableGeoJSON = GeoJSON.Feature | GeoJSON.FeatureCollection | undefined;
 
-export function getFeatureId(feature: GeoJSON.Feature, promoteId?: string): GeoJSONFeatureId | undefined {
+function getFeatureId(feature: GeoJSON.Feature, promoteId?: string): GeoJSONFeatureId | undefined {
     return promoteId ? feature.properties[promoteId] : feature.id;
 }
 
