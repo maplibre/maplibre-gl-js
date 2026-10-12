@@ -14,7 +14,7 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -605,6 +605,10 @@ export class VerticalPerspectiveTransform implements ITransform {
         return sphereSurfacePointToCoordinates(surface);
     }
 
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return this._helper.worldCoordinateHelper;
+    }
+
     populateCache(_coords: OverscaledTileID[]): void {
         // Do nothing
     }
@@ -1081,7 +1085,7 @@ function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius
     const lngLat = sphereSurfacePointToCoordinates(surface);
     const projected = MercatorCoordinate.fromLngLat(lngLat);
     const mercator = new MercatorCoordinate(projected.x, clamp(projected.y, 0, MAX_MERCATOR_Y));
-    const sample = sampleAt(ray.index, ray.exaggeration, mercator.x, mercator.y);
+    const sample = sampleAt(ray.index, ray.exaggeration, mercator.x, mercator.y, false);
     // The globe mesh caps the poles at elevation zero, matching the GLOBE branch of get_elevation.
     const elevation = Math.abs(lngLat.lat) > MAX_VALID_LATITUDE ? 0 : sample.elevation;
     return {sample: {...sample, elevation}, radius, mercator};

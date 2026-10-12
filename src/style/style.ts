@@ -497,6 +497,11 @@ export class Style extends Evented<MapEventType> {
         this._load(empty, {validate: false});
     }
 
+    /**
+     * Loads a style. The global state is set first, since the projection and the layers read it. The projection is
+     * created before the sources, which read it as they are added, and the map migrates to it once the layers and the
+     * light exist, so `projectiontransition` handlers can read them.
+     */
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification): void {
         let nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
         if (options.validate && validateStyleAndEmit(this, nextState)) {
@@ -507,6 +512,10 @@ export class Style extends Evented<MapEventType> {
 
         this._loaded = true;
         this.stylesheet = nextState;
+
+        this.setGlobalState(this.stylesheet.state ?? null);
+        const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', this.map._camera?.transform.constrainOverride, this._globalState);
+        this.projection = projectionObjects.projection;
 
         for (const id in nextState.sources) {
             this.addSource(id, nextState.sources[id], {validate: false});
@@ -523,7 +532,7 @@ export class Style extends Evented<MapEventType> {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
-        this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
+        this._applyProjection(projectionObjects);
 
         this.sky = new Sky(this.stylesheet.sky, this._globalState);
         this.sky.setEventedParent(this);
@@ -537,8 +546,6 @@ export class Style extends Evented<MapEventType> {
 
     private _createLayers() {
         const dereferencedLayers = derefLayers(this.stylesheet.layers);
-
-        this.setGlobalState(this.stylesheet.state ?? null);
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
@@ -1737,7 +1744,9 @@ export class Style extends Evented<MapEventType> {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
         const tileManager = this.tileManagers[sourceID];
-        return tileManager ? querySourceFeatures(tileManager, params ? {...params, globalState: this._globalState} : {globalState: this._globalState}) : [];
+        if (!tileManager) return [];
+        const paramsStrict = {...params, globalState: this._globalState, worldCoordinateHelper: this.projection.worldCoordinateHelper};
+        return querySourceFeatures(tileManager, paramsStrict);
     }
 
     getLight(): LightSpecification {
@@ -1827,7 +1836,14 @@ export class Style extends Evented<MapEventType> {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState);
+        this._applyProjection(createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState));
+    }
+
+    /**
+     * Puts a projection in place and migrates the map to its transform, which fires `projectiontransition`, then
+     * reloads the tiles in it.
+     */
+    private _applyProjection(projectionObjects: ReturnType<typeof createProjectionFromName>): void {
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.tileManagers) {

@@ -741,6 +741,18 @@ describe('Style._load', () => {
         expect(style.projection.name).toBe('mercator');
         expect(style.serialize().projection).toBeUndefined();
     });
+
+    test('evaluates a projection from the global state without a warning', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            state: {projectionType: {default: 'vertical-perspective'}},
+            projection: {type: ['global-state', 'projectionType']}
+        });
+
+        style._load(styleSpec, {validate: false});
+        expect(warn).not.toHaveBeenCalled();
+    });
 });
 
 describe('Style._remove', () => {
