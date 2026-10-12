@@ -1,11 +1,8 @@
-import {describe, afterEach, test, expect, vi} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
-import {MessageType} from './actor_messages.ts';
-import {Dispatcher, getGlobalDispatcher, importScriptInWorkers} from './dispatcher.ts';
-import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
+import {Dispatcher} from './dispatcher.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
-import {terminateGlobalWorkers} from './test/util.ts';
 
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', async () => {
@@ -97,106 +94,5 @@ describe('Dispatcher', () => {
         dispatcher.remove();
         worker.dispatchEvent(new ErrorEvent('error'));
         expect(listener).toHaveBeenCalledTimes(1);
-    });
-});
-
-describe('global dispatcher', () => {
-    afterEach(terminateGlobalWorkers);
-
-    test('removing the last map dispatcher terminates the workers', async () => {
-        const pool = getGlobalWorkerPool();
-        getGlobalDispatcher();
-        const mapDispatcher = new Dispatcher(pool, 1);
-        await mapDispatcher.getActors();
-
-        mapDispatcher.remove();
-
-        expect(pool.workersPromise).toBeFalsy();
-    });
-
-    test('creating a map dispatcher notifies the listeners that new global workers exist', async () => {
-        const globalWorkersCreated = vi.fn();
-        getGlobalDispatcher().on('workersCreated', globalWorkersCreated);
-        terminateGlobalWorkers();
-
-        await new Dispatcher(getGlobalWorkerPool(), 1).getActors();
-
-        expect(globalWorkersCreated).toHaveBeenCalled();
-    });
-
-    test('keeps the workers while another map still holds them', async () => {
-        const pool = getGlobalWorkerPool();
-        const mapDispatcher = new Dispatcher(pool, 1);
-        await mapDispatcher.getActors();
-        await new Dispatcher(pool, 2).getActors();
-
-        mapDispatcher.remove();
-
-        expect(pool.workersPromise).toBeTruthy();
-    });
-
-    test('the global dispatcher hands out fresh actors after its workers terminate', async () => {
-        const globalDispatcher = getGlobalDispatcher() as Dispatcher;
-        const actor = await globalDispatcher.getActor();
-
-        terminateGlobalWorkers();
-
-        await expect(globalDispatcher.getActor()).resolves.not.toBe(actor);
-    });
-
-    test('a message handler registered on the global dispatcher comes back with the new workers', async () => {
-        const handler = vi.fn();
-        const globalDispatcher = getGlobalDispatcher() as Dispatcher;
-        await globalDispatcher.registerMessageHandler(MessageType.importScript, handler);
-
-        terminateGlobalWorkers();
-
-        expect((await globalDispatcher.getActor()).messageHandlers[MessageType.importScript]).toBe(handler);
-    });
-
-    test('registers and unregisters a handler for a plugin-defined message type', async () => {
-        const handler = vi.fn();
-        const globalDispatcher = getGlobalDispatcher() as Dispatcher;
-
-        await globalDispatcher.registerMessageHandler('my-plugin-message', handler);
-        const actor = await globalDispatcher.getActor();
-        expect(actor.messageHandlers['my-plugin-message']).toBe(handler);
-
-        await globalDispatcher.unregisterMessageHandler('my-plugin-message');
-        expect(actor.messageHandlers['my-plugin-message']).toBeUndefined();
-    });
-
-    test('prewarm keeps the workers alive once the last map is removed, until they are cleared', () => {
-        prewarm();
-        const pool = getGlobalWorkerPool();
-        new Dispatcher(pool, 1).remove();
-        expect(pool.workersPromise).toBeTruthy();
-
-        clearPrewarmedResources();
-
-        expect(pool.numActive()).toBe(0);
-    });
-});
-
-describe('importScriptInWorkers', () => {
-    afterEach(terminateGlobalWorkers);
-
-    test('imports a script once when the call itself creates the global dispatcher', async () => {
-        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
-
-        await importScriptInWorkers('plugin.js');
-
-        expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(MessageType.importScript, 'plugin.js');
-    });
-
-    test('re-imports the scripts into the workers of a recreated global dispatcher', async () => {
-        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
-        await importScriptInWorkers('plugin.js');
-        terminateGlobalWorkers();
-        broadcastSpy.mockClear();
-
-        getGlobalDispatcher();
-
-        expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(MessageType.importScript, 'plugin.js');
     });
 });

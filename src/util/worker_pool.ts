@@ -31,24 +31,18 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     }
 
     /** Claims the shared workers, creating them on the first claim. */
-    async acquire(mapId: number | string): Promise<ActorTarget[]> {
+    acquire(mapId: number | string): Promise<ActorTarget[]> {
         this.active[mapId] = true;
         return this.ensureWorkers();
     }
 
     /**
-     * Uses the shared workers without claiming them, the way a `WeakRef` holds an object without keeping it alive.
-     * The `terminate` event fires once the last claim is released, since the workers are dead from then on.
+     * Returns the shared workers, creating them on first use, without claiming them: the
+     * `terminate` event still fires once the last claim is released. The `create` event fires
+     * before the workers boot, so listeners replay only state recorded before the call that
+     * created them.
      */
-    async weakAcquire(): Promise<ActorTarget[]> {
-        return this.ensureWorkers();
-    }
-
-    /**
-     * Returns the shared workers, creating them on first use. The `create` event fires before the
-     * workers boot, so listeners replay only state recorded before the call that created them.
-     */
-    private async ensureWorkers(): Promise<ActorTarget[]> {
+    async ensureWorkers(): Promise<ActorTarget[]> {
         if (!this.workersPromise) {
             const promises: Array<Promise<Worker>> = [];
             while (promises.length < WorkerPool.workerCount) {

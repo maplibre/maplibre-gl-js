@@ -41,13 +41,13 @@ describe('WorkerPool', () => {
         expect(pool.workersPromise).toBeFalsy();
     });
 
-    test('a weak acquirer does not keep the workers alive', async () => {
+    test('ensuring the workers exist does not keep them alive', async () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
         const terminateListener = vi.fn();
 
         const pool = new WorkerPool();
         pool.on('terminate', terminateListener);
-        await pool.weakAcquire();
+        await pool.ensureWorkers();
         await pool.acquire('map-1');
 
         pool.release('map-1');

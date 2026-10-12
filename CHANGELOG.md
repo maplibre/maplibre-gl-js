@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Terminate the pooled web workers when the last map is removed, so a new map is not handed workers the browser already killed. Call `prewarm()` to keep them alive between maps, re-send any state your plugin broadcasts into the workers from `onGlobalWorkersCreated`, and use your own string message types on the global dispatcher without casting. ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491), [#8735](https://github.com/maplibre/maplibre-gl-js/pull/8735)) (by [@lucaswoj](https://github.com/lucaswoj) and [@HarelM](https://github.com/HarelM))
+- Terminate the pooled web workers when the last map is removed, and recreate them for the next map; plugins can restore worker state from the global dispatcher's `workersCreated` event. ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491), [#8735](https://github.com/maplibre/maplibre-gl-js/pull/8735)) (by [@lucaswoj](https://github.com/lucaswoj) and [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.14.0
