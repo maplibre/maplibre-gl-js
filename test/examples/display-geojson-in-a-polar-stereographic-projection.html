@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Display GeoJSON in a polar stereographic projection</title>
-    <meta property="og:description" content="Draw a GeoJSON source on a map in the EPSG:3413 CRS, projected in the workers by a proj4 projection plugin." />
+    <meta property="og:description" content="Draw a GeoJSON source on a map in the EPSG:3413 CRS, projected in the workers by a proj4 projection handler." />
     <meta property="og:category" content="Vector & GeoJSON" />
     <meta property="og:created" content="2026-10-11" />
     <meta charset='utf-8'>
@@ -20,15 +20,15 @@
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    // GeoJSON is parsed and tiled in the workers, so they need the projection too: this plugin builds it there
+    // GeoJSON is parsed and tiled in the workers, so they need the projection too: this handler builds it there
     // from the definition's `wkt` with proj4.
-    const projectionPlugin = new Blob([`
+    const projectionHandlerScript = new Blob([`
         import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.15.0/+esm';
-        self.registerProjectionPlugin(wkt => proj4(wkt));
+        self.setProjectionHandler(wkt => proj4(wkt));
     `], {type: 'text/javascript'});
-    await maplibregl.importScriptInWorkers(URL.createObjectURL(projectionPlugin));
+    await maplibregl.importScriptInWorkers(URL.createObjectURL(projectionHandlerScript));
 
-    // NSIDC Sea Ice Polar Stereographic North. The same string goes to proj4 on the page and to the plugin.
+    // NSIDC Sea Ice Polar Stereographic North. The same string goes to proj4 on the page and to the handler.
     const epsg3413 = '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
 
     maplibregl.addProjection({

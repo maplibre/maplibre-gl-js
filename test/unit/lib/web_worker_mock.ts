@@ -13,7 +13,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     addProtocol: any;
     removeProtocol: any;
     makeRequest: any;
-    registerProjectionPlugin: any;
+    setProjectionHandler: any;
     worker: any;
 
     constructor(addListeners: EventListener[], postListeners: EventListener[]) {

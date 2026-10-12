@@ -39,9 +39,9 @@ export type CRSDefinition = {
      */
     tileMatrixSet: TileMatrixSet;
     /**
-     * The CRS as WKT, or as any other string the workers' projection plugin accepts, such as a PROJ string.
+     * The CRS as WKT, or as any other string the workers' projection handler accepts, such as a PROJ string.
      * GeoJSON sources need it: their data is parsed and tiled in the workers, where `projection` cannot go,
-     * so a plugin registered there builds the same converter from this string, see the custom CRS guide.
+     * so a handler set there builds the same converter from this string, see the custom CRS guide.
      * Without it, GeoJSON sources warn and draw in the wrong place.
      */
     wkt?: string;

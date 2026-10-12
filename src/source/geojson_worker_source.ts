@@ -8,7 +8,7 @@ import {isAbortError} from '../util/abort_error.ts';
 import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
 import {extend, JSON_PREFIX, warnOnce} from '../util/util.ts';
-import {createWorkerCRSHelper} from './projection_plugin_worker.ts';
+import {createWorkerCRSHelper} from './projection_handler_worker.ts';
 import {reprojectFeatureToPseudoLngLat, reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from '../util/geojson_reproject.ts';
 import {applySourceDiff, getFeatureId, toUpdateable} from './geojson_source_diff.ts';
 
@@ -81,7 +81,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _createGeoJSONIndex: typeof createGeoJSONIndex;
     /**
      * The registered projection the index holds its data in, see {@link LoadGeoJSONParameters.crs}, and its world
-     * coordinate helper: `undefined` without a registered projection, `null` when the worker has no projection plugin
+     * coordinate helper: `undefined` without a registered projection, `null` when the worker has no projection handler
      * to build one with.
      */
     _crs: LoadGeoJSONParameters['crs'];
@@ -202,7 +202,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
             delete this._pendingRequest;
             this.tileState.clearLoaded();
             if (this._crsHelper === null) {
-                warnOnce(`GeoJSON source "${params.source}" is drawn in the wrong place: no projection plugin is registered in the workers, see \`registerProjectionPlugin\` in the custom CRS guide.`);
+                warnOnce(`GeoJSON source "${params.source}" is drawn in the wrong place: no projection handler is set in the workers, see \`setProjectionHandler\` in the custom CRS guide.`);
             }
 
             // Sending a large GeoJSON payload from the worker to the main thread is slow so only do if necessary.
@@ -335,7 +335,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
     /**
      * Keeps the world coordinate helper for the registered projection the data comes for, building it only when the
-     * projection changes, since a projection plugin may parse the WKT each time.
+     * projection changes, since a projection handler may parse the WKT each time.
      */
     _setCRS(crs: LoadGeoJSONParameters['crs']): void {
         if (crs?.name === this._crs?.name && crs?.wkt === this._crs?.wkt && this._crsHelper !== null) return;

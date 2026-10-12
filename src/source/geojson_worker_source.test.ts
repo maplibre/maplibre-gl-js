@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
-import {setProjectionPlugin} from './projection_plugin_worker.ts';
+import {setProjectionHandler} from './projection_handler_worker.ts';
 import {identityCrs} from '../geo/projection/crs.ts';
 
 import type {GeoJSONVT} from '@maplibre/geojson-vt';
@@ -704,7 +704,7 @@ describe('loadData in a registered projection', () => {
     const planarParameters = {name: 'EPSG:test', wkt: 'PROJCS["test"]', tileMatrixSet: {origin: [-1000, 1000], extentAtZoom0: 2000}};
 
     afterEach(() => {
-        setProjectionPlugin(null);
+        setProjectionHandler(null);
         vi.restoreAllMocks();
     });
 
@@ -725,20 +725,20 @@ describe('loadData in a registered projection', () => {
         expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 3072, y: 1024});
     });
 
-    test('tiles the data where the projection plugin puts it', async () => {
-        setProjectionPlugin(() => ({forward: ([lng, lat]) => [lng * 10, lat * 10], inverse: ([x, y]) => [x / 10, y / 10]}));
+    test('tiles the data where the projection handler puts it', async () => {
+        setProjectionHandler(() => ({forward: ([lng, lat]) => [lng * 10, lat * 10], inverse: ([x, y]) => [x / 10, y / 10]}));
         const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
         await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
 
         expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 2970, y: 1126});
     });
 
-    test('warns about a wkt that no projection plugin can project', async () => {
+    test('warns about a wkt that no projection handler can project', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
         await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
 
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining('no projection plugin is registered in the workers'));
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('no projection handler is set in the workers'));
     });
 
     test('tiles a feature a diff adds where the projection puts it', async () => {
