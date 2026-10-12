@@ -1,4 +1,5 @@
 import {WorkerPool, PRELOAD_POOL_ID} from './worker_pool.ts';
+import {getGlobalDispatcher} from './global_dispatcher.ts';
 
 let globalWorkerPool: WorkerPool;
 
@@ -7,7 +8,10 @@ let globalWorkerPool: WorkerPool;
  * to be shared across each Map
  */
 export function getGlobalWorkerPool(): WorkerPool {
-    globalWorkerPool ||= new WorkerPool();
+    if (!globalWorkerPool) {
+        globalWorkerPool = new WorkerPool();
+        getGlobalDispatcher();
+    }
     return globalWorkerPool;
 }
 
