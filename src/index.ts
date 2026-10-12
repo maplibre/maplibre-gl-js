@@ -71,7 +71,7 @@ import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, Pr
 import type {CRSDefinition} from './geo/projection/crs.ts';
 import type {TileMatrixSet} from './geo/projection/tile_matrix_set.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
-import type {Actor, IActor} from './util/actor.ts';
+import type {Actor, IActor, MessageHandler} from './util/actor.ts';
 import type {Bucket} from './data/bucket.ts';
 import type {CollisionBoxArray} from './data/array_types.g.ts';
 import type {AlphaImage} from './util/image.ts';
@@ -383,6 +383,7 @@ export {
     type Actor,
     type IActor,
     type ActorMessage,
+    type MessageHandler,
     type Bucket,
     type CollisionBoxArray,
     type FeatureIndex,
