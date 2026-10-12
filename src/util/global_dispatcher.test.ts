@@ -15,7 +15,7 @@ describe('global dispatcher', () => {
     test('removing the last map dispatcher terminates the workers', async () => {
         const pool = getGlobalWorkerPool();
         const mapDispatcher = new Dispatcher(pool, 1);
-        await mapDispatcher.getActors();
+        await mapDispatcher.actorsPromise;
 
         mapDispatcher.remove();
 
@@ -26,7 +26,7 @@ describe('global dispatcher', () => {
         const globalWorkersCreated = vi.fn();
         getGlobalDispatcher().on('workersCreated', globalWorkersCreated);
 
-        await new Dispatcher(getGlobalWorkerPool(), 1).getActors();
+        await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
 
         expect(globalWorkersCreated).toHaveBeenCalled();
     });
@@ -34,8 +34,8 @@ describe('global dispatcher', () => {
     test('keeps the workers while another map still holds them', async () => {
         const pool = getGlobalWorkerPool();
         const mapDispatcher = new Dispatcher(pool, 1);
-        await mapDispatcher.getActors();
-        await new Dispatcher(pool, 2).getActors();
+        await mapDispatcher.actorsPromise;
+        await new Dispatcher(pool, 2).actorsPromise;
 
         mapDispatcher.remove();
 
@@ -61,7 +61,7 @@ describe('global dispatcher', () => {
         terminateGlobalWorkers();
         const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
 
-        await new Dispatcher(getGlobalWorkerPool(), 1).getActors();
+        await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
 
         expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
     });
@@ -99,22 +99,22 @@ describe('importScript', () => {
         terminateGlobalWorkers();
     });
 
-    test('broadcasts the script to the workers', async () => {
-        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
+    test('sends the script to the workers', async () => {
+        const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
 
         await getGlobalDispatcher().importScript('plugin.js');
 
-        expect(broadcastSpy).toHaveBeenCalledWith(MessageType.importScript, 'plugin.js');
+        expect(sendSpy).toHaveBeenCalledWith({type: MessageType.importScript, data: 'plugin.js'});
     });
 
     test('re-imports the scripts into the workers that replace terminated ones', async () => {
-        const broadcastSpy = vi.spyOn(Dispatcher.prototype, 'broadcast').mockResolvedValue([]);
+        const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
         await getGlobalDispatcher().importScript('plugin.js');
         terminateGlobalWorkers();
-        broadcastSpy.mockClear();
+        sendSpy.mockClear();
 
-        await new Dispatcher(getGlobalWorkerPool(), 1).getActors();
+        await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
 
-        expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(MessageType.importScript, 'plugin.js');
+        expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'});
     });
 });

@@ -31,7 +31,7 @@ import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source
 import {VideoSource} from './source/video_source.ts';
 import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
-import {type GlobalDispatcher, type GlobalDispatcherEventType, getGlobalDispatcher} from './util/global_dispatcher.ts';
+import {type GlobalDispatcher, type GlobalDispatcherEventType, type CustomMessageHandler, getGlobalDispatcher} from './util/global_dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
 import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
@@ -48,7 +48,7 @@ import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileM
 import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
 
-import type {Dispatcher, CustomMessageHandler} from './util/dispatcher.ts';
+import type {Dispatcher} from './util/dispatcher.ts';
 import type {MessageType, ActorMessage, RequestResponseMessageMap} from './util/actor_messages.ts';
 import type {ControlPosition, IControl} from './ui/control/control.ts';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, CustomTerrainRenderInput, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';

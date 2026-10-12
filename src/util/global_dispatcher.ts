@@ -1,4 +1,4 @@
-import {Dispatcher, type CustomMessageHandler} from './dispatcher.ts';
+import {Actor} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
@@ -29,32 +29,64 @@ export type GlobalDispatcherEventType = {
 };
 
 /**
+ * A handler for a message that is not one of the built-in {@link MessageType}s, e.g. a message that is sent by a plugin.
+ */
+export type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
+
+/**
  * The dispatcher shared across all map instances, see {@link getGlobalDispatcher}. Unlike a map's
- * dispatcher, its use of the workers is not a claim: its actors live and die with them.
+ * dispatcher it never claims the workers: its actors live and die with them, rebuilt from the
+ * pool's `create` event and discarded on `terminate`.
  */
 export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     /** Every script url {@link importScriptInWorkers} has sent, so they can be sent again to new workers. */
     private importedScriptUrls = new Set<string>();
-    private dispatcher: Dispatcher;
+    private messageHandlers: Record<string, MessageHandler<MessageType>> = {};
+    private actorsPromise: Promise<Actor[]> | undefined;
+    private workerPool: WorkerPool;
 
     constructor(workerPool: WorkerPool) {
         super();
-        this.dispatcher = new Dispatcher({
-            acquire: () => workerPool.ensureWorkers(),
-            release: () => {}
-        }, GLOBAL_DISPATCHER_ID);
-        workerPool.on('terminate', () => this.dispatcher.discardActors());
+        this.workerPool = workerPool;
         workerPool.on('create', () => {
-            this.dispatcher.getActors();
+            this.getActors();
             for (const url of this.importedScriptUrls) {
-                this.dispatcher.broadcast(MessageType.importScript, url).catch((error) => {
+                this.broadcast(MessageType.importScript, url).catch((error) => {
                     warnOnce(`Failed to import script ${url} into the workers: ${error}`);
                 });
             }
             this.fire('workersCreated');
         });
+        workerPool.on('terminate', () => {
+            this.actorsPromise?.then((actors) => {
+                for (const actor of actors) actor.remove();
+            });
+            this.actorsPromise = undefined;
+        });
         // Workers created before this module evaluated, e.g. by prewarm(), fired `create` already.
-        if (workerPool.workersPromise) this.dispatcher.getActors();
+        if (workerPool.workersPromise) this.getActors();
+    }
+
+    /**
+     * Returns the actors, creating the workers on first use. `ensureWorkers` fires the pool's
+     * `create` event synchronously, so the re-entrant call builds the actors and the `||=` here
+     * keeps them.
+     */
+    private getActors(): Promise<Actor[]> {
+        this.workerPool.ensureWorkers();
+        return this.actorsPromise ||= this.buildActors();
+    }
+
+    private async buildActors(): Promise<Actor[]> {
+        const workers = await this.workerPool.ensureWorkers();
+        return workers.map((worker, i) => {
+            const actor = new Actor(worker, GLOBAL_DISPATCHER_ID);
+            actor.name = `Worker ${i}`;
+            for (const [type, handler] of Object.entries(this.messageHandlers)) {
+                actor.registerMessageHandler(type as MessageType, handler);
+            }
+            return actor;
+        });
     }
 
     /**
@@ -63,8 +95,9 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      */
     broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>>;
     broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
-    broadcast(type: string, data: unknown): Promise<unknown[]> {
-        return this.dispatcher.broadcast(type, data);
+    async broadcast(type: string, data: unknown): Promise<unknown[]> {
+        const actors = await this.getActors();
+        return Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data: data as any})));
     }
 
     /**
@@ -73,12 +106,18 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      */
     registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): Promise<void>;
     registerMessageHandler<TData = any, TResult = any>(type: string, handler: CustomMessageHandler<TData, TResult>): Promise<void>;
-    registerMessageHandler(type: string, handler: CustomMessageHandler<any, any>): Promise<void> {
-        return this.dispatcher.registerMessageHandler(type, handler);
+    async registerMessageHandler(type: string, handler: CustomMessageHandler<any, any>): Promise<void> {
+        this.messageHandlers[type] = handler;
+        for (const actor of (await this.actorsPromise) ?? []) {
+            actor.registerMessageHandler(type as MessageType, handler);
+        }
     }
 
-    unregisterMessageHandler(type: MessageType | string): Promise<void> {
-        return this.dispatcher.unregisterMessageHandler(type);
+    async unregisterMessageHandler(type: MessageType | string): Promise<void> {
+        delete this.messageHandlers[type];
+        for (const actor of (await this.actorsPromise) ?? []) {
+            actor.unregisterMessageHandler(type as MessageType);
+        }
     }
 
     /**
@@ -87,7 +126,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      */
     async importScript(workerUrl: string): Promise<void> {
         this.importedScriptUrls.add(workerUrl);
-        await this.dispatcher.broadcast(MessageType.importScript, workerUrl);
+        await this.broadcast(MessageType.importScript, workerUrl);
     }
 }
 
@@ -110,4 +149,3 @@ globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params
 export function getGlobalDispatcher(): GlobalDispatcher {
     return globalDispatcher;
 }
-
