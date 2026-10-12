@@ -42,7 +42,6 @@ describe('WorkerPool', () => {
     });
 
     test('ensuring the workers exist does not keep them alive', async () => {
-        Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
         const terminateListener = vi.fn();
 
         const pool = new WorkerPool();
