@@ -472,7 +472,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      */
     private async _getLoadGeoJSONParameters(update: GeoJSONWorkerUpdate): Promise<LoadGeoJSONParameters> {
         const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
-        const crs = this._getWorkerCRS();
+        const crs = this._getCRSParameters();
         if (crs) params.crs = crs;
 
         if (!('data' in update)) {
@@ -496,7 +496,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * build a definition's converter from its `wkt`, or the built-in identity one without, so any other definition is
      * left out with a warning.
      */
-    private _getWorkerCRS(): LoadGeoJSONParameters['crs'] | undefined {
+    private _getCRSParameters(): LoadGeoJSONParameters['crs'] | undefined {
         const definition = getRegisteredProjection(this.map?.style?.projection?.name);
         if (!definition) return undefined;
         if (!definition.wkt && definition !== identityCrs) {
