@@ -1275,8 +1275,11 @@ describe('easeTo', () => {
 
         stub.mockReturnValue(1);
         queue.run();
+        expect(camera._elevation).toBe(true);
+
         stub.mockReturnValue(10);
         queue.run();
+        expect(camera._elevation).toBe(false);
 
         await moveEnded;
 
@@ -1303,9 +1306,11 @@ describe('easeTo', () => {
 
         stubNow.mockReturnValue(1);
         queue.run();
+        expect(camera._elevation).toBe(true);
 
         stubNow.mockReturnValue(10);
         queue.run();
+        expect(camera._elevation).toBe(false);
 
         await moveEnded;
 
@@ -2195,8 +2200,11 @@ describe('flyTo', () => {
 
         stub.mockReturnValue(1);
         queue.run();
+        expect(camera._elevation).toBe(true);
+
         stub.mockReturnValue(10);
         queue.run();
+        expect(camera._elevation).toBe(false);
 
         await moveEnded;
 
@@ -2222,9 +2230,11 @@ describe('flyTo', () => {
 
         stubNow.mockReturnValue(1);
         queue.run();
+        expect(camera._elevation).toBe(true);
 
         stubNow.mockReturnValue(10);
         queue.run();
+        expect(camera._elevation).toBe(false);
 
         await moveEnded;
 

@@ -1319,6 +1319,7 @@ export class Camera extends Evented<MapEventType> {
         this._pitching = false;
         this._rolling = false;
         this._padding = false;
+        this._elevation = false;
 
         if (wasZooming) {
             this.fire(new MapMovementEvent('zoomend', eventData));
