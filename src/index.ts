@@ -31,7 +31,7 @@ import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source
 import {VideoSource} from './source/video_source.ts';
 import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
-import {type Dispatcher, type IGlobalDispatcher, type CustomMessageHandler, getGlobalDispatcher, onGlobalWorkersCreated, importScriptInWorkers} from './util/dispatcher.ts';
+import {type Dispatcher, type DispatcherEventType, type IGlobalDispatcher, type CustomMessageHandler, getGlobalDispatcher, importScriptInWorkers} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
 import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
@@ -336,6 +336,7 @@ export {
     type WorkerTileResult,
     type ResourceType,
     type Dispatcher,
+    type DispatcherEventType,
     type IGlobalDispatcher,
     type CustomMessageHandler,
     type Actor,
@@ -402,6 +403,5 @@ export {
     restoreNow,
     isTimeFrozen,
     getGlobalDispatcher,
-    onGlobalWorkersCreated,
     EXTENT
 };

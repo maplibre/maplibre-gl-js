@@ -2,16 +2,20 @@ import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
-import {ErrorEvent, Evented, type ErrorEventType} from './evented.ts';
+import {ErrorEvent, Evented, type Event, type ErrorEventType} from './evented.ts';
 import {type Subscription, subscribe, warnOnce} from './util.ts';
 
 import type {WorkerPool} from './worker_pool.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
 
+export type DispatcherEventType = ErrorEventType & {
+    workersCreated: Event;
+};
+
 /**
  * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).
  */
-export class Dispatcher extends Evented<ErrorEventType> {
+export class Dispatcher extends Evented<DispatcherEventType> {
     workerPool: WorkerPool;
     actors: Actor[];
     private actorsPromise: Promise<Actor[]> | undefined;
@@ -161,17 +165,55 @@ export interface IGlobalDispatcher {
     registerMessageHandler<T extends MessageType>(type: T, handler: CustomMessageHandler<RequestResponseMessageMap[T][0], RequestResponseMessageMap[T][1]>): Promise<void>;
     registerMessageHandler<TData = any, TResult = any>(type: string, handler: CustomMessageHandler<TData, TResult>): Promise<void>;
     unregisterMessageHandler(type: MessageType | string): Promise<void>;
+    /**
+     * Subscribes to the `workersCreated` event, which fires each time the global workers are
+     * created, including the first. Removing the last map terminates them, so a listener here is
+     * the place to restore state that lives in the workers rather than in any one map.
+     *
+     * Message handlers registered through {@link getGlobalDispatcher} and scripts loaded through
+     * {@link importScriptInWorkers} come back on their own and do not need this.
+     * @param type - always `'workersCreated'`
+     * @param listener - sends the worker configuration again
+     * @returns a subscription object that can be used to stop listening
+     *
+     * @example
+     * ```ts
+     * getGlobalDispatcher().on('workersCreated', () => {
+     *     getGlobalDispatcher().broadcast('my-plugin-config', {tiles: 'https://example.com/{z}/{x}/{y}.png'});
+     * });
+     * ```
+     */
+    on(type: 'workersCreated', listener: () => void): Subscription;
 }
 
 /** The one dispatcher whose use of the workers is not a claim: its actors live and die with them. */
 export class GlobalDispatcher extends Dispatcher {
+    /** Every script url {@link importScriptInWorkers} has sent, so they can be sent again to new workers. */
+    private importedScriptUrls = new Set<string>();
+
     constructor(workerPool: WorkerPool) {
         super(workerPool, GLOBAL_DISPATCHER_ID);
+        workerPool.on('create', () => {
+            for (const url of this.importedScriptUrls) {
+                this.broadcast(MessageType.importScript, url).catch((error) => {
+                    warnOnce(`Failed to import script ${url} into the workers: ${error}`);
+                });
+            }
+            this.fire('workersCreated');
+        });
     }
 
     protected override acquireWorkers(): Promise<ActorTarget[]> {
         this.workerPool.once('terminate', () => this.discardActors());
         return this.workerPool.weakAcquire();
+    }
+
+    async importScript(workerUrl: string): Promise<void> {
+        if (this.importedScriptUrls.has(workerUrl)) return;
+        // Create the workers before recording the url, so the creation replay does not send it twice.
+        this.getActors();
+        this.importedScriptUrls.add(workerUrl);
+        await this.broadcast(MessageType.importScript, workerUrl);
     }
 }
 
@@ -179,30 +221,6 @@ const globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool());
 globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
     return makeRequest(params, abortController);
 });
-
-/** Every script url {@link importScriptInWorkers} has sent, so they can be sent again to new workers. */
-const scriptsImportedIntoWorkers: Set<string> = new Set();
-
-/**
- * Registers a callback that restores state living in the workers rather than in any one map. It
- * runs each time the global workers are created, including the first. Removing the last map
- * terminates them, so anything a plugin configures in the workers belongs here.
- *
- * Message handlers registered through {@link getGlobalDispatcher} and scripts loaded through
- * {@link importScriptInWorkers} come back on their own and do not need this.
- * @param listener - sends the worker configuration again
- * @returns a subscription object that can be used to stop sending it
- *
- * @example
- * ```ts
- * onGlobalWorkersCreated(() => {
- *     getGlobalDispatcher().broadcast('my-plugin-config', {tiles: 'https://example.com/{z}/{x}/{y}.png'});
- * });
- * ```
- */
-export function onGlobalWorkersCreated(listener: () => void): Subscription {
-    return getGlobalWorkerPool().on('create', listener);
-}
 
 /**
  * This function is used to get the global dispatcher that is shared across all maps instances.
@@ -212,7 +230,7 @@ export function onGlobalWorkersCreated(listener: () => void): Subscription {
  *
  * The same dispatcher is returned for the life of the page, so it is safe to keep, and the message
  * handlers registered on it come back on the workers that replace terminated ones. Configuration
- * you broadcast into the workers does not, so send that from {@link onGlobalWorkersCreated}.
+ * you broadcast into the workers does not, so send that from a `workersCreated` listener.
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): IGlobalDispatcher {
@@ -255,16 +273,5 @@ export function getGlobalDispatcher(): IGlobalDispatcher {
  * ```
  */
 export async function importScriptInWorkers(workerUrl: string): Promise<void> {
-    if (scriptsImportedIntoWorkers.has(workerUrl)) return;
-    const dispatcher = getGlobalDispatcher();
-    scriptsImportedIntoWorkers.add(workerUrl);
-    await dispatcher.broadcast(MessageType.importScript, workerUrl);
+    return globalDispatcher.importScript(workerUrl);
 }
-
-onGlobalWorkersCreated(() => {
-    for (const url of scriptsImportedIntoWorkers) {
-        getGlobalDispatcher().broadcast(MessageType.importScript, url).catch((error) => {
-            warnOnce(`Failed to import script ${url} into the workers: ${error}`);
-        });
-    }
-});

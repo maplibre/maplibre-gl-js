@@ -1,7 +1,7 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
 import {MessageType} from './actor_messages.ts';
-import {Dispatcher, getGlobalDispatcher, importScriptInWorkers, onGlobalWorkersCreated} from './dispatcher.ts';
+import {Dispatcher, getGlobalDispatcher, importScriptInWorkers} from './dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
@@ -116,7 +116,8 @@ describe('global dispatcher', () => {
 
     test('creating a map dispatcher notifies the listeners that new global workers exist', async () => {
         const globalWorkersCreated = vi.fn();
-        onGlobalWorkersCreated(globalWorkersCreated);
+        getGlobalDispatcher().on('workersCreated', globalWorkersCreated);
+        terminateGlobalWorkers();
 
         await new Dispatcher(getGlobalWorkerPool(), 1).getActors();
 
