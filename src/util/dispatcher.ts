@@ -170,7 +170,8 @@ export class GlobalDispatcher extends Dispatcher {
     }
 
     protected override acquireWorkers(): Promise<ActorTarget[]> {
-        return this.workerPool.weakAcquire(() => this.discardActors());
+        this.workerPool.once('terminate', () => this.discardActors());
+        return this.workerPool.weakAcquire();
     }
 }
 

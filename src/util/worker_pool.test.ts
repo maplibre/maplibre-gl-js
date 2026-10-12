@@ -46,7 +46,8 @@ describe('WorkerPool', () => {
         const terminateListener = vi.fn();
 
         const pool = new WorkerPool();
-        await pool.weakAcquire(terminateListener);
+        pool.on('terminate', terminateListener);
+        await pool.weakAcquire();
         await pool.acquire('map-1');
 
         pool.release('map-1');

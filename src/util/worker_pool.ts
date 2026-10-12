@@ -38,10 +38,9 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
 
     /**
      * Uses the shared workers without claiming them, the way a `WeakRef` holds an object without keeping it alive.
-     * `onTerminate` fires once the last claim is released, since the workers are dead from then on.
+     * The `terminate` event fires once the last claim is released, since the workers are dead from then on.
      */
-    async weakAcquire(onTerminate: () => void): Promise<ActorTarget[]> {
-        this.once('terminate', onTerminate);
+    async weakAcquire(): Promise<ActorTarget[]> {
         return this.ensureWorkers();
     }
 
