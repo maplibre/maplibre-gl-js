@@ -3,7 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Terminate the pooled web workers when the last map is removed, and recreate them for the next map; plugins can restore worker state from the global dispatcher's `workersCreated` event. ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491), [#8735](https://github.com/maplibre/maplibre-gl-js/pull/8735)) (by [@lucaswoj](https://github.com/lucaswoj) and [@HarelM](https://github.com/HarelM))
+- Terminate the pooled web workers when the last map is removed; plugins can restore worker state via the global dispatcher's `workersCreated` event ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491), [#8735](https://github.com/maplibre/maplibre-gl-js/pull/8735)) (by [@lucaswoj](https://github.com/lucaswoj) and [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.14.0

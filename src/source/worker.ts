@@ -102,10 +102,7 @@ export default class Worker {
     };
     referrer: string;
     globalStates: Map<string, Record<string, any>>;
-    /**
-     * The scripts that were imported into this worker, by url, so that a script that is sent again is not executed twice.
-     * This happens when the global dispatcher replays the scripts while this worker is still alive.
-     */
+    /** Scripts imported into this worker, by url, so a url sent twice runs once. */
     importedScripts: Map<string, Promise<void>>;
 
     constructor(self: WorkerGlobalScopeInterface & ActorTarget) {
@@ -270,7 +267,7 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        return await rtlWorkerPlugin.syncState(incomingState, loadScript);
+        return await rtlWorkerPlugin.syncState(incomingState, (url) => this._importScript(url));
     }
 
     private _getAvailableImages(mapId: string) {

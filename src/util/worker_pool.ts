@@ -1,14 +1,17 @@
 import {workerFactory} from './web_worker.ts';
 import {browser} from './browser.ts';
 import {isSafari} from './util.ts';
-import {Evented} from './evented.ts';
+import {Evented, type Event} from './evented.ts';
 
 import type {ActorTarget} from './actor.ts';
-import type {Event} from './evented.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
 
 export type WorkerPoolEventType = {
+    /**
+     * Fires when the shared workers are created, before they boot, so listeners replay only state
+     * recorded before the call that created them.
+     */
     create: Event;
     terminate: Event;
 };
@@ -37,10 +40,8 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     }
 
     /**
-     * Returns the shared workers, creating them on first use, without claiming them: the
-     * `terminate` event still fires once the last claim is released. The `create` event fires
-     * before the workers boot, so listeners replay only state recorded before the call that
-     * created them.
+     * Returns the shared workers, creating them on first use, without claiming them. The
+     * `terminate` event still fires once the last claim is released.
      */
     async ensureWorkers(): Promise<ActorTarget[]> {
         if (!this.workersPromise) {

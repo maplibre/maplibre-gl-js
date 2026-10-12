@@ -176,7 +176,6 @@ function getWorkerUrl(): string { return config.WORKER_URL; }
  * Sets the worker url
  */
 function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
-
 /**
  * Allows loading javascript code in the worker thread.
  * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.

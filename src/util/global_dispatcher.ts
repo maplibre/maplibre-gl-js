@@ -46,41 +46,52 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private actorsPromise: Promise<Actor[]> | undefined;
     private workerErrorSubscriptions: Subscription[] = [];
     private workerPool: WorkerPool;
+    /** Rejects when the current workers terminate, so in-flight broadcasts reject instead of hanging. */
+    private workersTerminated: Promise<never>;
+    private rejectInFlightBroadcasts: (error: Error) => void;
 
+    /**
+     * Workers created before construction, e.g. by prewarm() before this module evaluated, fired
+     * `create` already, so the constructor handles them directly.
+     */
     constructor(workerPool: WorkerPool) {
         super();
         this.workerPool = workerPool;
-        workerPool.on('create', () => {
-            this.getActors();
-            for (const url of this.importedScriptUrls) {
-                this.broadcast(MessageType.importScript, url).catch((error) => {
-                    warnOnce(`Failed to import script ${url} into the workers: ${error}`);
-                });
-            }
-            this.fire('workersCreated');
-        });
-        workerPool.on('terminate', () => {
-            this.actorsPromise?.then((actors) => {
-                for (const actor of actors) actor.remove();
-            });
-            this.actorsPromise = undefined;
-            for (const subscription of this.workerErrorSubscriptions) {
-                subscription.unsubscribe();
-            }
-            this.workerErrorSubscriptions = [];
-        });
-        // Workers created before this module evaluated, e.g. by prewarm(), fired `create` already.
-        if (workerPool.workersPromise) this.getActors();
+        workerPool.on('create', () => this.handleWorkersCreated());
+        workerPool.on('terminate', () => this.handleWorkersTerminated());
+        if (workerPool.workersPromise) this.handleWorkersCreated();
     }
 
-    /**
-     * Returns the actors, creating the workers on first use. `ensureWorkers` fires the pool's
-     * `create` event synchronously, so the re-entrant call builds the actors and the `||=` here
-     * keeps them.
-     */
+    private handleWorkersCreated(): void {
+        this.actorsPromise = this.buildActors();
+        this.workersTerminated = new Promise((_, reject) => { this.rejectInFlightBroadcasts = reject; });
+        this.workersTerminated.catch(() => {});
+        for (const url of this.importedScriptUrls) {
+            this.broadcast(MessageType.importScript, url).catch((error) => {
+                warnOnce(`Failed to import script ${url} into the workers: ${error}`);
+            });
+        }
+        this.fire('workersCreated');
+    }
+
+    private handleWorkersTerminated(): void {
+        this.actorsPromise?.then((actors) => {
+            for (const actor of actors) {
+                actor.remove();
+            }
+        }).catch(() => {});
+        this.actorsPromise = undefined;
+        this.rejectInFlightBroadcasts(new Error('The workers were terminated while a message was in flight.'));
+        for (const subscription of this.workerErrorSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this.workerErrorSubscriptions = [];
+    }
+
+    /** Returns the actors, creating the workers on first use: `ensureWorkers` fires the pool's `create` event synchronously. */
     private getActors(): Promise<Actor[]> {
         this.workerPool.ensureWorkers();
-        return this.actorsPromise ||= this.buildActors();
+        return this.actorsPromise;
     }
 
     private async buildActors(): Promise<Actor[]> {
@@ -104,9 +115,14 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      */
     broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>>;
     broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
-    async broadcast(type: string, data: unknown): Promise<unknown[]> {
-        const actors = await this.getActors();
-        return Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data: data as any})));
+    async broadcast(type: string, data: any): Promise<unknown[]> {
+        const actorsPromise = this.getActors();
+        const workersTerminated = this.workersTerminated;
+        const actors = await actorsPromise;
+        return Promise.race([
+            Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data}))),
+            workersTerminated
+        ]);
     }
 
     /**

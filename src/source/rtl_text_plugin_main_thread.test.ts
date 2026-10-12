@@ -130,6 +130,16 @@ describe('RTLMainThreadPlugin', () => {
         expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
 
+    test('should not restart an in-flight download when new workers are created', () => {
+        broadcastSpy = vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockReturnValue(new Promise(() => {}));
+        rtlMainThreadPlugin.setRTLTextPlugin(url);
+        expect(rtlMainThreadPlugin.status).toBe('loading');
+
+        rtlMainThreadPlugin.dispatcher.fire('workersCreated');
+
+        expect(broadcastSpy).toHaveBeenCalledTimes(1);
+    });
+
     test('should set status to requested if RTL plugin was not set', async () => {
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');

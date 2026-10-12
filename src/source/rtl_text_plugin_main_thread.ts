@@ -16,11 +16,16 @@ class RTLMainThreadPlugin extends Evented {
         this.dispatcher.on('workersCreated', () => this._syncStateToNewWorkers());
     }
 
+    /**
+     * Re-syncs the plugin into freshly created workers. A `loading` plugin needs no re-sync: its
+     * in-flight request targets the newest workers, and re-requesting here would double-load the
+     * script when the plugin's own broadcast is what created the workers.
+     */
     async _syncStateToNewWorkers(): Promise<void> {
         try {
             if (this.status === 'deferred') {
                 await this._syncState('deferred');
-            } else if (this.status === 'loading' || this.status === 'loaded') {
+            } else if (this.status === 'loaded') {
                 await this._requestImport();
             }
         } catch (error) {

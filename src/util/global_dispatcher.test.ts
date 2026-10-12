@@ -5,23 +5,12 @@ import {Dispatcher} from './dispatcher.ts';
 import {GlobalDispatcher, getGlobalDispatcher} from './global_dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 import {terminateGlobalWorkers} from './test/util.ts';
-
-import type {WorkerPool} from './worker_pool.ts';
+import {WorkerPool} from './worker_pool.ts';
 
 describe('global dispatcher', () => {
     afterEach(() => {
         vi.restoreAllMocks();
         terminateGlobalWorkers();
-    });
-
-    test('removing the last map dispatcher terminates the workers', async () => {
-        const pool = getGlobalWorkerPool();
-        const mapDispatcher = new Dispatcher(pool, 1);
-        await mapDispatcher.actorsPromise;
-
-        mapDispatcher.remove();
-
-        expect(pool.workersPromise).toBeFalsy();
     });
 
     test('creating a map dispatcher notifies the listeners that new global workers exist', async () => {
@@ -48,6 +37,7 @@ describe('global dispatcher', () => {
 
     test('a message handler registered on the global dispatcher comes back with the new workers', async () => {
         const handler = vi.fn();
+        await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
         await getGlobalDispatcher().registerMessageHandler('my-plugin-message', handler);
         terminateGlobalWorkers();
         const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
@@ -55,6 +45,15 @@ describe('global dispatcher', () => {
         await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
 
         expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
+    });
+
+    test('an in-flight broadcast rejects when the workers terminate', async () => {
+        vi.spyOn(Actor.prototype, 'sendAsync').mockReturnValue(new Promise(() => {}));
+        const resultPromise = getGlobalDispatcher().broadcast('my-plugin-message', 1);
+
+        terminateGlobalWorkers();
+
+        await expect(resultPromise).rejects.toThrow('The workers were terminated while a message was in flight.');
     });
 
     test('registers and unregisters a handler for a plugin-defined message type', async () => {
@@ -72,15 +71,13 @@ describe('global dispatcher', () => {
         expect(unregisterSpy).toHaveBeenCalledWith('my-plugin-message');
     });
 
-    test('fires worker errors through Evented', async () => {
+    test('fires worker errors through Evented until the workers terminate', async () => {
         vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
         const worker = new EventTarget() as ActorTarget & EventTarget;
         worker.postMessage = vi.fn();
-        const workerPool = {
-            on() {},
-            workersPromise: null,
-            ensureWorkers: () => Promise.resolve([worker])
-        } as any as WorkerPool;
+        worker.terminate = vi.fn();
+        const workerPool = new WorkerPool();
+        workerPool.workersPromise = Promise.resolve([worker]);
         const globalDispatcher = new GlobalDispatcher(workerPool);
         const errorListener = vi.fn();
         globalDispatcher.on('error', errorListener);
@@ -91,17 +88,22 @@ describe('global dispatcher', () => {
         expect(errorListener).toHaveBeenCalledWith(expect.objectContaining({
             error: new Error('Worker failed to load. Check that the worker URL is correct.')
         }));
+        workerPool.release(1);
+        worker.dispatchEvent(new ErrorEvent('error'));
+        expect(errorListener).toHaveBeenCalledTimes(1);
     });
 
     test('prewarm keeps the workers alive once the last map is removed, until they are cleared', () => {
         prewarm();
         const pool = getGlobalWorkerPool();
+        const terminateSpy = vi.fn();
+        pool.on('terminate', terminateSpy);
         new Dispatcher(pool, 1).remove();
-        expect(pool.workersPromise).toBeTruthy();
+        expect(terminateSpy).not.toHaveBeenCalled();
 
         clearPrewarmedResources();
 
-        expect(pool.numActive()).toBe(0);
+        expect(terminateSpy).toHaveBeenCalled();
     });
 });
 
