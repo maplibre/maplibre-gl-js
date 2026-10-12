@@ -8,10 +8,6 @@ import type {ActorTarget} from './actor.ts';
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
 
 export type WorkerPoolEventType = {
-    /**
-     * Fires when the shared workers are created, before they boot, so listeners replay only state
-     * recorded before the call that created them.
-     */
     create: Event;
     terminate: Event;
 };

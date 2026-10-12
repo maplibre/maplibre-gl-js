@@ -11,26 +11,24 @@ class RTLMainThreadPlugin extends Evented {
     url: string = null;
     dispatcher: GlobalDispatcher = getGlobalDispatcher();
 
-    constructor() {
-        super();
-        this.dispatcher.on('workersCreated', () => this._syncStateToNewWorkers());
-    }
-
     /**
      * Re-syncs the plugin into freshly created workers. A `loading` plugin needs no re-sync: its
-     * in-flight request targets the newest workers, and re-requesting here would double-load the
+     * in-flight request targets the newest workers, and re-requesting would double-load the
      * script when the plugin's own broadcast is what created the workers.
      */
-    async _syncStateToNewWorkers(): Promise<void> {
-        try {
-            if (this.status === 'deferred') {
-                await this._syncState('deferred');
-            } else if (this.status === 'loaded') {
-                await this._requestImport();
+    constructor() {
+        super();
+        this.dispatcher.on('workersCreated', async () => {
+            try {
+                if (this.status === 'deferred') {
+                    await this._syncState('deferred');
+                } else if (this.status === 'loaded') {
+                    await this._requestImport();
+                }
+            } catch (error) {
+                warnOnce(`Failed to load the RTL text plugin into the new workers: ${error}`);
             }
-        } catch (error) {
-            warnOnce(`Failed to load the RTL text plugin into the new workers: ${error}`);
-        }
+        });
     }
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
