@@ -71,20 +71,20 @@ export class ElevationHold {
         let changed = false;
         if (this._terrainChanged) {
             this._terrainChanged = false;
-            if (!terrain.hasElevationForLngLat(tr.center, tr)) {
+            if (terrain.findElevationForLngLat(tr.center, tr, 'loaded') === undefined) {
                 tr.setElevation(0);
                 this._dem = 'awaiting';
                 changed = true;
             }
         }
         if (this._dem !== 'awaiting') return changed;
-        const elevation = terrain.getDrawnElevationForLngLat(tr.center, true);
+        const elevation = terrain.findElevationForLngLat(tr.center, tr, 'own');
         if (elevation !== undefined) {
             tr.setElevation(elevation);
             this._dem = 'taken';
             return true;
         }
-        const drawnElevation = terrain.getDrawnElevationForLngLat(tr.center);
+        const drawnElevation = terrain.findElevationForLngLat(tr.center, tr, 'drawn');
         if (drawnElevation === undefined || drawnElevation === tr.elevation) return changed;
         tr.setElevation(drawnElevation);
         return true;
