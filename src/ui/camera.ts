@@ -909,8 +909,6 @@ export class Camera extends Evented<MapEventType> {
             if (this._elevation) {
                 tr.setElevation(interpolates.number(startElevation, elevation, k));
             } else if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
-
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
@@ -1374,7 +1372,7 @@ export class Camera extends Evented<MapEventType> {
         const pitch = options.pitch !== undefined ? +options.pitch : startPitch;
         const roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll;
         const padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
-        const elevation = options.elevation !== undefined ? +options.elevation : startElevation;
+        const elevation = options.elevation !== undefined ? options.elevation : startElevation;
 
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
