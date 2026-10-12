@@ -2,6 +2,31 @@ import {throttle} from '../util/throttle.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 
 import type {Map} from './map.ts';
+import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+
+/**
+ * The step in degrees over which the size of a degree is measured.
+ */
+const DEGREE_STEP = 1e-4;
+
+/**
+ * Returns how many degrees one world unit spans at a location. A world that wraps is 360 degrees wide.
+ * Any other world is measured at the location along longitude and along latitude, and the direction
+ * with the fewest degrees counts.
+ */
+function degreesPerWorldUnit(worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat): number {
+    if (worldCoordinateHelper.wraps) return 360;
+
+    const latStep = lngLat.lat > 0 ? -DEGREE_STEP : DEGREE_STEP;
+    const world = worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
+    const alongLng = worldCoordinateHelper.worldFromLngLat(lngLat.lng + DEGREE_STEP, lngLat.lat);
+    const alongLat = worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat + latStep);
+    const worldUnits = Math.max(
+        Math.hypot(alongLng.x - world.x, alongLng.y - world.y),
+        Math.hypot(alongLat.x - world.x, alongLat.y - world.y)
+    );
+    return DEGREE_STEP / worldUnits;
+}
 
 /**
  * Adds the map's position to its page's location hash.
@@ -45,8 +70,9 @@ export class Hash {
     getHashString(mapFeedback?: boolean): string {
         const center = this._map.getCenter(),
             zoom = Math.round(this._map.getZoom() * 100) / 100,
-            // derived from equation: 512px * 2^z / 360 / 10^d < 0.5px
-            precision = Math.ceil((zoom * Math.LN2 + Math.log(512 / 360 / 0.5)) / Math.LN10),
+            degreesPerWorld = degreesPerWorldUnit(this._map._camera.transform.worldCoordinateHelper, center),
+            // derived from equation: 512px * 2^z / degreesPerWorld / 10^d < 0.5px
+            precision = Math.ceil((zoom * Math.LN2 + Math.log(512 / degreesPerWorld / 0.5)) / Math.LN10),
             m = Math.pow(10, precision),
             lng = Math.round(center.lng * m) / m,
             lat = Math.round(center.lat * m) / m,
