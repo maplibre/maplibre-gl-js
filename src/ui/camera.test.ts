@@ -1288,7 +1288,8 @@ describe('easeTo', () => {
         const terrain = {
             getMinTileElevationForLngLatZoom: () => 50,
             getElevationForLngLatZoom: () => 50,
-            getElevationForLngLat: () => 50
+            getElevationForLngLat: () => 50,
+            getCoverageIndex: () => null
         } as any as Terrain;
 
         const {camera, queue} = createCamera({terrain});
@@ -2206,7 +2207,8 @@ describe('flyTo', () => {
         const terrain = {
             getMinTileElevationForLngLatZoom: () => 50,
             getElevationForLngLatZoom: () => 50,
-            getElevationForLngLat: () => 50
+            getElevationForLngLat: () => 50,
+            getCoverageIndex: () => null
         } as any as Terrain;
 
         const {camera, queue} = createCamera({terrain});
