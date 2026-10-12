@@ -1,10 +1,12 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
-import {Actor} from './actor.ts';
+import {Actor, type ActorTarget} from './actor.ts';
 import {MessageType} from './actor_messages.ts';
 import {Dispatcher} from './dispatcher.ts';
-import {getGlobalDispatcher} from './global_dispatcher.ts';
+import {GlobalDispatcher, getGlobalDispatcher} from './global_dispatcher.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 import {terminateGlobalWorkers} from './test/util.ts';
+
+import type {WorkerPool} from './worker_pool.ts';
 
 describe('global dispatcher', () => {
     afterEach(() => {
@@ -79,6 +81,27 @@ describe('global dispatcher', () => {
 
         await globalDispatcher.unregisterMessageHandler('my-plugin-message');
         expect(unregisterSpy).toHaveBeenCalledWith('my-plugin-message');
+    });
+
+    test('fires worker errors through Evented', async () => {
+        vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
+        const worker = new EventTarget() as ActorTarget & EventTarget;
+        worker.postMessage = vi.fn();
+        const workerPool = {
+            on() {},
+            workersPromise: null,
+            ensureWorkers: () => Promise.resolve([worker])
+        } as any as WorkerPool;
+        const globalDispatcher = new GlobalDispatcher(workerPool);
+        const errorListener = vi.fn();
+        globalDispatcher.on('error', errorListener);
+        await globalDispatcher.broadcast('my-plugin-message', 1);
+
+        worker.dispatchEvent(new ErrorEvent('error'));
+
+        expect(errorListener).toHaveBeenCalledWith(expect.objectContaining({
+            error: new Error('Worker failed to load. Check that the worker URL is correct.')
+        }));
     });
 
     test('prewarm keeps the workers alive once the last map is removed, until they are cleared', () => {

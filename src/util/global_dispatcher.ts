@@ -2,8 +2,8 @@ import {Actor} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
-import {Evented, type Event} from './evented.ts';
-import {warnOnce} from './util.ts';
+import {ErrorEvent, Evented, type Event} from './evented.ts';
+import {subscribe, warnOnce, type Subscription} from './util.ts';
 
 import type {MessageHandler} from './actor.ts';
 import type {WorkerPool} from './worker_pool.ts';
@@ -26,6 +26,7 @@ export type GlobalDispatcherEventType = {
      * ```
      */
     workersCreated: Event;
+    error: ErrorEvent;
 };
 
 /**
@@ -43,6 +44,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private importedScriptUrls = new Set<string>();
     private messageHandlers: Record<string, MessageHandler<MessageType>> = {};
     private actorsPromise: Promise<Actor[]> | undefined;
+    private workerErrorSubscriptions: Subscription[] = [];
     private workerPool: WorkerPool;
 
     constructor(workerPool: WorkerPool) {
@@ -62,6 +64,10 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
                 for (const actor of actors) actor.remove();
             });
             this.actorsPromise = undefined;
+            for (const subscription of this.workerErrorSubscriptions) {
+                subscription.unsubscribe();
+            }
+            this.workerErrorSubscriptions = [];
         });
         // Workers created before this module evaluated, e.g. by prewarm(), fired `create` already.
         if (workerPool.workersPromise) this.getActors();
@@ -80,6 +86,9 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private async buildActors(): Promise<Actor[]> {
         const workers = await this.workerPool.ensureWorkers();
         return workers.map((worker, i) => {
+            this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
+                this.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
+            }, false));
             const actor = new Actor(worker, GLOBAL_DISPATCHER_ID);
             actor.name = `Worker ${i}`;
             for (const [type, handler] of Object.entries(this.messageHandlers)) {
