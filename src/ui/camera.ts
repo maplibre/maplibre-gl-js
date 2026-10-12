@@ -906,7 +906,10 @@ export class Camera extends Evented<MapEventType> {
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            // TODO: include elevation in easing function (also include in flyto fucntion?) aslo include at endtransform
+            if (this._elevation) {
+                tr.setElevation(interpolates.number(startElevation, elevation, k));
+            } else if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+
             if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
