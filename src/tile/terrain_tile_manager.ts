@@ -302,12 +302,12 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
-     * Whether DEM data for a terrain tile can still arrive: the source tile covering it lies within the source's zoom
-     * range and bounds, and has not failed to load.
+     * Whether the terrain is still waiting for DEM data for a terrain tile that has none: the source tile covering it
+     * lies within the source's zoom range and bounds, and has not failed to load.
      * @param tileID - the terrain tile
      * @returns false where the source will not serve DEM data for the tile
      */
-    canLoadDEM(tileID: OverscaledTileID): boolean {
+    isStillWaitingForDEM(tileID: OverscaledTileID): boolean {
         const source = this.tileManager._source;
         const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
         if (z < source.minzoom) return false;

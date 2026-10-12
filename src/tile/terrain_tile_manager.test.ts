@@ -93,13 +93,13 @@ describe('TerrainTileManager', () => {
         expect(tsc.getSourceTile(tileID, true).tileID.key).toBe(underzoomTileID.key);
     });
 
-    test('canLoadDEM is false where the source tile under the terrain tile failed to load', () => {
+    test('isStillWaitingForDEM is false where the source tile under the terrain tile failed to load', () => {
         const terrainTileInsideTheBounds = new OverscaledTileID(6, 0, 6, 23, 33);
         const sourceTile = new Tile(terrainTileInsideTheBounds.scaledTo(5), 256);
         sourceTile.state = 'errored';
         tsc.tileManager._inViewTiles.setTile(sourceTile.tileID.key, sourceTile);
 
-        expect(tsc.canLoadDEM(terrainTileInsideTheBounds)).toBe(false);
+        expect(tsc.isStillWaitingForDEM(terrainTileInsideTheBounds)).toBe(false);
     });
 
     describe('update', () => {

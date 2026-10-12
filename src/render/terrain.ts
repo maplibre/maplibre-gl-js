@@ -264,7 +264,7 @@ export class Terrain {
         if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return dem === 'settled' ? 0 : undefined;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         if (this.tileManager.getSourceTile(tileID, true)?.dem) return elevation;
-        return dem === 'settled' && !this.tileManager.canLoadDEM(tileID) ? 0 : undefined;
+        return dem === 'settled' && !this.tileManager.isStillWaitingForDEM(tileID) ? 0 : undefined;
     }
 
     /**
