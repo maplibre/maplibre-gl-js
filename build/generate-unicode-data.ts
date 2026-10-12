@@ -51,6 +51,32 @@ async function isInCursiveScript(): Promise<string> {
 }
 
 /**
+ * Returns a character class matching the scripts with a dependent vowel sign that is a combining
+ * mark, such as Devanagari and Thai. Their text reaches the glyph manager as a mix of
+ * multi-codepoint clusters and lone letters. Characters shared with other scripts are left out.
+ */
+async function isInComplexShapingScript(): Promise<string> {
+    const combiningMarks = regenerate.default();
+    for (const category of ['Nonspacing_Mark', 'Spacing_Mark']) {
+        combiningMarks.add((await import(`@unicode/unicode-${unicodeVersion}/General_Category/${category}/code-points.mjs`)).default);
+    }
+
+    const vowelSigns = regenerate.default();
+    const dependentVowels = (await import(`@unicode/unicode-${unicodeVersion}/Indic_Syllabic_Category/Vowel_Dependent/code-points.mjs`)).default;
+    vowelSigns.add(dependentVowels.filter((codePoint: number) => combiningMarks.contains(codePoint)));
+
+    const set = regenerate.default();
+    const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.mjs`)).default.Script;
+    for (const script of scripts) {
+        if (script === 'Common' || script === 'Inherited') continue;
+        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.mjs`)).default;
+        if (codePoints.some((codePoint: number) => vowelSigns.contains(codePoint))) set.add(codePoints);
+    }
+
+    return set.toString();
+}
+
+/**
  * Returns a character class matching the scripts that are written horizontally from right to left.
  *
  * A script is one of them when the bidirectional algorithm reads its letters from right to left. The
@@ -566,6 +592,13 @@ export function codePointIsInCursiveScript(codePoint: number): boolean {
  */
 export function codePointIsInRTLScript(codePoint: number): boolean {
     return /${await isInRTLScript()}/gim.test(String.fromCodePoint(codePoint));
+}
+
+/**
+ * Returns whether the given codepoint belongs to a script whose letters combine into clusters.
+ */
+export function codePointIsInComplexShapingScript(codePoint: number): boolean {
+    return /${await isInComplexShapingScript()}/gim.test(String.fromCodePoint(codePoint));
 }
 
 /**
