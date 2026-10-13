@@ -102,6 +102,8 @@ Pick your setup:
     });
     ```
 
+    Nuxt runs on Vite, so follow this tab. Thanks to `<ClientOnly>` and dynamic imports, the map is loaded in the browser only inside `onMounted`, so it does not run on the server.
+
 === "webpack 5+"
 
     ```ts
