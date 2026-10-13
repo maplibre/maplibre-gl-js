@@ -48,7 +48,7 @@ import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileM
 import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
 
-import type {Dispatcher} from './util/dispatcher.ts';
+import type {Dispatcher, DispatcherEventType} from './util/dispatcher.ts';
 import type {MessageType, ActorMessage, RequestResponseMessageMap} from './util/actor_messages.ts';
 import type {ControlPosition, IControl} from './ui/control/control.ts';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, CustomTerrainRenderInput, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
@@ -337,6 +337,7 @@ export {
     type WorkerTileResult,
     type ResourceType,
     type Dispatcher,
+    type DispatcherEventType,
     type GlobalDispatcher,
     type CustomMessageHandler,
     type Actor,

@@ -1,7 +1,7 @@
 import {Dispatcher} from './dispatcher.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {MessageType} from './actor_messages.ts';
-import {warnOnce} from './util.ts';
+import {type Subscription, warnOnce} from './util.ts';
 
 import type {MessageHandler} from './actor.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
@@ -13,18 +13,6 @@ export const GLOBAL_DISPATCHER_ID = 'global-dispatcher';
 
 let sharedGlobalDispatcher: Dispatcher | undefined;
 let globalDispatcherClaims = 0;
-/** Every script url {@link importScriptInWorkers} has sent, so they can be sent again to new workers. */
-const scriptsImportedInWorkers: Set<string> = new Set();
-
-function createSharedGlobalDispatcher(): Dispatcher {
-    const dispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
-    for (const url of scriptsImportedInWorkers) {
-        dispatcher.broadcast(MessageType.importScript, url).catch((error) => {
-            warnOnce(`Failed to import script ${url} into the workers: ${error}`);
-        });
-    }
-    return dispatcher;
-}
 
 /**
  * A handler for a message that is not one of the built-in {@link MessageType}s, e.g. a message that is sent by a plugin.
@@ -38,9 +26,12 @@ export type CustomMessageHandler<TData, TResult> = (mapId: string | number, para
  */
 export class GlobalDispatcher {
     private released: boolean = false;
+    /** The scripts that were imported using this claim, which are imported again when the workers are replaced. */
+    private scripts: Set<string> = new Set();
+    private workersRestartSubscription: Subscription | undefined;
 
     constructor() {
-        sharedGlobalDispatcher ||= createSharedGlobalDispatcher();
+        sharedGlobalDispatcher ||= new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
         globalDispatcherClaims++;
     }
 
@@ -74,13 +65,64 @@ export class GlobalDispatcher {
     }
 
     /**
+     * Allows loading javascript code in the worker thread.
+     * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
+     *
+     * It can be useful for the following examples:
+     * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
+     * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which should come with `addSourceType` usually.
+     * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
+     *
+     * The script is kept in the workers for as long as this claim is held.
+     * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
+     *
+     * @example
+     * ```ts
+     * // below is an example of sending a js file to the worker to load the method there
+     * // Note that you'll need to call the global function `addProtocol` in the worker to register the protocol there.
+     * // add-protocol-worker.js
+     * async function loadFn(params, abortController) {
+     *     const t = await fetch(`https://${params.url.split("://")[1]}`);
+     *     if (t.status == 200) {
+     *         const buffer = await t.arrayBuffer();
+     *         return {data: buffer}
+     *     } else {
+     *         throw new Error(`Tile fetch error: ${t.statusText}`);
+     *     }
+     * }
+     * self.addProtocol('custom', loadFn);
+     *
+     * // main.js
+     * const globalDispatcher = getGlobalDispatcher();
+     * await globalDispatcher.importScript('add-protocol-worker.js');
+     * ```
+     */
+    async importScript(workerUrl: string): Promise<void> {
+        await this.dispatcher.broadcast(MessageType.importScript, workerUrl);
+        this.scripts.add(workerUrl);
+        this.workersRestartSubscription ||= this.dispatcher.on('workersrestart', this.importScriptsAgain);
+    }
+
+    /**
+     * Imports the scripts of this claim into the workers that replaced the ones that had them.
+     */
+    private importScriptsAgain = (): void => {
+        for (const url of this.scripts) {
+            this.dispatcher.broadcast(MessageType.importScript, url).catch((error) => {
+                warnOnce(`Failed to import script ${url} into the workers: ${error}`);
+            });
+        }
+    };
+
+    /**
      * Gives up this claim. When the last claim is released, and no map is left, the workers are terminated
-     * and anything that was sent to them is lost, except for the scripts loaded using {@link importScriptInWorkers}.
+     * and anything that was sent to them is lost, including the scripts that were imported.
      * Calling this more than once has no effect.
      */
     release(): void {
         if (this.released) return;
         this.released = true;
+        this.workersRestartSubscription?.unsubscribe();
         globalDispatcherClaims--;
         if (globalDispatcherClaims > 0) return;
         sharedGlobalDispatcher.remove();
@@ -112,46 +154,22 @@ export function getGlobalDispatcher(): GlobalDispatcher {
 
 /**
  * Allows loading javascript code in the worker thread.
- * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
- *
- * It can be useful for the following examples:
- * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
- * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which should come with `addSourceType` usually.
- * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
- *
- * The script is imported again automatically whenever the workers are recreated, e.g. after all the maps were removed and a new one is created.
+ * The workers are kept alive from the first call, even when all the maps are removed, since they hold the imported scripts.
  * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
- * @returns
+ * @deprecated Use {@link GlobalDispatcher.importScript} of the dispatcher that {@link getGlobalDispatcher} returns,
+ * which allows releasing the workers when the script is no longer needed.
  *
  * @example
  * ```ts
- * // below is an example of sending a js file to the worker to load the method there
- * // Note that you'll need to call the global function `addProtocol` in the worker to register the protocol there.
- * // add-protocol-worker.js
- * async function loadFn(params, abortController) {
- *     const t = await fetch(`https://${params.url.split("://")[1]}`);
- *     if (t.status == 200) {
- *         const buffer = await t.arrayBuffer();
- *         return {data: buffer}
- *     } else {
- *         throw new Error(`Tile fetch error: ${t.statusText}`);
- *     }
- * }
- * self.addProtocol('custom', loadFn);
- *
- * // main.js
  * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
 export async function importScriptInWorkers(workerUrl: string): Promise<void> {
     const globalDispatcher = getGlobalDispatcher();
-    scriptsImportedInWorkers.add(workerUrl);
     try {
-        await globalDispatcher.broadcast(MessageType.importScript, workerUrl);
+        await globalDispatcher.importScript(workerUrl);
     } catch (error) {
-        scriptsImportedInWorkers.delete(workerUrl);
-        throw error;
-    } finally {
         globalDispatcher.release();
+        throw error;
     }
 }

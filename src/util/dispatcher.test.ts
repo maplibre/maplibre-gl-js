@@ -3,6 +3,8 @@ import {Actor, type ActorTarget} from './actor.ts';
 import {Dispatcher} from './dispatcher.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
+import {MessageType} from './actor_messages.ts';
+import {Event} from './evented.ts';
 
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', async () => {
@@ -15,6 +17,9 @@ describe('Dispatcher', () => {
             },
             release (id) {
                 releaseCalled.push(id);
+            },
+            on() {
+                return {unsubscribe() {}};
             }
         } as any as WorkerPool;
 
@@ -38,6 +43,9 @@ describe('Dispatcher', () => {
             release (id) {
                 releaseCalled.push(id);
                 workers = null;
+            },
+            on() {
+                return {unsubscribe() {}};
             }
         } as any as WorkerPool;
 
@@ -79,7 +87,10 @@ describe('Dispatcher', () => {
             acquire() {
                 return Promise.resolve([worker]);
             },
-            release() {}
+            release() {},
+            on() {
+                return {unsubscribe() {}};
+            }
         } as any as WorkerPool;
         const dispatcher = new Dispatcher(workerPool, 1);
         const listener = vi.fn();
@@ -94,5 +105,37 @@ describe('Dispatcher', () => {
         dispatcher.remove();
         worker.dispatchEvent(new ErrorEvent('error'));
         expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    test('uses the new workers after the pool restarted them', async () => {
+        const workerPool = new WorkerPool();
+        const handler = vi.fn().mockResolvedValue({});
+        const dispatcher = new Dispatcher(workerPool, 1);
+        const restartListener = vi.fn();
+        dispatcher.on('workersrestart', restartListener);
+        await dispatcher.registerMessageHandler(MessageType.getGlyphs, handler);
+        const actorsBeforeRestart = await dispatcher.actorsPromise;
+
+        workerPool.workersPromise = null;
+        workerPool.fire(new Event('restart'));
+        const actorsAfterRestart = await dispatcher.actorsPromise;
+
+        expect(actorsAfterRestart[0].target).not.toBe(actorsBeforeRestart[0].target);
+        expect(actorsAfterRestart[0].messageHandlers[MessageType.getGlyphs]).toBe(handler);
+        expect(restartListener).toHaveBeenCalledTimes(1);
+        dispatcher.remove();
+    });
+
+    test('gives the new actors to a caller that was waiting when the pool restarted the workers', async () => {
+        const workerPool = new WorkerPool();
+        const dispatcher = new Dispatcher(workerPool, 1);
+        const actorPromise = dispatcher.getActor();
+
+        workerPool.workersPromise = null;
+        workerPool.fire(new Event('restart'));
+        const actor = await actorPromise;
+
+        expect(dispatcher.actors).toContain(actor);
+        dispatcher.remove();
     });
 });

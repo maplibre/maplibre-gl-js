@@ -2,6 +2,7 @@ import {describe, beforeEach, afterEach, test, expect, vi, type Mock} from 'vite
 import {GLOBAL_DISPATCHER_ID, getGlobalDispatcher, importScriptInWorkers} from './global_dispatcher.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {MessageType} from './actor_messages.ts';
+import {Event} from './evented.ts';
 
 import type MaplibreWorker from '../source/worker.ts';
 
@@ -60,9 +61,29 @@ describe('global dispatcher', () => {
         expect(sendResult).toBe('from main');
         globalDispatcher.release();
     });
+
+    test('keeps working after the workers were restarted', async () => {
+        const globalDispatcher = getGlobalDispatcher();
+        const mainHandler = vi.fn().mockResolvedValue('from main');
+        await globalDispatcher.registerMessageHandler('my-plugin-message', mainHandler);
+        const workerBeforeRestart = await getWorker();
+
+        getGlobalWorkerPool().workersPromise = null;
+        getGlobalWorkerPool().fire(new Event('restart'));
+        const worker = await getWorker();
+        const workerHandler = vi.fn().mockResolvedValue('from worker');
+        worker.actor.registerMessageHandler('my-plugin-message' as MessageType, workerHandler);
+        const broadcastResults = await globalDispatcher.broadcast('my-plugin-message', {to: 'worker'});
+        const sendResult = await worker.actor.sendAsync({type: 'my-plugin-message' as MessageType, data: {to: 'main'}, targetMapId: GLOBAL_DISPATCHER_ID});
+
+        expect(worker).not.toBe(workerBeforeRestart);
+        expect(broadcastResults).toEqual(['from worker']);
+        expect(sendResult).toBe('from main');
+        globalDispatcher.release();
+    });
 });
 
-describe('importScriptInWorkers', () => {
+describe('importing scripts', () => {
     const originalFetch = global.fetch;
     let fetchMock: Mock;
 
@@ -75,33 +96,47 @@ describe('importScriptInWorkers', () => {
         global.fetch = originalFetch;
     });
 
-    test('does not keep the workers after the script was imported', async () => {
-        await importScriptInWorkers('http://example.com/released.js');
+    test('imports a script into the workers and keeps the workers until the claim is released', async () => {
+        const globalDispatcher = getGlobalDispatcher();
 
-        expect(fetchMock.mock.calls.filter(([url]) => url === 'http://example.com/released.js')).toHaveLength(1);
+        await globalDispatcher.importScript('http://example.com/script.js');
+
+        expect(fetchMock.mock.calls.filter(([url]) => url === 'http://example.com/script.js')).toHaveLength(1);
+        expect(getGlobalWorkerPool().numActive()).toBe(1);
+        globalDispatcher.release();
         expect(getGlobalWorkerPool().numActive()).toBe(0);
     });
 
-    test('imports the script again when the workers are recreated', async () => {
-        await importScriptInWorkers('http://example.com/again.js');
-
+    test('imports the scripts again when the workers are replaced, until the claim is released', async () => {
         const globalDispatcher = getGlobalDispatcher();
-        await globalDispatcher.broadcast(MessageType.setReferrer, 'referrer');
+        await globalDispatcher.importScript('http://example.com/replaced.js');
 
-        expect(fetchMock.mock.calls.filter(([url]) => url === 'http://example.com/again.js')).toHaveLength(2);
+        getGlobalWorkerPool().workersPromise = null;
+        getGlobalWorkerPool().fire(new Event('restart'));
+        await vi.waitFor(() => expect(fetchMock.mock.calls.filter(([url]) => url === 'http://example.com/replaced.js')).toHaveLength(2));
+
+        globalDispatcher.release();
+        const otherGlobalDispatcher = getGlobalDispatcher();
+        getGlobalWorkerPool().workersPromise = null;
+        getGlobalWorkerPool().fire(new Event('restart'));
+        await otherGlobalDispatcher.broadcast(MessageType.setReferrer, 'referrer');
+
+        expect(fetchMock.mock.calls.filter(([url]) => url === 'http://example.com/replaced.js')).toHaveLength(2);
+        otherGlobalDispatcher.release();
+    });
+
+    test('rejects when a script fails to import', async () => {
+        fetchMock.mockResolvedValue({ok: false, status: 404});
+        const globalDispatcher = getGlobalDispatcher();
+
+        await expect(globalDispatcher.importScript('http://example.com/failed.js')).rejects.toThrow('Failed to load');
         globalDispatcher.release();
     });
 
-    test('does not import again a script that failed to import', async () => {
-        fetchMock.mockImplementation((url: string) => {
-            return Promise.resolve(url === 'http://example.com/failed.js' ? {ok: false, status: 404} : {ok: true, text: () => Promise.resolve('')});
-        });
-        await expect(importScriptInWorkers('http://example.com/failed.js')).rejects.toThrow('Failed to load');
+    test('importScriptInWorkers keeps the workers after the script was imported', async () => {
+        await importScriptInWorkers('http://example.com/deprecated.js');
 
-        const globalDispatcher = getGlobalDispatcher();
-        await globalDispatcher.broadcast(MessageType.setReferrer, 'referrer');
-
-        expect(fetchMock.mock.calls.filter(([url]) => url === 'http://example.com/failed.js')).toHaveLength(1);
-        globalDispatcher.release();
+        expect(fetchMock.mock.calls.filter(([url]) => url === 'http://example.com/deprecated.js')).toHaveLength(1);
+        expect(getGlobalWorkerPool().numActive()).toBe(1);
     });
 });

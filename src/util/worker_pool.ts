@@ -1,15 +1,27 @@
 import {workerFactory} from './web_worker.ts';
 import {browser} from './browser.ts';
 import {isSafari} from './util.ts';
+import {type Event, Evented} from './evented.ts';
 
 import type {ActorTarget} from './actor.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
 
 /**
+ * The events that a {@link WorkerPool} fires.
+ */
+export type WorkerPoolEventType = {
+    /**
+     * Fired when the pool found that its workers stopped working, e.g. when the browser terminated them,
+     * and dropped them while they are still held. Everyone that holds the workers should acquire them again to get new ones.
+     */
+    restart: Event;
+};
+
+/**
  * Constructs a worker pool.
  */
-export class WorkerPool {
+export class WorkerPool extends Evented<WorkerPoolEventType> {
     static workerCount: number;
 
     active: {
@@ -18,6 +30,7 @@ export class WorkerPool {
     workersPromise: Promise<ActorTarget[]> | null;
 
     constructor() {
+        super();
         this.active = {};
         this.workersPromise = null;
     }
