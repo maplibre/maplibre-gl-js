@@ -2,7 +2,7 @@
 ### ✨ Features and improvements
 - Support the `hash` option in a projection registered with `addProjection` ([#8743](https://github.com/maplibre/maplibre-gl-js/pull/8743)) (by [@birkskyum](https://github.com/birkskyum))
 - Add `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
-- Add the `emptyTileBehavior` option to vector, raster and raster-dem sources: `fallback` treats an empty (HTTP 204) tile, and a vector 404, as a missing tile, so a tile from another zoom level shows through ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Add `emptyTileBehavior` to vector, raster and raster-dem sources and their TileJSON: `fallback` treats an empty (HTTP 204) tile, and a vector 404, as a missing tile, so a tile from another zoom level shows through ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
