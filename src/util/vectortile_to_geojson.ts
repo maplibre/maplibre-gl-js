@@ -29,6 +29,21 @@ export type MapGeoJSONFeature = GeoJSONFeature & {
 };
 
 /**
+ * The geojson worker source serializes nested property values (objects and arrays) as
+ * `JSON_PREFIX`-prefixed JSON strings. Decodes them in place on the given vector tile
+ * feature, so that everything reading its properties sees the same values rendering used.
+ */
+export function decodeJsonEncodedProperties(feature: VectorTileFeatureLike): void {
+    for (const key in feature.properties) {
+        const value = feature.properties[key];
+        if (typeof value !== 'string' || !value.startsWith(JSON_PREFIX)) {
+            continue;
+        }
+        feature.properties[key] = JSON.parse(value.slice(JSON_PREFIX.length));
+    }
+}
+
+/**
  * A geojson feature
  */
 export class GeoJSONFeature {
@@ -60,13 +75,7 @@ export class GeoJSONFeature {
             GeoJSONFeature.worldCoordinateHelpers.set(this, worldCoordinateHelper);
         }
 
-        for (const key in vectorTileFeature.properties) {
-            if (typeof vectorTileFeature.properties[key] !== 'string' || !vectorTileFeature.properties[key].startsWith(JSON_PREFIX)) {
-                continue;
-            }
-            // JSON parsing the special case of a json prefix that is serialized in geojson worker source.
-            vectorTileFeature.properties[key] = JSON.parse(vectorTileFeature.properties[key].slice(JSON_PREFIX.length));
-        }
+        decodeJsonEncodedProperties(vectorTileFeature);
         this.properties = vectorTileFeature.properties;
         this.id = id;
     }

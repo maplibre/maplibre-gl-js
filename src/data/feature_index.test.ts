@@ -5,6 +5,7 @@ import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index.ts';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper, type VectorTileFeatureLike} from '@maplibre/vt-pbf';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {JSON_PREFIX} from '../util/util.ts';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
@@ -12,6 +13,7 @@ import {createIdentityCrsTransform} from '../util/test/util.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 
 describe('FeatureIndex', () => {
     describe('getId', () => {
@@ -75,6 +77,47 @@ describe('FeatureIndex', () => {
                 layer,
             }, [], undefined);
             expect(result.layer[0].feature.properties).toEqual(features[0].tags);
+        });
+
+        test('query evaluates filters and paint on decoded nested GeoJSON properties', () => {
+            const features = [
+                {
+                    type: 1,
+                    geometry: [0, 0],
+                    tags: {size: {radius: 20}, info: {color: 'red'}}
+                }  as any as Feature
+            ];
+            const geojsonWrapper = new GeoJSONWrapper(features);
+            geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
+            const rawTileData = fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}}, JSON_PREFIX);
+            const paint = {
+                'circle-radius': ['get', 'radius', ['get', 'size']],
+                'circle-color': ['get', 'color', ['get', 'info']]
+            };
+            const layer = new CircleStyleLayer({source: 'source', paint} as LayerSpecification, {});
+            layer.recalculate({} as EvaluationParameters, []);
+            const featureIndex = new FeatureIndex(tileID);
+            featureIndex.rawTileData = rawTileData as any as ArrayBuffer;
+            featureIndex.bucketLayerIDs = [['layer']];
+            featureIndex.insert(geojsonWrapper.feature(0), [[new Point(1, 1)]], 0, 0, 0);
+
+            const result = featureIndex.query({
+                queryPadding: 0,
+                tileSize: 512,
+                scale: 1,
+                queryGeometry: [new Point(0, 0), new Point(10, 10)],
+                cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
+                params: {
+                    filter: ['==', ['get', 'color', ['get', 'info']], 'red'],
+                },
+                transform
+            } as any, {
+                layer,
+            }, {layer: {paint, layout: {}}}, undefined);
+
+            expect(result.layer).toHaveLength(1);
+            expect(result.layer[0].feature.properties).toEqual(features[0].tags);
+            expect((result.layer[0].feature as MapGeoJSONFeature).layer.paint['circle-radius']).toBe(20);
         });
 
         test('query mlt tile', () => {

@@ -6,7 +6,7 @@ import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
 import {PbfReader} from 'pbf';
-import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import {GeoJSONFeature, decodeJsonEncodedProperties} from '../util/vectortile_to_geojson.ts';
 import {mapObject, extend} from '../util/util.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -229,6 +229,7 @@ export class FeatureIndex {
         const sourceLayerName = this.sourceLayerCoder.decode(sourceLayerIndex);
         const sourceLayer = this.vtLayers[sourceLayerName];
         const feature = sourceLayer.feature(featureIndex);
+        decodeJsonEncodedProperties(feature);
 
         if (filter.needGeometry) {
             const evaluationFeature = toEvaluationFeature(feature, true);
