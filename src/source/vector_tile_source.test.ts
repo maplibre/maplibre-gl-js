@@ -647,7 +647,7 @@ describe('VectorTileSource', () => {
                 loadVectorData() {},
             } as any as Tile);
 
-            expect(captured.data.request.headers).toBe(undefined);
+            expect(captured.data.request.headers).toBeUndefined();
         });
 
         test('requests MLT tiles with application/vnd.maplibre-tile', async () => {
