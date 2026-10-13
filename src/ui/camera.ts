@@ -10,7 +10,6 @@ import {MapMovementEvent} from './events.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
-import {getTerrainElevationForCenter} from '../render/terrain.ts';
 import {ElevationHold} from './elevation_hold.ts';
 
 import type {MapEventType} from './events.ts';
@@ -737,8 +736,8 @@ export class Camera extends Evented<MapEventType> {
 
         const oldZoom = tr.zoom;
         if (this.terrain && this.getCenterClampedToGround()) {
-            const elevation = getTerrainElevationForCenter(this.terrain, options.center ? LngLat.convert(options.center) : tr.center, tr);
-            if (elevation !== undefined) tr.setElevation(elevation);
+            const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr);
+            if (demState !== 'loading') tr.setElevation(elevation);
         }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
 
@@ -953,7 +952,8 @@ export class Camera extends Evented<MapEventType> {
     _prepareElevation(center: LngLat, tr: ITransform): void {
         this._elevationCenter = center;
         this._elevationStart = tr.elevation;
-        this._elevationTarget = getTerrainElevationForCenter(this.terrain, center, tr) ?? tr.elevation;
+        const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(center, tr);
+        this._elevationTarget = demState === 'loading' ? tr.elevation : elevation;
         this.elevationFreeze = true;
     }
 
@@ -972,7 +972,8 @@ export class Camera extends Evented<MapEventType> {
         }
 
         tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
-        const elevation = getTerrainElevationForCenter(this.terrain, this._elevationCenter, tr) ?? this._elevationTarget;
+        const {elevation: terrainElevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._elevationCenter, tr);
+        const elevation = demState === 'loading' ? this._elevationTarget : terrainElevation;
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -995,7 +996,7 @@ export class Camera extends Evented<MapEventType> {
      */
     holdElevation(tr: ITransform, holder: ElevationHolder): void {
         this.elevationFreeze = true;
-        const startedWithoutDem = !!this.terrain && this.getCenterClampedToGround() && this.terrain.getDEMStateForLngLat(tr.center, tr) !== 'loaded';
+        const startedWithoutDem = !!this.terrain && this.getCenterClampedToGround() && this.terrain.getElevationAndDEMStateForLngLat(tr.center, tr).demState !== 'loaded';
         const terrainAboveMaxZoomForCenter = this.terrain ? this._terrainHeightAboveMaxZoomForCenter(tr) : undefined;
         this._elevationHold = new ElevationHold(holder, startedWithoutDem, terrainAboveMaxZoomForCenter !== undefined && terrainAboveMaxZoomForCenter <= MAX_ZOOM_FOR_CENTER_TOLERANCE_M);
     }
@@ -1057,10 +1058,13 @@ export class Camera extends Evented<MapEventType> {
         }
         const tr = this.transform;
         tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
-        if (this.getCenterClampedToGround()) {
-            const elevation = this.terrain ? getTerrainElevationForCenter(this.terrain, tr.center, tr) : 0;
-            if (elevation !== undefined) tr.setElevation(elevation);
+        if (!this.getCenterClampedToGround()) return;
+        if (!this.terrain) {
+            tr.setElevation(0);
+            return;
         }
+        const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(tr.center, tr);
+        if (demState !== 'loading') tr.setElevation(elevation);
     }
 
     /**

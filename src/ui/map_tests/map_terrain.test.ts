@@ -1689,6 +1689,7 @@ describe('Keep camera outside terrain', () => {
         let terrainElevation = 10;
         const terrainStub = {} as Terrain;
         terrainStub.getElevationForLngLat = vi.fn(() => terrainElevation);
+        terrainStub.getElevationAndDEMStateForLngLat = () => ({elevation: terrainElevation, demState: 'loaded'});
         terrainStub.getCoverageIndex = () => null;
         map.terrain = terrainStub;
         map._camera.terrain = terrainStub;

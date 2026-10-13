@@ -24,7 +24,7 @@ import {type Event, ErrorEvent, type Listener, Evented} from '../util/evented.ts
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent, MapLibreEvent, MapMovementEvent, MapTerrainEvent, MapProjectionEvent, MapContextEvent} from './events.ts';
 import {TaskQueue} from '../util/task_queue.ts';
 import {throttle} from '../util/throttle.ts';
-import {getTerrainElevationForCenter, Terrain} from '../render/terrain.ts';
+import {Terrain} from '../render/terrain.ts';
 import {RenderToTexture} from '../webgl/render_to_texture.ts';
 import {config} from '../util/config.ts';
 import {defaultLocale} from './default_locale.ts';
@@ -4449,8 +4449,8 @@ export class Map extends Evented<MapEventType> {
             }
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
-                const elevation = getTerrainElevationForCenter(this.terrain, this._camera.transform.center, this._camera.transform);
-                if (elevation !== undefined) this._camera.transform.setElevation(elevation);
+                const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._camera.transform.center, this._camera.transform);
+                if (demState !== 'loading') this._camera.transform.setElevation(elevation);
             }
         } else {
             this._camera.transform.setMinElevationForCurrentTile(0);
