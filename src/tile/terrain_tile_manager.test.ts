@@ -9,10 +9,12 @@ import {Tile} from './tile.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {StubMap} from '../util/test/util.ts';
+import {TileManager} from './tile_manager.ts';
 
 import type {DEMData} from '../data/dem_data.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Painter, RTTObject} from '../render/painter.ts';
+import type {Map} from '../ui/map.ts';
 
 const transform = createMercatorTransform();
 
@@ -80,6 +82,21 @@ describe('TerrainTileManager', () => {
         expect(tsc.getSourceTile(tileID.children(12)[0])).toBeTruthy();
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0])).toBeFalsy();
         expect(tsc.getSourceTile(tileID.children(12)[0].children(12)[0], true)).toBeTruthy();
+    });
+
+    test('getSourceTile finds the DEM tile of a tile first looked up before the source loaded its zoom range', async () => {
+        const tileManager = new TileManager('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], maxzoom: 11}, {getActor() {}} as any as Dispatcher);
+        const terrainTileManager = new TerrainTileManager(tileManager);
+        const terrainTileID = new OverscaledTileID(15, 0, 15, 19575, 13242);
+        terrainTileManager.getSourceTile(terrainTileID);
+        const zoomRangeLoaded = tileManager.once('data');
+        tileManager.onAdd({transform, _requestManager: new RequestManager(), getPixelRatio() { return 1; }} as any as Map);
+        await zoomRangeLoaded;
+        const demTile = new Tile(terrainTileID.scaledTo(11), 512);
+        demTile.dem = {} as DEMData;
+        tileManager._inViewTiles.setTile(demTile.tileID.key, demTile);
+
+        expect(terrainTileManager.getSourceTile(terrainTileID)).toBe(demTile);
     });
 
     test('getSourceTile should get tile from out of view cache when tile in not in view', () => {
