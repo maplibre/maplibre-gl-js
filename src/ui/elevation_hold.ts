@@ -71,7 +71,7 @@ export class ElevationHold {
         let changed = false;
         if (this._terrainChanged) {
             this._terrainChanged = false;
-            if (!terrain.hasElevationForLngLat(tr.center, tr)) {
+            if (terrain.getElevationAndDEMStateForLngLat(tr.center, tr).demState !== 'loaded') {
                 tr.setElevation(0);
                 this._dem = 'awaiting';
                 changed = true;
