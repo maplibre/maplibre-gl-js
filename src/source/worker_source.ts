@@ -20,12 +20,12 @@ export type TileEncoding = 'mlt' | 'mvt';
 
 /**
  * How a tile source treats a tile response with an empty body, such as HTTP 204.
- * `transparent` (the default) loads the tile with nothing to draw: a raster tile draws fully transparent, a raster-dem tile carries no elevation, a vector tile has no features.
- * `missing` treats it like a 404 response: the tile is left without data, so a loaded tile from another zoom level shows through in its place.
- * A missing tile records neither the response's expiry nor its etag, so it is not reloaded on a timer; it is requested again when it is needed again.
- * For vector sources `missing` covers 404 responses as well, which by default load as empty tiles.
+ * `render` (the default) loads the tile with nothing to draw: a raster tile draws fully transparent, a raster-dem tile carries no elevation, a vector tile has no features.
+ * `fallback` treats it like a 404 response: the tile is left without data, so a loaded tile from another zoom level shows through in its place.
+ * A tile left without data records neither the response's expiry nor its etag, so it is not reloaded on a timer; it is requested again when it is needed again.
+ * For vector sources `fallback` covers 404 responses as well, which by default load as empty tiles.
  */
-export type EmptyTileBehavior = 'transparent' | 'missing';
+export type EmptyTileBehavior = 'render' | 'fallback';
 
 /**
  * Parameters to identify a tile

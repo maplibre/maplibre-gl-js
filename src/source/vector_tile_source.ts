@@ -101,7 +101,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.maxzoom = 22;
         this.scheme = 'xyz';
         this.tileSize = 512;
-        this.emptyTileBehavior = 'transparent';
+        this.emptyTileBehavior = 'render';
         this.reparseOverscaled = true;
         this.isTileClipped = true;
         this._loaded = false;
@@ -262,9 +262,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             return;
         }
         // A 404 (no data) and an empty body such as a 204 (`emptyBody`) both mean there is nothing to draw.
-        // Under `emptyTileBehavior: 'missing'` the tile is left without data, expiry or etag, like a raster 404.
+        // Under `emptyTileBehavior: 'fallback'` the tile is left without data, expiry or etag, like a raster 404.
         const noContent = !data || (data.etagUnmodified !== true && data.emptyBody);
-        if (noContent && this.emptyTileBehavior === 'missing') {
+        if (noContent && this.emptyTileBehavior === 'fallback') {
             tile.state = 'errored';
         } else {
             this._afterTileLoadWorkerResponse(tile, data);

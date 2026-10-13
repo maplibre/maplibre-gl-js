@@ -93,7 +93,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         this.roundZoom = true;
         this.scheme = 'xyz';
         this.tileSize = 512;
-        this.emptyTileBehavior = 'transparent';
+        this.emptyTileBehavior = 'render';
         this._loaded = false;
         this._premultiplyAlpha = true;
 
@@ -233,9 +233,9 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 return;
             }
             if (response) {
-                // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'missing'` is left without data
+                // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'fallback'` is left without data
                 // or expiry, like a 404, so a loaded tile from another zoom level shows in its place.
-                if (!response.data && this.emptyTileBehavior === 'missing') {
+                if (!response.data && this.emptyTileBehavior === 'fallback') {
                     tile.state = 'errored';
                     return;
                 }

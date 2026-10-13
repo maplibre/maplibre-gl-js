@@ -136,14 +136,14 @@ describe('RasterDEMTileSource', () => {
         expect((tile.actor as any).sendAsync).not.toHaveBeenCalled();
     });
 
-    test('a 204 with emptyTileBehavior missing leaves the tile without data, so another zoom level supplies the elevation', async () => {
+    test('a 204 with emptyTileBehavior fallback leaves the tile without data, so another zoom level supplies the elevation', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'fallback'});
         const promise = waitForMetadataEvent(source);
         await sleep(0);
         server.respond();
@@ -171,7 +171,7 @@ describe('RasterDEMTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300'}, '']);
-        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'fallback'});
         source.map._refreshExpiredTiles = true;
         const promise = waitForMetadataEvent(source);
         await sleep(0);

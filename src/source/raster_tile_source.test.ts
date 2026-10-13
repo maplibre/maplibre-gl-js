@@ -191,14 +191,14 @@ describe('RasterTileSource', () => {
             expect.anything());
     });
 
-    test('a 204 with emptyTileBehavior missing leaves the tile without data, so another zoom level shows through', async () => {
+    test('a 204 with emptyTileBehavior fallback leaves the tile without data, so another zoom level shows through', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'fallback'});
         const getTileTexture = vi.fn();
         source.map.painter = {context: {}, getTileTexture} as any;
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
@@ -219,12 +219,12 @@ describe('RasterTileSource', () => {
         expect(getTileTexture).not.toHaveBeenCalled();
     });
 
-    test('emptyTileBehavior missing in the TileJSON applies to a source that does not set it', async () => {
+    test('emptyTileBehavior fallback in the TileJSON applies to a source that does not set it', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
-            emptyTileBehavior: 'missing'
+            emptyTileBehavior: 'fallback'
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
         const source = createSource({url: '/source.json'});
@@ -255,7 +255,7 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300'}, '']);
-        const source = createSource({url: '/source.json', emptyTileBehavior: 'missing'});
+        const source = createSource({url: '/source.json', emptyTileBehavior: 'fallback'});
         source.map.painter = {context: {}, getTileTexture: vi.fn()} as any;
         source.map._refreshExpiredTiles = true;
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
