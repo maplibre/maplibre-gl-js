@@ -308,13 +308,9 @@ export class TerrainTileManager extends Evented {
      * @param tileID - the terrain tile
      */
     loadDemAhead(tileID: OverscaledTileID): void {
-        const source = this.tileManager._source;
-        if (!source.loaded()) return;
-        const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
-        if (z < source.minzoom) return;
-        const sourceTileID = tileID.scaledTo(z);
-        if (source.hasTile && !source.hasTile(sourceTileID)) return;
-        this.tileManager.loadTileAhead(sourceTileID);
+        if (!this.tileManager._source.loaded()) return;
+        const sourceTileID = this._getDEMSourceTileID(tileID);
+        if (sourceTileID) this.tileManager.loadTileAhead(sourceTileID);
     }
 
     /**
@@ -324,12 +320,23 @@ export class TerrainTileManager extends Evented {
      * @returns false where the source will not serve DEM data for the tile
      */
     isStillWaitingForDEM(tileID: OverscaledTileID): boolean {
+        const sourceTileID = this._getDEMSourceTileID(tileID);
+        return !!sourceTileID && this.findTileInCaches(sourceTileID.key)?.state !== 'errored';
+    }
+
+    /**
+     * The source tile that brings the DEM data for a terrain tile.
+     * @param tileID - the terrain tile
+     * @returns the source tile's id, or null where the source serves no DEM data for the tile: below its minzoom or
+     * outside its bounds
+     */
+    private _getDEMSourceTileID(tileID: OverscaledTileID): OverscaledTileID | null {
         const source = this.tileManager._source;
         const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
-        if (z < source.minzoom) return false;
+        if (z < source.minzoom) return null;
         const sourceTileID = tileID.scaledTo(z);
-        if (source.hasTile && !source.hasTile(sourceTileID)) return false;
-        return this.findTileInCaches(sourceTileID.key)?.state !== 'errored';
+        if (source.hasTile && !source.hasTile(sourceTileID)) return null;
+        return sourceTileID;
     }
 
     /**
