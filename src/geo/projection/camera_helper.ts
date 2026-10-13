@@ -1,8 +1,8 @@
 import Point from '@mapbox/point-geometry';
-import {degreesToRadians, getRollPitchBearing, type RollPitchBearing, rollPitchBearingToQuat, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
+import {clamp, degreesToRadians, getRollPitchBearing, MAX_VALID_LATITUDE, type RollPitchBearing, rollPitchBearingToQuat, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
+import {lngLatBoxToWorldSamples, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
@@ -170,30 +170,35 @@ export function updateRotation(args: UpdateRotationArgs): void {
 }
 
 export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
-    // Consider all corners of the rotated bounding box derived from the given points
-    // when find the camera position that fits the given points.
+    // Fit the whole box, not only its corners: rotate the points sampled over it by the bearing and take
+    // the rectangle around them in the rotated frame, grown by how far the edges bulge past the points.
 
-    const nwWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthWest());
-    const neWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthEast());
-    const seWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthEast());
-    const swWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthWest());
+    const worldCoordinateHelper = tr.worldCoordinateHelper;
+    const nwWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthWest(), worldCoordinateHelper);
+    const neWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthEast(), worldCoordinateHelper);
+    const seWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthEast(), worldCoordinateHelper);
+    const swWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthWest(), worldCoordinateHelper);
+    const [south, north] = worldCoordinateHelper.wraps ?
+        [clamp(bounds.getSouth(), -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE), clamp(bounds.getNorth(), -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)] :
+        [bounds.getSouth(), bounds.getNorth()];
+    const {points, bulge} = lngLatBoxToWorldSamples(worldCoordinateHelper, bounds.getWest(), south, bounds.getEast(), north);
 
     const bearingRadians = degreesToRadians(-bearing);
 
-    const nwRotatedWorld = nwWorld.rotate(bearingRadians);
-    const neRotatedWorld = neWorld.rotate(bearingRadians);
-    const seRotatedWorld = seWorld.rotate(bearingRadians);
-    const swRotatedWorld = swWorld.rotate(bearingRadians);
-
-    const upperRight = new Point(
-        Math.max(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
-        Math.max(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
-    );
-
-    const lowerLeft = new Point(
-        Math.min(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
-        Math.min(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
-    );
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const point of points) {
+        const {x, y} = point.mult(tr.worldSize).rotate(bearingRadians);
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+    }
+    const worldBulge = bulge * tr.worldSize;
+    const upperRight = new Point(maxX + worldBulge, maxY + worldBulge);
+    const lowerLeft = new Point(minX - worldBulge, minY - worldBulge);
 
     // Calculate zoom: consider the original bbox and both paddings.
     const size = upperRight.sub(lowerLeft);
@@ -203,7 +208,8 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
     const scaleX = availableWidth / size.x;
     const scaleY = availableHeight / size.y;
 
-    if (scaleY < 0 || scaleX < 0) {
+    // A box reaching a point the projection sends to infinity has no finite size to fit.
+    if (scaleY < 0 || scaleX < 0 || !Number.isFinite(size.x) || !Number.isFinite(size.y)) {
         cameraBoundsWarning();
         return undefined;
     }
@@ -219,10 +225,14 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
     const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
     const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / zoomScale(zoom));
 
+    // The middle of the fitted rectangle, rotated back. For a box that projects to a parallelogram, as every box
+    // does in mercator, that is the midpoint of its diagonal, taken directly to keep rotation rounding out of it.
+    const projectsToParallelogram = bulge === 0 && nwWorld.add(seWorld).equals(neWorld.add(swWorld));
+    const middle = projectsToParallelogram ? nwWorld.add(seWorld).div(2) : upperRight.add(lowerLeft).div(2).rotate(-bearingRadians);
     const center = unprojectFromWorldCoordinates(
         tr.worldSize,
-        // either world diagonal can be used (NW-SE or NE-SW)
-        nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
+        middle.sub(offsetAtFinalZoom),
+        worldCoordinateHelper
     );
 
     return {

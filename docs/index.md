@@ -6,7 +6,7 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 
 ## Quickstart
 
-<iframe src="./examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
+<iframe src="../test/examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
 
 ```html
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.13.0/dist/maplibre-gl.css" />

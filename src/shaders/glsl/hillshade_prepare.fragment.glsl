@@ -9,6 +9,7 @@ in vec2 v_pos;
 uniform vec2 u_dimension;
 uniform float u_zoom;
 uniform vec4 u_unpack;
+uniform float u_log2_world_width;
 
 float getElevation(ivec2 texel) {
     // Convert encoded elevation value to meters
@@ -48,9 +49,10 @@ void main() {
 
     // Here we divide the x and y slopes by 8 * pixel size
     // where pixel size (aka meters/pixel) is:
-    // circumference of the world / (pixels per tile * number of tiles)
-    // which is equivalent to: 8 * 40075016.6855785 / (tileSize * pow(2, u_zoom))
-    // which can be reduced to: pow(2, 28.25619978527 - u_zoom) / tileSize.
+    // width of the zoom 0 world / (pixels per tile * number of tiles)
+    // which is equivalent to: 8 * worldWidth / (tileSize * pow(2, u_zoom))
+    // which can be reduced to: pow(2, 3 + log2(worldWidth) - u_zoom) / tileSize.
+    // The mercator world is 40075016.6855785 m wide, a registered CRS's is its zoom 0 extent.
     // We want to vertically exaggerate the hillshading because otherwise
     // it is barely noticeable at low zooms. To do this, we multiply this by
     // a scale factor that is a function of zooms below 15, which is an arbitrary
@@ -64,7 +66,7 @@ void main() {
     vec2 deriv = vec2(
         (c + f + f + i) - (a + d + d + g),
         (g + h + h + i) - (a + b + b + c)
-    ) * tileSize / pow(2.0, exaggeration + (28.2562 - u_zoom));
+    ) * tileSize / pow(2.0, exaggeration + (3.0 + u_log2_world_width - u_zoom));
 
     // Flat ground is stored as 128/255, which 8 bits hold exactly, so that it reads back as no slope at all.
     fragColor = clamp(vec4(

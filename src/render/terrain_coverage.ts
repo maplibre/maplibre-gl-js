@@ -1,9 +1,10 @@
 import {EXTENT} from '../data/extent.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {TerrainTileManager} from '../tile/terrain_tile_manager.ts';
+import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
 
 export type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
 
@@ -49,6 +50,7 @@ const NOT_COVERED: TerrainSample = {covered: false, demLoaded: false, elevation:
  * tile's DEM data, a loaded parent's where the tile's own has not loaded, or only the tiles' own.
  * @param tileManager - the terrain source's tiles, drawn and loaded
  * @param exaggeration - the terrain's exaggeration, which every sampled elevation includes
+ * @param getWorldCoordinateHelper - the lng/lat to world mapping of the map's projection, mercator by default
  */
 export class TerrainCoverage {
     private _samplerCache = new Map<string, TerrainElevationSampler>();
@@ -56,7 +58,11 @@ export class TerrainCoverage {
     private _index: TerrainCoverageIndex | null | undefined;
     private _ownDemIndex: TerrainCoverageIndex | null | undefined;
 
-    constructor(private readonly tileManager: TerrainTileManager, private readonly exaggeration: number) {}
+    constructor(
+        private readonly tileManager: TerrainTileManager,
+        private readonly exaggeration: number,
+        private readonly getWorldCoordinateHelper: () => WorldCoordinateHelper = () => mercatorWorldCoordinateHelper
+    ) {}
 
     /** Drops the samplers and both indexes. Missing DEM data is never cached, so a later sample can retry. */
     reset(): void {
@@ -86,8 +92,9 @@ export class TerrainCoverage {
     sample(lnglat: LngLat, ownDemOnly: boolean = false): number | undefined {
         const index = this.getIndex(ownDemOnly);
         if (!index) return undefined;
-        const mercator = MercatorCoordinate.fromLngLat(lnglat);
-        const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
+        const worldCoordinateHelper = this.getWorldCoordinateHelper();
+        const {x, y} = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
+        const sample = sampleAt(index, this.exaggeration, x, y, worldCoordinateHelper.wraps);
         return sample.demLoaded ? sample.elevation : undefined;
     }
 
@@ -152,18 +159,20 @@ export class TerrainCoverage {
 }
 
 /**
- * Elevation of the rendered terrain surface at a mercator position, and whether it is covered at all.
+ * Elevation of the rendered terrain surface at a world position, and whether it is covered at all.
  * A covered tile whose DEM has not loaded yet is flat at zero, which is what the terrain mesh renders.
+ * @param wraps - whether x wraps into world copies (mercator); a planar CRS has no terrain outside its world square
  */
-export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, mercatorX: number, mercatorY: number): TerrainSample {
-    if (mercatorY < 0 || mercatorY >= 1) return NOT_COVERED;
-    const wrap = Math.floor(mercatorX);
-    const wrappedX = mercatorX - wrap;
+export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, worldX: number, worldY: number, wraps: boolean): TerrainSample {
+    if (worldY < 0 || worldY >= 1) return NOT_COVERED;
+    if (!wraps && (worldX < 0 || worldX >= 1)) return NOT_COVERED;
+    const wrap = wraps ? Math.floor(worldX) : 0;
+    const wrappedX = worldX - wrap;
 
     for (const z of index.zooms) {
         const scale = 1 << z;
         const scaledX = wrappedX * scale;
-        const scaledY = mercatorY * scale;
+        const scaledY = worldY * scale;
         const tileX = Math.floor(scaledX);
         const tileY = Math.floor(scaledY);
         const key = `${wrap}/${z}/${tileX}/${tileY}`;

@@ -1,11 +1,10 @@
 import Point from '@mapbox/point-geometry';
-import {extend, wrap, defaultEasing, pick, evaluateZoomSnap, lerp, zoomScale} from '../util/util.ts';
+import {extend, wrap, defaultEasing, evaluateZoomSnap, lerp, zoomScale} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
@@ -737,7 +736,8 @@ export class Camera extends Evented<MapEventType> {
 
         const oldZoom = tr.zoom;
         if (this.terrain && this.getCenterClampedToGround()) {
-            tr.setElevation(this.terrain.getElevationForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr));
+            const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr);
+            if (demState !== 'loading') tr.setElevation(elevation);
         }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
 
@@ -944,14 +944,16 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Starts easing the center elevation: records where it stands on the transform the animation edits and
-     * samples the terrain under the map center the animation ends on.
+     * samples the terrain under the map center the animation ends on. While the DEM data under that center is
+     * still loading, the target is the elevation the center starts at.
      * @param center - the map center when the animation ends
      * @param tr - the transform the animation edits
      */
     _prepareElevation(center: LngLat, tr: ITransform): void {
         this._elevationCenter = center;
         this._elevationStart = tr.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLat(center, tr);
+        const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(center, tr);
+        this._elevationTarget = demState === 'loading' ? tr.elevation : elevation;
         this.elevationFreeze = true;
     }
 
@@ -959,7 +961,8 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Eases the center elevation towards the terrain under `_elevationCenter`, on the transform the
      * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform. A center
-     * that is not clamped to the ground keeps its elevation.
+     * that is not clamped to the ground keeps its elevation, and the target stays put while the DEM data under
+     * `_elevationCenter` is still loading.
      * @param k - the animation's progress, 0 to 1
      * @param tr - the transform the animation edits
      */
@@ -969,7 +972,8 @@ export class Camera extends Evented<MapEventType> {
         }
 
         tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
-        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, tr);
+        const {elevation: terrainElevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._elevationCenter, tr);
+        const elevation = demState === 'loading' ? this._elevationTarget : terrainElevation;
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -992,7 +996,7 @@ export class Camera extends Evented<MapEventType> {
      */
     holdElevation(tr: ITransform, holder: ElevationHolder): void {
         this.elevationFreeze = true;
-        const startedWithoutDem = !!this.terrain && this.getCenterClampedToGround() && !this.terrain.hasElevationForLngLat(tr.center, tr);
+        const startedWithoutDem = !!this.terrain && this.getCenterClampedToGround() && this.terrain.getElevationAndDEMStateForLngLat(tr.center, tr).demState !== 'loaded';
         const terrainAboveMaxZoomForCenter = this.terrain ? this._terrainHeightAboveMaxZoomForCenter(tr) : undefined;
         this._elevationHold = new ElevationHold(holder, startedWithoutDem, terrainAboveMaxZoomForCenter !== undefined && terrainAboveMaxZoomForCenter <= MAX_ZOOM_FOR_CENTER_TOLERANCE_M);
     }
@@ -1041,9 +1045,10 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Applies a change of the terrain under the center (terrain set or removed, a DEM tile landed): at rest the
-     * camera moves with the center's elevation, as on every rendered frame; a hold keeps the camera where the user
-     * put it unless it waits for DEM data. A gesture's hold takes here, on the requested camera state its frames
-     * read; an animation's takes on its next frame, on the transform it edits, see {@link ElevationHold.take}.
+     * camera moves with the center's elevation unless its DEM data is still loading, as on every rendered frame; a
+     * hold keeps the camera where the user put it unless it waits for DEM data. A gesture's hold takes here, on the
+     * requested camera state its frames read; an animation's takes on its next frame, on the transform it edits,
+     * see {@link ElevationHold.take}.
      */
     applyTerrainChange(): void {
         if (this.elevationFreeze) {
@@ -1053,9 +1058,13 @@ export class Camera extends Evented<MapEventType> {
         }
         const tr = this.transform;
         tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
-        if (this.getCenterClampedToGround()) {
-            tr.setElevation(this.terrain ? this.terrain.getElevationForLngLat(tr.center, tr) : 0);
+        if (!this.getCenterClampedToGround()) return;
+        if (!this.terrain) {
+            tr.setElevation(0);
+            return;
         }
+        const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(tr.center, tr);
+        if (demState !== 'loading') tr.setElevation(elevation);
     }
 
     /**
@@ -1161,7 +1170,7 @@ export class Camera extends Evented<MapEventType> {
                 const x = w0 * p0[0] + w1 * p1[0] + w2 * p2[0] + w3 * p3[0];
                 const y = w0 * p0[1] + w1 * p1[1] + w2 * p2[1] + w3 * p3[1];
                 const altitude = w0 * p0[2] + w1 * p1[2] + w2 * p2[2] + w3 * p3[2];
-                const sample = sampleAt(index, this.terrain.exaggeration, x, y);
+                const sample = sampleAt(index, this.terrain.exaggeration, x, y, tr.worldCoordinateHelper.wraps);
                 if (sample.covered) {
                     height = Math.max(height, sample.elevation - altitude);
                 }
@@ -1184,10 +1193,12 @@ export class Camera extends Evented<MapEventType> {
         if (!index) {
             return undefined;
         }
-        const camera = MercatorCoordinate.fromLngLat(tr.getCameraLngLat());
-        const center = MercatorCoordinate.fromLngLat(tr.center);
+        const worldCoordinateHelper = tr.worldCoordinateHelper;
+        const cameraLngLat = tr.getCameraLngLat();
+        const camera = worldCoordinateHelper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat);
+        const center = worldCoordinateHelper.worldFromLngLat(tr.center.lng, tr.center.lat);
         const distanceFractionAtMaxZoom = zoomScale(tr.zoom - tr.maxZoom);
-        const sample = sampleAt(index, this.terrain.exaggeration, lerp(camera.x, center.x, distanceFractionAtMaxZoom), lerp(camera.y, center.y, distanceFractionAtMaxZoom));
+        const sample = sampleAt(index, this.terrain.exaggeration, lerp(camera.x, center.x, distanceFractionAtMaxZoom), lerp(camera.y, center.y, distanceFractionAtMaxZoom), worldCoordinateHelper.wraps);
         return sample.covered ? sample.elevation - lerp(tr.getCameraAltitude(), tr.elevation, distanceFractionAtMaxZoom) : undefined;
     }
 
@@ -1324,20 +1335,19 @@ export class Camera extends Evented<MapEventType> {
         this.fire(new MapMovementEvent('moveend', eventData));
     }
 
+    /*
+     * This method implements an “optimal path” animation, as detailed in:
+     *
+     * Van Wijk, Jarke J.; Nuij, Wim A. A. “Smooth and efficient zooming and panning.” INFOVIS
+     * ’03. pp. 15–22. <https://www.win.tue.nl/~vanwijk/zoompan.pdf#page=5>.
+     *
+     * Where applicable, local variable documentation begins with the associated variable or
+     * function in van Wijk (2003).
+     */
     flyTo(options: FlyToOptions, eventData?: any): this {
-        // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
-            const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'roll', 'elevation', 'padding']) as JumpToOptions;
-            return this.jumpTo(coercedOptions, eventData);
+            return this.easeTo(options, eventData);
         }
-
-        // This method implements an “optimal path” animation, as detailed in:
-        //
-        // Van Wijk, Jarke J.; Nuij, Wim A. A. “Smooth and efficient zooming and panning.” INFOVIS
-        //   ’03. pp. 15–22. <https://www.win.tue.nl/~vanwijk/zoompan.pdf#page=5>.
-        //
-        // Where applicable, local variable documentation begins with the associated variable or
-        // function in van Wijk (2003).
 
         this.stop();
 

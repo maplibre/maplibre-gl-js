@@ -130,6 +130,16 @@ describe('ScaleControl', () => {
         expect(newContents).not.toBe(initialContents);
     });
 
+    test('shows the scale of the style\'s projection once it applies, before the map moves', async () => {
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, center: [10, 60], zoom: 3});
+        map.addControl(new ScaleControl());
+        await map.once('style.load');
+        map.addControl(new ScaleControl());
+
+        const [addedBeforeTheProjection, addedAfterIt] = map.getContainer().querySelectorAll('.maplibregl-ctrl-scale');
+        expect(addedBeforeTheProjection.innerHTML).toBe(addedAfterIt.innerHTML);
+    });
+
     test('setUnit switches between different unit systems', () => {
         const map = createMap();
         const scale = new ScaleControl({unit: 'metric'});
