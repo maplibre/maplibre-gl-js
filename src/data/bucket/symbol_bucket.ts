@@ -31,7 +31,7 @@ import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
 import {getSizeData, MAX_PACKED_SIZE, MAX_GLYPHS} from '../../symbol/symbol_size.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
-import {EXTENT} from '../extent.ts';
+import {isOutsideTile} from '../extent_bounds.ts';
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
@@ -501,7 +501,7 @@ export class SymbolBucket implements Bucket {
 
             if (!needGeometry)  evaluationFeature.geometry = loadGeometry(feature);
 
-            if (pointPlacement && feature.type === 1 && isOutsideTile(evaluationFeature.geometry)) continue;
+            if (pointPlacement && feature.type === 1 && isEveryPointOutsideTile(evaluationFeature.geometry)) continue;
 
             let text: Formatted | void;
             if (hasText) {
@@ -995,14 +995,12 @@ export class SymbolBucket implements Bucket {
     }
 }
 
-/** Whether every point lies outside the tile, where the neighbouring tile labels it; matches the anchor check in symbol_layout.ts. */
-function isOutsideTile(geometry: Point[][]): boolean {
-    for (const ring of geometry) {
-        for (const p of ring) {
-            if (!(p.x < 0 || p.x >= EXTENT || p.y < 0 || p.y >= EXTENT)) return false;
-        }
-    }
-    return true;
+/**
+ * Whether every point lies outside the tile. A point label is anchored on the point itself, and
+ * `addSymbolAtAnchor` in symbol_layout.ts drops an anchor outside the tile, so such a feature gets no label here.
+ */
+function isEveryPointOutsideTile(geometry: Point[][]): boolean {
+    return geometry.every(ring => ring.every(isOutsideTile));
 }
 
 register('SymbolBucket', SymbolBucket, {
