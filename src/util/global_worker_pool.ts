@@ -8,10 +8,7 @@ let globalWorkerPool: WorkerPool;
  * to be shared across each Map
  */
 export function getGlobalWorkerPool(): WorkerPool {
-    if (!globalWorkerPool) {
-        globalWorkerPool = new WorkerPool();
-        getGlobalDispatcher();
-    }
+    globalWorkerPool ||= new WorkerPool();
     return globalWorkerPool;
 }
 
@@ -38,6 +35,7 @@ export function getGlobalWorkerPool(): WorkerPool {
  * ```
  */
 export function prewarm(): void {
+    getGlobalDispatcher();
     const workerPool = getGlobalWorkerPool();
     workerPool.acquire(PRELOAD_POOL_ID);
 }
