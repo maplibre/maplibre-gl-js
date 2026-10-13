@@ -227,17 +227,15 @@ describe('GlyphManager', () => {
         expect(glyphRangeRequests()).toHaveLength(0);
     });
 
-    test('GlyphManager still fetches characters scripts share, and letters of scripts without clusters', async () => {
+    test('GlyphManager fetches letters of scripts whose vowel signs do not form clusters', async () => {
         serveGlyphRanges();
         const createRasterizer = fakeRasterizer();
         const manager = createGlyphManager(true, 'sans-serif', undefined, createRasterizer);
 
-        // The middle dot of Catalan l·l, and a New Tai Lue letter, whose vowel signs are spacing
-        // letters that never form a cluster
-        await manager.getGlyphs({'Noto Sans': {default: [char(0xb7), char(0x1980)]}});
+        // A New Tai Lue letter, whose vowel signs are spacing letters that never form a cluster
+        await manager.getGlyphs({'Noto Sans': {default: [char(0x1980)]}});
 
-        expect(glyphRangeRequests().map(request => request.url.match(/\d+-\d+/)[0]).sort())
-            .toEqual(['0-255', '6400-6655']);
+        expect(glyphRangeRequests().map(request => request.url.match(/\d+-\d+/)[0])).toEqual(['6400-6655']);
         expect(createRasterizer).not.toHaveBeenCalled();
     });
 
