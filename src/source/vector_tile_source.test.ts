@@ -635,7 +635,7 @@ describe('VectorTileSource', () => {
             return captured;
         }
 
-        test('requests MVT tiles with application/vnd.mapbox-vector-tile', async () => {
+        test('requests for MVT tiles do not include an accept header', async () => {
             const source = createSource({
                 tiles: ['http://example.com/{z}/{x}/{y}.pbf']
             });
@@ -650,7 +650,7 @@ describe('VectorTileSource', () => {
             expect(captured.data.request.headers).toBeUndefined();
         });
 
-        test('requests MLT tiles with application/vnd.maplibre-tile', async () => {
+        test('requests for MLT tiles with application/vnd.maplibre-tile', async () => {
             const source = createSource({
                 tiles: ['http://example.com/{z}/{x}/{y}.mlt'],
                 encoding: 'mlt'
@@ -666,7 +666,7 @@ describe('VectorTileSource', () => {
             expect(captured.data.request.headers.Accept).toBe('application/vnd.maplibre-tile');
         });
 
-        test('does not override Accept header set by transformRequest', async () => {
+        test('respects Accept header set by transformRequest', async () => {
             const source = createSource({
                 tiles: ['http://example.com/{z}/{x}/{y}.pbf']
             }, async (url) => ({
