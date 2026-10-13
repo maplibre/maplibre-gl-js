@@ -4450,7 +4450,8 @@ export class Map extends Evented<MapEventType> {
             }
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(this.terrain.getElevationForLngLat(this._camera.transform.center, this._camera.transform));
+                const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._camera.transform.center, this._camera.transform);
+                if (demState !== 'loading') this._camera.transform.setElevation(elevation);
             }
         } else {
             this._camera.transform.setMinElevationForCurrentTile(0);
