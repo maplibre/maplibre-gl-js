@@ -77,7 +77,7 @@
       "paint": {
         "line-color": "#90ee90",
         "line-width": 16,
-        "line-layer-blend": "plus"
+        "line-layer-blend": "lighter"
       }
     }
   ]

@@ -30,8 +30,7 @@ type ShaderBlend = keyof typeof shaderBlendDefines;
 
 /** Blend modes a fixed-function blend function reproduces exactly, so the GPU's own destination suffices. */
 const fixedFunctionBlends: Record<Exclude<LayerBlend, ShaderBlend | 'normal'>, Readonly<ColorMode>> = {
-    plus: ColorMode.plus,
-    erase: ColorMode.erase,
+    lighter: ColorMode.lighter,
     screen: ColorMode.screen
 };
 
