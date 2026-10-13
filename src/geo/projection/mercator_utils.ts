@@ -225,3 +225,27 @@ export function worldBoxToLngLatBox(worldCoordinateHelper: WorldCoordinateHelper
         north: Math.max(corners[0].lat, corners[1].lat, corners[2].lat, corners[3].lat),
     };
 }
+
+/**
+ * The step in degrees over which {@link degreesPerWorldUnit} measures the size of a degree.
+ */
+const DEGREE_STEP = 1e-4;
+
+/**
+ * Returns how many degrees one world unit spans at a location. A world that wraps is 360 degrees wide.
+ * Any other world is measured at the location along longitude and along latitude, and the direction
+ * with the fewest degrees counts.
+ */
+export function degreesPerWorldUnit(worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat): number {
+    if (worldCoordinateHelper.wraps) return 360;
+
+    const latStep = lngLat.lat > 0 ? -DEGREE_STEP : DEGREE_STEP;
+    const world = worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
+    const alongLng = worldCoordinateHelper.worldFromLngLat(lngLat.lng + DEGREE_STEP, lngLat.lat);
+    const alongLat = worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat + latStep);
+    const worldUnits = Math.max(
+        Math.hypot(alongLng.x - world.x, alongLng.y - world.y),
+        Math.hypot(alongLat.x - world.x, alongLat.y - world.y)
+    );
+    return DEGREE_STEP / worldUnits;
+}

@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
-import {cameraMercatorCoordinate, getMercatorHorizon, lngLatBoxToWorldBox, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates, worldBoxToLngLatBox} from './mercator_utils.ts';
+import {cameraMercatorCoordinate, degreesPerWorldUnit, getMercatorHorizon, lngLatBoxToWorldBox, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates, worldBoxToLngLatBox} from './mercator_utils.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from './crs.ts';
 import {createMercatorTransform} from './mercator_transform.ts';
@@ -33,6 +33,12 @@ describe('mercator utils', () => {
         const projected = projectToWorldCoordinates(worldSize, new LngLat(0, 89), worldCoordinateHelper);
         expect(projected.y).toBeCloseTo(pixelsPerDegree, 10);
         expect(unprojectFromWorldCoordinates(worldSize, projected, worldCoordinateHelper).lat).toBeCloseTo(89, 10);
+    });
+
+    test('degreesPerWorldUnit measures a world that does not wrap', () => {
+        const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
+
+        expect(degreesPerWorldUnit(worldCoordinateHelper, new LngLat(10, 20))).toBeCloseTo(180, 6);
     });
 
     test('getMercatorHorizon', () => {

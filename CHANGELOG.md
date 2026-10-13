@@ -1,10 +1,12 @@
 ## main
 ### ✨ Features and improvements
+- Support the `hash` option in a projection registered with `addProjection` ([#8743](https://github.com/maplibre/maplibre-gl-js/pull/8743)) (by [@birkskyum](https://github.com/birkskyum))
 - Add `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix labels in Brahmic scripts such as Devanagari, Thai and Telugu mixing fonts or dropping letters when the style has a glyphs URL ([#8741](https://github.com/maplibre/maplibre-gl-js/issues/8741)) (by [@crackalamoo](https://github.com/crackalamoo))
+- Fix a grid of lines along tile borders in line layers of sliced overzoomed tiles when the source tile extent is larger than 4096, by scaling the clip buffer with the extent ([#8705](https://github.com/maplibre/maplibre-gl-js/pull/8705)) (by [@tordans](https://github.com/tordans))
 - _...Add new stuff here..._
 
 ## 6.14.0
