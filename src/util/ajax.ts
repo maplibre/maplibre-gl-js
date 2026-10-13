@@ -1,7 +1,9 @@
-import {ensureError, extend, isWorker} from './util.ts';
+import {ensureError, extend, isWorker, warnOnce} from './util.ts';
 import {AbortError, isAbortError, throwIfAborted} from './abort_error.ts';
 import {getProtocol} from '../source/protocol_crud.ts';
 import {MessageType} from './actor_messages.ts';
+
+import type {WorkerGlobalScopeInterface} from './web_worker.ts';
 
 /**
  * A type used to store the tile's expiration date and cache control definition
@@ -247,6 +249,18 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
 }
 
 /**
+ * Checks whether a request that can't be made in this thread should be sent to a map in the main thread, using `getResource`.
+ * This is the case in a worker, when there is a map to send it to.
+ * When no map id was given it warns, since the request is then sent to any map that the worker knows, and that map can be removed while the request is made.
+ */
+function shouldGetResourceFromMainThread(self: any, mapId: string | number | undefined): self is WorkerGlobalScopeInterface {
+    if (!isWorker(self) || !self.worker?.actor) return false;
+    if (mapId != null) return true;
+    warnOnce('makeRequest was called in a worker without a map id, for a request that the main thread has to make. Pass the id of the map as the third argument, e.g. `this.actor.mapId` in a worker source.');
+    return self.worker.getAnyMapId() != null;
+}
+
+/**
  * We're trying to use the Fetch API if possible. However, requests for resources with the file:// URI scheme don't work with the Fetch API.
  * In this case we unconditionally use XHR on the current thread since referrers don't matter.
  * This method can also use the registered method if `addProtocol` was called.
@@ -267,16 +281,16 @@ export const makeRequest = async function(requestParameters: RequestParameters, 
             }
             return response;
         }
-        if (mapId != null && isWorker(self) && self.worker?.actor) {
-            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: mapId}, abortController);
+        if (shouldGetResourceFromMainThread(self, mapId)) {
+            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: mapId ?? self.worker.getAnyMapId()}, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {
         if (fetch && Request && AbortController && Object.hasOwn(Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, abortController);
         }
-        if (mapId != null && isWorker(self) && self.worker?.actor) {
-            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, mustQueue: true, targetMapId: mapId}, abortController);
+        if (shouldGetResourceFromMainThread(self, mapId)) {
+            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, mustQueue: true, targetMapId: mapId ?? self.worker.getAnyMapId()}, abortController);
         }
     }
     return makeXMLHttpRequest(requestParameters, abortController);

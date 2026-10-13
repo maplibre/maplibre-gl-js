@@ -143,7 +143,7 @@ export default class Worker {
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
 
-        this.self.makeRequest = (request, abortController, mapId) => makeRequest(request, abortController, mapId ?? this._getAnyMapId());
+        this.self.makeRequest = makeRequest;
 
         this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);
@@ -248,10 +248,11 @@ export default class Worker {
     }
 
     /**
-     * Used for requests that were made without a map id, e.g. from an imported script,
+     * Returns the id of a map that this worker knows, if there is one.
+     * It is used for requests that were made without a map id, e.g. from an imported script,
      * since any map in the main thread can make the request for the worker.
      */
-    private _getAnyMapId(): string | number | undefined {
+    getAnyMapId(): string | number | undefined {
         return this.globalStates.keys().next().value;
     }
 
