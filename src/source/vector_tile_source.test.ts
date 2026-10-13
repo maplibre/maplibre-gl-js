@@ -592,7 +592,7 @@ describe('VectorTileSource', () => {
                 loadVectorData() {},
             } as any as Tile);
 
-            expect(captured.data.request.headers.Accept).toBe('application/vnd.mapbox-vector-tile');
+            expect(captured.data.request.headers).toBe(undefined);
         });
 
         test('requests MLT tiles with application/vnd.maplibre-tile', async () => {
