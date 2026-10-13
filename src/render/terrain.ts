@@ -57,14 +57,13 @@ export type TerrainData = {
 
 /**
  * @internal
- * Which DEM data {@link Terrain.findElevationForLngLat} takes an elevation from, from the narrowest:
- * - `own`: the drawn tile's own DEM data.
- * - `drawn`: the DEM data drawn there: the tile's own, or a loaded parent's drawn in its place until that lands.
- * - `loaded`: the drawn DEM data, or else that of the tile at the transform's tile zoom or of a loaded parent.
- * - `settled`: as `loaded`, and 0 where the source serves no DEM data, so only DEM data that can still arrive is
- * missing.
+ * Where the DEM data under a location stands, see {@link Terrain.getDEMStateForLngLat}:
+ * - `loaded`: it has loaded.
+ * - `loading`: none has loaded yet, but it can still arrive.
+ * - `none`: none has loaded and none will: the location is outside the source's bounds or zoom range, or its tile
+ * failed to load.
  */
-export type ElevationDEM = 'own' | 'drawn' | 'loaded' | 'settled';
+export type DEMState = 'loaded' | 'loading' | 'none';
 
 /**
  * @internal
@@ -235,36 +234,44 @@ export class Terrain {
      * Get the elevation for given {@link LngLat} in respect of exaggeration.
      * Where the location is covered by a rendered tile with loaded DEM data this samples the
      * rendered surface, so the result agrees with what is drawn; elsewhere it traverses up the
-     * zoom levels to find the first tile with data to return. It gives 0 where no DEM data is loaded, so a caller
-     * that has to tell that apart from 0 m uses {@link findElevationForLngLat}.
+     * zoom levels to find the first tile with data to return. Where no DEM data has loaded it gives 0, which
+     * {@link getDEMStateForLngLat} tells apart from 0 m.
      * @param lnglat - the location
      * @returns the elevation
      */
     getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
-        const elevation = this.coverage.sample(lnglat);
+        const elevation = this.getDrawnElevationForLngLat(lnglat);
         if (elevation !== undefined) return elevation;
         return this.getElevationForLngLatZoom(lnglat, this._getFallbackZoom(transform));
     }
 
     /**
-     * The elevation at the given {@link LngLat} in respect of exaggeration, for a caller that has to tell DEM data that
-     * is missing apart from 0 m, such as the camera waiting for the terrain under its center.
+     * Get the elevation of the terrain as drawn at the given {@link LngLat}, in respect of exaggeration, where a drawn
+     * tile has DEM data there: its own, or with `ownDemOnly` false a loaded parent's drawn in its place, which can be
+     * a few hundred meters off until the tile's own loads.
+     * @param lnglat - the location
+     * @param ownDemOnly - whether only a drawn tile's own DEM data counts
+     * @returns the elevation, or undefined where no drawn tile has that DEM data
+     */
+    getDrawnElevationForLngLat(lnglat: LngLat, ownDemOnly: boolean = false): number | undefined {
+        return this.coverage.sample(lnglat, ownDemOnly);
+    }
+
+    /**
+     * Where the DEM data {@link getElevationForLngLat} reads at the given {@link LngLat} stands: loaded where a drawn
+     * tile or the tile it falls back to has DEM data, its own or a loaded parent's.
      * @param lnglat - the location
      * @param transform - the transform {@link getElevationForLngLat} is given
-     * @param dem - which DEM data the elevation is taken from
-     * @returns the elevation, or undefined where that DEM data is missing
+     * @returns the state of the DEM data there
      */
-    findElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform, dem: ElevationDEM): number | undefined {
-        if (dem === 'own' || dem === 'drawn') return this.coverage.sample(lnglat, dem === 'own');
-        const elevation = this.getElevationForLngLat(lnglat, transform);
-        // Any elevation other than 0 comes from DEM data, and so does a 0 where DEM data is drawn.
-        if (elevation !== 0 || this.coverage.sample(lnglat) !== undefined) return elevation;
+    getDEMStateForLngLat(lnglat: LngLat, transform: IReadonlyTransform): DEMState {
+        if (this.getDrawnElevationForLngLat(lnglat) !== undefined) return 'loaded';
         const zoom = this._getFallbackZoom(transform);
         const worldCoordinateHelper = this._worldCoordinateHelper;
-        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return dem === 'settled' ? 0 : undefined;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return 'none';
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
-        if (this.tileManager.getSourceTile(tileID, true)?.dem) return elevation;
-        return dem === 'settled' && !this.tileManager.isStillWaitingForDEM(tileID) ? 0 : undefined;
+        if (this.tileManager.getSourceTile(tileID, true)?.dem) return 'loaded';
+        return this.tileManager.isStillWaitingForDEM(tileID) ? 'loading' : 'none';
     }
 
     /**
