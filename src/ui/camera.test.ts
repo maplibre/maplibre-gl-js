@@ -2094,7 +2094,7 @@ describe('flyTo', () => {
 
     test('check elevation callbacks', () => {
         const terrain = {
-            getElevationForLngLat: () => 100,
+            getElevationAndDEMStateForLngLat: () => ({elevation: 100, demState: 'loaded'}),
             getMinTileElevationForLngLatZoom: () => 200
         } as any;
         const {camera} = createCamera({terrain});
@@ -2112,7 +2112,7 @@ describe('flyTo', () => {
         expect(camera._elevationTarget).toBe(100);
         expect(camera.elevationFreeze).toBeTruthy();
 
-        terrain.getElevationForLngLat = () => 200;
+        terrain.getElevationAndDEMStateForLngLat = () => ({elevation: 200, demState: 'loaded'});
         camera._updateElevation(0.5, camera.transform);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);

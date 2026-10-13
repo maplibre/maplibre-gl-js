@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix the camera dropping to sea level while the terrain under the center of a `jumpTo`, `easeTo` or `flyTo` loads ([#8549](https://github.com/maplibre/maplibre-gl-js/issues/8549)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix a grid of lines along tile borders in line layers of sliced overzoomed tiles when the source tile extent is larger than 4096, by scaling the clip buffer with the extent ([#8705](https://github.com/maplibre/maplibre-gl-js/pull/8705)) (by [@tordans](https://github.com/tordans))
 - _...Add new stuff here..._
 
