@@ -2,13 +2,13 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {RasterTileSource} from './raster_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Tile} from '../tile/tile.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {ImageRequest} from '../util/image_request.ts';
 
 import type {Dispatcher} from '../util/dispatcher.ts';
-import type {Tile} from '../tile/tile.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options, transformCallback?) {
@@ -199,24 +199,18 @@ describe('RasterTileSource', () => {
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
         const source = createSource({url: '/source.json', emptyTileBehavior: 'fallback'});
-        const getTileTexture = vi.fn();
-        source.map.painter = {context: {}, getTileTexture} as any;
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'loading',
-            setExpiryData() {}
-        } as any as Tile;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
         const tilePromise = source.loadTile(tile);
         await sleep(0);
         server.respond();
         await tilePromise;
 
         expect(tile.state).toBe('errored');
-        expect(getTileTexture).not.toHaveBeenCalled();
+        expect(tile.texture).toBeUndefined();
     });
 
     test('emptyTileBehavior fallback in the TileJSON applies to a source that does not set it', async () => {
@@ -228,27 +222,21 @@ describe('RasterTileSource', () => {
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
         const source = createSource({url: '/source.json'});
-        const getTileTexture = vi.fn();
-        source.map.painter = {context: {}, getTileTexture} as any;
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'loading',
-            setExpiryData() {}
-        } as any as Tile;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
         const tilePromise = source.loadTile(tile);
         await sleep(0);
         server.respond();
         await tilePromise;
 
         expect(tile.state).toBe('errored');
-        expect(getTileTexture).not.toHaveBeenCalled();
+        expect(tile.texture).toBeUndefined();
     });
 
-    test('a missing tile does not record the expiry of its 204, so it is requested again in full when it is needed again', async () => {
+    test('a tile that falls back does not record the expiry of its 204, so it is requested again in full when it is needed again', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -256,24 +244,20 @@ describe('RasterTileSource', () => {
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300'}, '']);
         const source = createSource({url: '/source.json', emptyTileBehavior: 'fallback'});
-        source.map.painter = {context: {}, getTileTexture: vi.fn()} as any;
         source.map._refreshExpiredTiles = true;
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'loading',
-            setExpiryData: vi.fn()
-        } as any as Tile;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const setExpiryData = vi.spyOn(tile, 'setExpiryData');
         const tilePromise = source.loadTile(tile);
         await sleep(0);
         server.respond();
         await tilePromise;
 
         expect(tile.state).toBe('errored');
-        expect(tile.setExpiryData).not.toHaveBeenCalled();
+        expect(setExpiryData).not.toHaveBeenCalled();
     });
 
     test('can asynchronously transform tile request', async () => {

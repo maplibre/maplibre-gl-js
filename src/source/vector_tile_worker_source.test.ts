@@ -482,13 +482,19 @@ describe('vector tile worker source', () => {
             request.respond(204, {}, '');
         });
 
-        const params = {
+        const params: WorkerTileParameters = {
+            type: 'vector',
             source: 'source',
             uid: 0,
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            zoom: 0,
+            tileSize: 512,
+            promoteId: undefined,
+            pixelRatio: 1,
+            showCollisionBoxes: false,
             request: {url: 'http://localhost:2900/faketile.pbf'},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters;
+        };
 
         const loadPromise = source.loadTile(params);
         server.respond();

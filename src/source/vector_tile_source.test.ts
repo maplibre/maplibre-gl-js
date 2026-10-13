@@ -6,6 +6,7 @@ import {VectorTileSource} from './vector_tile_source.ts';
 import {AJAXError} from '../util/ajax.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Tile} from '../tile/tile.ts';
 import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
@@ -16,7 +17,6 @@ import {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 import type {Map} from '../ui/map.ts';
 import type {WorkerTileParameters} from './worker_source.ts';
-import type {Tile} from '../tile/tile.ts';
 import type {Source} from './source.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {IActor} from '../util/actor.ts';
@@ -344,19 +344,15 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'loading',
-            loadVectorData: vi.fn(),
-            setExpiryData() {}
-        } as any as Tile;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const loadVectorData = vi.spyOn(tile, 'loadVectorData');
         const tilePromise = source.loadTile(tile);
         await sleep(0);
         server.respond();
         await tilePromise;
 
         expect(tile.state).toBe('errored');
-        expect(tile.loadVectorData).not.toHaveBeenCalled();
+        expect(loadVectorData).not.toHaveBeenCalled();
     });
 
     test('a 404 with emptyTileBehavior fallback leaves the tile without data, so another zoom level shows through', async () => {
@@ -367,19 +363,15 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'loading',
-            loadVectorData: vi.fn(),
-            setExpiryData() {}
-        } as any as Tile;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const loadVectorData = vi.spyOn(tile, 'loadVectorData');
         const tilePromise = source.loadTile(tile);
         await sleep(0);
         server.respond();
         await tilePromise;
 
         expect(tile.state).toBe('errored');
-        expect(tile.loadVectorData).not.toHaveBeenCalled();
+        expect(loadVectorData).not.toHaveBeenCalled();
     });
 
     test('a 204 with emptyTileBehavior fallback leaves the tile without data, so another zoom level shows through', async () => {
@@ -390,22 +382,18 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'loading',
-            loadVectorData: vi.fn(),
-            setExpiryData() {}
-        } as any as Tile;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const loadVectorData = vi.spyOn(tile, 'loadVectorData');
         const tilePromise = source.loadTile(tile);
         await sleep(0);
         server.respond();
         await tilePromise;
 
         expect(tile.state).toBe('errored');
-        expect(tile.loadVectorData).not.toHaveBeenCalled();
+        expect(loadVectorData).not.toHaveBeenCalled();
     });
 
-    test('a missing tile records neither the expiry nor the etag of its 204, so it is requested again in full when it is needed again', async () => {
+    test('a tile that falls back records neither the expiry nor the etag of its 204, so it is requested again in full when it is needed again', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
         const source = createSourceWithWorker({url: '/source.json', emptyTileBehavior: 'fallback'});
@@ -414,19 +402,15 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await promise;
-        const tile = {
-            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-            state: 'loading',
-            loadVectorData: vi.fn(),
-            setExpiryData: vi.fn()
-        } as any as Tile;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const setExpiryData = vi.spyOn(tile, 'setExpiryData');
         const tilePromise = source.loadTile(tile);
         await sleep(0);
         server.respond();
         await tilePromise;
 
         expect(tile.state).toBe('errored');
-        expect(tile.setExpiryData).not.toHaveBeenCalled();
+        expect(setExpiryData).not.toHaveBeenCalled();
         expect(tile.etag).toBeUndefined();
     });
 
