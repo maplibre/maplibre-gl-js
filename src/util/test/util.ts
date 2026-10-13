@@ -257,7 +257,7 @@ export function createTerrain(): Terrain {
         getCoverageIndex: () => null,
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
-        hasElevationForLngLat: () => true,
+        getElevationAndDEMStateForLngLat: () => ({elevation: 1000, demState: 'loaded'}),
         getMinTileElevationForLngLatZoom: () => 0,
         resetElevationCache: () => {},
         getFramebuffer: () => ({}),
