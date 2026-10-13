@@ -14,7 +14,7 @@ import {ElevationHold} from './elevation_hold.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {TaskID} from '../util/task_queue.ts';
@@ -56,6 +56,20 @@ const MAX_CENTER_OFF_TERRAIN_M = 1;
  * sits there already, and two reads of the same surface under it differ by rounding.
  */
 const MAX_ZOOM_FOR_CENTER_TOLERANCE_M = 0.01;
+
+/**
+ * The terrain's elevation at a map center, or undefined while the DEM data there is still loading, so the center
+ * keeps its elevation until it lands. Only a 0 asks for the DEM state: any other elevation comes from loaded DEM data.
+ * @param terrain - the terrain under the map
+ * @param center - the map center
+ * @param tr - the transform the elevation is for
+ * @returns the elevation, or undefined while the DEM data under the center is still loading
+ */
+export function getTerrainElevationForCenter(terrain: Terrain, center: LngLat, tr: IReadonlyTransform): number | undefined {
+    const elevation = terrain.getElevationForLngLat(center, tr);
+    if (elevation === 0 && terrain.getDEMStateForLngLat(center, tr) === 'loading') return undefined;
+    return elevation;
+}
 
 /**
  * Options common to {@link Map.jumpTo}, {@link Map.easeTo}, and {@link Map.flyTo}, controlling the desired location,
@@ -736,7 +750,7 @@ export class Camera extends Evented<MapEventType> {
 
         const oldZoom = tr.zoom;
         if (this.terrain && this.getCenterClampedToGround()) {
-            const elevation = this._terrainElevationForCenter(options.center ? LngLat.convert(options.center) : tr.center, tr);
+            const elevation = getTerrainElevationForCenter(this.terrain, options.center ? LngLat.convert(options.center) : tr.center, tr);
             if (elevation !== undefined) tr.setElevation(elevation);
         }
         this.cameraHelper.handleJumpToCenterZoom(tr, options);
@@ -943,20 +957,6 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * The terrain's elevation at a map center, or undefined while the DEM data there is still loading, so the center
-     * keeps its elevation until it lands. Only a 0 asks for the DEM state: any other elevation comes from loaded DEM data.
-     * @param center - the map center
-     * @param tr - the transform the elevation is for
-     * @returns the elevation, or undefined while the DEM data under the center is still loading
-     */
-    _terrainElevationForCenter(center: LngLat, tr: ITransform): number | undefined {
-        const elevation = this.terrain.getElevationForLngLat(center, tr);
-        if (elevation === 0 && this.terrain.getDEMStateForLngLat(center, tr) === 'loading') return undefined;
-        return elevation;
-    }
-
-    /**
-     * @internal
      * Starts easing the center elevation: records where it stands on the transform the animation edits and
      * samples the terrain under the map center the animation ends on. While the DEM data under that center is
      * still loading, the target is the elevation the center starts at.
@@ -966,7 +966,7 @@ export class Camera extends Evented<MapEventType> {
     _prepareElevation(center: LngLat, tr: ITransform): void {
         this._elevationCenter = center;
         this._elevationStart = tr.elevation;
-        this._elevationTarget = this._terrainElevationForCenter(center, tr) ?? tr.elevation;
+        this._elevationTarget = getTerrainElevationForCenter(this.terrain, center, tr) ?? tr.elevation;
         this.elevationFreeze = true;
     }
 
@@ -985,7 +985,7 @@ export class Camera extends Evented<MapEventType> {
         }
 
         tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
-        const elevation = this._terrainElevationForCenter(this._elevationCenter, tr) ?? this._elevationTarget;
+        const elevation = getTerrainElevationForCenter(this.terrain, this._elevationCenter, tr) ?? this._elevationTarget;
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -1071,7 +1071,7 @@ export class Camera extends Evented<MapEventType> {
         const tr = this.transform;
         tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
         if (this.getCenterClampedToGround()) {
-            const elevation = this.terrain ? this._terrainElevationForCenter(tr.center, tr) : 0;
+            const elevation = this.terrain ? getTerrainElevationForCenter(this.terrain, tr.center, tr) : 0;
             if (elevation !== undefined) tr.setElevation(elevation);
         }
     }
