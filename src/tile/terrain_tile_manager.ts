@@ -318,6 +318,21 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
+     * Whether the terrain is still waiting for DEM data for a terrain tile that has none: the source tile covering it
+     * lies within the source's zoom range and bounds, and has not failed to load.
+     * @param tileID - the terrain tile
+     * @returns false where the source will not serve DEM data for the tile
+     */
+    isStillWaitingForDEM(tileID: OverscaledTileID): boolean {
+        const source = this.tileManager._source;
+        const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
+        if (z < source.minzoom) return false;
+        const sourceTileID = tileID.scaledTo(z);
+        if (source.hasTile && !source.hasTile(sourceTileID)) return false;
+        return this.findTileInCaches(sourceTileID.key)?.state !== 'errored';
+    }
+
+    /**
      * Finds a source tile in view, in the out-of-view cache, or loading ahead of the view, see
      * {@link TileManager.loadTileAhead}, which keeps it there until its load settles.
      * @param key - the source tile's key

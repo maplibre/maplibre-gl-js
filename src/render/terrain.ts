@@ -57,6 +57,16 @@ export type TerrainData = {
 
 /**
  * @internal
+ * Where the DEM data under a location stands, see {@link Terrain.getElevationAndDEMStateForLngLat}:
+ * - `loaded`: it has loaded.
+ * - `loading`: none has loaded yet, but it can still arrive.
+ * - `none`: none has loaded and none will: the location is outside the source's bounds or zoom range, or its tile
+ * failed to load.
+ */
+export type DEMState = 'loaded' | 'loading' | 'none';
+
+/**
+ * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *
  * 1. loads raster-dem tiles via the internal tileManager this.tileManager
@@ -224,7 +234,8 @@ export class Terrain {
      * Get the elevation for given {@link LngLat} in respect of exaggeration.
      * Where the location is covered by a rendered tile with loaded DEM data this samples the
      * rendered surface, so the result agrees with what is drawn; elsewhere it traverses up the
-     * zoom levels to find the first tile with data to return.
+     * zoom levels to find the first tile with data to return. Where no DEM data has loaded it gives 0, which
+     * {@link getElevationAndDEMStateForLngLat} tells apart from 0 m.
      * @param lnglat - the location
      * @returns the elevation
      */
@@ -247,19 +258,22 @@ export class Terrain {
     }
 
     /**
-     * Whether {@link getElevationForLngLat} finds DEM data at the given {@link LngLat}, drawn or in the tile it falls
-     * back to, rather than giving 0 for want of any.
+     * {@link getElevationForLngLat} together with where the DEM data it reads stands, for a caller that has to tell the
+     * 0 it gives for want of DEM data apart from 0 m. DEM data has loaded where a drawn tile or the tile it falls back
+     * to has it, its own or a loaded parent's, and any elevation other than 0 comes from loaded DEM data.
      * @param lnglat - the location
      * @param transform - the transform {@link getElevationForLngLat} is given
-     * @returns true where a drawn tile or the fallback tile has DEM data, its own or a loaded parent's
+     * @returns the elevation, and the state of the DEM data there
      */
-    hasElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): boolean {
-        if (this.getDrawnElevationForLngLat(lnglat) !== undefined) return true;
+    getElevationAndDEMStateForLngLat(lnglat: LngLat, transform: IReadonlyTransform): {elevation: number; demState: DEMState} {
+        const elevation = this.getElevationForLngLat(lnglat, transform);
+        if (elevation !== 0 || this.getDrawnElevationForLngLat(lnglat) !== undefined) return {elevation, demState: 'loaded'};
         const zoom = this._getFallbackZoom(transform);
         const worldCoordinateHelper = this._worldCoordinateHelper;
-        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return false;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return {elevation, demState: 'none'};
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
-        return !!this.tileManager.getSourceTile(tileID, true)?.dem;
+        if (this.tileManager.getSourceTile(tileID, true)?.dem) return {elevation, demState: 'loaded'};
+        return {elevation, demState: this.tileManager.isStillWaitingForDEM(tileID) ? 'loading' : 'none'};
     }
 
     /**
