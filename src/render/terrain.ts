@@ -66,6 +66,20 @@ export type TerrainData = {
 export type DEMState = 'loaded' | 'loading' | 'none';
 
 /**
+ * The terrain's elevation at a map center, or undefined while the DEM data there is still loading, so the center
+ * keeps its elevation until it lands. Only a 0 asks for the DEM state: any other elevation comes from loaded DEM data.
+ * @param terrain - the terrain under the map
+ * @param center - the map center
+ * @param tr - the transform the elevation is for
+ * @returns the elevation, or undefined while the DEM data under the center is still loading
+ */
+export function getTerrainElevationForCenter(terrain: Terrain, center: LngLat, tr: IReadonlyTransform): number | undefined {
+    const elevation = terrain.getElevationForLngLat(center, tr);
+    if (elevation === 0 && terrain.getDEMStateForLngLat(center, tr) === 'loading') return undefined;
+    return elevation;
+}
+
+/**
  * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *

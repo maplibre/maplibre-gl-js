@@ -13,7 +13,7 @@ import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
 import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
-import {Camera, getTerrainElevationForCenter, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions} from './camera.ts';
+import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -24,7 +24,7 @@ import {type Event, ErrorEvent, type Listener, Evented} from '../util/evented.ts
 import {type MapEventType, type MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent, MapLibreEvent, MapMovementEvent, MapTerrainEvent, MapProjectionEvent, MapContextEvent} from './events.ts';
 import {TaskQueue} from '../util/task_queue.ts';
 import {throttle} from '../util/throttle.ts';
-import {Terrain} from '../render/terrain.ts';
+import {getTerrainElevationForCenter, Terrain} from '../render/terrain.ts';
 import {RenderToTexture} from '../webgl/render_to_texture.ts';
 import {config} from '../util/config.ts';
 import {defaultLocale} from './default_locale.ts';
