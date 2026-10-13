@@ -51,9 +51,9 @@ async function isInCursiveScript(): Promise<string> {
 }
 
 /**
- * Returns a character class matching the scripts with a dependent vowel sign that is a combining
- * mark, such as Devanagari and Thai. Their text reaches the glyph manager as a mix of
- * multi-codepoint clusters and lone letters. Characters shared with other scripts are left out.
+ * Returns a character class matching the blocks of the scripts with a dependent vowel sign that is a
+ * combining mark, such as Devanagari and Thai. Their text reaches the glyph manager as a mix of
+ * multi-codepoint clusters and lone letters.
  */
 async function isInComplexShapingScript(): Promise<string> {
     const combiningMarks = regenerate.default();
@@ -65,12 +65,19 @@ async function isInComplexShapingScript(): Promise<string> {
     const dependentVowels = (await import(`@unicode/unicode-${unicodeVersion}/Indic_Syllabic_Category/Vowel_Dependent/code-points.mjs`)).default;
     vowelSigns.add(dependentVowels.filter((codePoint: number) => combiningMarks.contains(codePoint)));
 
-    const set = regenerate.default();
-    const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.mjs`)).default.Script;
+    const {Script: scripts, Block: blocks} = (await import(`@unicode/unicode-${unicodeVersion}/index.mjs`)).default;
+
+    const letters = regenerate.default();
     for (const script of scripts) {
         if (script === 'Common' || script === 'Inherited') continue;
         const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.mjs`)).default;
-        if (codePoints.some((codePoint: number) => vowelSigns.contains(codePoint))) set.add(codePoints);
+        if (codePoints.some((codePoint: number) => vowelSigns.contains(codePoint))) letters.add(codePoints);
+    }
+
+    const set = regenerate.default();
+    for (const block of blocks) {
+        const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Block/${block}/code-points.mjs`)).default;
+        if (codePoints.some((codePoint: number) => letters.contains(codePoint))) set.add(codePoints);
     }
 
     return set.toString();
@@ -595,7 +602,7 @@ export function codePointIsInRTLScript(codePoint: number): boolean {
 }
 
 /**
- * Returns whether the given codepoint belongs to a script whose letters combine into clusters.
+ * Returns whether the given codepoint is in a block of a script whose letters combine into clusters.
  */
 export function codePointIsInComplexShapingScript(codePoint: number): boolean {
     return /${await isInComplexShapingScript()}/gim.test(String.fromCodePoint(codePoint));
