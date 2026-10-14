@@ -66,7 +66,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             }
             if (response) {
                 // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'fallback'` is left without data
-                // or expiry, like a 404, so another zoom level supplies the elevation.
+                // or expiry, so another zoom level supplies the elevation.
                 if (!response.data && this.emptyTileBehavior === 'fallback') {
                     tile.state = 'errored';
                     return;

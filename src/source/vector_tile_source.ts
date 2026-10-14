@@ -19,7 +19,7 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
     /**
-     * How a tile response with an empty body, or a 404, is handled, see {@link EmptyTileBehavior}.
+     * How a tile response with an empty body is handled, see {@link EmptyTileBehavior}.
      * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
      */
     emptyTileBehavior?: EmptyTileBehavior;
@@ -261,10 +261,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         if (tile.aborted) {
             return;
         }
-        // A 404 (no data) and an empty body such as a 204 (`emptyBody`) both mean there is nothing to draw.
-        // Under `emptyTileBehavior: 'fallback'` the tile is left without data, expiry or etag, like a raster 404.
-        const noContent = !data || (data.etagUnmodified !== true && data.emptyBody);
-        if (noContent && this.emptyTileBehavior === 'fallback') {
+        // Under `emptyTileBehavior: 'fallback'` a response with an empty body, such as a 204, leaves the tile without data, expiry or etag.
+        const emptyBody = data && data.etagUnmodified !== true && data.emptyBody;
+        if (emptyBody && this.emptyTileBehavior === 'fallback') {
             tile.state = 'errored';
         } else {
             this._afterTileLoadWorkerResponse(tile, data);
