@@ -128,7 +128,7 @@ describe('Worker generic testing', () => {
         server.restore();
     });
 
-    test('imports a script sent twice only once', async () => {
+    test('imports a script only once when requested twice', async () => {
         const server = fakeServer.create();
         const first = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
         const second = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
