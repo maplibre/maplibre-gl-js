@@ -41,7 +41,7 @@ function defaultWorkerUrl(): string {
 }
 
 function isClassicWorkerUrl(url: string): boolean {
-    return url.split(/[?#]/)[0].endsWith('.cjs');
+    return url.endsWith('.cjs') || url.split(/[?#]/)[0].endsWith('.cjs');
 }
 
 function createWorker(url: string, asModule: boolean): Worker {
