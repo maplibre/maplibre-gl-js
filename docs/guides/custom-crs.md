@@ -184,7 +184,7 @@ maplibregl.addProjection({
 });
 ```
 
-The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. Data outside the tile matrix set is cut away, so it ends at the grid's edge like the tiles do. [Display GeoJSON in a polar stereographic projection](../examples/display-geojson-in-a-polar-stereographic-projection.md) puts it together in a complete page, with the handler's script inlined as a Blob. The built-in `identity` projection needs neither a `wkt` nor a handler. Without a `wkt`, or without a handler in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
+The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. Only the positions are projected, so the edges between them are straight in the grid, and a long edge needs more positions to follow its curve. Data outside the tile matrix set is cut away, so it ends at the grid's edge like the tiles do. [Display GeoJSON in a polar stereographic projection](../examples/display-geojson-in-a-polar-stereographic-projection.md) puts it together in a complete page, with the handler's script inlined as a Blob. The built-in `identity` projection needs neither a `wkt` nor a handler. Without a `wkt`, or without a handler in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
 
 ## What keeps working
 
