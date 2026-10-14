@@ -1263,7 +1263,7 @@ describe('easeTo', () => {
         expect(camera.getZoom()).toBe(2.7);
     });
 
-    test('respects elevation', async () => {
+    test('interpolates elevation to specified value', async () => {
         const {camera, queue} = createCamera({});
 
         const stub = vi.spyOn(timeControl, 'now');
@@ -1287,7 +1287,7 @@ describe('easeTo', () => {
 
     });
 
-    test('respects elevation when terrain exists', async () => {
+    test('interpolates elevation to specified value, overriding terrain elevation', async () => {
         const terrain = {
             getMinTileElevationForLngLatZoom: () => 50,
             getElevationForLngLatZoom: () => 50,
@@ -2188,15 +2188,20 @@ describe('flyTo', () => {
         expect(camera.getZoom()).toBe(2.7);
     });
 
-    test('respects elevation', async () => {
-        const {camera, queue} = createCamera({});
+    test('interpolates elevation to specified value', async () => {
+        const {camera, queue} = createCamera({}, false, {center: [0, 0]});
 
         const stub = vi.spyOn(timeControl, 'now');
         stub.mockReturnValue(0);
 
         const moveEnded = camera.once('moveend');
 
-        camera.flyTo({elevation: 100, animate: true, duration: 10});
+        const easeToSpy = vi.spyOn(camera, 'easeTo');
+
+        // Change center so we don't fallback to easeTo
+        camera.flyTo({center: [100, 0], elevation: 100, animate: true, duration: 10});
+
+        expect(easeToSpy).not.toHaveBeenCalled();
 
         stub.mockReturnValue(1);
         queue.run();
@@ -2211,7 +2216,7 @@ describe('flyTo', () => {
         expect(camera.getCenterElevation()).toBe(100);
     });
 
-    test('respects elevation when terrain exists', async () => {
+    test('interpolates elevation to specified value, overriding terrain elevation', async () => {
         const terrain = {
             getMinTileElevationForLngLatZoom: () => 50,
             getElevationForLngLatZoom: () => 50,
@@ -2219,14 +2224,19 @@ describe('flyTo', () => {
             getCoverageIndex: () => null
         } as any as Terrain;
 
-        const {camera, queue} = createCamera({terrain});
+        const {camera, queue} = createCamera({terrain}, false, {center: [0, 0]});
         const stubNow = vi.spyOn(timeControl, 'now');
 
         const moveEnded = camera.once('moveend');
 
         stubNow.mockReturnValue(0);
 
-        camera.flyTo({elevation: 100, animate: true, duration: 10});
+        const easeToSpy = vi.spyOn(camera, 'easeTo');
+
+        // Change center so we don't fallback to easeTo
+        camera.flyTo({center: [100, 0], elevation: 100, animate: true, duration: 10});
+
+        expect(easeToSpy).not.toHaveBeenCalled();
 
         stubNow.mockReturnValue(1);
         queue.run();
