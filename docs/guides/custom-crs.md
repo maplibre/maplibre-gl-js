@@ -206,7 +206,6 @@ Everything that speaks lng/lat goes through the CRS's `projection`, so the map A
 - The `within` and `distance` expressions, which compute in mercator.
 - Projection expressions. A registered projection only works as a plain name in `projection.type`: in an expression such as `['step', ['zoom'], 'EPSG:25832', 10, 'mercator']` it is ignored, and the map logs a warning and draws the globe projection.
 - Switching to or from a registered CRS after the sources have loaded, with `setProjection` or with `setStyle` to a style in another projection, for now. Tile `bounds`, GeoJSON data and the corners of image, video and canvas sources are placed in the projection the map has when each source loads, so register the projection first and name it in the style, as the examples do.
-- GeoJSON that reaches the far pole of a polar projection. That pole projects to infinity, so on EPSG:3413 Antarctica from a world countries layer covers the whole map.
 
 ## Removing a projection
 
