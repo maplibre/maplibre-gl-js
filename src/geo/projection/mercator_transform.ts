@@ -996,14 +996,18 @@ export class MercatorTransform implements ITransform {
         this._fogMatrixCacheF32.clear();
     }
 
+    /**
+     * How many times farther from the camera the ground at the top of the viewport is than the center, and so
+     * how much more ground a pixel covers there. Feature queries scale the per-tile query padding by it.
+     *
+     * The ground is sampled at the top-left corner of the viewport, or at the horizon when the horizon is in
+     * view. A screen ray above the horizon misses the ground plane and unprojects to a point behind the camera,
+     * which would make the factor negative and shrink the query padding until no tile is queried at all.
+     */
     maxPitchScaleFactor(): number {
         // calcMatrices hasn't run yet
         if (!this._pixelMatrixInverse) return 1;
 
-        // Sample the top edge of the viewport, but never above the horizon. Above it the ray misses the ground
-        // plane, so `screenPointToMercatorCoordinate` returns a point behind the camera and the factor turns
-        // negative. `SourceCache.tilesIn` multiplies the query padding with it, so a negative factor shrinks the
-        // query box instead of growing it until no tile matches, and feature queries return nothing (#2994).
         const horizonY = this.centerPoint.y - getMercatorHorizon(this);
         const coord = this.screenPointToMercatorCoordinate(new Point(0, Math.max(0, horizonY)));
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1] as vec4;
