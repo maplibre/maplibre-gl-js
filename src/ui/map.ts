@@ -746,6 +746,7 @@ export class Map extends Evented<MapEventType> {
 
     constructor(options: MapOptions) {
         super();
+        // Registers the getResource handler the workers use to request resources via the main thread.
         getGlobalDispatcher();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
