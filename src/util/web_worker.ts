@@ -12,7 +12,7 @@ export interface WorkerGlobalScopeInterface {
     addProtocol: (customProtocol: string, loadFn: AddProtocolAction) => void;
     removeProtocol: (customProtocol: string) => void;
     makeRequest: (request: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>;
-    setProjectionHandler: (handler: ProjectionHandler) => void;
+    setProjectionHandler: (handler: ProjectionHandler | null) => void;
     worker: MaplibreWorker;
 }
 
