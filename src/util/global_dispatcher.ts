@@ -1,11 +1,11 @@
-import {Actor} from './actor.ts';
+import {createActors} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
-import {ErrorEvent, Evented, type Event} from './evented.ts';
-import {subscribe, warnOnce, type Subscription} from './util.ts';
+import {type ErrorEvent, Evented, type Event} from './evented.ts';
+import {warnOnce, type Subscription} from './util.ts';
 
-import type {MessageHandler} from './actor.ts';
+import type {Actor, MessageHandler} from './actor.ts';
 import type {WorkerPool} from './worker_pool.ts';
 import type {RequestResponseMessageMap} from './actor_messages.ts';
 
@@ -96,17 +96,14 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
 
     private async buildActors(): Promise<Actor[]> {
         const workers = await this.workerPool.ensureWorkers();
-        return workers.map((worker, i) => {
-            this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
-                this.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
-            }, false));
-            const actor = new Actor(worker, GLOBAL_DISPATCHER_ID);
-            actor.name = `Worker ${i}`;
+        const {actors, workerErrorSubscriptions} = createActors(workers, GLOBAL_DISPATCHER_ID, this);
+        this.workerErrorSubscriptions = workerErrorSubscriptions;
+        for (const actor of actors) {
             for (const [type, handler] of Object.entries(this.messageHandlers)) {
                 actor.registerMessageHandler(type as MessageType, handler);
             }
-            return actor;
-        });
+        }
+        return actors;
     }
 
     /**

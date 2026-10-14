@@ -1,7 +1,7 @@
-import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
-import {ErrorEvent, Evented, type ErrorEventType} from './evented.ts';
-import {type Subscription, subscribe} from './util.ts';
+import {type Actor, createActors, type MessageHandler} from './actor.ts';
+import {Evented, type ErrorEventType} from './evented.ts';
 
+import type {Subscription} from './util.ts';
 import type {WorkerPool} from './worker_pool.ts';
 import type {MessageType, RequestResponseMessageMap} from './actor_messages.ts';
 
@@ -31,14 +31,9 @@ export class Dispatcher extends Evented<ErrorEventType> {
     private async initActors(mapId: string | number): Promise<Actor[]> {
         const workers = await this.workerPool.acquire(mapId);
         if (this.removed) return [];
-        this.actors = workers.map((worker: ActorTarget, i: number) => {
-            this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
-                this.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
-            }, false));
-            const actor = new Actor(worker, mapId);
-            actor.name = `Worker ${i}`;
-            return actor;
-        });
+        const {actors, workerErrorSubscriptions} = createActors(workers, mapId, this);
+        this.actors = actors;
+        this.workerErrorSubscriptions = workerErrorSubscriptions;
         if (!this.actors.length) throw new Error('No actors found');
         return this.actors;
     }
