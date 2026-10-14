@@ -2,6 +2,7 @@ import {CRSWorldCoordinateHelper, identityCrs, type CRSDefinition} from '../geo/
 import {warnOnce} from '../util/util.ts';
 
 /**
+ * @experimental
  * Builds the converter for a coordinate reference system from its WKT, the way `proj4(wkt)` does: `forward` takes
  * lng/lat to CRS coordinates and `inverse` takes them back. A worker script sets one with
  * `self.setProjectionHandler`, loaded through {@link importScriptInWorkers}, so that GeoJSON sources follow a
