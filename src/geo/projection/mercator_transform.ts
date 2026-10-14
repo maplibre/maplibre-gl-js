@@ -1000,7 +1000,12 @@ export class MercatorTransform implements ITransform {
         // calcMatrices hasn't run yet
         if (!this._pixelMatrixInverse) return 1;
 
-        const coord = this.screenPointToMercatorCoordinate(new Point(0, 0));
+        // Sample the top edge of the viewport, but never above the horizon. Above it the ray misses the ground
+        // plane, so `screenPointToMercatorCoordinate` returns a point behind the camera and the factor turns
+        // negative. `SourceCache.tilesIn` multiplies the query padding with it, so a negative factor shrinks the
+        // query box instead of growing it until no tile matches, and feature queries return nothing (#2994).
+        const horizonY = this.centerPoint.y - getMercatorHorizon(this);
+        const coord = this.screenPointToMercatorCoordinate(new Point(0, Math.max(0, horizonY)));
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1] as vec4;
         const topPoint = vec4.transformMat4(p, p, this._pixelMatrix);
         return topPoint[3] / this._helper.cameraToCenterDistance;
