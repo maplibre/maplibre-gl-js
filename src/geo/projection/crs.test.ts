@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {CRSWorldCoordinateHelper, identityCrs, type CRS} from './crs.ts';
-import {createIdentityCrsAnsweringInside, createRotatedCrs} from '../../util/test/util.ts';
+import {createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs} from '../../util/test/util.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 
@@ -173,6 +173,50 @@ describe('CRSWorldCoordinateHelper', () => {
         test('reports the same meters per world unit as the mercator helper at the equator', () => {
             const worldCoordinateHelper = new CRSWorldCoordinateHelper(createMercatorAsCrs());
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBeCloseTo(mercatorWorldCoordinateHelper.metersPerWorldUnit(0.5, 0.5), 6);
+        });
+    });
+
+    describe('latitudeRange', () => {
+        test('runs from the latitude of the corners one world width out to the near pole in a north polar CRS', () => {
+            expect(new CRSWorldCoordinateHelper(createPolarStereographicCrs()).latitudeRange).toEqual([expect.closeTo(-20.383370, 6), 90]);
+        });
+
+        test('runs from the near pole to the latitude of the corners one world width out in a south polar CRS', () => {
+            const northPolar = createPolarStereographicCrs();
+            const southPolar: CRS = {
+                ...northPolar,
+                name: 'test:south-polar',
+                projection: {
+                    forward([lng, lat]) {
+                        return northPolar.projection.forward([lng, -lat]);
+                    },
+                    inverse(position) {
+                        const [lng, lat] = northPolar.projection.inverse(position);
+                        return [lng, -lat];
+                    },
+                },
+            };
+            expect(new CRSWorldCoordinateHelper(southPolar).latitudeRange).toEqual([-90, expect.closeTo(20.383370, 6)]);
+        });
+
+        test('is the whole globe when the inverse has no answer one world width out', () => {
+            expect(new CRSWorldCoordinateHelper(createIdentityCrsAnsweringInside(null)).latitudeRange).toEqual([-90, 90]);
+        });
+
+        test('is the whole globe when the inverse answers one world width out with a position that does not map back', () => {
+            const smallIdentity: CRS = {
+                name: 'test:small-identity',
+                projection: {
+                    forward([lng, lat]) {
+                        return [lng, lat];
+                    },
+                    inverse([x, y]) {
+                        return Math.abs(x) <= 1 && Math.abs(y) <= 1 ? [x, y] : [0, 0];
+                    },
+                },
+                tileMatrixSet: {origin: [-1, 1], extentAtZoom0: 2},
+            };
+            expect(new CRSWorldCoordinateHelper(smallIdentity).latitudeRange).toEqual([-90, 90]);
         });
     });
 });

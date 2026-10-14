@@ -58,6 +58,7 @@ export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
     private readonly _originX: number;
     private readonly _originY: number;
     private readonly _extent: number;
+    private _latitudeRange: [number, number] | undefined;
     /** A CRS is a bounded plane: no world copies, no wrapping, and no latitude clamp. */
     readonly wraps = false;
 
@@ -105,6 +106,46 @@ export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
     }
     worldZFromAltitude(altitude: number, _lngLat: LngLat): number {
         return altitude / this._extent;
+    }
+    /**
+     * The latitudes, `[south, north]`, of the positions the projection puts within one world width of the world
+     * square. GeoJSON sources clip their data to them before projecting it, so that what lies further out, like the
+     * opposite pole of a polar projection, which projects to infinity, never reaches the map. `[-90, 90]` when the
+     * inverse has no answer that far out, or an answer that does not map back.
+     */
+    get latitudeRange(): [number, number] {
+        this._latitudeRange ??= this._findLatitudeRange();
+        return this._latitudeRange;
+    }
+    /**
+     * Walks the edge of the world square grown by one world width on each side, world -1 to 2 on both axes, taking
+     * the lowest and highest latitude the inverse gives there; a pole the projection puts inside it widens the
+     * range to that pole.
+     */
+    private _findLatitudeRange(): [number, number] {
+        const stepsPerSide = 64;
+        let south = 90;
+        let north = -90;
+        for (let step = 0; step <= stepsPerSide; step++) {
+            const along = -1 + 3 * step / stepsPerSide;
+            for (const [x, y] of [[along, -1], [along, 2], [-1, along], [2, along]]) {
+                const position = this._inverse(x, y);
+                const back = position && this.worldFromLngLat(position[0], position[1]);
+                if (!back || Math.hypot(back.x - x, back.y - y) > 1e-6) return [-90, 90];
+                south = Math.min(south, position[1]);
+                north = Math.max(north, position[1]);
+            }
+        }
+        if (this._isNearWorldSquare(-90)) south = -90;
+        if (this._isNearWorldSquare(90)) north = 90;
+        return [south, north];
+    }
+    /**
+     * Whether the projection puts the pole at `latitude` within one world width of the world square.
+     */
+    private _isNearWorldSquare(latitude: number): boolean {
+        const {x, y} = this.worldFromLngLat(0, latitude);
+        return x >= -1 && x <= 2 && y >= -1 && y <= 2;
     }
 }
 
