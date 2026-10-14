@@ -10,6 +10,7 @@ import {warnOnce} from '../util/util.ts';
 import {allowsVerticalWritingMode, allowsLetterSpacing} from '../util/script_detection.ts';
 import {findPoleOfInaccessibility} from '../util/find_pole_of_inaccessibility.ts';
 import {EXTENT} from '../data/extent.ts';
+import {isOutsideTile} from '../data/extent_bounds.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {SIZE_PACK_FACTOR, MAX_PACKED_SIZE, MAX_GLYPH_ICON_SIZE} from './symbol_size.ts';
 import {getIconPadding, type SymbolPadding} from '../style/style_layer/symbol_style_layer.ts';
@@ -332,7 +333,7 @@ function addFeature(bucket: SymbolBucket,
     const granularity = (canonical) ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
 
     const addSymbolAtAnchor = (line, anchor) => {
-        if (anchor.x < 0 || anchor.x >= EXTENT || anchor.y < 0 || anchor.y >= EXTENT) {
+        if (isOutsideTile(anchor)) {
             // Symbol layers are drawn across tile boundaries, We filter out symbols
             // outside our tile boundaries (which may be included in vector tile buffers)
             // to prevent double-drawing symbols.
