@@ -116,7 +116,7 @@ describe('loadTileJson', () => {
         });
     });
 
-    test('reads emptyTileBehavior from the TileJSON', async () => {
+    test('reads emptyResponse from the TileJSON', async () => {
         const options = {
             type: 'raster',
             url: 'http://example.com/test.json',
@@ -125,7 +125,7 @@ describe('loadTileJson', () => {
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
                 tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
-                emptyTileBehavior: 'fallback',
+                emptyResponse: 'missing',
             }));
         });
 
@@ -134,20 +134,20 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result.emptyTileBehavior).toBe('fallback');
+        expect(result.emptyResponse).toBe('missing');
     });
 
-    test('the emptyTileBehavior option wins over the TileJSON', async () => {
+    test('the emptyResponse option wins over the TileJSON', async () => {
         const options = {
             type: 'raster',
             url: 'http://example.com/test.json',
-            emptyTileBehavior: 'render',
+            emptyResponse: 'blank',
         } satisfies RasterTileSourceOptions;
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
                 tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
-                emptyTileBehavior: 'fallback',
+                emptyResponse: 'missing',
             }));
         });
 
@@ -156,7 +156,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result.emptyTileBehavior).toBe('render');
+        expect(result.emptyResponse).toBe('blank');
     });
 
     test('excludes non-TileJSON data', async () => {

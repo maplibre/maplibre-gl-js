@@ -4,7 +4,7 @@ import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 
 import type {RequestManager} from '../util/request_manager.ts';
-import type {EmptyTileBehavior} from './worker_source.ts';
+import type {EmptyResponse} from './worker_source.ts';
 import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LoadTileJsonResponse = {
@@ -16,12 +16,12 @@ export type LoadTileJsonResponse = {
     scheme: RasterSourceSpecification['scheme'];
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
-    emptyTileBehavior?: EmptyTileBehavior;
+    emptyResponse?: EmptyResponse;
     vectorLayerIds?: string[];
 };
 
 export async function loadTileJson(
-    options: (RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification) & {emptyTileBehavior?: EmptyTileBehavior},
+    options: (RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification) & {emptyResponse?: EmptyResponse},
     requestManager: RequestManager,
     abortController: AbortController,
     targetWindow?: Window,
@@ -39,7 +39,7 @@ export async function loadTileJson(
     const result = pick(
         // explicit source options take precedence over TileJSON
         extend(tileJSON, options),
-        ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding', 'emptyTileBehavior']
+        ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding', 'emptyResponse']
     ) as LoadTileJsonResponse;
 
     if ('vector_layers' in tileJSON && tileJSON.vector_layers) {

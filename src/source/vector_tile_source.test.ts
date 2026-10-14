@@ -336,8 +336,8 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
 
-    test('emptyTileBehavior fallback in the TileJSON applies to a source that does not set it', async () => {
-        server.respondWith('/source.json', JSON.stringify({...fixturesSource, emptyTileBehavior: 'fallback'}));
+    test('emptyResponse missing in the TileJSON applies to a source that does not set it', async () => {
+        server.respondWith('/source.json', JSON.stringify({...fixturesSource, emptyResponse: 'missing'}));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
         const source = createSourceWithWorker({url: '/source.json'});
         const promise = waitForMetadataEvent(source);
@@ -355,10 +355,10 @@ describe('VectorTileSource', () => {
         expect(loadVectorData).not.toHaveBeenCalled();
     });
 
-    test('a 204 with emptyTileBehavior fallback leaves the tile without data, so another zoom level shows through', async () => {
+    test('a 204 with emptyResponse missing leaves the tile without data, so another zoom level shows through', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyTileBehavior: 'fallback'});
+        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
         const promise = waitForMetadataEvent(source);
         await sleep(0);
         server.respond();
@@ -377,7 +377,7 @@ describe('VectorTileSource', () => {
     test('a tile that falls back records neither the expiry nor the etag of its 204, so it is requested again in full when it is needed again', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyTileBehavior: 'fallback'});
+        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
         source.map._refreshExpiredTiles = true;
         const promise = waitForMetadataEvent(source);
         await sleep(0);

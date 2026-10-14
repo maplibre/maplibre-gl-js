@@ -191,14 +191,14 @@ describe('RasterTileSource', () => {
             expect.anything());
     });
 
-    test('a 204 with emptyTileBehavior fallback leaves the tile without data, so another zoom level shows through', async () => {
+    test('a 204 with emptyResponse missing leaves the tile without data, so another zoom level shows through', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSource({url: '/source.json', emptyTileBehavior: 'fallback'});
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await sleep(0);
         server.respond();
@@ -213,12 +213,12 @@ describe('RasterTileSource', () => {
         expect(tile.texture).toBeUndefined();
     });
 
-    test('emptyTileBehavior fallback in the TileJSON applies to a source that does not set it', async () => {
+    test('emptyResponse missing in the TileJSON applies to a source that does not set it', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
-            emptyTileBehavior: 'fallback'
+            emptyResponse: 'missing'
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
         const source = createSource({url: '/source.json'});
@@ -243,7 +243,7 @@ describe('RasterTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         }));
         server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300'}, '']);
-        const source = createSource({url: '/source.json', emptyTileBehavior: 'fallback'});
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
         source.map._refreshExpiredTiles = true;
         const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
         await sleep(0);

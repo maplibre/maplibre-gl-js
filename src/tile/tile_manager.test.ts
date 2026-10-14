@@ -489,7 +489,7 @@ describe('TileManager / Source lifecycle', () => {
         tileManager._source.loadTile = async (tile) => {
             requestedZooms.push(tile.tileID.canonical.z);
             await sleep(0);
-            // the four z1 tiles come back without data, as a source with emptyTileBehavior fallback
+            // the four z1 tiles come back without data, as a source with emptyResponse missing
             // leaves them on an empty response; the single z0 parent loads
             tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
         };

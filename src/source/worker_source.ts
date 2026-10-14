@@ -19,12 +19,12 @@ import type {DashEntry} from '../render/line_atlas.ts';
 export type TileEncoding = 'mlt' | 'mvt';
 
 /**
- * How a tile source treats a tile response with an empty body (HTTP 204, or 200 with no content).
- * `render` (the default) loads the tile with nothing to draw: a raster tile draws fully transparent, a raster-dem tile carries no elevation, a vector tile has no features.
- * `fallback` leaves the tile without data, so a loaded tile from another zoom level shows through in its place.
+ * What a tile response with an empty body (HTTP 204, or 200 with no content) means in a tileset.
+ * `blank` (the default): the tile is in the tileset and has nothing there, so it loads with nothing to draw: a raster tile draws fully transparent, a raster-dem tile carries no elevation, a vector tile has no features.
+ * `missing`: the tileset has no tile there at that zoom level, so the tile is left without data and a loaded tile from another zoom level shows through in its place.
  * A tile left without data records neither the response's expiry nor its etag, so it is not reloaded on a timer; it is requested again when it is needed again.
  */
-export type EmptyTileBehavior = 'render' | 'fallback';
+export type EmptyResponse = 'blank' | 'missing';
 
 /**
  * Parameters to identify a tile

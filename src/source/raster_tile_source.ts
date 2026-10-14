@@ -10,7 +10,7 @@ import {RGBAImage} from '../util/image.ts';
 import {isAbortError} from '../util/abort_error.ts';
 
 import type {Source} from './source.ts';
-import type {EmptyTileBehavior} from './worker_source.ts';
+import type {EmptyResponse} from './worker_source.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
@@ -22,10 +22,10 @@ import type {
 
 export type RasterTileSourceOptions = (RasterSourceSpecification | RasterDEMSourceSpecification) & {
     /**
-     * How a tile response with an empty body is handled, see {@link EmptyTileBehavior}.
+     * What a tile response with an empty body means in the tileset, see {@link EmptyResponse}.
      * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
      */
-    emptyTileBehavior?: EmptyTileBehavior;
+    emptyResponse?: EmptyResponse;
 };
 
 /**
@@ -67,7 +67,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     url: string;
     scheme: string;
     tileSize: number;
-    emptyTileBehavior: EmptyTileBehavior;
+    emptyResponse: EmptyResponse;
 
     bounds: [number, number, number, number];
     tileBounds: TileBounds;
@@ -93,7 +93,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         this.roundZoom = true;
         this.scheme = 'xyz';
         this.tileSize = 512;
-        this.emptyTileBehavior = 'render';
+        this.emptyResponse = 'blank';
         this._loaded = false;
         this._premultiplyAlpha = true;
 
@@ -233,9 +233,9 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 return;
             }
             if (response) {
-                // An empty response (e.g. HTTP 204) under `emptyTileBehavior: 'fallback'` is left without data
+                // An empty response (e.g. HTTP 204) under `emptyResponse: 'missing'` is left without data
                 // or expiry, so a loaded tile from another zoom level shows in its place.
-                if (!response.data && this.emptyTileBehavior === 'fallback') {
+                if (!response.data && this.emptyResponse === 'missing') {
                     tile.state = 'errored';
                     return;
                 }

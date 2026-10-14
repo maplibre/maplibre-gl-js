@@ -13,16 +13,16 @@ import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding, EmptyTileBehavior} from './worker_source.ts';
+import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding, EmptyResponse} from './worker_source.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
     /**
-     * How a tile response with an empty body is handled, see {@link EmptyTileBehavior}.
+     * What a tile response with an empty body means in the tileset, see {@link EmptyResponse}.
      * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
      */
-    emptyTileBehavior?: EmptyTileBehavior;
+    emptyResponse?: EmptyResponse;
 };
 
 export type LoadTileResult = {
@@ -76,7 +76,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     scheme: string;
     encoding: TileEncoding;
     tileSize: number;
-    emptyTileBehavior: EmptyTileBehavior;
+    emptyResponse: EmptyResponse;
     promoteId: PromoteIdSpecification;
 
     _options: VectorTileSourceOptions;
@@ -101,7 +101,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.maxzoom = 22;
         this.scheme = 'xyz';
         this.tileSize = 512;
-        this.emptyTileBehavior = 'render';
+        this.emptyResponse = 'blank';
         this.reparseOverscaled = true;
         this.isTileClipped = true;
         this._loaded = false;
@@ -261,9 +261,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         if (tile.aborted) {
             return;
         }
-        // Under `emptyTileBehavior: 'fallback'` a response with an empty body, such as a 204, leaves the tile without data, expiry or etag.
+        // Under `emptyResponse: 'missing'` a response with an empty body, such as a 204, leaves the tile without data, expiry or etag.
         const emptyBody = data && data.etagUnmodified !== true && data.emptyBody;
-        if (emptyBody && this.emptyTileBehavior === 'fallback') {
+        if (emptyBody && this.emptyResponse === 'missing') {
             tile.state = 'errored';
         } else {
             this._afterTileLoadWorkerResponse(tile, data);
