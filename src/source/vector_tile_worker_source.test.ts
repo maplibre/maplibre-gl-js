@@ -91,7 +91,7 @@ describe('vector tile worker source', () => {
             type: 'fill'
         }]);
         const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = () => ({vectorTile: new VectorTile(new PbfReader(rawTileData)), rawData: rawTileData});
+        source.decodeTileData = () => new VectorTile(new PbfReader(rawTileData));
 
         server.respondWith(request => {
             request.respond(200, {
@@ -143,32 +143,27 @@ describe('vector tile worker source', () => {
         const actor = createFakeActor();
 
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
-        source.loadVectorTile = (_params, _rawData) => {
-            return {
-                vectorTile: {
-                    layers: {
-                        test: {
-                            version: 2,
-                            name: 'test',
-                            extent: 8192,
-                            length: 1,
-                            feature: (featureIndex: number) => ({
-                                extent: 8192,
-                                type: 1,
-                                id: featureIndex,
-                                properties: {
-                                    name: 'test'
-                                },
-                                loadGeometry () {
-                                    return [[new Point(0, 0)]];
-                                }
-                            })
+        source.decodeTileData = () => ({
+            layers: {
+                test: {
+                    version: 2,
+                    name: 'test',
+                    extent: 8192,
+                    length: 1,
+                    feature: (featureIndex: number) => ({
+                        extent: 8192,
+                        type: 1,
+                        id: featureIndex,
+                        properties: {
+                            name: 'test'
+                        },
+                        loadGeometry () {
+                            return [[new Point(0, 0)]];
                         }
-                    }
-                },
-                rawData: rawTileData
-            };
-        };
+                    })
+                }
+            }
+        });
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
@@ -219,32 +214,27 @@ describe('vector tile worker source', () => {
         const actor = createFakeActor(() => sendAsyncShouldAbort);
 
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
-        source.loadVectorTile = (_params, _rawData) => {
-            return {
-                vectorTile: {
-                    layers: {
-                        test: {
-                            version: 2,
-                            name: 'test',
-                            extent: 8192,
-                            length: 1,
-                            feature: (featureIndex: number) => ({
-                                extent: 8192,
-                                type: 1,
-                                id: featureIndex,
-                                properties: {
-                                    name: 'test'
-                                },
-                                loadGeometry () {
-                                    return [[new Point(0, 0)]];
-                                }
-                            })
+        source.decodeTileData = () => ({
+            layers: {
+                test: {
+                    version: 2,
+                    name: 'test',
+                    extent: 8192,
+                    length: 1,
+                    feature: (featureIndex: number) => ({
+                        extent: 8192,
+                        type: 1,
+                        id: featureIndex,
+                        properties: {
+                            name: 'test'
+                        },
+                        loadGeometry () {
+                            return [[new Point(0, 0)]];
                         }
-                    }
-                },
-                rawData: rawTileData
-            };
-        };
+                    })
+                }
+            }
+        });
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
@@ -275,13 +265,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.loadTile reparses tile if reloadTile is called during reparsing', async () => {
         const rawTileData = new ArrayBuffer(0);
-        const loadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: new VectorTile(new PbfReader(rawTileData)),
-                rawData: rawTileData,
-                encoding: 'mvt'
-            };
-        };
+        const decodeTileData = () => new VectorTile(new PbfReader(rawTileData));
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -291,7 +275,7 @@ describe('vector tile worker source', () => {
         }]);
 
         const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = loadVectorData;
+        source.decodeTileData = decodeTileData;
 
         const parseWorkerTileMock = vi
             .spyOn(WorkerTile.prototype, 'parse')
@@ -329,13 +313,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.reloadTile during loadTile returns data even if interrupted by another reloadTile', async () => {
         const rawTileData = new ArrayBuffer(0);
-        const loadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: new VectorTile(new PbfReader(rawTileData)),
-                rawData: rawTileData,
-                encoding: 'mvt'
-            };
-        };
+        const decodeTileData = () => new VectorTile(new PbfReader(rawTileData));
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -345,7 +323,7 @@ describe('vector tile worker source', () => {
         }]);
 
         const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = loadVectorData;
+        source.decodeTileData = decodeTileData;
 
         const parseWorkerTileMock = vi
             .spyOn(WorkerTile.prototype, 'parse')
@@ -393,10 +371,7 @@ describe('vector tile worker source', () => {
         const source = new VectorTileWorkerSource({} as any, new StyleLayerIndex(), []);
         const mockVectorTile = {layers: {}} as any;
 
-        source.loadVectorTile = vi.fn().mockReturnValue({
-            vectorTile: mockVectorTile,
-            rawData: new ArrayBuffer(0)
-        });
+        source.decodeTileData = vi.fn().mockReturnValue(mockVectorTile);
 
         const getOverzoomTileSpy = vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
             vectorTile: mockVectorTile,
@@ -428,10 +403,7 @@ describe('vector tile worker source', () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const mockVectorTile = {layers: {}} as any;
 
-        source.loadVectorTile = vi.fn().mockReturnValue({
-            vectorTile: mockVectorTile,
-            rawData: new ArrayBuffer(0)
-        });
+        source.decodeTileData = vi.fn().mockReturnValue(mockVectorTile);
 
         vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
             vectorTile: mockVectorTile,
@@ -477,7 +449,7 @@ describe('vector tile worker source', () => {
 
     test('VectorTileWorkerSource.loadTile returns null for an empty tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        source.loadVectorTile = (_params, _rawData) => null;
+        source.decodeTileData = () => null;
         const parse = vi.fn();
 
         server.respondWith(request => {
@@ -540,15 +512,7 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource provides resource timing information', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0);
 
-        const loadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: new VectorTile(new PbfReader(rawTileData)),
-                rawData: rawTileData,
-                cacheControl: null,
-                expires: null,
-                encoding: 'mvt'
-            };
-        };
+        const decodeTileData = () => new VectorTile(new PbfReader(rawTileData));
 
         const exampleResourceTiming = {
             connectEnd: 473,
@@ -579,7 +543,7 @@ describe('vector tile worker source', () => {
         }]);
 
         const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = loadVectorData;
+        source.decodeTileData = decodeTileData;
 
         window.performance.getEntriesByName = vi.fn().mockReturnValue([exampleResourceTiming]);
 
@@ -604,15 +568,7 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource provides resource timing information (fallback method)', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0);
 
-        const loadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: new VectorTile(new PbfReader(rawTileData)),
-                rawData: rawTileData,
-                cacheControl: null,
-                expires: null,
-                encoding: 'mvt'
-            };
-        };
+        const decodeTileData = () => new VectorTile(new PbfReader(rawTileData));
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -622,7 +578,7 @@ describe('vector tile worker source', () => {
         }]);
 
         const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = loadVectorData;
+        source.decodeTileData = decodeTileData;
 
         const sampleMarks = [100, 350];
         const marks = {};
@@ -666,8 +622,8 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource.loadTile skips parsing and returns unmodified when e-tags match', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
-        source.loadVectorTile = () => {
-            throw new Error('loadVectorTile should not be called when etag matches');
+        source.decodeTileData = () => {
+            throw new Error('decodeTileData should not be called when etag matches');
         };
 
         const rawTileData = new ArrayBuffer(0);

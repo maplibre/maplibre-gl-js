@@ -709,12 +709,12 @@ describe('loadData in a registered projection', () => {
     });
 
     function firstFeatureInRootTile(source: GeoJSONWorkerSource) {
-        const {vectorTile} = source.loadVectorTile({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
+        const {vectorTile} = source.loadVectorTileSync({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
         return vectorTile.layers[GEOJSON_TILE_LAYER_NAME].feature(0);
     }
 
     function featureCountInRootTile(source: GeoJSONWorkerSource) {
-        const result = source.loadVectorTile({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
+        const result = source.loadVectorTileSync({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
         return result?.vectorTile.layers[GEOJSON_TILE_LAYER_NAME]?.length ?? 0;
     }
 
