@@ -6,10 +6,10 @@ import {EXTENT} from '../data/extent.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import {beforeMapTest, createMap, createPolarStereographicCrs, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
-import {CRSWorldCoordinateHelper, identityCrs, type CRSDefinition} from '../geo/projection/crs.ts';
+import {identityCrs, type CRSDefinition} from '../geo/projection/crs.ts';
 import {addProjection, removeProjection} from '../geo/projection/projection_crud.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 
@@ -381,27 +381,32 @@ describe('GeoJSONSource in a registered projection', () => {
         projection: {forward: position => position, inverse: position => position},
         tileMatrixSet: {origin: [-1000, 1000], extentAtZoom0: 2000}
     };
+    const polarCrs: CRSDefinition = {...createPolarStereographicCrs(), wkt: 'PROJCS["test:polar"]'};
 
     afterEach(() => {
         removeProjection(planarCrs.name);
+        removeProjection(polarCrs.name);
         vi.restoreAllMocks();
     });
 
-    function loadSourceInProjection(definition: CRSDefinition) {
+    async function loadSourceInProjection(projectionName: string) {
+        beforeMapTest();
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: projectionName}}});
+        await map.once('style.load');
         const sent: LoadGeoJSONParameters[] = [];
-        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+        const source = new GeoJSONSource('id', {data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<any>) {
                 sent.push(message.data);
                 return Promise.resolve({});
             }
         }), undefined);
-        source.map = {style: {projection: new MercatorProjection(new CRSWorldCoordinateHelper(definition))}} as any as Map;
+        source.map = map;
         source.load();
         return {source, sent};
     }
 
     test('sends the built-in identity projection to the worker without a wkt', async () => {
-        const {source, sent} = loadSourceInProjection(identityCrs);
+        const {source, sent} = await loadSourceInProjection('identity');
         await waitForMetadataEvent(source);
 
         expect(sent[0].crs).toEqual({name: 'identity', wkt: undefined, tileMatrixSet: identityCrs.tileMatrixSet});
@@ -410,7 +415,7 @@ describe('GeoJSONSource in a registered projection', () => {
     test('sends a registered projection to the worker with its wkt', async () => {
         const definition = {...planarCrs, wkt: 'PROJCS["test"]'};
         addProjection(definition);
-        const {source, sent} = loadSourceInProjection(definition);
+        const {source, sent} = await loadSourceInProjection(definition.name);
         await waitForMetadataEvent(source);
 
         expect(sent[0].crs).toEqual({name: 'EPSG:test', wkt: 'PROJCS["test"]', tileMatrixSet: planarCrs.tileMatrixSet});
@@ -419,11 +424,22 @@ describe('GeoJSONSource in a registered projection', () => {
     test('warns and sends no projection when a registered projection has no wkt', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         addProjection(planarCrs);
-        const {source, sent} = loadSourceInProjection(planarCrs);
+        const {source, sent} = await loadSourceInProjection(planarCrs.name);
         await waitForMetadataEvent(source);
 
         expect(sent[0].crs).toBeUndefined();
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('the projection "EPSG:test" has no `wkt`'));
+    });
+
+    test('asks to reload every tile after a diff, since the lng/lat box of tile 0/0/0 in a polar CRS leaves out the pole', async () => {
+        addProjection(polarCrs);
+        const {source} = await loadSourceInProjection(polarCrs.name);
+        await waitForMetadataEvent(source);
+
+        const content = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        source.updateData({add: [{type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 89]}}]});
+
+        expect((await content).shouldReloadTileOptions).toBeUndefined();
     });
 });
 
@@ -1447,39 +1463,6 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         const result = source.shouldReloadTile(tile, shouldReloadTileOptions);
 
         expect(result).toBe(false);
-    });
-
-    test('reloads a tile that contains an added feature in the map projection', async () => {
-        source.map = {style: {projection: new MercatorProjection(new CRSWorldCoordinateHelper(identityCrs))}} as any as Map;
-        const tileOfLng0To90Lat0To90InTheIdentityCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
-        tileOfLng0To90Lat0To90InTheIdentityCrs.state = 'loaded';
-        const diff: GeoJSONSourceDiff = {add: [{id: 1, type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}}]};
-        let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
-        source.on('data', (e) => {
-            if (e.shouldReloadTileOptions) {
-                shouldReloadTileOptions = e.shouldReloadTileOptions;
-            }
-        });
-        await source.updateData(diff);
-
-        expect(source.shouldReloadTile(tileOfLng0To90Lat0To90InTheIdentityCrs, shouldReloadTileOptions)).toBe(true);
-    });
-
-    test('does not reload a tile for an added feature that only mercator would place inside it', async () => {
-        source.map = {style: {projection: new MercatorProjection(new CRSWorldCoordinateHelper(identityCrs))}} as any as Map;
-        const tileOfLng0To90Lat0To90InTheIdentityCrs = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), source.tileSize);
-        tileOfLng0To90Lat0To90InTheIdentityCrs.state = 'loaded';
-        const insideTheMercatorTileOfLng0To180 = [125, 15];
-        const diff: GeoJSONSourceDiff = {add: [{id: 1, type: 'Feature', properties: {}, geometry: {type: 'Point', coordinates: insideTheMercatorTileOfLng0To180}}]};
-        let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
-        source.on('data', (e) => {
-            if (e.shouldReloadTileOptions) {
-                shouldReloadTileOptions = e.shouldReloadTileOptions;
-            }
-        });
-        await source.updateData(diff);
-
-        expect(source.shouldReloadTile(tileOfLng0To90Lat0To90InTheIdentityCrs, shouldReloadTileOptions)).toBe(false);
     });
 
     test('returns false when diff is empty', async () => {

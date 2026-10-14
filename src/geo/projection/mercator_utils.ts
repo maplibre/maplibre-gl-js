@@ -208,8 +208,8 @@ export function lngLatBoxToWorldBox(worldCoordinateHelper: WorldCoordinateHelper
 /**
  * Maps the four corners of a world rectangle back to lng/lat and returns the box that contains them.
  * That is exact in mercator. Where `x` and `y` both depend on `lng` and `lat` it can miss a curved edge
- * or a pole inside the rectangle; its one caller is the GeoJSON reload check, and GeoJSON does not follow
- * a registered CRS yet.
+ * or a pole inside the rectangle; its one caller is the GeoJSON reload check, which a GeoJSON source skips
+ * in a registered projection by reloading every tile on a diff.
  */
 export function worldBoxToLngLatBox(worldCoordinateHelper: WorldCoordinateHelper, minX: number, minY: number, maxX: number, maxY: number): {west: number; south: number; east: number; north: number} {
     const corners = [

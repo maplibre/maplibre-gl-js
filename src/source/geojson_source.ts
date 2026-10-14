@@ -526,7 +526,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * since the data its result describes is no longer the source's, and still fires its events.
      *
      * A diff reloads only the tiles it touches, but a cluster refresh can regroup points on any tile,
-     * so an update that carries one reloads every tile, whatever diff comes with it.
+     * so an update that carries one reloads every tile, whatever diff comes with it. So does any diff on a map in a
+     * registered projection, where the lng/lat box of a tile, see {@link tileIdToLngLatBounds}, can miss part of it.
      */
     private _onWorkerUpdateResult(update: GeoJSONWorkerUpdate, result: GeoJSONWorkerSourceLoadDataResult, replaced: boolean) {
         if (this._removed || result.abandoned) {
@@ -541,7 +542,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         const diff = 'data' in update || replaced ? undefined : update.diff;
         const affectedGeometries = this._applyDiffToSource(diff);
         const refreshesClusters = !('data' in update) && update.updateCluster;
-        const shouldReloadTileOptions = refreshesClusters ? undefined : this._getShouldReloadTileOptions(affectedGeometries);
+        const reloadsEveryTile = refreshesClusters || this.map?.style?.projection?.worldCoordinateHelper.wraps === false;
+        const shouldReloadTileOptions = reloadsEveryTile ? undefined : this._getShouldReloadTileOptions(affectedGeometries);
 
         const eventData: {resourceTiming?: PerformanceResourceTiming[]} = {};
         this._applyResourceTiming(eventData, result);
