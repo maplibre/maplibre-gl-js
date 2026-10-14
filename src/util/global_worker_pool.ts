@@ -1,5 +1,4 @@
 import {WorkerPool, PRELOAD_POOL_ID} from './worker_pool.ts';
-import {getGlobalDispatcher} from './global_dispatcher.ts';
 
 let globalWorkerPool: WorkerPool;
 
@@ -35,7 +34,6 @@ export function getGlobalWorkerPool(): WorkerPool {
  * ```
  */
 export function prewarm(): void {
-    getGlobalDispatcher();
     const workerPool = getGlobalWorkerPool();
     workerPool.acquire(PRELOAD_POOL_ID);
 }
