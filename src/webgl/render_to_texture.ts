@@ -43,6 +43,22 @@ function isRenderedToTexture(layer: StyleLayer): boolean {
 }
 
 /**
+ * Returns the ids of the layers in each render stack, a run of layers rendered to texture that ends at a layer
+ * that is not.
+ */
+function getRenderStacks(style: Style, layerIds: string[]): string[][] {
+    const stacks: string[][] = [];
+    let prevRenderedToTexture = false;
+    for (const layerId of layerIds) {
+        const renderedToTexture = isRenderedToTexture(style._layers[layerId]);
+        if (renderedToTexture && !prevRenderedToTexture) stacks.push([]);
+        if (renderedToTexture) stacks[stacks.length - 1].push(layerId);
+        prevRenderedToTexture = renderedToTexture;
+    }
+    return stacks;
+}
+
+/**
  * @internal
  * Renders RTT-eligible layers into per-tile cached textures, then drapes
  * them onto the terrain mesh. Slots live on each Tile so their lifetime
@@ -123,6 +139,7 @@ export class RenderToTexture {
         this._rttTiles = [];
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
+        const stacks = getRenderStacks(style, this._renderableLayerIds);
         const visibleLayerIds = this._renderableLayerIds.join();
 
         const rttSourceIds = new Set<string>();
@@ -179,12 +196,44 @@ export class RenderToTexture {
                 this.needsFollowUpFrame = true;
             } else if (difference === 'zoom' || difference === 'sourceTiles') {
                 if (staleTileReleased) this.needsFollowUpFrame = true;
-                else tile.releaseRTT(this.painter);
+                else this._releaseChangedTextures(tile, style, stacks);
                 staleTileReleased = true;
             } else {
-                tile.releaseRTT(this.painter);
+                this._releaseChangedTextures(tile, style, stacks);
             }
         }
+    }
+
+    /**
+     * Releases the tile's textures of the stacks whose layers changed, or all of its textures when every stack
+     * changed, which also drops the textures of stacks that the layers no longer form.
+     */
+    _releaseChangedTextures(tile: Tile, style: Style, stacks: string[][]): void {
+        const changedStacks = stacks.map(layerIds => this._hasStackChanged(tile, style, layerIds));
+        if (!changedStacks.includes(false)) {
+            tile.releaseRTT(this.painter);
+            return;
+        }
+        for (const [stack, changed] of changedStacks.entries()) {
+            if (changed) tile.releaseRTTStack(this.painter, stack);
+        }
+    }
+
+    /**
+     * Whether the tile's texture of the stack differs from what this frame would render into it. A stack whose
+     * layers have no fingerprint, background layers only, counts as changed.
+     */
+    _hasStackChanged(tile: Tile, style: Style, layerIds: string[]): boolean {
+        let fingerprinted = false;
+        for (const layerId of layerIds) {
+            const fingerprintKey = rttFingerprintKey(style._layers[layerId]);
+            const frameFingerprint = this._rttFingerprints[fingerprintKey]?.[tile.tileID.key];
+            const tileFingerprint = tile.rttFingerprint[fingerprintKey];
+            if (!frameFingerprint && !tileFingerprint) continue;
+            if (frameFingerprint?.difference(tileFingerprint) !== 'none') return true;
+            fingerprinted = true;
+        }
+        return !fingerprinted;
     }
 
     /**

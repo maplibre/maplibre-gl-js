@@ -250,6 +250,17 @@ export class Tile {
     }
 
     /**
+     * @internal
+     * Returns the cached RTT slot of the stack to the painter's pool.
+     */
+    releaseRTTStack(painter: Painter, stack: number): void {
+        const obj = this.rttObjects[stack];
+        if (!obj) return;
+        painter.releaseRTT(obj);
+        this.rttObjects[stack] = undefined;
+    }
+
+    /**
      * Given a data object with a 'buffers' property, load it into
      * this tile's elementGroups and buffers properties and set loaded
      * to true. If the data is null, like in the case of an empty
