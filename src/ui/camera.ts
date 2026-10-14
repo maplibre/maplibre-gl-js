@@ -349,7 +349,7 @@ export class Camera extends Evented<MapEventType> {
     _pitching: boolean;
     _rolling: boolean;
     _padding: boolean;
-    _elevation: boolean;
+    _elevating: boolean;
 
     _bearingSnap: number;
     _zoomSnap: number;
@@ -898,7 +898,7 @@ export class Camera extends Evented<MapEventType> {
         this._rolling ||= (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
         this._zooming ||= easeHandler.isZooming;
-        this._elevation ||= (startElevation !== elevation);
+        this._elevating ||= (startElevation !== elevation);
         this._easeId = options.easeId;
 
         this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation});
@@ -906,7 +906,7 @@ export class Camera extends Evented<MapEventType> {
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if (this._elevation) {
+            if (this._elevating) {
                 tr.setElevation(interpolates.number(startElevation, elevation, k));
             } else if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
@@ -1317,7 +1317,7 @@ export class Camera extends Evented<MapEventType> {
         this._pitching = false;
         this._rolling = false;
         this._padding = false;
-        this._elevation = false;
+        this._elevating= false;
 
         if (wasZooming) {
             this.fire(new MapMovementEvent('zoomend', eventData));
@@ -1470,7 +1470,7 @@ export class Camera extends Evented<MapEventType> {
         this._pitching = (pitch !== startPitch);
         this._rolling = (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
-        this._elevation = (startElevation !== elevation);
+        this._elevating = (startElevation !== elevation);
 
         this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
 
@@ -1497,7 +1497,7 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this._elevation) {
+            if (this._elevating) {
                 tr.setElevation(interpolates.number(startElevation, elevation, k));
             } else if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
 
