@@ -31,6 +31,7 @@ import {VectorTileFeature} from '@mapbox/vector-tile';
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
 import {getSizeData, MAX_PACKED_SIZE, MAX_GLYPHS} from '../../symbol/symbol_size.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
+import {isOutsideTile} from '../extent_bounds.ts';
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
@@ -477,6 +478,7 @@ export class SymbolBucket implements Bucket {
         // and null returned because icon-image wasn't defined is to check whether or not iconImage.parameters is an empty object
         const hasIcon = iconImage.value.kind !== 'constant' || !!iconImage.value.value || Object.keys(iconImage.parameters).length > 0;
         const symbolSortKey = layout.get('symbol-sort-key');
+        const pointPlacement = layout.get('symbol-placement') === 'point';
 
         this.features = [];
 
@@ -498,6 +500,8 @@ export class SymbolBucket implements Bucket {
             }
 
             if (!needGeometry)  evaluationFeature.geometry = loadGeometry(feature);
+
+            if (pointPlacement && feature.type === 1 && isEveryPointOutsideTile(evaluationFeature.geometry)) continue;
 
             let text: Formatted | void;
             if (hasText) {
@@ -989,6 +993,14 @@ export class SymbolBucket implements Bucket {
         if (this.text.indexBuffer) this.text.indexBuffer.updateData(this.text.indexArray);
         if (this.icon.indexBuffer) this.icon.indexBuffer.updateData(this.icon.indexArray);
     }
+}
+
+/**
+ * Whether every point lies outside the tile. A point label is anchored on the point itself, and
+ * `addSymbolAtAnchor` in symbol_layout.ts drops an anchor outside the tile, so such a feature gets no label here.
+ */
+function isEveryPointOutsideTile(geometry: Point[][]): boolean {
+    return geometry.every(ring => ring.every(isOutsideTile));
 }
 
 register('SymbolBucket', SymbolBucket, {
