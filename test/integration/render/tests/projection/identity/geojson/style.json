@@ -2,7 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Renders geojson in the built-in identity projection, where the square spanning lng/lat -90..90 is tile 0/0/0. At zoom 0 a 256px view centered on 0,0 shows lng/lat -45..45, so in the identity CRS the polygon fills the top-right quadrant, the line runs along x=14px and the diagonal from top-left to bottom-right, and the point sits at 43,213.",
+      "description": "Renders geojson in the built-in identity projection, where the square spanning lng/lat -90..90 is tile 0/0/0. At zoom 0 a 256px view centered on 0,0 shows lng/lat -45..45, so in the identity CRS the polygon fills the top-right quadrant, the line runs along x=14px and the diagonal from top-left to bottom-right, and the point sits at 43,213. The point at 150,30 lies east of the square and is not drawn; wrapped around the square, it would sit at 43,43.",
       "width": 256,
       "height": 256
     }
@@ -39,6 +39,14 @@
             "geometry": {
               "type": "Point",
               "coordinates": [-30, -30]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"kind": "point"},
+            "geometry": {
+              "type": "Point",
+              "coordinates": [150, 30]
             }
           }
         ]

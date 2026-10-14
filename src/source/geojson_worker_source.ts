@@ -9,7 +9,7 @@ import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
 import {extend, JSON_PREFIX} from '../util/util.ts';
 import {createWorkerCRSHelper} from './projection_handler_worker.ts';
-import {reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONSourceDiffToPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from '../util/geojson_reproject.ts';
+import {reprojectGeoJSONFromWorld, reprojectGeoJSONSourceDiffToWorld, reprojectGeoJSONToWorld} from '../util/geojson_reproject.ts';
 
 import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source.ts';
@@ -264,14 +264,14 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
         if (params.data) {
             params.data = this._filterGeoJSON(params.data, params.filter, params.source);
-            const indexData = this._crsHelper ? reprojectGeoJSONToPseudoLngLat(params.data, this._crsHelper) : params.data;
-            this._geoJSONIndex = this._createGeoJSONIndex(indexData, params);
+            const indexData = this._crsHelper ? reprojectGeoJSONToWorld(params.data, this._crsHelper) : params.data;
+            this._geoJSONIndex = this._createGeoJSONIndex(indexData, params, this._crsHelper !== undefined);
             return;
         }
 
         if (params.dataDiff) {
-            this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
-            const indexDiff = this._crsHelper ? reprojectGeoJSONSourceDiffToPseudoLngLat(params.dataDiff, this._crsHelper) : params.dataDiff;
+            this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params, this._crsHelper !== undefined);
+            const indexDiff = this._crsHelper ? reprojectGeoJSONSourceDiffToWorld(params.dataDiff, this._crsHelper) : params.dataDiff;
             this._geoJSONIndex.updateData(indexDiff, this._getFilterPredicate(params.filter, params.source));
         }
 
@@ -334,14 +334,19 @@ export class GeoJSONWorkerSource implements WorkerSource {
      * Moves features the index returns back from the registered projection's world square to lng/lat.
      */
     _toLngLat(features: GeoJSON.Feature[]): GeoJSON.Feature[] {
-        return this._crsHelper ? features.map(feature => reprojectGeoJSONFromPseudoLngLat(feature, this._crsHelper)) : features;
+        return this._crsHelper ? features.map(feature => reprojectGeoJSONFromWorld(feature, this._crsHelper)) : features;
     }
 }
 
-export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
+/**
+ * Builds the geojson-vt index of a GeoJSON source's data.
+ * @param worldCoordinates - whether the data is in the registered projection's world coordinates instead of lng/lat
+ */
+export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters, worldCoordinates: boolean): GeoJSONVT {
     const options = extend(params.geojsonVtOptions || {}, {
         updateable: true,
         clusterOptions: getSuperclusterOptions(params),
+        worldCoordinates,
     });
 
     return new GeoJSONVT(data, options);

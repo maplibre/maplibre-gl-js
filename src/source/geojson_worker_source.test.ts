@@ -713,6 +713,11 @@ describe('loadData in a registered projection', () => {
         return vectorTile.layers[GEOJSON_TILE_LAYER_NAME].feature(0);
     }
 
+    function featureCountInRootTile(source: GeoJSONWorkerSource) {
+        const result = source.loadVectorTile({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
+        return result?.vectorTile.layers[GEOJSON_TILE_LAYER_NAME]?.length ?? 0;
+    }
+
     test('tiles the data where the built-in identity projection puts it', async () => {
         const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
         await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
@@ -746,12 +751,47 @@ describe('loadData in a registered projection', () => {
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('no projection handler is set in the workers'));
     });
 
-    test('tiles a feature a diff adds where the projection puts it', async () => {
+    test('tiles the data as lng/lat when no projection handler can project its wkt', async () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
         const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
-        await source.loadData({source: 'source', data: {type: 'FeatureCollection', features: []}, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+        await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
+
+        expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 2560, y: 1473});
+    });
+
+    test('tiles a feature a diff adds to a source without data where the projection puts it', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
         await source.loadData({source: 'source', dataDiff: {add: [pointAt45]}, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
 
         expect(firstFeatureInRootTile(source).loadGeometry()[0][0]).toMatchObject({x: 3072, y: 1024});
+    });
+
+    test('leaves out points outside the grid square instead of wrapping them around or clamping them onto its top edge', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        const eastOfTheSquare = {...pointAt45, id: 'east', geometry: {type: 'Point', coordinates: [135, 45]}} as GeoJSON.Feature;
+        const northOfTheSquare = {...pointAt45, id: 'north', geometry: {type: 'Point', coordinates: [45, 135]}} as GeoJSON.Feature;
+        const data = {type: 'FeatureCollection', features: [pointAt45, eastOfTheSquare, northOfTheSquare]} as GeoJSON.FeatureCollection;
+        await source.loadData({source: 'source', data, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+
+        expect(featureCountInRootTile(source)).toBe(1);
+    });
+
+    test('removes a feature from the tiles when a diff moves it out of the grid square', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+        await source.loadData({source: 'source', dataDiff: {update: [{id: 'p', newGeometry: {type: 'Point', coordinates: [135, 45]}}]}, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+
+        expect(featureCountInRootTile(source)).toBe(0);
+    });
+
+    test('draws a feature again, with its properties, when a diff moves it back into the grid square', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        const namedPoint = {...pointAt45, properties: {name: 'p'}} as GeoJSON.Feature;
+        await source.loadData({source: 'source', data: namedPoint, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+        await source.loadData({source: 'source', dataDiff: {update: [{id: 'p', newGeometry: {type: 'Point', coordinates: [135, 45]}}]}, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+        await source.loadData({source: 'source', dataDiff: {update: [{id: 'p', newGeometry: {type: 'Point', coordinates: [45, 45]}}]}, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
+
+        expect(firstFeatureInRootTile(source).properties).toEqual({name: 'p'});
     });
 
     test('returns cluster leaves in lng/lat', async () => {

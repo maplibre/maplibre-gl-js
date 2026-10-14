@@ -1,15 +1,11 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {reprojectGeoJSONFromPseudoLngLat, reprojectGeoJSONSourceDiffToPseudoLngLat, reprojectGeoJSONToPseudoLngLat} from './geojson_reproject.ts';
+import {reprojectGeoJSONFromWorld, reprojectGeoJSONSourceDiffToWorld, reprojectGeoJSONToWorld} from './geojson_reproject.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
-import {mercatorXfromLng, mercatorYfromLat} from '../geo/mercator_coordinate.ts';
 import {polygonIntersectsPolygon} from './intersection_tests.ts';
 import {createPolarStereographicCrs} from './test/util.ts';
 
 import type {GeoJSONSourceDiff} from '../source/geojson_source_diff.ts';
-
-/** lng/lat 45/45 is world (0.75, 0.25) in the identity CRS; mercator puts that world position at 90 E, this far north. */
-const pseudoLatOf45 = 66.51326044;
 
 function createIdentityHelper() {
     return new CRSWorldCoordinateHelper(identityCrs);
@@ -19,15 +15,15 @@ function createPolarHelper() {
     return new CRSWorldCoordinateHelper(createPolarStereographicCrs());
 }
 
-describe('reprojectGeoJSONToPseudoLngLat', () => {
-    test('moves an identity-CRS position to the lng/lat mercator maps to the same world position', () => {
+describe('reprojectGeoJSONToWorld', () => {
+    test('moves an identity-CRS position to its world coordinates', () => {
         const point: GeoJSON.Point = {type: 'Point', coordinates: [45, 45]};
-        expect(reprojectGeoJSONToPseudoLngLat(point, createIdentityHelper()).coordinates).toEqual([90, expect.closeTo(pseudoLatOf45, 6)]);
+        expect(reprojectGeoJSONToWorld(point, createIdentityHelper()).coordinates).toEqual([0.75, 0.25]);
     });
 
     test('keeps the altitude and any further ordinates', () => {
         const point: GeoJSON.Point = {type: 'Point', coordinates: [0, 0, 123, 4]};
-        expect(reprojectGeoJSONToPseudoLngLat(point, createIdentityHelper()).coordinates).toEqual([0, 0, 123, 4]);
+        expect(reprojectGeoJSONToWorld(point, createIdentityHelper()).coordinates).toEqual([0.5, 0.5, 123, 4]);
     });
 
     test('walks features, collections, nested geometries and geometry collections without mutating the input', () => {
@@ -56,7 +52,7 @@ describe('reprojectGeoJSONToPseudoLngLat', () => {
         };
         const copy = JSON.parse(JSON.stringify(data));
 
-        const result = reprojectGeoJSONToPseudoLngLat(data, createIdentityHelper());
+        const result = reprojectGeoJSONToWorld(data, createIdentityHelper());
 
         expect(data).toEqual(copy);
         expect(result).not.toBe(data);
@@ -64,24 +60,24 @@ describe('reprojectGeoJSONToPseudoLngLat', () => {
         expect(result.features[0].properties).toBe(data.features[0].properties);
         expect(result.features[2].geometry).toBeNull();
         const polygon = result.features[0].geometry as GeoJSON.Polygon;
-        expect(polygon.coordinates[0][2]).toEqual([90, expect.closeTo(pseudoLatOf45, 6)]);
+        expect(polygon.coordinates[0][2]).toEqual([0.75, 0.25]);
         const collection = result.features[1].geometry as GeoJSON.GeometryCollection;
-        expect((collection.geometries[1] as GeoJSON.Point).coordinates).toEqual([90, expect.closeTo(0, 9)]);
+        expect((collection.geometries[1] as GeoJSON.Point).coordinates).toEqual([0.75, 0.5]);
     });
 });
 
-describe('reprojectGeoJSONToPseudoLngLat in a polar CRS, whose latitude range ends at 20.383370 S', () => {
+describe('reprojectGeoJSONToWorld in a polar CRS, whose latitude range ends at 20.383370 S', () => {
     test('drops a polygon with an edge across the far pole, which the projection puts at infinity', () => {
         const isea4hSouthPoleCell: GeoJSON.Polygon = {type: 'Polygon', coordinates: [[
             [88.3853, -87.67805], [54.96953, -88.57819], [0, -89.52868], [180, -89.31865], [142.1755, -88.10424], [115.34565, -87.43262], [88.3853, -87.67805]
         ]]};
-        expect(reprojectGeoJSONToPseudoLngLat(isea4hSouthPoleCell, createPolarHelper()).coordinates).toEqual([]);
+        expect(reprojectGeoJSONToWorld(isea4hSouthPoleCell, createPolarHelper()).coordinates).toEqual([]);
     });
 
     test('closes a ring cut at the southern limit along the parallel, so a polygon of the whole globe covers the world square', () => {
         const wholeGlobe: GeoJSON.Polygon = {type: 'Polygon', coordinates: [[[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]]]};
-        const ring = reprojectGeoJSONToPseudoLngLat(wholeGlobe, createPolarHelper()).coordinates[0];
-        const worldRing = ring.map(([pseudoLng, pseudoLat]) => new Point(mercatorXfromLng(pseudoLng), mercatorYfromLat(pseudoLat)));
+        const ring = reprojectGeoJSONToWorld(wholeGlobe, createPolarHelper()).coordinates[0];
+        const worldRing = ring.map(([x, y]) => new Point(x, y));
         const insideWorldSquare = new Point(0.75, 0.75);
         expect(polygonIntersectsPolygon([insideWorldSquare], worldRing)).toBe(true);
     });
@@ -89,7 +85,7 @@ describe('reprojectGeoJSONToPseudoLngLat in a polar CRS, whose latitude range en
     test('cuts a line where it passes the southern limit', () => {
         const helper = createPolarHelper();
         const outAndBack: GeoJSON.LineString = {type: 'LineString', coordinates: [[0, 80], [0, -80], [90, 80]]};
-        const pieces = reprojectGeoJSONFromPseudoLngLat(reprojectGeoJSONToPseudoLngLat(outAndBack, helper), helper);
+        const pieces = reprojectGeoJSONFromWorld(reprojectGeoJSONToWorld(outAndBack, helper), helper);
         expect(pieces).toEqual({type: 'MultiLineString', coordinates: [
             [[expect.closeTo(0, 6), expect.closeTo(80, 6)], [expect.closeTo(0, 6), expect.closeTo(-20.383370, 4)]],
             [[expect.closeTo(33.534355, 4), expect.closeTo(-20.383370, 4)], [expect.closeTo(90, 6), expect.closeTo(80, 6)]]
@@ -102,7 +98,7 @@ describe('reprojectGeoJSONToPseudoLngLat in a polar CRS, whose latitude range en
             {type: 'Point', coordinates: [18.42, -33.92]},
             {type: 'MultiPoint', coordinates: [[18.42, -33.92], [18.42, 60]]}
         ]};
-        const moved = reprojectGeoJSONFromPseudoLngLat(reprojectGeoJSONToPseudoLngLat(points, helper), helper);
+        const moved = reprojectGeoJSONFromWorld(reprojectGeoJSONToWorld(points, helper), helper);
         expect(moved.geometries.map(geometry => (geometry as GeoJSON.Point | GeoJSON.MultiPoint).coordinates)).toEqual([
             [expect.closeTo(18.42, 6), expect.closeTo(-20.383370, 4)],
             [[expect.closeTo(18.42, 6), expect.closeTo(-20.383370, 4)], [expect.closeTo(18.42, 6), expect.closeTo(60, 6)]]
@@ -117,13 +113,13 @@ describe('reprojectGeoJSONToPseudoLngLat in a polar CRS, whose latitude range en
             {type: 'MultiLineString', coordinates: [beyondLine, [[0, 60], [90, 60]]]},
             {type: 'MultiPolygon', coordinates: [[beyondRing], [[[0, 60], [90, 60], [90, 70], [0, 60]]]]}
         ]};
-        const clipped = reprojectGeoJSONToPseudoLngLat(lines, createPolarHelper());
+        const clipped = reprojectGeoJSONToWorld(lines, createPolarHelper());
         expect(clipped.geometries.map(geometry => (geometry as GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.MultiPolygon).coordinates.length)).toEqual([0, 1, 1]);
     });
 });
 
-describe('reprojectGeoJSONFromPseudoLngLat', () => {
-    test('round trips with reprojectGeoJSONToPseudoLngLat, 3D coordinates and geometry collections included', () => {
+describe('reprojectGeoJSONFromWorld', () => {
+    test('round trips with reprojectGeoJSONToWorld, 3D coordinates and geometry collections included', () => {
         const feature: GeoJSON.Feature = {
             type: 'Feature',
             properties: {},
@@ -135,7 +131,7 @@ describe('reprojectGeoJSONFromPseudoLngLat', () => {
                 ]
             }
         };
-        const roundTripped = reprojectGeoJSONFromPseudoLngLat(reprojectGeoJSONToPseudoLngLat(feature, createIdentityHelper()), createIdentityHelper());
+        const roundTripped = reprojectGeoJSONFromWorld(reprojectGeoJSONToWorld(feature, createIdentityHelper()), createIdentityHelper());
         const geometries = (roundTripped.geometry as GeoJSON.GeometryCollection).geometries;
         expect((geometries[0] as GeoJSON.Point).coordinates).toEqual([expect.closeTo(-30, 9), expect.closeTo(-30, 9), 500]);
         expect((geometries[1] as GeoJSON.MultiPolygon).coordinates).toEqual([[[
@@ -147,7 +143,7 @@ describe('reprojectGeoJSONFromPseudoLngLat', () => {
     });
 });
 
-describe('reprojectGeoJSONSourceDiffToPseudoLngLat', () => {
+describe('reprojectGeoJSONSourceDiffToWorld', () => {
     test('moves the added features and the replaced geometries, and keeps removals and property changes', () => {
         const diff = {
             remove: ['gone'],
@@ -158,11 +154,11 @@ describe('reprojectGeoJSONSourceDiffToPseudoLngLat', () => {
             ]
         } satisfies GeoJSONSourceDiff;
 
-        const result = reprojectGeoJSONSourceDiffToPseudoLngLat(diff, createIdentityHelper());
+        const result = reprojectGeoJSONSourceDiffToWorld(diff, createIdentityHelper());
 
         expect(result.remove).toEqual(['gone']);
-        expect((result.add[0].geometry as GeoJSON.Point).coordinates).toEqual([90, expect.closeTo(pseudoLatOf45, 6)]);
-        expect((result.update[0].newGeometry as GeoJSON.Point).coordinates).toEqual([90, expect.closeTo(pseudoLatOf45, 6)]);
+        expect((result.add[0].geometry as GeoJSON.Point).coordinates).toEqual([0.75, 0.25]);
+        expect((result.update[0].newGeometry as GeoJSON.Point).coordinates).toEqual([0.75, 0.25]);
         expect(result.update[1]).toBe(diff.update[1]);
     });
 });

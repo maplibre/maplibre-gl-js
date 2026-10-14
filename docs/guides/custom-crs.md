@@ -184,7 +184,7 @@ maplibregl.addProjection({
 });
 ```
 
-The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. Before projecting it, the source clips it to the latitudes the projection puts within one grid width of tile 0/0/0, so that what lies further out, like the opposite pole of a polar projection, which projects to infinity, stays off the map. [Display GeoJSON in a polar stereographic projection](../examples/display-geojson-in-a-polar-stereographic-projection.md) puts it together in a complete page, with the handler's script inlined as a Blob. The built-in `identity` projection needs neither a `wkt` nor a handler. Without a `wkt`, or without a handler in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
+The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. Before projecting it, the source clips it to the latitudes the projection puts within one grid width of tile 0/0/0, so that what lies further out, like the opposite pole of a polar projection, which projects to infinity, stays off the map. Data outside the tile matrix set is cut away, so it ends at the grid's edge like the tiles do. [Display GeoJSON in a polar stereographic projection](../examples/display-geojson-in-a-polar-stereographic-projection.md) puts it together in a complete page, with the handler's script inlined as a Blob. The built-in `identity` projection needs neither a `wkt` nor a handler. Without a `wkt`, or without a handler in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
 
 ## What keeps working
 
@@ -204,7 +204,6 @@ Everything that speaks lng/lat goes through the CRS definition's `projection`, s
 - Converters whose `inverse` does not undo `forward`. The camera constraint and every query rely on the round trip being stable.
 - Custom layers. They get the grid's matrix, so positions from `MercatorCoordinate` end up in the wrong place.
 - The `within` and `distance` expressions, which compute in mercator.
-- GeoJSON data outside the tile matrix set. geojson-vt wraps its world around and clamps it at the top and bottom, so data beyond the grid's left or right edge is drawn one grid width over, inside it, and data beyond its top or bottom edge along that edge.
 - Projection expressions. A registered projection only works as a plain name in `projection.type`: in an expression such as `['step', ['zoom'], 'EPSG:25832', 10, 'mercator']` it is ignored, and the map logs a warning and draws the globe projection.
 - Switching to or from a registered CRS after the sources have loaded, with `setProjection` or with `setStyle` to a style in another projection, for now. Tile `bounds`, GeoJSON data and the corners of image, video and canvas sources are placed in the projection the map has when each source loads, so register the projection first and name it in the style, as the examples do.
 
