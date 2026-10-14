@@ -1,0 +1,134 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 2,
+  "sources": {
+    "points": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "icon": "restaurant-12",
+              "label": "West",
+              "iconOffset": [
+                16,
+                0
+              ],
+              "textOffset": [
+                4,
+                2
+              ]
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -2,
+                8
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "icon": "cafe-12",
+              "label": "East",
+              "iconOffset": [
+                -16,
+                0
+              ],
+              "textOffset": [
+                -4,
+                2
+              ]
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                2,
+                -8
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "icon": "bar-12",
+              "label": "North",
+              "iconOffset": [
+                0,
+                0
+              ],
+              "textOffset": [
+                0,
+                2
+              ]
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -8,
+                2
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/sprite",
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "symbols",
+      "type": "symbol",
+      "source": "points",
+      "layout": {
+        "symbol-placement": "point",
+        "icon-image": [
+          "get",
+          "icon"
+        ],
+        "icon-size": 3,
+        "icon-offset": [
+          "get",
+          "iconOffset"
+        ],
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+        "text-field": [
+          "get",
+          "label"
+        ],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-offset": [
+          "get",
+          "textOffset"
+        ],
+        "text-allow-overlap": true,
+        "text-ignore-placement": true
+      }
+    }
+  ]
+}
