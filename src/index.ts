@@ -20,7 +20,7 @@ import {type AddProtocolAction, type AddProtocolResponseData, config} from './ut
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
 import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
 import {WorkerPool} from './util/worker_pool.ts';
-import {prewarm, clearPrewarmedResources} from './util/global_worker_pool.ts';
+import {prewarm, clearPrewarmedResources, restartWorkers} from './util/global_worker_pool.ts';
 import {AJAXError, type ExpiryData, type GetResourceResponse, type RequestParameters} from './util/ajax.ts';
 import {GeoJSONSource, type GetClusterOptions, type SetClusterOptions} from './source/geojson_source.ts';
 import {CanvasSource, type CanvasSourceSpecification} from './source/canvas_source.ts';
@@ -427,6 +427,7 @@ export {
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
+    restartWorkers,
     clearPrewarmedResources,
     getVersion,
     getWorkerCount,

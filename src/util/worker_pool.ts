@@ -51,18 +51,34 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
         return (await this.workersPromise).slice();
     }
 
+    /**
+     * Terminates the shared workers and creates replacements, keeping every claim. For workers
+     * the browser killed behind the library's back. The `terminate` and `create` events let
+     * everything holding actors on the old workers rebuild them on the new ones.
+     */
+    restart(): void {
+        if (!this.workersPromise) return;
+        this.terminateWorkers();
+        this.ensureWorkers().catch(() => {});
+    }
+
     release(mapId: number | string): void {
         delete this.active[mapId];
         if (this.numActive() === 0 && this.workersPromise) {
-            const promise = this.workersPromise;
-            this.workersPromise = null;
-            this.fire('terminate');
-            promise.then(workers => {
-                for (const w of workers) {
-                    w.terminate();
-                }
-            });
+            this.terminateWorkers();
         }
+    }
+
+    /** Drops the current workers, firing `terminate`, and terminates each one once it exists. */
+    private terminateWorkers(): void {
+        const promise = this.workersPromise;
+        this.workersPromise = null;
+        this.fire('terminate');
+        promise.then(workers => {
+            for (const w of workers) {
+                w.terminate();
+            }
+        }).catch(() => {});
     }
 
     isPreloaded(): boolean {
