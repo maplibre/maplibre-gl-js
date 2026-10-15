@@ -1,21 +1,24 @@
-import {describe, test, expect, vi, beforeEach} from 'vitest';
+import {afterEach, describe, test, expect, vi, beforeEach} from 'vitest';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
 import {EXTENT} from '../data/extent.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import {beforeMapTest, createMap, createPolarStereographicCrs, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
+import {identityCrs, type CRSDefinition} from '../geo/projection/crs.ts';
+import {addProjection, removeProjection} from '../geo/projection/projection_crud.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
 import type {LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import type {Map} from '../ui/map.ts';
 
 const wrapDispatcher = getWrapDispatcher();
 
@@ -271,14 +274,12 @@ describe('GeoJSONSource.loadTile', () => {
     const mapStub = {
         getPixelRatio() { return 1; },
         showCollisionBoxes: false,
-        style: {
-            projection: {
-                get subdivisionGranularity() {
-                    return SubdivisionGranularitySetting.noSubdivision;
-                }
-            }
-        }
+        style: {projection: new MercatorProjection()}
     } as any;
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
 
     test('swallows an AbortError from the worker request', async () => {
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
@@ -371,6 +372,74 @@ describe('GeoJSONSource.loadTile', () => {
         expect(tile.aborted).toBe(true);
         await expect(loading).resolves.toBeUndefined();
         expect(loadVectorDataSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe('GeoJSONSource in a registered projection', () => {
+    const planarCrs: CRSDefinition = {
+        name: 'EPSG:test',
+        projection: {forward: position => position, inverse: position => position},
+        tileMatrixSet: {origin: [-1000, 1000], extentAtZoom0: 2000}
+    };
+    const polarCrs: CRSDefinition = {...createPolarStereographicCrs(), wkt: 'PROJCS["test:polar"]'};
+
+    afterEach(() => {
+        removeProjection(planarCrs.name);
+        removeProjection(polarCrs.name);
+        vi.restoreAllMocks();
+    });
+
+    async function loadSourceInProjection(projectionName: string) {
+        beforeMapTest();
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: projectionName}}});
+        await map.once('style.load');
+        const sent: LoadGeoJSONParameters[] = [];
+        const source = new GeoJSONSource('id', {data: {type: 'FeatureCollection', features: []}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message: ActorMessage<any>) {
+                sent.push(message.data);
+                return Promise.resolve({});
+            }
+        }), undefined);
+        source.map = map;
+        source.load();
+        return {source, sent};
+    }
+
+    test('sends the built-in identity projection to the worker without a wkt', async () => {
+        const {source, sent} = await loadSourceInProjection('identity');
+        await waitForMetadataEvent(source);
+
+        expect(sent[0].crs).toEqual({name: 'identity', wkt: undefined, tileMatrixSet: identityCrs.tileMatrixSet});
+    });
+
+    test('sends a registered projection to the worker with its wkt', async () => {
+        const definition = {...planarCrs, wkt: 'PROJCS["test"]'};
+        addProjection(definition);
+        const {source, sent} = await loadSourceInProjection(definition.name);
+        await waitForMetadataEvent(source);
+
+        expect(sent[0].crs).toEqual({name: 'EPSG:test', wkt: 'PROJCS["test"]', tileMatrixSet: planarCrs.tileMatrixSet});
+    });
+
+    test('warns and sends no projection when a registered projection has no wkt', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        addProjection(planarCrs);
+        const {source, sent} = await loadSourceInProjection(planarCrs.name);
+        await waitForMetadataEvent(source);
+
+        expect(sent[0].crs).toBeUndefined();
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('the projection "EPSG:test" has no `wkt`'));
+    });
+
+    test('asks to reload every tile after a diff, since the lng/lat box of tile 0/0/0 in a polar CRS leaves out the pole', async () => {
+        addProjection(polarCrs);
+        const {source} = await loadSourceInProjection(polarCrs.name);
+        await waitForMetadataEvent(source);
+
+        const content = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
+        source.updateData({add: [{type: 'Feature', id: 0, properties: {}, geometry: {type: 'Point', coordinates: [0, 89]}}]});
+
+        expect((await content).shouldReloadTileOptions).toBeUndefined();
     });
 });
 
@@ -843,13 +912,7 @@ describe('GeoJSONSource.update', () => {
             transform: {} as IReadonlyTransform,
             getPixelRatio() { return 1; },
             getGlobalState: () => ({}),
-            style: {
-                projection: {
-                    get subdivisionGranularity() {
-                        return SubdivisionGranularitySetting.noSubdivision;
-                    }
-                }
-            }
+            style: {projection: new MercatorProjection()}
         } as any;
 
         source.on('data', (e) => {
@@ -1309,6 +1372,7 @@ describe('GeoJSONSource.shoudReloadTile', () => {
 
     beforeEach(() => {
         source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
+        source.map = {style: {projection: new MercatorProjection()}} as any as Map;
         tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
         tile.state = 'loaded';
     });

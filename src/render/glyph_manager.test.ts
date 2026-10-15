@@ -214,6 +214,31 @@ describe('GlyphManager', () => {
         expect(returnedGlyphs['Noto Sans'].default[cluster].metrics.advance).toBeGreaterThan(0);
     });
 
+    test('GlyphManager locally generates a lone letter of a script that combines into clusters', async () => {
+        serveGlyphRanges();
+        const drawn = [];
+        const createRasterizer = fakeRasterizer((text) => { drawn.push(text); return GLYPHS[0]; });
+        const manager = createGlyphManager(true, 'sans-serif', undefined, createRasterizer);
+
+        // \u0926 is Devanagari DA standing alone
+        await manager.getGlyphs({'Noto Sans': {default: ['\u0926']}});
+
+        expect(drawn).toEqual(['\u0926']);
+        expect(glyphRangeRequests()).toHaveLength(0);
+    });
+
+    test('GlyphManager fetches letters of scripts whose vowel signs do not form clusters', async () => {
+        serveGlyphRanges();
+        const createRasterizer = fakeRasterizer();
+        const manager = createGlyphManager(true, 'sans-serif', undefined, createRasterizer);
+
+        // A New Tai Lue letter, whose vowel signs are spacing letters that never form a cluster
+        await manager.getGlyphs({'Noto Sans': {default: [char(0x1980)]}});
+
+        expect(glyphRangeRequests().map(request => request.url.match(/\d+-\d+/)[0])).toEqual(['6400-6655']);
+        expect(createRasterizer).not.toHaveBeenCalled();
+    });
+
     test('GlyphManager matches font styles', async () => {
         const manager = createGlyphManager(false, 'sans-serif');
 

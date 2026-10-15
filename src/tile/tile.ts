@@ -250,6 +250,17 @@ export class Tile {
     }
 
     /**
+     * @internal
+     * Returns the cached RTT slot of the stack to the painter's pool.
+     */
+    releaseRTTStack(painter: Painter, stack: number): void {
+        const obj = this.rttObjects[stack];
+        if (!obj) return;
+        painter.releaseRTT(obj);
+        this.rttObjects[stack] = undefined;
+    }
+
+    /**
      * Given a data object with a 'buffers' property, load it into
      * this tile's elementGroups and buffers properties and set loaded
      * to true. If the data is null, like in the case of an empty
@@ -421,18 +432,18 @@ export class Tile {
         }, layers, serializedLayers, sourceFeatureState);
     }
 
-    querySourceFeatures(result: GeoJSONFeature[], params?: QuerySourceFeatureOptionsStrict): void {
+    querySourceFeatures(result: GeoJSONFeature[], params: QuerySourceFeatureOptionsStrict): void {
         const featureIndex = this.latestFeatureIndex;
         if (!featureIndex?.rawTileData) return;
 
         const vtLayers = featureIndex.loadVTLayers();
 
-        const sourceLayer = params?.sourceLayer ? params.sourceLayer : '';
+        const sourceLayer = params.sourceLayer ? params.sourceLayer : '';
         const layer = vtLayers[GEOJSON_TILE_LAYER_NAME] || vtLayers[sourceLayer];
 
         if (!layer) return;
 
-        const filter = featureFilter(params?.filter, `querySourceFeatures[${sourceLayer}].filter`, params?.globalState);
+        const filter = featureFilter(params.filter, `querySourceFeatures[${sourceLayer}].filter`, params.globalState);
         const {z, x, y} = this.tileID.canonical;
         const coord = {z, x, y};
 
@@ -445,7 +456,7 @@ export class Tile {
                 continue;
             }
             const id = featureIndex.getId(feature, sourceLayer);
-            const geojsonFeature = new GeoJSONFeature(feature, z, x, y, id);
+            const geojsonFeature = new GeoJSONFeature(feature, z, x, y, id, params.worldCoordinateHelper);
             (geojsonFeature as any).tile = coord;
             result.push(geojsonFeature);
         }

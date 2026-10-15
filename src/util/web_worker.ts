@@ -4,6 +4,7 @@ import {type AddProtocolAction, config} from './config.ts';
 import type {default as MaplibreWorker} from '../source/worker.ts';
 import type {WorkerSourceConstructor} from '../source/worker_source.ts';
 import type {GetResourceResponse, RequestParameters} from './ajax.ts';
+import type {ProjectionHandler} from '../source/projection_handler_worker.ts';
 
 export interface WorkerGlobalScopeInterface {
     registerWorkerSource: (sourceName: string, sourceConstructor: WorkerSourceConstructor) => void;
@@ -11,6 +12,11 @@ export interface WorkerGlobalScopeInterface {
     addProtocol: (customProtocol: string, loadFn: AddProtocolAction) => void;
     removeProtocol: (customProtocol: string) => void;
     makeRequest: (request: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>;
+    /**
+     * @experimental
+     * Sets the workers' `ProjectionHandler`, for GeoJSON sources on a map in a registered projection; `null` removes it.
+     */
+    setProjectionHandler: (handler: ProjectionHandler | null) => void;
     worker: MaplibreWorker;
 }
 
@@ -41,7 +47,7 @@ function defaultWorkerUrl(): string {
 }
 
 function isClassicWorkerUrl(url: string): boolean {
-    return url.split(/[?#]/)[0].endsWith('.cjs');
+    return url.endsWith('.cjs') || url.split(/[?#]/)[0].endsWith('.cjs');
 }
 
 function createWorker(url: string, asModule: boolean): Worker {

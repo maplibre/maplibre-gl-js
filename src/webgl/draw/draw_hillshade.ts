@@ -143,7 +143,7 @@ function prepareHillshade(
 
         frameRenderContext.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            hillshadeUniformPrepareValues(tile.tileID, dem),
+            hillshadeUniformPrepareValues(frameRenderContext.transform, tile.tileID, dem),
             null, null, layer.id, painter.rasterBoundsBuffer,
             painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 
