@@ -1,6 +1,6 @@
 import {FontFaceManager} from './font_face_manager.ts';
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
-import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
+import {codePointIsInComplexShapingScript, codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
 import {isCluster} from '../util/graphemes.ts';
 import {AlphaImage} from '../util/image.ts';
 import {ensureError, warnOnce} from '../util/util.ts';
@@ -160,6 +160,10 @@ export class GlyphManager {
      * has no way to serve the one shape they are written as. A file the style pinned with
      * `font-faces` draws it where one covers it, and the local fonts otherwise. For a single
      * codepoint a declared file still wins over the glyphs URL and the local fallbacks.
+     *
+     * Lone letters of scripts that form clusters are drawn locally too, so a word isn't split across
+     * two fonts.
+     *
      * Providers support the `default` variant; unsupported variants return `null`.
      */
     async _getAndCacheGlyphsPromise(stack: string, id: string, variant: string): Promise<GlyphResult> {
@@ -189,9 +193,11 @@ export class GlyphManager {
             return {stack, id, variant, glyph};
         }
 
-        // If the style hasn’t opted into server-side fonts, this codepoint is CJK, or this is a cluster
-        // that a codepoint-keyed glyphs URL cannot serve, draw the glyph locally and cache it.
-        if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint)) {
+        // If the style hasn’t opted into server-side fonts, this codepoint is CJK or in a script that
+        // forms clusters, or this is a cluster that a codepoint-keyed glyphs URL cannot serve, draw the
+        // glyph locally and cache it.
+        if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint) ||
+            codePointIsInComplexShapingScript(codePoint)) {
             glyph = glyphs[id] = await this._drawGlyph(entry, stack, id);
             return {stack, id, variant, glyph};
         }
