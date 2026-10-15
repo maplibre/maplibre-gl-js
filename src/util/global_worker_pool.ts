@@ -39,21 +39,6 @@ export function prewarm(): void {
 }
 
 /**
- * Terminates the web workers shared by every map on the page and replaces them with new ones.
- * Called by the health check in `worker_recovery.ts` when the browser has killed the workers
- * behind the library's back, as iOS does to a backgrounded page.
- *
- * Each map recovers through the same contract as a lost WebGL context: it fires
- * `webglcontextlost`, rebuilds its style from a snapshot, restores its images, and fires
- * `webglcontextrestored`. As after a real context loss, custom layers and feature state are
- * dropped and must be added again by the application, and the rebuild blanks the map until
- * its tiles reload.
- */
-export function restartWorkers(): void {
-    getGlobalWorkerPool().restart();
-}
-
-/**
  * Clears up resources that have previously been created by `prewarm()`.
  * Note that this is typically not necessary. You should only call this function
  * if you expect the user of your app to not return to a Map view at any point

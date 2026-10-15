@@ -5,7 +5,6 @@ import {DOM} from '../util/dom.ts';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {getGlobalDispatcher} from '../util/global_dispatcher.ts';
-import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {watchWorkerHealth} from '../util/worker_recovery.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
@@ -749,10 +748,7 @@ export class Map extends Evented<MapEventType> {
     constructor(options: MapOptions) {
         super();
         // Registers the getResource handler the workers use to request resources via the main thread.
-        getGlobalDispatcher();
-        // The initial workers are created while this map's style is constructed, when `this.style`
-        // is still unset, so the handler only ever sees the workers a restart replaced.
-        getGlobalWorkerPool().on('create', this._handleWorkersCreated);
+        getGlobalDispatcher().on('workersCreated', this._handleWorkersCreated);
         watchWorkerHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
@@ -4309,14 +4305,15 @@ export class Map extends Evented<MapEventType> {
     };
 
     /**
-     * The shared workers were replaced (see `restartWorkers`) and hold none of this map's state.
-     * Recovery reuses the context-loss contract: the style is rebuilt from a snapshot, the same
-     * context events fire, and custom layers and feature state are dropped.
+     * The shared workers were replaced (see `WorkerPool.restart`) and hold none of this map's
+     * state. Recovery reuses the context-loss contract: the style is rebuilt from a snapshot, the
+     * same context events fire, and custom layers and feature state are dropped. A style still
+     * loading is rebuilt once it loads, since its load finishes on the main thread regardless of
+     * the workers. The initial worker creation never reaches this handler: it happens while this
+     * map's style is constructed, before `this.style` is set.
      */
-    _handleWorkersCreated = (): void => {
-        if (!this.style || this._removed) return;
-        // A style still loading can't be snapshotted yet. Its load finishes on the main thread
-        // regardless of the workers, and the rebuild then starts over on the new ones.
+    private _handleWorkersCreated = (): void => {
+        if (!this.style) return;
         if (!this.style._loaded) {
             this.style.once('style.load', () => this._handleWorkersCreated());
             return;
@@ -4331,8 +4328,8 @@ export class Map extends Evented<MapEventType> {
         this.fire(new MapContextEvent('webglcontextrestored', {originalEvent: new globalThis.Event('webglcontextrestored') as WebGLContextEvent}));
     };
 
+    /** Warns about the custom layers and layer event listeners a style rebuild cannot restore. */
     private _warnAboutUnrestorableLayers(): void {
-        // check if style contains custom layers to warn user that they can't be restored automatically
         for (const layer of Object.values(this.style._layers)) {
             if (layer.type === 'custom') {
                 console.warn(`Custom layer with id '${layer.id}' cannot be restored after WebGL context loss. You will need to re-add it manually after context restoration.`);
@@ -4346,18 +4343,19 @@ export class Map extends Evented<MapEventType> {
         }
     }
 
+    /**
+     * Rebuilds the style from a snapshot taken by {@link Map._getStyleAndImages}. A rebuilt style
+     * starts with empty atlases, so images that render themselves with WebGL owe every atlas a
+     * fresh render.
+     */
     private _restoreStyleAndImages({style, images}: LostContextStyle): void {
-        if (style) {
-            this.setStyle(style, {diff: false});
-        }
+        if (!style) return;
+        this.setStyle(style, {diff: false});
 
-        if (images && this.style) {
-            this.style.imageManager.images = images;
-            // A rebuilt style starts with empty atlases, so images that render themselves with WebGL owe every atlas a fresh render.
-            for (const id in images) {
-                const image = images[id];
-                if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);
-            }
+        if (!images || !this.style) return;
+        this.style.imageManager.images = images;
+        for (const [id, image] of Object.entries(images)) {
+            if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);
         }
     }
 
@@ -4603,7 +4601,7 @@ export class Map extends Evented<MapEventType> {
         this._diffStyleRequest?.abort();
         this.painter.destroy();
         this._handlers.destroy();
-        getGlobalWorkerPool().off('create', this._handleWorkersCreated);
+        getGlobalDispatcher().off('workersCreated', this._handleWorkersCreated);
         this.setStyle(null);
         if (typeof window !== 'undefined') {
             this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);

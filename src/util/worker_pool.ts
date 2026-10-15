@@ -64,7 +64,7 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
 
     release(mapId: number | string): void {
         delete this.active[mapId];
-        if (this.numActive() === 0 && this.workersPromise) {
+        if (this.numActive() === 0) {
             this.terminateWorkers();
         }
     }
@@ -72,6 +72,7 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     /** Drops the current workers, firing `terminate`, and terminates each one once it exists. */
     private terminateWorkers(): void {
         const promise = this.workersPromise;
+        if (!promise) return;
         this.workersPromise = null;
         this.fire('terminate');
         promise.then(workers => {

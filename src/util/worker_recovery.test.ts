@@ -1,5 +1,5 @@
 import {describe, test, expect, vi, afterEach} from 'vitest';
-import {restartWorkersIfTerminated, watchWorkerHealth, WORKER_PING_TIMEOUT_MS} from './worker_recovery.ts';
+import {restartWorkersIfTerminated, watchWorkerHealth} from './worker_recovery.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GlobalDispatcher} from './global_dispatcher.ts';
 import {terminateGlobalWorkers} from './test/util.ts';
@@ -46,7 +46,7 @@ describe('worker recovery', () => {
 
         vi.useFakeTimers();
         document.dispatchEvent(new Event('visibilitychange'));
-        await vi.advanceTimersByTimeAsync(WORKER_PING_TIMEOUT_MS);
+        await vi.advanceTimersByTimeAsync(2000);
 
         expect(restartSpy).toHaveBeenCalledTimes(1);
     });

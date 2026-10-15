@@ -1,7 +1,7 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
 import {GPUInitializationError} from '../../util/gpu_initialization_error.ts';
-import {getGlobalWorkerPool, restartWorkers} from '../../util/global_worker_pool.ts';
+import {getGlobalWorkerPool} from '../../util/global_worker_pool.ts';
 
 let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
 beforeEach(() => {
@@ -138,7 +138,7 @@ test('a WebGL style image is told to release its GPU resources on context loss, 
     map.remove();
 });
 
-test('restartWorkers() replaces the workers and rebuilds the style through the context-loss contract', async () => {
+test('a worker pool restart replaces the workers and rebuilds the style through the context-loss contract', async () => {
     const map = createMap();
     await map.once('load');
     map.addSource('points', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
@@ -151,7 +151,7 @@ test('restartWorkers() replaces the workers and rebuilds the style through the c
     map.on('webglcontextlost', lostSpy);
     map.on('webglcontextrestored', restoredSpy);
 
-    restartWorkers();
+    getGlobalWorkerPool().restart();
     await map.once('style.load');
 
     expect(lostSpy).toHaveBeenCalledTimes(1);
@@ -170,10 +170,9 @@ test('a restart while the style is still loading rebuilds it once it loads', asy
     const lostSpy = vi.fn();
     map.on('webglcontextlost', lostSpy);
 
-    restartWorkers();
+    getGlobalWorkerPool().restart();
     expect(lostSpy).not.toHaveBeenCalled();
 
-    // The rebuild consumes the original style's `style.load`, so the one that reaches the map is the rebuilt style's.
     await map.once('style.load');
     expect(lostSpy).toHaveBeenCalledTimes(1);
     map.remove();
