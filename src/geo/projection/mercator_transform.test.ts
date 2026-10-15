@@ -318,6 +318,20 @@ describe('transform', () => {
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
 
+    test('maxPitchScaleFactor stays positive and finite when the top of the viewport is sky', () => {
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.resize(500, 500);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(0.0, 0.0));
+
+        for (const pitch of [72, 85]) {
+            transform.setPitch(pitch);
+            const factor = transform.maxPitchScaleFactor();
+            expect(factor, `pitch ${pitch}`).toBeGreaterThan(0);
+            expect(Number.isFinite(factor), `pitch ${pitch}`).toBe(true);
+        }
+    });
+
     test('recalculateZoomAndCenter: no change', () => {
         const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.setElevation(200);
