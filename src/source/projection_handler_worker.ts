@@ -3,12 +3,12 @@ import {warnOnce} from '../util/util.ts';
 
 /**
  * @experimental
- * Builds the converter for a coordinate reference system from its WKT, the way `proj4(wkt)` does: `forward` takes
- * lng/lat to CRS coordinates and `inverse` takes them back. A worker script sets one with
+ * Builds the converter for a coordinate reference system from its definition string, the way `proj4(definition)`
+ * does: `forward` takes lng/lat to CRS coordinates and `inverse` takes them back. A worker script sets one with
  * `self.setProjectionHandler`, loaded through {@link importScriptInWorkers}, so that GeoJSON sources follow a
- * registered projection whose definition carries a `wkt`.
+ * registered projection that has a `definition`.
  */
-export type ProjectionHandler = (wkt: string) => CRSDefinition['projection'];
+export type ProjectionHandler = (definition: string) => CRSDefinition['projection'];
 
 let projectionHandler: ProjectionHandler | null = null;
 
@@ -30,15 +30,15 @@ export function setProjectionHandler(handler: ProjectionHandler | null): void {
 /**
  * @internal
  * The world coordinate helper a worker builds for a registered projection the main thread describes: from the
- * definition's WKT through the projection handler, or the built-in identity CRS when there is no WKT. `undefined`,
- * with a warning, when a WKT comes with no handler set.
+ * definition string through the projection handler, or the built-in identity CRS when there is none. `undefined`,
+ * with a warning, when a definition string comes with no handler set.
  */
-export function createWorkerCRSHelper(crs: Pick<CRSDefinition, 'name' | 'wkt' | 'tileMatrixSet'>): CRSWorldCoordinateHelper | undefined {
-    if (!crs.wkt) return new CRSWorldCoordinateHelper(identityCrs);
+export function createWorkerCRSHelper(crs: Pick<CRSDefinition, 'name' | 'definition' | 'tileMatrixSet'>): CRSWorldCoordinateHelper | undefined {
+    if (!crs.definition) return new CRSWorldCoordinateHelper(identityCrs);
     if (!projectionHandler) {
         warnOnce('GeoJSON sources are drawn in the wrong place: no projection handler is set in the workers, see `setProjectionHandler` in the custom CRS guide.');
         return undefined;
     }
-    if (!projections.has(crs.wkt)) projections.set(crs.wkt, projectionHandler(crs.wkt));
-    return new CRSWorldCoordinateHelper({name: crs.name, wkt: crs.wkt, projection: projections.get(crs.wkt), tileMatrixSet: crs.tileMatrixSet});
+    if (!projections.has(crs.definition)) projections.set(crs.definition, projectionHandler(crs.definition));
+    return new CRSWorldCoordinateHelper({name: crs.name, definition: crs.definition, projection: projections.get(crs.definition), tileMatrixSet: crs.tileMatrixSet});
 }

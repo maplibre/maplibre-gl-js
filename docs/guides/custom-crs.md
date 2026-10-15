@@ -25,7 +25,7 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 | `projection` | Converts between lng/lat degrees and CRS coordinates: `forward([lng, lat])` returns `[x, y]`, for example meters easting/northing, and `inverse([x, y])` returns `[lng, lat]`. A proj4js converter such as `proj4('EPSG:4326', 'EPSG:2193')` has this shape, and deck.gl's custom projection view takes the same object. Outside the tile matrix set `inverse` may return `null` or values that are not finite; the map then uses the nearest position inside it. |
 | `tileMatrixSet.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
 | `tileMatrixSet.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
-| `wkt` | Optional. The CRS as WKT, or as another string the workers' projection handler accepts, such as a PROJ string. GeoJSON sources need it, see [GeoJSON sources](#geojson-sources). |
+| `definition` | Optional. The CRS as a string the workers' projection handler accepts, such as WKT or a PROJ string. GeoJSON sources need it, see [GeoJSON sources](#geojson-sources). |
 
 CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `identity` projection it means "one unit". The map's center stays inside the tile 0/0/0 square and the zoom is limited only by `minZoom`, since the square is the grid the tile matrix set picked and can be much larger than the area of interest or narrower than the window. Set `maxBounds` to keep the whole view inside an area.
 
@@ -162,12 +162,12 @@ On a Mercator map `{bbox}` expands to the same string as the existing `{bbox-eps
 
 ## GeoJSON sources
 
-A GeoJSON source's data is parsed and tiled in the map's web workers, where the definition's `projection` object cannot go. Give the definition a `wkt`, and set a projection handler in the workers that builds the same converter from it. With proj4js the script that sets it is two lines:
+A GeoJSON source's data is parsed and tiled in the map's web workers, where the definition's `projection` object cannot go. Pass the CRS as a `definition` string too, and set a projection handler in the workers that builds the same converter from it. With proj4js the script that sets it is two lines:
 
 ```js
 // projection-handler.mjs
 import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.15.0/+esm';
-self.setProjectionHandler(wkt => proj4(wkt));
+self.setProjectionHandler(definition => proj4(definition));
 ```
 
 Load it into the workers before the map's sources load, and pass the same string to proj4 on the page:
@@ -178,13 +178,13 @@ await maplibregl.importScriptInWorkers(new URL('projection-handler.mjs', locatio
 const nztm = '+proj=tmerc +lat_0=0 +lon_0=173 +k=0.9996 +x_0=1600000 +y_0=10000000 +ellps=GRS80 +units=m +no_defs';
 maplibregl.addProjection({
     name: 'EPSG:2193',
-    wkt: nztm,
+    definition: nztm,
     projection: proj4('EPSG:4326', nztm),
     tileMatrixSet: {origin: [-3260586.7284, 10438190.1652], extentAtZoom0: 10018754.1714}
 });
 ```
 
-The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. Only the positions are projected, so the edges between them are straight in the grid, and a long edge needs more positions to follow its curve. Data outside the tile matrix set is cut away, so it ends at the grid's edge like the tiles do. [Display GeoJSON in a polar stereographic projection](../examples/display-geojson-in-a-polar-stereographic-projection.md) puts it together in a complete page, with the handler's script inlined as a Blob. The built-in `identity` projection needs neither a `wkt` nor a handler. Without a `wkt`, or without a handler in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
+The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. Only the positions are projected, so the edges between them are straight in the grid, and a long edge needs more positions to follow its curve. Data outside the tile matrix set is cut away, so it ends at the grid's edge like the tiles do. [Display GeoJSON in a polar stereographic projection](../examples/display-geojson-in-a-polar-stereographic-projection.md) puts it together in a complete page, with the handler's script inlined as a Blob. The built-in `identity` projection needs neither a `definition` nor a handler. Without a `definition`, or without a handler in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
 
 ## What keeps working
 

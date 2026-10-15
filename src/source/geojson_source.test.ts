@@ -381,7 +381,7 @@ describe('GeoJSONSource in a registered projection', () => {
         projection: {forward: position => position, inverse: position => position},
         tileMatrixSet: {origin: [-1000, 1000], extentAtZoom0: 2000}
     };
-    const polarCrs: CRSDefinition = {...createPolarStereographicCrs(), wkt: 'PROJCS["test:polar"]'};
+    const polarCrs: CRSDefinition = {...createPolarStereographicCrs(), definition: 'PROJCS["test:polar"]'};
 
     afterEach(() => {
         removeProjection(planarCrs.name);
@@ -405,30 +405,30 @@ describe('GeoJSONSource in a registered projection', () => {
         return {source, sent};
     }
 
-    test('sends the built-in identity projection to the worker without a wkt', async () => {
+    test('sends the built-in identity projection to the worker without a definition', async () => {
         const {source, sent} = await loadSourceInProjection('identity');
         await waitForMetadataEvent(source);
 
-        expect(sent[0].crs).toEqual({name: 'identity', wkt: undefined, tileMatrixSet: identityCrs.tileMatrixSet});
+        expect(sent[0].crs).toEqual({name: 'identity', definition: undefined, tileMatrixSet: identityCrs.tileMatrixSet});
     });
 
-    test('sends a registered projection to the worker with its wkt', async () => {
-        const definition = {...planarCrs, wkt: 'PROJCS["test"]'};
+    test('sends a registered projection to the worker with its definition', async () => {
+        const definition = {...planarCrs, definition: 'PROJCS["test"]'};
         addProjection(definition);
         const {source, sent} = await loadSourceInProjection(definition.name);
         await waitForMetadataEvent(source);
 
-        expect(sent[0].crs).toEqual({name: 'EPSG:test', wkt: 'PROJCS["test"]', tileMatrixSet: planarCrs.tileMatrixSet});
+        expect(sent[0].crs).toEqual({name: 'EPSG:test', definition: 'PROJCS["test"]', tileMatrixSet: planarCrs.tileMatrixSet});
     });
 
-    test('warns and sends no projection when a registered projection has no wkt', async () => {
+    test('warns and sends no projection when a registered projection has no definition', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         addProjection(planarCrs);
         const {source, sent} = await loadSourceInProjection(planarCrs.name);
         await waitForMetadataEvent(source);
 
         expect(sent[0].crs).toBeUndefined();
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining('the projection "EPSG:test" has no `wkt`'));
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('the projection "EPSG:test" has no `definition`'));
     });
 
     test('asks to reload every tile after a diff, since the lng/lat box of tile 0/0/0 in a polar CRS leaves out the pole', async () => {

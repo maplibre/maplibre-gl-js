@@ -58,7 +58,7 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
      * The map's registered projection, if it has one: the data is moved into that projection's world square before it
      * is tiled, the way tiles of the projection's own grid sit in it.
      */
-    crs?: Pick<CRSDefinition, 'name' | 'wkt' | 'tileMatrixSet'>;
+    crs?: Pick<CRSDefinition, 'name' | 'definition' | 'tileMatrixSet'>;
 };
 
 /**
