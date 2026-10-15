@@ -648,6 +648,25 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
     });
 
+    test('removes an expired tile from its previous worker without waiting for it', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+        await waitForMetadataEvent(source);
+        const previousWorker = {sendAsync: vi.fn(() => new Promise(() => {}))};
+        const tile = {
+            uid: 1,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            state: 'expired',
+            actor: previousWorker,
+            loadVectorData() {}
+        } as any as Tile;
+
+        await expect(source.loadTile(tile)).resolves.toEqual({});
+        expect(previousWorker.sendAsync).toHaveBeenCalledWith({
+            type: MessageType.removeTile,
+            data: {uid: tile.uid, type: source.type, source: source.id}
+        });
+    });
+
     test('stores worker etag on tile when present', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
