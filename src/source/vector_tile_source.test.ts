@@ -6,17 +6,20 @@ import {VectorTileSource} from './vector_tile_source.ts';
 import {AJAXError} from '../util/ajax.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Tile} from '../tile/tile.ts';
 import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
+import {VectorTileWorkerSource} from './vector_tile_worker_source.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 import type {Map} from '../ui/map.ts';
 import type {WorkerTileParameters} from './worker_source.ts';
-import type {Tile} from '../tile/tile.ts';
 import type {Source} from './source.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {IActor} from '../util/actor.ts';
 
 class StubbedEvented extends Evented {}
 
@@ -36,6 +39,20 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
 
     source.on('error', () => { }); // to prevent console log of errors
 
+    return source;
+}
+
+/**
+ * A source whose worker runs in this thread, so the fake server answers the tile requests the worker makes.
+ */
+function createSourceWithWorker(options) {
+    const source = createSource(options);
+    const workerSource = new VectorTileWorkerSource({sendAsync: () => Promise.resolve({})} as IActor, new StyleLayerIndex([]), []);
+    source.dispatcher = getWrapDispatcher()({
+        sendAsync(message) {
+            return workerSource.loadTile(message.data as WorkerTileParameters);
+        }
+    });
     return source;
 }
 
@@ -317,6 +334,65 @@ describe('VectorTileSource', () => {
         } as any as Tile;
         await source.loadTile(tile);
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
+    });
+
+    test('emptyResponse missing in the TileJSON applies to a source that does not set it', async () => {
+        server.respondWith('/source.json', JSON.stringify({...fixturesSource, emptyResponse: 'missing'}));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSourceWithWorker({url: '/source.json'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const loadVectorData = vi.spyOn(tile, 'loadVectorData');
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(loadVectorData).not.toHaveBeenCalled();
+    });
+
+    test('a 204 with emptyResponse missing leaves the tile without data, so another zoom level shows through', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const loadVectorData = vi.spyOn(tile, 'loadVectorData');
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(loadVectorData).not.toHaveBeenCalled();
+    });
+
+    test('a tile that falls back records neither the expiry nor the etag of its 204, so it is requested again in full when it is needed again', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
+        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
+        source.map._refreshExpiredTiles = true;
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const setExpiryData = vi.spyOn(tile, 'setExpiryData');
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(setExpiryData).not.toHaveBeenCalled();
+        expect(tile.etag).toBeUndefined();
     });
 
     test('reloads a loading tile properly', async () => {

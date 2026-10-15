@@ -13,11 +13,16 @@ import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding} from './worker_source.ts';
+import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding, EmptyResponse} from './worker_source.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
+    /**
+     * What a tile response with an empty body means in the tileset, see {@link EmptyResponse}.
+     * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
+     */
+    emptyResponse?: EmptyResponse;
 };
 
 export type LoadTileResult = {
@@ -71,9 +76,10 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     scheme: string;
     encoding: TileEncoding;
     tileSize: number;
+    emptyResponse: EmptyResponse;
     promoteId: PromoteIdSpecification;
 
-    _options: VectorSourceSpecification;
+    _options: VectorTileSourceOptions;
     _collectResourceTiming: boolean;
     dispatcher: Dispatcher;
     map: Map;
@@ -95,6 +101,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.maxzoom = 22;
         this.scheme = 'xyz';
         this.tileSize = 512;
+        this.emptyResponse = 'blank';
         this.reparseOverscaled = true;
         this.isTileClipped = true;
         this._loaded = false;
@@ -235,18 +242,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             });
         }
         tile.abortController = new AbortController();
+        let data: WorkerTileResult | null;
         try {
-            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
-            delete tile.abortController;
-
-            if (tile.aborted) {
-                return;
-            }
-            this._afterTileLoadWorkerResponse(tile, data);
-
-            const result: LoadTileResult = {};
-            if (data?.etagUnmodified) result.unmodified = true;
-            return result;
+            data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
         } catch (err) {
             delete tile.abortController;
 
@@ -256,8 +254,25 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             if (err && err.status !== 404) {
                 throw err;
             }
-            this._afterTileLoadWorkerResponse(tile, null);
+            data = null;
         }
+        delete tile.abortController;
+
+        if (tile.aborted) {
+            return;
+        }
+        // Under `emptyResponse: 'missing'` a response with an empty body, such as a 204, leaves the tile without data, expiry or etag.
+        const emptyBody = data && data.etagUnmodified !== true && data.emptyBody;
+        if (emptyBody && this.emptyResponse === 'missing') {
+            tile.state = 'errored';
+        } else {
+            this._afterTileLoadWorkerResponse(tile, data);
+        }
+        this._reloadIfRequestedWhileLoading(tile);
+
+        const result: LoadTileResult = {};
+        if (data?.etagUnmodified) result.unmodified = true;
+        return result;
     }
 
     /**
@@ -280,7 +295,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         };
     }
 
-    private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
+    private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult | null) {
         if (data?.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
@@ -289,9 +304,10 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             tile.setExpiryData(data);
         }
         tile.etag = data?.etag;
-
         tile.loadVectorData(data, this.map.style);
+    }
 
+    private _reloadIfRequestedWhileLoading(tile: Tile) {
         if (tile.reloadPromise) {
             const reloadPromise = tile.reloadPromise;
             tile.reloadPromise = null;

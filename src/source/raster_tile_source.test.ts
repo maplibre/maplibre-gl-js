@@ -2,13 +2,13 @@ import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {RasterTileSource} from './raster_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Tile} from '../tile/tile.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {ImageRequest} from '../util/image_request.ts';
 
 import type {Dispatcher} from '../util/dispatcher.ts';
-import type {Tile} from '../tile/tile.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options, transformCallback?) {
@@ -189,6 +189,75 @@ describe('RasterTileSource', () => {
         expect(update).toHaveBeenCalledWith(
             expect.objectContaining({width: 1, height: 1, data: new Uint8Array(4)}),
             expect.anything());
+    });
+
+    test('a 204 with emptyResponse missing leaves the tile without data, so another zoom level shows through', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(tile.texture).toBeUndefined();
+    });
+
+    test('emptyResponse missing in the TileJSON applies to a source that does not set it', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            emptyResponse: 'missing'
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSource({url: '/source.json'});
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(tile.texture).toBeUndefined();
+    });
+
+    test('a tile that falls back does not record the expiry of its 204, so it is requested again in full when it is needed again', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300'}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        source.map._refreshExpiredTiles = true;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const setExpiryData = vi.spyOn(tile, 'setExpiryData');
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(setExpiryData).not.toHaveBeenCalled();
     });
 
     test('can asynchronously transform tile request', async () => {
