@@ -9,7 +9,7 @@ import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {beforeMapTest, createMap, createPolarStereographicCrs, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
-import {identityCrs, type CRSDefinition} from '../geo/projection/crs.ts';
+import {identityCrs, type CRS} from '../geo/projection/crs.ts';
 import {addProjection, removeProjection} from '../geo/projection/projection_crud.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 
@@ -376,12 +376,12 @@ describe('GeoJSONSource.loadTile', () => {
 });
 
 describe('GeoJSONSource in a registered projection', () => {
-    const planarCrs: CRSDefinition = {
+    const planarCrs: CRS = {
         name: 'EPSG:test',
         projection: {forward: position => position, inverse: position => position},
         tileMatrixSet: {origin: [-1000, 1000], extentAtZoom0: 2000}
     };
-    const polarCrs: CRSDefinition = {...createPolarStereographicCrs(), definition: 'PROJCS["test:polar"]'};
+    const polarCrs: CRS = {...createPolarStereographicCrs(), definition: 'PROJCS["test:polar"]'};
 
     afterEach(() => {
         removeProjection(planarCrs.name);

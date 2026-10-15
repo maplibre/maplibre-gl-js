@@ -4,7 +4,7 @@ MapLibre GL JS renders Web Mercator (EPSG:3857) tiles by default. Some tile sets
 
 The map never reprojects tile content on the GPU. It positions the CRS's own tile grid on screen and converts lng/lat to and from that grid through the converter you supply. Reprojecting Mercator tiles into another CRS is a separate problem, tracked in [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 
-`addProjection`, `removeProjection`, `CRSDefinition`, the workers' `setProjectionHandler`, the built-in `identity` projection and the `{bbox}` token are experimental, so they can still change in a minor release.
+`addProjection`, `removeProjection`, `CRS`, the workers' `setProjectionHandler`, the built-in `identity` projection and the `{bbox}` token are experimental, so they can still change in a minor release.
 
 ## What is supported
 
@@ -17,7 +17,7 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 
 ## Defining a CRS
 
-`addProjection` takes a `CRSDefinition`:
+`addProjection` takes a `CRS`:
 
 | Field | Meaning |
 |-------|---------|
@@ -162,7 +162,7 @@ On a Mercator map `{bbox}` expands to the same string as the existing `{bbox-eps
 
 ## GeoJSON sources
 
-A GeoJSON source's data is parsed and tiled in the map's web workers, where the definition's `projection` object cannot go. Pass the CRS as a `definition` string too, and set a projection handler in the workers that builds the same converter from it. With proj4js the script that sets it is two lines:
+A GeoJSON source's data is parsed and tiled in the map's web workers, where the CRS's `projection` object cannot go. Pass the CRS as a `definition` string too, and set a projection handler in the workers that builds the same converter from it. With proj4js the script that sets it is two lines:
 
 ```js
 // projection-handler.mjs
@@ -188,7 +188,7 @@ The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster me
 
 ## What keeps working
 
-Everything that speaks lng/lat goes through the CRS definition's `projection`, so the map API is unchanged:
+Everything that speaks lng/lat goes through the CRS's `projection`, so the map API is unchanged:
 
 - `map.project`, `map.unproject`, `map.getBounds`, `fitBounds`, `flyTo` and markers all take and return lng/lat.
 - `queryRenderedFeatures` and `querySourceFeatures` return GeoJSON in lng/lat.
@@ -210,4 +210,4 @@ Everything that speaks lng/lat goes through the CRS definition's `projection`, s
 
 ## Removing a projection
 
-`removeProjection(name)` unregisters a CRS. A map currently using it keeps working until its projection changes. To replace a definition, remove it and register the new one. Built-in projections, like `identity`, cannot be removed.
+`removeProjection(name)` unregisters a CRS. A map currently using it keeps working until its projection changes. To replace a CRS, remove it and register the new one. Built-in projections, like `identity`, cannot be removed.
