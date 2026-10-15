@@ -2,7 +2,7 @@
 ### ✨ Features and improvements
 - Support the `hash` option in a projection registered with `addProjection` ([#8743](https://github.com/maplibre/maplibre-gl-js/pull/8743)) (by [@birkskyum](https://github.com/birkskyum))
 - Add `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
-- Add `restartWorkers()` to recover every map after the browser terminated the shared web workers, as iOS does to a backgrounded page; each map recovers through the same contract as a lost WebGL context ([#8461](https://github.com/maplibre/maplibre-gl-js/issues/8461)) (by [@lucaswoj](https://github.com/lucaswoj) and [@ingalls](https://github.com/ingalls))
+- Automatically recover after the browser terminates the shared web workers, as iOS does to a backgrounded page: worker health is checked on every return to the foreground, and each map rebuilds through the same contract as a lost WebGL context ([#8461](https://github.com/maplibre/maplibre-gl-js/issues/8461)) (by [@lucaswoj](https://github.com/lucaswoj) and [@ingalls](https://github.com/ingalls))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

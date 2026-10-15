@@ -207,6 +207,9 @@ export default class Worker {
             this.referrer = params;
         });
 
+        // Answers the main thread's worker health check, see `watchWorkerHealth`.
+        this.actor.registerMessageHandler(MessageType.ping, async () => {});
+
         this.actor.registerMessageHandler(MessageType.syncRTLPluginState, (mapId: string, params: PluginState) => {
             return this._syncRTLPluginState(mapId, params);
         });

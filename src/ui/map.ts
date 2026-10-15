@@ -6,6 +6,7 @@ import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {getGlobalDispatcher} from '../util/global_dispatcher.ts';
 import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
+import {watchWorkerHealth} from '../util/worker_recovery.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions} from '../style/style.ts';
@@ -752,6 +753,7 @@ export class Map extends Evented<MapEventType> {
         // The initial workers are created while this map's style is constructed, when `this.style`
         // is still unset, so the handler only ever sees the workers a restart replaced.
         getGlobalWorkerPool().on('create', this._handleWorkersCreated);
+        watchWorkerHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
