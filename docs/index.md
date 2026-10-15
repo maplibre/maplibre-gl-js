@@ -102,7 +102,7 @@ Pick your setup:
     });
     ```
 
-    Nuxt runs on Vite, so follow this tab. Thanks to `<ClientOnly>` and dynamic imports, the map is loaded in the browser only inside `onMounted`, so it does not run on the server.
+    Nuxt, SvelteKit, Astro and other Vite-based frameworks can use the same snippet; just create the map on the client only (in the browser).
 
 === "webpack 5+"
 
