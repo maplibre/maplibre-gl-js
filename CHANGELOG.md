@@ -5,6 +5,7 @@
 - Add experimental `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
 - Speed up tile loading by skipping point labels in the tile buffer, which the neighbouring tile draws ([#8535](https://github.com/maplibre/maplibre-gl-js/pull/8535)) (by [@cherenkov](https://github.com/cherenkov))
 - Project GeoJSON sources on a map in a registered CRS, in the workers, from the definition's `wkt` and a projection handler ([#8736](https://github.com/maplibre/maplibre-gl-js/issues/8736)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Allow calling `new Map({ transformStyle: { ... }})` to provide a style transformation function similar to the same option in `setStyle` ([#8786](https://github.com/maplibre/maplibre-gl-js/issues/8786)) (by [@hiddewie](https://github.com/hiddewie))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
