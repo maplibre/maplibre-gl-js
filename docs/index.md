@@ -102,6 +102,8 @@ Pick your setup:
     });
     ```
 
+    Nuxt, SvelteKit, Astro and other Vite-based frameworks can use the same snippet; just create the map on the client only (in the browser).
+
 === "webpack 5+"
 
     ```ts
