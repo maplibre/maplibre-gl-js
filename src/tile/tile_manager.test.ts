@@ -500,6 +500,26 @@ describe('TileManager / Source lifecycle', () => {
         expect(tileManager.loaded()).toBeTruthy();
     });
 
+    test('loaded() false after a tile error while other tiles are loading', async () => {
+        const transform = createMercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = (tile) => tile.tileID.canonical.x === 0 && tile.tileID.canonical.y === 0 ?
+            Promise.reject(new Error('Error loading tile')) :
+            new Promise<void>(() => {});
+        tileManager.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                tileManager.update(transform);
+            }
+        });
+        const errorPromise = tileManager.once('error');
+
+        tileManager.onAdd(undefined);
+        await errorPromise;
+        expect(tileManager.loaded()).toBeFalsy();
+    });
+
     test('loaded() false after source begins loading following error', async () => {
         const tileManager = createTileManager({error: 'Error loading source'});
         const errorPromise = tileManager.once('error');

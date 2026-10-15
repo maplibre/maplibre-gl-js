@@ -108,9 +108,10 @@ export class TileManager extends Evented<SourceEventType> {
             this._sourceErrored = false;
         });
 
-        this.on('error', () => {
-            // Only set _sourceErrored if the source does not have pending loads.
-            this._sourceErrored = this._source.loaded();
+        this.on('error', (e: ErrorEvent & {tile?: Tile}) => {
+            // A failed tile counts as done in loaded(), so only an error of the source itself sets _sourceErrored,
+            // and only if the source does not have pending loads.
+            if (!e.tile) this._sourceErrored = this._source.loaded();
         });
 
         this._source = createSource(id, options, dispatcher, this);
