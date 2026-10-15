@@ -4,7 +4,7 @@ import * as regenerate from 'regenerate';
 /**
  * The heuristics in the functions below are based on this version of the
  * Unicode Standard. This constant should match the `@unicode/unicode-*` package
- * in package.json, and the vendored extracts in `build/unicode`.
+ * in package.json.
  *
  * When upgrading to a new version of the standard, consider any new scripts,
  * blocks, and characters that may require different script detection.
@@ -360,30 +360,6 @@ async function joinsToTheFollowingGrapheme(): Promise<string> {
     return set.toString();
 }
 
-const downloadedRows = new Map<string, Promise<string[][]>>();
-/**
- * The rows of one file of the Unicode Character Database, each split into its fields, with the
- * comments and blank lines dropped. A file is downloaded from unicode.org and parsed once, and kept
- * for the rest of the run.
- */
-function unicodeDataRows(file: string): Promise<string[][]> {
-    if (!downloadedRows.has(file)) {
-        downloadedRows.set(file, (async () => {
-            const url = `https://www.unicode.org/Public/${unicodeVersion}/ucd/${file}`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
-            }
-            return (await response.text())
-                .split('\n')
-                .map(line => line.split('#')[0])
-                .filter(line => line.trim())
-                .map(line => line.split(';').map(field => field.trim()));
-        })());
-    }
-    return downloadedRows.get(file);
-}
-
 /**
  * The blocks the Arabic script is written from, plus the two joiners that steer it.
  *
@@ -411,18 +387,25 @@ function isArabic(codePoint: number): boolean {
  */
 type JoiningType = 'R' | 'L' | 'D' | 'C' | 'U' | 'T';
 
+/** The `Joining_Type` property values, by the short name used for them in the generated file. */
+const joiningTypeNames: Record<Exclude<JoiningType, 'U'>, string> = {
+    R: 'Right_Joining',
+    L: 'Left_Joining',
+    D: 'Dual_Joining',
+    C: 'Join_Causing',
+    T: 'Transparent',
+};
+
 /**
- * The joining type of every character: which side, if any, it joins the letters beside it on.
- *
- * `DerivedJoiningType.txt` states the property for every code point, the combining marks and format
- * characters that join through included.
+ * The joining type of every character that joins, or lets the letters around it join: which side,
+ * if any, it joins the letters beside it on. Characters that do not join are left out.
  */
 async function readJoiningTypes(): Promise<Map<number, JoiningType>> {
     const joiningTypes = new Map<number, JoiningType>();
 
-    for (const [codePoints, type] of await unicodeDataRows('extracted/DerivedJoiningType.txt')) {
-        const [first, last] = codePoints.split('..').map(hex => parseInt(hex, 16));
-        for (let codePoint = first; codePoint <= (last ?? first); codePoint++) {
+    for (const [type, name] of Object.entries(joiningTypeNames)) {
+        const codePoints: number[] = (await import(`@unicode/unicode-${unicodeVersion}/Joining_Type/${name}/code-points.mjs`)).default;
+        for (const codePoint of codePoints) {
             joiningTypes.set(codePoint, type as JoiningType);
         }
     }
@@ -432,6 +415,14 @@ async function readJoiningTypes(): Promise<Map<number, JoiningType>> {
 
 /** The four shapes a cursive script writes a letter in. */
 type PresentationForms = {isolated: number; final: number; initial: number; medial: number};
+
+/** The `Decomposition_Mapping` types that name each of the four shapes. */
+const decompositionTypeNames: Record<keyof PresentationForms, string> = {
+    isolated: 'Isolated',
+    final: 'Final',
+    initial: 'Initial',
+    medial: 'Medial',
+};
 
 /**
  * Tatweel, the stroke a word is stretched along, and the space a mark is shown over on its own.
@@ -459,27 +450,25 @@ async function readPresentationForms(): Promise<{
     const forms = new Map<number, PresentationForms>();
     const ligatures = new Map<string, {isolated: number; final: number}>();
 
-    for (const row of await unicodeDataRows('UnicodeData.txt')) {
-        const codePoint = parseInt(row[0], 16);
-        if (codePoint < 0xfb50 || codePoint > 0xfeff) continue;
+    for (const [shape, name] of Object.entries(decompositionTypeNames) as Array<[keyof PresentationForms, string]>) {
+        const decompositions: Map<number, number | number[]> = (await import(`@unicode/unicode-${unicodeVersion}/Decomposition_Mapping/${name}/code-points.mjs`)).default;
+        for (const [codePoint, decomposition] of decompositions) {
+            if (codePoint < 0xfb50 || codePoint > 0xfeff) continue;
 
-        const match = /^<(isolated|final|initial|medial)>\s+(.+)$/.exec(row[5]);
-        if (!match) continue;
+            const bases = [decomposition].flat();
+            const carried = bases.length === 2 && markCarriers.has(bases[0]);
 
-        const shape = match[1] as keyof PresentationForms;
-        const bases = match[2].split(/\s+/).map(base => parseInt(base, 16));
-        const carried = bases.length === 2 && markCarriers.has(bases[0]);
-
-        if (bases.length === 1 || carried) {
-            const base = carried ? bases[1] : bases[0];
-            const existing = forms.get(base) ?? {isolated: 0, final: 0, initial: 0, medial: 0};
-            existing[shape] = codePoint;
-            forms.set(base, existing);
-        } else if (codePoint >= 0xfef5 && codePoint <= 0xfefc) {
-            const pair = String.fromCodePoint(...bases);
-            const existing = ligatures.get(pair) ?? {isolated: 0, final: 0};
-            existing[shape as 'isolated' | 'final'] = codePoint;
-            ligatures.set(pair, existing);
+            if (bases.length === 1 || carried) {
+                const base = carried ? bases[1] : bases[0];
+                const existing = forms.get(base) ?? {isolated: 0, final: 0, initial: 0, medial: 0};
+                existing[shape] = codePoint;
+                forms.set(base, existing);
+            } else if (codePoint >= 0xfef5 && codePoint <= 0xfefc) {
+                const pair = String.fromCodePoint(...bases);
+                const existing = ligatures.get(pair) ?? {isolated: 0, final: 0};
+                existing[shape as 'isolated' | 'final'] = codePoint;
+                ligatures.set(pair, existing);
+            }
         }
     }
 
