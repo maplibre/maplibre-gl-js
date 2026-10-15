@@ -74,6 +74,11 @@ export class TileManager extends Evented<SourceEventType> {
     _sourceLoaded: boolean;
     _maxContentElevationSeen: number = 0;
 
+    /**
+     * @internal
+     * signifies that the source itself failed to load and had no pending loads, so `loaded()` stops waiting for it
+     * until it starts loading again. A tile that fails does not set it, since `loaded()` already counts a failed tile as done.
+     */
     _sourceErrored: boolean;
     _inViewTiles: InViewTiles;
     _prevLng: number;
@@ -109,8 +114,6 @@ export class TileManager extends Evented<SourceEventType> {
         });
 
         this.on('error', (e: ErrorEvent & {tile?: Tile}) => {
-            // A failed tile counts as done in loaded(), so only an error of the source itself sets _sourceErrored,
-            // and only if the source does not have pending loads.
             if (!e.tile) this._sourceErrored = this._source.loaded();
         });
 

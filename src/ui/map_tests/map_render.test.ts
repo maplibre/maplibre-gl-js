@@ -108,7 +108,6 @@ describe('when one tile request fails with a server error while the others are l
             'source-layer': 'sourceLayer'
         });
         const map = createMap({style});
-        map.on('error', () => {});
         await vi.waitFor(() => expect(server.requests.length).toBeGreaterThan(1));
         const idle = vi.fn();
         map.on('idle', idle);
@@ -116,7 +115,7 @@ describe('when one tile request fails with a server error while the others are l
 
         server.requests[0].respond(500, {}, '');
         await tileError;
-        await vi.waitFor(() => expect(map._frameRequest).toBeNull());
+        await map.once('render');
 
         expect(idle).not.toHaveBeenCalled();
     });
