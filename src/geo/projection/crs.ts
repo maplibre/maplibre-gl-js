@@ -38,6 +38,13 @@ export type CRSDefinition = {
      * The quad tile matrix set over the CRS plane.
      */
     tileMatrixSet: TileMatrixSet;
+    /**
+     * The CRS as WKT, or as any other string the workers' projection handler accepts, such as a PROJ string.
+     * GeoJSON sources need it: their data is parsed and tiled in the workers, where `projection` cannot go,
+     * so a handler set there builds the same converter from this string, see the custom CRS guide.
+     * Without it, GeoJSON sources warn and draw in the wrong place.
+     */
+    wkt?: string;
 };
 
 /**
