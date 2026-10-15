@@ -1,12 +1,15 @@
 ## main
 ### ✨ Features and improvements
+- Redraw fewer layers on terrain when a custom layer's `terrainTileRevision` or a feature state changes ([#8782](https://github.com/maplibre/maplibre-gl-js/pull/8782)) (by [@birkskyum](https://github.com/birkskyum))
 - Support the `hash` option in a projection registered with `addProjection` ([#8743](https://github.com/maplibre/maplibre-gl-js/pull/8743)) (by [@birkskyum](https://github.com/birkskyum))
-- Add `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
+- Add experimental `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
 - Speed up tile loading by skipping point labels in the tile buffer, which the neighbouring tile draws ([#8535](https://github.com/maplibre/maplibre-gl-js/pull/8535)) (by [@cherenkov](https://github.com/cherenkov))
 - Project GeoJSON sources on a map in a registered CRS, in the workers, from the definition's `wkt` and a projection handler ([#8736](https://github.com/maplibre/maplibre-gl-js/issues/8736)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix labels in Brahmic scripts such as Devanagari, Thai and Telugu mixing fonts or dropping letters when the style has a glyphs URL ([#8741](https://github.com/maplibre/maplibre-gl-js/issues/8741)) (by [@crackalamoo](https://github.com/crackalamoo))
+- Fix `setWorkerUrl` treating a `.cjs` fragment or query marker as a module worker URL ([#8769](https://github.com/maplibre/maplibre-gl-js/issues/8769)) (by [@Anandb71](https://github.com/Anandb71))
 - Fix the terrain not finding a tile's own DEM data when the DEM source's maxzoom is below the terrain tile zoom ([#8765](https://github.com/maplibre/maplibre-gl-js/pull/8765)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix the camera climbing or sinking at the end of a `flyTo` over terrain, and `flyTo` and `easeTo` heading for sea level while the DEM under the destination loads ([#8732](https://github.com/maplibre/maplibre-gl-js/pull/8732)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix the camera dropping to sea level while the terrain under the center of a `jumpTo`, `easeTo` or `flyTo` loads ([#8549](https://github.com/maplibre/maplibre-gl-js/issues/8549)) (by [@johncarmack1984](https://github.com/johncarmack1984))
