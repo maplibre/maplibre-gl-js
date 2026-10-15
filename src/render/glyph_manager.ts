@@ -104,6 +104,14 @@ const defaultCreateRasterizer: CreateRasterizer = (options, padding) => {
  */
 const clusterEmsWide = 3;
 
+/**
+ * The OpenType feature each alternate variant is drawn with. A variant is `null` where the font has
+ * no distinct alternate, so that layout can fall back to rotation or a compatibility character.
+ */
+const variantFeatures: Record<string, FontFeature> = {
+    vertical: 'vert'
+};
+
 /** Whether two glyphs have identical bitmaps and metrics. */
 function glyphsEqual(a: StyleGlyph, b: StyleGlyph): boolean {
     return a.bitmap.width === b.bitmap.width && a.bitmap.height === b.bitmap.height &&
@@ -121,7 +129,7 @@ export class GlyphManager {
     lang?: string;
     fontFaceManager: FontFaceManager;
     createRasterizer: CreateRasterizer;
-    /** Default glyphs shared by requests and vertical comparisons, keyed by rasterizer. */
+    /** Default glyphs shared by requests and alternate comparisons, keyed by rasterizer. */
     rasterizedGlyphs: WeakMap<Rasterizer, Record<string, StyleGlyph>> = new WeakMap();
 
     constructor(
@@ -157,7 +165,7 @@ export class GlyphManager {
 
         for (const stack in glyphs) {
             for (const variant in glyphs[stack]) {
-                if (variant === 'vertical' && !hasFontFaces) continue;
+                if (variantFeatures[variant] && !hasFontFaces) continue;
                 for (const id of glyphs[stack][variant]) {
                     glyphsPromises.push(this._getAndCacheGlyphsPromise(stack, id, variant));
                 }
@@ -190,7 +198,7 @@ export class GlyphManager {
      * has no way to serve the one shape they are written as. A file the style pinned with
      * `font-faces` draws it where one covers it, and the local fonts otherwise. For a single
      * codepoint a declared file still wins over the glyphs URL and the local fallbacks.
-     * The `vertical` variant uses only declared font files; unsupported variants return `null`.
+     * Other variants use only declared font files and variantFeatures; unknown ones return `null`.
      */
     async _getAndCacheGlyphsPromise(stack: string, id: string, variant: string): Promise<GlyphResult> {
         // Create an entry for this fontstack if it doesn’t already exist.
@@ -205,7 +213,8 @@ export class GlyphManager {
         }
 
         if (variant !== 'default') {
-            glyph = variant === 'vertical' ? await this._drawVerticalGlyph(entry, stack, id) : null;
+            const feature = variantFeatures[variant];
+            glyph = feature ? await this._drawAlternateGlyph(entry, stack, id, feature) : null;
             glyphs[id] = glyph;
             return {stack, id, variant, glyph};
         }
@@ -233,14 +242,14 @@ export class GlyphManager {
     }
 
     /**
-     * Draws and compares a font's `vert` glyph with its default glyph.
-     * Returns the vertical glyph, or `null` if it is missing, empty, identical, or its font was replaced.
+     * Draws a font's glyph with `feature` enabled and compares it with its default glyph.
+     * Returns the alternate, or `null` if it is missing, empty, identical, or its font was replaced.
      */
-    async _drawVerticalGlyph(entry: Entry, stack: string, id: string): Promise<StyleGlyph | null> {
-        const verticalTinySDF = await this._getFontFaceTinySDF(entry, stack, id, 'vert');
-        if (!verticalTinySDF || this.entries[stack] !== entry) return null;
+    async _drawAlternateGlyph(entry: Entry, stack: string, id: string, feature: FontFeature): Promise<StyleGlyph | null> {
+        const alternateTinySDF = await this._getFontFaceTinySDF(entry, stack, id, feature);
+        if (!alternateTinySDF || this.entries[stack] !== entry) return null;
 
-        const char = verticalTinySDF.draw(id);
+        const char = alternateTinySDF.draw(id);
         if (!char.glyphWidth || !char.glyphHeight) return null;
 
         const defaultTinySDF = await this._getFontFaceTinySDF(entry, stack, id, 'normal');
