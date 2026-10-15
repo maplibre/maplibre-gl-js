@@ -18,6 +18,7 @@
 - Fix the globe drag rounding its rotation to single precision ([#8784](https://github.com/maplibre/maplibre-gl-js/pull/8784)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `load` and `idle` firing before the other tiles finish loading when one tile fails ([#8785](https://github.com/maplibre/maplibre-gl-js/pull/8785)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix a GeoJSON feature without coordinates staying out of the tiles after `updateData` gives it some, by updating geojson-vt to 6.3.0 ([#8797](https://github.com/maplibre/maplibre-gl-js/pull/8797)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix GeoJSON tiles showing stale data and `queryRenderedFeatures` throwing "feature index out of bounds" after `updateData` calls that overlap with style changes ([#8775](https://github.com/maplibre/maplibre-gl-js/pull/8775)) (by [@tordans](https://github.com/tordans))
 - _...Add new stuff here..._
 
 ## 6.14.0
