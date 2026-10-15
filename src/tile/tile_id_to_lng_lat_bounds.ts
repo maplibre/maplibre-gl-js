@@ -6,8 +6,8 @@ import type {CanonicalTileID} from './tile_id.ts';
 
 /**
  * The lng/lat box of a tile, grown by `buffer` tile units (0 for the bare tile), in the given world mapping.
- * The four tile corners are mapped back and their hull is returned, so the box is exact for mercator
- * and a conservative cover for a mapping where both axes depend on lng and lat.
+ * The four tile corners are mapped back and their hull is returned, see {@link worldBoxToLngLatBox}: exact for
+ * mercator, but where both axes depend on lng and lat it can miss part of the tile, such as a pole inside it.
  */
 export function tileIdToLngLatBounds(
     {x,y,z}: CanonicalTileID,
