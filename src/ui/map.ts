@@ -4,7 +4,7 @@ import {now} from '../util/time_control.ts';
 import {DOM} from '../util/dom.ts';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
-import {ensureGlobalDispatcher, getGlobalDispatcher} from '../util/global_dispatcher.ts';
+import {getGlobalDispatcher} from '../util/global_dispatcher.ts';
 import {watchWorkerHealth} from '../util/worker_recovery.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
@@ -747,7 +747,7 @@ export class Map extends Evented<MapEventType> {
 
     constructor(options: MapOptions) {
         super();
-        ensureGlobalDispatcher().on('workersCreated', this._handleWorkersCreated);
+        getGlobalDispatcher().on('workersCreated', this._handleWorkersCreated);
         watchWorkerHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,

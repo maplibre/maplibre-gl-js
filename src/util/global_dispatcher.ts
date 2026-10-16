@@ -166,16 +166,16 @@ let globalDispatcher: GlobalDispatcher;
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): GlobalDispatcher {
-    return ensureGlobalDispatcher();
+    ensureGlobalDispatcher();
+    return globalDispatcher;
 }
 
 /** Creates the global dispatcher on first call, registering the getResource handler the workers use to request resources via the main thread. */
-export function ensureGlobalDispatcher(): GlobalDispatcher {
+export function ensureGlobalDispatcher(): void {
     if (!globalDispatcher) {
         globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool());
         globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
             return makeRequest(params, abortController);
         });
     }
-    return globalDispatcher;
 }
