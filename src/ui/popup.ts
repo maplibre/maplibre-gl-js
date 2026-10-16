@@ -631,7 +631,7 @@ export class Popup extends Evented<PopupEventType> {
         if (this.options.closeButton) {
             this._closeButton = DOM.create('button', 'maplibregl-popup-close-button', this._content);
             this._closeButton.type = 'button';
-            this._closeButton.innerHTML = '&#215;';
+            this._closeButton.textContent = '\xd7';
             this._closeButton.addEventListener('click', this._onClose);
         }
     }
