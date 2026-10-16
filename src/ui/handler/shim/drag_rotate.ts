@@ -22,23 +22,29 @@ export type DragRotateHandlerOptions = {
 };
 
 /**
- * Options object for {@link DragRotateHandler.enable}.
+ * Options object for {@link DragRotateHandler.enable}. A drag around the pointer always turns the map linearly,
+ * so `movement` is only set with `around: 'center'`.
  */
 export type DragRotateOptions = {
     /**
-     * If `'pointer'` is passed, the map turns and tilts around the point under the pointer where the drag starts,
-     * on the terrain where there is any, which keeps its place on the screen and its distance from the camera, so tilting also zooms.
-     * A drag that starts in the sky turns around the center.
+     * The map turns and tilts around its center.
      * @defaultValue 'center'
      */
-    around?: 'center' | 'pointer';
+    around?: 'center';
     /**
      * How a drag around the center turns the map. If `'circular'` is passed, the map follows the pointer around the center like a wheel,
      * so the same drag turns it one way above the center and the other way below. If `'linear'` is passed, the bearing follows
-     * the horizontal movement of the pointer, the same way anywhere on the map. A drag around the pointer is always linear.
+     * the horizontal movement of the pointer, the same way anywhere on the map.
      * @defaultValue 'circular', or 'linear' if {@link MapOptions.aroundCenter} is `false`
      */
     movement?: 'circular' | 'linear';
+} | {
+    /**
+     * The map turns and tilts around the point under the pointer where the drag starts, on the terrain where there is any,
+     * which keeps its place on the screen and its distance from the camera, so tilting also zooms. The bearing follows the
+     * horizontal movement of the pointer. A drag that starts in the sky turns around the center.
+     */
+    around: 'pointer';
 };
 
 /**
@@ -87,7 +93,7 @@ export class DragRotateHandler {
     enable(options?: DragRotateOptions | boolean): void {
         const enableOptions: DragRotateOptions = typeof options === 'object' ? options : {};
         this.around = enableOptions.around ?? 'center';
-        this.movement = enableOptions.movement ?? this._defaultMovement;
+        this.movement = enableOptions.around === 'pointer' ? 'linear' : enableOptions.movement ?? this._defaultMovement;
         this._mouseRotate.enable();
         if (this._pitchWithRotate) this._mousePitch.enable();
         if (this._rollEnabled) this._mouseRoll.enable();
