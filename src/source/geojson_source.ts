@@ -493,17 +493,17 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
 
     /**
      * The map's registered projection as the workers take it, see {@link LoadGeoJSONParameters.crs}. The workers can
-     * build a definition's converter from its `wkt`, or the built-in identity one without, so any other definition is
-     * left out with a warning.
+     * build a projection's converter from its `definition`, or the built-in identity one without, so any other
+     * projection is left out with a warning.
      */
     private _getCRSParameters(): LoadGeoJSONParameters['crs'] | undefined {
-        const definition = getRegisteredProjection(this.map?.style?.projection?.name);
-        if (!definition) return undefined;
-        if (!definition.wkt && definition !== identityCrs) {
-            warnOnce(`GeoJSON source "${this.id}" is drawn in the wrong place: the projection "${definition.name}" has no \`wkt\` to project its data with.`);
+        const crs = getRegisteredProjection(this.map?.style?.projection?.name);
+        if (!crs) return undefined;
+        if (!crs.definition && crs !== identityCrs) {
+            warnOnce(`GeoJSON source "${this.id}" is drawn in the wrong place: the projection "${crs.name}" has no \`definition\` to project its data with.`);
             return undefined;
         }
-        return {name: definition.name, wkt: definition.wkt, tileMatrixSet: definition.tileMatrixSet};
+        return {name: crs.name, definition: crs.definition, tileMatrixSet: crs.tileMatrixSet};
     }
 
     /**

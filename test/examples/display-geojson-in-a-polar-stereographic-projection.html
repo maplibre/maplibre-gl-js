@@ -21,10 +21,10 @@
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
     // GeoJSON is parsed and tiled in the workers, so they need the projection too: this handler builds it there
-    // from the definition's `wkt` with proj4.
+    // from the projection's `definition` with proj4.
     const projectionHandlerScript = new Blob([`
         import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.15.0/+esm';
-        self.setProjectionHandler(wkt => proj4(wkt));
+        self.setProjectionHandler(definition => proj4(definition));
     `], {type: 'text/javascript'});
     await maplibregl.importScriptInWorkers(URL.createObjectURL(projectionHandlerScript));
 
@@ -33,7 +33,7 @@
 
     maplibregl.addProjection({
         name: 'EPSG:3413',
-        wkt: epsg3413,
+        definition: epsg3413,
         projection: proj4('EPSG:4326', epsg3413),
         // The grid NASA GIBS serves EPSG:3413 in, centered on the North Pole.
         tileMatrixSet: {origin: [-4194304, 4194304], extentAtZoom0: 8388608}

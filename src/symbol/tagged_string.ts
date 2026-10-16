@@ -203,14 +203,14 @@ export class TaggedString {
      * `text` split into the units it is laid out in. Derived from `text`, so anything that changes
      * `text` clears it.
      */
-    _graphemes: string[] | null;
+    cachedGraphemes: string[] | null;
 
     constructor(text: string = '', sections: SectionOptions[] = [], sectionIndex: number[] = []) {
         this.text = text;
         this.sections = sections;
         this.sectionIndex = sectionIndex;
         this.imageSectionID = null;
-        this._graphemes = null;
+        this.cachedGraphemes = null;
     }
 
     /**
@@ -218,11 +218,12 @@ export class TaggedString {
      * belong to it stay together.
      */
     graphemes(): string[] {
-        this._graphemes ??= toGraphemes(this.text);
-        return this._graphemes;
+        this.cachedGraphemes ??= toGraphemes(this.text);
+        return this.cachedGraphemes;
     }
 
-    static fromFeature(text: Formatted, defaultFontStack: string): TaggedString {
+    /** Creates tagged text, applying vertical punctuation when requested. */
+    static fromFeature(text: Formatted, defaultFontStack: string, vertical: boolean, glyphMap?: GlyphMap): TaggedString {
         const result = new TaggedString();
         for (const section of text.sections) {
             if (!section.image) {
@@ -231,6 +232,7 @@ export class TaggedString {
                 result.addImageSection(section);
             }
         }
+        if (vertical) result.verticalizePunctuation(glyphMap);
         return result;
     }
 
@@ -246,9 +248,24 @@ export class TaggedString {
         return this.sectionIndex[index];
     }
 
-    verticalizePunctuation(): void {
-        this.text = verticalizePunctuation(this.text);
-        this._graphemes = null;
+    /**
+     * Uses compatibility punctuation where a font's vertical form is unavailable or unused, preserving
+     * UTF-16 length, keeping whole-text context, cluster boundaries and section indices intact.
+     *
+     * @param glyphMap - glyph variants used to check for font-provided vertical forms
+     * @param verticals - resolved orientations, if available; only upright glyphs use font alternates
+     */
+    verticalizePunctuation(glyphMap: GlyphMap = {}, verticals?: boolean[]): void {
+        const replacements = verticalizePunctuation(this.text);
+        let offset = 0;
+        this.cachedGraphemes = this.graphemes().map((grapheme, index) => {
+            const replacement = replacements.slice(offset, offset + grapheme.length);
+            offset += grapheme.length;
+            const section = this.getSection(index);
+            return verticals?.[index] !== false && 'fontStack' in section && glyphMap[section.fontStack]?.vertical?.[grapheme] ?
+                grapheme : replacement;
+        });
+        this.text = this.cachedGraphemes.join('');
     }
 
     /**
@@ -276,7 +293,7 @@ export class TaggedString {
 
         this.text = graphemes.slice(start, end).join('');
         this.sectionIndex = this.sectionIndex.slice(start, end);
-        this._graphemes = null;
+        this.cachedGraphemes = null;
     }
 
     substring(start: number, end: number): TaggedString {
@@ -332,7 +349,7 @@ export class TaggedString {
         const joined = toGraphemes(tail + text);
 
         this.text += text;
-        this._graphemes = graphemes.slice(0, tail ? -1 : undefined).concat(joined);
+        this.cachedGraphemes = graphemes.slice(0, tail ? -1 : undefined).concat(joined);
 
         const added = joined.length - (tail ? 1 : 0);
         for (let i = 0; i < added; i++) {
