@@ -3,7 +3,7 @@ import {Map} from '../map.ts';
 import {Marker} from '../marker.ts';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
-import {beforeMapTest} from '../../util/test/util.ts';
+import {beforeMapTest, spyOnPreventDefault} from '../../util/test/util.ts';
 import {restoreNow, setNow} from '../../util/time_control.ts';
 
 function createMap() {
@@ -40,6 +40,28 @@ beforeEach(() => {
 });
 
 describe('touch zoom rotate', () => {
+
+    test('TwoFingersTouchZoomRotateHandler does not try to cancel a touchmove that is not cancelable, and still zooms', () => {
+        const {map, target} = createPinchZoomMap();
+        const zoom = vi.fn();
+        map.on('zoom', zoom);
+        const preventDefaults = spyOnPreventDefault(map.getCanvasContainer(), 'touchmove');
+
+        startPinchGesture(map, target);
+
+        simulate.touchmove(target, {cancelable: true, touches: [{target, identifier: 1, clientX: 0, clientY: -100}, {target, identifier: 2, clientX: 0, clientY: 100}]});
+        map._renderTaskQueue.run();
+        expect(preventDefaults[0]).toHaveBeenCalled();
+        const zoomsSoFar = zoom.mock.calls.length;
+
+        simulate.touchmove(target, {cancelable: false, touches: [{target, identifier: 1, clientX: 0, clientY: -150}, {target, identifier: 2, clientX: 0, clientY: 150}]});
+        map._renderTaskQueue.run();
+        expect(preventDefaults[1]).not.toHaveBeenCalled();
+        expect(zoom.mock.calls.length).toBeGreaterThan(zoomsSoFar);
+
+        endPinchGesture(map);
+        map.remove();
+    });
 
     test('TwoFingersTouchZoomRotateHandler fires zoomstart, zoom, and zoomend events at appropriate times in response to a pinch-zoom gesture', () => {
         const map = createMap();

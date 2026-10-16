@@ -1,4 +1,4 @@
-import {vi, expect, onTestFinished, type Mock} from 'vitest';
+import {vi, expect, onTestFinished, type Mock, type MockInstance} from 'vitest';
 import {Map, type MapOptions} from '../../ui/map.ts';
 import {NullWebGL2RenderingContext, createNullGL} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
@@ -136,6 +136,18 @@ function setNullGLGetContext() {
         if (type === 'webgl2') return new NullWebGL2RenderingContext(this, attributes);
         return _originalGetContext.call(this, type, attributes);
     } as any;
+}
+
+/**
+ * Spies on `preventDefault` of every `type` event that reaches `target`, from the capture phase so the spy is in
+ * place before the map's own listeners run. Returns the spies in dispatch order.
+ */
+export function spyOnPreventDefault(target: EventTarget, type: string): MockInstance[] {
+    const spies: MockInstance[] = [];
+    const listener = (e: Event) => { spies.push(vi.spyOn(e, 'preventDefault')); };
+    target.addEventListener(type, listener, {capture: true});
+    onTestFinished(() => target.removeEventListener(type, listener, {capture: true}));
+    return spies;
 }
 
 export function beforeMapTest(): void {
