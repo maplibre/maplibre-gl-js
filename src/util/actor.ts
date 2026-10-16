@@ -264,10 +264,25 @@ export class Actor implements IActor {
         this.target.postMessage(responseMessage, {transfer: buffers});
     }
 
-    remove(): void {
+    /**
+     * Stops this actor. When the target is gone for good, e.g. a terminated worker, pass
+     * `rejectInFlightWith` to reject the requests still awaiting an answer instead of
+     * leaving them pending forever.
+     */
+    remove(rejectInFlightWith?: Error): void {
         this.invoker.remove();
         this.subscription.unsubscribe();
+        if (!rejectInFlightWith) return;
+        for (const id of Object.keys(this.resolveRejects)) {
+            this.resolveRejects[id].reject(rejectInFlightWith);
+            delete this.resolveRejects[id];
+        }
     }
+}
+
+/** Sends a message to every actor and collects the responses. */
+export function broadcastToActors<T extends MessageType>(actors: Actor[], type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>> {
+    return Promise.all(actors.map(actor => actor.sendAsync({type, data})));
 }
 
 /** Builds a named actor per worker and reports worker errors to `errorTarget`. */

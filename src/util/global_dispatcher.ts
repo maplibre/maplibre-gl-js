@@ -1,4 +1,4 @@
-import {createActors} from './actor.ts';
+import {broadcastToActors, createActors} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
@@ -54,8 +54,6 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private actorsPromise: Promise<Actor[]> | undefined;
     private workerErrorSubscriptions: Subscription[] = [];
     private workerPool: WorkerPool;
-    /** Called when the current workers terminate, so in-flight broadcasts reject instead of hanging. */
-    private rejectInFlightBroadcasts = new Set<(error: Error) => void>();
     private watchingHealth = false;
     private healthCheckInFlight = false;
 
@@ -84,16 +82,12 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private handleWorkersTerminated(): void {
         this.actorsPromise?.then((actors) => {
             for (const actor of actors) {
-                actor.remove();
+                actor.remove(new Error('The workers were terminated while a message was in flight.'));
             }
         }).catch((error) => {
             warnOnce(`The terminated workers' actors were never created: ${error}`);
         });
         this.actorsPromise = undefined;
-        for (const reject of this.rejectInFlightBroadcasts) {
-            reject(new Error('The workers were terminated while a message was in flight.'));
-        }
-        this.rejectInFlightBroadcasts.clear();
         for (const subscription of this.workerErrorSubscriptions) {
             subscription.unsubscribe();
         }
@@ -126,21 +120,8 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>>;
     broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
     async broadcast(type: string, data: any): Promise<unknown[]> {
-        const actorsPromise = this.getActors();
-        let rejectBroadcast: (error: Error) => void;
-        const workersTerminated = new Promise<never>((_, reject) => {
-            rejectBroadcast = reject;
-            this.rejectInFlightBroadcasts.add(reject);
-        });
-        try {
-            const actors = await actorsPromise;
-            return await Promise.race([
-                Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data}))),
-                workersTerminated
-            ]);
-        } finally {
-            this.rejectInFlightBroadcasts.delete(rejectBroadcast);
-        }
+        const actors = await this.getActors();
+        return broadcastToActors(actors, type as MessageType, data);
     }
 
     /**
@@ -168,6 +149,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      * creation replay; the worker runs each url only once.
      */
     async importScript(workerUrl: string): Promise<void> {
+        await this.workerPool.start();
         this.importedScriptUrls.add(workerUrl);
         await this.broadcast(MessageType.importScript, workerUrl);
     }
@@ -182,7 +164,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         if (this.watchingHealth || typeof document === 'undefined') return;
         this.watchingHealth = true;
         document.addEventListener('visibilitychange', async () => {
-            if (document.visibilityState !== 'visible' || this.healthCheckInFlight || !this.workerPool.workersPromise) return;
+            if (document.visibilityState !== 'visible' || this.healthCheckInFlight) return;
             this.healthCheckInFlight = true;
             try {
                 if (!await this.ping()) this.workerPool.restart();
@@ -194,9 +176,10 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
 
     /**
      * Pings the workers, resolving false only on silence: any answer, even an error, proves they
-     * are alive. Creates the workers if none exist yet, so check the pool before calling.
+     * are alive. Resolves true when no workers exist, since there is nothing to restart.
      */
     async ping(timeoutMs: number = PING_TIMEOUT_MS): Promise<boolean> {
+        if (!this.workerPool.workersPromise) return true;
         let timer: ReturnType<typeof setTimeout>;
         try {
             return await Promise.race([

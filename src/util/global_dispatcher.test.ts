@@ -48,7 +48,10 @@ describe('global dispatcher', () => {
     });
 
     test('an in-flight broadcast rejects when the workers terminate', async () => {
-        vi.spyOn(Actor.prototype, 'sendAsync').mockReturnValue(new Promise(() => {}));
+        const workers = await getGlobalWorkerPool().start();
+        for (const worker of workers) {
+            vi.spyOn(worker, 'postMessage').mockImplementation(() => {});
+        }
         const resultPromise = getGlobalDispatcher().broadcast('my-plugin-message', 1);
 
         terminateGlobalWorkers();
