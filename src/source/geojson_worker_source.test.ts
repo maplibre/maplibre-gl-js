@@ -701,7 +701,7 @@ describe('loadData', () => {
 describe('loadData in a registered projection', () => {
     const pointAt45 = {type: 'Feature', id: 'p', properties: {}, geometry: {type: 'Point', coordinates: [45, 45]}} as GeoJSON.Feature;
     const identityParameters = {name: 'identity', tileMatrixSet: identityCrs.tileMatrixSet};
-    const planarParameters = {name: 'EPSG:test', wkt: 'PROJCS["test"]', tileMatrixSet: {origin: [-1000, 1000], extentAtZoom0: 2000}};
+    const planarParameters = {name: 'EPSG:test', definition: 'PROJCS["test"]', tileMatrixSet: {origin: [-1000, 1000], extentAtZoom0: 2000}};
 
     afterEach(() => {
         setProjectionHandler(null);
@@ -743,7 +743,7 @@ describe('loadData in a registered projection', () => {
         expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    test('warns about a wkt that no projection handler can project', async () => {
+    test('warns about a definition that no projection handler can project', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
         await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);
@@ -751,7 +751,7 @@ describe('loadData in a registered projection', () => {
         expect(warn).toHaveBeenCalledWith(expect.stringContaining('no projection handler is set in the workers'));
     });
 
-    test('tiles the data as lng/lat when no projection handler can project its wkt', async () => {
+    test('tiles the data as lng/lat when no projection handler can project its definition', async () => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
         await source.loadData({source: 'source', data: pointAt45, geojsonVtOptions: {}, crs: planarParameters} as LoadGeoJSONParameters);

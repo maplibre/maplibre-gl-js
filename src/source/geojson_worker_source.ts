@@ -18,7 +18,7 @@ import type {RequestParameters} from '../util/ajax.ts';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
-import type {CRSDefinition, CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
+import type {CRS, CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -58,7 +58,7 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
      * The map's registered projection, if it has one: the data is moved into that projection's world square before it
      * is tiled, the way tiles of the projection's own grid sit in it.
      */
-    crs?: Pick<CRSDefinition, 'name' | 'wkt' | 'tileMatrixSet'>;
+    crs?: Pick<CRS, 'name' | 'definition' | 'tileMatrixSet'>;
 };
 
 /**
