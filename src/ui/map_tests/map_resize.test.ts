@@ -31,6 +31,16 @@ describe('resize', () => {
         expect(onEvent).toHaveBeenCalled();
     });
 
+    test('resizes the style layers', async () => {
+        const map = createMap({style: {version: 8, sources: {}, layers: [{id: 'background', type: 'background'}]}});
+        await map.once('idle');
+        const resize = vi.spyOn(map.style.getLayer('background'), 'resize');
+
+        map.resize();
+
+        expect(resize).toHaveBeenCalled();
+    });
+
     test('listen to window resize event', () => {
         const spy = vi.fn();
         global.ResizeObserver = vi.fn(class {

@@ -62,4 +62,6 @@ Compiling and caching GL shader programs is managed by the `ProgramCache` and `P
 
 ## Transform
 
+A `WorldCoordinateHelper` maps lng/lat to and from world coordinates (the unit square that tile 0/0/0 covers): mercator's for the mercator, globe and vertical-perspective projections, and one built from the definition of a planar CRS registered with `addProjection`, which the projection and the transform both hold. The transform, camera, covering tiles, terrain, sources and queries all go through that helper rather than calling the mercator functions directly, which is what lets a registered CRS render its pre-projected tiles with the mercator rendering path untouched. See `developer-guides/custom-crs.md` for the seam and the rule that keeps mercator unchanged.
+
 ## Controls

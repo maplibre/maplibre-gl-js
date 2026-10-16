@@ -18,8 +18,7 @@ export default {
         css({output: 'main.css'}),
         copy({
             targets: [
-                {src: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', dest: 'dist'},
-                {src: 'node_modules/maplibre-gl/dist/maplibre-gl-shared.mjs', dest: 'dist'}
+                {src: 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', dest: 'dist'}
             ]
         })
     ]

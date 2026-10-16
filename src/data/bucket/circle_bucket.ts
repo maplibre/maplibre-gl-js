@@ -5,7 +5,7 @@ import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray} from '../index_array_type.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
-import {EXTENT} from '../extent.ts';
+import {isOutsideTile} from '../extent_bounds.ts';
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
@@ -207,8 +207,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
                 const vx = point.x;
                 const vy = point.y;
 
-                // Do not include points that are outside the tile boundaries.
-                if (vx < 0 || vx >= EXTENT || vy < 0 || vy >= EXTENT) {
+                if (isOutsideTile(point)) {
                     continue;
                 }
 

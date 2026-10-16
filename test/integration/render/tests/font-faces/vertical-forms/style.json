@@ -1,0 +1,179 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 500,
+      "height": 420,
+      "description": "Horizontal and vertical point and line labels share a font stack; vertical forms must retain their orientation without affecting horizontal glyphs."
+    }
+  },
+  "zoom": 0,
+  "center": [
+    0,
+    0
+  ],
+  "font-faces": {
+    "Noto Serif": "local://font/NotoSerifCJKjp-Regular.woff2"
+  },
+  "sources": {
+    "horizontal-point": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -150,
+            65
+          ]
+        }
+      }
+    },
+    "vertical-point": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -110,
+            0
+          ]
+        }
+      }
+    },
+    "horizontal-line": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -60,
+              -77
+            ],
+            [
+              130,
+              -77
+            ]
+          ]
+        }
+      }
+    },
+    "vertical-line": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              120,
+              -73
+            ],
+            [
+              120,
+              73
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "horizontal-point",
+      "type": "symbol",
+      "source": "horizontal-point",
+      "layout": {
+        "text-field": "東京タワー（ぁ）",
+        "text-font": [
+          "Noto Serif"
+        ],
+        "text-size": 28,
+        "text-allow-overlap": true,
+        "symbol-placement": "point",
+        "text-writing-mode": [
+          "horizontal"
+        ],
+        "text-anchor": "left"
+      },
+      "paint": {
+        "text-color": "#111111"
+      }
+    },
+    {
+      "id": "vertical-point",
+      "type": "symbol",
+      "source": "vertical-point",
+      "layout": {
+        "text-field": "東京タワー（ぁ）",
+        "text-font": [
+          "Noto Serif"
+        ],
+        "text-size": 28,
+        "text-allow-overlap": true,
+        "symbol-placement": "point",
+        "text-writing-mode": [
+          "vertical"
+        ],
+        "text-anchor": "center"
+      },
+      "paint": {
+        "text-color": "#111111"
+      }
+    },
+    {
+      "id": "horizontal-line",
+      "type": "symbol",
+      "source": "horizontal-line",
+      "layout": {
+        "text-field": "「小ぁ、。」",
+        "text-font": [
+          "Noto Serif"
+        ],
+        "text-size": 28,
+        "text-allow-overlap": true,
+        "symbol-placement": "line",
+        "text-writing-mode": [
+          "horizontal"
+        ]
+      },
+      "paint": {
+        "text-color": "#111111"
+      }
+    },
+    {
+      "id": "vertical-line",
+      "type": "symbol",
+      "source": "vertical-line",
+      "layout": {
+        "text-field": "東京タワー（ぁ）",
+        "text-font": [
+          "Noto Serif"
+        ],
+        "text-size": 28,
+        "text-allow-overlap": true,
+        "symbol-placement": "line",
+        "text-writing-mode": [
+          "vertical"
+        ]
+      },
+      "paint": {
+        "text-color": "#111111"
+      }
+    }
+  ]
+}

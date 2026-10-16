@@ -5,15 +5,16 @@ import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g.ts';
 import pos3dAttributes from '../data/pos3d_attributes.ts';
 import {SegmentVector} from '../data/segment.ts';
 import {Texture} from '../webgl/texture.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {TerrainTileManager} from '../tile/terrain_tile_manager.ts';
 import {EXTENT} from '../data/extent.ts';
-import {earthRadius, type LngLat} from '../geo/lng_lat.ts';
 import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {TerrainCoverage, type TerrainCoverageIndex} from './terrain_coverage.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
+import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {LngLat} from '../geo/lng_lat.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
@@ -53,6 +54,16 @@ export type TerrainData = {
     depthTexture: WebGLTexture;
     tile: Tile;
 };
+
+/**
+ * @internal
+ * Where the DEM data under a location stands, see {@link Terrain.getElevationAndDEMStateForLngLat}:
+ * - `loaded`: it has loaded.
+ * - `loading`: none has loaded yet, but it can still arrive.
+ * - `none`: none has loaded and none will: the location is outside the source's bounds or zoom range, or its tile
+ * failed to load.
+ */
+export type DEMState = 'loaded' | 'loading' | 'none';
 
 /**
  * @internal
@@ -142,8 +153,14 @@ export class Terrain {
      * @see {@link MapOptions.terrainSkirtLength}
      */
     _terrainSkirtLength: 'none' | 'auto';
-    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, terrainSkirtLength: 'none' | 'auto' = 'auto') {
+    /** Reads the lng/lat to world mapping of the map's projection, which the map can switch while the terrain is on. */
+    private readonly _getWorldCoordinateHelper: () => WorldCoordinateHelper;
+    /**
+     * @param getWorldCoordinateHelper - reads the lng/lat to world mapping of the map's projection, mercator's by default
+     */
+    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, terrainSkirtLength: 'none' | 'auto' = 'auto', getWorldCoordinateHelper: () => WorldCoordinateHelper = () => mercatorWorldCoordinateHelper) {
         this.painter = painter;
+        this._getWorldCoordinateHelper = getWorldCoordinateHelper;
         this.tileManager = new TerrainTileManager(tileManager);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
@@ -151,7 +168,7 @@ export class Terrain {
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = new Map();
-        this.coverage = new TerrainCoverage(this.tileManager, this.exaggeration);
+        this.coverage = new TerrainCoverage(this.tileManager, this.exaggeration, () => this._worldCoordinateHelper);
     }
 
     destroy(): void {
@@ -207,16 +224,18 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
-        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
-        const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
-        return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return 0;
+        const {tileID, worldX, worldY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.getElevation(tileID, worldX % EXTENT, worldY % EXTENT, EXTENT);
     }
 
     /**
      * Get the elevation for given {@link LngLat} in respect of exaggeration.
      * Where the location is covered by a rendered tile with loaded DEM data this samples the
      * rendered surface, so the result agrees with what is drawn; elsewhere it traverses up the
-     * zoom levels to find the first tile with data to return.
+     * zoom levels to find the first tile with data to return. Where no DEM data has loaded it gives 0, which
+     * {@link getElevationAndDEMStateForLngLat} tells apart from 0 m.
      * @param lnglat - the location
      * @returns the elevation
      */
@@ -239,18 +258,22 @@ export class Terrain {
     }
 
     /**
-     * Whether {@link getElevationForLngLat} finds DEM data at the given {@link LngLat}, drawn or in the tile it falls
-     * back to, rather than giving 0 for want of any.
+     * {@link getElevationForLngLat} together with where the DEM data it reads stands, for a caller that has to tell the
+     * 0 it gives for want of DEM data apart from 0 m. DEM data has loaded where a drawn tile or the tile it falls back
+     * to has it, its own or a loaded parent's, and any elevation other than 0 comes from loaded DEM data.
      * @param lnglat - the location
      * @param transform - the transform {@link getElevationForLngLat} is given
-     * @returns true where a drawn tile or the fallback tile has DEM data, its own or a loaded parent's
+     * @returns the elevation, and the state of the DEM data there
      */
-    hasElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): boolean {
-        if (this.getDrawnElevationForLngLat(lnglat) !== undefined) return true;
+    getElevationAndDEMStateForLngLat(lnglat: LngLat, transform: IReadonlyTransform): {elevation: number; demState: DEMState} {
+        const elevation = this.getElevationForLngLat(lnglat, transform);
+        if (elevation !== 0 || this.getDrawnElevationForLngLat(lnglat) !== undefined) return {elevation, demState: 'loaded'};
         const zoom = this._getFallbackZoom(transform);
-        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return false;
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return {elevation, demState: 'none'};
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
-        return !!this.tileManager.getSourceTile(tileID, true)?.dem;
+        if (this.tileManager.getSourceTile(tileID, true)?.dem) return {elevation, demState: 'loaded'};
+        return {elevation, demState: this.tileManager.isStillWaitingForDEM(tileID) ? 'loading' : 'none'};
     }
 
     /**
@@ -393,10 +416,10 @@ export class Terrain {
 
     /**
      * create a regular mesh which will be used by all terrain-tiles
+     * @param globeEnabled - whether the globe is rendering, which adds the pole geometry of the edge tiles
      * @returns the created regular mesh
      */
-    getTerrainMesh(tileId: OverscaledTileID): Mesh {
-        const globeEnabled = this.painter.style.projection?.transitionState > 0;
+    getTerrainMesh(tileId: OverscaledTileID, globeEnabled: boolean): Mesh {
         const northPole = globeEnabled && tileId.canonical.y === 0;
         const southPole = globeEnabled && tileId.canonical.y === (1 << tileId.canonical.z) - 1;
         const key = `m_${northPole ? 'n' : ''}_${southPole ? 's' : ''}`;
@@ -431,18 +454,21 @@ export class Terrain {
     }
 
     /**
-     * Calculates the height of the tile skirts for the "auto" strategy.
+     * Calculates the height of the tile skirts for the "auto" strategy: a fifth of the tile width in meters, taking
+     * the meters per world unit at the center of the world square (the equator for mercator, where one world unit
+     * is the earth's circumference).
      * @see {@link MapOptions.terrainSkirtLength}
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters
      */
     getSkirtLength(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
-        return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
+        return this._worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5) / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
 
     getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
-        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return 0;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }
@@ -465,17 +491,26 @@ export class Terrain {
         return minMax;
     }
 
-    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; mercatorX: number; mercatorY: number} {
-        const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
+    /**
+     * The lng/lat to world mapping of the map's projection.
+     */
+    private get _worldCoordinateHelper(): WorldCoordinateHelper {
+        return this._getWorldCoordinateHelper();
+    }
+
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; worldX: number; worldY: number} {
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        const location = worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat;
+        const worldCoordinate = worldCoordinateHelper.worldFromLngLat(location.lng, location.lat);
         const worldSize = (1 << zoom) * EXTENT;
-        const mercatorX = mercatorCoordinate.x * worldSize;
-        const mercatorY = mercatorCoordinate.y * worldSize;
-        const tileX = Math.floor(mercatorX / EXTENT), tileY = Math.floor(mercatorY / EXTENT);
+        const worldX = worldCoordinate.x * worldSize;
+        const worldY = worldCoordinate.y * worldSize;
+        const tileX = Math.floor(worldX / EXTENT), tileY = Math.floor(worldY / EXTENT);
         const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
         return {
             tileID,
-            mercatorX,
-            mercatorY
+            worldX,
+            worldY
         };
     }
 
@@ -517,4 +552,3 @@ export class Terrain {
         }
     }
 }
-

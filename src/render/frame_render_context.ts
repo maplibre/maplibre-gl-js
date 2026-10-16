@@ -21,6 +21,8 @@ import type {Mesh} from './mesh.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {LightPropsPossiblyEvaluated} from '../style/light_properties.g.ts';
 import type {SkyPropsPossiblyEvaluated} from '../style/sky_properties.g.ts';
+import type {Projection, TileMeshUsage} from '../geo/projection/projection.ts';
+import type {CrossTileID, VariableOffset} from '../symbol/placement.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -42,6 +44,8 @@ export type FrameRenderData = {
     readonly fadeDuration: number;
     /** Progress of the symbol fade since the last placement. */
     readonly symbolFadeChange: number;
+    /** The anchors the last placement chose for symbols with variable anchors. */
+    readonly variableOffsets: Readonly<Record<CrossTileID, VariableOffset>>;
     readonly anisotropicFilterPitch: number;
     readonly projectionTransition: number;
     readonly isRenderingGlobe: boolean;
@@ -64,8 +68,8 @@ type FrameRenderContextOptions = {
     context: Context;
     programCache: ProgramCache;
     currentPass: RenderPass;
-    /** Returns the mesh a tile's clipping mask is drawn with. */
-    getStencilMesh: (tileID: CanonicalTileID, hasBorder: boolean) => Mesh;
+    /** The projection that builds the tile meshes, undefined until the style has one. */
+    projection: Projection | undefined;
 };
 
 /** Distinct z-planes within each layer that can be drawn to, implemented with the WebGL depth buffer. */
@@ -97,11 +101,11 @@ export class FrameRenderContext {
     readonly data: FrameRenderData;
     readonly context: Context;
     readonly programCache: ProgramCache;
+    private readonly projection: Projection | undefined;
     /** The source whose clipping masks are in the stencil buffer. */
     private currentStencilSource: string;
     private nextStencilID: number = 1;
     private tileClippingMaskIDs: Record<string, number> = {};
-    private readonly getStencilMesh: (tileID: CanonicalTileID, hasBorder: boolean) => Mesh;
 
     constructor(options: FrameRenderContextOptions) {
         this.transform = options.transform;
@@ -110,7 +114,7 @@ export class FrameRenderContext {
         this.context = options.context;
         this.programCache = options.programCache;
         this.currentPass = options.currentPass;
-        this.getStencilMesh = options.getStencilMesh;
+        this.projection = options.projection;
     }
 
     getProjectionDataForTile(tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
@@ -133,6 +137,11 @@ export class FrameRenderContext {
     getTerrainDataForTile(tileID: OverscaledTileID): TerrainData | null {
         if (this.isRenderingToTexture) return null;
         return this.terrain?.getTerrainData(tileID) ?? null;
+    }
+
+    /** Returns the mesh the projection draws a tile with. */
+    getMeshFromTileID(tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh {
+        return this.projection.getMeshFromTileID(this.context, tileID, hasBorder, allowPoles, usage);
     }
 
     /**
@@ -243,7 +252,7 @@ export class FrameRenderContext {
         for (const tileID of tileIDs) {
             const stencilRef = tileStencilRefs[tileID.key];
             const terrainData = this.getTerrainDataForTile(tileID);
-            const mesh = this.getStencilMesh(tileID.canonical, useBorders);
+            const mesh = this.getMeshFromTileID(tileID.canonical, useBorders, true, 'stencil');
             const projectionData = this.getProjectionDataForTile(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,

@@ -1,5 +1,6 @@
 import {throttle} from '../util/throttle.ts';
 import {LngLat} from '../geo/lng_lat.ts';
+import {degreesPerWorldUnit} from '../geo/projection/mercator_utils.ts';
 
 import type {Map} from './map.ts';
 
@@ -45,8 +46,9 @@ export class Hash {
     getHashString(mapFeedback?: boolean): string {
         const center = this._map.getCenter(),
             zoom = Math.round(this._map.getZoom() * 100) / 100,
-            // derived from equation: 512px * 2^z / 360 / 10^d < 0.5px
-            precision = Math.ceil((zoom * Math.LN2 + Math.log(512 / 360 / 0.5)) / Math.LN10),
+            degreesPerWorld = degreesPerWorldUnit(this._map._camera.transform.worldCoordinateHelper, center),
+            // derived from equation: 512px * 2^z / degreesPerWorld / 10^d < 0.5px
+            precision = Math.ceil((zoom * Math.LN2 + Math.log(512 / degreesPerWorld / 0.5)) / Math.LN10),
             m = Math.pow(10, precision),
             lng = Math.round(center.lng * m) / m,
             lat = Math.round(center.lat * m) / m,
