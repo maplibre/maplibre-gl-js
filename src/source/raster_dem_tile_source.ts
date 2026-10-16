@@ -109,6 +109,8 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.state = 'unloaded';
             } else if (err) {
                 tile.state = 'errored';
+                // forget the actor, or a retry is taken for a duplicate load and its image is dropped
+                delete tile.actor;
                 throw err;
             }
         }
