@@ -543,6 +543,21 @@ describe('GlyphManager', () => {
             expect(server.requests.map(request => request.url)).toEqual(['https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf']);
         });
 
+        test('keeps a declared font glyph when a later request downloads the range it falls in', async () => {
+            stubFontFaces();
+            serveGlyphRanges();
+            const createRasterizer = fakeRasterizer();
+
+            const manager = createGlyphManager(true, undefined, undefined, createRasterizer);
+            manager.setFontFaces({'Arial Unicode MS': [{url: 'https://localhost/paren.ttf', 'unicode-range': ['U+0028']}]});
+
+            const declared = await manager.getGlyphs({'Arial Unicode MS': {default: ['(']}});
+            await manager.getGlyphs({'Arial Unicode MS': {default: ['A']}});
+            const again = await manager.getGlyphs({'Arial Unicode MS': {default: ['(']}});
+
+            expect(again['Arial Unicode MS'].default['('].metrics).toEqual(declared['Arial Unicode MS'].default['('].metrics);
+        });
+
         test('does not sniff a weight or a style out of the font name, which the file already carries', async () => {
             stubFontFaces();
             const createRasterizer = fakeRasterizer();
