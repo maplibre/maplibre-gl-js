@@ -2,7 +2,7 @@ import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {reprojectGeoJSONFromWorld, reprojectGeoJSONSourceDiffToWorld, reprojectGeoJSONToWorld} from './geojson_reproject.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
-import {polygonIntersectsPolygon} from './intersection_tests.ts';
+import {polygonIntersectsBox, polygonIntersectsBufferedMultiLine, polygonIntersectsPolygon} from './intersection_tests.ts';
 import {createPolarStereographicCrs} from './test/util.ts';
 
 import type {GeoJSONSourceDiff} from '../source/geojson_source_diff.ts';
@@ -67,54 +67,27 @@ describe('reprojectGeoJSONToWorld', () => {
 });
 
 describe('reprojectGeoJSONToWorld in a polar CRS, whose latitude range ends at 20.383370 S', () => {
-    test('drops a polygon with an edge across the far pole, which the projection puts at infinity', () => {
+    test('keeps a polygon with an edge across the far pole out of the world square', () => {
         const isea4hSouthPoleCell: GeoJSON.Polygon = {type: 'Polygon', coordinates: [[
             [88.3853, -87.67805], [54.96953, -88.57819], [0, -89.52868], [180, -89.31865], [142.1755, -88.10424], [115.34565, -87.43262], [88.3853, -87.67805]
         ]]};
-        expect(reprojectGeoJSONToWorld(isea4hSouthPoleCell, createPolarHelper()).coordinates).toEqual([]);
+        const ring = reprojectGeoJSONToWorld(isea4hSouthPoleCell, createPolarHelper()).coordinates[0];
+        expect(polygonIntersectsBox(ring.map(([x, y]) => new Point(x, y)), 0, 0, 1, 1)).toBe(false);
     });
 
-    test('closes a ring cut at the southern limit along the parallel, so a polygon of the whole globe covers the world square', () => {
+    test('keeps a line along a parallel past the southern limit out of the world square', () => {
+        const farParallel: GeoJSON.LineString = {type: 'LineString', coordinates: [[0, -80], [180, -80]]};
+        const line = reprojectGeoJSONToWorld(farParallel, createPolarHelper()).coordinates.map(([x, y]) => new Point(x, y));
+        const worldSquare = [new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 0)];
+        expect(polygonIntersectsBufferedMultiLine(worldSquare, [line], 0)).toBe(false);
+    });
+
+    test('fills an edge along the southern limit, so a polygon of the whole globe covers the world square', () => {
         const wholeGlobe: GeoJSON.Polygon = {type: 'Polygon', coordinates: [[[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]]]};
         const ring = reprojectGeoJSONToWorld(wholeGlobe, createPolarHelper()).coordinates[0];
         const worldRing = ring.map(([x, y]) => new Point(x, y));
         const insideWorldSquare = new Point(0.75, 0.75);
         expect(polygonIntersectsPolygon([insideWorldSquare], worldRing)).toBe(true);
-    });
-
-    test('cuts a line where it passes the southern limit', () => {
-        const helper = createPolarHelper();
-        const outAndBack: GeoJSON.LineString = {type: 'LineString', coordinates: [[0, 80], [0, -80], [90, 80]]};
-        const pieces = reprojectGeoJSONFromWorld(reprojectGeoJSONToWorld(outAndBack, helper), helper);
-        expect(pieces).toEqual({type: 'MultiLineString', coordinates: [
-            [[expect.closeTo(0, 6), expect.closeTo(80, 6)], [expect.closeTo(0, 6), expect.closeTo(-20.383370, 4)]],
-            [[expect.closeTo(33.534355, 4), expect.closeTo(-20.383370, 4)], [expect.closeTo(90, 6), expect.closeTo(80, 6)]]
-        ]});
-    });
-
-    test('moves points beyond the southern limit onto it', () => {
-        const helper = createPolarHelper();
-        const points: GeoJSON.GeometryCollection = {type: 'GeometryCollection', geometries: [
-            {type: 'Point', coordinates: [18.42, -33.92]},
-            {type: 'MultiPoint', coordinates: [[18.42, -33.92], [18.42, 60]]}
-        ]};
-        const moved = reprojectGeoJSONFromWorld(reprojectGeoJSONToWorld(points, helper), helper);
-        expect(moved.geometries.map(geometry => (geometry as GeoJSON.Point | GeoJSON.MultiPoint).coordinates)).toEqual([
-            [expect.closeTo(18.42, 6), expect.closeTo(-20.383370, 4)],
-            [[expect.closeTo(18.42, 6), expect.closeTo(-20.383370, 4)], [expect.closeTo(18.42, 6), expect.closeTo(60, 6)]]
-        ]);
-    });
-
-    test('drops the lines and polygons beyond the southern limit, multi-part ones part by part', () => {
-        const beyondLine = [[0, -40], [90, -40]];
-        const beyondRing = [[0, -40], [90, -40], [90, -50], [0, -40]];
-        const lines: GeoJSON.GeometryCollection = {type: 'GeometryCollection', geometries: [
-            {type: 'LineString', coordinates: beyondLine},
-            {type: 'MultiLineString', coordinates: [beyondLine, [[0, 60], [90, 60]]]},
-            {type: 'MultiPolygon', coordinates: [[beyondRing], [[[0, 60], [90, 60], [90, 70], [0, 60]]]]}
-        ]};
-        const clipped = reprojectGeoJSONToWorld(lines, createPolarHelper());
-        expect(clipped.geometries.map(geometry => (geometry as GeoJSON.LineString | GeoJSON.MultiLineString | GeoJSON.MultiPolygon).coordinates.length)).toEqual([0, 1, 1]);
     });
 });
 

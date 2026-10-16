@@ -109,9 +109,9 @@ export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
     }
     /**
      * The latitudes, `[south, north]`, of the positions the projection puts within one world width of the world
-     * square. GeoJSON sources clip their data to them before projecting it, so that what lies further out, like the
-     * opposite pole of a polar projection, which projects to infinity, never reaches the map. `[-90, 90]` when the
-     * inverse has no answer that far out, or an answer that does not map back.
+     * square. GeoJSON sources move the positions past them onto them before projecting, so that what lies further
+     * out, like the opposite pole of a polar projection, which projects to infinity, never reaches the map.
+     * `[-90, 90]` when the inverse has no answer that far out, or an answer that does not map back.
      */
     get latitudeRange(): [number, number] {
         this._latitudeRange ??= this._findLatitudeRange();

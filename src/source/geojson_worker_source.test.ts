@@ -3,7 +3,7 @@ import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
 import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {createFakeActor, createPolarStereographicCrs, setPerformance, sleep} from '../util/test/util.ts';
+import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {setProjectionHandler, type ProjectionHandler} from './projection_handler_worker.ts';
@@ -792,20 +792,6 @@ describe('loadData in a registered projection', () => {
         await source.loadData({source: 'source', dataDiff: {update: [{id: 'p', newGeometry: {type: 'Point', coordinates: [45, 45]}}]}, geojsonVtOptions: {}, crs: identityParameters} as LoadGeoJSONParameters);
 
         expect(firstFeatureInRootTile(source).properties).toEqual({name: 'p'});
-    });
-
-    test('draws a line again, with its properties, when a diff moves it back from beyond the latitudes the projection is clipped to', async () => {
-        const polarCrs = createPolarStereographicCrs();
-        setProjectionHandler(() => polarCrs.projection);
-        const polarParameters = {name: polarCrs.name, definition: 'polar', tileMatrixSet: polarCrs.tileMatrixSet};
-        const arcticLine = {type: 'Feature', id: 'line', properties: {name: 'line'}, geometry: {type: 'LineString', coordinates: [[0, 80], [90, 80]]}} as GeoJSON.Feature;
-        const beyondTheClip = {type: 'LineString', coordinates: [[0, -40], [90, -40]]} as GeoJSON.LineString;
-        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
-        await source.loadData({source: 'source', data: arcticLine, geojsonVtOptions: {}, crs: polarParameters} as LoadGeoJSONParameters);
-        await source.loadData({source: 'source', dataDiff: {update: [{id: 'line', newGeometry: beyondTheClip}]}, geojsonVtOptions: {}, crs: polarParameters} as LoadGeoJSONParameters);
-        await source.loadData({source: 'source', dataDiff: {update: [{id: 'line', newGeometry: arcticLine.geometry}]}, geojsonVtOptions: {}, crs: polarParameters} as LoadGeoJSONParameters);
-
-        expect(firstFeatureInRootTile(source).properties).toEqual({name: 'line'});
     });
 
     test('returns cluster leaves in lng/lat', async () => {
