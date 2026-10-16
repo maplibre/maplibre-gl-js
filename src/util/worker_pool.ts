@@ -32,14 +32,14 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     /** Claims the shared workers, creating them on the first claim. */
     acquire(mapId: number | string): Promise<ActorTarget[]> {
         this.active[mapId] = true;
-        return this.ensureWorkers();
+        return this.start();
     }
 
     /**
-     * Returns the shared workers, creating them on first use, without claiming them. The
-     * `terminate` event still fires once the last claim is released.
+     * Starts the shared workers if they are not running and returns them, without claiming them.
+     * The `terminate` event still fires once the last claim is released.
      */
-    async ensureWorkers(): Promise<ActorTarget[]> {
+    async start(): Promise<ActorTarget[]> {
         if (!this.workersPromise) {
             const promises: Array<Promise<Worker>> = [];
             while (promises.length < WorkerPool.workerCount) {
@@ -59,7 +59,7 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     restart(): void {
         if (!this.workersPromise) return;
         this.terminate();
-        this.ensureWorkers().catch((error) => {
+        this.start().catch((error) => {
             warnOnce(`Failed to create replacement workers: ${error}`);
         });
     }

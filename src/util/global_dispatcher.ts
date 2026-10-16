@@ -100,14 +100,14 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         this.workerErrorSubscriptions = [];
     }
 
-    /** Returns the actors, creating the workers on first use: `ensureWorkers` fires the pool's `create` event synchronously. */
+    /** Returns the actors, creating the workers on first use: `start` fires the pool's `create` event synchronously. */
     private getActors(): Promise<Actor[]> {
-        if (!this.workerPool.workersPromise) this.workerPool.ensureWorkers();
+        if (!this.workerPool.workersPromise) this.workerPool.start();
         return this.actorsPromise;
     }
 
     private async buildActors(): Promise<Actor[]> {
-        const workers = await this.workerPool.ensureWorkers();
+        const workers = await this.workerPool.start();
         const {actors, workerErrorSubscriptions} = createActors(workers, GLOBAL_DISPATCHER_ID, this);
         this.workerErrorSubscriptions = workerErrorSubscriptions;
         const handlers = Object.entries(this.messageHandlers);

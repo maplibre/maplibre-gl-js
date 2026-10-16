@@ -70,12 +70,12 @@ describe('WorkerPool', () => {
         expect(pool.workersPromise).toBeFalsy();
     });
 
-    test('ensuring the workers exist does not keep them alive', async () => {
+    test('starting the workers does not keep them alive', async () => {
         const terminateListener = vi.fn();
 
         const pool = new WorkerPool();
         pool.on('terminate', terminateListener);
-        await pool.ensureWorkers();
+        await pool.start();
         await pool.acquire('map-1');
 
         pool.release('map-1');
