@@ -58,7 +58,7 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
      */
     restart(): void {
         if (!this.workersPromise) return;
-        this.terminateWorkers();
+        this.terminate();
         this.ensureWorkers().catch((error) => {
             warnOnce(`Failed to create replacement workers: ${error}`);
         });
@@ -67,12 +67,12 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     release(mapId: number | string): void {
         delete this.active[mapId];
         if (this.numActive() === 0) {
-            this.terminateWorkers();
+            this.terminate();
         }
     }
 
     /** Drops the current workers, firing `terminate`, and terminates each one once it exists. */
-    private terminateWorkers(): void {
+    private terminate(): void {
         const promise = this.workersPromise;
         if (!promise) return;
         this.workersPromise = null;
