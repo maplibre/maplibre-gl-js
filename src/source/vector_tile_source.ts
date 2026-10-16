@@ -226,7 +226,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             return;
         }
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
-        if (!tile.actor || tile.state === 'expired') {
+        // a failed tile that is retried is loading and has an actor, but no request in flight
+        const isRetryOfErroredTile = tile.state === 'loading' && !tile.abortController;
+        if (!tile.actor || tile.state === 'expired' || isRetryOfErroredTile) {
             tile.actor = this.dispatcher.getReadyActor();
             messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {

@@ -17,6 +17,7 @@
 - Fix a grid of lines along tile borders in line layers of sliced overzoomed tiles when the source tile extent is larger than 4096, by scaling the clip buffer with the extent ([#8705](https://github.com/maplibre/maplibre-gl-js/pull/8705)) (by [@tordans](https://github.com/tordans))
 - Fix the globe drag rounding its rotation to single precision ([#8784](https://github.com/maplibre/maplibre-gl-js/pull/8784)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `load` and `idle` firing before the other tiles finish loading when one tile fails ([#8785](https://github.com/maplibre/maplibre-gl-js/pull/8785)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix a vector or raster-dem tile that failed never loading again after `setTiles`, `setUrl` or `refreshTiles`, which kept `idle` from firing (by [@benjddd](https://github.com/benjddd))
 - _...Add new stuff here..._
 
 ## 6.14.0
