@@ -54,9 +54,8 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private actorsPromise: Promise<Actor[]> | undefined;
     private workerErrorSubscriptions: Subscription[] = [];
     private workerPool: WorkerPool;
-    /** Rejects when the current workers terminate, so in-flight broadcasts reject instead of hanging. */
-    private workersTerminated: Promise<never>;
-    private rejectInFlightBroadcasts: (error: Error) => void;
+    /** Called when the current workers terminate, so in-flight broadcasts reject instead of hanging. */
+    private rejectInFlightBroadcasts = new Set<(error: Error) => void>();
     private watchingWorkerHealth = false;
     private healthCheckInFlight = false;
 
@@ -74,8 +73,6 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
 
     private handleWorkersCreated(): void {
         this.actorsPromise = this.buildActors();
-        this.workersTerminated = new Promise((_, reject) => { this.rejectInFlightBroadcasts = reject; });
-        this.workersTerminated.catch(() => {});
         for (const url of this.importedScriptUrls) {
             this.broadcast(MessageType.importScript, url).catch((error) => {
                 warnOnce(`Failed to import script ${url} into the workers: ${error}`);
@@ -89,9 +86,14 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
             for (const actor of actors) {
                 actor.remove();
             }
-        }).catch(() => {});
+        }).catch((error) => {
+            warnOnce(`The terminated workers' actors were never created: ${error}`);
+        });
         this.actorsPromise = undefined;
-        this.rejectInFlightBroadcasts(new Error('The workers were terminated while a message was in flight.'));
+        for (const reject of this.rejectInFlightBroadcasts) {
+            reject(new Error('The workers were terminated while a message was in flight.'));
+        }
+        this.rejectInFlightBroadcasts.clear();
         for (const subscription of this.workerErrorSubscriptions) {
             subscription.unsubscribe();
         }
@@ -124,12 +126,20 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
     async broadcast(type: string, data: any): Promise<unknown[]> {
         const actorsPromise = this.getActors();
-        const workersTerminated = this.workersTerminated;
-        const actors = await actorsPromise;
-        return Promise.race([
-            Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data}))),
-            workersTerminated
-        ]);
+        let rejectBroadcast: (error: Error) => void;
+        const workersTerminated = new Promise<never>((_, reject) => {
+            rejectBroadcast = reject;
+            this.rejectInFlightBroadcasts.add(reject);
+        });
+        try {
+            const actors = await actorsPromise;
+            return await Promise.race([
+                Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data}))),
+                workersTerminated
+            ]);
+        } finally {
+            this.rejectInFlightBroadcasts.delete(rejectBroadcast);
+        }
     }
 
     /**

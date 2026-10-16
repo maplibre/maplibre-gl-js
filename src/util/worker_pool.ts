@@ -1,6 +1,6 @@
 import {workerFactory} from './web_worker.ts';
 import {browser} from './browser.ts';
-import {isSafari} from './util.ts';
+import {isSafari, warnOnce} from './util.ts';
 import {Evented, type Event} from './evented.ts';
 
 import type {ActorTarget} from './actor.ts';
@@ -59,7 +59,9 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     restart(): void {
         if (!this.workersPromise) return;
         this.terminateWorkers();
-        this.ensureWorkers().catch(() => {});
+        this.ensureWorkers().catch((error) => {
+            warnOnce(`Failed to create replacement workers: ${error}`);
+        });
     }
 
     release(mapId: number | string): void {
@@ -79,7 +81,9 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
             for (const w of workers) {
                 w.terminate();
             }
-        }).catch(() => {});
+        }).catch((error) => {
+            warnOnce(`The terminated workers were never created: ${error}`);
+        });
     }
 
     isPreloaded(): boolean {
