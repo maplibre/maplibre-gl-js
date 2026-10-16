@@ -5,7 +5,6 @@ import {DOM} from '../util/dom.ts';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {getGlobalDispatcher} from '../util/global_dispatcher.ts';
-import {watchWorkerHealth} from '../util/worker_recovery.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions} from '../style/style.ts';
@@ -748,7 +747,7 @@ export class Map extends Evented<MapEventType> {
     constructor(options: MapOptions) {
         super();
         getGlobalDispatcher().on('workersCreated', this._handleWorkersCreated);
-        watchWorkerHealth();
+        getGlobalDispatcher().watchWorkerHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes

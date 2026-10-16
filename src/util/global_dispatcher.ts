@@ -34,6 +34,9 @@ export type GlobalDispatcherEventType = {
  */
 export type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
 
+/** How long the workers get to answer a ping before they are considered terminated. */
+const WORKER_PING_TIMEOUT_MS = 2000;
+
 /**
  * The dispatcher shared across all map instances, see {@link getGlobalDispatcher}. Unlike a map's
  * dispatcher it never claims the workers: its actors live and die with them, rebuilt from the
@@ -49,6 +52,8 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     /** Rejects when the current workers terminate, so in-flight broadcasts reject instead of hanging. */
     private workersTerminated: Promise<never>;
     private rejectInFlightBroadcasts: (error: Error) => void;
+    private watchingWorkerHealth = false;
+    private healthCheckInFlight = false;
 
     /**
      * Workers created before construction, e.g. by prewarm() before this module evaluated, fired
@@ -149,6 +154,41 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     async importScript(workerUrl: string): Promise<void> {
         this.importedScriptUrls.add(workerUrl);
         await this.broadcast(MessageType.importScript, workerUrl);
+    }
+
+    /**
+     * Checks worker health on every return to the foreground, restarting the workers if the browser
+     * terminated them while the page was hidden, as iOS does under memory pressure. Browsers fire no
+     * event for the termination, so the health check is the only way to notice it.
+     */
+    watchWorkerHealth(): void {
+        if (this.watchingWorkerHealth || typeof document === 'undefined') return;
+        this.watchingWorkerHealth = true;
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') this.restartWorkersIfTerminated();
+        }, false);
+    }
+
+    /**
+     * Restarts the shared workers unless every one answers a ping in time. Any answer, even an
+     * error, proves the worker is alive; only silence means the browser terminated it. Each map
+     * then recovers through the same contract as a lost WebGL context, see
+     * `Map._handleWorkersCreated`.
+     */
+    async restartWorkersIfTerminated(timeoutMs: number = WORKER_PING_TIMEOUT_MS): Promise<void> {
+        if (this.healthCheckInFlight || !this.workerPool.workersPromise) return;
+        this.healthCheckInFlight = true;
+        let timer: ReturnType<typeof setTimeout>;
+        try {
+            const alive = await Promise.race([
+                this.broadcast(MessageType.ping, undefined).then(() => true, () => true),
+                new Promise<boolean>((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); })
+            ]);
+            if (!alive) this.workerPool.restart();
+        } finally {
+            clearTimeout(timer);
+            this.healthCheckInFlight = false;
+        }
     }
 }
 
