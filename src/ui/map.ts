@@ -4,7 +4,7 @@ import {now} from '../util/time_control.ts';
 import {DOM} from '../util/dom.ts';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
-import {getGlobalDispatcher} from '../util/global_dispatcher.ts';
+import {ensureGlobalDispatcher} from '../util/global_dispatcher.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions} from '../style/style.ts';
@@ -746,8 +746,7 @@ export class Map extends Evented<MapEventType> {
 
     constructor(options: MapOptions) {
         super();
-        // Registers the getResource handler the workers use to request resources via the main thread.
-        getGlobalDispatcher();
+        ensureGlobalDispatcher();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
