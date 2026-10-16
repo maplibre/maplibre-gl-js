@@ -38,6 +38,11 @@ export interface WorldCoordinateHelper {
      */
     lngLatFromWorld(x: number, y: number): LngLat;
     /**
+     * Whether a world square position has a lng/lat of its own: everywhere for mercator, and for a planar CRS
+     * wherever its inverse answers, which past the edge of a world projection it does not.
+     */
+    hasLngLat(x: number, y: number): boolean;
+    /**
      * Meters per world unit at a world position (mercator: the circumference at that latitude; planar: constant, arguments ignored).
      * Takes the world position because the camera-to-center iteration only has one; it avoids a lng/lat object per step.
      */
@@ -448,7 +453,8 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * @internal
      * Returns whether the specified screen point lies on the map.
-     * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled.
+     * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled,
+     * or if it lies where a projection registered with {@link addProjection} has no lng/lat, such as past the edge of a world projection.
      * @param p - The point's coordinates.
      * @param terrain - Optional terrain.
      */

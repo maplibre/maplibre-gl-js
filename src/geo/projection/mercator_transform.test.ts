@@ -7,7 +7,8 @@ import {MercatorTransform, createMercatorTransform} from './mercator_transform.t
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
-import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsTransform} from '../../util/test/util.ts';
+import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsTransform, createWrappingWorldCrs} from '../../util/test/util.ts';
+import {CRSWorldCoordinateHelper} from './crs.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorWorldCoordinateHelper, mercatorZfromAltitude} from '../mercator_coordinate.ts';
@@ -656,6 +657,16 @@ describe('transform', () => {
 
         transform.setPadding({top: 0, bottom: 200, left: 0, right: 0});
         expect(transform.isPointOnMapSurface(new Point(250, 100))).toBe(true);
+    });
+
+    test('isPointOnMapSurface is false past the edge of a world projection', () => {
+        const transform = createMercatorTransform({minZoom: -2, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+        transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(createWrappingWorldCrs()));
+        transform.resize(500, 500);
+        transform.setZoom(-1);
+
+        expect(transform.isPointOnMapSurface(new Point(300, 250))).toBe(true);
+        expect(transform.isPointOnMapSurface(new Point(400, 250))).toBe(false);
     });
 
     test('projectTileCoordinates', () => {

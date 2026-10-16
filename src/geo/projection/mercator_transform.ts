@@ -614,7 +614,12 @@ export class MercatorTransform implements ITransform {
         if (terrain) {
             return this.screenTerrainPointToMercatorCoordinate(p, terrain) != null;
         }
-        return (p.y > this.centerPoint.y - getMercatorHorizon(this));
+        const belowHorizon = p.y > this.centerPoint.y - getMercatorHorizon(this);
+        if (!belowHorizon || this.worldCoordinateHelper.wraps) {
+            return belowHorizon;
+        }
+        const coordinate = this.screenPointToMercatorCoordinate(p);
+        return this.worldCoordinateHelper.hasLngLat(coordinate.x, coordinate.y);
     }
 
     /**
