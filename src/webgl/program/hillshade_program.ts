@@ -10,12 +10,11 @@ import {
     Uniform4f
 } from '../uniform_binding.ts';
 import {EXTENT} from '../../data/extent.ts';
-import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 
 import type {Context} from '../../webgl/context.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Tile} from '../../tile/tile.ts';
-import type {Painter} from '../../render/painter.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';
 import type {DEMData} from '../../data/dem_data.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -38,6 +37,7 @@ export type HillshadePrepareUniformsType = {
     'u_dimension': Uniform2f;
     'u_zoom': Uniform1f;
     'u_unpack': Uniform4f;
+    'u_log2_world_width': Uniform1f;
 };
 
 const hillshadeUniforms = (context: Context, locations: UniformLocations): HillshadeUniformsType => ({
@@ -57,11 +57,12 @@ const hillshadePrepareUniforms = (context: Context, locations: UniformLocations)
     'u_image': new Uniform1i(context, locations.u_image),
     'u_dimension': new Uniform2f(context, locations.u_dimension),
     'u_zoom': new Uniform1f(context, locations.u_zoom),
-    'u_unpack': new Uniform4f(context, locations.u_unpack)
+    'u_unpack': new Uniform4f(context, locations.u_unpack),
+    'u_log2_world_width': new Uniform1f(context, locations.u_log2_world_width)
 });
 
 const hillshadeUniformValues = (
-    painter: Painter,
+    transform: IReadonlyTransform,
     tile: Tile,
     layer: HillshadeStyleLayer,
 ): UniformValues<HillshadeUniformsType> => {
@@ -91,12 +92,12 @@ const hillshadeUniformValues = (
     for (let i = 0; i < illumination.directionRadians.length; i++) {
         // modify azimuthal angle by map rotation if light is anchored at the viewport
         if (layer.paint.get('hillshade-illumination-anchor') === 'viewport') {
-            illumination.directionRadians[i] += painter.frameRenderContext.transform.bearingInRadians;
+            illumination.directionRadians[i] += transform.bearingInRadians;
         }
     }
     return {
         'u_image': 0,
-        'u_latrange': getTileLatRange(painter, tile.tileID),
+        'u_latrange': getTileLatRange(transform, tile.tileID),
         'u_exaggeration': layer.paint.get('hillshade-exaggeration'),
         'u_altitudes': illumination.altitudeRadians,
         'u_azimuths': illumination.directionRadians,
@@ -107,7 +108,7 @@ const hillshadeUniformValues = (
     };
 };
 
-const hillshadeUniformPrepareValues = (tileID: OverscaledTileID, dem: DEMData): UniformValues<HillshadePrepareUniformsType> => {
+const hillshadeUniformPrepareValues = (transform: IReadonlyTransform, tileID: OverscaledTileID, dem: DEMData): UniformValues<HillshadePrepareUniformsType> => {
 
     const stride = dem.stride;
     const matrix = mat4.create();
@@ -120,17 +121,37 @@ const hillshadeUniformPrepareValues = (tileID: OverscaledTileID, dem: DEMData): 
         'u_image': 1,
         'u_dimension': [stride, stride],
         'u_zoom': tileID.overscaledZ,
-        'u_unpack': dem.getUnpackVector()
+        'u_unpack': dem.getUnpackVector(),
+        'u_log2_world_width': getLog2WorldWidth(transform)
     };
 };
 
-function getTileLatRange(painter: Painter, tileID: OverscaledTileID) {
+/**
+ * The log2 of the zoom 0 world's width in meters, from which the prepare shader gets the meters per DEM pixel that
+ * it divides elevation differences by. A registered CRS's world is its zoom 0 extent wide, in CRS units taken as
+ * meters. Mercator keeps 25.2562, which with the shader's 3 for the 8 in its slope kernel is the 28.2562 the shader
+ * used before, so its hillshade does not change.
+ */
+function getLog2WorldWidth(transform: IReadonlyTransform): number {
+    const worldCoordinateHelper = transform.worldCoordinateHelper;
+    return worldCoordinateHelper.wraps ? 25.2562 : Math.log2(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5));
+}
+
+/**
+ * The latitudes of the tile's top and bottom edges, which the hillshade shader uses to correct the mercator
+ * scale distortion of slopes (it scales by `cos(lat)`). Only the wrapping, cylindrical mercator plane stretches
+ * with latitude; any other plane is rendered in its own units and gets `[0, 0]`: `cos(0)` is 1 and the shader
+ * applies no correction.
+ */
+function getTileLatRange(transform: IReadonlyTransform, tileID: OverscaledTileID): [number, number] {
+    const worldCoordinateHelper = transform.worldCoordinateHelper;
+    if (!worldCoordinateHelper.wraps) return [0, 0];
     // for scaling the magnitude of a points slope by its latitude
     const tilesAtZoom = Math.pow(2, tileID.canonical.z);
     const y = tileID.canonical.y;
     return [
-        new MercatorCoordinate(0, y / tilesAtZoom).toLngLat().lat,
-        new MercatorCoordinate(0, (y + 1) / tilesAtZoom).toLngLat().lat];
+        worldCoordinateHelper.lngLatFromWorld(0, y / tilesAtZoom).lat,
+        worldCoordinateHelper.lngLatFromWorld(0, (y + 1) / tilesAtZoom).lat];
 }
 
 export {

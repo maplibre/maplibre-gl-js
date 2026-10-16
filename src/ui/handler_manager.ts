@@ -188,8 +188,11 @@ export class HandlerManager {
     _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
     /**
      * The gesture in flight over terrain, from its first handler frame to the `_fireEvents` call that sees the
-     * movement end. It holds the center elevation (see {@link Camera.holdElevation}); its end puts the center back
-     * onto the terrain, or at 0 keeping the zoom with the terrain off.
+     * movement end. It holds the center elevation (see {@link Camera.holdElevation}), which
+     * {@link Camera._keepCameraAboveTerrain} may raise to keep the camera out of the terrain and lower again, and a
+     * frame that zooms in moves the held center onto the terrain the camera looks at, with the camera where it is
+     * (see {@link Camera.moveCenterOntoTerrain}); its end puts the center back onto the terrain, or at 0 keeping the
+     * zoom with the terrain off.
      */
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
     _zoom: {handlerName: string};
@@ -579,6 +582,9 @@ export class HandlerManager {
         this._camera.stop(true);
 
         const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta} = combinedResult;
+        if (zoomDelta > 0 && this._terrainGesture.inFlight) {
+            this._camera.moveCenterOntoTerrain(tr, zoomDelta);
+        }
 
         let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, tr);
         const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : undefined;

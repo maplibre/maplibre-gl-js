@@ -7,6 +7,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
 
@@ -61,6 +62,82 @@ test('no render after idle event', async () => {
     map.on('render', spy);
     await sleep(100);
     expect(spy).not.toHaveBeenCalled();
+});
+
+describe('when every tile request fails with a server error', () => {
+    let style: StyleSpecification;
+
+    beforeEach(() => {
+        server.respondWith(/example\.com/, [500, {}, '']);
+        server.respondImmediately = true;
+        style = createStyle();
+        style.sources.maplibre = {
+            type: 'vector',
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        };
+        style.layers.push({
+            id: 'layerId',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        });
+    });
+
+    test('load fires', async () => {
+        const map = createMap({style});
+        await expect(map.once('load')).resolves.toBeDefined();
+    });
+
+    test('idle fires', async () => {
+        const map = createMap({style});
+        await expect(map.once('idle')).resolves.toBeDefined();
+    });
+});
+
+describe('when one tile request fails with a server error while the others are loading', () => {
+    let style: StyleSpecification;
+
+    beforeEach(() => {
+        style = createStyle();
+        style.sources.maplibre = {
+            type: 'vector',
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        };
+        style.layers.push({
+            id: 'layerId',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        });
+    });
+
+    test('load waits for the tiles still loading', async () => {
+        const map = createMap({style});
+        const load = vi.fn();
+        map.on('load', load);
+        await vi.waitFor(() => expect(server.requests.length).toBeGreaterThan(1));
+        const tileError = map.once('error');
+
+        server.requests[0].respond(500, {}, '');
+        await tileError;
+        await map.once('render');
+
+        expect(load).not.toHaveBeenCalled();
+    });
+
+    test('idle waits for the tiles still loading', async () => {
+        const map = createMap({style});
+        const idle = vi.fn();
+        map.on('idle', idle);
+        await vi.waitFor(() => expect(server.requests.length).toBeGreaterThan(1));
+        const tileError = map.once('error');
+
+        server.requests[0].respond(500, {}, '');
+        await tileError;
+        await map.once('render');
+
+        expect(idle).not.toHaveBeenCalled();
+    });
 });
 
 test('no render before style loaded', async () => {
@@ -236,24 +313,28 @@ describe('frame render data', () => {
         const map = createMap();
         await map.once('idle');
         map.setProjection({type: 'vertical-perspective'});
+        const render = vi.spyOn(map.painter, 'render');
 
         map.redraw();
 
-        expect(map.painter.frameRenderContext.data.projectionTransition).toBe(1);
-        expect(map.painter.frameRenderContext.data.isRenderingGlobe).toBe(true);
-        expect(map.painter.frameRenderContext.data.projectionShaderVariant.name).toBe('globe');
+        const data = render.mock.lastCall[2];
+        expect(data.projectionTransition).toBe(1);
+        expect(data.isRenderingGlobe).toBe(true);
+        expect(data.projectionShaderVariant.name).toBe('globe');
         map.remove();
     });
 
     test('passes the pixel ratio and the evaluated light and sky to the painter', async () => {
         const map = createMap({pixelRatio: 2, style: {version: 8, sources: {}, layers: [], light: {intensity: 0.2}, sky: {'fog-color': 'red'}}});
         await map.once('idle');
+        const render = vi.spyOn(map.painter, 'render');
 
         map.redraw();
 
-        expect(map.painter.frameRenderContext.data.pixelRatio).toBe(2);
-        expect(map.painter.frameRenderContext.data.light.intensity).toBe(0.2);
-        expect(map.painter.frameRenderContext.data.sky['fog-color']).toEqual(Color.red);
+        const data = render.mock.lastCall[2];
+        expect(data.pixelRatio).toBe(2);
+        expect(data.light.intensity).toBe(0.2);
+        expect(data.sky['fog-color']).toEqual(Color.red);
         map.remove();
     });
 });

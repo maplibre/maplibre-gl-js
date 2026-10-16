@@ -68,7 +68,7 @@ export function drawDebug(painter: Painter, tileManager: TileManager, coords: Ov
 }
 
 function drawDebugTile(painter: Painter, tileManager: TileManager, coord: OverscaledTileID, frameRenderContext: FrameRenderContext) {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
 
     const program = frameRenderContext.useProgram('debug');

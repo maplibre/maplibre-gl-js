@@ -71,6 +71,7 @@ export class ScaleControl implements IControl {
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-scale', map.getContainer());
 
         this._map.on('move', this._onMove);
+        this._map.on('projectiontransition', this._onMove);
         this._onMove();
 
         return this._container;
@@ -80,6 +81,7 @@ export class ScaleControl implements IControl {
     onRemove(): void {
         this._container.remove();
         this._map.off('move', this._onMove);
+        this._map.off('projectiontransition', this._onMove);
         this._map = undefined;
     }
 
@@ -90,30 +92,33 @@ export class ScaleControl implements IControl {
      */
     setUnit = (unit: Unit): void => {
         this.options.unit = unit;
+        if (!this._map) return;
         updateScale(this._map, this._container, this.options);
     };
 }
 
+/**
+ * A horizontal scale is imagined to be present at center of the map
+ * container with maximum length (Default) as 100px.
+ * Using spherical law of cosines approximation, the real distance is
+ * found between the two coordinates and is rounded off to near pretty number.
+ * Minimum maxWidth is calculated for the scale box.
+ * In case the center of the screen is not pointing at the map, the previous scale is used.
+ * 
+ */
 function updateScale(map: Map, container: HTMLElement, options: ScaleControlOptions): void {
-    // A horizontal scale is imagined to be present at center of the map
-    // container with maximum length (Default) as 100px.
-    // Using spherical law of cosines approximation, the real distance is
-    // found between the two coordinates.
-    // Minimum maxWidth is calculated for the scale box.
     const optWidth = options?.maxWidth || 100;
     const {width: containerWidth, height: containerHeight} = map._camera.transform;
     const y = containerHeight / 2;
     const x = containerWidth / 2;
     const left = map.unproject([x - optWidth / 2, y]);
     const right = map.unproject([x + optWidth / 2, y]);
+    if (!left || !right) return;
 
     const globeWidth = Math.round(map.project(right).x - map.project(left).x);
     const maxWidth = Math.min(optWidth, globeWidth, containerWidth);
 
     const maxMeters = left.distanceTo(right);
-    // The real distance corresponding to 100px scale length is rounded off to
-    // near pretty number and the scale length for the same is found out.
-    // Default unit of the scale is based on User's locale.
     if (options?.unit === 'imperial') {
         const maxFeet = 3.2808 * maxMeters;
         if (maxFeet > 5280) {

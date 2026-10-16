@@ -1,7 +1,7 @@
-import {Map, setWorkerUrl} from 'maplibre-gl';
+import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
 new Map({
     container: 'map',

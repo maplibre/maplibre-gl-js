@@ -1,8 +1,8 @@
 layout(location = 0) in vec2 a_anchor_pos;
 layout(location = 1) in vec2 a_placed;
 layout(location = 2) in vec2 a_box_real;
-flat out float v_placed;
-flat out float v_notUsed;
+out float v_placed;
+out float v_notUsed;
 
 void main() {
     gl_Position = projectTileWithElevation(a_anchor_pos, get_elevation(a_anchor_pos));

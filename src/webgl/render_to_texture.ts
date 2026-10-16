@@ -43,6 +43,22 @@ function isRenderedToTexture(layer: StyleLayer): boolean {
 }
 
 /**
+ * Returns the ids of the layers in each render stack, a run of layers rendered to texture that ends at a layer
+ * that is not.
+ */
+function getRenderStacks(style: Style, layerIds: string[]): string[][] {
+    const stacks: string[][] = [];
+    let prevRenderedToTexture = false;
+    for (const layerId of layerIds) {
+        const renderedToTexture = isRenderedToTexture(style._layers[layerId]);
+        if (renderedToTexture && !prevRenderedToTexture) stacks.push([]);
+        if (renderedToTexture) stacks[stacks.length - 1].push(layerId);
+        prevRenderedToTexture = renderedToTexture;
+    }
+    return stacks;
+}
+
+/**
  * @internal
  * Renders RTT-eligible layers into per-tile cached textures, then drapes
  * them onto the terrain mesh. Slots live on each Tile so their lifetime
@@ -123,6 +139,7 @@ export class RenderToTexture {
         this._rttTiles = [];
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
+        const stacks = getRenderStacks(style, this._renderableLayerIds);
         const visibleLayerIds = this._renderableLayerIds.join();
 
         const rttSourceIds = new Set<string>();
@@ -179,12 +196,44 @@ export class RenderToTexture {
                 this.needsFollowUpFrame = true;
             } else if (difference === 'zoom' || difference === 'sourceTiles') {
                 if (staleTileReleased) this.needsFollowUpFrame = true;
-                else tile.releaseRTT(this.painter);
+                else this._releaseChangedTextures(tile, style, stacks);
                 staleTileReleased = true;
             } else {
-                tile.releaseRTT(this.painter);
+                this._releaseChangedTextures(tile, style, stacks);
             }
         }
+    }
+
+    /**
+     * Releases the tile's textures of the stacks whose layers changed, or all of its textures when every stack
+     * changed, which also drops the textures of stacks that the layers no longer form.
+     */
+    _releaseChangedTextures(tile: Tile, style: Style, stacks: string[][]): void {
+        const changedStacks = stacks.map(layerIds => this._hasStackChanged(tile, style, layerIds));
+        if (!changedStacks.includes(false)) {
+            tile.releaseRTT(this.painter);
+            return;
+        }
+        for (const [stack, changed] of changedStacks.entries()) {
+            if (changed) tile.releaseRTTStack(this.painter, stack);
+        }
+    }
+
+    /**
+     * Whether the tile's texture of the stack differs from what this frame would render into it. A stack whose
+     * layers have no fingerprint, background layers only, counts as changed.
+     */
+    _hasStackChanged(tile: Tile, style: Style, layerIds: string[]): boolean {
+        let fingerprinted = false;
+        for (const layerId of layerIds) {
+            const fingerprintKey = rttFingerprintKey(style._layers[layerId]);
+            const frameFingerprint = this._rttFingerprints[fingerprintKey]?.[tile.tileID.key];
+            const tileFingerprint = tile.rttFingerprint[fingerprintKey];
+            if (!frameFingerprint && !tileFingerprint) continue;
+            if (frameFingerprint?.difference(tileFingerprint) !== 'none') return true;
+            fingerprinted = true;
+        }
+        return !fingerprinted;
     }
 
     /**
@@ -210,10 +259,11 @@ export class RenderToTexture {
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
      * @param layer - the layer to render
+     * @param style - the style the stacked layers and their tile managers come from
      * @param frameRenderContext - shared state for the current render
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer, frameRenderContext: FrameRenderContext): boolean {
+    renderLayer(layer: StyleLayer, style: Style, frameRenderContext: FrameRenderContext): boolean {
         if (layer.isHidden(frameRenderContext.transform.zoom)) return false;
 
         const renderedToTexture = isRenderedToTexture(layer);
@@ -246,11 +296,11 @@ export class RenderToTexture {
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 frameRenderContext.invalidateTileClippingMasks();
                 for (const layerId of layers) {
-                    const layer = painter.style._layers[layerId];
+                    const layer = style._layers[layerId];
                     const coords = layer.source ? this._coordsAscending[layer.source][tile.tileID.key] : [tile.tileID];
                     painter.context.viewport.set([0, 0, this.rttSize, this.rttSize]);
                     frameRenderContext.renderTileClippingMasks(layer, coords);
-                    painter.renderLayer(painter, painter.style.tileManagers[layer.source], layer, coords, frameRenderContext);
+                    painter.renderLayer(painter, style.tileManagers[layer.source], layer, coords, frameRenderContext);
                     const fingerprintKey = rttFingerprintKey(layer);
                     if (fingerprintKey) tile.rttFingerprint[fingerprintKey] = this._rttFingerprints[fingerprintKey][tile.tileID.key];
                 }

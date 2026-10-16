@@ -115,6 +115,7 @@ export class NullWebGL2RenderingContext {
     FRAGMENT_SHADER: number = 0x8B30;
     COMPILE_STATUS: number = 0x8B81;
     LINK_STATUS: number = 0x8B82;
+    ATTACHED_SHADERS: number = 0x8B85;
     UNPACK_ALIGNMENT: number = 0x0CF5;
     UNPACK_FLIP_Y_WEBGL: number = 0x9240;
     UNPACK_PREMULTIPLY_ALPHA_WEBGL: number = 0x9241;

@@ -1,7 +1,9 @@
 import {LngLat, earthRadius} from '../geo/lng_lat.ts';
+import {mercatorTileMatrixSet} from './projection/tile_matrix_set.ts';
 
 import type {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 import type {LngLatLike} from '../geo/lng_lat.ts';
+import type {WorldCoordinateHelper} from './transform_interface.ts';
 
 /*
  * The average circumference of the world in meters.
@@ -75,7 +77,7 @@ export function mercatorScale(lat: number): number {
  * let nullIsland = new MercatorCoordinate(0.5, 0.5, 0);
  * ```
  * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-style-layer/)
- * @see [Add a 3D model using three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-3d-model-using-threejs/)
+ * @see [Add 3D Tiles, 3D objects and models using Three.js](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-tiles-3d-objects-and-models-using-threejs/)
  * @see [Add a simple custom layer on a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-simple-custom-layer-on-a-globe/)
  */
 export class MercatorCoordinate implements IMercatorCoordinate {
@@ -158,3 +160,34 @@ export class MercatorCoordinate implements IMercatorCoordinate {
         return 1 / earthCircumference * mercatorScale(latFromMercatorY(this.y));
     }
 }
+
+/**
+ * @internal
+ * The Web Mercator world mapping used by the mercator, globe, and vertical-perspective projections.
+ * `metersPerWorldUnit` is the inverse of `MercatorCoordinate.meterInMercatorCoordinateUnits`.
+ * Lives next to the mercator functions it calls so they stay module-local on the camera paths.
+ */
+class MercatorWorldCoordinateHelper implements WorldCoordinateHelper {
+    readonly name = 'mercator';
+    worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate {
+        return new MercatorCoordinate(mercatorXfromLng(lng), mercatorYfromLat(lat), altitude === undefined ? 0 : mercatorZfromAltitude(altitude, lat));
+    }
+    lngLatFromWorld(x: number, y: number): LngLat {
+        return new LngLat(lngFromMercatorX(x), latFromMercatorY(y));
+    }
+    metersPerWorldUnit(_x: number, y: number): number {
+        return 1 / (1 / earthCircumference * mercatorScale(latFromMercatorY(y)));
+    }
+    worldZFromAltitude(altitude: number, lngLat: LngLat): number {
+        return mercatorZfromAltitude(altitude, lngLat.lat);
+    }
+    /** The world wraps in longitude: copies, wrapping, and the mercator latitude clamp all apply. */
+    readonly wraps = true;
+    readonly tileMatrixSet = mercatorTileMatrixSet;
+}
+
+/**
+ * @internal
+ * The one mercator world mapping: it holds no state, so every mercator-based transform shares this instance.
+ */
+export const mercatorWorldCoordinateHelper: WorldCoordinateHelper = new MercatorWorldCoordinateHelper();

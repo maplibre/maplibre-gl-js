@@ -6,8 +6,7 @@ import {Painter} from '../../render/painter.ts';
 import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
-import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
-import {MercatorProjection} from '../../geo/projection/mercator_projection.ts';
+import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {expectToBeCloseToArray, createFrameRenderData} from '../../util/test/util.ts';
 
 import type {CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
@@ -27,16 +26,14 @@ vi.mock(import('../../symbol/projection'));
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
         // same transform setup as in transform.test.ts 'creates a transform', so matrices of transform should be the same
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
         transform.setMinPitch(10);
         transform.setMaxPitch(10);
         const mockPainter = new Painter(null);
-        mockPainter.style = {
-            projection: new MercatorProjection(),
-        } as any;
         mockPainter.context = {
             gl: {},
+            setCustomLayerDefaults: () => {},
             setColorMode: () => {},
             setStencilMode: () => {},
             setDepthMode: () => {},
@@ -45,8 +42,7 @@ describe('drawCustom', () => {
                 set: () => {}
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', getStencilMesh: null});
-        mockPainter.frameRenderContext = frameRenderContext;
+        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         const tile = new Tile(tileId, 256);
