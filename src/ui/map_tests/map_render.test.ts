@@ -94,6 +94,52 @@ describe('when every tile request fails with a server error', () => {
     });
 });
 
+describe('when one tile request fails with a server error while the others are loading', () => {
+    let style: StyleSpecification;
+
+    beforeEach(() => {
+        style = createStyle();
+        style.sources.maplibre = {
+            type: 'vector',
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        };
+        style.layers.push({
+            id: 'layerId',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        });
+    });
+
+    test('load waits for the tiles still loading', async () => {
+        const map = createMap({style});
+        const load = vi.fn();
+        map.on('load', load);
+        await vi.waitFor(() => expect(server.requests.length).toBeGreaterThan(1));
+        const tileError = map.once('error');
+
+        server.requests[0].respond(500, {}, '');
+        await tileError;
+        await map.once('render');
+
+        expect(load).not.toHaveBeenCalled();
+    });
+
+    test('idle waits for the tiles still loading', async () => {
+        const map = createMap({style});
+        const idle = vi.fn();
+        map.on('idle', idle);
+        await vi.waitFor(() => expect(server.requests.length).toBeGreaterThan(1));
+        const tileError = map.once('error');
+
+        server.requests[0].respond(500, {}, '');
+        await tileError;
+        await map.once('render');
+
+        expect(idle).not.toHaveBeenCalled();
+    });
+});
+
 test('no render before style loaded', async () => {
     server.respondWith('/styleUrl', JSON.stringify(createStyle()));
     const map = createMap({style: '/styleUrl'});
