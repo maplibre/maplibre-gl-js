@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, test, expect} from 'vitest';
-import {createMap, beforeMapTest, createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs, createWidePlateCarreeCrs} from '../../util/test/util.ts';
 import {addProjection, removeProjection} from '../../geo/projection/projection_crud.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
@@ -139,5 +139,33 @@ describe('Map in a CRS whose converter answers only inside its tile matrix set',
 
         expect(pastTheWestEdge.lng).toBeCloseTo(-90, 6);
         expect(pastTheWestEdge.lat).toBeCloseTo(0, 6);
+    });
+});
+
+describe('Map in a CRS wider than ±180°', () => {
+    afterEach(() => {
+        removeProjection(createWidePlateCarreeCrs().name);
+    });
+
+    test('eases to a center past 180° without wrapping it', async () => {
+        const crs = createWidePlateCarreeCrs();
+        addProjection(crs);
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}});
+        await map.once('style.load');
+
+        map.easeTo({center: [200, 0], duration: 0});
+
+        expect(map.getCenter().lng).toBeCloseTo(200, 6);
+    });
+
+    test('flies to a center past 180° without wrapping it', async () => {
+        const crs = createWidePlateCarreeCrs();
+        addProjection(crs);
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}});
+        await map.once('style.load');
+
+        map.flyTo({center: [200, 0], duration: 0});
+
+        expect(map.getCenter().lng).toBeCloseTo(200, 6);
     });
 });
