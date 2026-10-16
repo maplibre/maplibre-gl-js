@@ -6,6 +6,7 @@
 - Speed up tile loading by skipping point labels in the tile buffer, which the neighbouring tile draws ([#8535](https://github.com/maplibre/maplibre-gl-js/pull/8535)) (by [@cherenkov](https://github.com/cherenkov))
 - Project GeoJSON sources on a map in a registered CRS, in the workers, from a `definition` string and a projection handler ([#8736](https://github.com/maplibre/maplibre-gl-js/issues/8736)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Support OpenType `vert` forms in vertical labels rendered with `font-faces` ([#8489](https://github.com/maplibre/maplibre-gl-js/pull/8489)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
+- Automatically recover every map, through the same contract as a lost WebGL context, after the browser terminates the shared web workers as iOS does to a backgrounded page ([#8461](https://github.com/maplibre/maplibre-gl-js/issues/8461)) (by [@lucaswoj](https://github.com/lucaswoj) and [@ingalls](https://github.com/ingalls))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -15,6 +16,7 @@
 - Fix the terrain not finding a tile's own DEM data when the DEM source's maxzoom is below the terrain tile zoom ([#8765](https://github.com/maplibre/maplibre-gl-js/pull/8765)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix the camera dropping to sea level while the terrain under the center of a `jumpTo`, `easeTo` or `flyTo` loads ([#8549](https://github.com/maplibre/maplibre-gl-js/issues/8549)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix a grid of lines along tile borders in line layers of sliced overzoomed tiles when the source tile extent is larger than 4096, by scaling the clip buffer with the extent ([#8705](https://github.com/maplibre/maplibre-gl-js/pull/8705)) (by [@tordans](https://github.com/tordans))
+- Terminate the pooled web workers when the last map is removed; plugins can restore worker state via the global dispatcher's `workersCreated` event ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491), [#8735](https://github.com/maplibre/maplibre-gl-js/pull/8735)) (by [@lucaswoj](https://github.com/lucaswoj) and [@HarelM](https://github.com/HarelM))
 - Fix the globe drag rounding its rotation to single precision ([#8784](https://github.com/maplibre/maplibre-gl-js/pull/8784)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `load` and `idle` firing before the other tiles finish loading when one tile fails ([#8785](https://github.com/maplibre/maplibre-gl-js/pull/8785)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix a GeoJSON feature without coordinates staying out of the tiles after `updateData` gives it some, by updating geojson-vt to 6.3.0 ([#8797](https://github.com/maplibre/maplibre-gl-js/pull/8797)) (by [@johncarmack1984](https://github.com/johncarmack1984))

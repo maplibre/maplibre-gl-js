@@ -1,15 +1,21 @@
 import {workerFactory} from './web_worker.ts';
 import {browser} from './browser.ts';
-import {isSafari} from './util.ts';
+import {isSafari, warnOnce} from './util.ts';
+import {Evented, type Event} from './evented.ts';
 
 import type {ActorTarget} from './actor.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
 
+export type WorkerPoolEventType = {
+    create: Event;
+    terminate: Event;
+};
+
 /**
  * Constructs a worker pool.
  */
-export class WorkerPool {
+export class WorkerPool extends Evented<WorkerPoolEventType> {
     static workerCount: number;
 
     active: {
@@ -18,33 +24,66 @@ export class WorkerPool {
     workersPromise: Promise<ActorTarget[]> | null;
 
     constructor() {
+        super();
         this.active = {};
         this.workersPromise = null;
     }
 
-    async acquire(mapId: number | string): Promise<ActorTarget[]> {
+    /** Claims the shared workers, creating them on the first claim. */
+    acquire(mapId: number | string): Promise<ActorTarget[]> {
         this.active[mapId] = true;
+        return this.start();
+    }
+
+    /**
+     * Starts the shared workers if they are not running and returns them, without claiming them.
+     * The `terminate` event still fires once the last claim is released.
+     */
+    async start(): Promise<ActorTarget[]> {
         if (!this.workersPromise) {
             const promises: Array<Promise<Worker>> = [];
             while (promises.length < WorkerPool.workerCount) {
                 promises.push(workerFactory());
             }
             this.workersPromise = Promise.all(promises);
+            this.fire('create');
         }
         return (await this.workersPromise).slice();
     }
 
+    /**
+     * Terminates the shared workers and creates replacements, keeping every claim. For workers
+     * the browser killed behind the library's back. The `terminate` and `create` events let
+     * everything holding actors on the old workers rebuild them on the new ones.
+     */
+    restart(): void {
+        if (!this.workersPromise) return;
+        this.terminate();
+        this.start().catch((error) => {
+            warnOnce(`Failed to create replacement workers: ${error}`);
+        });
+    }
+
     release(mapId: number | string): void {
         delete this.active[mapId];
-        if (this.numActive() === 0 && this.workersPromise) {
-            const promise = this.workersPromise;
-            this.workersPromise = null;
-            promise.then(workers => {
-                for (const w of workers) {
-                    w.terminate();
-                }
-            });
+        if (this.numActive() === 0) {
+            this.terminate();
         }
+    }
+
+    /** Drops the current workers, firing `terminate`, and terminates each one once it exists. */
+    private terminate(): void {
+        const promise = this.workersPromise;
+        if (!promise) return;
+        this.workersPromise = null;
+        this.fire('terminate');
+        promise.then(workers => {
+            for (const w of workers) {
+                w.terminate();
+            }
+        }).catch((error) => {
+            warnOnce(`The terminated workers were never created: ${error}`);
+        });
     }
 
     isPreloaded(): boolean {

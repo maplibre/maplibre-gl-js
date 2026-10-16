@@ -1,12 +1,9 @@
-import {Actor, type ActorTarget, type MessageHandler} from './actor.ts';
-import {getGlobalWorkerPool} from './global_worker_pool.ts';
-import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
-import {MessageType} from './actor_messages.ts';
-import {ErrorEvent, Evented, type ErrorEventType} from './evented.ts';
-import {type Subscription, subscribe} from './util.ts';
+import {type Actor, broadcastToActors, createActors, type MessageHandler} from './actor.ts';
+import {Evented, type ErrorEventType} from './evented.ts';
 
+import type {Subscription} from './util.ts';
 import type {WorkerPool} from './worker_pool.ts';
-import type {RequestResponseMessageMap} from './actor_messages.ts';
+import type {MessageType, RequestResponseMessageMap} from './actor_messages.ts';
 
 /**
  * Responsible for sending messages from a {@link Source} to an associated worker source (usually with the same name).
@@ -34,14 +31,9 @@ export class Dispatcher extends Evented<ErrorEventType> {
     private async initActors(mapId: string | number): Promise<Actor[]> {
         const workers = await this.workerPool.acquire(mapId);
         if (this.removed) return [];
-        this.actors = workers.map((worker: ActorTarget, i: number) => {
-            this.workerErrorSubscriptions.push(subscribe(worker, 'error', () => {
-                this.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
-            }, false));
-            const actor = new Actor(worker, mapId);
-            actor.name = `Worker ${i}`;
-            return actor;
-        });
+        const {actors, workerErrorSubscriptions} = createActors(workers, mapId, this);
+        this.actors = actors;
+        this.workerErrorSubscriptions = workerErrorSubscriptions;
         if (!this.actors.length) throw new Error('No actors found');
         return this.actors;
     }
@@ -51,7 +43,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
      */
     async broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>> {
         const actors = await this.actorsPromise;
-        return Promise.all(actors.map(actor => actor.sendAsync({type, data})));
+        return broadcastToActors(actors, type, data);
     }
 
     /**
@@ -102,23 +94,4 @@ export class Dispatcher extends Evented<ErrorEventType> {
             actor.unregisterMessageHandler(type);
         }
     }
-}
-
-let globalDispatcher: Dispatcher;
-
-/**
- * This function is used to get the global dispatcher that is shared across all maps instances.
- * It is used by the main thread to send messages to the workers, and by the workers to send messages back to the main thread.
- * If you import a script into the worker and need to send a message to the workers to pass some parameters for example,
- * you can use this function to get the global dispatcher and send a message to the workers.
- * @returns The global dispatcher instance.
- */
-export function getGlobalDispatcher(): Dispatcher {
-    if (!globalDispatcher) {
-        globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
-        globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
-            return makeRequest(params, abortController);
-        });
-    }
-    return globalDispatcher;
 }
