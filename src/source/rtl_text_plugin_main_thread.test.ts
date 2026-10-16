@@ -21,7 +21,7 @@ describe('RTLMainThreadPlugin', () => {
         global.fetch = null;
         // Reset the singleton instance before each test
         rtlMainThreadPlugin.clearRTLTextPlugin();
-        broadcastSpy = vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockResolvedValue({} as any);
+        broadcastSpy = vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockResolvedValue([]);
     });
 
     function broadcastMockSuccess(message: MessageType, payload: PluginState): Promise<PluginState[]> {

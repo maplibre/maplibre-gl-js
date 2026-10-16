@@ -1,6 +1,7 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
 import {GPUInitializationError} from '../../util/gpu_initialization_error.ts';
+import {getGlobalWorkerPool} from '../../util/global_worker_pool.ts';
 
 let originalGetContext: typeof HTMLCanvasElement.prototype.getContext;
 beforeEach(() => {
@@ -134,6 +135,46 @@ test('a WebGL style image is told to release its GPU resources on context loss, 
     expect(map.getImage('gpu-image').userImage).toBe(userImage);
     expect(map.getImage('gpu-image').version).toBe(versionBeforeContextLoss + 1);
 
+    map.remove();
+});
+
+test('a worker pool restart replaces the workers and rebuilds the style through the context-loss contract', async () => {
+    const map = createMap();
+    await map.once('load');
+    map.addSource('points', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
+    map.addLayer({id: 'points', type: 'circle', source: 'points'});
+    const styleBeforeRestart = map.getStyle();
+    const workersBeforeRestart = await getGlobalWorkerPool().ensureWorkers();
+    const styleObjectBeforeRestart = map.style;
+    const lostSpy = vi.fn();
+    const restoredSpy = vi.fn();
+    map.on('webglcontextlost', lostSpy);
+    map.on('webglcontextrestored', restoredSpy);
+
+    getGlobalWorkerPool().restart();
+    await map.once('style.load');
+
+    expect(lostSpy).toHaveBeenCalledTimes(1);
+    expect(restoredSpy).toHaveBeenCalledTimes(1);
+    expect(map.style).not.toBe(styleObjectBeforeRestart);
+    expect(map.getStyle()).toEqual(styleBeforeRestart);
+    const workersAfterRestart = await getGlobalWorkerPool().ensureWorkers();
+    for (const worker of workersAfterRestart) {
+        expect(workersBeforeRestart).not.toContain(worker);
+    }
+    map.remove();
+});
+
+test('a restart while the style is still loading rebuilds it once it loads', async () => {
+    const map = createMap();
+    const lostSpy = vi.fn();
+    map.on('webglcontextlost', lostSpy);
+
+    getGlobalWorkerPool().restart();
+    expect(lostSpy).not.toHaveBeenCalled();
+
+    await map.once('style.load');
+    expect(lostSpy).toHaveBeenCalledTimes(1);
     map.remove();
 });
 

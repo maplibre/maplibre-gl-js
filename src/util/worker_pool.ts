@@ -1,6 +1,6 @@
 import {workerFactory} from './web_worker.ts';
 import {browser} from './browser.ts';
-import {isSafari} from './util.ts';
+import {isSafari, warnOnce} from './util.ts';
 import {Evented, type Event} from './evented.ts';
 
 import type {ActorTarget} from './actor.ts';
@@ -51,18 +51,39 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
         return (await this.workersPromise).slice();
     }
 
+    /**
+     * Terminates the shared workers and creates replacements, keeping every claim. For workers
+     * the browser killed behind the library's back. The `terminate` and `create` events let
+     * everything holding actors on the old workers rebuild them on the new ones.
+     */
+    restart(): void {
+        if (!this.workersPromise) return;
+        this.terminate();
+        this.ensureWorkers().catch((error) => {
+            warnOnce(`Failed to create replacement workers: ${error}`);
+        });
+    }
+
     release(mapId: number | string): void {
         delete this.active[mapId];
-        if (this.numActive() === 0 && this.workersPromise) {
-            const promise = this.workersPromise;
-            this.workersPromise = null;
-            this.fire('terminate');
-            promise.then(workers => {
-                for (const w of workers) {
-                    w.terminate();
-                }
-            });
+        if (this.numActive() === 0) {
+            this.terminate();
         }
+    }
+
+    /** Drops the current workers, firing `terminate`, and terminates each one once it exists. */
+    private terminate(): void {
+        const promise = this.workersPromise;
+        if (!promise) return;
+        this.workersPromise = null;
+        this.fire('terminate');
+        promise.then(workers => {
+            for (const w of workers) {
+                w.terminate();
+            }
+        }).catch((error) => {
+            warnOnce(`The terminated workers were never created: ${error}`);
+        });
     }
 
     isPreloaded(): boolean {

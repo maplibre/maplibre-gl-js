@@ -41,6 +41,35 @@ describe('WorkerPool', () => {
         expect(pool.workersPromise).toBeFalsy();
     });
 
+    test('restart terminates the workers and creates replacements, keeping the claims', async () => {
+        const pool = new WorkerPool();
+        const before = await pool.acquire('map-1');
+        const terminateSpies = before.map((w) => vi.spyOn(w, 'terminate'));
+
+        pool.restart();
+        await Promise.resolve();
+
+        for (const spy of terminateSpies) {
+            expect(spy).toHaveBeenCalledTimes(1);
+        }
+        const after = await pool.acquire('map-1');
+        expect(after).toHaveLength(before.length);
+        for (const w of after) {
+            expect(before).not.toContain(w);
+        }
+    });
+
+    test('restart before any worker exists does nothing', () => {
+        const pool = new WorkerPool();
+        const createListener = vi.fn();
+        pool.on('create', createListener);
+
+        pool.restart();
+
+        expect(createListener).not.toHaveBeenCalled();
+        expect(pool.workersPromise).toBeFalsy();
+    });
+
     test('ensuring the workers exist does not keep them alive', async () => {
         const terminateListener = vi.fn();
 

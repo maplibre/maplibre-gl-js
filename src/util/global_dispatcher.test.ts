@@ -124,3 +124,48 @@ describe('importScript', () => {
         expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'});
     });
 });
+
+describe('worker recovery', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.useRealTimers();
+        terminateGlobalWorkers();
+    });
+
+    test('does nothing when no workers exist', async () => {
+        const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
+        getGlobalDispatcher().watchHealth();
+
+        vi.useFakeTimers();
+        document.dispatchEvent(new Event('visibilitychange'));
+        await vi.advanceTimersByTimeAsync(2000);
+
+        expect(restartSpy).not.toHaveBeenCalled();
+    });
+
+    test('reports workers that answer the ping as alive', async () => {
+        await getGlobalWorkerPool().acquire('map-1');
+
+        await expect(getGlobalDispatcher().ping(5000)).resolves.toBe(true);
+    });
+
+    test('reports workers that never answer the ping as dead', async () => {
+        await getGlobalWorkerPool().acquire('map-1');
+        vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockReturnValue(new Promise(() => {}));
+
+        await expect(getGlobalDispatcher().ping(1)).resolves.toBe(false);
+    });
+
+    test('restarts dead workers when the page returns to the foreground', async () => {
+        await getGlobalWorkerPool().acquire('map-1');
+        vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockReturnValue(new Promise(() => {}));
+        const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
+        getGlobalDispatcher().watchHealth();
+
+        vi.useFakeTimers();
+        document.dispatchEvent(new Event('visibilitychange'));
+        await vi.advanceTimersByTimeAsync(2000);
+
+        expect(restartSpy).toHaveBeenCalledTimes(1);
+    });
+});

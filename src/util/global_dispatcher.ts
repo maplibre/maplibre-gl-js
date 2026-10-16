@@ -35,6 +35,14 @@ export type GlobalDispatcherEventType = {
 export type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
 
 /**
+ * How long the workers get to answer a ping before they are considered terminated. The ping
+ * queues ahead of tile work on return to the foreground, so the budget only needs to cover one
+ * in-flight tile parse on slow hardware. A false timeout restarts healthy workers and drops map
+ * state, so err on the large side.
+ */
+const PING_TIMEOUT_MS = 500;
+
+/**
  * The dispatcher shared across all map instances, see {@link getGlobalDispatcher}. Unlike a map's
  * dispatcher it never claims the workers: its actors live and die with them, rebuilt from the
  * pool's `create` event and discarded on `terminate`.
@@ -46,9 +54,10 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private actorsPromise: Promise<Actor[]> | undefined;
     private workerErrorSubscriptions: Subscription[] = [];
     private workerPool: WorkerPool;
-    /** Rejects when the current workers terminate, so in-flight broadcasts reject instead of hanging. */
-    private workersTerminated: Promise<never>;
-    private rejectInFlightBroadcasts: (error: Error) => void;
+    /** Called when the current workers terminate, so in-flight broadcasts reject instead of hanging. */
+    private rejectInFlightBroadcasts = new Set<(error: Error) => void>();
+    private watchingHealth = false;
+    private healthCheckInFlight = false;
 
     /**
      * Workers created before construction, e.g. by prewarm() before this module evaluated, fired
@@ -64,8 +73,6 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
 
     private handleWorkersCreated(): void {
         this.actorsPromise = this.buildActors();
-        this.workersTerminated = new Promise((_, reject) => { this.rejectInFlightBroadcasts = reject; });
-        this.workersTerminated.catch(() => {});
         for (const url of this.importedScriptUrls) {
             this.broadcast(MessageType.importScript, url).catch((error) => {
                 warnOnce(`Failed to import script ${url} into the workers: ${error}`);
@@ -79,9 +86,14 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
             for (const actor of actors) {
                 actor.remove();
             }
-        }).catch(() => {});
+        }).catch((error) => {
+            warnOnce(`The terminated workers' actors were never created: ${error}`);
+        });
         this.actorsPromise = undefined;
-        this.rejectInFlightBroadcasts(new Error('The workers were terminated while a message was in flight.'));
+        for (const reject of this.rejectInFlightBroadcasts) {
+            reject(new Error('The workers were terminated while a message was in flight.'));
+        }
+        this.rejectInFlightBroadcasts.clear();
         for (const subscription of this.workerErrorSubscriptions) {
             subscription.unsubscribe();
         }
@@ -90,7 +102,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
 
     /** Returns the actors, creating the workers on first use: `ensureWorkers` fires the pool's `create` event synchronously. */
     private getActors(): Promise<Actor[]> {
-        this.workerPool.ensureWorkers();
+        if (!this.workerPool.workersPromise) this.workerPool.ensureWorkers();
         return this.actorsPromise;
     }
 
@@ -98,8 +110,9 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         const workers = await this.workerPool.ensureWorkers();
         const {actors, workerErrorSubscriptions} = createActors(workers, GLOBAL_DISPATCHER_ID, this);
         this.workerErrorSubscriptions = workerErrorSubscriptions;
+        const handlers = Object.entries(this.messageHandlers);
         for (const actor of actors) {
-            for (const [type, handler] of Object.entries(this.messageHandlers)) {
+            for (const [type, handler] of handlers) {
                 actor.registerMessageHandler(type as MessageType, handler);
             }
         }
@@ -114,12 +127,20 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
     async broadcast(type: string, data: any): Promise<unknown[]> {
         const actorsPromise = this.getActors();
-        const workersTerminated = this.workersTerminated;
-        const actors = await actorsPromise;
-        return Promise.race([
-            Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data}))),
-            workersTerminated
-        ]);
+        let rejectBroadcast: (error: Error) => void;
+        const workersTerminated = new Promise<never>((_, reject) => {
+            rejectBroadcast = reject;
+            this.rejectInFlightBroadcasts.add(reject);
+        });
+        try {
+            const actors = await actorsPromise;
+            return await Promise.race([
+                Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data}))),
+                workersTerminated
+            ]);
+        } finally {
+            this.rejectInFlightBroadcasts.delete(rejectBroadcast);
+        }
     }
 
     /**
@@ -150,6 +171,42 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         this.importedScriptUrls.add(workerUrl);
         await this.broadcast(MessageType.importScript, workerUrl);
     }
+
+    /**
+     * Checks worker health on every return to the foreground, restarting the workers if the browser
+     * terminated them while the page was hidden, as iOS does under memory pressure. Browsers fire no
+     * event for the termination, so the health check is the only way to notice it. Each map then
+     * recovers through the same contract as a lost WebGL context, see `Map._handleWorkersCreated`.
+     */
+    watchHealth(): void {
+        if (this.watchingHealth || typeof document === 'undefined') return;
+        this.watchingHealth = true;
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState !== 'visible' || this.healthCheckInFlight || !this.workerPool.workersPromise) return;
+            this.healthCheckInFlight = true;
+            try {
+                if (!await this.ping()) this.workerPool.restart();
+            } finally {
+                this.healthCheckInFlight = false;
+            }
+        }, false);
+    }
+
+    /**
+     * Pings the workers, resolving false only on silence: any answer, even an error, proves they
+     * are alive. Creates the workers if none exist yet, so check the pool before calling.
+     */
+    async ping(timeoutMs: number = PING_TIMEOUT_MS): Promise<boolean> {
+        let timer: ReturnType<typeof setTimeout>;
+        try {
+            return await Promise.race([
+                this.broadcast(MessageType.ping, undefined).then(() => true, () => true),
+                new Promise<boolean>((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); })
+            ]);
+        } finally {
+            clearTimeout(timer);
+        }
+    }
 }
 
 let globalDispatcher: GlobalDispatcher;
@@ -166,16 +223,11 @@ let globalDispatcher: GlobalDispatcher;
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): GlobalDispatcher {
-    ensureGlobalDispatcher();
-    return globalDispatcher;
-}
-
-/** Creates the global dispatcher on first call, registering the getResource handler the workers use to request resources via the main thread. */
-export function ensureGlobalDispatcher(): void {
     if (!globalDispatcher) {
         globalDispatcher = new GlobalDispatcher(getGlobalWorkerPool());
         globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
             return makeRequest(params, abortController);
         });
     }
+    return globalDispatcher;
 }

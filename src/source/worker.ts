@@ -213,6 +213,8 @@ export default class Worker {
             this.referrer = params;
         });
 
+        this.actor.registerMessageHandler(MessageType.ping, async () => {});
+
         this.actor.registerMessageHandler(MessageType.syncRTLPluginState, (mapId: string, params: PluginState) => {
             return this._syncRTLPluginState(mapId, params);
         });
