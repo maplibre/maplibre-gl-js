@@ -206,6 +206,7 @@ Everything that speaks lng/lat goes through the CRS's `projection`, so the map A
 - The `within` and `distance` expressions, which compute in mercator.
 - Projection expressions. A registered projection only works as a plain name in `projection.type`: in an expression such as `['step', ['zoom'], 'EPSG:25832', 10, 'mercator']` it is ignored, and the map logs a warning and draws the globe projection.
 - Switching to or from a registered CRS after the sources have loaded, with `setProjection` or with `setStyle` to a style in another projection, for now. Tile `bounds`, GeoJSON data and the corners of image, video and canvas sources are placed in the projection the map has when each source loads, so register the projection first and name it in the style, as the examples do.
+- GeoJSON far from the central meridian of a transverse mercator, such as UTM or NZTM. More than 90 degrees from that meridian the projection puts the northern and southern hemispheres at opposite ends of the plane, so a polygon that crosses the equator there draws as a band across the map, as the Democratic Republic of the Congo from a world countries layer does on EPSG:2193. Leave out data on the far side of the world, with a filter or a smaller data set; the fix is the subject of [maplibre/maplibre-gl-js#8800](https://github.com/maplibre/maplibre-gl-js/issues/8800).
 
 ## Removing a projection
 
