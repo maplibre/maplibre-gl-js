@@ -34,8 +34,13 @@ export type GlobalDispatcherEventType = {
  */
 export type CustomMessageHandler<TData, TResult> = (mapId: string | number, params: TData, abortController?: AbortController) => Promise<TResult>;
 
-/** How long the workers get to answer a ping before they are considered terminated. */
-const WORKER_PING_TIMEOUT_MS = 2000;
+/**
+ * How long the workers get to answer a ping before they are considered terminated. The ping
+ * queues ahead of tile work on return to the foreground, so the budget only needs to cover one
+ * in-flight tile parse on slow hardware. A false timeout restarts healthy workers and drops map
+ * state, so err on the large side.
+ */
+const WORKER_PING_TIMEOUT_MS = 500;
 
 /**
  * The dispatcher shared across all map instances, see {@link getGlobalDispatcher}. Unlike a map's
