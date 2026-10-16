@@ -227,11 +227,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
-            const previousActor = tile.actor;
             tile.actor = this.dispatcher.getReadyActor();
-            if (previousActor && previousActor !== tile.actor) {
-                previousActor.sendAsync({type: MessageType.removeTile, data: {uid: tile.uid, type: this.type, source: this.id}});
-            }
             messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
             return new Promise<void>((resolve, reject) => {
@@ -316,16 +312,13 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
     }
 
+    /**
+     * Removes the tile from every worker, since an expired tile may be reloaded on a different worker.
+     */
     async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         if (tile.actor) {
-            await tile.actor.sendAsync({
-                type: MessageType.removeTile,
-                data: {
-                    uid: tile.uid,
-                    type: this.type,
-                    source: this.id}
-            });
+            await this.dispatcher.broadcast(MessageType.removeTile, {uid: tile.uid, type: this.type, source: this.id});
         }
     }
 
