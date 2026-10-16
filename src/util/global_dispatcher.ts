@@ -174,35 +174,36 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     /**
      * Checks worker health on every return to the foreground, restarting the workers if the browser
      * terminated them while the page was hidden, as iOS does under memory pressure. Browsers fire no
-     * event for the termination, so the health check is the only way to notice it.
+     * event for the termination, so the health check is the only way to notice it. Each map then
+     * recovers through the same contract as a lost WebGL context, see `Map._handleWorkersCreated`.
      */
     watchWorkerHealth(): void {
         if (this.watchingWorkerHealth || typeof document === 'undefined') return;
         this.watchingWorkerHealth = true;
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') this.restartWorkersIfTerminated();
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState !== 'visible' || this.healthCheckInFlight || !this.workerPool.workersPromise) return;
+            this.healthCheckInFlight = true;
+            try {
+                if (!await this.areWorkersAlive()) this.workerPool.restart();
+            } finally {
+                this.healthCheckInFlight = false;
+            }
         }, false);
     }
 
     /**
-     * Restarts the shared workers unless every one answers a ping in time. Any answer, even an
-     * error, proves the worker is alive; only silence means the browser terminated it. Each map
-     * then recovers through the same contract as a lost WebGL context, see
-     * `Map._handleWorkersCreated`.
+     * Pings the workers, resolving false only on silence: any answer, even an error, proves they
+     * are alive. Creates the workers if none exist yet, so check the pool before calling.
      */
-    async restartWorkersIfTerminated(timeoutMs: number = WORKER_PING_TIMEOUT_MS): Promise<void> {
-        if (this.healthCheckInFlight || !this.workerPool.workersPromise) return;
-        this.healthCheckInFlight = true;
+    async areWorkersAlive(timeoutMs: number = WORKER_PING_TIMEOUT_MS): Promise<boolean> {
         let timer: ReturnType<typeof setTimeout>;
         try {
-            const alive = await Promise.race([
+            return await Promise.race([
                 this.broadcast(MessageType.ping, undefined).then(() => true, () => true),
                 new Promise<boolean>((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); })
             ]);
-            if (!alive) this.workerPool.restart();
         } finally {
             clearTimeout(timer);
-            this.healthCheckInFlight = false;
         }
     }
 }
