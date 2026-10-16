@@ -4,7 +4,7 @@ import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
-import {setMatchMedia} from '../util/test/util.ts';
+import {createTerrain, setMatchMedia} from '../util/test/util.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
@@ -1242,7 +1242,6 @@ describe('easeTo', () => {
 
         terrain = {
             getMinTileElevationForLngLatZoom: () => 0,
-            getElevationForLngLatZoom: () => 0,
             getElevationForLngLat: () => 0
         } as any as Terrain;
 
@@ -2035,16 +2034,26 @@ describe('flyTo', () => {
         expect(camera.getPadding()).toEqual({top: 50, bottom: 0, left: 0, right: 30});
     });
 
+    test('applies the offset option when prefers-reduce-motion:reduce is set', async () => {
+        const {camera} = createCamera();
+        Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
+
+        camera.flyTo({center: [100, 0], offset: [100, 0]});
+
+        // Same end center as the animated flyTo and easeTo with this offset
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
+    });
+
     test('check elevation events freezeElevation=false', async () => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
-        const {camera, queue} = createCamera({terrain});
+        const terrain = createTerrain();
+        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
         const stub = vi.spyOn(timeControl, 'now');
 
-        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
         camera._updateElevation = () => terrainCallbacks.update++;
-        camera._finalizeElevation = () => terrainCallbacks.finalize++;
         camera.setCenter([-10, 0]);
+        terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
 
         stub.mockReturnValue(0);
@@ -2056,19 +2065,19 @@ describe('flyTo', () => {
         await moveEnded;
         expect(terrainCallbacks.prepare).toBe(1);
         expect(terrainCallbacks.update).toBe(2);
-        expect(terrainCallbacks.finalize).toBe(0);
+        expect(camera.transform.elevation).toBe(1000);
     });
 
     test('check elevation events freezeElevation=true', async() => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
-        const {camera, queue} = createCamera({terrain});
+        const terrain = createTerrain();
+        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
         const stub = vi.spyOn(timeControl, 'now');
 
-        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
         camera._updateElevation = () => terrainCallbacks.update++;
-        camera._finalizeElevation = () => terrainCallbacks.finalize++;
         camera.setCenter([-10, 0]);
+        terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
 
         stub.mockReturnValue(0);
@@ -2080,12 +2089,12 @@ describe('flyTo', () => {
         await moveEnded;
         expect(terrainCallbacks.prepare).toBe(1);
         expect(terrainCallbacks.update).toBe(0);
-        expect(terrainCallbacks.finalize).toBe(1);
+        expect(camera.transform.elevation).toBe(2000);
     });
 
     test('check elevation callbacks', () => {
         const terrain = {
-            getElevationForLngLat: () => 100,
+            getElevationAndDEMStateForLngLat: () => ({elevation: 100, demState: 'loaded'}),
             getMinTileElevationForLngLatZoom: () => 200
         } as any;
         const {camera} = createCamera({terrain});
@@ -2103,12 +2112,12 @@ describe('flyTo', () => {
         expect(camera._elevationTarget).toBe(100);
         expect(camera.elevationFreeze).toBeTruthy();
 
-        terrain.getElevationForLngLat = () => 200;
+        terrain.getElevationAndDEMStateForLngLat = () => ({elevation: 200, demState: 'loaded'});
         camera._updateElevation(0.5, camera.transform);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
 
-        camera._finalizeElevation();
+        camera.releaseElevation();
         expect(camera.elevationFreeze).toBeFalsy();
     });
 
@@ -2724,6 +2733,12 @@ describe('jumpTo globe projection', () => {
             expect(camera.getZoom()).toBe(0.6154999996223638);
         });
 
+        test('jumps onto the pole while zooming out', () => {
+            camera.jumpTo({zoom: 8});
+            camera.jumpTo({center: [0, 90], zoom: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 90});
+        });
+
         test('changing center with zoom specified should not adjusts zoom', () => {
             camera.jumpTo({center: [0, 40], zoom: 3});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
@@ -2887,6 +2902,12 @@ describe('easeTo globe projection', () => {
             camera.easeTo({center: [0, 40], zoom: 3, duration: 0});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
             expect(camera.getZoom()).toBe(3);
+        });
+
+        test('eases onto the pole while zooming out', () => {
+            camera.jumpTo({center: [0, 60.2], zoom: 8});
+            camera.easeTo({center: [0, 90], zoom: 0, duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 90});
         });
     });
 
@@ -3226,6 +3247,12 @@ describe('flyTo globe projection', () => {
             expect(camera.getCenter().lng).toBeCloseTo(0, 9);
             expect(camera.getCenter().lat).toBeCloseTo(40, 9);
             expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
+
+        test('flies onto the pole while zooming out', () => {
+            camera.jumpTo({zoom: 8});
+            camera.flyTo({center: [0, 90], zoom: 0, animate: false});
+            expect(camera.getCenter().lat).toBeCloseTo(90, 9);
         });
 
         test('changing center with zoom specified should not adjusts zoom', () => {

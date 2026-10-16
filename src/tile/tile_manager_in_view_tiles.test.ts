@@ -3,7 +3,7 @@ import {InViewTiles} from './tile_manager_in_view_tiles.ts';
 import {Tile} from './tile.ts';
 import {OverscaledTileID} from './tile_id.ts';
 
-import type {Painter} from '../render/painter.ts';
+import type {Style} from '../style/style.ts';
 
 describe('InViewTiles', () => {
     test('getRenderableIds returns only renderable tiles', () => {
@@ -120,12 +120,12 @@ describe('InViewTiles', () => {
         inViewTiles.setTile(tile2.tileID.key, tile2);
 
         const states = {road: [{id: '1', state: {hover: true}}]};
-        const painter = {style: {}} as unknown as Painter;
+        const style = {} as unknown as Style;
         const revision = 3;
 
-        inViewTiles.setFeatureState(states, painter, revision);
+        inViewTiles.setFeatureState(states, style, revision);
 
-        expect(spy1).toHaveBeenCalledWith(states, painter, revision);
-        expect(spy2).toHaveBeenCalledWith(states, painter, revision);
+        expect(spy1).toHaveBeenCalledWith(states, style, revision);
+        expect(spy2).toHaveBeenCalledWith(states, style, revision);
     });
 });

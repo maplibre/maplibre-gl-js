@@ -74,6 +74,11 @@ export class TileManager extends Evented<SourceEventType> {
     _sourceLoaded: boolean;
     _maxContentElevationSeen: number = 0;
 
+    /**
+     * @internal
+     * signifies that the source itself failed to load and had no pending loads, so `loaded()` stops waiting for it
+     * until it starts loading again. A tile that fails does not set it, since `loaded()` already counts a failed tile as done.
+     */
     _sourceErrored: boolean;
     _inViewTiles: InViewTiles;
     _prevLng: number;
@@ -108,9 +113,8 @@ export class TileManager extends Evented<SourceEventType> {
             this._sourceErrored = false;
         });
 
-        this.on('error', () => {
-            // Only set _sourceErrored if the source does not have pending loads.
-            this._sourceErrored = this._source.loaded();
+        this.on('error', (e: ErrorEvent & {tile?: Tile}) => {
+            if (!e.tile) this._sourceErrored = this._source.loaded();
         });
 
         this._source = createSource(id, options, dispatcher, this);
@@ -225,7 +229,7 @@ export class TileManager extends Evented<SourceEventType> {
             this._source.prepare();
         }
 
-        this._state.coalesceChanges(this._inViewTiles, this.map ? this.map.painter : null);
+        this._state.coalesceChanges(this._inViewTiles, this.style);
         for (const tile of this._inViewTiles.getAllTiles()) {
             tile.upload(context);
             tile.prepare(this.map.style.imageManager);
@@ -323,7 +327,7 @@ export class TileManager extends Evented<SourceEventType> {
         // Reset feature state revision so initializeTileState re-applies
         // feature state to the tile's new bucket data after a reload.
         tile.featureStateRevision = -1;
-        this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+        this._state.initializeTileState(tile, this.style);
 
         if (!tile.aborted) {
             this._source.fire(new MapSourceDataEvent('data', {tile, coord: tile.tileID}));
@@ -743,7 +747,7 @@ export class TileManager extends Evented<SourceEventType> {
 
             // set the tileID because the cached tile could have had a different wrap value
             tile.tileID = tileID;
-            this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+            this._state.initializeTileState(tile, this.style);
         }
 
         const cached = tile;

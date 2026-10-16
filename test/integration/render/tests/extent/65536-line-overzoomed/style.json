@@ -1,0 +1,41 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "A tile with an extent of 65536 is sliced into overzoomed tiles. The line layer must only draw the outline of the polygon and not the edges that the slicing creates along the tile borders, which cross in the center."
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 2,
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 0,
+      "tiles": [
+        "local://tiles/extent65536-0-0-0.mvt"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "maplibre",
+      "type": "line",
+      "source": "maplibre",
+      "source-layer": "polygon",
+      "paint": {
+        "line-color": "black",
+        "line-width": 10
+      }
+    }
+  ]
+}

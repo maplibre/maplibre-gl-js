@@ -14,6 +14,6 @@ export interface IRenderToTexture {
      */
     needsFollowUpFrame: boolean;
     prepareForRender(style: Style, zoom: number, isMoving: boolean): void;
-    renderLayer(layer: StyleLayer, frameRenderContext: FrameRenderContext): boolean;
+    renderLayer(layer: StyleLayer, style: Style, frameRenderContext: FrameRenderContext): boolean;
     getTexture(tile: Tile): any;
 }

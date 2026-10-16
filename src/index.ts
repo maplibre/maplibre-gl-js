@@ -31,6 +31,7 @@ import {VectorTileSource, type LoadTileResult} from './source/vector_tile_source
 import {VideoSource} from './source/video_source.ts';
 import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
+import {addProjection, removeProjection} from './geo/projection/projection_crud.ts';
 import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
 import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
@@ -50,7 +51,7 @@ import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
 
 import type {ControlPosition, IControl} from './ui/control/control.ts';
-import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
+import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, CustomTerrainRenderInput, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
 import type {AnchoredCameraOptions, AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson.ts';
 import type {Handler, HandlerResult} from './ui/handler_manager.ts';
@@ -66,6 +67,8 @@ import type {RequestTransformFunction, ResourceType} from './util/request_manage
 import type {OverscaledTileID} from './tile/tile_id.ts';
 import type {PositionAnchor} from './ui/anchor.ts';
 import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, ProjectionMatrix, RendererProjectionData} from './geo/projection/projection_data.ts';
+import type {CRSDefinition} from './geo/projection/crs.ts';
+import type {TileMatrixSet} from './geo/projection/tile_matrix_set.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
 import type {Actor, IActor} from './util/actor.ts';
 import type {Bucket} from './data/bucket.ts';
@@ -78,6 +81,7 @@ import type {FeatureIndex} from './data/feature_index.ts';
 import type {DashEntry} from './render/line_atlas.ts';
 import type {Painter} from './render/painter.ts';
 import type {WorkerGlobalScopeInterface} from './util/web_worker.ts';
+import type {TerrainHeightMapTarget} from './render/terrain.ts';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -346,6 +350,7 @@ export {
     type BoxZoomHandlerOptions,
     type HandlerResult,
     type CustomRenderMethodInput,
+    type CustomTerrainRenderInput,
     type ExpiryData,
     type PositionAnchor,
     type ProjectionData,
@@ -355,6 +360,8 @@ export {
     type Mat4f64,
     type ProjectionMatrix,
     type RendererProjectionData,
+    type CRSDefinition,
+    type TileMatrixSet,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
     type TextFit,
@@ -387,6 +394,7 @@ export {
     type IControl,
     type CustomLayerInterface,
     type CustomLayerProjectionDataParams,
+    type TerrainHeightMapTarget,
     type UnwrappedTileIDLiteral,
     type CanvasSourceSpecification,
     type PaddingOptions,
@@ -421,6 +429,8 @@ export {
     setWorkerUrl,
     addProtocol,
     removeProtocol,
+    addProjection,
+    removeProjection,
     addSourceType,
     importScriptInWorkers,
     createTileMesh,

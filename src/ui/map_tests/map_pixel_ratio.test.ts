@@ -19,12 +19,11 @@ test('pixel ratio by default reflects devicePixelRatio changes', () => {
     expect(map.getPixelRatio()).toBe(1);
 });
 
-test('painter has the expected size and pixel ratio', () => {
+test('painter has the expected size', () => {
     const container = window.document.createElement('div');
     Object.defineProperty(container, 'clientWidth', {value: 512});
     Object.defineProperty(container, 'clientHeight', {value: 512});
     const map = createMap({container, pixelRatio: 2});
-    expect(map.painter.pixelRatio).toBe(2);
     expect(map.painter.width).toBe(1024);
     expect(map.painter.height).toBe(1024);
 });
@@ -56,11 +55,9 @@ describe('setPixelRatio', () => {
         Object.defineProperty(container, 'clientWidth', {value: 512});
         Object.defineProperty(container, 'clientHeight', {value: 512});
         const map = createMap({container, pixelRatio: 1});
-        expect(map.painter.pixelRatio).toBe(1);
         expect(map.painter.width).toBe(512);
         expect(map.painter.height).toBe(512);
         map.setPixelRatio(2);
-        expect(map.painter.pixelRatio).toBe(2);
         expect(map.painter.width).toBe(1024);
         expect(map.painter.height).toBe(1024);
     });

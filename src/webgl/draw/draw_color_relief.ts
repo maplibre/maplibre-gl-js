@@ -17,8 +17,7 @@ export function drawColorRelief(painter: Painter, tileManager: TileManager, laye
     if (frameRenderContext.currentPass !== 'translucent') return;
     if (!tileIDs.length) return;
 
-    const projection = painter.style.projection;
-    const useSubdivision = projection.useSubdivision;
+    const {useSubdivision} = frameRenderContext.data;
 
     const depthMode = frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = frameRenderContext.colorModeForRenderPass();
@@ -55,8 +54,7 @@ function renderColorRelief(
     useBorder: boolean,
     frameRenderContext: FrameRenderContext
 ) {
-    const projection = painter.style.projection;
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     const program = frameRenderContext.useProgram('colorRelief');
     const align = !frameRenderContext.data.moving;
@@ -98,7 +96,7 @@ function renderColorRelief(
         }
         tile.demTexture.bind(textureFilter, gl.CLAMP_TO_EDGE);
 
-        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true, 'raster');
+        const mesh = frameRenderContext.getMeshFromTileID(coord.canonical, useBorder, true, 'raster');
 
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
