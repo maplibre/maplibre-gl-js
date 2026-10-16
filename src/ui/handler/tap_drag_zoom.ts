@@ -75,7 +75,7 @@ export class TapDragZoomHandler implements Handler {
             const dist = newSwipePoint.y - this._swipePoint.y;
             this._swipePoint = newSwipePoint;
 
-            e.preventDefault();
+            if (e.cancelable) e.preventDefault();
             this._active = true;
 
             return {
