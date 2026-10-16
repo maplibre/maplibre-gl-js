@@ -2,6 +2,7 @@ import {Actor, type ActorTarget, type IActor} from '../util/actor.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {VectorTileWorkerSource} from './vector_tile_worker_source.ts';
 import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source.ts';
+import {setProjectionHandler} from './projection_handler_worker.ts';
 import {rtlWorkerPlugin, type RTLTextPlugin} from './rtl_text_plugin_worker.ts';
 import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import {isWorker} from '../util/util.ts';
@@ -141,6 +142,11 @@ export default class Worker {
         };
 
         this.self.makeRequest = makeRequest;
+
+        /**
+         * Invoked by a script loaded with `importScriptInWorkers`, see the custom CRS guide.
+         */
+        this.self.setProjectionHandler = setProjectionHandler;
 
         this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);

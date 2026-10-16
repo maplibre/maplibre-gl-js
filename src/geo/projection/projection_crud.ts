@@ -1,15 +1,15 @@
-import {identityCrs, type CRSDefinition} from './crs.ts';
+import {identityCrs, type CRS} from './crs.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-const registeredProjections = new Map<string, CRSDefinition>([[identityCrs.name, identityCrs]]);
+const registeredProjections = new Map<string, CRS>([[identityCrs.name, identityCrs]]);
 
 /**
  * @internal
- * Returns the registered CRS definition for a projection name, or `undefined` if the name is not registered
+ * Returns the registered CRS for a projection name, or `undefined` if the name is not registered
  * (an unset or expression-valued projection type is never registered).
  */
-export function getRegisteredProjection(name: ProjectionSpecification['type']): CRSDefinition | undefined {
+export function getRegisteredProjection(name: ProjectionSpecification['type']): CRS | undefined {
     return typeof name === 'string' ? registeredProjections.get(name) : undefined;
 }
 
@@ -25,7 +25,7 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  *
  * A map in a registered projection never renders world copies and never wraps across an antimeridian.
  *
- * @param def - the CRS definition
+ * @param crs - the CRS
  * @throws Error if the name has no colon, is already registered, or if `tileMatrixSet.extentAtZoom0` is not positive
  * @example
  * ```ts
@@ -47,17 +47,17 @@ export function getRegisteredProjection(name: ProjectionSpecification['type']): 
  * });
  * ```
  */
-export function addProjection(def: CRSDefinition): void {
-    if (!def.name.includes(':')) {
-        throw new Error(`The projection name "${def.name}" needs a colon, like "EPSG:2193" or "custom:equal-earth": names without one are reserved for built-in projections.`);
+export function addProjection(crs: CRS): void {
+    if (!crs.name.includes(':')) {
+        throw new Error(`The projection name "${crs.name}" needs a colon, like "EPSG:2193" or "custom:equal-earth": names without one are reserved for built-in projections.`);
     }
-    if (registeredProjections.has(def.name)) {
-        throw new Error(`A projection called "${def.name}" already exists.`);
+    if (registeredProjections.has(crs.name)) {
+        throw new Error(`A projection called "${crs.name}" already exists.`);
     }
-    if (!(def.tileMatrixSet.extentAtZoom0 > 0)) {
-        throw new Error(`The projection "${def.name}" needs a tileMatrixSet.extentAtZoom0 greater than zero.`);
+    if (!(crs.tileMatrixSet.extentAtZoom0 > 0)) {
+        throw new Error(`The projection "${crs.name}" needs a tileMatrixSet.extentAtZoom0 greater than zero.`);
     }
-    registeredProjections.set(def.name, def);
+    registeredProjections.set(crs.name, crs);
 }
 
 /**
