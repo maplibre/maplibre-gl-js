@@ -18,6 +18,7 @@
 - Fix a grid of lines along tile borders in line layers of sliced overzoomed tiles when the source tile extent is larger than 4096, by scaling the clip buffer with the extent ([#8705](https://github.com/maplibre/maplibre-gl-js/pull/8705)) (by [@tordans](https://github.com/tordans))
 - Fix the globe drag rounding its rotation to single precision ([#8784](https://github.com/maplibre/maplibre-gl-js/pull/8784)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `load` and `idle` firing before the other tiles finish loading when one tile fails ([#8785](https://github.com/maplibre/maplibre-gl-js/pull/8785)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix a GeoJSON feature without coordinates staying out of the tiles after `updateData` gives it some, by updating geojson-vt to 6.3.0 ([#8797](https://github.com/maplibre/maplibre-gl-js/pull/8797)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ## 6.14.0
