@@ -66,7 +66,7 @@ describe('reprojectGeoJSONToWorld', () => {
     });
 });
 
-describe('reprojectGeoJSONToWorld in a polar CRS, whose latitude range ends at 20.383370 S', () => {
+describe('reprojectGeoJSONToWorld in a polar CRS, whose latitude range ends at 53 S', () => {
     test('keeps a polygon with an edge across the far pole out of the world square', () => {
         const isea4hSouthPoleCell: GeoJSON.Polygon = {type: 'Polygon', coordinates: [[
             [88.3853, -87.67805], [54.96953, -88.57819], [0, -89.52868], [180, -89.31865], [142.1755, -88.10424], [115.34565, -87.43262], [88.3853, -87.67805]
@@ -88,6 +88,22 @@ describe('reprojectGeoJSONToWorld in a polar CRS, whose latitude range ends at 2
         const worldRing = ring.map(([x, y]) => new Point(x, y));
         const insideWorldSquare = new Point(0.75, 0.75);
         expect(polygonIntersectsPolygon([insideWorldSquare], worldRing)).toBe(true);
+    });
+});
+
+describe('reprojectGeoJSONToWorld in a polar CRS on a 1 km grid at 5 W, 70 N', () => {
+    function createSmallGridHelper() {
+        const polar = createPolarStereographicCrs();
+        const [x, y] = polar.projection.forward([-5, 70]);
+        return new CRSWorldCoordinateHelper({...polar, tileMatrixSet: {origin: [x - 500, y + 500], extentAtZoom0: 1000}});
+    }
+
+    test('keeps a polygon that covers the grid over all of it', () => {
+        const rectangle: GeoJSON.Polygon = {type: 'Polygon', coordinates: [[[-20, 60], [10, 60], [10, 80], [-20, 80], [-20, 60]]]};
+        const ring = reprojectGeoJSONToWorld(rectangle, createSmallGridHelper()).coordinates[0].map(([x, y]) => new Point(x, y));
+        for (const [x, y] of [[0.5, 0.5], [0.01, 0.01], [0.99, 0.01], [0.99, 0.99], [0.01, 0.99]]) {
+            expect(polygonIntersectsPolygon([new Point(x, y)], ring)).toBe(true);
+        }
     });
 });
 

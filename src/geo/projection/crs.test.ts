@@ -177,11 +177,11 @@ describe('CRSWorldCoordinateHelper', () => {
     });
 
     describe('latitudeRange', () => {
-        test('runs from the latitude of the corners one world width out to the near pole in a north polar CRS', () => {
-            expect(new CRSWorldCoordinateHelper(createPolarStereographicCrs()).latitudeRange).toEqual([expect.closeTo(-20.383370, 6), 90]);
+        test('runs from where the meridian stretches ten times as much as at the center to the near pole in a north polar CRS', () => {
+            expect(new CRSWorldCoordinateHelper(createPolarStereographicCrs()).latitudeRange).toEqual([-53, 90]);
         });
 
-        test('runs from the near pole to the latitude of the corners one world width out in a south polar CRS', () => {
+        test('runs from the near pole to where the meridian stretches ten times as much as at the center in a south polar CRS', () => {
             const northPolar = createPolarStereographicCrs();
             const southPolar: CRS = {
                 ...northPolar,
@@ -196,27 +196,11 @@ describe('CRSWorldCoordinateHelper', () => {
                     },
                 },
             };
-            expect(new CRSWorldCoordinateHelper(southPolar).latitudeRange).toEqual([-90, expect.closeTo(20.383370, 6)]);
+            expect(new CRSWorldCoordinateHelper(southPolar).latitudeRange).toEqual([-90, 53]);
         });
 
-        test('is the whole globe when the inverse has no answer one world width out', () => {
-            expect(new CRSWorldCoordinateHelper(createIdentityCrsAnsweringInside(null)).latitudeRange).toEqual([-90, 90]);
-        });
-
-        test('is the whole globe when the inverse answers one world width out with a position that does not map back', () => {
-            const smallIdentity: CRS = {
-                name: 'test:small-identity',
-                projection: {
-                    forward([lng, lat]) {
-                        return [lng, lat];
-                    },
-                    inverse([x, y]) {
-                        return Math.abs(x) <= 1 && Math.abs(y) <= 1 ? [x, y] : [0, 0];
-                    },
-                },
-                tileMatrixSet: {origin: [-1, 1], extentAtZoom0: 2},
-            };
-            expect(new CRSWorldCoordinateHelper(smallIdentity).latitudeRange).toEqual([-90, 90]);
+        test('is the whole globe for a projection that stretches no pole that much', () => {
+            expect(new CRSWorldCoordinateHelper(identityCrs).latitudeRange).toEqual([-90, 90]);
         });
     });
 });

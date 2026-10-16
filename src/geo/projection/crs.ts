@@ -48,6 +48,12 @@ export type CRS = {
 };
 
 /**
+ * How many times as much as at the center of its tile matrix set a projection may stretch distances along the meridian
+ * before GeoJSON sources stop placing data there, see {@link CRSWorldCoordinateHelper.latitudeRange}.
+ */
+const MAX_MERIDIAN_STRETCH = 10;
+
+/**
  * @internal
  * The world coordinate mapping for a CRS: world x/y are the CRS coordinates relative
  * to the tile matrix set origin, scaled so tile 0/0/0 is the 0..1 square, with y growing down.
@@ -108,44 +114,39 @@ export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
         return altitude / this._extent;
     }
     /**
-     * The latitudes, `[south, north]`, of the positions the projection puts within one world width of the world
-     * square. GeoJSON sources move the positions past them onto them before projecting, so that what lies further
-     * out, like the opposite pole of a polar projection, which projects to infinity, never reaches the map.
-     * `[-90, 90]` when the inverse has no answer that far out, or an answer that does not map back.
+     * The latitudes, `[south, north]`, from the center of the tile matrix set toward each pole, up to which the
+     * projection stretches distances along the meridian less than {@link MAX_MERIDIAN_STRETCH} times as much as at the
+     * center. GeoJSON sources move the positions past them onto them before projecting, so that what the projection
+     * cannot place, like the opposite pole of a polar projection, which projects to infinity, never reaches the map.
+     * `[-90, 90]` for a projection that stretches neither pole that much, like transverse mercator.
      */
     get latitudeRange(): [number, number] {
-        this._latitudeRange ??= this._findLatitudeRange();
+        this._latitudeRange ??= [this._findLatitudeLimit(-90), this._findLatitudeLimit(90)];
         return this._latitudeRange;
     }
     /**
-     * Walks the edge of the world square grown by one world width on each side, world -1 to 2 on both axes, taking
-     * the lowest and highest latitude the inverse gives there; a pole the projection puts inside it widens the
-     * range to that pole.
+     * Walks the meridian through the center of the tile matrix set toward the pole at `pole`, a degree at a time, and
+     * returns the last latitude before the projection stretches distances along it more than
+     * {@link MAX_MERIDIAN_STRETCH} times as much as at the center, or the pole when it never does.
      */
-    private _findLatitudeRange(): [number, number] {
-        const stepsPerSide = 64;
-        let south = 90;
-        let north = -90;
-        for (let step = 0; step <= stepsPerSide; step++) {
-            const along = -1 + 3 * step / stepsPerSide;
-            for (const [x, y] of [[along, -1], [along, 2], [-1, along], [2, along]]) {
-                const position = this._inverse(x, y);
-                const back = position && this.worldFromLngLat(position[0], position[1]);
-                if (!back || Math.hypot(back.x - x, back.y - y) > 1e-6) return [-90, 90];
-                south = Math.min(south, position[1]);
-                north = Math.max(north, position[1]);
-            }
+    private _findLatitudeLimit(pole: number): number {
+        const center = this.lngLatFromWorld(0.5, 0.5);
+        const maxStretch = MAX_MERIDIAN_STRETCH * this._meridianStretch(center.lng, center.lat);
+        if (!(maxStretch > 0)) return pole;
+        const step = Math.sign(pole - center.lat);
+        for (let lat = center.lat; Math.abs(pole - lat) > 1; lat += step) {
+            if (!(this._meridianStretch(center.lng, lat + step) <= maxStretch)) return lat;
         }
-        if (this._isNearWorldSquare(-90)) south = -90;
-        if (this._isNearWorldSquare(90)) north = 90;
-        return [south, north];
+        return pole;
     }
     /**
-     * Whether the projection puts the pole at `latitude` within one world width of the world square.
+     * The distance the projection puts between the position at `lng`, `lat` and the one a hundredth of a degree from
+     * it toward the equator, in CRS units.
      */
-    private _isNearWorldSquare(latitude: number): boolean {
-        const {x, y} = this.worldFromLngLat(0, latitude);
-        return x >= -1 && x <= 2 && y >= -1 && y <= 2;
+    private _meridianStretch(lng: number, lat: number): number {
+        const [x, y] = this._crs.projection.forward([lng, lat]);
+        const [towardEquatorX, towardEquatorY] = this._crs.projection.forward([lng, lat >= 0 ? lat - 0.01 : lat + 0.01]);
+        return Math.hypot(towardEquatorX - x, towardEquatorY - y);
     }
 }
 
