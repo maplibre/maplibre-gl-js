@@ -102,7 +102,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
 
     /** Returns the actors, creating the workers on first use: `ensureWorkers` fires the pool's `create` event synchronously. */
     private getActors(): Promise<Actor[]> {
-        this.workerPool.ensureWorkers();
+        if (!this.workerPool.workersPromise) this.workerPool.ensureWorkers();
         return this.actorsPromise;
     }
 
@@ -110,8 +110,9 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         const workers = await this.workerPool.ensureWorkers();
         const {actors, workerErrorSubscriptions} = createActors(workers, GLOBAL_DISPATCHER_ID, this);
         this.workerErrorSubscriptions = workerErrorSubscriptions;
+        const handlers = Object.entries(this.messageHandlers);
         for (const actor of actors) {
-            for (const [type, handler] of Object.entries(this.messageHandlers)) {
+            for (const [type, handler] of handlers) {
                 actor.registerMessageHandler(type as MessageType, handler);
             }
         }

@@ -483,7 +483,7 @@ type Delegate<E extends Event = Event> = (e: E) => void;
 
 type StyleSnapshot = {
     style: StyleSpecification | null;
-    images: {[_: string]: StyleImage} | null;
+    images: {[_: string]: StyleImage};
 };
 
 const defaultMinZoom = -2;
@@ -678,7 +678,7 @@ export class Map extends Evented<MapEventType> {
      */
     _lostContextSnapshot: StyleSnapshot = {
         style: null,
-        images: null
+        images: {}
     };
 
     /**
@@ -746,8 +746,9 @@ export class Map extends Evented<MapEventType> {
 
     constructor(options: MapOptions) {
         super();
-        getGlobalDispatcher().on('workersCreated', this._handleWorkersCreated);
-        getGlobalDispatcher().watchHealth();
+        const globalDispatcher = getGlobalDispatcher();
+        globalDispatcher.on('workersCreated', this._handleWorkersCreated);
+        globalDispatcher.watchHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
@@ -4287,7 +4288,7 @@ export class Map extends Evented<MapEventType> {
 
     _contextRestored = (event: WebGLContextEvent): void => {
         this._restoreStyleSnapshot(this._lostContextSnapshot);
-        this._lostContextSnapshot = {style: null, images: null};
+        this._lostContextSnapshot = {style: null, images: {}};
 
         try {
             this._setupPainter();
@@ -4312,7 +4313,8 @@ export class Map extends Evented<MapEventType> {
     private _handleWorkersCreated = (): void => {
         if (!this.style) return;
         if (!this.style._loaded) {
-            this.style.once('style.load', () => this._handleWorkersCreated());
+            this.style.off('style.load', this._handleWorkersCreated);
+            this.style.once('style.load', this._handleWorkersCreated);
             return;
         }
 
@@ -4349,7 +4351,7 @@ export class Map extends Evented<MapEventType> {
         if (!style) return;
         this.setStyle(style, {diff: false});
 
-        if (!images || !this.style) return;
+        if (!this.style) return;
         this.style.imageManager.images = images;
         for (const [id, image] of Object.entries(images)) {
             if (image.isWebGLImage) this.style.imageManager.updateImage(id, image, false);

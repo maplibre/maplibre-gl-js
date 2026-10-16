@@ -1,5 +1,5 @@
 import {type Subscription, ensureError, isWorker, subscribe} from './util.ts';
-import {ErrorEvent} from './evented.ts';
+import {ErrorEvent, type Evented, type ErrorEventType} from './evented.ts';
 import {AbortError} from './abort_error.ts';
 import {serialize, deserialize, type Serialized} from './web_worker_transfer.ts';
 import {ThrottledInvoker} from './throttled_invoker.ts';
@@ -271,7 +271,7 @@ export class Actor implements IActor {
 }
 
 /** Builds a named actor per worker and reports worker errors to `errorTarget`. */
-export function createActors(workers: ActorTarget[], mapId: string | number, errorTarget: {fire(event: ErrorEvent): unknown}): {actors: Actor[]; workerErrorSubscriptions: Subscription[]} {
+export function createActors(workers: ActorTarget[], mapId: string | number, errorTarget: Evented<ErrorEventType>): {actors: Actor[]; workerErrorSubscriptions: Subscription[]} {
     const workerErrorSubscriptions = workers.map(worker => subscribe(worker, 'error', () => {
         errorTarget.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
     }, false));
