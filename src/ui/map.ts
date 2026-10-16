@@ -747,7 +747,7 @@ export class Map extends Evented<MapEventType> {
     constructor(options: MapOptions) {
         super();
         getGlobalDispatcher().on('workersCreated', this._handleWorkersCreated);
-        getGlobalDispatcher().watchWorkerHealth();
+        getGlobalDispatcher().watchHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes

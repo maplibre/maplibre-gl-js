@@ -134,7 +134,7 @@ describe('worker recovery', () => {
 
     test('does nothing when no workers exist', async () => {
         const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
-        getGlobalDispatcher().watchWorkerHealth();
+        getGlobalDispatcher().watchHealth();
 
         vi.useFakeTimers();
         document.dispatchEvent(new Event('visibilitychange'));
@@ -146,21 +146,21 @@ describe('worker recovery', () => {
     test('reports workers that answer the ping as alive', async () => {
         await getGlobalWorkerPool().acquire('map-1');
 
-        await expect(getGlobalDispatcher().areWorkersAlive(5000)).resolves.toBe(true);
+        await expect(getGlobalDispatcher().ping(5000)).resolves.toBe(true);
     });
 
     test('reports workers that never answer the ping as dead', async () => {
         await getGlobalWorkerPool().acquire('map-1');
         vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockReturnValue(new Promise(() => {}));
 
-        await expect(getGlobalDispatcher().areWorkersAlive(1)).resolves.toBe(false);
+        await expect(getGlobalDispatcher().ping(1)).resolves.toBe(false);
     });
 
     test('restarts dead workers when the page returns to the foreground', async () => {
         await getGlobalWorkerPool().acquire('map-1');
         vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockReturnValue(new Promise(() => {}));
         const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
-        getGlobalDispatcher().watchWorkerHealth();
+        getGlobalDispatcher().watchHealth();
 
         vi.useFakeTimers();
         document.dispatchEvent(new Event('visibilitychange'));

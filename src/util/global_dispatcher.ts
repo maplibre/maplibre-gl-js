@@ -40,7 +40,7 @@ export type CustomMessageHandler<TData, TResult> = (mapId: string | number, para
  * in-flight tile parse on slow hardware. A false timeout restarts healthy workers and drops map
  * state, so err on the large side.
  */
-const WORKER_PING_TIMEOUT_MS = 500;
+const PING_TIMEOUT_MS = 500;
 
 /**
  * The dispatcher shared across all map instances, see {@link getGlobalDispatcher}. Unlike a map's
@@ -56,7 +56,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private workerPool: WorkerPool;
     /** Called when the current workers terminate, so in-flight broadcasts reject instead of hanging. */
     private rejectInFlightBroadcasts = new Set<(error: Error) => void>();
-    private watchingWorkerHealth = false;
+    private watchingHealth = false;
     private healthCheckInFlight = false;
 
     /**
@@ -177,14 +177,14 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      * event for the termination, so the health check is the only way to notice it. Each map then
      * recovers through the same contract as a lost WebGL context, see `Map._handleWorkersCreated`.
      */
-    watchWorkerHealth(): void {
-        if (this.watchingWorkerHealth || typeof document === 'undefined') return;
-        this.watchingWorkerHealth = true;
+    watchHealth(): void {
+        if (this.watchingHealth || typeof document === 'undefined') return;
+        this.watchingHealth = true;
         document.addEventListener('visibilitychange', async () => {
             if (document.visibilityState !== 'visible' || this.healthCheckInFlight || !this.workerPool.workersPromise) return;
             this.healthCheckInFlight = true;
             try {
-                if (!await this.areWorkersAlive()) this.workerPool.restart();
+                if (!await this.ping()) this.workerPool.restart();
             } finally {
                 this.healthCheckInFlight = false;
             }
@@ -195,7 +195,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      * Pings the workers, resolving false only on silence: any answer, even an error, proves they
      * are alive. Creates the workers if none exist yet, so check the pool before calling.
      */
-    async areWorkersAlive(timeoutMs: number = WORKER_PING_TIMEOUT_MS): Promise<boolean> {
+    async ping(timeoutMs: number = PING_TIMEOUT_MS): Promise<boolean> {
         let timer: ReturnType<typeof setTimeout>;
         try {
             return await Promise.race([
