@@ -37,9 +37,10 @@ export class TerrainTileManager extends Evented {
      */
     _renderableTilesKeys: string[];
     /**
-     * raster-dem-tile for a TileID cache.
+     * For each tile, the key of its raster-dem tile and the source zoom that key was scaled to, which changes once the
+     * source has loaded its zoom range.
      */
-    _sourceTileCache: {[_: string]: string};
+    _sourceTileCache: {[_: string]: {zoom: number; key: string}};
     /**
      * minimum zoomlevel to render the terrain.
      */
@@ -291,8 +292,8 @@ export class TerrainTileManager extends Evented {
         if (z > source.maxzoom) z = source.maxzoom;
         if (z < source.minzoom) return undefined;
         // cache for tileID to terrain-tileID
-        this._sourceTileCache[tileID.key] ||= tileID.scaledTo(z).key;
-        let tile = this.findTileInCaches(this._sourceTileCache[tileID.key]);
+        if (this._sourceTileCache[tileID.key]?.zoom !== z) this._sourceTileCache[tileID.key] = {zoom: z, key: tileID.scaledTo(z).key};
+        let tile = this.findTileInCaches(this._sourceTileCache[tileID.key].key);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
         if (!tile?.dem && searchForDEM) {
             while (z >= source.minzoom && !tile?.dem)

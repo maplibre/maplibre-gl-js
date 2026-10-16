@@ -285,6 +285,37 @@ describe('terrainTileRevision', () => {
         expect(terrainTiles).toBeGreaterThan(0);
         expect(renderToTerrainTile).toHaveBeenCalledTimes(terrainTiles);
     });
+
+    test('keeps the terrain tiles of a custom layer below a layer that is not draped when one above it changes', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
+            layers: [],
+            terrain: {source: 'dem'}
+        }});
+        const renderBelowToTerrainTile = vi.fn();
+        const renderAboveToTerrainTile = vi.fn();
+        const below = {id: 'below', type: 'custom' as const, render: () => {}, renderToTerrainTile: renderBelowToTerrainTile, terrainTileRevision: 0};
+        const notDraped = {id: 'not-draped', type: 'custom' as const, render: () => {}};
+        const above = {id: 'above', type: 'custom' as const, render: () => {}, renderToTerrainTile: renderAboveToTerrainTile, terrainTileRevision: 0};
+        await map.once('load');
+        map.addLayer(below);
+        map.addLayer(notDraped);
+        map.addLayer(above);
+        await map.once('idle');
+        const terrainTiles = map.terrain.tileManager.getRenderableTiles().length;
+        renderBelowToTerrainTile.mockClear();
+        renderAboveToTerrainTile.mockClear();
+
+        above.terrainTileRevision++;
+        map.triggerRepaint();
+        await map.once('idle');
+
+        expect(terrainTiles).toBeGreaterThan(0);
+        expect(renderAboveToTerrainTile).toHaveBeenCalledTimes(terrainTiles);
+        expect(renderBelowToTerrainTile).not.toHaveBeenCalled();
+    });
 });
 
 describe('renderTerrainHeightMap', () => {
