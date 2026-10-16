@@ -2,6 +2,7 @@ import {describe, test, expect} from 'vitest';
 import {LngLat} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
+import {mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {CanonicalTileID} from '../tile/tile_id.ts';
 import {EXTENT} from '../data/extent.ts';
 
@@ -170,20 +171,13 @@ describe('LngLatBounds', () => {
         expect(
             LngLatBounds.convert([bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()])
         ).toEqual(bounds);
-        expect(LngLatBounds.convert([[undefined, -50], [undefined, 65]]).toArray())
-            .toEqual([[-Infinity, -50], [Infinity, 65]]);
-        expect(LngLatBounds.convert([[-30, undefined], [30, undefined]]).toArray())
-            .toEqual([[-30, -90], [30, 90]]);
-        expect(LngLatBounds.convert([undefined, -50, undefined, 65]).toArray())
+    });
+
+    test('convert preserves infinite longitude endpoints', () => {
+        expect(LngLatBounds.convert([[-Infinity, -50], [Infinity, 65]]).toArray())
             .toEqual([[-Infinity, -50], [Infinity, 65]]);
         expect(LngLatBounds.convert([-Infinity, -50, Infinity, 65]).toArray())
             .toEqual([[-Infinity, -50], [Infinity, 65]]);
-        expect(() => LngLatBounds.convert([[undefined, -50], [30, 65]])).toThrow(
-            'Both west and east maxBounds values must be defined or undefined together'
-        );
-        expect(() => LngLatBounds.convert([[-30, undefined], [30, 65]])).toThrow(
-            'Both south and north maxBounds values must be defined or undefined together'
-        );
     });
 
     test('toArray', () => {
@@ -442,7 +436,7 @@ describe('LngLatBounds', () => {
             });
 
             test('entire worlds tile should return true', () => {
-                const tileBounds = tileIdToLngLatBounds(new CanonicalTileID(0, 0, 0), 2048 / EXTENT);
+                const tileBounds = tileIdToLngLatBounds(new CanonicalTileID(0, 0, 0), 2048 / EXTENT, mercatorWorldCoordinateHelper);
                 const bounds = new LngLatBounds([[-8.290589217651302, 44.47966524518165], [20.566067150212803, 50.98693819014929]]);
                 expect(tileBounds.intersects(bounds)).toBe(true);
             });

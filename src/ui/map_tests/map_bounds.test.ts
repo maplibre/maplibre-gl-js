@@ -90,18 +90,7 @@ describe('setMaxBounds', () => {
         ).toEqual(toFixed(map.getBounds().toArray()));
     });
 
-    test('can leave longitude unconstrained', () => {
-        const map = createMap({zoom: 10, center: [0, 0], renderWorldCopies: true});
-
-        map.setMaxBounds([[undefined, -50], [undefined, 65]]);
-        map.setCenter([180, 80]);
-
-        expect(map.getCenter().lng).toBe(180);
-        expect(map.getCenter().lat).toBeLessThan(65);
-        expect(map.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
-    });
-
-    test('treats explicit infinite longitude bounds as unconstrained', () => {
+    test('constrains latitude while leaving longitude unbounded', () => {
         const map = createMap({zoom: 10, center: [0, 0], renderWorldCopies: true});
 
         map.setMaxBounds([[-Infinity, -50], [Infinity, 65]]);
@@ -112,48 +101,41 @@ describe('setMaxBounds', () => {
         expect(map.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
     });
 
+    test('supports flat infinite longitude bounds', () => {
+        const map = createMap({zoom: 10});
+
+        map.setMaxBounds([-Infinity, -50, Infinity, 65]);
+
+        expect(map.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
+    });
+
     test('rejects one-sided infinite longitude bounds', () => {
         const map = createMap({zoom: 10});
 
         expect(() => map.setMaxBounds([[-Infinity, -50], [30, 65]])).toThrow(
             'Longitude maxBounds values must either be finite or span from -Infinity to Infinity'
         );
+
+        expect(() => map.setMaxBounds([[-30, -50], [Infinity, 65]])).toThrow(
+            'Longitude maxBounds values must either be finite or span from -Infinity to Infinity'
+        );
     });
 
-    test('can leave latitude unconstrained', () => {
+    test('can constrain longitude without further restricting latitude', () => {
         const map = createMap({zoom: 10, center: [0, 0]});
 
-        map.setMaxBounds([[-30, undefined], [30, undefined]]);
+        map.setMaxBounds([[-30, -90], [30, 90]]);
         map.setCenter([80, 80]);
 
         expect(map.getCenter().lng).toBeLessThan(30);
         expect(map.getCenter().lat).toBe(80);
     });
 
-    test('accepts flat partial bounds', () => {
-        const map = createMap({zoom: 10});
-
-        map.setMaxBounds([undefined, -50, undefined, 65]);
-
-        expect(map.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
-    });
-
-    test('requires both endpoints of an unconstrained axis to be undefined', () => {
-        const map = createMap({zoom: 10});
-
-        expect(() => map.setMaxBounds([[undefined, -50], [30, 65]])).toThrow(
-            'Both west and east maxBounds values must be defined or undefined together'
-        );
-        expect(() => map.setMaxBounds([[-30, undefined], [30, 65]])).toThrow(
-            'Both south and north maxBounds values must be defined or undefined together'
-        );
-    });
-
-    test('clears max bounds when both axes are unconstrained', () => {
+    test('clears bounds when both axes span their valid ranges', () => {
         const map = createMap({zoom: 10});
 
         map.setMaxBounds([[-30, -50], [30, 65]]);
-        map.setMaxBounds([[undefined, undefined], [undefined, undefined]]);
+        map.setMaxBounds([[-Infinity, -90], [Infinity, 90]]);
 
         expect(map.getMaxBounds()).toBeNull();
     });
