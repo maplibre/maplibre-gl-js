@@ -11,7 +11,7 @@ type PositionMapper = (position: GeoJSON.Position) => GeoJSON.Position;
 /**
  * @internal
  * Rewrites every position of a GeoJSON object from the map's lng/lat to the map projection's world coordinates, x and
- * y from 0 to 1 across its world square with y growing down, which geojson-vt tiles with its `worldCoordinates` option.
+ * y from 0 to 1 across its world square with y growing down, which geojson-vt tiles with `coordinates: 'unitSquare'`.
  * Returns a new object; the input is never mutated, and non-coordinate members are carried over as they are.
  */
 export function reprojectGeoJSONToWorld<T extends GeoJSON.GeoJSON>(data: T, crsHelper: CRSWorldCoordinateHelper): T {
