@@ -481,7 +481,7 @@ type DelegatedListener = {
 
 type Delegate<E extends Event = Event> = (e: E) => void;
 
-type LostContextStyle = {
+type StyleSnapshot = {
     style: StyleSpecification | null;
     images: {[_: string]: StyleImage} | null;
 };
@@ -674,9 +674,9 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Used to store the previous style and images when a context loss occurs, so they can be restored.
+     * The style snapshot taken at context loss, held until context restoration rebuilds from it.
      */
-    _lostContextStyle: LostContextStyle = {
+    _lostContextSnapshot: StyleSnapshot = {
         style: null,
         images: null
     };
@@ -1607,7 +1607,7 @@ export class Map extends Evented<MapEventType> {
     resize(eventData?: any, constrainTransform = true): this {
         // Early out if the context is lost
         // causes a blank map otherwise
-        const isContextLost = this._lostContextStyle.style !== null;
+        const isContextLost = this._lostContextSnapshot.style !== null;
         if (isContextLost) return this;
         this._resizeInternal(constrainTransform);
 
@@ -2868,10 +2868,9 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Returns the map's style and cloned images to restore context.
-     * @returns An object containing the style and images.
+     * Snapshots the serialized style and cloned images so {@link Map._restoreStyleSnapshot} can rebuild them.
      */
-    _getStyleAndImages(): LostContextStyle {
+    _takeStyleSnapshot(): StyleSnapshot {
         if (this.style) {
             return {
                 style: this.style.serialize(),
@@ -4270,7 +4269,7 @@ export class Map extends Evented<MapEventType> {
         }
         this.painter.destroy();
 
-        this._lostContextStyle = this._getStyleAndImages();
+        this._lostContextSnapshot = this._takeStyleSnapshot();
 
         if (!this.style) {
             this.fire(new MapContextEvent('webglcontextlost', {originalEvent: event}));
@@ -4287,8 +4286,8 @@ export class Map extends Evented<MapEventType> {
     };
 
     _contextRestored = (event: WebGLContextEvent): void => {
-        this._restoreStyleAndImages(this._lostContextStyle);
-        this._lostContextStyle = {style: null, images: null};
+        this._restoreStyleSnapshot(this._lostContextSnapshot);
+        this._lostContextSnapshot = {style: null, images: null};
 
         try {
             this._setupPainter();
@@ -4317,11 +4316,11 @@ export class Map extends Evented<MapEventType> {
             return;
         }
 
-        const snapshot = this._getStyleAndImages();
+        const snapshot = this._takeStyleSnapshot();
         this._warnAboutUnrestorableLayers();
         this.fire(new MapContextEvent('webglcontextlost', {originalEvent: new globalThis.Event('webglcontextlost') as WebGLContextEvent}));
 
-        this._restoreStyleAndImages(snapshot);
+        this._restoreStyleSnapshot(snapshot);
         this._update();
         this.fire(new MapContextEvent('webglcontextrestored', {originalEvent: new globalThis.Event('webglcontextrestored') as WebGLContextEvent}));
     };
@@ -4342,11 +4341,11 @@ export class Map extends Evented<MapEventType> {
     }
 
     /**
-     * Rebuilds the style from a snapshot taken by {@link Map._getStyleAndImages}. A rebuilt style
+     * Rebuilds the style from a snapshot taken by {@link Map._takeStyleSnapshot}. A rebuilt style
      * starts with empty atlases, so images that render themselves with WebGL owe every atlas a
      * fresh render.
      */
-    private _restoreStyleAndImages({style, images}: LostContextStyle): void {
+    private _restoreStyleSnapshot({style, images}: StyleSnapshot): void {
         if (!style) return;
         this.setStyle(style, {diff: false});
 
