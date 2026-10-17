@@ -147,6 +147,11 @@ export type CustomRenderMethodInput = {
      * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
      * can be used to project a `LngLat` to a mercator coordinate.
      *
+     * Under a projection registered with {@link addProjection}, these uniforms take the same range in the world square
+     * of its tile matrix set instead, where `[0, 0]` is the top left corner of tile 0/0/0, and one meter is
+     * `1 / extentAtZoom0` in x, y and z. {@link MercatorCoordinate} does not apply there. The custom CRS guide shows
+     * how to compute the positions.
+     *
      * Under globe projection, when these uniforms are used, the `elevation` parameter
      * passed to `projectTileFor3D` in the shader is elevation in meters above "sea level",
      * or more accurately for globe, elevation above the surface of the perfect sphere used to render the planet.
