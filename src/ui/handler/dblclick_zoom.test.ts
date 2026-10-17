@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import * as timeControl from '../../util/time_control.ts';
-import {beforeMapTest, sleep} from '../../util/test/util.ts';
+import {beforeMapTest, sleep, spyOnPreventDefault} from '../../util/test/util.ts';
 import {Map, type MapOptions} from '../map.ts';
 
 function createMap(options: any = {}) {
@@ -29,6 +29,26 @@ beforeEach(() => {
 });
 
 describe('dbclick_zoom', () => {
+    test('DoubleClickZoomHandler does not try to cancel a touchend that is not cancelable, and still zooms on double tap', async () => {
+        const map = createMap();
+        const canvas = map.getCanvas();
+        const zoom = vi.fn();
+        map.on('zoomstart', zoom);
+        const preventDefaults = spyOnPreventDefault(map.getCanvasContainer(), 'touchend');
+
+        simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
+        simulate.touchend(canvas);
+        await sleep(100);
+        simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
+        simulate.touchend(canvas, {cancelable: false});
+        map._renderTaskQueue.run();
+
+        expect(preventDefaults[1]).not.toHaveBeenCalled();
+        expect(zoom).toHaveBeenCalled();
+
+        map.remove();
+    });
+
     test('DoubleClickZoomHandler zooms on dblclick event', () => {
         const map = createMap();
 

@@ -45,7 +45,9 @@ export class TouchPanHandler implements Handler {
             this._map.cooperativeGestures.notifyGestureBlocked('touch_pan', e);
             return;
         }
-        e.preventDefault();
+        // Once a scroll is in progress for this touch sequence, e.g. another finger is scrolling the page, the browser
+        // delivers touchmove with cancelable=false; preventDefault() is then a no-op that Chromium reports as an intervention.
+        if (e.cancelable) e.preventDefault();
         return this._calculateTransform(e, points, mapTouches);
     }
 

@@ -55,7 +55,7 @@ abstract class TwoFingersTouchHandler implements Handler {
     touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): HandlerResult | void {
         if (!this._firstTwoTouches) return;
 
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
 
         const [idA, idB] = this._firstTwoTouches;
         const a = getTouchById(mapTouches, points, idA);

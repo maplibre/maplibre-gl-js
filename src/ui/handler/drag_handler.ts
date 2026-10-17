@@ -133,7 +133,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
         if (!this.isEnabled()) return;
         const lastPoint = this._lastPoint;
         if (!lastPoint) return;
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
 
         if (!this._moveStateManager.isValidMoveEvent(e)) {
             this.reset(e);

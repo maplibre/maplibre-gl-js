@@ -1,7 +1,7 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
-import {beforeMapTest} from '../../util/test/util.ts';
+import {beforeMapTest, spyOnPreventDefault} from '../../util/test/util.ts';
 import {Map} from '../map.ts';
 
 import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
@@ -155,6 +155,32 @@ describe('drag_pan', () => {
         simulate.blur(window);
         expect(dragend).toHaveBeenCalledTimes(1);
 
+        map.remove();
+    });
+
+    test('DragPanHandler does not try to cancel a touchmove that is not cancelable, and still pans', () => {
+        // Chromium delivers touchmove with cancelable=false while a scroll is in progress elsewhere on the page,
+        // and logs an intervention for every preventDefault() call on such an event.
+        const map = createMap();
+        const target = map.getCanvas();
+        const drag = vi.fn();
+        map.on('drag', drag);
+        const preventDefaults = spyOnPreventDefault(map.getCanvasContainer(), 'touchmove');
+
+        simulate.touchstart(target, {touches: [{target, clientX: 0, clientY: 0}]});
+        map._renderTaskQueue.run();
+
+        simulate.touchmove(target, {cancelable: true, touches: [{target, clientX: 10, clientY: 10}]});
+        map._renderTaskQueue.run();
+        expect(preventDefaults[0]).toHaveBeenCalled();
+
+        simulate.touchmove(target, {cancelable: false, touches: [{target, clientX: 20, clientY: 20}]});
+        map._renderTaskQueue.run();
+        expect(preventDefaults[1]).not.toHaveBeenCalled();
+        expect(drag).toHaveBeenCalledTimes(2);
+
+        simulate.touchend(target);
+        map._renderTaskQueue.run();
         map.remove();
     });
 

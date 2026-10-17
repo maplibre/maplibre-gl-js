@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
+import {createMap as globalCreateMap, beforeMapTest, spyOnPreventDefault} from '../../util/test/util.ts';
 import {NavigationControl} from './navigation_control.ts';
 
 function createMap() {
@@ -178,6 +178,27 @@ describe('NavigationControl', () => {
         map._renderTaskQueue.run();
 
         expect(spySetPitch).not.toHaveBeenCalled();
+        expect(spySetBearing).toHaveBeenCalled();
+    });
+
+    test('compass button touch drag does not try to cancel a touchmove that is not cancelable', () => {
+        map.addControl(new NavigationControl({showCompass: true}));
+        const spySetBearing = vi.spyOn(map, 'setBearing');
+        const preventDefaults = spyOnPreventDefault(window, 'touchmove');
+
+        const navButton = map.getContainer().querySelector('.maplibregl-ctrl-compass');
+        const navRect = navButton.getClientRects();
+        const buttonX = (navRect.x ?? 0) + (navRect.width ?? 0) / 2;
+        const buttonY = (navRect.y ?? 0) + (navRect.height ?? 0) / 2 - 1;
+
+        simulate.touchstart(navButton, {touches: [{clientX: buttonX, clientY: buttonY}], targetTouches: [{clientX: buttonX, clientY: buttonY}]});
+        simulate.touchmove(window, {cancelable: true, touches: [{clientX: buttonX - 50, clientY: buttonY}], targetTouches: [{clientX: buttonX - 50, clientY: buttonY}]});
+        expect(preventDefaults[0]).toHaveBeenCalled();
+        simulate.touchmove(window, {cancelable: false, touches: [{clientX: buttonX - 100, clientY: buttonY}], targetTouches: [{clientX: buttonX - 100, clientY: buttonY}]});
+        expect(preventDefaults[1]).not.toHaveBeenCalled();
+        simulate.touchend(window);
+        map._renderTaskQueue.run();
+
         expect(spySetBearing).toHaveBeenCalled();
     });
 
