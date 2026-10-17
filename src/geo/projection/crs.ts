@@ -12,9 +12,10 @@ import type {TileMatrixSet} from './tile_matrix_set.ts';
  * Register one with {@link addProjection} and select it with the style's `projection.type`
  * or `map.setProjection({type: name})`.
  *
- * Tiles are used as-is: the map never reprojects tile content, it only positions the CRS's own
- * tile grid on screen and maps lng/lat to and from it through `projection`. CRS units are
- * taken as meters wherever the map converts meters: altitudes, elevations, and the camera distance.
+ * Every tile source of the map is taken to be cut in `tileMatrixSet`, and the tiles are used as they are,
+ * without reprojecting their content. The map positions that grid on screen and maps lng/lat to and from it
+ * through `projection`. CRS units are taken as meters wherever the map converts meters: altitudes, elevations,
+ * and the camera distance.
  */
 export type CRS = {
     /**

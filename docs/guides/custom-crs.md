@@ -2,13 +2,13 @@
 
 MapLibre GL JS renders Web Mercator (EPSG:3857) tiles by default. Some tile sets are published in a different planar coordinate reference system (CRS): national grids such as NZTM2000 (EPSG:2193), polar stereographic grids for the Arctic and Antarctic, or a plain image plane for floor plans, game maps and scanned artwork. `addProjection` registers such a CRS so a map can render tiles that were pre-projected in it, with the map's lng/lat API working as usual on top.
 
-The map never reprojects tile content on the GPU. It positions the CRS's own tile grid on screen and converts lng/lat to and from that grid through the converter you supply. Reprojecting Mercator tiles into another CRS is a separate problem, tracked in [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
+The map does not reproject tile content. It positions the tile grid registered with the CRS on screen and converts lng/lat to and from that grid through the converter you supply. Reprojecting tiles from another grid, such as Mercator tiles, into the CRS is tracked in [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 
 `addProjection`, `removeProjection`, `CRS`, the workers' `setProjectionHandler`, the built-in `identity` projection and the `{bbox}` token are experimental, so they can still change in a minor release.
 
 ## What is supported
 
-A registered CRS is a square, power-of-two quad tile grid laid over a plane, the shape the OGC Two Dimensional Tile Matrix Set standard calls a quad tree tile matrix set. Tile 0/0/0 is one square, every zoom level splits each tile into four, and every source of the map serves tiles in that grid. Within that fence:
+A registered CRS comes with a square, power-of-two quad tile grid laid over its plane, the shape the OGC Two Dimensional Tile Matrix Set standard calls a quad tree tile matrix set. Tile 0/0/0 is one square, every zoom level splits each tile into four, and every tile source of the map is taken to serve tiles in that grid. Within that fence:
 
 - The map has exactly one CRS at a time, selected by the style's `projection.type` or `map.setProjection({type: name})`.
 - There are no world copies and no antimeridian wrap: the map renders a single world whatever `renderWorldCopies` is set to, and coordinates never wrap.
