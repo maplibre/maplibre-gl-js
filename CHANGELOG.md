@@ -19,6 +19,7 @@
 - Fix the globe drag rounding its rotation to single precision ([#8784](https://github.com/maplibre/maplibre-gl-js/pull/8784)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `load` and `idle` firing before the other tiles finish loading when one tile fails ([#8785](https://github.com/maplibre/maplibre-gl-js/pull/8785)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix a GeoJSON feature without coordinates staying out of the tiles after `updateData` gives it some, by updating geojson-vt to 6.3.0 ([#8797](https://github.com/maplibre/maplibre-gl-js/pull/8797)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix the touch handlers calling `preventDefault()` on touch events that are not cancelable, which Chromium logs as an intervention on every touchmove while another finger is scrolling the page ([#8801](https://github.com/maplibre/maplibre-gl-js/pull/8801)) (by [@binchoi](https://github.com/binchoi))
 - _...Add new stuff here..._
 
 ## 6.14.0

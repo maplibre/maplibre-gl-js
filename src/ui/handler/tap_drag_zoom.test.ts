@@ -1,6 +1,6 @@
 
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {beforeMapTest, sleep} from '../../util/test/util.ts';
+import {beforeMapTest, sleep, spyOnPreventDefault} from '../../util/test/util.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {Map} from '../map.ts';
 
@@ -60,6 +60,27 @@ beforeEach(() => {
 });
 
 describe('tap_drag_zoom', () => {
+    test('TapDragZoomHandler does not try to cancel a touchmove that is not cancelable, and still zooms', () => {
+        const {map, target} = createTapDragZoomMap();
+        const {zoom} = setupEvents(map);
+        const preventDefaults = spyOnPreventDefault(map.getCanvasContainer(), 'touchmove');
+
+        startDoubleTapDragGesture(map, target);
+
+        simulate.touchmove(target, {cancelable: true, touches: [{target, clientX: 100, clientY: 110}]});
+        map._renderTaskQueue.run();
+        expect(preventDefaults[0]).toHaveBeenCalled();
+        const zoomsSoFar = zoom.mock.calls.length;
+
+        simulate.touchmove(target, {cancelable: false, touches: [{target, clientX: 100, clientY: 120}]});
+        map._renderTaskQueue.run();
+        expect(preventDefaults[1]).not.toHaveBeenCalled();
+        expect(zoom.mock.calls.length).toBeGreaterThan(zoomsSoFar);
+
+        endDoubleTapDragGesture(map, target);
+        map.remove();
+    });
+
     test('TapDragZoomHandler fires zoomstart, zoom, and zoomend at appropriate times in response to a double-tap and drag gesture', () => {
         const map = createMap();
         const target = map.getCanvas();
