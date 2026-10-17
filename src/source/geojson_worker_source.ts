@@ -125,9 +125,8 @@ export class GeoJSONWorkerSource implements WorkerSource {
             const {vectorTile, rawData} = loadResult;
 
             workerTile.vectorTile = vectorTile;
+            workerTile.rawTileData = rawData;
             this.tileState.markLoaded(uid, workerTile);
-            const parsingState = {rawData};
-            this.tileState.setParsing(uid, parsingState);
 
             return await this._parseWorkerTile(workerTile, params);
         } catch (err) {
@@ -136,22 +135,12 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
     }
 
+    /**
+     * Parses the tile and adds a copy of its raw tile data, which the feature index of the result refers to.
+     */
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const parseState = this.tileState.getParsing(workerTile.uid);
-
-        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-
-        // We need to pass rawTileData back to the main thread so that it can be stored in the Tile and FeatureIndex.
-        // After the main thread has successfully received and stored rawTileData,
-        // we no longer need to store it in the worker or transfer additional copies of it.
-        if (parseState) {
-            const {rawData} = parseState;
-            // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
-            result = extend({rawTileData: rawData.slice(0), encoding: 'mvt'}, result);
-            this.tileState.removeParsing(workerTile.uid);
-        }
-
-        return result;
+        const result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
+        return extend({rawTileData: workerTile.rawTileData.slice(0), encoding: 'mvt'}, result);
     }
 
     /**
