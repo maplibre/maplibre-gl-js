@@ -252,7 +252,7 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
     const l = Math.sqrt(vec3.dot(w, w));
     const t = Math.acos(clamp(vec3.dot(vecToTarget, vecToPixelCurrent), -1, 1)) / 2;
     const s = Math.sin(t);
-    const delta = l ? quat.fromValues((w[1] / l) * s, (-w[0] / l) * s, (w[2] / l) * s, Math.cos(t)) : quat.fromValues(0, 0, 0, 1);
+    const delta = l ? quat.set(createVec4f64(), (w[1] / l) * s, (-w[0] / l) * s, (w[2] / l) * s, Math.cos(t)) : quat.identity(createVec4f64());
     const newCenterQuat = quat.multiply(createVec4f64(), centerQuat, delta);
     const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
 

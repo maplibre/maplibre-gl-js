@@ -45,6 +45,21 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
         expect(tr.zoom).toBeCloseTo(zoomBefore + getZoomAdjustment(80, tr.center.lat), 10);
     });
 
+    test('pans toward the pole in double precision', () => {
+        const tr = createGlobeTransform();
+        tr.resize(512, 512);
+        tr.setZoom(1);
+        tr.setCenter(new LngLat(-100, 88));
+        tr.setTransitionState(1);
+        const helper = new VerticalPerspectiveCameraHelper();
+
+        helper.handleMapControlsPan(
+            {panDelta: new Point(0, 40), around: tr.centerPoint} as MapControlsDeltas,
+            tr, tr.center);
+
+        expect(tr.center.lat).toBeCloseTo(89.2138864716364, 10);
+    });
+
     describe('anchor', () => {
         function panFrom(around: Point) {
             const tr = createGlobeTransform();
