@@ -303,27 +303,56 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
+     * Starts loading the DEM tile that covers a terrain tile before the view reaches it, where the source serves one,
+     * see {@link TileManager.loadTileAhead}. Before the source has loaded, its zoom range and tile URLs are unknown, and
+     * the view loads the tile when it gets there.
+     * @param tileID - the terrain tile
+     */
+    loadDemAhead(tileID: OverscaledTileID): void {
+        if (!this.tileManager._source.loaded()) return;
+        const sourceTileID = this._getDEMSourceTileID(tileID);
+        if (sourceTileID) this.tileManager.loadTileAhead(sourceTileID);
+    }
+
+    /**
      * Whether the terrain is still waiting for DEM data for a terrain tile that has none: the source tile covering it
      * lies within the source's zoom range and bounds, and has not failed to load.
      * @param tileID - the terrain tile
      * @returns false where the source will not serve DEM data for the tile
      */
     isStillWaitingForDEM(tileID: OverscaledTileID): boolean {
-        const source = this.tileManager._source;
-        const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
-        if (z < source.minzoom) return false;
-        const sourceTileID = tileID.scaledTo(z);
-        if (source.hasTile && !source.hasTile(sourceTileID)) return false;
-        return this.findTileInCaches(sourceTileID.key)?.state !== 'errored';
+        const sourceTileID = this._getDEMSourceTileID(tileID);
+        return !!sourceTileID && this.findTileInCaches(sourceTileID.key)?.state !== 'errored';
     }
 
+    /**
+     * The source tile that brings the DEM data for a terrain tile.
+     * @param tileID - the terrain tile
+     * @returns the source tile's id, or null where the source serves no DEM data for the tile: below its minzoom or
+     * outside its bounds
+     */
+    private _getDEMSourceTileID(tileID: OverscaledTileID): OverscaledTileID | null {
+        const source = this.tileManager._source;
+        const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
+        if (z < source.minzoom) return null;
+        const sourceTileID = tileID.scaledTo(z);
+        if (source.hasTile && !source.hasTile(sourceTileID)) return null;
+        return sourceTileID;
+    }
+
+    /**
+     * Finds a source tile in view, in the out-of-view cache, or loading ahead of the view, see
+     * {@link TileManager.loadTileAhead}, which keeps it there until its load settles.
+     * @param key - the source tile's key
+     * @returns the tile
+     */
     findTileInCaches(key: string): Tile | undefined {
         let tile = this.tileManager.getTileByID(key);
         if (tile) {
             return tile;
         }
         tile = this.tileManager._outOfViewCache.getByKey(key);
-        return tile;
+        return tile ?? this.tileManager._tilesLoadingAhead[key];
     }
 
     /**

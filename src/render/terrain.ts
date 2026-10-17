@@ -277,6 +277,20 @@ export class Terrain {
     }
 
     /**
+     * Starts loading the DEM data under a location for a zoom before the view reaches it, so a camera animation can read
+     * the elevation it heads for on the way, see {@link TerrainTileManager.loadDemAhead}.
+     * @param lnglat - the location
+     * @param zoom - the map zoom whose terrain tile covers the location
+     */
+    loadDemAhead(lnglat: LngLat, zoom: number): void {
+        const tileZoom = Math.max(0, Math.floor(zoom));
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(tileZoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return;
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, tileZoom);
+        this.tileManager.loadDemAhead(tileID);
+    }
+
+    /**
      * The zoom {@link getElevationForLngLat} passes to {@link getElevationForLngLatZoom} where no drawn tile has DEM
      * data: the transform's tile zoom, where the terrain's tiles are loaded.
      */

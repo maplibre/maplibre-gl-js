@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {vec3} from 'gl-matrix';
-import {extend, wrap, defaultEasing, evaluateZoomSnap, lerp, scaleZoom, zoomScale} from '../util/util.ts';
+import {clamp, extend, wrap, defaultEasing, evaluateZoomSnap, lerp, scaleZoom, zoomScale} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
@@ -876,6 +876,7 @@ export class Camera extends Evented<MapEventType> {
         }
 
         const tr = this.getTransformForUpdate();
+        const startZoom = tr.zoom;
         const startBearing = this.getBearing(),
             startPitch = tr.pitch,
             startRoll = tr.roll,
@@ -919,7 +920,8 @@ export class Camera extends Evented<MapEventType> {
         this._padding = !tr.isPaddingEqual(padding);
         this._zooming ||= easeHandler.isZooming;
         this._easeId = options.easeId;
-        this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation});
+        const endZoom = options.zoom !== undefined ? +options.zoom : startZoom;
+        this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation, lowestZoom: Math.min(startZoom, endZoom), endZoom});
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
@@ -936,15 +938,16 @@ export class Camera extends Evented<MapEventType> {
     }
 
     /**
-     * @param elevation - over terrain, the transform the animation edits, the map center it ends on, and whether
-     * it holds the center elevation (`freezeElevation`) instead of easing it
+     * @param elevation - over terrain, the transform the animation edits, the map center it ends on, whether it holds
+     * the center elevation (`freezeElevation`) instead of easing it, and the lowest and the end zoom the animation
+     * passes through
      */
     _prepareEase(eventData: any, noMoveStart: boolean,
         currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {},
-        elevation?: {tr: ITransform; center: LngLat; freeze: boolean}): void {
+        elevation?: {tr: ITransform; center: LngLat; freeze: boolean; lowestZoom: number; endZoom: number}): void {
         this._moving = true;
         if (this.terrain && elevation) {
-            this._prepareElevation(elevation.center, elevation.tr);
+            this._prepareElevation(elevation.center, elevation.tr, elevation.lowestZoom, elevation.endZoom);
             if (elevation.freeze) this.holdElevation(elevation.tr, 'animation');
         }
         if (!noMoveStart && !currently.moving) {
@@ -968,16 +971,24 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * Starts easing the center elevation: records where it stands on the transform the animation edits and
      * samples the terrain under the map center the animation ends on. While the DEM data under that center is
-     * still loading, the target is the elevation the center starts at.
+     * still loading, the target is the elevation the center starts at. Where no DEM data covers that center yet, it
+     * starts loading it for the lowest and the end zoom of the animation, so the elevation the animation heads for
+     * arrives on the way rather than when the view reaches it, see {@link Terrain.loadDemAhead}.
      * @param center - the map center when the animation ends
      * @param tr - the transform the animation edits
+     * @param lowestZoom - the lowest zoom the animation passes through
+     * @param endZoom - the zoom the animation ends at
      */
-    _prepareElevation(center: LngLat, tr: ITransform): void {
+    _prepareElevation(center: LngLat, tr: ITransform, lowestZoom: number, endZoom: number): void {
         this._elevationCenter = center;
         this._elevationStart = tr.elevation;
         const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(center, tr);
         this._elevationTarget = demState === 'loading' ? tr.elevation : elevation;
         this.elevationFreeze = true;
+        if (demState !== 'loaded') {
+            this.terrain.loadDemAhead(center, lowestZoom);
+            this.terrain.loadDemAhead(center, endZoom);
+        }
     }
 
     /**
@@ -986,12 +997,12 @@ export class Camera extends Evented<MapEventType> {
      * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform. A center
      * that is not clamped to the ground keeps its elevation, and the target stays put while the DEM data under
      * `_elevationCenter` is still loading.
-     * @param k - the animation's progress, 0 to 1
+     * @param k - how far the center elevation has come from its start to the target, 0 to 1
      * @param tr - the transform the animation edits
      */
     _updateElevation(k: number, tr: ITransform): void {
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
-            this._prepareElevation(tr.center, tr);
+            this._prepareElevation(tr.center, tr, tr.zoom, tr.zoom);
         }
 
         tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
@@ -1441,6 +1452,7 @@ export class Camera extends Evented<MapEventType> {
         }
 
         const tr = this.getTransformForUpdate(),
+            startZoom = tr.zoom,
             startBearing = tr.bearing,
             startPitch = tr.pitch,
             startRoll = tr.roll,
@@ -1548,7 +1560,10 @@ export class Camera extends Evented<MapEventType> {
         this._rolling = (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
 
-        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
+        // The lowest zoom of the flight is where the visible span w(s) peaks: at s = -r0 / rho on the arc, else at an end.
+        const lowestZoom = startZoom - Math.log2(Math.max(w(0), w(S), w(clamp(-r0 / rho, 0, S))));
+        const endZoom = startZoom + Math.log2(flyToHandler.scaleOfZoom);
+        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation, lowestZoom, endZoom});
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfulls.
@@ -1573,7 +1588,9 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            // The center elevation moves with the center along the path, so it reaches the destination's while the camera
+            // is still high instead of as the flight zooms in; a flight that does not move the center moves it with k.
+            if (this.terrain && !options.freezeElevation) this._updateElevation(Math.max(k, centerFactor), tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
