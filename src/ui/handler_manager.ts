@@ -18,18 +18,16 @@ import {DragRotateHandler} from './handler/shim/drag_rotate.ts';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch.ts';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures.ts';
 import {TransformProvider} from './handler/transform-provider.ts';
-import {captureRotationPivot, orbitRotationPivot} from './rotation_pivot.ts';
 import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Map, CompleteMapOptions} from './map.ts';
-import type {Camera} from './camera.ts';
+import type {Camera, RotationPivot} from './camera.ts';
 import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {RotationPivot} from './rotation_pivot.ts';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
 
@@ -653,8 +651,9 @@ export class HandlerManager {
             this._terrainGesture.inFlight = true;
             this._camera.holdElevation(tr, 'gesture');
         }
-        this._rotationPivot ??= captureRotationPivot(tr, combinedResult.around, terrain, this._camera.cameraHelper.useGlobeControls);
-        const held = orbitRotationPivot(tr, this._rotationPivot, combinedResult);
+        const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around} = combinedResult;
+        this._rotationPivot ??= this._camera.captureRotationPivot(tr, around);
+        const held = this._camera.orbitRotationPivot(tr, this._rotationPivot, {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around});
         if (!held) this._rotationPivot = null;
     }
 
