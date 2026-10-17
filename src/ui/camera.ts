@@ -349,6 +349,7 @@ export class Camera extends Evented<MapEventType> {
     _pitching: boolean;
     _rolling: boolean;
     _padding: boolean;
+    _elevating: boolean;
 
     _bearingSnap: number;
     _zoomSnap: number;
@@ -856,10 +857,13 @@ export class Camera extends Evented<MapEventType> {
         const startBearing = this.getBearing(),
             startPitch = tr.pitch,
             startRoll = tr.roll,
+            startElevation = tr.elevation,
             bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
             pitch = options.pitch !== undefined ? +options.pitch : startPitch,
             roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll,
-            padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
+            padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions,
+            elevation = options.elevation !== undefined ? +options.elevation : startElevation;
+
         const offsetAsPoint = Point.convert(options.offset);
 
         let around, aroundPoint;
@@ -895,13 +899,17 @@ export class Camera extends Evented<MapEventType> {
         this._rolling ||= (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
         this._zooming ||= easeHandler.isZooming;
+        this._elevating ||= (startElevation !== elevation);
         this._easeId = options.easeId;
+
         this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation});
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            if (this._elevating) {
+                tr.setElevation(interpolates.number(startElevation, elevation, k));
+            } else if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
@@ -1319,6 +1327,7 @@ export class Camera extends Evented<MapEventType> {
         this._pitching = false;
         this._rolling = false;
         this._padding = false;
+        this._elevating= false;
 
         if (wasZooming) {
             this.fire(new MapMovementEvent('zoomend', eventData));
@@ -1366,12 +1375,14 @@ export class Camera extends Evented<MapEventType> {
             startBearing = tr.bearing,
             startPitch = tr.pitch,
             startRoll = tr.roll,
-            startPadding = tr.padding;
+            startPadding = tr.padding,
+            startElevation = tr.elevation;
 
         const bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
         const pitch = options.pitch !== undefined ? +options.pitch : startPitch;
         const roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll;
         const padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
+        const elevation = options.elevation !== undefined ? options.elevation : startElevation;
 
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
@@ -1444,7 +1455,7 @@ export class Camera extends Evented<MapEventType> {
         // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
         if (Math.abs(u1) < 0.000002 || !isFinite(S)) {
             // Perform a more or less instantaneous transition if the path is too short.
-            if (Math.abs(w0 - w1) < 0.000001) return this.easeTo(options, eventData);
+            if (Math.abs(w0 - w1) < 0.000001 ) return this.easeTo(options, eventData);
 
             const k = w1 < w0 ? -1 : 1;
             S = Math.abs(Math.log(w1 / w0)) / rho;
@@ -1469,6 +1480,7 @@ export class Camera extends Evented<MapEventType> {
         this._pitching = (pitch !== startPitch);
         this._rolling = (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
+        this._elevating = (startElevation !== elevation);
 
         this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
 
@@ -1495,7 +1507,10 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            if (this._elevating) {
+                tr.setElevation(interpolates.number(startElevation, elevation, k));
+            } else if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {

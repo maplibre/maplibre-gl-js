@@ -1262,6 +1262,62 @@ describe('easeTo', () => {
         camera.easeTo({zoom: 2.7, duration: 0});
         expect(camera.getZoom()).toBe(2.7);
     });
+
+    test('interpolates elevation to specified value', async () => {
+        const {camera, queue} = createCamera({});
+
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+
+        const moveEnded = camera.once('moveend');
+
+        camera.easeTo({elevation: 100, animate: true, duration: 10});
+
+        stub.mockReturnValue(1);
+        queue.run();
+        expect(camera._elevating).toBe(true);
+
+        stub.mockReturnValue(10);
+        queue.run();
+        expect(camera._elevating).toBe(false);
+
+        await moveEnded;
+
+        expect(camera.getCenterElevation()).toBe(100);
+
+    });
+
+    test('interpolates elevation to specified value, overriding terrain elevation', async () => {
+        const terrain = {
+            getMinTileElevationForLngLatZoom: () => 50,
+            getElevationForLngLatZoom: () => 50,
+            getElevationForLngLat: () => 50,
+            getCoverageIndex: () => null,
+            getElevationAndDEMStateForLngLat: () => [50, 'none']
+        } as any as Terrain;
+
+        const {camera, queue} = createCamera({terrain});
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        const moveEnded = camera.once('moveend');
+
+        stubNow.mockReturnValue(0);
+
+        camera.easeTo({elevation: 100, animate: true, duration: 10});
+
+        stubNow.mockReturnValue(1);
+        queue.run();
+        expect(camera._elevating).toBe(true);
+
+        stubNow.mockReturnValue(10);
+        queue.run();
+        expect(camera._elevating).toBe(false);
+
+        await moveEnded;
+
+        expect(camera.getCenterElevation()).toBe(100);
+    });
+
 });
 
 describe('flyTo', () => {
@@ -2132,6 +2188,71 @@ describe('flyTo', () => {
         camera.flyTo({zoom: 2.7, animate: false});
         expect(camera.getZoom()).toBe(2.7);
     });
+
+    test('interpolates elevation to specified value', async () => {
+        const {camera, queue} = createCamera({}, false, {center: [0, 0]});
+
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+
+        const moveEnded = camera.once('moveend');
+
+        const easeToSpy = vi.spyOn(camera, 'easeTo');
+
+        // Change center so we don't fallback to easeTo
+        camera.flyTo({center: [100, 0], elevation: 100, animate: true, duration: 10});
+
+        expect(easeToSpy).not.toHaveBeenCalled();
+
+        stub.mockReturnValue(1);
+        queue.run();
+        expect(camera._elevating).toBe(true);
+
+        stub.mockReturnValue(10);
+        queue.run();
+        expect(camera._elevating).toBe(false);
+
+        await moveEnded;
+
+        expect(camera.getCenterElevation()).toBe(100);
+    });
+
+    test('interpolates elevation to specified value, overriding terrain elevation', async () => {
+        const terrain = {
+            getMinTileElevationForLngLatZoom: () => 50,
+            getElevationForLngLatZoom: () => 50,
+            getElevationForLngLat: () => 50,
+            getCoverageIndex: () => null,
+            getElevationAndDEMStateForLngLat: () => [50, 'none']
+        } as any as Terrain;
+
+        const {camera, queue} = createCamera({terrain}, false, {center: [0, 0]});
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        const moveEnded = camera.once('moveend');
+
+        stubNow.mockReturnValue(0);
+
+        const easeToSpy = vi.spyOn(camera, 'easeTo');
+
+        // Change center so we don't fallback to easeTo
+        camera.flyTo({center: [100, 0], elevation: 100, animate: true, duration: 10});
+
+        expect(easeToSpy).not.toHaveBeenCalled();
+
+        stubNow.mockReturnValue(1);
+        queue.run();
+        expect(camera._elevating).toBe(true);
+
+        stubNow.mockReturnValue(10);
+        queue.run();
+        expect(camera._elevating).toBe(false);
+
+        await moveEnded;
+
+        expect(camera.getCenterElevation()).toBe(100);
+    });
+
 });
 
 describe('isEasing', () => {
