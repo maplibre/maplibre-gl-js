@@ -6,6 +6,7 @@
 - Speed up tile loading by skipping point labels in the tile buffer, which the neighbouring tile draws ([#8535](https://github.com/maplibre/maplibre-gl-js/pull/8535)) (by [@cherenkov](https://github.com/cherenkov))
 - Project GeoJSON sources on a map in a registered CRS, in the workers, from a `definition` string and a projection handler ([#8736](https://github.com/maplibre/maplibre-gl-js/issues/8736)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Support OpenType `vert` forms in vertical labels rendered with `font-faces` ([#8489](https://github.com/maplibre/maplibre-gl-js/pull/8489)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
+- Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
