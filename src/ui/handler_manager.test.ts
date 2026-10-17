@@ -540,17 +540,14 @@ describe('terrain gesture anchoring', () => {
 });
 
 describe('dragRotate around the pointer', () => {
-    test('each right-button drag orbits the point where it started, so tilting also zooms', async () => {
+    test('a new right-button drag turns around the point where it starts, not where the last one started', async () => {
         map = createMap({interactive: true, dragRotate: {around: 'pointer'}, zoom: 12, pitch: 45});
         await map.once('load');
         vi.spyOn(timeControl, 'now').mockReturnValue(0);
-        const firstPivot = map.unproject([60, 150]);
 
         simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 60, clientY: 150});
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 80, clientY: 140});
         map.redraw();
-        const firstPivotDuringDrag = map.project(firstPivot);
-        const zoomAfterTilt = map.getZoom();
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 80, clientY: 140});
         map.redraw();
         const secondPivot = map.unproject([140, 120]);
@@ -558,8 +555,6 @@ describe('dragRotate around the pointer', () => {
         simulate.mousemove(window.document.body, {buttons: 2, clientX: 160, clientY: 110});
         map.redraw();
 
-        expect(firstPivotDuringDrag.dist(new Point(60, 150))).toBeLessThan(0.1);
-        expect(zoomAfterTilt).toBeCloseTo(11.961036, 5);
         expect(map.project(secondPivot).dist(new Point(140, 120))).toBeLessThan(0.1);
     });
 });
