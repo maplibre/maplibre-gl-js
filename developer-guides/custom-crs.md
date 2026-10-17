@@ -12,7 +12,7 @@ The transform, camera, covering tiles, terrain, sources and queries used to call
 - `wraps` is `true` only for Mercator. It gates world copies, `LngLat.wrap()`, antimeridian handling, the `MAX_VALID_LATITUDE` clamp and the hillshade latitude correction. With a non-wrapping helper `MercatorTransform._constrainToWorldSquare` keeps the center inside tile 0/0/0 and leaves the zoom to `minZoom`, or keeps the view inside the `maxBounds` box.
 - `tileMatrixSet` is the grid whose tile 0/0/0 is the world square, in CRS units, which the `{bbox}` tile URL token is expressed in; EPSG:3857 meters for Mercator.
 
-A `CRSDefinition` becomes a helper through `new CRSWorldCoordinateHelper(definition)`, which applies the world-coordinate formula from the user guide.
+A `CRS` becomes a helper through `new CRSWorldCoordinateHelper(crs)`, which applies the world-coordinate formula from the user guide.
 
 ## Who holds the helper
 
