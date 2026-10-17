@@ -4,15 +4,17 @@ import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
-import {createTerrain, setMatchMedia} from '../util/test/util.ts';
+import {createDEM, createDEMTerrain, createTerrain, setMatchMedia} from '../util/test/util.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
 import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Terrain} from '../render/terrain.ts';
+import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {JumpToOptions} from '../../dist/maplibre-gl';
 
 beforeEach(() => {
@@ -4103,4 +4105,114 @@ describe('camera options given as undefined are treated as absent', () => {
         camera.flyTo({...undefinedOptions, center: [10, 20], animate: false});
         expect(state(camera)).toEqual(start);
     });
+});
+
+describe('orbitRotationPivot', () => {
+    test('keeps the pivot at its screen point and zooms to keep its distance from the camera', () => {
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 6000));
+        const camera = createPivotCamera(terrain);
+        const pivot = camera.captureRotationPivot(camera.transform, new Point(570, 370));
+
+        camera.orbitRotationPivot(camera.transform, pivot, turnBy({bearingDelta: 30, pitchDelta: -20, rollDelta: 10}));
+
+        expect(camera.transform.bearing).toBeCloseTo(30);
+        expect(camera.transform.pitch).toBeCloseTo(40);
+        expect(camera.transform.roll).toBeCloseTo(10);
+        expect(camera.transform.locationToScreenPoint(pivot.location, terrain).dist(new Point(570, 370))).toBeLessThan(0.1);
+        expect(camera.transform.zoom).toBeCloseTo(12.388069, 5);
+    });
+
+    test('keeps a pivot on the globe on the planet\'s surface under the terrain, at its screen point and distance from the camera', () => {
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 3000));
+        const {camera} = createCamera({maxZoom: 22, maxPitch: 85, renderWorldCopies: true, terrain}, true);
+        camera.transform.resize(800, 600, true);
+        camera.transform.setCenter(new LngLat(10, 45));
+        camera.transform.setZoom(10);
+        camera.transform.setPitch(60);
+        const pivot = camera.captureRotationPivot(camera.transform, new Point(570, 370));
+
+        camera.orbitRotationPivot(camera.transform, pivot, turnBy({bearingDelta: 30, pitchDelta: -20}));
+
+        expect(pivot.elevation).toBeUndefined();
+        expect(camera.transform.bearing).toBeCloseTo(30);
+        expect(camera.transform.pitch).toBeCloseTo(40);
+        expect(camera.transform.locationToScreenPoint(pivot.location).dist(pivot.point)).toBeLessThan(0.1);
+        expect(camera.transform.zoom).toBeCloseTo(10.153954, 5);
+    });
+
+    test('keeps the pivot at its screen point where the zoom is at its limit', () => {
+        const camera = createPivotCamera();
+        camera.transform.setZoom(22);
+        const pivot = camera.captureRotationPivot(camera.transform, new Point(570, 370));
+
+        camera.orbitRotationPivot(camera.transform, pivot, turnBy({bearingDelta: 30, pitchDelta: -20}));
+
+        expect(camera.transform.zoom).toBe(22);
+        expect(camera.transform.bearing).toBeCloseTo(30);
+        expect(camera.transform.pitch).toBeCloseTo(40);
+        expect(camera.transform.locationToScreenPoint(pivot.location).dist(new Point(570, 370))).toBeLessThan(0.1);
+    });
+
+    test('keeps only the change of bearing of a frame that would tilt the pivot close to the horizon', () => {
+        const camera = createPivotCamera();
+        const pivot = camera.captureRotationPivot(camera.transform, new Point(500, 50));
+
+        camera.orbitRotationPivot(camera.transform, pivot, turnBy({bearingDelta: 10, pitchDelta: 20}));
+
+        expect(camera.transform.bearing).toBeCloseTo(10);
+        expect(camera.transform.pitch).toBe(60);
+        expect(camera.transform.locationToScreenPoint(pivot.location).dist(new Point(500, 50))).toBeLessThan(0.1);
+    });
+
+    test('keeps only the change of bearing of a frame that would make the camera look up', () => {
+        const camera = createPivotCamera();
+        camera.transform.setMaxPitch(180);
+        const pivot = camera.captureRotationPivot(camera.transform, new Point(500, 550));
+
+        camera.orbitRotationPivot(camera.transform, pivot, turnBy({bearingDelta: 10, pitchDelta: 40}));
+
+        expect(camera.transform.bearing).toBeCloseTo(10);
+        expect(camera.transform.pitch).toBe(60);
+        expect(camera.transform.locationToScreenPoint(pivot.location).dist(new Point(500, 550))).toBeLessThan(0.1);
+    });
+
+    test('turns the camera in place around the center for a point in the sky, also to where it looks up', () => {
+        const camera = createPivotCamera();
+        camera.transform.setMaxPitch(180);
+        camera.transform.setPitch(85);
+        const pivot = camera.captureRotationPivot(camera.transform, new Point(400, 0));
+
+        camera.orbitRotationPivot(camera.transform, pivot, turnBy({bearingDelta: 10, pitchDelta: 10}));
+
+        expect(pivot.point).toEqual(new Point(400, 300));
+        expect(camera.transform.bearing).toBeCloseTo(10);
+        expect(camera.transform.pitch).toBeCloseTo(95);
+        expect(camera.transform.center).toEqual(new LngLat(0, 0));
+    });
+
+    test('turns the camera in place where the edge of the map keeps the pivot from its screen point', () => {
+        const camera = createPivotCamera();
+        camera.transform.setZoom(1);
+        const pivot = camera.captureRotationPivot(camera.transform, new Point(700, 100));
+
+        const held = camera.orbitRotationPivot(camera.transform, pivot, turnBy({bearingDelta: 60}));
+
+        expect(held).toBe(false);
+        expect(camera.transform.bearing).toBeCloseTo(60);
+        expect(camera.transform.center).toEqual(new LngLat(0, 0));
+    });
+
+    function createPivotCamera(terrain: Terrain = null): Camera {
+        const {camera} = createCamera({maxZoom: 22, maxPitch: 85, renderWorldCopies: true, terrain});
+        camera.transform.resize(800, 600, true);
+        camera.transform.setCenter(new LngLat(0, 0));
+        camera.transform.setZoom(12);
+        camera.transform.setElevation(500);
+        camera.transform.setPitch(60);
+        return camera;
+    }
+
+    function turnBy(deltas: Partial<MapControlsDeltas>): MapControlsDeltas {
+        return {panDelta: new Point(0, 0), zoomDelta: 0, bearingDelta: 0, pitchDelta: 0, rollDelta: 0, around: new Point(0, 0), ...deltas};
+    }
 });

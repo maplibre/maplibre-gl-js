@@ -1,20 +1,22 @@
 import Point from '@mapbox/point-geometry';
-import {clamp, extend, wrap, defaultEasing, evaluateZoomSnap, lerp, zoomScale} from '../util/util.ts';
+import {vec3} from 'gl-matrix';
+import {clamp, extend, wrap, defaultEasing, evaluateZoomSnap, lerp, scaleZoom, zoomScale} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
-import {LngLat} from '../geo/lng_lat.ts';
+import {LngLat, earthRadius} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
+import {angularCoordinatesToSurfaceVector} from '../geo/projection/globe_utils.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
 import {ElevationHold} from './elevation_hold.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {TaskID} from '../util/task_queue.ts';
@@ -56,6 +58,27 @@ const MAX_CENTER_OFF_TERRAIN_M = 1;
  * sits there already, and two reads of the same surface under it differ by rounding.
  */
 const MAX_ZOOM_FOR_CENTER_TOLERANCE_M = 0.01;
+
+/** Pixels a rotation pivot keeps below the horizon, closer to which a pixel spans too much ground to hold it. */
+const PIVOT_HORIZON_MARGIN_PX = 16;
+
+/** How many times the zoom is corrected to reach a rotation pivot's distance. Mercator needs two, the globe a few more. */
+const MAX_PIVOT_ZOOM_CORRECTIONS = 5;
+
+/** The share of a rotation pivot's distance within which the camera counts as being at that distance. */
+const PIVOT_DISTANCE_TOLERANCE = 1e-7;
+
+/** The share of a rotation pivot's distance within which the ground under its screen point counts as the pivot, about a tenth of a pixel. */
+const PIVOT_POINT_TOLERANCE = 1e-4;
+
+/** The point a drag turns the camera around, with the screen point and the distance in meters from the camera it keeps. */
+export type RotationPivot = {
+    point: Point;
+    location: LngLat;
+    /** The elevation of a pivot on mercator terrain. Without it the pivot lies on the ground the transform unprojects to. */
+    elevation?: number;
+    distance: number;
+};
 
 /**
  * Options common to {@link Map.jumpTo}, {@link Map.easeTo}, and {@link Map.flyTo}, controlling the desired location,
@@ -1240,6 +1263,61 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
+     * Picks the point a drag turns the camera around, the terrain under the point, or the ground without terrain there,
+     * and the center for a point in the sky. On the globe, which holds no location at an elevation, a pivot on terrain
+     * is held by the planet's surface under it.
+     * @param tr - the camera state the drag starts from
+     * @param point - the screen point the drag starts at
+     */
+    captureRotationPivot(tr: IReadonlyTransform, point: Point): RotationPivot {
+        if (!isBelowHorizon(tr, point)) {
+            return {point: tr.centerPoint, location: tr.center, distance: distanceFromCamera(tr, tr.center)};
+        }
+        const hit = this.terrain ? tr.screenTerrainPointToMercatorCoordinate(point, this.terrain) : null;
+        const location = hit ? hit.toLngLat() : tr.screenPointToLocation(point);
+        if (hit && this.cameraHelper.useGlobeControls) {
+            return {point: tr.locationToScreenPoint(location), location, distance: distanceFromCamera(tr, location)};
+        }
+        return {point, location, elevation: hit?.z, distance: distanceFromCamera(tr, location, hit?.z)};
+    }
+
+    /**
+     * @internal
+     * Turns the camera around a pivot, keeping only the change of bearing where the tilt would bring the pivot close to
+     * the horizon. A pivot at the center turns the camera in place, without that limit.
+     * @param tr - the requested camera state
+     * @param pivot - the pivot, see {@link Camera.captureRotationPivot}
+     * @param deltas - the frame's change of bearing, pitch and roll
+     * @returns false where the pivot cannot be held, as next to a pole of the globe, which turns the camera in place
+     */
+    orbitRotationPivot(tr: ITransform, pivot: RotationPivot, deltas: MapControlsDeltas): boolean {
+        if (pivot.point.equals(tr.centerPoint)) {
+            this.cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
+            return true;
+        }
+        const camera = this._turnAroundPivot(tr, pivot, deltas) ?? this._turnAroundPivot(tr, pivot, {...deltas, pitchDelta: 0, rollDelta: 0});
+        if (!camera) {
+            this.cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
+            return false;
+        }
+        tr.apply(camera, false);
+        return true;
+    }
+
+    /**
+     * @internal
+     * Returns the camera turned around the pivot, or null where that would make it look up, bring the pivot close to the
+     * horizon or lose it.
+     */
+    _turnAroundPivot(start: ITransform, pivot: RotationPivot, deltas: MapControlsDeltas): ITransform | null {
+        const camera = start.clone();
+        this.cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, camera);
+        if (camera.pitch >= 90 || !isBelowHorizon(camera, pivot.point)) return null;
+        return holdPivot(camera, pivot) && isAtScreenPoint(camera, pivot) ? camera : null;
+    }
+
+    /**
+     * @internal
      * Called after the camera is done being manipulated. A hold on the center elevation takes DEM data that landed, see
      * {@link ElevationHold.take}; then the camera is kept above the terrain, see {@link Camera._keepCameraAboveTerrain};
      * `transformCameraUpdate`, if present, proposes its changes on a copy, and the "approved" result is applied to the
@@ -1603,4 +1681,61 @@ export class Camera extends Evented<MapEventType> {
     isRotating(): boolean {
         return this._rotating;
     }
+}
+
+/**
+ * Zooms and moves the camera so the pivot is at its screen point and distance, or as close to the distance as the zoom limits allow.
+ * Returns false where no zoom gives the distance, which is where the camera would have to go below the ground.
+ *
+ * The distance grows with the span of the view, in a straight line on mercator and nearly so on the globe,
+ * so the span is found with the secant method.
+ */
+function holdPivot(tr: ITransform, pivot: RotationPivot): boolean {
+    let span = 1;
+    let distance = placePivot(tr, pivot);
+    let nextSpan = pivot.distance / distance;
+    for (let i = 0; i < MAX_PIVOT_ZOOM_CORRECTIONS && !isAtDistance(distance, pivot); i++) {
+        if (!Number.isFinite(nextSpan) || nextSpan <= 0) return false;
+        const zoom = tr.zoom;
+        tr.setZoom(zoom + scaleZoom(span / nextSpan));
+        const reachedSpan = span * zoomScale(zoom - tr.zoom);
+        if (reachedSpan === span) return true;
+        const reachedDistance = placePivot(tr, pivot);
+        nextSpan = reachedSpan + (pivot.distance - reachedDistance) * (reachedSpan - span) / (reachedDistance - distance);
+        span = reachedSpan;
+        distance = reachedDistance;
+    }
+    return isAtDistance(distance, pivot);
+}
+
+/** Moves the camera so the pivot is at its screen point, and returns the pivot's distance from the camera. */
+function placePivot(tr: ITransform, pivot: RotationPivot): number {
+    tr.setLocationAtPoint(pivot.location, pivot.point, pivot.elevation);
+    return distanceFromCamera(tr, pivot.location, pivot.elevation);
+}
+
+function isAtDistance(distance: number, pivot: RotationPivot): boolean {
+    return Math.abs(distance / pivot.distance - 1) < PIVOT_DISTANCE_TOLERANCE;
+}
+
+/** Whether the ground under the pivot's screen point is the pivot, which the edge of the map or a pole of the globe can prevent. A pivot on terrain is not checked. */
+function isAtScreenPoint(tr: IReadonlyTransform, pivot: RotationPivot): boolean {
+    if (pivot.elevation !== undefined) return true;
+    const offset = vec3.distance(positionOf(tr.screenPointToLocation(pivot.point), 0), positionOf(pivot.location, 0));
+    return offset < pivot.distance * PIVOT_POINT_TOLERANCE;
+}
+
+function isBelowHorizon(tr: IReadonlyTransform, point: Point): boolean {
+    return tr.isPointOnMapSurface(new Point(point.x, point.y - PIVOT_HORIZON_MARGIN_PX));
+}
+
+/** Returns the straight-line distance in meters from the camera to a location, at the center's elevation unless it has its own. */
+function distanceFromCamera(tr: IReadonlyTransform, location: LngLat, elevation: number = tr.elevation): number {
+    return vec3.distance(positionOf(tr.getCameraLngLat(), tr.getCameraAltitude()), positionOf(location, elevation));
+}
+
+/** Returns the position of a location in meters from the center of the earth. */
+function positionOf(location: LngLat, elevation: number): vec3 {
+    const position = angularCoordinatesToSurfaceVector(location);
+    return vec3.scale(position, position, earthRadius + elevation);
 }
