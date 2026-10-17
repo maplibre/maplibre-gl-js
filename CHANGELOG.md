@@ -1,7 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add `dragRotate: {around: 'pointer'}` to turn and tilt the map around the point under the pointer where the drag starts ([#8628](https://github.com/maplibre/maplibre-gl-js/pull/8628)) (by [@birkskyum](https://github.com/birkskyum))
-- Add `dragRotate: {around: 'center', movement: 'circular' | 'linear'}` to choose how a drag turns the map around its center, and deprecate `aroundCenter`, whose `true` is `'circular'` and `false` is `'linear'` ([#8628](https://github.com/maplibre/maplibre-gl-js/pull/8628)) (by [@birkskyum](https://github.com/birkskyum))
+- Add `dragRotate: {around: 'pointer'}` to turn and tilt the map around the point under the pointer, and `{around: 'center', movement: 'circular' | 'linear'}`, which replaces the deprecated `aroundCenter` ([#8628](https://github.com/maplibre/maplibre-gl-js/pull/8628)) (by [@birkskyum](https://github.com/birkskyum))
 - Redraw fewer layers on terrain when a custom layer's `terrainTileRevision` or a feature state changes ([#8782](https://github.com/maplibre/maplibre-gl-js/pull/8782)) (by [@birkskyum](https://github.com/birkskyum))
 - Support the `hash` option in a projection registered with `addProjection` ([#8743](https://github.com/maplibre/maplibre-gl-js/pull/8743)) (by [@birkskyum](https://github.com/birkskyum))
 - Add experimental `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
