@@ -11,6 +11,8 @@ import type {PaddingOptions} from '../edge_insets.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 
 export type MapControlsDeltas = {
+    /** Preserve bearing when panning the globe. Defaults to true. */
+    fixedBearing?: boolean;
     panDelta: Point;
     zoomDelta: number;
     bearingDelta: number;
