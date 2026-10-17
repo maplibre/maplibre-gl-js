@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {CRSWorldCoordinateHelper, identityCrs, type CRS} from './crs.ts';
-import {createIdentityCrsAnsweringInside, createRotatedCrs} from '../../util/test/util.ts';
+import {createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs} from '../../util/test/util.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 
@@ -173,6 +173,34 @@ describe('CRSWorldCoordinateHelper', () => {
         test('reports the same meters per world unit as the mercator helper at the equator', () => {
             const worldCoordinateHelper = new CRSWorldCoordinateHelper(createMercatorAsCrs());
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBeCloseTo(mercatorWorldCoordinateHelper.metersPerWorldUnit(0.5, 0.5), 6);
+        });
+    });
+
+    describe('latitudeRange', () => {
+        test('runs from where the meridian stretches ten times as much as at the center to the near pole in a north polar CRS', () => {
+            expect(new CRSWorldCoordinateHelper(createPolarStereographicCrs()).latitudeRange).toEqual([-53, 90]);
+        });
+
+        test('runs from the near pole to where the meridian stretches ten times as much as at the center in a south polar CRS', () => {
+            const northPolar = createPolarStereographicCrs();
+            const southPolar: CRS = {
+                ...northPolar,
+                name: 'test:south-polar',
+                projection: {
+                    forward([lng, lat]) {
+                        return northPolar.projection.forward([lng, -lat]);
+                    },
+                    inverse(position) {
+                        const [lng, lat] = northPolar.projection.inverse(position);
+                        return [lng, -lat];
+                    },
+                },
+            };
+            expect(new CRSWorldCoordinateHelper(southPolar).latitudeRange).toEqual([-90, 53]);
+        });
+
+        test('is the whole globe for a projection that stretches no pole that much', () => {
+            expect(new CRSWorldCoordinateHelper(identityCrs).latitudeRange).toEqual([-90, 90]);
         });
     });
 });
