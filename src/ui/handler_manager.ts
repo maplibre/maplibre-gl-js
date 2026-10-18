@@ -23,7 +23,7 @@ import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Map, CompleteMapOptions} from './map.ts';
-import type {Camera} from './camera.ts';
+import type {Camera, RotationPivot} from './camera.ts';
 import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
@@ -195,6 +195,8 @@ export class HandlerManager {
      * zoom with the terrain off.
      */
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
+    /** The point a drag turns the camera around, picked on its first frame and kept until it ends or cannot be held. */
+    _rotationPivot: RotationPivot | null = null;
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
@@ -323,15 +325,17 @@ export class HandlerManager {
             map.touchPitch.enable(options.touchPitch);
         }
         const getCenter = () => this._camera.transform.centerPoint;
-        const mouseRotate = generateMouseRotationHandler(options, getCenter);
-        const mousePitch = generateMousePitchHandler(options);
-        const mouseRoll = generateMouseRollHandler(options, getCenter);
+        const getAround = () => map.dragRotate.around;
+        const getMovement = () => map.dragRotate.movement;
+        const mouseRotate = generateMouseRotationHandler(options, getCenter, getAround, getMovement);
+        const mousePitch = generateMousePitchHandler(options, getAround);
+        const mouseRoll = generateMouseRollHandler(options, getCenter, getAround);
         map.dragRotate = new DragRotateHandler(options, mouseRotate, mousePitch, mouseRoll);
         this._add('mouseRotate', mouseRotate, ['mousePitch']);
         this._add('mousePitch', mousePitch, ['mouseRotate', 'mouseRoll']);
         this._add('mouseRoll', mouseRoll, ['mousePitch']);
         if (options.interactive && options.dragRotate) {
-            map.dragRotate.enable();
+            map.dragRotate.enable(options.dragRotate);
         }
 
         const mousePan = generateMousePanHandler(options);
@@ -581,6 +585,12 @@ export class HandlerManager {
         // stop any ongoing camera animations (easeTo, flyTo)
         this._camera.stop(true);
 
+        if (this._turnsAroundPivot(combinedResult, combinedEventsInProgress)) {
+            this._orbitRotationPivot(tr, combinedResult, terrain);
+            this._commitFrame(tr, combinedResult, combinedEventsInProgress, deactivatedHandlers);
+            return;
+        }
+
         const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta} = combinedResult;
         if (zoomDelta > 0 && this._terrainGesture.inFlight) {
             this._camera.moveCenterOntoTerrain(tr, zoomDelta);
@@ -614,12 +624,37 @@ export class HandlerManager {
             panDelta,
         });
 
+        this._commitFrame(tr, combinedResult, combinedEventsInProgress, deactivatedHandlers);
+    }
+
+    /** Applies the frame's camera to the map, records the frame for inertia and fires its events. */
+    _commitFrame(tr: ITransform,
+        combinedResult: HandlerResult,
+        combinedEventsInProgress: EventsInProgress,
+        deactivatedHandlers: Record<string, Event>): void {
         this._camera.applyUpdatedTransform(tr);
 
         this._map._update();
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
+    }
 
+    /** Whether a frame rotates the camera around its own `around` point, which drag to rotate sets when it turns around the pointer. */
+    _turnsAroundPivot(combinedResult: HandlerResult, combinedEventsInProgress: EventsInProgress): boolean {
+        if (!combinedResult.around) return false;
+        return !combinedEventsInProgress.drag && !combinedEventsInProgress.zoom;
+    }
+
+    /** Turns the camera around the drag's pivot, holding the center elevation over terrain until the drag ends like every gesture. */
+    _orbitRotationPivot(tr: ITransform, combinedResult: HandlerResult, terrain: Terrain | null): void {
+        if (terrain && !this._terrainGesture.inFlight) {
+            this._terrainGesture.inFlight = true;
+            this._camera.holdElevation(tr, 'gesture');
+        }
+        const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around} = combinedResult;
+        this._rotationPivot ??= this._camera.captureRotationPivot(tr, around);
+        const held = this._camera.orbitRotationPivot(tr, this._rotationPivot, {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around});
+        if (!held) this._rotationPivot = null;
     }
 
     /**
@@ -804,6 +839,7 @@ export class HandlerManager {
             }
             this._updatingCamera = false;
         }
+        if (finishedMoving) this._rotationPivot = null;
 
     }
 

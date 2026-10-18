@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add `dragRotate: {around: 'pointer'}` to turn and tilt the map around the point under the pointer, and `{around: 'center', movement: 'circular' | 'linear'}`, which replaces the deprecated `aroundCenter` ([#8628](https://github.com/maplibre/maplibre-gl-js/pull/8628)) (by [@birkskyum](https://github.com/birkskyum))
 - Redraw fewer layers on terrain when a custom layer's `terrainTileRevision` or a feature state changes ([#8782](https://github.com/maplibre/maplibre-gl-js/pull/8782)) (by [@birkskyum](https://github.com/birkskyum))
 - Support the `hash` option in a projection registered with `addProjection` ([#8743](https://github.com/maplibre/maplibre-gl-js/pull/8743)) (by [@birkskyum](https://github.com/birkskyum))
 - Add experimental `addProjection`, `removeProjection`, a built-in `identity` projection and a `{bbox}` tile URL token for maps in a custom planar CRS with its own quad tile grid ([#168](https://github.com/maplibre/maplibre-gl-js/issues/168), [#5764](https://github.com/maplibre/maplibre-gl-js/issues/5764))
@@ -18,6 +19,7 @@
 - Fix a grid of lines along tile borders in line layers of sliced overzoomed tiles when the source tile extent is larger than 4096, by scaling the clip buffer with the extent ([#8705](https://github.com/maplibre/maplibre-gl-js/pull/8705)) (by [@tordans](https://github.com/tordans))
 - Fix the globe drag rounding its rotation to single precision ([#8784](https://github.com/maplibre/maplibre-gl-js/pull/8784)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `load` and `idle` firing before the other tiles finish loading when one tile fails ([#8785](https://github.com/maplibre/maplibre-gl-js/pull/8785)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Avoid using `.innerHTML = …` for the Popup close icon ([#8795](https://github.com/maplibre/maplibre-gl-js/pull/8795)) (by [@k-yle](https://github.com/k-yle))
 - Fix a GeoJSON feature without coordinates staying out of the tiles after `updateData` gives it some, by updating geojson-vt to 6.3.0 ([#8797](https://github.com/maplibre/maplibre-gl-js/pull/8797)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
