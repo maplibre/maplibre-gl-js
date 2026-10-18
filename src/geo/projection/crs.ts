@@ -12,9 +12,10 @@ import type {TileMatrixSet} from './tile_matrix_set.ts';
  * Register one with {@link addProjection} and select it with the style's `projection.type`
  * or `map.setProjection({type: name})`.
  *
- * Tiles are used as-is: the map never reprojects tile content, it only positions the CRS's own
- * tile grid on screen and maps lng/lat to and from it through `projection`. CRS units are
- * taken as meters wherever the map converts meters: altitudes, elevations, and the camera distance.
+ * Every tile source of the map is taken to be cut in `tileMatrixSet`, and the tiles are used as they are,
+ * without reprojecting their content. The map positions that grid on screen and maps lng/lat to and from it
+ * through `projection`. CRS units are taken as meters wherever the map converts meters: altitudes, elevations,
+ * and the camera distance.
  */
 export type CRS = {
     /**
@@ -48,6 +49,12 @@ export type CRS = {
 };
 
 /**
+ * How many times as much as at the center of its tile matrix set a projection may stretch distances along the meridian
+ * before GeoJSON sources stop placing data there, see {@link CRSWorldCoordinateHelper.latitudeRange}.
+ */
+const MAX_MERIDIAN_STRETCH = 10;
+
+/**
  * @internal
  * The world coordinate mapping for a CRS: world x/y are the CRS coordinates relative
  * to the tile matrix set origin, scaled so tile 0/0/0 is the 0..1 square, with y growing down.
@@ -58,6 +65,7 @@ export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
     private readonly _originX: number;
     private readonly _originY: number;
     private readonly _extent: number;
+    private _latitudeRange: [number, number] | undefined;
     /** A CRS is a bounded plane: no world copies, no wrapping, and no latitude clamp. */
     readonly wraps = false;
 
@@ -105,6 +113,41 @@ export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
     }
     worldZFromAltitude(altitude: number, _lngLat: LngLat): number {
         return altitude / this._extent;
+    }
+    /**
+     * The latitudes, `[south, north]`, from the center of the tile matrix set toward each pole, up to which the
+     * projection stretches distances along the meridian less than {@link MAX_MERIDIAN_STRETCH} times as much as at the
+     * center. GeoJSON sources move the positions past them onto them before projecting, so that what the projection
+     * cannot place, like the opposite pole of a polar projection, which projects to infinity, never reaches the map.
+     * `[-90, 90]` for a projection that stretches neither pole that much, like transverse mercator.
+     */
+    get latitudeRange(): [number, number] {
+        this._latitudeRange ??= [this._findLatitudeLimit(-90), this._findLatitudeLimit(90)];
+        return this._latitudeRange;
+    }
+    /**
+     * Walks the meridian through the center of the tile matrix set toward the pole at `pole`, a degree at a time, and
+     * returns the last latitude before the projection stretches distances along it more than
+     * {@link MAX_MERIDIAN_STRETCH} times as much as at the center, or the pole when it never does.
+     */
+    private _findLatitudeLimit(pole: number): number {
+        const center = this.lngLatFromWorld(0.5, 0.5);
+        const maxStretch = MAX_MERIDIAN_STRETCH * this._meridianStretch(center.lng, center.lat);
+        if (!(maxStretch > 0)) return pole;
+        const step = Math.sign(pole - center.lat);
+        for (let lat = center.lat; Math.abs(pole - lat) > 1; lat += step) {
+            if (!(this._meridianStretch(center.lng, lat + step) <= maxStretch)) return lat;
+        }
+        return pole;
+    }
+    /**
+     * The distance the projection puts between the position at `lng`, `lat` and the one a hundredth of a degree from
+     * it toward the equator, in CRS units.
+     */
+    private _meridianStretch(lng: number, lat: number): number {
+        const [x, y] = this._crs.projection.forward([lng, lat]);
+        const [towardEquatorX, towardEquatorY] = this._crs.projection.forward([lng, lat >= 0 ? lat - 0.01 : lat + 0.01]);
+        return Math.hypot(towardEquatorX - x, towardEquatorY - y);
     }
 }
 
