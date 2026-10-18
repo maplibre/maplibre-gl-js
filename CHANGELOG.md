@@ -10,6 +10,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix panning with the remaining finger after a pinch ([#8809](https://github.com/maplibre/maplibre-gl-js/issues/8809)).
 - Work around a regression in Safari 26.6 and later where the map stops loading tiles after the page was in the background ([#8780](https://github.com/maplibre/maplibre-gl-js/pull/8780)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix labels in Brahmic scripts such as Devanagari, Thai and Telugu mixing fonts or dropping letters when the style has a glyphs URL ([#8741](https://github.com/maplibre/maplibre-gl-js/issues/8741)) (by [@crackalamoo](https://github.com/crackalamoo))
 - Fix `setWorkerUrl` treating a `.cjs` fragment or query marker as a module worker URL ([#8769](https://github.com/maplibre/maplibre-gl-js/issues/8769)) (by [@Anandb71](https://github.com/Anandb71))

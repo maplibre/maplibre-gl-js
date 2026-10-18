@@ -821,6 +821,9 @@ export class HandlerManager {
         }
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
+            if (this._handlersById.touchPan.isActive()) {
+                this._inertia.clear();
+            }
             const inertialEase = this._inertia._onMoveEnd(this._map.dragPan._inertiaOptions);
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
