@@ -2,13 +2,13 @@
 
 MapLibre GL JS renders Web Mercator (EPSG:3857) tiles by default. Some tile sets are published in a different planar coordinate reference system (CRS): national grids such as NZTM2000 (EPSG:2193), polar stereographic grids for the Arctic and Antarctic, or a plain image plane for floor plans, game maps and scanned artwork. `addProjection` registers such a CRS so a map can render tiles that were pre-projected in it, with the map's lng/lat API working as usual on top.
 
-The map never reprojects tile content on the GPU. It positions the CRS's own tile grid on screen and converts lng/lat to and from that grid through the converter you supply. Reprojecting Mercator tiles into another CRS is a separate problem, tracked in [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
+The map does not reproject tile content. It positions the tile grid registered with the CRS on screen and converts lng/lat to and from that grid through the converter you supply. Reprojecting tiles from another grid, such as Mercator tiles, into the CRS is tracked in [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 
 `addProjection`, `removeProjection`, `CRS`, the workers' `setProjectionHandler`, the built-in `identity` projection and the `{bbox}` token are experimental, so they can still change in a minor release.
 
 ## What is supported
 
-A registered CRS is a square, power-of-two quad tile grid laid over a plane, the shape the OGC Two Dimensional Tile Matrix Set standard calls a quad tree tile matrix set. Tile 0/0/0 is one square, every zoom level splits each tile into four, and every source of the map serves tiles in that grid. Within that fence:
+A registered CRS comes with a square, power-of-two quad tile grid laid over its plane, the shape the OGC Two Dimensional Tile Matrix Set standard calls a quad tree tile matrix set. Tile 0/0/0 is one square, every zoom level splits each tile into four, and every tile source of the map is taken to serve tiles in that grid. Within that fence:
 
 - The map has exactly one CRS at a time, selected by the style's `projection.type` or `map.setProjection({type: name})`.
 - There are no world copies and no antimeridian wrap: the map renders a single world whatever `renderWorldCopies` is set to, and coordinates never wrap.
@@ -22,7 +22,7 @@ A registered CRS is a square, power-of-two quad tile grid laid over a plane, the
 | Field | Meaning |
 |-------|---------|
 | `name` | The name used in `projection.type`, for example `'EPSG:2193'` or `'custom:floor-plan'`. It needs a colon: names without one, like `'mercator'`, `'globe'`, `'vertical-perspective'` and `'identity'`, are reserved for built-in projections. |
-| `projection` | Converts between lng/lat degrees and CRS coordinates: `forward([lng, lat])` returns `[x, y]`, for example meters easting/northing, and `inverse([x, y])` returns `[lng, lat]`. A proj4js converter such as `proj4('EPSG:4326', 'EPSG:2193')` has this shape, and deck.gl's custom projection view takes the same object. Outside the tile matrix set `inverse` may return `null` or values that are not finite; the map then uses the nearest position inside it. |
+| `projection` | Converts between lng/lat degrees and CRS coordinates: `forward([lng, lat])` returns `[x, y]`, for example meters easting/northing, and `inverse([x, y])` returns `[lng, lat]`. A proj4js converter such as `proj4('EPSG:4326', 'EPSG:2193')` has this shape, and deck.gl's custom projection view takes the same object. Where `inverse` has no answer, it may return `null`, values that are not finite, or a position `forward` does not take back, or throw, as proj4 does past the edge of world projections. The map then uses the edge of the answers on the line to the center of the tile matrix set, assuming they form one stretch from the center outwards, so center the tile matrix set on a world projection's world, and a gesture there zooms around the center, as it does above the horizon of a pitched map. |
 | `tileMatrixSet.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
 | `tileMatrixSet.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
 | `definition` | Optional. The CRS as a string the workers' projection handler accepts, such as WKT or a PROJ string. GeoJSON sources need it, see [GeoJSON sources](#geojson-sources). |
@@ -186,6 +186,20 @@ maplibregl.addProjection({
 
 The data stays in lng/lat: `getData`, `queryRenderedFeatures` and the cluster methods return lng/lat, and `setData` and `updateData` take it. Only the positions are projected, so the edges between them are straight in the grid, and a long edge needs more positions to follow its curve. Before projecting it, the source moves the positions that lie toward a pole past the latitude where the projection starts to stretch distances more than ten times as much as at the center of the grid onto that latitude, so that what the projection can't place, like the opposite pole of a polar projection, which projects to infinity, stays off the map. Projections that stretch neither pole that much, like UTM, keep every latitude. Data outside the tile matrix set is cut away, so it ends at the grid's edge like the tiles do. [Display GeoJSON in a polar stereographic projection](../examples/display-geojson-in-a-polar-stereographic-projection.md) puts it together in a complete page, with the handler's script inlined as a Blob. The built-in `identity` projection needs neither a `definition` nor a handler. Without a `definition`, or without a handler in the workers, a GeoJSON source logs a warning and is drawn in the wrong place.
 
+## Custom layers
+
+A custom layer's `defaultProjectionData` takes world coordinates, the unit square of tile 0/0/0 from [Defining a CRS](#defining-a-crs), the way it takes Mercator coordinates on a Mercator map. `MercatorCoordinate` still answers in Mercator, so compute positions from the object passed to `addProjection` instead:
+
+```js
+function toWorld(crs, [lng, lat], altitude = 0) {
+    const [x, y] = crs.projection.forward([lng, lat]);
+    const {origin, extentAtZoom0} = crs.tileMatrixSet;
+    return [(x - origin[0]) / extentAtZoom0, (origin[1] - y) / extentAtZoom0, altitude / extentAtZoom0];
+}
+```
+
+A meter is `1 / extentAtZoom0` world units everywhere in the grid, so a three.js model takes that as its scale where the Mercator examples use `meterInMercatorCoordinateUnits()`. Libraries that place things with `MercatorCoordinate`, or build their own camera from the map's center and zoom, need support for the CRS on their side.
+
 ## What keeps working
 
 Everything that speaks lng/lat goes through the CRS's `projection`, so the map API is unchanged:
@@ -201,8 +215,7 @@ Everything that speaks lng/lat goes through the CRS's `projection`, so the map A
 - Mixing CRSs. A Mercator tile source on an EPSG:2193 map, or a projected raster layer over Mercator base tiles, renders in the wrong place. Reprojecting tiles on the GPU is the subject of [maplibre/maplibre#491](https://github.com/maplibre/maplibre/issues/491).
 - Non-quad tile matrix sets: grids whose levels are not powers of two, or whose tiles are not square. A grid whose level 0 has more than one tile works with the recipe above.
 - Globe and world copies, as described above.
-- Converters whose `inverse` does not undo `forward`. The camera constraint and every query rely on the round trip being stable.
-- Custom layers. They get the grid's matrix, so positions from `MercatorCoordinate` end up in the wrong place.
+- Converters whose `inverse` does not undo `forward` inside the projection's area. The camera constraint and every query rely on the round trip being stable there.
 - The `within` and `distance` expressions, which compute in mercator.
 - Projection expressions. A registered projection only works as a plain name in `projection.type`: in an expression such as `['step', ['zoom'], 'EPSG:25832', 10, 'mercator']` it is ignored, and the map logs a warning and draws the globe projection.
 - Switching to or from a registered CRS after the sources have loaded, with `setProjection` or with `setStyle` to a style in another projection, for now. Tile `bounds`, GeoJSON data and the corners of image, video and canvas sources are placed in the projection the map has when each source loads, so register the projection first and name it in the style, as the examples do.

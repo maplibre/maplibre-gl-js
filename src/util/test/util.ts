@@ -466,6 +466,25 @@ export function createIdentityCrsAnsweringInside(answerOutside: number[] | null)
 }
 
 /**
+ * Plate carrée on a tile 0/0/0 twice as wide as the world, with an inverse that wraps a position past ±180 around
+ * to the other side of the world, as proj4 does past the edge of a world projection.
+ */
+export function createWrappingWorldCrs(): CRS {
+    return {
+        name: 'test:wrapping-world',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return [(x + 540) % 360 - 180, y];
+            },
+        },
+        tileMatrixSet: {origin: [-360, 360], extentAtZoom0: 720},
+    };
+}
+
+/**
  * Plate carrée on a tile 0/0/0 twice as wide as the world, with an inverse that answers everywhere, so a position
  * past ±180 has a longitude of its own.
  */

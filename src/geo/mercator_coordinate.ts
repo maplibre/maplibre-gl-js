@@ -175,6 +175,9 @@ class MercatorWorldCoordinateHelper implements WorldCoordinateHelper {
     lngLatFromWorld(x: number, y: number): LngLat {
         return new LngLat(lngFromMercatorX(x), latFromMercatorY(y));
     }
+    hasLngLat(_x: number, _y: number): boolean {
+        return true;
+    }
     metersPerWorldUnit(_x: number, y: number): number {
         return 1 / (1 / earthCircumference * mercatorScale(latFromMercatorY(y)));
     }
