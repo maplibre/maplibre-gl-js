@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {CRSWorldCoordinateHelper, identityCrs, type CRS} from './crs.ts';
-import {createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs} from '../../util/test/util.ts';
+import {createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs, createWrappingWorldCrs} from '../../util/test/util.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 
@@ -43,9 +43,49 @@ describe('CRSWorldCoordinateHelper', () => {
             expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
         });
 
+        test('maps a position past the east edge to the nearest position inside where inverse throws', () => {
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper({
+                name: 'test:throwing-outside',
+                projection: {
+                    forward: ([lng, lat]) => [lng, lat],
+                    inverse([x, y]) {
+                        if (Math.abs(x) > 90 || Math.abs(y) > 90) throw new Error();
+                        return [x, y];
+                    },
+                },
+                tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+            });
+            expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
+        });
+
         test('maps a position past the east edge to the nearest position inside where inverse returns NaN', () => {
             const worldCoordinateHelper = new CRSWorldCoordinateHelper(createIdentityCrsAnsweringInside([NaN, NaN]));
             expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
+        });
+
+        test('maps a position past the edge of the world to the edge where inverse wraps it to the other side', () => {
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createWrappingWorldCrs());
+            const pastTheEastEdge = worldCoordinateHelper.lngLatFromWorld(0.875, 0.5);
+            expect(pastTheEastEdge.lng).toBeCloseTo(180, 5);
+            expect(pastTheEastEdge.lat).toBeCloseTo(0, 5);
+        });
+
+        test('keeps the inverse of a converter that is only approximately invertible', () => {
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper({
+                name: 'test:approximate',
+                projection: {forward: ([lng, lat]) => [lng, lat], inverse: ([x, y]) => [x * 1.0001, y]},
+                tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+            });
+            expect(worldCoordinateHelper.lngLatFromWorld(0.75, 0.5).lng).toBeCloseTo(45.0045, 6);
+        });
+
+        test('keeps the inverse of a converter that never leads back to the position', () => {
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper({
+                name: 'test:imprecise',
+                projection: {forward: ([lng, lat]) => [lng, lat], inverse: ([x, y]) => [x + 1, y]},
+                tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+            });
+            expect(worldCoordinateHelper.lngLatFromWorld(0.5, 0.5)).toEqual(new LngLat(1, 0));
         });
 
         test('throws when inverse has no answer inside the tile matrix set either', () => {

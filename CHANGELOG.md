@@ -10,6 +10,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix world projections like Equal Earth throwing and jumping when the mouse is in the space around the world ([#8803](https://github.com/maplibre/maplibre-gl-js/pull/8803)) (by [@birkskyum](https://github.com/birkskyum))
 - Work around a regression in Safari 26.6 and later where the map stops loading tiles after the page was in the background ([#8780](https://github.com/maplibre/maplibre-gl-js/pull/8780)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix labels in Brahmic scripts such as Devanagari, Thai and Telugu mixing fonts or dropping letters when the style has a glyphs URL ([#8741](https://github.com/maplibre/maplibre-gl-js/issues/8741)) (by [@crackalamoo](https://github.com/crackalamoo))
 - Fix `setWorkerUrl` treating a `.cjs` fragment or query marker as a module worker URL ([#8769](https://github.com/maplibre/maplibre-gl-js/issues/8769)) (by [@Anandb71](https://github.com/Anandb71))
@@ -19,6 +20,7 @@
 - Fix a grid of lines along tile borders in line layers of sliced overzoomed tiles when the source tile extent is larger than 4096, by scaling the clip buffer with the extent ([#8705](https://github.com/maplibre/maplibre-gl-js/pull/8705)) (by [@tordans](https://github.com/tordans))
 - Fix the globe drag rounding its rotation to single precision ([#8784](https://github.com/maplibre/maplibre-gl-js/pull/8784)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `load` and `idle` firing before the other tiles finish loading when one tile fails ([#8785](https://github.com/maplibre/maplibre-gl-js/pull/8785)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Avoid using `.innerHTML = …` for the Popup close icon ([#8795](https://github.com/maplibre/maplibre-gl-js/pull/8795)) (by [@k-yle](https://github.com/k-yle))
 - Fix a GeoJSON feature without coordinates staying out of the tiles after `updateData` gives it some, by updating geojson-vt to 6.3.0 ([#8797](https://github.com/maplibre/maplibre-gl-js/pull/8797)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
