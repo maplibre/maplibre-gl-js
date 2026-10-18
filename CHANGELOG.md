@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
