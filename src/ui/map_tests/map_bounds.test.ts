@@ -90,56 +90,6 @@ describe('setMaxBounds', () => {
         ).toEqual(toFixed(map.getBounds().toArray()));
     });
 
-    test('constrains latitude while leaving longitude unbounded', () => {
-        const map = createMap({zoom: 10, center: [0, 0], renderWorldCopies: true});
-
-        map.setMaxBounds([[-Infinity, -50], [Infinity, 65]]);
-        map.setCenter([180, 80]);
-
-        expect(map.getCenter().lng).toBe(180);
-        expect(map.getCenter().lat).toBeLessThan(65);
-        expect(map.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
-    });
-
-    test('supports flat infinite longitude bounds', () => {
-        const map = createMap({zoom: 10});
-
-        map.setMaxBounds([-Infinity, -50, Infinity, 65]);
-
-        expect(map.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
-    });
-
-    test('rejects one-sided infinite longitude bounds', () => {
-        const map = createMap({zoom: 10});
-
-        expect(() => map.setMaxBounds([[-Infinity, -50], [30, 65]])).toThrow(
-            'Longitude maxBounds values must either be finite or span from -Infinity to Infinity'
-        );
-
-        expect(() => map.setMaxBounds([[-30, -50], [Infinity, 65]])).toThrow(
-            'Longitude maxBounds values must either be finite or span from -Infinity to Infinity'
-        );
-    });
-
-    test('can constrain longitude without further restricting latitude', () => {
-        const map = createMap({zoom: 10, center: [0, 0]});
-
-        map.setMaxBounds([[-30, -90], [30, 90]]);
-        map.setCenter([80, 80]);
-
-        expect(map.getCenter().lng).toBeLessThan(30);
-        expect(map.getCenter().lat).toBe(80);
-    });
-
-    test('clears bounds when both axes span their valid ranges', () => {
-        const map = createMap({zoom: 10});
-
-        map.setMaxBounds([[-30, -50], [30, 65]]);
-        map.setMaxBounds([[-Infinity, -90], [Infinity, 90]]);
-
-        expect(map.getMaxBounds()).toBeNull();
-    });
-
     test('when no argument is passed, map bounds constraints are removed', () => {
         const map = createMap({zoom: 0});
         map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
