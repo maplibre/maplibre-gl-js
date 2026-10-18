@@ -5,6 +5,7 @@ import {Event as MapEvent} from '../util/evented.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap, createTerrain} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
+import * as timeControl from '../util/time_control.ts';
 
 import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager.ts';
 import type {Map} from './map.ts';
@@ -535,5 +536,25 @@ describe('terrain gesture anchoring', () => {
         const slip = slipOf(anchor, mid);
         endGesture(target);
         expect(slip).toBeLessThan(0.5);
+    });
+});
+
+describe('dragRotate around the pointer', () => {
+    test('a new right-button drag turns around the point where it starts, not where the last one started', async () => {
+        map = createMap({interactive: true, dragRotate: {around: 'pointer'}, zoom: 12, pitch: 45});
+        await map.once('load');
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 60, clientY: 150});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 80, clientY: 140});
+        map.redraw();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 80, clientY: 140});
+        map.redraw();
+        const secondPivot = map.unproject([140, 120]);
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 140, clientY: 120});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 160, clientY: 110});
+        map.redraw();
+
+        expect(map.project(secondPivot).dist(new Point(140, 120))).toBeLessThan(0.1);
     });
 });

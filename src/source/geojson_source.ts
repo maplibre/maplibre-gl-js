@@ -10,6 +10,8 @@ import {isAbortError} from '../util/abort_error.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {tileIdToLngLatBounds} from '../tile/tile_id_to_lng_lat_bounds.ts';
 import {UpdateQueue} from '../util/update_queue.ts';
+import {getRegisteredProjection} from '../geo/projection/projection_crud.ts';
+import {identityCrs} from '../geo/projection/crs.ts';
 
 import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import type {Source} from './source.ts';
@@ -470,6 +472,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      */
     private async _getLoadGeoJSONParameters(update: GeoJSONWorkerUpdate): Promise<LoadGeoJSONParameters> {
         const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
+        const crs = this._getCRSParameters();
+        if (crs) params.crs = crs;
 
         if (!('data' in update)) {
             if (update.diff) params.dataDiff = update.diff;
@@ -485,6 +489,21 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
 
         params.data = update.data;
         return params;
+    }
+
+    /**
+     * The map's registered projection as the workers take it, see {@link LoadGeoJSONParameters.crs}. The workers can
+     * build a projection's converter from its `definition`, or the built-in identity one without, so any other
+     * projection is left out with a warning.
+     */
+    private _getCRSParameters(): LoadGeoJSONParameters['crs'] | undefined {
+        const crs = getRegisteredProjection(this.map?.style?.projection?.name);
+        if (!crs) return undefined;
+        if (!crs.definition && crs !== identityCrs) {
+            warnOnce(`GeoJSON source "${this.id}" is drawn in the wrong place: the projection "${crs.name}" has no \`definition\` to project its data with.`);
+            return undefined;
+        }
+        return {name: crs.name, definition: crs.definition, tileMatrixSet: crs.tileMatrixSet};
     }
 
     /**
@@ -507,7 +526,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * since the data its result describes is no longer the source's, and still fires its events.
      *
      * A diff reloads only the tiles it touches, but a cluster refresh can regroup points on any tile,
-     * so an update that carries one reloads every tile, whatever diff comes with it.
+     * so an update that carries one reloads every tile, whatever diff comes with it. So does any diff on a map in a
+     * registered projection, where the lng/lat box of a tile, see {@link tileIdToLngLatBounds}, can miss part of it.
      */
     private _onWorkerUpdateResult(update: GeoJSONWorkerUpdate, result: GeoJSONWorkerSourceLoadDataResult, replaced: boolean) {
         if (this._removed || result.abandoned) {
@@ -522,7 +542,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         const diff = 'data' in update || replaced ? undefined : update.diff;
         const affectedGeometries = this._applyDiffToSource(diff);
         const refreshesClusters = !('data' in update) && update.updateCluster;
-        const shouldReloadTileOptions = refreshesClusters ? undefined : this._getShouldReloadTileOptions(affectedGeometries);
+        const reloadsEveryTile = refreshesClusters || this.map?.style?.projection?.worldCoordinateHelper.wraps === false;
+        const shouldReloadTileOptions = reloadsEveryTile ? undefined : this._getShouldReloadTileOptions(affectedGeometries);
 
         const eventData: {resourceTiming?: PerformanceResourceTiming[]} = {};
         this._applyResourceTiming(eventData, result);
@@ -635,9 +656,6 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     async loadTile(tile: Tile): Promise<void> {
-        if (!this.map.style.projection.worldCoordinateHelper.wraps) {
-            warnOnce(`GeoJSON sources do not follow a registered projection yet, so source "${this.id}" is drawn in the wrong place.`);
-        }
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = await this.actorPromise;
         const params: WorkerTileParameters = {

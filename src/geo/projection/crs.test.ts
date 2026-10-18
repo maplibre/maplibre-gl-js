@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
-import {CRSWorldCoordinateHelper, identityCrs, type CRSDefinition} from './crs.ts';
-import {createIdentityCrsAnsweringInside, createRotatedCrs} from '../../util/test/util.ts';
+import {CRSWorldCoordinateHelper, identityCrs, type CRS} from './crs.ts';
+import {createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs, createWrappingWorldCrs} from '../../util/test/util.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 
@@ -16,10 +16,10 @@ function createSamplePoints(): Array<[number, number]> {
 }
 
 /**
- * Spherical mercator written as a CRS definition, so its world coordinates can be checked against
+ * Spherical mercator written as a CRS, so its world coordinates can be checked against
  * the mercator helper's own math.
  */
-function createMercatorAsCrs(): CRSDefinition {
+function createMercatorAsCrs(): CRS {
     const halfCircumference = Math.PI * earthRadius;
     return {
         name: 'mercator-as-crs',
@@ -43,9 +43,49 @@ describe('CRSWorldCoordinateHelper', () => {
             expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
         });
 
+        test('maps a position past the east edge to the nearest position inside where inverse throws', () => {
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper({
+                name: 'test:throwing-outside',
+                projection: {
+                    forward: ([lng, lat]) => [lng, lat],
+                    inverse([x, y]) {
+                        if (Math.abs(x) > 90 || Math.abs(y) > 90) throw new Error();
+                        return [x, y];
+                    },
+                },
+                tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+            });
+            expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
+        });
+
         test('maps a position past the east edge to the nearest position inside where inverse returns NaN', () => {
             const worldCoordinateHelper = new CRSWorldCoordinateHelper(createIdentityCrsAnsweringInside([NaN, NaN]));
             expect(worldCoordinateHelper.lngLatFromWorld(1.5, 0.25)).toEqual(new LngLat(90, 45));
+        });
+
+        test('maps a position past the edge of the world to the edge where inverse wraps it to the other side', () => {
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(createWrappingWorldCrs());
+            const pastTheEastEdge = worldCoordinateHelper.lngLatFromWorld(0.875, 0.5);
+            expect(pastTheEastEdge.lng).toBeCloseTo(180, 5);
+            expect(pastTheEastEdge.lat).toBeCloseTo(0, 5);
+        });
+
+        test('keeps the inverse of a converter that is only approximately invertible', () => {
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper({
+                name: 'test:approximate',
+                projection: {forward: ([lng, lat]) => [lng, lat], inverse: ([x, y]) => [x * 1.0001, y]},
+                tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+            });
+            expect(worldCoordinateHelper.lngLatFromWorld(0.75, 0.5).lng).toBeCloseTo(45.0045, 6);
+        });
+
+        test('keeps the inverse of a converter that never leads back to the position', () => {
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper({
+                name: 'test:imprecise',
+                projection: {forward: ([lng, lat]) => [lng, lat], inverse: ([x, y]) => [x + 1, y]},
+                tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+            });
+            expect(worldCoordinateHelper.lngLatFromWorld(0.5, 0.5)).toEqual(new LngLat(1, 0));
         });
 
         test('throws when inverse has no answer inside the tile matrix set either', () => {
@@ -105,7 +145,7 @@ describe('CRSWorldCoordinateHelper', () => {
         });
     });
 
-    describe('identity CRS definition', () => {
+    describe('identity CRS', () => {
         test('is the identity over lng/lat with tile 0/0/0 spanning -90..90', () => {
             expect(identityCrs.name).toBe('identity');
             expect(identityCrs.projection.forward([12.5, -41.9])).toEqual([12.5, -41.9]);
@@ -126,14 +166,14 @@ describe('CRSWorldCoordinateHelper', () => {
         });
 
         test('measures world coordinates from the tile matrix set origin with y growing down', () => {
-            const definition = createRotatedCrs();
-            const worldCoordinateHelper = new CRSWorldCoordinateHelper(definition);
+            const crs = createRotatedCrs();
+            const worldCoordinateHelper = new CRSWorldCoordinateHelper(crs);
             const quarterAcross = 0.25;
             const threeQuartersDown = 0.75;
-            const [originX, originY] = definition.tileMatrixSet.origin;
-            const extent = definition.tileMatrixSet.extentAtZoom0;
+            const [originX, originY] = crs.tileMatrixSet.origin;
+            const extent = crs.tileMatrixSet.extentAtZoom0;
             const lngLat = worldCoordinateHelper.lngLatFromWorld(quarterAcross, threeQuartersDown);
-            const [x, y] = definition.projection.forward([lngLat.lng, lngLat.lat]);
+            const [x, y] = crs.projection.forward([lngLat.lng, lngLat.lat]);
             expect(x).toBeCloseTo(originX + quarterAcross * extent, 10);
             expect(y).toBeCloseTo(originY - threeQuartersDown * extent, 10);
         });
@@ -173,6 +213,34 @@ describe('CRSWorldCoordinateHelper', () => {
         test('reports the same meters per world unit as the mercator helper at the equator', () => {
             const worldCoordinateHelper = new CRSWorldCoordinateHelper(createMercatorAsCrs());
             expect(worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5)).toBeCloseTo(mercatorWorldCoordinateHelper.metersPerWorldUnit(0.5, 0.5), 6);
+        });
+    });
+
+    describe('latitudeRange', () => {
+        test('runs from where the meridian stretches ten times as much as at the center to the near pole in a north polar CRS', () => {
+            expect(new CRSWorldCoordinateHelper(createPolarStereographicCrs()).latitudeRange).toEqual([-53, 90]);
+        });
+
+        test('runs from the near pole to where the meridian stretches ten times as much as at the center in a south polar CRS', () => {
+            const northPolar = createPolarStereographicCrs();
+            const southPolar: CRS = {
+                ...northPolar,
+                name: 'test:south-polar',
+                projection: {
+                    forward([lng, lat]) {
+                        return northPolar.projection.forward([lng, -lat]);
+                    },
+                    inverse(position) {
+                        const [lng, lat] = northPolar.projection.inverse(position);
+                        return [lng, -lat];
+                    },
+                },
+            };
+            expect(new CRSWorldCoordinateHelper(southPolar).latitudeRange).toEqual([-90, 53]);
+        });
+
+        test('is the whole globe for a projection that stretches no pole that much', () => {
+            expect(new CRSWorldCoordinateHelper(identityCrs).latitudeRange).toEqual([-90, 90]);
         });
     });
 });
