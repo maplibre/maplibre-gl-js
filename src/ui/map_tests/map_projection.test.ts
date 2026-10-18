@@ -59,13 +59,17 @@ describe('Map in the identity projection', () => {
 });
 
 describe('Map in a CRS registered with addProjection', () => {
+    const crs = createRotatedCrs();
+
+    beforeEach(() => {
+        addProjection(crs);
+    });
+
     afterEach(() => {
-        removeProjection(createRotatedCrs().name);
+        removeProjection(crs.name);
     });
 
     test('setProjection accepts the registered name', async () => {
-        const crs = createRotatedCrs();
-        addProjection(crs);
         const map = createMap();
         await map.once('style.load');
 
@@ -75,8 +79,6 @@ describe('Map in a CRS registered with addProjection', () => {
     });
 
     test('projects lng/lat to the screen through the registered CRS', async () => {
-        const crs = createRotatedCrs();
-        addProjection(crs);
         const map = createMap();
         await map.once('style.load');
         map.setProjection({type: crs.name});
@@ -95,13 +97,17 @@ describe('Map in a CRS registered with addProjection', () => {
 });
 
 describe('Map in a polar stereographic CRS', () => {
+    const crs = createPolarStereographicCrs();
+
+    beforeEach(() => {
+        addProjection(crs);
+    });
+
     afterEach(() => {
-        removeProjection(createPolarStereographicCrs().name);
+        removeProjection(crs.name);
     });
 
     test('fits the cap north of 60N with the pole at the center', async () => {
-        const crs = createPolarStereographicCrs();
-        addProjection(crs);
         const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}});
         await map.once('style.load');
 
@@ -111,8 +117,6 @@ describe('Map in a polar stereographic CRS', () => {
     });
 
     test('keeps a center on the far side of the pole inside maxBounds of the cap north of 60N', async () => {
-        const crs = createPolarStereographicCrs();
-        addProjection(crs);
         const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}, maxBounds: [[-180, 60], [180, 90]], zoom: 3});
         await map.once('style.load');
 
@@ -124,13 +128,17 @@ describe('Map in a polar stereographic CRS', () => {
 });
 
 describe('Map in a CRS whose converter answers only inside its tile matrix set', () => {
+    const crs = createIdentityCrsAnsweringInside(null);
+
+    beforeEach(() => {
+        addProjection(crs);
+    });
+
     afterEach(() => {
-        removeProjection(createIdentityCrsAnsweringInside(null).name);
+        removeProjection(crs.name);
     });
 
     test('unprojects a point past the west edge of the world square to the edge', async () => {
-        const crs = createIdentityCrsAnsweringInside(null);
-        addProjection(crs);
         const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}});
         await map.once('style.load');
         const containerMiddle = 100;
