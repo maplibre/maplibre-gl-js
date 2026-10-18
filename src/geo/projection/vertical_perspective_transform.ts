@@ -405,8 +405,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     public transformLightDirection(dir: vec3): vec3 {
-        const sphereX = this._helper._center.lng * Math.PI / 180.0;
-        const sphereY = this._helper._center.lat * Math.PI / 180.0;
+        const sphereX = this._helper.center.lng * Math.PI / 180.0;
+        const sphereY = this._helper.center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
         const spherePos: vec3 = [
@@ -433,11 +433,11 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     public getPixelScale(): number {
-        return 1.0 / planetScaleAtLatitude(this._helper._center.lat);
+        return 1.0 / planetScaleAtLatitude(this._helper.center.lat);
     }
 
     public getCircleRadiusCorrection(): number {
-        return planetScaleAtLatitude(this._helper._center.lat);
+        return planetScaleAtLatitude(this._helper.center.lat);
     }
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
@@ -506,8 +506,8 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         // Apply center of perspective offset
         const offset = this.centerOffset;
-        globeMatrix[8] = -offset.x * 2 / this._helper._width;
-        globeMatrix[9] = offset.y * 2 / this._helper._height;
+        globeMatrix[8] = -offset.x * 2 / this._helper.width;
+        globeMatrix[9] = offset.y * 2 / this._helper.height;
         this._projectionMatrix = mat4.clone(globeMatrix);
 
         this._globeProjMatrixInverted = createMat4f64();
