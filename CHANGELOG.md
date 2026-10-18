@@ -5,20 +5,10 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- docs: show how custom layers place positions on a registered CRS ([#8806](https://github.com/maplibre/maplibre-gl-js/pull/8806)) (by [@birkskyum](https://github.com/birkskyum))
-- fix: keep GeoJSON at the far pole of a polar projection off the map ([#8798](https://github.com/maplibre/maplibre-gl-js/pull/8798)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- refactor: rename CRSDefinition to CRS and its wkt to definition ([#8787](https://github.com/maplibre/maplibre-gl-js/pull/8787)) (by [@birkskyum](https://github.com/birkskyum))
-- fix: do not mix fonts or drop glyphs in Brahmic scripts ([#8740](https://github.com/maplibre/maplibre-gl-js/pull/8740)) (by [@crackalamoo](https://github.com/crackalamoo))
-- Update unitcode to version 2.0.8 ([#8783](https://github.com/maplibre/maplibre-gl-js/pull/8783)) (by [@HarelM](https://github.com/HarelM))
-- fix(worker): treat .cjs fragment/query as classic worker URL ([#8773](https://github.com/maplibre/maplibre-gl-js/pull/8773)) (by [@Anandb71](https://github.com/Anandb71))
-- docs: mark identity and the bbox token as experimental ([#8774](https://github.com/maplibre/maplibre-gl-js/pull/8774)) (by [@birkskyum](https://github.com/birkskyum))
-- feat: project GeoJSON sources into a registered projection in the workers ([#8738](https://github.com/maplibre/maplibre-gl-js/pull/8738)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- docs: add a Nuxt note to the Vite installation tab ([#8766](https://github.com/maplibre/maplibre-gl-js/pull/8766)) (by [@MihaelaAghirculesei](https://github.com/MihaelaAghirculesei))
-- fix: keep the center elevation while the terrain under a new center loads ([#8731](https://github.com/maplibre/maplibre-gl-js/pull/8731)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- docs: fix documentation link targets ([#8764](https://github.com/maplibre/maplibre-gl-js/pull/8764)) (by [@AlvaroBalbin](https://github.com/AlvaroBalbin))
-- feat: add addProjection for maps in a custom planar CRS ([#8723](https://github.com/maplibre/maplibre-gl-js/pull/8723)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 ## 6.15.0
+
 ### ✨ Features and improvements
+
 - Add `dragRotate: {around: 'pointer'}` to turn and tilt the map around the point under the pointer, and `{around: 'center', movement: 'circular' | 'linear'}`, which replaces the deprecated `aroundCenter` ([#8628](https://github.com/maplibre/maplibre-gl-js/pull/8628)) (by [@birkskyum](https://github.com/birkskyum))
 - Redraw fewer layers on terrain when a custom layer's `terrainTileRevision` or a feature state changes ([#8782](https://github.com/maplibre/maplibre-gl-js/pull/8782)) (by [@birkskyum](https://github.com/birkskyum))
 - Support the `hash` option in a projection registered with `addProjection` ([#8743](https://github.com/maplibre/maplibre-gl-js/pull/8743)) (by [@birkskyum](https://github.com/birkskyum))
@@ -28,6 +18,7 @@
 - Support OpenType `vert` forms in vertical labels rendered with `font-faces` ([#8489](https://github.com/maplibre/maplibre-gl-js/pull/8489)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 
 ### 🐞 Bug fixes
+
 - Fix a map in a registered projection going blank when its center crosses 180° ([#8802](https://github.com/maplibre/maplibre-gl-js/pull/8802)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix world projections like Equal Earth throwing and jumping when the mouse is in the space around the world ([#8803](https://github.com/maplibre/maplibre-gl-js/pull/8803)) (by [@birkskyum](https://github.com/birkskyum))
 - Work around a regression in Safari 26.6 and later where the map stops loading tiles after the page was in the background ([#8780](https://github.com/maplibre/maplibre-gl-js/pull/8780)) (by [@birkskyum](https://github.com/birkskyum))
