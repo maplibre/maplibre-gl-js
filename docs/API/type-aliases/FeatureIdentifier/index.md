@@ -2,7 +2,7 @@
 
 > **FeatureIdentifier** = `object`
 
-Defined in: [style/style.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style.ts#L79>)
+Defined in: [style/style.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style.ts#L79>)
 
 A feature identifier that is bound to a source
 
@@ -12,7 +12,7 @@ A feature identifier that is bound to a source
 
 > `optional` **id?**: `string` | `number`
 
-Defined in: [style/style.ts:83](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style.ts#L83>)
+Defined in: [style/style.ts:83](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style.ts#L83>)
 
 Unique id of the feature.
 
@@ -22,7 +22,7 @@ Unique id of the feature.
 
 > **source**: `string`
 
-Defined in: [style/style.ts:87](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style.ts#L87>)
+Defined in: [style/style.ts:87](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style.ts#L87>)
 
 The id of the vector or GeoJSON source for the feature.
 
@@ -32,6 +32,6 @@ The id of the vector or GeoJSON source for the feature.
 
 > `optional` **sourceLayer?**: `string`
 
-Defined in: [style/style.ts:91](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/style/style.ts#L91>)
+Defined in: [style/style.ts:91](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style.ts#L91>)
 
 *For vector tile sources, `sourceLayer` is required.*

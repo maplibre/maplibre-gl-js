@@ -164,7 +164,7 @@ map.on('load', async () => {
     <meta property="og:created" content="2026-10-05" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css' />
 
     <style>
         body {
@@ -191,7 +191,7 @@ map.on('load', async () => {
             "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
             "3d-tiles-renderer": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.three.js",
             "3d-tiles-renderer/plugins": "https://cdn.jsdelivr.net/npm/3d-tiles-renderer@0.5.3/build/index.plugins.js",
-            "maplibre-gl": "https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.mjs",
+            "maplibre-gl": "https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs",
             "proj4": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/proj4-wrapper.js",
             "geotiff": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/type-wrappers/geotiff-wrapper.js",
             "maplibre-gl-three": "https://cdn.jsdelivr.net/npm/maplibre-gl-three@3.0.0/dist/maplibre-gl-three.js"

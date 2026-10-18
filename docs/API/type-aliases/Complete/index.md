@@ -2,7 +2,7 @@
 
 > **Complete**\<`T`\> = { \[P in keyof Required\<T\>\]: Pick\<T, P\> extends Required\<Pick\<T, P\>\> ? T\[P\] : T\[P\] | undefined }
 
-Defined in: [util/util.ts:1100](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/util/util.ts#L1100>)
+Defined in: [util/util.ts:1100](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/util.ts#L1100>)
 
 Makes optional keys required and add the the undefined type.
 

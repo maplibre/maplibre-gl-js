@@ -196,6 +196,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/enumerations/TextFit/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/addProjection/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/addProtocol/</loc>
       </url>
       <url>
@@ -236,6 +239,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/prewarm/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/removeProjection/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/removeProtocol/</loc>
@@ -337,6 +343,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/BoxZoomHandlerOptions/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CRS/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CalculateTileZoomFunction/</loc>
       </url>
       <url>
@@ -392,6 +401,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/DragPanOptions/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/DragRotateOptions/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/EaseToOptions/</loc>
@@ -613,6 +625,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/TerrainHeightMapTarget/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/TileMatrixSet/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/TileMesh/</loc>
       </url>
       <url>
@@ -832,6 +847,12 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-a-hybrid-satellite-map-with-terrain-elevation/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-a-map-in-a-polar-stereographic-projection/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-a-map-in-utm-zone-32n/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-a-map-with-mlt/</loc>
       </url>
       <url>
@@ -856,10 +877,16 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-a-satellite-map/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-an-image-in-the-identity-projection/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-geojson-in-a-polar-stereographic-projection/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/</loc>
@@ -1049,6 +1076,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/guides/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/guides/custom-crs/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/guides/large-data/</loc>

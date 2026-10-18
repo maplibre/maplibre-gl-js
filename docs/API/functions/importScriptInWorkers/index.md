@@ -2,7 +2,7 @@
 
 > **importScriptInWorkers**(`workerUrl`: `string`): `Promise`\<`void`\>
 
-Defined in: [index.ts:209](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/index.ts#L209>)
+Defined in: [index.ts:212](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/index.ts#L212>)
 
 Allows loading javascript code in the worker thread. *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
 

@@ -2,7 +2,7 @@
 
 > **setWorkerUrl**(`value`: `string`): `void`
 
-Defined in: [index.ts:177](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/index.ts#L177>)
+Defined in: [index.ts:180](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/index.ts#L180>)
 
 Sets the worker url
 

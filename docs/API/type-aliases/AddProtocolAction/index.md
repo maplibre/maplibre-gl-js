@@ -2,7 +2,7 @@
 
 > **AddProtocolAction** = (`requestParameters`: [`RequestParameters`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequestParameters/index.md>), `abortController`: `AbortController`) =\> `Promise`\<[`GetResourceResponse`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GetResourceResponse/index.md>)\<[`AddProtocolResponseData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AddProtocolResponseData/index.md>)\>\>
 
-Defined in: [util/config.ts:20](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/util/config.ts#L20>)
+Defined in: [util/config.ts:20](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/config.ts#L20>)
 
 This method type is used to register a protocol handler. Use the abort controller for aborting requests. Return a promise with the relevant resource response, see [AddProtocolResponseData](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AddProtocolResponseData/index.md>) for what `data` may hold.
 

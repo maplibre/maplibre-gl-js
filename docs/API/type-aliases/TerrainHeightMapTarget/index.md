@@ -2,7 +2,7 @@
 
 > **TerrainHeightMapTarget** = `object`
 
-Defined in: [render/terrain.ts:30](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/render/terrain.ts#L30>)
+Defined in: [render/terrain.ts:31](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/render/terrain.ts#L31>)
 
 **`Experimental`**
 
@@ -14,7 +14,7 @@ A float texture for [CustomRenderMethodInput.renderTerrainHeightMap](<https://ma
 
 > **bounds**: \[`number`, `number`, `number`, `number`\]
 
-Defined in: [render/terrain.ts:38](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/render/terrain.ts#L38>)
+Defined in: [render/terrain.ts:39](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/render/terrain.ts#L39>)
 
 The area to draw, `[minX, minY, maxX, maxY]` in [MercatorCoordinate](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MercatorCoordinate/index.md>) units, with x counting world copies.
 
@@ -24,7 +24,7 @@ The area to draw, `[minX, minY, maxX, maxY]` in [MercatorCoordinate](<https://ma
 
 > **height**: `number`
 
-Defined in: [render/terrain.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/render/terrain.ts#L36>)
+Defined in: [render/terrain.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/render/terrain.ts#L37>)
 
 The height of the texture in pixels.
 
@@ -34,7 +34,7 @@ The height of the texture in pixels.
 
 > **texture**: `WebGLTexture`
 
-Defined in: [render/terrain.ts:32](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/render/terrain.ts#L32>)
+Defined in: [render/terrain.ts:33](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/render/terrain.ts#L33>)
 
 A texture in the map's WebGL context.
 
@@ -44,6 +44,6 @@ A texture in the map's WebGL context.
 
 > **width**: `number`
 
-Defined in: [render/terrain.ts:34](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/render/terrain.ts#L34>)
+Defined in: [render/terrain.ts:35](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/render/terrain.ts#L35>)
 
 The width of the texture in pixels.

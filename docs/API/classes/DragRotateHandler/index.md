@@ -1,6 +1,6 @@
 # DragRotateHandler
 
-Defined in: [ui/handler/shim/drag\_rotate.ts:25](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_rotate.ts#L25>)
+Defined in: [ui/handler/shim/drag\_rotate.ts:56](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/handler/shim/drag_rotate.ts#L56>)
 
 The `DragRotateHandler` allows the user to rotate the map by clicking and dragging the cursor while holding the right mouse button or `ctrl` key.
 
@@ -10,7 +10,7 @@ The `DragRotateHandler` allows the user to rotate the map by clicking and draggi
 
 > **disable**(): `void`
 
-Defined in: [ui/handler/shim/drag\_rotate.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_rotate.ts#L64>)
+Defined in: [ui/handler/shim/drag\_rotate.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/handler/shim/drag_rotate.ts#L110>)
 
 Disables the "drag to rotate" interaction.
 
@@ -28,11 +28,17 @@ map.dragRotate.disable();
 
 ### enable()
 
-> **enable**(): `void`
+> **enable**(`options?`: `boolean` | [`DragRotateOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/DragRotateOptions/index.md>)): `void`
 
-Defined in: [ui/handler/shim/drag\_rotate.ts:50](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_rotate.ts#L50>)
+Defined in: [ui/handler/shim/drag\_rotate.ts:93](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/handler/shim/drag_rotate.ts#L93>)
 
 Enables the "drag to rotate" interaction.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `options?` | `boolean` \| [`DragRotateOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/DragRotateOptions/index.md>) | Options object |
 
 #### Returns
 
@@ -42,6 +48,8 @@ Enables the "drag to rotate" interaction.
 
 ```ts
 map.dragRotate.enable();
+map.dragRotate.enable({around: 'pointer'});
+map.dragRotate.enable({around: 'center', movement: 'linear'});
 ```
 
 ---
@@ -50,7 +58,7 @@ map.dragRotate.enable();
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler/shim/drag\_rotate.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_rotate.ts#L84>)
+Defined in: [ui/handler/shim/drag\_rotate.ts:130](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/handler/shim/drag_rotate.ts#L130>)
 
 Returns a Boolean indicating whether the "drag to rotate" interaction is active, i.e. currently being used.
 
@@ -66,7 +74,7 @@ Returns a Boolean indicating whether the "drag to rotate" interaction is active,
 
 > **isEnabled**(): `boolean`
 
-Defined in: [ui/handler/shim/drag\_rotate.ts:75](<https://github.com/maplibre/maplibre-gl-js/blob/72927301b7594536630d896c45c64c4d0d4c587f/src/ui/handler/shim/drag_rotate.ts#L75>)
+Defined in: [ui/handler/shim/drag\_rotate.ts:121](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/handler/shim/drag_rotate.ts#L121>)
 
 Returns a Boolean indicating whether the "drag to rotate" interaction is enabled.
 
