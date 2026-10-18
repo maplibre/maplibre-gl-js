@@ -466,6 +466,25 @@ export function createIdentityCrsAnsweringInside(answerOutside: number[] | null)
 }
 
 /**
+ * Plate carrée on a tile 0/0/0 twice as wide as the world, with an inverse that wraps a position past ±180 around
+ * to the other side of the world, as proj4 does past the edge of a world projection.
+ */
+export function createWrappingWorldCrs(): CRS {
+    return {
+        name: 'test:wrapping-world',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return [(x + 540) % 360 - 180, y];
+            },
+        },
+        tileMatrixSet: {origin: [-360, 360], extentAtZoom0: 720},
+    };
+}
+
+/**
  * A north polar stereographic CRS on a sphere, oriented like EPSG:3413 (lng -45 points down) and true to scale
  * at 70N, with tile 0/0/0 spanning the EPSG:3413 grid NASA GIBS serves. Parallels are circles around the pole.
  */
