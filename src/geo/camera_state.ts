@@ -55,7 +55,8 @@ export type CameraState = {
 
 /**
  * @internal
- * The camera state of a new transform, which has no size yet and no bounds.
+ * The camera state of a new transform, which has no size yet and no bounds. The matrices and the values computed
+ * with them start out `undefined` until the transform computes them.
  */
 export function createCameraState(options?: TransformOptions): CameraState {
     return {
@@ -80,7 +81,6 @@ export function createCameraState(options?: TransformOptions): CameraState {
         latRange: [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE],
         renderWorldCopies: options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies,
         minElevationForCurrentTile: 0,
-        // The transform computes these with its matrices, and the rotation once it has a bearing.
         pixelsPerMeter: undefined,
         cameraToCenterDistance: undefined,
         rotationMatrix: undefined,
