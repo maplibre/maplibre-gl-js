@@ -1,4 +1,4 @@
-import {afterEach, beforeEach, describe, expect, vi, test} from 'vitest';
+import {afterEach, beforeEach, onTestFinished, describe, expect, vi, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
 import {Event as MapEvent} from '../util/evented.ts';
@@ -23,6 +23,44 @@ beforeEach(() => {
 afterEach(() => {
     map.remove();
     vi.restoreAllMocks();
+});
+
+test.each([0, 3])('the remaining finger can pan after a pinch at bearing %i', async bearing => {
+    map = createMap({interactive: true, zoom: 12, bearing, touchPitch: false, doubleClickZoom: false});
+    map.touchZoomRotate.disableRotation();
+    await map.once('style.load');
+    timeControl.setNow(0);
+    onTestFinished(timeControl.restoreNow);
+    const canvas = map.getCanvas();
+    const remaining = {target: canvas, identifier: 1, clientX: 20, clientY: 100};
+    const released = {target: canvas, identifier: 2, clientX: 180, clientY: 100};
+    simulate.touchstart(canvas, {touches: [remaining, released]});
+    for (let step = 1; step <= 6; step++) {
+        timeControl.setNow(step * 16);
+        remaining.clientX += 5;
+        released.clientX -= 5;
+        simulate.touchmove(canvas, {touches: [remaining, released]});
+        map.redraw();
+    }
+    simulate.touchend(canvas, {touches: [remaining], changedTouches: [released]});
+    map.redraw();
+    timeControl.setNow(2000);
+    map.redraw();
+
+    const anchor = map.unproject([remaining.clientX, remaining.clientY]);
+    remaining.clientY += 48;
+    simulate.touchmove(canvas, {touches: [remaining]});
+    map.redraw();
+    const point = map.project(anchor);
+    expect(point.x).toBeCloseTo(remaining.clientX, 1);
+    expect(point.y).toBeCloseTo(remaining.clientY, 1);
+    expect(map.getBearing()).toBe(bearing);
+
+    simulate.touchend(canvas, {touches: [], changedTouches: [remaining]});
+    map.redraw();
+    timeControl.setNow(4000);
+    map.redraw();
+    expect(map.getBearing()).toBe(0);
 });
 
 describe('HandlerManager terrain scenarios', () => {

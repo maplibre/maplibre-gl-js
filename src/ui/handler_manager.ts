@@ -821,6 +821,9 @@ export class HandlerManager {
         }
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
+            if (this._handlersById.touchPan.isActive()) {
+                this._inertia.clear();
+            }
             const inertialEase = this._inertia._onMoveEnd(this._map.dragPan._inertiaOptions);
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
@@ -833,7 +836,7 @@ export class HandlerManager {
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
                 this._fireEvent('moveend', originalEndEvent);
-                if (shouldSnapToNorth(this._map.getBearing())) {
+                if (!this._handlersById.touchPan.isActive() && shouldSnapToNorth(this._map.getBearing())) {
                     this._map.resetNorth();
                 }
             }
