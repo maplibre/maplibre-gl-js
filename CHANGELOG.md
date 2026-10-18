@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `GeoJSONSource.getBounds` throwing when a feature has a `null` geometry ([#8814](https://github.com/maplibre/maplibre-gl-js/pull/8814)) (by [@auraseb](https://github.com/auraseb))
 - _...Add new stuff here..._
 
 ## 6.15.0
