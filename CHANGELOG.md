@@ -1,5 +1,14 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.15.0
+
+### ✨ Features and improvements
+
 - Add `dragRotate: {around: 'pointer'}` to turn and tilt the map around the point under the pointer, and `{around: 'center', movement: 'circular' | 'linear'}`, which replaces the deprecated `aroundCenter` ([#8628](https://github.com/maplibre/maplibre-gl-js/pull/8628)) (by [@birkskyum](https://github.com/birkskyum))
 - Redraw fewer layers on terrain when a custom layer's `terrainTileRevision` or a feature state changes ([#8782](https://github.com/maplibre/maplibre-gl-js/pull/8782)) (by [@birkskyum](https://github.com/birkskyum))
 - Support the `hash` option in a projection registered with `addProjection` ([#8743](https://github.com/maplibre/maplibre-gl-js/pull/8743)) (by [@birkskyum](https://github.com/birkskyum))
@@ -7,9 +16,9 @@
 - Speed up tile loading by skipping point labels in the tile buffer, which the neighbouring tile draws ([#8535](https://github.com/maplibre/maplibre-gl-js/pull/8535)) (by [@cherenkov](https://github.com/cherenkov))
 - Project GeoJSON sources on a map in a registered CRS, in the workers, from a `definition` string and a projection handler ([#8736](https://github.com/maplibre/maplibre-gl-js/issues/8736)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Support OpenType `vert` forms in vertical labels rendered with `font-faces` ([#8489](https://github.com/maplibre/maplibre-gl-js/pull/8489)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - Fix a map in a registered projection going blank when its center crosses 180° ([#8802](https://github.com/maplibre/maplibre-gl-js/pull/8802)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix world projections like Equal Earth throwing and jumping when the mouse is in the space around the world ([#8803](https://github.com/maplibre/maplibre-gl-js/pull/8803)) (by [@birkskyum](https://github.com/birkskyum))
 - Work around a regression in Safari 26.6 and later where the map stops loading tiles after the page was in the background ([#8780](https://github.com/maplibre/maplibre-gl-js/pull/8780)) (by [@birkskyum](https://github.com/birkskyum))
@@ -22,7 +31,6 @@
 - Fix `load` and `idle` firing before the other tiles finish loading when one tile fails ([#8785](https://github.com/maplibre/maplibre-gl-js/pull/8785)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Avoid using `.innerHTML = …` for the Popup close icon ([#8795](https://github.com/maplibre/maplibre-gl-js/pull/8795)) (by [@k-yle](https://github.com/k-yle))
 - Fix a GeoJSON feature without coordinates staying out of the tiles after `updateData` gives it some, by updating geojson-vt to 6.3.0 ([#8797](https://github.com/maplibre/maplibre-gl-js/pull/8797)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- _...Add new stuff here..._
 
 ## 6.14.0
 
