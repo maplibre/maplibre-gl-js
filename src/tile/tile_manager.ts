@@ -549,7 +549,9 @@ export class TileManager extends Evented<SourceEventType> {
         this.terrain = terrain;
 
         this.updateCacheSize(transform);
-        this.handleWrapJump(this.transform.center.lng);
+        if (this.transform.worldCoordinateHelper.wraps) {
+            this.handleWrapJump(this.transform.center.lng);
+        }
 
         let idealTileIDs: OverscaledTileID[];
 

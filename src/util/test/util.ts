@@ -485,6 +485,25 @@ export function createWrappingWorldCrs(): CRS {
 }
 
 /**
+ * Plate carrée on a tile 0/0/0 twice as wide as the world, with an inverse that answers everywhere, so a position
+ * past ±180 has a longitude of its own.
+ */
+export function createWidePlateCarreeCrs(): CRS {
+    return {
+        name: 'test:wide-plate-carree',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return [x, y];
+            },
+        },
+        tileMatrixSet: {origin: [-360, 360], extentAtZoom0: 720},
+    };
+}
+
+/**
  * A north polar stereographic CRS on a sphere, oriented like EPSG:3413 (lng -45 points down) and true to scale
  * at 70N, with tile 0/0/0 spanning the EPSG:3413 grid NASA GIBS serves. Parallels are circles around the pole.
  */
