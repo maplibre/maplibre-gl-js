@@ -25,8 +25,8 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-test('the remaining finger can pan after pinch inertia would have finished', async () => {
-    map = createMap({interactive: true, zoom: 12, touchPitch: false, doubleClickZoom: false});
+test.each([0, 3])('the remaining finger can pan after a pinch at bearing %i', async bearing => {
+    map = createMap({interactive: true, zoom: 12, bearing, touchPitch: false, doubleClickZoom: false});
     map.touchZoomRotate.disableRotation();
     await map.once('style.load');
     timeControl.setNow(0);
@@ -54,6 +54,13 @@ test('the remaining finger can pan after pinch inertia would have finished', asy
     const point = map.project(anchor);
     expect(point.x).toBeCloseTo(remaining.clientX, 1);
     expect(point.y).toBeCloseTo(remaining.clientY, 1);
+    expect(map.getBearing()).toBe(bearing);
+
+    simulate.touchend(canvas, {touches: [], changedTouches: [remaining]});
+    map.redraw();
+    timeControl.setNow(4000);
+    map.redraw();
+    expect(map.getBearing()).toBe(0);
 });
 
 describe('HandlerManager terrain scenarios', () => {

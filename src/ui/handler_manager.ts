@@ -836,7 +836,7 @@ export class HandlerManager {
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
                 this._fireEvent('moveend', originalEndEvent);
-                if (shouldSnapToNorth(this._map.getBearing())) {
+                if (!this._handlersById.touchPan.isActive() && shouldSnapToNorth(this._map.getBearing())) {
                     this._map.resetNorth();
                 }
             }
