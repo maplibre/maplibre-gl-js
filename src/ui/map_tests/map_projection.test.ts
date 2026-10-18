@@ -143,13 +143,17 @@ describe('Map in a CRS whose converter answers only inside its tile matrix set',
 });
 
 describe('Map in a CRS wider than ±180°', () => {
+    const crs = createWidePlateCarreeCrs();
+
+    beforeEach(() => {
+        addProjection(crs);
+    });
+
     afterEach(() => {
-        removeProjection(createWidePlateCarreeCrs().name);
+        removeProjection(crs.name);
     });
 
     test('eases to a center past 180° without wrapping it', async () => {
-        const crs = createWidePlateCarreeCrs();
-        addProjection(crs);
         const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}});
         await map.once('style.load');
 
@@ -159,8 +163,6 @@ describe('Map in a CRS wider than ±180°', () => {
     });
 
     test('flies to a center past 180° without wrapping it', async () => {
-        const crs = createWidePlateCarreeCrs();
-        addProjection(crs);
         const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: crs.name}}});
         await map.once('style.load');
 
