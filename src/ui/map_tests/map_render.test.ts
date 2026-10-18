@@ -1,10 +1,11 @@
-import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
+import {describe, beforeEach, afterEach, onTestFinished, test, expect, vi, type MockInstance} from 'vitest';
 import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {PauseablePlacement} from '../../style/pauseable_placement.ts';
 import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {now, setNow, restoreNow} from '../../util/time_control.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 
 import type {Map} from '../map.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -19,6 +20,49 @@ beforeEach(() => {
 
 afterEach(() => {
     server.restore();
+});
+
+test('globe panning follows the fingers after pinching with transformCameraUpdate', async () => {
+    const map = createMap({
+        interactive: true,
+        center: [-87.5, 20.1],
+        zoom: 12.3,
+        touchPitch: false,
+        doubleClickZoom: false,
+        transformCameraUpdate: () => ({}),
+        style: {version: 8, projection: {type: 'globe'}, sources: {}, layers: []}
+    });
+    onTestFinished(() => {
+        map.remove();
+        restoreNow();
+    });
+    map.touchZoomRotate.disableRotation();
+    await map.once('style.load');
+    setNow(0);
+    map.redraw();
+    const canvas = map.getCanvas();
+
+    function touches(span: number, y = 100) {
+        return [-1, 1].map((side, identifier) => ({target: canvas, identifier, clientX: 100 + side * span, clientY: y}));
+    }
+
+    simulate.touchstart(canvas, {touches: touches(80)});
+    for (let step = 1; step <= 12; step++) {
+        setNow(step * 16);
+        simulate.touchmove(canvas, {touches: touches(80 - step * 40 / 12)});
+        map.redraw();
+    }
+    expect(map.getZoom()).toBeLessThan(12);
+
+    const anchor = map.unproject([60, 100]);
+    for (let step = 1; step <= 12; step++) {
+        setNow((12 + step) * 16);
+        simulate.touchmove(canvas, {touches: touches(40, 100 + step * 4)});
+        map.redraw();
+    }
+    const point = map.project(anchor);
+    expect(point.x).toBeCloseTo(60, 1);
+    expect(point.y).toBeCloseTo(148, 1);
 });
 
 test('render stabilizes', async () => {

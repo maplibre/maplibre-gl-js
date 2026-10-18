@@ -4434,6 +4434,7 @@ export class Map extends Evented<MapEventType> {
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
         this._camera.transform.setTransitionState(this.style.projection?.transitionState);
+        this._camera._requestedCameraState?.setTransitionState(this.style.projection?.transitionState);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we
