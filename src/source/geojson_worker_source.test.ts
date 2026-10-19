@@ -709,12 +709,12 @@ describe('loadData in a registered projection', () => {
     });
 
     function firstFeatureInRootTile(source: GeoJSONWorkerSource) {
-        const {vectorTile} = source.loadVectorTile({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
+        const {vectorTile} = source.loadVectorTileSync({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
         return vectorTile.layers[GEOJSON_TILE_LAYER_NAME].feature(0);
     }
 
     function featureCountInRootTile(source: GeoJSONWorkerSource) {
-        const result = source.loadVectorTile({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
+        const result = source.loadVectorTileSync({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
         return result?.vectorTile.layers[GEOJSON_TILE_LAYER_NAME]?.length ?? 0;
     }
 
@@ -803,5 +803,17 @@ describe('loadData in a registered projection', () => {
         const leaves = source.getClusterLeaves({clusterId, limit: 10, offset: 0});
 
         expect((leaves[0].geometry as GeoJSON.Point).coordinates).toEqual([expect.closeTo(45, 9), expect.closeTo(45, 9)]);
+    });
+});
+
+describe('GeoJSONWorkerSource.loadVectorTile', () => {
+    test('gives the tile of the indexed data decoded, without encoding it', async () => {
+        const source = new GeoJSONWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        await source.loadData({type: 'geojson', source: 'source', data: {type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}, geojsonVtOptions: {}});
+
+        const tileData = await source.loadVectorTile({tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as WorkerTileParameters);
+
+        expect(tileData.vectorTile.layers[GEOJSON_TILE_LAYER_NAME]).toHaveLength(1);
+        expect(tileData.rawData).toBeUndefined();
     });
 });

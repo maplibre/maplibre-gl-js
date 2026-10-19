@@ -1,169 +1,52 @@
-import {PbfReader} from 'pbf';
-import {VectorTile} from '@mapbox/vector-tile';
 import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
-import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
-import {WorkerTile} from './worker_tile.ts';
-import {WorkerTileState} from './worker_tile_state.ts';
+import {getArrayBuffer} from '../util/ajax.ts';
 import {BoundedLRUCache} from '../tile/tile_cache.ts';
-import {ensureError, extend} from '../util/util.ts';
 import {RequestPerformance} from '../util/request_performance.ts';
 import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoomed.ts';
-import {MLTVectorTile} from './vector_tile_mlt.ts';
+import {expiryData, VectorWorkerSource} from './vector_worker_source.ts';
 
+import type {LoadVectorTileResult} from './vector_worker_source.ts';
 import type {
-    WorkerSource,
     WorkerTileParameters,
-    TileParameters,
     WorkerTileResult
 } from '../source/worker_source.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
-export type LoadVectorTileResult = {
-    vectorTile: VectorTileLike;
-    rawData: ArrayBufferLike;
-};
-
 /**
  * The {@link WorkerSource} implementation that supports {@link VectorTileSource}. This class is
  * used by vector tile sources to perform tile processing operations in a separate worker thread.
  */
-export class VectorTileWorkerSource implements WorkerSource {
-    actor: IActor;
-    layerIndex: StyleLayerIndex;
-    availableImages: string[];
-    tileState: WorkerTileState;
+export class VectorTileWorkerSource extends VectorWorkerSource {
     overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]) {
-        this.actor = actor;
-        this.layerIndex = layerIndex;
-        this.availableImages = availableImages;
-        this.tileState = new WorkerTileState();
+        super(actor, layerIndex, availableImages);
         this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
     }
 
     /**
-     * Loads a vector tile
+     * Implements {@link VectorWorkerSource.loadVectorTile}: the tile as fetched, or, for a tile
+     * beyond the source's maxzoom, the part of the tile at the maxzoom that it covers. Data whose
+     * `etag` is the one the tile was requested with is not read, and is left as fetched.
      */
-    loadVectorTile(params: WorkerTileParameters, rawData: ArrayBuffer): LoadVectorTileResult {
-        try {
-            const vectorTile = params.encoding !== 'mlt'
-                ? new VectorTile(new PbfReader(rawData))
-                : new MLTVectorTile(rawData);
+    async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult | null> {
+        const request = params.overzoomParameters?.overzoomRequest ?? params.request;
+        const timing = request?.collectResourceTiming ? new RequestPerformance(request.url) : undefined;
+        const response = await getArrayBuffer(request, abortController);
+        const freshness = {...expiryData(response), ...this._finishRequestTiming(timing)};
 
-            return {vectorTile, rawData};
-        } catch (ex) {
-            const bytes = new Uint8Array(rawData);
-            const isGzipped = bytes[0] === 0x1f && bytes[1] === 0x8b;
-            let errorMessage = `Unable to parse the tile at ${params.request.url}, `;
-            if (isGzipped) {
-                errorMessage += 'please make sure the data is not gzipped and that you have configured the relevant header in the server';
-            } else {
-                errorMessage += `got error: ${ensureError(ex).message}`;
-            }
-            throw new Error(errorMessage);
-        }
-    }
-
-    /**
-     * Implements {@link WorkerSource.loadTile}.
-     */
-    async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
-        const {uid, overzoomParameters} = params;
-
-        if (overzoomParameters) {
-            params.request = overzoomParameters.overzoomRequest;
+        if (!params.overzoomParameters || (params.etag && params.etag === response.etag)) {
+            return {rawData: response.data, encoding: params.encoding, ...freshness};
         }
 
-        const timing = this._startRequestTiming(params);
-        const workerTile = new WorkerTile(params);
-
-        this.tileState.startLoading(uid, workerTile);
-        const abortController = new AbortController();
-        workerTile.abort = abortController;
-        try {
-            // Download the tile data from the network.
-            const tileResponse = await getArrayBuffer(params.request, abortController);
-
-            // Tile data hasn't changed (etag support) - return an unmodified result
-            if (params.etag && params.etag === tileResponse.etag) {
-                this.tileState.finishLoading(uid);
-                return this._getEtagUnmodifiedResult(tileResponse, timing);
-            }
-
-            const tileResult = this.loadVectorTile(params, tileResponse.data);
-            this.tileState.finishLoading(uid);
-            if (!tileResult) return null;
-
-            let {vectorTile, rawData} = tileResult;
-            if (overzoomParameters) {
-                ({vectorTile, rawData} = this._getOverzoomTile(params, vectorTile));
-            }
-
-            const cacheControl = this._getExpiryData(tileResponse);
-            const resourceTiming = this._finishRequestTiming(timing);
-
-            workerTile.vectorTile = vectorTile;
-            workerTile.etag = tileResponse.etag;
-            this.tileState.markLoaded(uid, workerTile);
-            const parsingState = {rawData, cacheControl, resourceTiming};
-            this.tileState.setParsing(uid, parsingState);
-
-            return await this._parseWorkerTile(workerTile, params);
-        } catch (err) {
-            this.tileState.finishLoading(uid);
-            this.tileState.markLoaded(uid, workerTile);
-            throw err;
-        }
+        const maxZoomTile = this.decodeTileData({...params, request}, {rawData: response.data, encoding: params.encoding});
+        if (!maxZoomTile) return null;
+        return {...this._getOverzoomTile(params, maxZoomTile), encoding: 'mvt', ...freshness};
     }
 
-    _getEtagUnmodifiedResult(response: ExpiryData, timing: RequestPerformance): WorkerTileResult {
-        const cacheControl = this._getExpiryData(response);
-        const resourceTiming = this._finishRequestTiming(timing);
-        return extend({etagUnmodified: true as const}, cacheControl, resourceTiming);
-    }
-
-    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const parseState = this.tileState.getParsing(workerTile.uid);
-
-        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-
-        // We need to pass rawTileData back to the main thread so that it can be stored in the Tile and FeatureIndex.
-        // After the main thread has successfully received and stored rawTileData,
-        // we no longer need to store it in the worker or transfer additional copies of it.
-        if (parseState) {
-            const {rawData, cacheControl, resourceTiming} = parseState;
-            // Overzoomed tiles are always re-encoded to MVT protobuf by _getOverzoomTile
-            const encoding = params.overzoomParameters ? 'mvt' : params.encoding;
-            // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
-            result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
-            this.tileState.removeParsing(workerTile.uid);
-        } else if (workerTile.etag) {
-            // Reload: return the stored etag since the main thread overwrites the tile's etag with every
-            // result (#3309). cacheControl/expires are deliberately not re-sent: the main thread anchors
-            // max-age to the time it receives them, and the tile's expiration already survives a reload.
-            result = extend(result, {etag: workerTile.etag});
-        }
-
-        return result;
-    }
-
-    _getExpiryData({expires, cacheControl, etag}: ExpiryData): ExpiryData {
-        const data: ExpiryData = {};
-        if (expires) data.expires = expires;
-        if (cacheControl) data.cacheControl = cacheControl;
-        if (etag) data.etag = etag;
-        return data;
-    }
-
-    _startRequestTiming(params: WorkerTileParameters): RequestPerformance | undefined {
-        if (!params.request?.collectResourceTiming) return;
-        return new RequestPerformance(params.request.url);
-    }
-
-    _finishRequestTiming(timing: RequestPerformance): {resourceTiming?: any} {
+    _finishRequestTiming(timing: RequestPerformance | undefined): {resourceTiming?: any} {
         const timingData = timing?.finish();
         if (!timingData) return {};
 
@@ -216,30 +99,7 @@ export class VectorTileWorkerSource implements WorkerSource {
      * Implements {@link WorkerSource.reloadTile}.
      */
     async reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const uid = params.uid;
-        const workerTile = this.tileState.getLoaded(uid);
-        if (!workerTile) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
-
-        // If there was no vector tile data on the initial load, don't try to reparse the tile.
-        if (!workerTile.vectorTile) {
-            return;
-        }
-
-        workerTile.showCollisionBoxes = params.showCollisionBoxes;
-        return await this._parseWorkerTile(workerTile, params);
-    }
-
-    /**
-     * Implements {@link WorkerSource.abortTile}.
-     */
-    async abortTile(params: TileParameters): Promise<void> {
-        this.tileState.abort(params.uid);
-    }
-
-    /**
-     * Implements {@link WorkerSource.removeTile}.
-     */
-    async removeTile(params: TileParameters): Promise<void> {
-        this.tileState.removeLoaded(params.uid);
+        if (!this.tileState.getLoaded(params.uid)) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
+        return super.reloadTile(params);
     }
 }

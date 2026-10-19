@@ -1,19 +1,18 @@
 import {getJSON} from '../util/ajax.ts';
 import {RequestPerformance} from '../util/request_performance.ts';
-import {fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
+import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {EXTENT} from '../data/extent.ts';
 import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error.ts';
-import {WorkerTile} from './worker_tile.ts';
-import {WorkerTileState} from './worker_tile_state.ts';
-import {extend, JSON_PREFIX} from '../util/util.ts';
+import {VectorWorkerSource} from './vector_worker_source.ts';
+import {extend} from '../util/util.ts';
 import {createWorkerCRSHelper} from './projection_handler_worker.ts';
 import {reprojectGeoJSONFromWorld, reprojectGeoJSONSourceDiffToWorld, reprojectGeoJSONToWorld} from '../util/geojson_reproject.ts';
 
 import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
-import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source.ts';
-import type {LoadVectorTileResult} from './vector_tile_worker_source.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
+import type {LoadVectorTileResult} from './vector_worker_source.ts';
 import type {RequestParameters} from '../util/ajax.ts';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages.ts';
 import type {IActor} from '../util/actor.ts';
@@ -69,12 +68,7 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
  * `new GeoJSONWorkerSource(actor, layerIndex, customLoadGeoJSONFunction)`.
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
  */
-export class GeoJSONWorkerSource implements WorkerSource {
-    actor: IActor;
-    layerIndex: StyleLayerIndex;
-    availableImages: string[];
-    tileState: WorkerTileState;
-
+export class GeoJSONWorkerSource extends VectorWorkerSource {
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
@@ -85,17 +79,26 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _crsHelper: CRSWorldCoordinateHelper | undefined;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
-        this.actor = actor;
-        this.layerIndex = layerIndex;
-        this.availableImages = availableImages;
-        this.tileState = new WorkerTileState();
+        super(actor, layerIndex, availableImages);
         this._createGeoJSONIndex = createGeoJSONIndexFunc;
     }
 
     /**
-     * Retrieves and sends loaded vector tiles to the main thread.
+     * Implements {@link VectorWorkerSource.loadVectorTile}, with
+     * {@link GeoJSONWorkerSource.loadVectorTileSync}.
      */
-    loadVectorTile(params: WorkerTileParameters): LoadVectorTileResult | null {
+    async loadVectorTile(params: WorkerTileParameters): Promise<LoadVectorTileResult | null> {
+        return this.loadVectorTileSync(params);
+    }
+
+    /**
+     * A sync version of loadVectorTile.
+     *
+     * In general, `VectorWorkerSource` rightly doesn't explicit implementations to do this
+     * synchronously, but `GeoJSONWorkerSource` already did, so we expose this for the sake of
+     * historical users that wish to continue taking advantage of synchronicity.
+     */
+    loadVectorTileSync(params: WorkerTileParameters): LoadVectorTileResult & {vectorTile: GeoJSONWrapper} | null {
         if (!this._geoJSONIndex) throw new Error('Unable to parse the data into a cluster or geojson');
 
         const {z, x, y} = params.tileID.canonical;
@@ -103,69 +106,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (!geoJSONTile) return null;
 
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
-        return {
-            vectorTile: geojsonWrapper,
-            rawData: fromVectorTileJs(geojsonWrapper, JSON_PREFIX).buffer
-        };
-
-    }
-
-    /**
-     * Implements {@link WorkerSource.loadTile}.
-     */
-    async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
-        const {uid} = params;
-
-        const workerTile = new WorkerTile(params);
-        workerTile.abort = new AbortController();
-        try {
-            const loadResult = this.loadVectorTile(params);
-            if (!loadResult) return null;
-
-            const {vectorTile, rawData} = loadResult;
-
-            workerTile.vectorTile = vectorTile;
-            this.tileState.markLoaded(uid, workerTile);
-            const parsingState = {rawData};
-            this.tileState.setParsing(uid, parsingState);
-
-            return await this._parseWorkerTile(workerTile, params);
-        } catch (err) {
-            this.tileState.markLoaded(uid, workerTile);
-            throw err;
-        }
-    }
-
-    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const parseState = this.tileState.getParsing(workerTile.uid);
-
-        let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
-
-        // We need to pass rawTileData back to the main thread so that it can be stored in the Tile and FeatureIndex.
-        // After the main thread has successfully received and stored rawTileData,
-        // we no longer need to store it in the worker or transfer additional copies of it.
-        if (parseState) {
-            const {rawData} = parseState;
-            // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
-            result = extend({rawTileData: rawData.slice(0), encoding: 'mvt'}, result);
-            this.tileState.removeParsing(workerTile.uid);
-        }
-
-        return result;
-    }
-
-    /**
-     * Implements {@link WorkerSource.abortTile}.
-     */
-    async abortTile(params: TileParameters): Promise<void> {
-        this.tileState.abort(params.uid);
-    }
-
-    /**
-     * Implements {@link WorkerSource.removeTile}.
-     */
-    async removeTile(params: TileParameters): Promise<void> {
-        this.tileState.removeLoaded(params.uid);
+        return {vectorTile: geojsonWrapper};
     }
 
     /**
@@ -220,31 +161,6 @@ export class GeoJSONWorkerSource implements WorkerSource {
         // it's necessary to eval the result of getEntriesByName() here via parse/stringify
         // late evaluation in the main thread causes TypeError: illegal invocation
         result.resourceTiming = {[params.source]: JSON.parse(JSON.stringify(timingData))};
-    }
-
-    /**
-     * Implements {@link WorkerSource.reloadTile}.
-     *
-     * If the tile is loaded, reload by re-parsing the already available tile data.
-     * Otherwise, such as after a setData() call, we load the tile fresh.
-     *
-     * @param params - the parameters
-     * @returns A promise that resolves when the tile is reloaded
-     */
-    async reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const uid = params.uid;
-        const workerTile = this.tileState.getLoaded(uid);
-        if (!workerTile) {
-            return await this.loadTile(params);
-        }
-
-        // If there was no vector tile data on the initial load, don't try to reparse the tile.
-        if (!workerTile.vectorTile) {
-            return;
-        }
-
-        workerTile.showCollisionBoxes = params.showCollisionBoxes;
-        return await this._parseWorkerTile(workerTile, params);
     }
 
     /**
