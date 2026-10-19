@@ -2109,7 +2109,7 @@ describe('flyTo', () => {
 
         const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
-        camera._updateTerrainElevationIfNeeded = () => terrainCallbacks.update++;
+        camera._updateElevationFromTerrainIfNeeded = () => terrainCallbacks.update++;
         camera.setCenter([-10, 0]);
         terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
@@ -2133,7 +2133,7 @@ describe('flyTo', () => {
 
         const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
-        camera._updateTerrainElevationIfNeeded = () => terrainCallbacks.update++;
+        camera._updateElevationFromTerrainIfNeeded = () => terrainCallbacks.update++;
         camera.setCenter([-10, 0]);
         terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
@@ -2171,7 +2171,7 @@ describe('flyTo', () => {
         expect(camera.elevationFreeze).toBeTruthy();
 
         terrain.getElevationAndDEMStateForLngLat = () => ({elevation: 200, demState: 'loaded'});
-        camera._updateTerrainElevationIfNeeded(0.5, camera.transform, false);
+        camera._updateElevationFromTerrainIfNeeded(0.5, camera.transform, false);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
 

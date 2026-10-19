@@ -932,7 +932,7 @@ export class Camera extends Evented<MapEventType> {
 
             if (this._elevating) {
                 tr.setElevation(interpolates.number(startElevation, elevation, k));
-            } else this._updateTerrainElevationIfNeeded(k, tr, options.freezeElevation);
+            } else this._updateElevationFromTerrainIfNeeded(k, tr, options.freezeElevation);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
@@ -997,7 +997,7 @@ export class Camera extends Evented<MapEventType> {
      * @param k - the animation's progress, 0 to 1
      * @param tr - the transform the animation edits
      */
-    _updateTerrainElevationIfNeeded(k: number, tr: ITransform, freezeElevation: boolean): void {
+    _updateElevationFromTerrainIfNeeded(k: number, tr: ITransform, freezeElevation: boolean): void {
         if (!this.terrain || freezeElevation) return;
 
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
@@ -1589,7 +1589,7 @@ export class Camera extends Evented<MapEventType> {
 
             if (this._elevating) {
                 tr.setElevation(interpolates.number(startElevation, elevation, k));
-            } else this._updateTerrainElevationIfNeeded(k, tr, options.freezeElevation);
+            } else this._updateElevationFromTerrainIfNeeded(k, tr, options.freezeElevation);
 
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
