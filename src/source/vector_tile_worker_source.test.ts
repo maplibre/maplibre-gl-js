@@ -6,7 +6,7 @@ import {VectorTileWorkerSource} from '../source/vector_tile_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {WorkerTile} from './worker_tile.ts';
-import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
+import {bufferToArrayBuffer, createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {ABORT_ERROR} from '../util/abort_error.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
@@ -648,5 +648,58 @@ describe('vector tile worker source', () => {
 
         expect(res).toBeDefined();
         expect(res.etagUnmodified).toBe(true);
+    });
+});
+
+describe('VectorTileWorkerSource.loadVectorTile', () => {
+    let server: FakeServer;
+
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create();
+        server.respondImmediately = true;
+    });
+
+    afterEach(() => {
+        server.restore();
+    });
+
+    test('gives a tile as fetched, without decoding it', async () => {
+        const rawTileData = bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')));
+        server.respondWith('http://localhost:2900/faketile.pbf', request => request.respond(200, {'Content-Type': 'application/pbf', 'ETag': '"v1"'}, rawTileData as any));
+        const source = new VectorTileWorkerSource(createFakeActor(), new StyleLayerIndex(), []);
+        const decodeTileData = vi.spyOn(source, 'decodeTileData');
+
+        const tileData = await source.loadVectorTile({
+            source: 'source',
+            uid: 0,
+            tileID: new OverscaledTileID(6, 0, 6, 18, 23),
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            encoding: 'mvt',
+        } as WorkerTileParameters, new AbortController());
+
+        expect(tileData).toEqual({rawData: rawTileData, encoding: 'mvt', etag: '"v1"'});
+        expect(decodeTileData).not.toHaveBeenCalled();
+    });
+
+    test('gives a tile beyond the maxzoom decoded and encoded, as the part of the tile at the maxzoom that it covers', async () => {
+        const rawTileData = bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')));
+        server.respondWith('http://localhost:2900/faketile.pbf', request => request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any));
+        const layerIndex = new StyleLayerIndex([{id: 'water', type: 'fill', source: 'source', 'source-layer': 'water'}]);
+        const source = new VectorTileWorkerSource(createFakeActor(), layerIndex, []);
+
+        const tileData = await source.loadVectorTile({
+            source: 'source',
+            uid: 0,
+            tileID: new OverscaledTileID(7, 0, 7, 36, 46),
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(6, 18, 23),
+                overzoomRequest: {url: 'http://localhost:2900/faketile.pbf'}
+            },
+        } as WorkerTileParameters, new AbortController());
+
+        expect(Object.keys(tileData.vectorTile.layers)).toEqual(['water']);
+        expect(Object.keys(new VectorTile(new PbfReader(tileData.rawData as ArrayBuffer)).layers)).toEqual(['water']);
+        expect(tileData.encoding).toBe('mvt');
     });
 });
