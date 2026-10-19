@@ -20,14 +20,6 @@ export type CameraState = {
      */
     elevation: number;
     zoom: number;
-    /**
-     * The integer zoom level for tiles.
-     */
-    tileZoom: number;
-    /**
-     * Computed based on zoom.
-     */
-    scale: number;
     bearingInRadians: number;
     pitchInRadians: number;
     rollInRadians: number;
@@ -45,6 +37,15 @@ export type CameraState = {
     renderWorldCopies: boolean;
     minElevationForCurrentTile: number;
 
+    // Derived values
+    /**
+     * The integer zoom level for tiles.
+     */
+    tileZoom: number;
+    /**
+     * Computed based on zoom.
+     */
+    scale: number;
     pixelsPerMeter: number;
     cameraToCenterDistance: number;
     rotationMatrix: mat2;
@@ -66,8 +67,6 @@ export function createCameraState(options?: TransformOptions): CameraState {
         center: new LngLat(0, 0),
         elevation: 0,
         zoom: 0,
-        tileZoom: 0,
-        scale: 1,
         bearingInRadians: 0,
         pitchInRadians: 0,
         rollInRadians: 0,
@@ -81,6 +80,8 @@ export function createCameraState(options?: TransformOptions): CameraState {
         latRange: [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE],
         renderWorldCopies: options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies,
         minElevationForCurrentTile: 0,
+        tileZoom: 0,
+        scale: 1,
         pixelsPerMeter: undefined,
         cameraToCenterDistance: undefined,
         rotationMatrix: undefined,
