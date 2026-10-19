@@ -304,6 +304,7 @@ export type AnimationOptions = {
      * Default false. Needed in 3D maps to let the camera stay in a constant
      * height based on sea-level. After the animation finished the zoom-level will be recalculated in respect of
      * the distance from the camera to the center-coordinate-altitude.
+     * `elevation` option will take priority over this if it is present
      */
     freezeElevation?: boolean;
 };
