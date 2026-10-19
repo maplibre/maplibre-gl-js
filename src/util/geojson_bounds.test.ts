@@ -75,4 +75,35 @@ describe('getGeoJSONBounds', () => {
         expect(bounds.getSouthWest().lat).toBe(1.2);
         expect(bounds.getSouthWest().lng).toBe(1.1);
     });
+
+    test('get bounds from feature collection with a feature without geometry', () => {
+        const bounds = getGeoJSONBounds({
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                properties: {},
+                geometry: null
+            }, {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'Point',
+                    coordinates: [1.1, 1.2]
+                }
+            }]
+        });
+        expect(bounds.getNorthEast().lat).toBe(1.2);
+        expect(bounds.getNorthEast().lng).toBe(1.1);
+        expect(bounds.getSouthWest().lat).toBe(1.2);
+        expect(bounds.getSouthWest().lng).toBe(1.1);
+    });
+
+    test('get bounds from feature without geometry', () => {
+        const bounds = getGeoJSONBounds({
+            type: 'Feature',
+            properties: {},
+            geometry: null
+        });
+        expect(bounds.isEmpty()).toBeTruthy();
+    });
 });

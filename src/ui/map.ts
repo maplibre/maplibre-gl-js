@@ -1755,7 +1755,7 @@ export class Map extends Evented<MapEventType> {
      * as close as possible to the operation's request while still
      * remaining within the bounds.
      *
-     * @param bounds - The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
+     * @param bounds - The maximum bounds to set. Use `-Infinity` and `Infinity` for an unconstrained longitude range, with finite latitude limits. Pass `null` or `undefined` to remove all bounds.
      * @example
      * Define bounds that conform to the `LngLatBoundsLike` object as set the max bounds.
      * ```ts
