@@ -50,6 +50,27 @@ describe('mouse handler tests', () => {
         expect((mouseRotate.dragMove(overToleranceMove, new Point(10, 10)) as DragRotateResult).bearingDelta).toBeCloseTo(20);
     });
 
+    test('MouseRotateHandler around the pointer turns around the point the drag started at by rotateSpeed on both sides of the center', () => {
+        const mouseRotate = generateMouseRotationHandler({clickTolerance: 2}, () => new Point(400, 300), () => 'pointer');
+
+        mouseRotate.enable();
+        mouseRotate.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2}), new Point(200, 100));
+
+        expect(mouseRotate.dragMove(new MouseEvent('mousemove', {buttons: 2}), new Point(210, 100))).toEqual({bearingDelta: 8, around: new Point(200, 100)});
+        expect(mouseRotate.dragMove(new MouseEvent('mousemove', {buttons: 2}), new Point(220, 500))).toEqual({bearingDelta: 8, around: new Point(200, 100)});
+    });
+
+    test('MousePitchHandler around the pointer tilts around the point the drag started at, and only on moves that tilt', () => {
+        const mousePitch = generateMousePitchHandler({clickTolerance: 2}, () => 'pointer');
+
+        mousePitch.enable();
+        mousePitch.dragStart(new MouseEvent('mousedown', {buttons: 2, button: 2}), new Point(0, 0));
+
+        expect(mousePitch.dragMove(new MouseEvent('mousemove', {buttons: 2}), new Point(10, 0))).toBeUndefined();
+        expect(mousePitch.isActive()).toBe(false);
+        expect(mousePitch.dragMove(new MouseEvent('mousemove', {buttons: 2}), new Point(10, 10))).toEqual({pitchDelta: -5, around: new Point(0, 0)});
+    });
+
     test('MousePitchHandler pitches 2 degrees per dragged pixel when pitchSpeed is -2', () => {
         const mousePitch = generateMousePitchHandler({clickTolerance: 2, pitchSpeed: -2});
 
