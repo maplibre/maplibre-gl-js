@@ -12,7 +12,7 @@ import {createCameraState, type CameraState} from './camera_state.ts';
 
 import type {WorldCoordinateHelper} from './transform_interface.ts';
 import type {PaddingOptions} from './edge_insets.ts';
-import type {IReadonlyTransform, ITransformGetters, TransformConstrainFunction} from './transform_interface.ts';
+import type {IReadonlyTransform, ITransformGetters, NearFarZ, TransformConstrainFunction} from './transform_interface.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
@@ -118,10 +118,6 @@ export class TransformHelper implements ITransformGetters {
 
     _constraining: boolean;
 
-    _nearZ: number;
-    _farZ: number;
-    _autoCalculateNearFarZ: boolean;
-
     _constrainOverride: TransformConstrainFunction;
 
     _worldCoordinateHelper: WorldCoordinateHelper;
@@ -134,7 +130,6 @@ export class TransformHelper implements ITransformGetters {
         this._constrainOverride = options?.constrainOverride ?? null;
 
         this._unmodified = true;
-        this._autoCalculateNearFarZ = true;
     }
 
     public apply(thatI: ITransformGetters, constrain: boolean): void {
@@ -161,9 +156,7 @@ export class TransformHelper implements ITransformGetters {
         this._cameraState.maxPitch = thatI.maxPitch;
         this._cameraState.renderWorldCopies = thatI.renderWorldCopies;
         this._cameraState.cameraToCenterDistance = thatI.cameraToCenterDistance;
-        this._nearZ = thatI.nearZ;
-        this._farZ = thatI.farZ;
-        this._autoCalculateNearFarZ = thatI.autoCalculateNearFarZ;
+        this._cameraState.nearFarZOverride = thatI.nearFarZOverride;
         if (constrain) {
             this.constrainInternal();
         }
@@ -397,17 +390,14 @@ export class TransformHelper implements ITransformGetters {
 
     get cameraToCenterDistance(): number { return this._cameraState.cameraToCenterDistance; }
 
-    get nearZ(): number { return this._nearZ; }
-    get farZ(): number { return this._farZ; }
-    get autoCalculateNearFarZ(): boolean { return this._autoCalculateNearFarZ; }
+    get nearFarZOverride(): NearFarZ | null { return this._cameraState.nearFarZOverride; }
+    get autoCalculateNearFarZ(): boolean { return this._cameraState.nearFarZOverride === null; }
     overrideNearFarZ(nearZ: number, farZ: number): void {
-        this._autoCalculateNearFarZ = false;
-        this._nearZ = nearZ;
-        this._farZ = farZ;
+        this._cameraState.nearFarZOverride = {nearZ, farZ};
         this._calcMatrices();
     }
     clearNearFarZOverride(): void {
-        this._autoCalculateNearFarZ = true;
+        this._cameraState.nearFarZOverride = null;
         this._calcMatrices();
     }
 
