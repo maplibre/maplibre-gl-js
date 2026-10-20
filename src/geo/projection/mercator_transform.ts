@@ -339,9 +339,9 @@ export class MercatorTransform implements ITransform {
         const result = [new UnwrappedTileID(0, tileID)];
         if (this._helper.renderWorldCopies && this.worldCoordinateHelper.wraps) {
             const utl = this.screenPointToMercatorCoordinate(new Point(0, 0));
-            const utr = this.screenPointToMercatorCoordinate(new Point(this._helper._width, 0));
-            const ubl = this.screenPointToMercatorCoordinate(new Point(this._helper._width, this._helper._height));
-            const ubr = this.screenPointToMercatorCoordinate(new Point(0, this._helper._height));
+            const utr = this.screenPointToMercatorCoordinate(new Point(this._helper.width, 0));
+            const ubl = this.screenPointToMercatorCoordinate(new Point(this._helper.width, this._helper.height));
+            const ubr = this.screenPointToMercatorCoordinate(new Point(0, this._helper.height));
             const w0 = Math.floor(Math.min(utl.x, utr.x, ubl.x, ubr.x));
             const w1 = Math.floor(Math.max(utl.x, utr.x, ubl.x, ubr.x));
 
@@ -602,19 +602,24 @@ export class MercatorTransform implements ITransform {
     }
 
     getBounds(): LngLatBounds {
-        const top = Math.max(0, this._helper._height / 2 - getMercatorHorizon(this));
+        const top = Math.max(0, this._helper.height / 2 - getMercatorHorizon(this));
         return new LngLatBounds()
             .extend(this.screenPointToLocation(new Point(0, top)))
-            .extend(this.screenPointToLocation(new Point(this._helper._width, top)))
-            .extend(this.screenPointToLocation(new Point(this._helper._width, this._helper._height)))
-            .extend(this.screenPointToLocation(new Point(0, this._helper._height)));
+            .extend(this.screenPointToLocation(new Point(this._helper.width, top)))
+            .extend(this.screenPointToLocation(new Point(this._helper.width, this._helper.height)))
+            .extend(this.screenPointToLocation(new Point(0, this._helper.height)));
     }
 
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
         if (terrain) {
             return this.screenTerrainPointToMercatorCoordinate(p, terrain) != null;
         }
-        return (p.y > this.centerPoint.y - getMercatorHorizon(this));
+        const belowHorizon = p.y > this.centerPoint.y - getMercatorHorizon(this);
+        if (!belowHorizon || this.worldCoordinateHelper.wraps) {
+            return belowHorizon;
+        }
+        const coordinate = this.screenPointToMercatorCoordinate(p);
+        return this.worldCoordinateHelper.hasLngLat(coordinate.x, coordinate.y);
     }
 
     /**
@@ -677,9 +682,9 @@ export class MercatorTransform implements ITransform {
             zoom
         };
 
-        let lngRange = this._helper._lngRange;
+        let lngRange = this._helper.lngRange;
 
-        if (!this._helper._renderWorldCopies && lngRange === null) {
+        if (!this._helper.renderWorldCopies && lngRange === null) {
             const almost180 = 180 - 1e-10;
             lngRange = [-almost180, almost180];
         }
@@ -695,8 +700,8 @@ export class MercatorTransform implements ITransform {
         const screenWidth = this.width - left - right;
         const screenHeight = this.height - top - bottom;
 
-        if (this._helper._latRange) {
-            const latRange = this._helper._latRange;
+        if (this._helper.latRange) {
+            const latRange = this._helper.latRange;
             minY = mercatorYfromLat(latRange[1]) * worldSize;
             maxY = mercatorYfromLat(latRange[0]) * worldSize;
             const shouldZoomIn = maxY - minY < screenHeight;
@@ -736,7 +741,7 @@ export class MercatorTransform implements ITransform {
             return result;
         }
 
-        if (this._helper._latRange) {
+        if (this._helper.latRange) {
             const h2 = screenHeight / 2;
             if (originalY - h2 < minY) modifiedY = minY + h2;
             if (originalY + h2 > maxY) modifiedY = maxY - h2;
@@ -745,7 +750,7 @@ export class MercatorTransform implements ITransform {
         if (lngRange) {
             const centerX = (minX + maxX) / 2;
             let wrappedX = originalX;
-            if (this._helper._renderWorldCopies) {
+            if (this._helper.renderWorldCopies) {
                 wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
             }
             const w2 = screenWidth / 2;
@@ -772,7 +777,7 @@ export class MercatorTransform implements ITransform {
      */
     private _constrainToWorldSquare(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
         const worldCoordinateHelper = this.worldCoordinateHelper;
-        const lngRange = this._helper._lngRange;
+        const lngRange = this._helper.lngRange;
         const worldSize = this.tileSize * zoomScale(zoom);
         if (!lngRange) {
             const {x, y} = projectToWorldCoordinates(worldSize, lngLat, worldCoordinateHelper);
@@ -783,7 +788,7 @@ export class MercatorTransform implements ITransform {
             }
             return {center: new LngLat(lngLat.lng, lngLat.lat), zoom};
         }
-        const box = this._projectMaxBounds(lngRange, this._helper._latRange);
+        const box = this._projectMaxBounds(lngRange, this._helper.latRange);
         const minX = Math.max(box.minX, 0) * worldSize;
         const maxX = Math.min(box.maxX, 1) * worldSize;
         const minY = Math.max(box.minY, 0) * worldSize;
@@ -854,7 +859,7 @@ export class MercatorTransform implements ITransform {
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
         const minRenderDistanceBelowCameraInMeters = 100;
         const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile, this.getCameraAltitude() - minRenderDistanceBelowCameraInMeters);
-        const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians);
+        const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._helper.pixelsPerMeter / Math.cos(limitedPitchRadians);
         const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
@@ -886,7 +891,7 @@ export class MercatorTransform implements ITransform {
         // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
         // when rendering custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
-        this._helper._nearZ = this._helper._height / 50;
+        this._helper._nearZ = this._helper.height / 50;
     }
 
     /**
@@ -902,7 +907,7 @@ export class MercatorTransform implements ITransform {
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const limitedPitchRadians = degreesToRadians(Math.min(this.pitch, maxMercatorHorizonAngle));
-        const cameraToSeaLevelDistance = Math.max(this._helper.cameraToCenterDistance / 2, this._helper.cameraToCenterDistance + this._helper._elevation * this._helper._pixelPerMeter / Math.cos(limitedPitchRadians));
+        const cameraToSeaLevelDistance = Math.max(this._helper.cameraToCenterDistance / 2, this._helper.cameraToCenterDistance + this._helper.elevation * this._helper.pixelsPerMeter / Math.cos(limitedPitchRadians));
 
         if (calculateNearFarZ) {
             this._calculateNearFarZ(cameraToSeaLevelDistance, limitedPitchRadians, offset);
@@ -911,13 +916,13 @@ export class MercatorTransform implements ITransform {
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;
         m = new Float64Array(16);
-        mat4.perspective(m, this.fovInRadians, this._helper._width / this._helper._height, this._helper._nearZ, this._helper._farZ);
+        mat4.perspective(m, this.fovInRadians, this._helper.width / this._helper.height, this._helper._nearZ, this._helper._farZ);
         this._invProjMatrix = new Float64Array(16);
         fastInvertProjMat4(this._invProjMatrix, m);
 
         // Apply center of perspective offset
-        m[8] = -offset.x * 2 / this._helper._width;
-        m[9] = offset.y * 2 / this._helper._height;
+        m[8] = -offset.x * 2 / this._helper.width;
+        m[9] = offset.y * 2 / this._helper.height;
         this._projectionMatrix = mat4.clone(m);
 
         mat4.scale(m, m, [1, -1, 1]);
@@ -932,7 +937,7 @@ export class MercatorTransform implements ITransform {
         this._mercatorMatrix = mat4.scale([], m, [this.worldSize, this.worldSize, this.worldSize]);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
-        mat4.scale(m, m, [1, 1, this._helper._pixelPerMeter]);
+        mat4.scale(m, m, [1, 1, this._helper.pixelsPerMeter]);
 
         // matrix for conversion from world space to screen coordinates in 2D
         this._pixelMatrix = mat4.multiply(new Float64Array(16), this.clipSpaceToPixelsMatrix, m);
@@ -962,7 +967,7 @@ export class MercatorTransform implements ITransform {
         mat4.rotateX(this._fogMatrix, this._fogMatrix, this.pitchInRadians);
         mat4.rotateZ(this._fogMatrix, this._fogMatrix, -this.bearingInRadians);
         mat4.translate(this._fogMatrix, this._fogMatrix, [-x, -y, 0]);
-        mat4.scale(this._fogMatrix, this._fogMatrix, [1, 1, this._helper._pixelPerMeter]);
+        mat4.scale(this._fogMatrix, this._fogMatrix, [1, 1, this._helper.pixelsPerMeter]);
         mat4.translate(this._fogMatrix, this._fogMatrix, [0, 0, -this.elevation]); // elevate camera over terrain
 
         // matrix for conversion from world space to screen coordinates in 3D
@@ -974,7 +979,7 @@ export class MercatorTransform implements ITransform {
         // is an odd integer to preserve rendering to the pixel grid. We're rotating this shift based on the angle
         // of the transformation so that 0°, 90°, 180°, and 270° rasters are crisp, and adjust the shift so that
         // it is always <= 0.5 pixels.
-        const xShift = (this._helper._width % 2) / 2, yShift = (this._helper._height % 2) / 2,
+        const xShift = (this._helper.width % 2) / 2, yShift = (this._helper.height % 2) / 2,
             angleCos = Math.cos(this.bearingInRadians), angleSin = Math.sin(-this.bearingInRadians),
             dx = x - Math.round(x) + angleCos * xShift + angleSin * yShift,
             dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;

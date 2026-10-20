@@ -332,7 +332,7 @@ export class GlobeTransform implements ITransform {
      * first, and while the globe is rendering mercator is made to reuse that result instead of computing its own.
      */
     private _calcMatrices(): void {
-        if (!this._helper._width || !this._helper._height) {
+        if (!this._helper.width || !this._helper.height) {
             return;
         }
         this._verticalPerspectiveTransform._calcMatrices();

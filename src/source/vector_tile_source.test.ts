@@ -648,6 +648,17 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
     });
 
+    test('removes an unloaded tile from every worker', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+        const broadcast = vi.fn().mockResolvedValue([]);
+        source.dispatcher = {broadcast} as any;
+        const tile = {uid: 1, actor: {}, unloadVectorData() {}} as any as Tile;
+
+        await source.unloadTile(tile);
+
+        expect(broadcast).toHaveBeenCalledWith(MessageType.removeTile, {uid: tile.uid, type: source.type, source: source.id});
+    });
+
     test('stores worker etag on tile when present', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']

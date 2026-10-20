@@ -69,6 +69,8 @@ export class VectorTileWorkerSource implements WorkerSource {
 
     /**
      * Implements {@link WorkerSource.loadTile}.
+     * An unchanged ETag skips parsing only when this worker holds a decoded copy of that version,
+     * which is what a later `reloadTile` reparses; otherwise the response is parsed and stored like a new tile.
      */
     async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
         const {uid, overzoomParameters} = params;
@@ -87,8 +89,9 @@ export class VectorTileWorkerSource implements WorkerSource {
             // Download the tile data from the network.
             const tileResponse = await getArrayBuffer(params.request, abortController);
 
+            const loadedTile = this.tileState.getLoaded(uid);
             // Tile data hasn't changed (etag support) - return an unmodified result
-            if (params.etag && params.etag === tileResponse.etag) {
+            if (params.etag && params.etag === tileResponse.etag && loadedTile?.etag === tileResponse.etag) {
                 this.tileState.finishLoading(uid);
                 return this._getEtagUnmodifiedResult(tileResponse, timing);
             }
