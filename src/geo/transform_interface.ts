@@ -87,6 +87,15 @@ export type TransformConstrainFunction =  (
     zoom: number;
 };
 
+/**
+ * @internal
+ * The depth range of a projection matrix, from the near to the far clipping plane.
+ */
+export type NearFarZ = {
+    readonly nearZ: number;
+    readonly farZ: number;
+};
+
 export interface ITransformGetters {
     get tileSize(): number;
 
@@ -162,8 +171,10 @@ export interface ITransformGetters {
      */
     get cameraToCenterDistance(): number;
 
-    get nearZ(): number;
-    get farZ(): number;
+    /**
+     * The depth range set with {@link ITransform.overrideNearFarZ}, or null while each projection computes its own.
+     */
+    get nearFarZOverride(): NearFarZ | null;
     get autoCalculateNearFarZ(): boolean;
 
     get constrainOverride(): TransformConstrainFunction;
@@ -320,6 +331,14 @@ export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: numb
  * by code that has a reference to in under the {@link ITransform} type.
  */
 export interface IReadonlyTransform extends ITransformGetters {
+    /**
+     * The near clipping plane of the projection matrix, computed by the projection unless overridden.
+     */
+    get nearZ(): number;
+    /**
+     * The far clipping plane of the projection matrix, computed by the projection unless overridden.
+     */
+    get farZ(): number;
     /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.

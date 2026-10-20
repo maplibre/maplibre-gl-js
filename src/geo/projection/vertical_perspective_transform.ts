@@ -14,7 +14,7 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, NearFarZ, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -232,10 +232,13 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.constrainOverride;
     }
     public get nearZ(): number {
-        return this._helper.nearZ;
+        return this._nearZ;
     }
     public get farZ(): number {
-        return this._helper.farZ;
+        return this._farZ;
+    }
+    public get nearFarZOverride(): NearFarZ | null {
+        return this._helper.nearFarZOverride;
     }
     public get autoCalculateNearFarZ(): boolean {
         return this._helper.autoCalculateNearFarZ;
@@ -256,6 +259,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
     private _cameraPosition: vec3 = createVec3f64();
+    private _nearZ: number;
+    private _farZ: number;
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
      * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
@@ -489,20 +494,19 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the helper already
-     * holds. Defaults to {@link autoCalculateNearFarZ}; a composing transform such as {@link GlobeTransform}
-     * overrides it so that its two children share a single depth range.
+     * The computed far plane only has to be far enough to take in the globe, since the vertex shader computes its own
+     * depth.
+     * @param nearFarZ - The depth range to use instead of computing one, by default the camera state's override.
      */
-    _calcMatrices(calculateNearFarZ: boolean = this._helper.autoCalculateNearFarZ): void {
+    _calcMatrices(nearFarZ: NearFarZ | null = this._helper.nearFarZOverride): void {
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4f64();
-        if (calculateNearFarZ) {
-            this._helper._nearZ = 0.5;
-            this._helper._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
-        }
-        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._helper._nearZ, this._helper._farZ);
+        const {nearZ, farZ} = nearFarZ ?? {nearZ: 0.5, farZ: this.cameraToCenterDistance + globeRadiusPixels * 2.0};
+        this._nearZ = nearZ;
+        this._farZ = farZ;
+        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
         const offset = this.centerOffset;

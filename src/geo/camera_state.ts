@@ -4,6 +4,7 @@ import {MAX_VALID_LATITUDE} from '../util/util.ts';
 
 import type {mat2, mat4} from 'gl-matrix';
 import type {TransformOptions} from './transform_helper.ts';
+import type {NearFarZ} from './transform_interface.ts';
 
 /**
  * @internal
@@ -36,8 +37,12 @@ export type CameraState = {
     latRange: [number, number];
     renderWorldCopies: boolean;
     minElevationForCurrentTile: number;
+    /**
+     * The depth range to use instead of the one each projection computes, or null.
+     */
+    nearFarZOverride: NearFarZ | null;
 
-    // Derived values
+    // Derived the same way in every projection
     /**
      * The integer zoom level for tiles.
      */
@@ -80,6 +85,7 @@ export function createCameraState(options?: TransformOptions): CameraState {
         latRange: [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE],
         renderWorldCopies: options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies,
         minElevationForCurrentTile: 0,
+        nearFarZOverride: null,
         tileZoom: 0,
         scale: 1,
         pixelsPerMeter: undefined,
