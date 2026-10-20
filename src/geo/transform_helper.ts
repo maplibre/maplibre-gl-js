@@ -91,6 +91,10 @@ export type TransformOptions = {
      * An override of the transform's default constraining function for respecting its longitude and latitude bounds.
      */
     constrainOverride?: TransformConstrainFunction | null;
+    /**
+     * The camera's lng/lat to world coordinate mapping, fixed for the transform's lifetime. Defaults to mercator.
+     */
+    worldCoordinateHelper?: WorldCoordinateHelper;
 };
 
 function getTileZoom(zoom: number): number {
@@ -120,12 +124,12 @@ export class TransformHelper implements ITransformGetters {
 
     _constrainOverride: TransformConstrainFunction;
 
-    _worldCoordinateHelper: WorldCoordinateHelper;
+    private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._cameraState = createCameraState(options);
-        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
+        this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
 
         this._constrainOverride = options?.constrainOverride ?? null;
 
@@ -447,14 +451,6 @@ export class TransformHelper implements ITransformGetters {
             this._cameraState.lngRange?.[1] ?? Infinity,
             this._cameraState.latRange[1]
         ]);
-    }
-
-    /**
-     * Replaces the lng/lat to world coordinate mapping, mercator by default. The projection factory calls this on a
-     * transform it just built for a registered CRS, and `clone` calls it to keep the mapping.
-     */
-    setWorldCoordinateHelper(worldCoordinateHelper: WorldCoordinateHelper): void {
-        this._worldCoordinateHelper = worldCoordinateHelper;
     }
 
     /**

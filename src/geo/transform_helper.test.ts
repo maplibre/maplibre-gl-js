@@ -140,8 +140,7 @@ describe('TransformHelper', () => {
         });
 
         test('leaves the target alone in a world that does not wrap', () => {
-            const transform = createMercatorTransform({renderWorldCopies: true});
-            transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(createRotatedCrs()));
+            const transform = createMercatorTransform({renderWorldCopies: true, worldCoordinateHelper: new CRSWorldCoordinateHelper(createRotatedCrs())});
             transform.resize(200, 200);
             transform.setZoom(4);
             transform.setCenter(new LngLat(140, 0));
