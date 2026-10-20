@@ -8,6 +8,7 @@
 - Fix expired vector tiles erroring on their next reload, e.g. after `setFilter()`, when the server returns an unchanged ETag ([#8771](https://github.com/maplibre/maplibre-gl-js/pull/8771)) (by [@DoFabien](https://github.com/DoFabien))
 - Fix `GeoJSONSource.getBounds` throwing when a feature has a `null` geometry ([#8814](https://github.com/maplibre/maplibre-gl-js/pull/8814)) (by [@auraseb](https://github.com/auraseb))
 - Fix characters covered by `font-faces` switching to glyphs from the glyphs URL once their PBF range is downloaded ([#8490](https://github.com/maplibre/maplibre-gl-js/pull/8490)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
+- Fix GeoJSON tiles showing stale data and `queryRenderedFeatures` throwing "feature index out of bounds" after `updateData` calls that overlap with style changes ([#8775](https://github.com/maplibre/maplibre-gl-js/pull/8775)) (by [@tordans](https://github.com/tordans))
 - _...Add new stuff here..._
 
 ## 6.15.0

@@ -17,7 +17,7 @@ import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
-import type {LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import type {GeoJSONWorkerTileParameters, LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import type {Map} from '../ui/map.ts';
 
 const wrapDispatcher = getWrapDispatcher();
@@ -347,6 +347,59 @@ describe('GeoJSONSource.loadTile', () => {
         await source.loadTile(tile);
 
         expect(spy.mock.calls).toEqual([[MessageType.loadTile], [MessageType.reloadTile]]);
+    });
+
+    test('ignores the answer and the error of a request that a newer one for the same tile has replaced', async () => {
+        const requests: Array<{resolve: (data: unknown) => void; reject: (error: Error) => void}> = [];
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync() {
+                return new Promise((resolve, reject) => requests.push({resolve, reject}));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        const loadVectorDataSpy = vi.spyOn(tile, 'loadVectorData').mockImplementation(() => {});
+
+        const answeredLate = source.loadTile(tile);
+        const failedLate = source.loadTile(tile);
+        const newest = source.loadTile(tile);
+        await sleep(0);
+        requests[2].resolve({newest: true});
+        await newest;
+        requests[0].resolve({newest: false});
+        requests[1].reject(new Error('worker error'));
+
+        await expect(answeredLate).resolves.toBeUndefined();
+        await expect(failedLate).resolves.toBeUndefined();
+        expect(loadVectorDataSpy.mock.calls.map(([data]) => data)).toEqual([{newest: true}]);
+    });
+
+    test('asks the worker for raw tile data only while an older request for the tile is open', async () => {
+        const requests: Array<{params: GeoJSONWorkerTileParameters; resolve: (data: unknown) => void}> = [];
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                return new Promise((resolve) => requests.push({params: message.data as GeoJSONWorkerTileParameters, resolve}));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        vi.spyOn(tile, 'loadVectorData').mockImplementation(() => {});
+
+        const first = source.loadTile(tile);
+        await sleep(0);
+        const second = source.loadTile(tile);
+        await sleep(0);
+        requests[0].resolve({});
+        requests[1].resolve({});
+        await Promise.all([first, second]);
+        const third = source.loadTile(tile);
+        await sleep(0);
+        requests[2].resolve({});
+        await third;
+
+        expect(requests.map(({params}) => params.returnRawTileData)).toEqual([false, true, false]);
     });
 
     test('is cancelled by abortTile while the worker is loading it', async () => {

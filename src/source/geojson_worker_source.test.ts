@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
-import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import {GeoJSONWorkerSource, type GeoJSONWorkerTileParameters, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
@@ -258,6 +258,44 @@ describe('geojson tile worker source', () => {
 
         expect(res).toBeDefined();
         expect(res.rawTileData).toBeDefined();
+    });
+
+    test('GeoJSONWorkerSource.reloadTile returns the raw data of the tile it parsed when asked for it', async () => {
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': GEOJSON_TILE_LAYER_NAME,
+            type: 'symbol',
+            layout: {'icon-image': 'hello'}
+        }]);
+        const imageRequests: Array<() => void> = [];
+        const waitingActor: IActor = {
+            sendAsync: () => new Promise((resolve) => imageRequests.push(() => resolve({})))
+        };
+        const source = new GeoJSONWorkerSource(waitingActor, layerIndex, ['hello']);
+        const tileParams = {
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters;
+
+        await source.loadData({source: 'source', data: pointNamed('old'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
+        const loaded = source.loadTile(tileParams);
+        imageRequests.shift()();
+        await loaded;
+
+        const reparseParams: GeoJSONWorkerTileParameters = {...tileParams, returnRawTileData: true};
+        const reparseOfOld = source.reloadTile(reparseParams) as Promise<WorkerTileWithData>;
+        await source.loadData({source: 'source', data: pointNamed('new'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
+        const loadOfNew = source.reloadTile(tileParams) as Promise<WorkerTileWithData>;
+        imageRequests.pop()();
+        const newResult = await loadOfNew;
+        imageRequests.pop()();
+        const oldResult = await reparseOfOld;
+
+        expect(nameInRawTileData(newResult)).toBe('new');
+        expect(nameInRawTileData(oldResult)).toBe('old');
     });
 
     test('GeoJSONWorkerSource.loadTile returns null for an empty tile', async () => {
@@ -805,3 +843,16 @@ describe('loadData in a registered projection', () => {
         expect((leaves[0].geometry as GeoJSON.Point).coordinates).toEqual([expect.closeTo(45, 9), expect.closeTo(45, 9)]);
     });
 });
+
+function pointNamed(name: string): GeoJSON.GeoJSON {
+    return {
+        type: 'Feature',
+        geometry: {type: 'Point', coordinates: [0, 0]},
+        properties: {name}
+    };
+}
+
+function nameInRawTileData(result: WorkerTileWithData): unknown {
+    result.featureIndex.rawTileData = result.rawTileData;
+    return result.featureIndex.loadVTLayers()[GEOJSON_TILE_LAYER_NAME].feature(0).properties.name;
+}
