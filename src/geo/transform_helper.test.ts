@@ -14,6 +14,53 @@ const emptyCallbacks = {
 };
 
 describe('TransformHelper', () => {
+    describe('max bounds', () => {
+        test('constrains latitude while leaving longitude unbounded', () => {
+            const transform = createMercatorTransform({renderWorldCopies: true});
+            transform.resize(200, 200);
+            transform.setZoom(10);
+
+            transform.setMaxBounds(new LngLatBounds([-Infinity, -50], [Infinity, 65]));
+            transform.setCenter(new LngLat(180, 80));
+
+            expect(transform.center.lng).toBe(180);
+            expect(transform.center.lat).toBeLessThan(65);
+            expect(transform.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
+        });
+
+        test('rejects one-sided infinite longitude bounds', () => {
+            const transform = createMercatorTransform();
+
+            expect(() => transform.setMaxBounds(new LngLatBounds([-Infinity, -50], [30, 65]))).toThrow(
+                'Longitude maxBounds values must either be finite or span from -Infinity to Infinity'
+            );
+            expect(() => transform.setMaxBounds(new LngLatBounds([-30, -50], [Infinity, 65]))).toThrow(
+                'Longitude maxBounds values must either be finite or span from -Infinity to Infinity'
+            );
+        });
+
+        test('can constrain longitude without further restricting latitude', () => {
+            const transform = createMercatorTransform();
+            transform.resize(200, 200);
+            transform.setZoom(10);
+
+            transform.setMaxBounds(new LngLatBounds([-30, -90], [30, 90]));
+            transform.setCenter(new LngLat(80, 80));
+
+            expect(transform.center.lng).toBeLessThan(30);
+            expect(transform.center.lat).toBe(80);
+        });
+
+        test('clears bounds when both axes span their valid ranges', () => {
+            const transform = createMercatorTransform();
+
+            transform.setMaxBounds(new LngLatBounds([-30, -50], [30, 65]));
+            transform.setMaxBounds(new LngLatBounds([-Infinity, -90], [Infinity, 90]));
+
+            expect(transform.getMaxBounds()).toBeNull();
+        });
+    });
+
     test('does not calculate the projection matrices while the width or height is zero', () => {
         let calls = 0;
         const helper = new TransformHelper({...emptyCallbacks, calcMatrices: () => { calls++; }});

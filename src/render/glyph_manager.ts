@@ -15,12 +15,12 @@ import type {FontFacesSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type Entry = {
     /**
-     * The glyphs drawn or downloaded so far, keyed by variant and grapheme cluster.
+     * The glyphs requested so far, keyed by variant and grapheme cluster.
      * `null` means the requested glyph is unavailable.
      */
     glyphs: Record<string, Record<string, StyleGlyph | null>>;
-    requests: Record<number, Promise<{[_: number]: StyleGlyph | null}>>;
-    ranges: Record<number, boolean | null>;
+    /** The PBF ranges downloaded or being downloaded, keyed by range number. */
+    requests: Record<number, Promise<Record<number, StyleGlyph | null>>>;
     tinySDF?: Promise<Rasterizer>;
     ideographTinySDF?: Promise<Rasterizer>;
     /**
@@ -206,7 +206,7 @@ export class GlyphManager {
      */
     async _getAndCacheGlyphsPromise(stack: string, id: string, variant: string): Promise<GlyphResult> {
         // Create an entry for this fontstack if it doesn’t already exist.
-        this.entries[stack] ??= {glyphs: {default: {}}, requests: {}, ranges: {}};
+        this.entries[stack] ??= {glyphs: {default: {}}, requests: {}};
         const entry = this.entries[stack];
         const glyphs = (entry.glyphs[variant] ||= {});
 
@@ -270,27 +270,22 @@ export class GlyphManager {
      * Gets a glyph from the server-side cache, downloading the PBF range it falls in if need be.
      *
      * Only reached for a single codepoint. What comes back is keyed by codepoint, as the file is,
-     * and is cached by cluster -- which for one codepoint is the character itself.
+     * and is cached by cluster -- which for one codepoint is the character itself. Only the
+     * requested glyph is cached, because the rest of the range may be covered by a declared font.
      */
     async _downloadAndCacheRangePromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         const codePoint = id.codePointAt(0);
         const entry = this.entries[stack];
         const range = Math.floor(codePoint / 256);
-        if (entry.ranges[range]) {
-            return {stack, id, glyph: null};
-        }
 
         // Start downloading this range unless we’re currently downloading it.
         entry.requests[range] ||= this._loadGlyphRange(stack, range);
 
         try {
-            // Get the response and cache the glyphs from it.
             const response = await entry.requests[range];
-            for (const responseId in response) {
-                entry.glyphs.default[String.fromCodePoint(+responseId)] = response[+responseId];
-            }
-            entry.ranges[range] = true;
-            return {stack, id, glyph: response[codePoint] || null};
+            const glyph = response[codePoint] || null;
+            entry.glyphs.default[id] = glyph;
+            return {stack, id, glyph};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
             const glyph = await this._drawGlyph(entry, stack, id);
@@ -518,7 +513,6 @@ export class GlyphManager {
             entry.fontFaceTinySDFs = {};
             entry.glyphs = {default: {}};
             entry.requests = {};
-            entry.ranges = {};
         }
         this.entries = {};
         this.fontFaceManager.destroy();
