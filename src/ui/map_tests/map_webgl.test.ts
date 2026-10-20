@@ -212,3 +212,29 @@ test('Hit WebGL max drawing buffer limit', () => {
     // Check if maxCanvasSize is updated
     expect(map._maxCanvasSize).toEqual([7536, 4239]);
 });
+
+test('keeps the canvas size after a resize lands before "webglcontextlost" is dispatched', async () => {
+    const container = window.document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', {value: 400});
+    Object.defineProperty(container, 'clientHeight', {value: 300});
+    const map = createMap({container, pixelRatio: 2});
+    const canvas = map.getCanvas();
+    const gl = map.painter.context.gl;
+    vi.spyOn(gl, 'isContextLost').mockReturnValue(true);
+    vi.spyOn(gl, 'drawingBufferWidth', 'get').mockReturnValue(0);
+    vi.spyOn(gl, 'drawingBufferHeight', 'get').mockReturnValue(0);
+    map.resize();
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+    vi.restoreAllMocks();
+
+    const contextRestoredPromise = map.once('webglcontextrestored');
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    await contextRestoredPromise;
+
+    expect(canvas.width).toBe(800);
+    expect(canvas.height).toBe(600);
+    map.remove();
+});

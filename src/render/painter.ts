@@ -623,6 +623,7 @@ export class Painter {
      * Note: drawing buffer size changes only when canvas size changes
      */
     overLimit(): boolean {
+        if (this.context.gl.isContextLost()) return false;
         const {drawingBufferWidth, drawingBufferHeight} = this.context.gl;
         return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
     }
