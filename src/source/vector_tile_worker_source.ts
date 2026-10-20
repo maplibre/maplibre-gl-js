@@ -11,11 +11,11 @@ import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoom
 import {MLTVectorTile} from './vector_tile_mlt.ts';
 
 import type {
-    WorkerSource,
     WorkerTileParameters,
     TileParameters,
     WorkerTileResult
 } from '../source/worker_source.ts';
+import type {CombinableWorkerSource} from './combinable_worker_source.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
@@ -29,7 +29,7 @@ export type LoadVectorTileResult = {
  * The {@link WorkerSource} implementation that supports {@link VectorTileSource}. This class is
  * used by vector tile sources to perform tile processing operations in a separate worker thread.
  */
-export class VectorTileWorkerSource implements WorkerSource {
+export class VectorTileWorkerSource implements CombinableWorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
     availableImages: string[];

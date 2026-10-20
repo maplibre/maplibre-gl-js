@@ -12,7 +12,8 @@ import {createWorkerCRSHelper} from './projection_handler_worker.ts';
 import {reprojectGeoJSONFromWorld, reprojectGeoJSONSourceDiffToWorld, reprojectGeoJSONToWorld} from '../util/geojson_reproject.ts';
 
 import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
-import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source.ts';
+import type {WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source.ts';
+import type {CombinableWorkerSource} from './combinable_worker_source.ts';
 import type {LoadVectorTileResult} from './vector_tile_worker_source.ts';
 import type {RequestParameters} from '../util/ajax.ts';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages.ts';
@@ -69,7 +70,7 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
  * `new GeoJSONWorkerSource(actor, layerIndex, customLoadGeoJSONFunction)`.
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
  */
-export class GeoJSONWorkerSource implements WorkerSource {
+export class GeoJSONWorkerSource implements CombinableWorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
     availableImages: string[];

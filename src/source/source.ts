@@ -5,6 +5,9 @@ import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions} from '../sourc
 import {VideoSource} from '../source/video_source.ts';
 import {ImageSource} from '../source/image_source.ts';
 import {CanvasSource} from '../source/canvas_source.ts';
+import {DifferenceSource} from '../source/difference_source.ts';
+import {GeoJSONLayersSource} from '../source/geojson_layers_source.ts';
+import {UnionSource} from '../source/union_source.ts';
 
 import type {CalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
@@ -15,6 +18,7 @@ import type {Tile} from '../tile/tile.ts';
 import type {OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
+import type {CombinatorSourceSpecification} from '../source/combinator.ts';
 
 const registeredSources = {} as {[key:string]: SourceClass};
 
@@ -134,7 +138,7 @@ export interface Source {
  * A general definition of a {@link Source} class for factory usage
  */
 export type SourceClass = {
-    new (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source;
+    new (id: string, specification: SourceSpecification | CanvasSourceSpecification | CombinatorSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source;
 };
 
 /**
@@ -148,7 +152,7 @@ export type SourceClass = {
  * @param dispatcher - A {@link Dispatcher} instance, which can be used to send messages to the workers.
  * @returns a newly created source
  */
-export const create = (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source => {
+export const create = (id: string, specification: SourceSpecification | CanvasSourceSpecification | CombinatorSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source => {
 
     const Class = getSourceType(specification.type);
     const source = new Class(id, specification, dispatcher, eventedParent);
@@ -176,6 +180,12 @@ const getSourceType = (name: string): SourceClass => {
             return VideoSource;
         case 'canvas':
             return CanvasSource;
+        case 'geojson-layers':
+            return GeoJSONLayersSource;
+        case 'union':
+            return UnionSource;
+        case 'difference':
+            return DifferenceSource;
     }
     return registeredSources[name];
 };

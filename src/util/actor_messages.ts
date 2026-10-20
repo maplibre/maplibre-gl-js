@@ -1,3 +1,4 @@
+import type {SetCombinatorDefinitionParameters} from '../source/combinator_worker.ts';
 import type {LoadGeoJSONParameters} from '../source/geojson_worker_source.ts';
 import type {TileParameters, WorkerDEMTileParameters, WorkerTileParameters, WorkerTileResult} from '../source/worker_source.ts';
 import type {DEMData} from '../data/dem_data.ts';
@@ -116,6 +117,7 @@ export const enum MessageType {
     abortTile = 'AT',
     removeDEMTile = 'RDT',
     getResource = 'GR',
+    setCombinatorDefinition = 'SCD',
 }
 
 /**
@@ -128,6 +130,7 @@ export type RequestResponseMessageMap = {
     [MessageType.getClusterChildren]: [ClusterIDAndSource, GeoJSON.Feature[]];
     [MessageType.getClusterLeaves]: [GetClusterLeavesParams, GeoJSON.Feature[]];
     [MessageType.loadData]: [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
+    [MessageType.setCombinatorDefinition]: [SetCombinatorDefinitionParameters, void];
     [MessageType.loadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.reloadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.getGlyphs]: [GetGlyphsParameters, GlyphMap];
