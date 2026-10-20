@@ -62,6 +62,14 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
 };
 
 /**
+ * The parameters of a request for a GeoJSON tile.
+ */
+export type GeoJSONWorkerTileParameters = WorkerTileParameters & {
+    /** Asks for the raw tile data with a re-parse too, which otherwise only comes with the first parse of a tile. */
+    returnRawTileData?: boolean;
+};
+
+/**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
  * This class is designed to be easily reused to support custom source types
  * for data formats that can be parsed/converted into an in-memory GeoJSON
@@ -136,7 +144,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
     }
 
-    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
+    async _parseWorkerTile(workerTile: WorkerTile, params: GeoJSONWorkerTileParameters): Promise<WorkerTileResult> {
         const parseState = this.tileState.getParsing(workerTile.uid);
 
         let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);

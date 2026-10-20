@@ -17,8 +17,7 @@ import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
-import type {LoadGeoJSONParameters} from './geojson_worker_source.ts';
-import type {WorkerTileParameters} from './worker_source.ts';
+import type {GeoJSONWorkerTileParameters, LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import type {Map} from '../ui/map.ts';
 
 const wrapDispatcher = getWrapDispatcher();
@@ -377,10 +376,10 @@ describe('GeoJSONSource.loadTile', () => {
     });
 
     test('asks the worker for raw tile data only while an older request for the tile is open', async () => {
-        const requests: Array<{params: WorkerTileParameters; resolve: (data: unknown) => void}> = [];
+        const requests: Array<{params: GeoJSONWorkerTileParameters; resolve: (data: unknown) => void}> = [];
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message: ActorMessage<MessageType>) {
-                return new Promise((resolve) => requests.push({params: message.data as WorkerTileParameters, resolve}));
+                return new Promise((resolve) => requests.push({params: message.data as GeoJSONWorkerTileParameters, resolve}));
             }
         }), undefined);
         source.map = mapStub;

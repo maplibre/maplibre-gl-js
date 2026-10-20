@@ -108,8 +108,6 @@ export class Tile {
     needsTerrainPrepare: boolean;
     needsColorReliefPrepare: boolean;
     abortController: AbortController;
-    /** Counts the worker requests a GeoJSON source sent for this tile. Only the newest one's answer is applied. */
-    workerRequests: number = 0;
     texture: any;
     fbo: Framebuffer;
     demTexture: Texture;

@@ -41,10 +41,6 @@ export type WorkerTileParameters = TileParameters & {
     showCollisionBoxes: boolean;
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
-    /**
-     * Asks for the raw tile data with a re-parse too, which otherwise only comes with the first parse of a tile.
-     */
-    returnRawTileData?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
     encoding?: TileEncoding;
     /**

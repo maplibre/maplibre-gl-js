@@ -22,8 +22,7 @@ import type {Actor} from '../util/actor.ts';
 import type {GeoJSONWorkerSourceLoadDataResult} from '../util/actor_messages.ts';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeatureId, GeoJSONSourceDiff} from './geojson_source_diff.ts';
-import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source.ts';
-import type {WorkerTileParameters} from './worker_source.ts';
+import type {GeoJSONWorkerOptions, GeoJSONWorkerTileParameters, LoadGeoJSONParameters} from './geojson_worker_source.ts';
 
 /**
  * Options object for GeoJSONSource.
@@ -662,7 +661,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = await this.actorPromise;
-        const params: WorkerTileParameters = {
+        const params: GeoJSONWorkerTileParameters = {
             type: this.type,
             uid: tile.uid,
             tileID: tile.tileID,
@@ -677,11 +676,10 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             returnRawTileData: !!tile.abortController
         };
 
-        const request = ++tile.workerRequests;
-        tile.abortController = new AbortController();
+        const abortController = tile.abortController = new AbortController();
         try {
-            const data = await (await this.actorPromise).sendAsync({type: message, data: params}, tile.abortController);
-            if (request !== tile.workerRequests) return;
+            const data = await (await this.actorPromise).sendAsync({type: message, data: params}, abortController);
+            if (tile.abortController !== abortController) return;
             delete tile.abortController;
             tile.unloadVectorData();
 
@@ -689,7 +687,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 tile.loadVectorData(data, this.map.style, message ===  MessageType.reloadTile);
             }
         } catch (err) {
-            if (request !== tile.workerRequests) return;
+            if (tile.abortController !== abortController) return;
             delete tile.abortController;
             if (tile.aborted || isAbortError(err)) {
                 return;

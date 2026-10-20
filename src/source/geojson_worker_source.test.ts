@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {GEOJSON_TILE_LAYER_NAME} from '@maplibre/vt-pbf';
-import {GeoJSONWorkerSource, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import {GeoJSONWorkerSource, type GeoJSONWorkerTileParameters, type LoadGeoJSONParameters} from './geojson_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
@@ -285,7 +285,8 @@ describe('geojson tile worker source', () => {
         imageRequests.shift()();
         await loaded;
 
-        const reparseOfOld = source.reloadTile({...tileParams, returnRawTileData: true}) as Promise<WorkerTileWithData>;
+        const reparseParams: GeoJSONWorkerTileParameters = {...tileParams, returnRawTileData: true};
+        const reparseOfOld = source.reloadTile(reparseParams) as Promise<WorkerTileWithData>;
         await source.loadData({source: 'source', data: pointNamed('new'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
         const loadOfNew = source.reloadTile(tileParams) as Promise<WorkerTileWithData>;
         imageRequests.pop()();
