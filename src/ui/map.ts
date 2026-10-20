@@ -1614,7 +1614,7 @@ export class Map extends Evented<MapEventType> {
     resize(eventData?: any, constrainTransform = true): this {
         // Early out if the context is lost
         // causes a blank map otherwise
-        const isContextLost = this._lostContextStyle.style !== null || this.painter.context.gl.isContextLost();
+        const isContextLost = this._lostContextStyle.style !== null;
         if (isContextLost) return this;
         this._resizeInternal(constrainTransform);
 
@@ -1652,8 +1652,9 @@ export class Map extends Evented<MapEventType> {
         this.painter.resize(width, height, this._clampedPixelRatio);
 
         // check if we've reached GL limits, in that case further clamps pixelRatio
-        if (this.painter.overLimit()) {
-            const gl = this.painter.context.gl;
+        // a lost context reports a 0x0 drawing buffer, which is not a real limit
+        const gl = this.painter.context.gl;
+        if (!gl.isContextLost() && this.painter.overLimit()) {
             // store updated _maxCanvasSize value
             this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
             this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
