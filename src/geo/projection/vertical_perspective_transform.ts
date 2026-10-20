@@ -759,6 +759,16 @@ export class VerticalPerspectiveTransform implements ITransform {
      * (same size before and after a {@link setLocationAtPoint} call).
      */
     setLocationAtPoint(lnglat: LngLat, point: Point, _elevation?: number): void {
+        const camera = this.getCameraForLocationAtPoint(lnglat, point);
+        if (camera) this._helper.setCenterAndZoom(camera.center, camera.zoom);
+    }
+
+    /**
+     * The center and zoom that {@link setLocationAtPoint} moves the camera to, or null where `lnglat` already renders
+     * at the screen `point` or no center puts it there. The zoom keeps the planet at the size it has now, from the latitude the constrain lets the
+     * center reach.
+     */
+    getCameraForLocationAtPoint(lnglat: LngLat, point: Point): {center: LngLat; zoom: number} | null {
         // The elevation is ignored: this transform solves on the planet's surface.
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
@@ -797,7 +807,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
         if (vecToTargetXZLengthSquared < targetXSquared) {
             // Zero solutions - setLocationAtPoint is impossible.
-            return;
+            return null;
         }
 
         // The intersection's Z coordinates
@@ -846,14 +856,14 @@ export class VerticalPerspectiveTransform implements ITransform {
             validLat = latB;
         } else {
             // No solution.
-            return;
+            return null;
         }
 
         const newLng = validLng / Math.PI * 180;
-        const newLat = validLat / Math.PI * 180;
-        const oldLat = this.center.lat;
-        this.setCenter(new LngLat(newLng, clamp(newLat, -90, 90)));
-        this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
+        const newLat = clamp(validLat / Math.PI * 180, -90, 90);
+        if (newLng === this.center.lng && newLat === this.center.lat) return null;
+        const {center, zoom} = this._helper.getConstrainedCamera(new LngLat(newLng, newLat), this.zoom);
+        return this._helper.getConstrainedCamera(center, this.applyConstrain(center, zoom + getZoomAdjustment(this.center.lat, center.lat)).zoom);
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {

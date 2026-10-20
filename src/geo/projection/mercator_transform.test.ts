@@ -150,6 +150,33 @@ describe('transform', () => {
         expect(fixedLngLat(transform.screenPointToLocation(new Point(15, 45)))).toEqual({lng: 13, lat: 10});
     });
 
+    test('getCameraForLocationAtPoint gives the camera setLocationAtPoint moves to, without moving it', () => {
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(500, 500);
+        transform.setZoom(4);
+
+        const camera = transform.getCameraForLocationAtPoint(new LngLat(13, 10), new Point(15, 45));
+
+        expect(transform.center).toEqual({lng: 0, lat: 0});
+        expect(transform.getCameraForLocationAtPoint(transform.center, transform.centerPoint)).toBeNull();
+        transform.setLocationAtPoint(new LngLat(13, 10), new Point(15, 45));
+        expect(transform.center).toEqual(camera.center);
+        expect(transform.zoom).toBe(camera.zoom);
+    });
+
+    test('getCameraForLocationAtPoint gives the constrained camera in a world without copies', () => {
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
+        transform.resize(500, 500);
+        transform.setZoom(4);
+
+        const camera = transform.getCameraForLocationAtPoint(new LngLat(179, 0), transform.centerPoint);
+
+        expect(camera.center.lng).toBeLessThan(179);
+        transform.setLocationAtPoint(new LngLat(179, 0), transform.centerPoint);
+        expect(transform.center).toEqual(camera.center);
+        expect(transform.zoom).toBe(camera.zoom);
+    });
+
     test('has a default zoom', () => {
         const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);

@@ -72,6 +72,17 @@ describe('TransformHelper', () => {
         expect(calls).toBe(1);
     });
 
+    test('getConstrainedCamera constrains only once the transform has a size', () => {
+        const helper = new TransformHelper({...emptyCallbacks, defaultConstrain: () => ({center: new LngLat(5, 5), zoom: 3})});
+        const center = new LngLat(10, 20);
+
+        expect(helper.getConstrainedCamera(center, 7)).toEqual({center, zoom: 7});
+
+        helper.resize(640, 480);
+
+        expect(helper.getConstrainedCamera(center, 7)).toEqual({center: new LngLat(5, 5), zoom: 3});
+    });
+
     test('apply', () => {
         const original = new TransformHelper(emptyCallbacks);
         original.setConstrainOverride((lngLat, zoom) => {
