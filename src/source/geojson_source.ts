@@ -185,8 +185,6 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     map: Map;
     actorPromise: Promise<Actor>;
     _workerUpdates: UpdateQueue<GeoJSONWorkerUpdate, GeoJSONWorkerSourceLoadDataResult>;
-    /** Each tile's newest worker request. Answers to older requests are ignored. */
-    _latestTileRequests: WeakMap<Tile, AbortController> = new WeakMap();
     _collectResourceTiming: boolean;
     _removed: boolean;
 
@@ -658,8 +656,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     /**
-     * Loads the tile in the worker. Only the answer to the tile's newest request is applied,
-     * because the worker can answer overlapping requests out of order.
+     * Loads the tile in the worker and applies only the answer to its newest request. A request sent while an older one
+     * is open asks for the raw tile data too, since the older answer that carried it is then ignored.
      */
     async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
@@ -675,14 +673,15 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
             pixelRatio: this.map.getPixelRatio(),
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
-            subdivisionGranularity: this.map.style.projection.subdivisionGranularity
+            subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
+            returnRawTileData: !!tile.abortController
         };
 
-        const abortController = tile.abortController = new AbortController();
-        this._latestTileRequests.set(tile, abortController);
+        const request = ++tile.workerRequests;
+        tile.abortController = new AbortController();
         try {
-            const data = await (await this.actorPromise).sendAsync({type: message, data: params}, abortController);
-            if (this._latestTileRequests.get(tile) !== abortController) return;
+            const data = await (await this.actorPromise).sendAsync({type: message, data: params}, tile.abortController);
+            if (request !== tile.workerRequests) return;
             delete tile.abortController;
             tile.unloadVectorData();
 
@@ -690,7 +689,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                 tile.loadVectorData(data, this.map.style, message ===  MessageType.reloadTile);
             }
         } catch (err) {
-            if (this._latestTileRequests.get(tile) !== abortController) return;
+            if (request !== tile.workerRequests) return;
             delete tile.abortController;
             if (tile.aborted || isAbortError(err)) {
                 return;

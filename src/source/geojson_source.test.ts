@@ -18,6 +18,7 @@ import type {RequestManager} from '../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
 import type {LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
 import type {Map} from '../ui/map.ts';
 
 const wrapDispatcher = getWrapDispatcher();
@@ -373,6 +374,33 @@ describe('GeoJSONSource.loadTile', () => {
         await expect(answeredLate).resolves.toBeUndefined();
         await expect(failedLate).resolves.toBeUndefined();
         expect(loadVectorDataSpy.mock.calls.map(([data]) => data)).toEqual([{newest: true}]);
+    });
+
+    test('asks the worker for raw tile data only while an older request for the tile is open', async () => {
+        const requests: Array<{params: WorkerTileParameters; resolve: (data: unknown) => void}> = [];
+        const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message: ActorMessage<MessageType>) {
+                return new Promise((resolve) => requests.push({params: message.data as WorkerTileParameters, resolve}));
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+        vi.spyOn(tile, 'loadVectorData').mockImplementation(() => {});
+
+        const first = source.loadTile(tile);
+        await sleep(0);
+        const second = source.loadTile(tile);
+        await sleep(0);
+        requests[0].resolve({});
+        requests[1].resolve({});
+        await Promise.all([first, second]);
+        const third = source.loadTile(tile);
+        await sleep(0);
+        requests[2].resolve({});
+        await third;
+
+        expect(requests.map(({params}) => params.returnRawTileData)).toEqual([false, true, false]);
     });
 
     test('is cancelled by abortTile while the worker is loading it', async () => {

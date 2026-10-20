@@ -11,7 +11,7 @@ import {identityCrs} from '../geo/projection/crs.ts';
 
 import type {GeoJSONVT} from '@maplibre/geojson-vt';
 import type {Actor, IActor} from '../util/actor.ts';
-import type {TileParameters, WorkerTileParameters, WorkerTileWithData} from './worker_source.ts';
+import type {TileParameters, WorkerTileParameters, WorkerTileResult, WorkerTileWithData} from './worker_source.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTile} from './worker_tile.ts';
 
@@ -43,7 +43,6 @@ describe('geojson tile worker source', () => {
             '0': {
                 status: 'done',
                 vectorTile: {},
-                rawTileData: new ArrayBuffer(0),
                 parse
             } as any as WorkerTile
         };
@@ -53,41 +52,24 @@ describe('geojson tile worker source', () => {
         await expect(reloadPromise).resolves.toBeTruthy();
     });
 
-    test('GeoJSONWorkerSource.reloadTile returns the raw data of the tile it parsed, not of the one that replaced it', async () => {
-        const layerIndex = new StyleLayerIndex([{
-            id: 'test',
-            source: 'source',
-            'source-layer': GEOJSON_TILE_LAYER_NAME,
-            type: 'symbol',
-            layout: {'icon-image': 'hello'}
-        }]);
-        const imageRequests: Array<() => void> = [];
-        const waitingActor: IActor = {
-            sendAsync: () => new Promise((resolve) => imageRequests.push(() => resolve({})))
+    test('GeoJSONWorkerSource.reloadTile returns parse result without rawTileData when parsing state was already consumed', async () => {
+        const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
+        const parseResult = {buckets: []} as any as WorkerTileResult;
+        const parse = vi.fn().mockResolvedValue(parseResult);
+
+        source.tileState.loaded = {
+            '0': {
+                status: 'parsing',
+                vectorTile: {},
+                parse
+            } as any as WorkerTile
         };
-        const source = new GeoJSONWorkerSource(waitingActor, layerIndex, ['hello']);
-        const tileParams = {
-            source: 'source',
-            uid: 0,
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
-            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters;
 
-        await source.loadData({source: 'source', data: pointNamed('old'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
-        const loaded = source.loadTile(tileParams);
-        imageRequests.shift()();
-        await loaded;
+        const result = await source.reloadTile({uid: 0} as any as WorkerTileParameters) as WorkerTileWithData;
 
-        const reparseOfOld = source.reloadTile(tileParams) as Promise<WorkerTileWithData>;
-        await source.loadData({source: 'source', data: pointNamed('new'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
-        const loadOfNew = source.reloadTile(tileParams) as Promise<WorkerTileWithData>;
-        imageRequests.pop()();
-        const newResult = await loadOfNew;
-        imageRequests.pop()();
-        const oldResult = await reparseOfOld;
-
-        expect(nameInRawTileData(newResult)).toBe('new');
-        expect(nameInRawTileData(oldResult)).toBe('old');
+        expect(parse).toHaveBeenCalledTimes(1);
+        expect(result).toBe(parseResult);
+        expect(result.rawTileData).toBeUndefined();
     });
 
     test('GeoJSONWorkerSource.loadTile reparses tile if reloadTile has been called during parsing', async () => {
@@ -278,6 +260,43 @@ describe('geojson tile worker source', () => {
         expect(res.rawTileData).toBeDefined();
     });
 
+    test('GeoJSONWorkerSource.reloadTile returns the raw data of the tile it parsed when asked for it', async () => {
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': GEOJSON_TILE_LAYER_NAME,
+            type: 'symbol',
+            layout: {'icon-image': 'hello'}
+        }]);
+        const imageRequests: Array<() => void> = [];
+        const waitingActor: IActor = {
+            sendAsync: () => new Promise((resolve) => imageRequests.push(() => resolve({})))
+        };
+        const source = new GeoJSONWorkerSource(waitingActor, layerIndex, ['hello']);
+        const tileParams = {
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as any as WorkerTileParameters;
+
+        await source.loadData({source: 'source', data: pointNamed('old'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
+        const loaded = source.loadTile(tileParams);
+        imageRequests.shift()();
+        await loaded;
+
+        const reparseOfOld = source.reloadTile({...tileParams, returnRawTileData: true}) as Promise<WorkerTileWithData>;
+        await source.loadData({source: 'source', data: pointNamed('new'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
+        const loadOfNew = source.reloadTile(tileParams) as Promise<WorkerTileWithData>;
+        imageRequests.pop()();
+        const newResult = await loadOfNew;
+        imageRequests.pop()();
+        const oldResult = await reparseOfOld;
+
+        expect(nameInRawTileData(newResult)).toBe('new');
+        expect(nameInRawTileData(oldResult)).toBe('old');
+    });
+
     test('GeoJSONWorkerSource.loadTile returns null for an empty tile', async () => {
         const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex(), []);
         await source.loadData({source: 'source', data: {type: 'FeatureCollection', features: []}, geojsonVtOptions: {}} as LoadGeoJSONParameters);
@@ -346,8 +365,11 @@ describe('reloadTile', () => {
         const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
         expect(spy).toHaveBeenCalledTimes(1);
 
-        // second call parses the same tile again
+        // second call won't give us new rawTileData
         let data = await source.reloadTile(tileParams as any as WorkerTileParameters) as WorkerTileWithData;
+        expect('rawTileData' in data).toBeFalsy();
+        data.rawTileData = firstData.rawTileData;
+        data.encoding = 'mvt';
         expect(data).toEqual(firstData);
 
         // also shouldn't call loadVectorData again
