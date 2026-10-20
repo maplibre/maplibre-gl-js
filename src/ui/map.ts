@@ -1614,7 +1614,7 @@ export class Map extends Evented<MapEventType> {
     resize(eventData?: any, constrainTransform = true): this {
         // Early out if the context is lost
         // causes a blank map otherwise
-        const isContextLost = this._lostContextStyle.style !== null;
+        const isContextLost = this._lostContextStyle.style !== null || this.painter.context.gl.isContextLost();
         if (isContextLost) return this;
         this._resizeInternal(constrainTransform);
 
