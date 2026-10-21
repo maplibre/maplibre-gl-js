@@ -75,7 +75,8 @@ export class DragPanHandler {
      */
     enable(options?: DragPanOptions | boolean): void {
         this._inertiaOptions = options || {};
-        this.bearing = typeof options === 'object' ? options.bearing ?? 'fixed' : 'fixed';
+        const enableOptions: DragPanOptions = typeof options === 'object' ? options : {};
+        this.bearing = enableOptions.bearing ?? 'fixed';
         this._mousePan.enable();
         this._touchPan.enable();
         this._el.classList.add('maplibregl-touch-drag-pan');

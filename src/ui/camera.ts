@@ -942,7 +942,7 @@ export class Camera extends Evented<MapEventType> {
      * Over terrain it holds the center elevation like the inertia of the other gestures (`freezeElevation`), and a
      * glide that isn't interrupted ends with {@link Camera.snapToNorth}, as the other gestures do.
      */
-    _glidePan(pan: Point, options: {duration: number; easing: (_: number) => number}, eventData?: Record<string, unknown>): void {
+    _glidePan(pan: Point, options: AnimationOptions, eventData?: Record<string, unknown>): void {
         this._stop(false);
         const tr = this.getTransformForUpdate();
         const currently = {moving: this._moving, rotating: this._rotating};
