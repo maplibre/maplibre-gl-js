@@ -7,8 +7,8 @@ import type {TouchPanHandler} from './../touch_pan.ts';
 export type DragPanOptions = {
     /**
      * Preserve bearing while dragging the globe. Set to false to allow free
-     * rotation across the poles. After a flick the globe glides on with the bearing it has
-     * and stops at a pole. Has no effect on Mercator panning.
+     * rotation across the poles, also while the globe glides on after a flick.
+     * Has no effect on Mercator panning.
      * @defaultValue true
      */
     fixedBearing?: boolean;

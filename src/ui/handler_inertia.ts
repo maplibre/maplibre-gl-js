@@ -45,6 +45,14 @@ export type InertiaOptions = {
 };
 
 /**
+ * The ease that carries a gesture on after it ends. A gesture that panned also gives its pan in pixels, for a drag
+ * with a free bearing that pans on instead of easing to `center`.
+ */
+export type InertialEase = EaseToOptions & {
+    pan?: Point;
+};
+
+/**
  * The maximum age of a recorded gesture update, in milliseconds.
  */
 const BUFFER_CUTOFF = 160;
@@ -115,7 +123,7 @@ export class HandlerInertia {
      * @returns the ease options, or `undefined` when the measured interval holds no
      * movement, which terrain gestures produce by recording updates without any delta
      */
-    _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): EaseToOptions {
+    _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): InertialEase {
         this._drainInertiaBuffer();
         const entries = this._getVelocityEntries();
         if (entries.length < 2) {
@@ -161,6 +169,7 @@ export class HandlerInertia {
             const computedEaseOptions = this._map._camera.cameraHelper.handlePanInertia(finalPan, this._map._camera.transform);
             easeOptions.center = computedEaseOptions.easingCenter;
             easeOptions.offset = computedEaseOptions.easingOffset;
+            easeOptions.pan = finalPan;
             extendDuration(easeOptions, result);
         }
 

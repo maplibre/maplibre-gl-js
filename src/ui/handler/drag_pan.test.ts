@@ -505,32 +505,39 @@ describe('drag_pan', () => {
         map.remove();
     });
 
-    test('DragPanHandler keeps the globe moving after a flick with fixedBearing false', async () => {
+    test('DragPanHandler glides the globe on over the pole after a flick with fixedBearing false', async () => {
+        const container = DOM.create('div', '', window.document.body);
+        Object.defineProperty(container, 'clientWidth', {value: 200});
+        Object.defineProperty(container, 'clientHeight', {value: 200});
         const map = new Map({
-            container: DOM.create('div', '', window.document.body),
+            container,
             style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}},
-            center: [0, 20],
+            center: [0, 70],
             dragPan: {fixedBearing: false},
         });
         await map.once('load');
 
         let time = 1000;
         setNow(time);
-        simulate.mousedown(map.getCanvas(), {buttons, clientX: 100, clientY: 100});
+        simulate.mousedown(map.getCanvas(), {buttons, clientX: 100, clientY: 80});
         map._renderTaskQueue.run();
-        for (let x = 110; x <= 150; x += 10) {
+        for (const clientY of [100, 120, 140]) {
             setNow(time += 16);
-            simulate.mousemove(map.getCanvas(), {buttons, clientX: x, clientY: 100});
+            simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY});
             map._renderTaskQueue.run();
         }
-        simulate.mouseup(map.getCanvas(), {clientX: 150, clientY: 100});
+        simulate.mouseup(map.getCanvas(), {clientX: 100, clientY: 140});
         map._renderTaskQueue.run();
-        const releasedLng = map.getCenter().lng;
+
+        expect(map.getCenter().lat).toBeLessThan(88);
+        expect(map.getCenter().lng).toBeCloseTo(0, 6);
 
         setNow(time += 5000);
         map._renderTaskQueue.run();
 
-        expect(map.getCenter().lng).toBeLessThan(releasedLng - 5);
+        expect(map.getCenter().lat).toBeLessThan(88);
+        expect(Math.abs(map.getCenter().lng)).toBeCloseTo(180, 6);
+        expect(Math.abs(map.getBearing())).toBeCloseTo(180, 6);
 
         restoreNow();
         map.remove();

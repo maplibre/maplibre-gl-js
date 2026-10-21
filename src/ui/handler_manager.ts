@@ -829,15 +829,21 @@ export class HandlerManager {
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
             const inertialEase = this._inertia._onMoveEnd(this._map.dragPan._inertiaOptions);
+            const freeGlobePan = this._camera.cameraHelper.useGlobeControls && !this._map.dragPan._fixedBearing;
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 
             if (inertialEase && (inertialEase.essential || !browser.prefersReducedMotion)) {
-                if (shouldSnapToNorth(inertialEase.bearing || this._map.getBearing())) {
-                    inertialEase.bearing = 0;
+                const {pan, ...ease} = inertialEase;
+                if (freeGlobePan && pan) {
+                    this._camera._glidePan(pan, {duration: ease.duration, easing: ease.easing}, {originalEvent: originalEndEvent});
+                } else {
+                    if (shouldSnapToNorth(ease.bearing || this._map.getBearing())) {
+                        ease.bearing = 0;
+                    }
+                    ease.freezeElevation = true;
+                    this._map.easeTo(ease, {originalEvent: originalEndEvent});
                 }
-                inertialEase.freezeElevation = true;
-                this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
                 this._fireEvent('moveend', originalEndEvent);
                 if (shouldSnapToNorth(this._map.getBearing())) {
