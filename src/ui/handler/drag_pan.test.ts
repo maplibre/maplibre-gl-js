@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
-import {beforeMapTest} from '../../util/test/util.ts';
+import {beforeMapTest, createMap as globalCreateMap} from '../../util/test/util.ts';
 import {restoreNow, setNow} from '../../util/time_control.ts';
 import {Map} from '../map.ts';
 
@@ -510,37 +510,23 @@ describe('drag_pan', () => {
     });
 
     test('DragPanHandler glides the globe on over the pole after a flick with a free bearing', async () => {
-        const container = DOM.create('div', '', window.document.body);
-        Object.defineProperty(container, 'clientWidth', {value: 200});
-        Object.defineProperty(container, 'clientHeight', {value: 200});
-        const map = new Map({
-            container,
-            style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}},
-            center: [0, 70],
-            dragPan: {bearing: 'free'},
-        });
+        const map = globalCreateMap({interactive: true, style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}, center: [0, 70], dragPan: {bearing: 'free'}});
         await map.once('load');
 
-        setNow(1000);
-        simulate.mousedown(map.getCanvas(), {buttons, clientX: 100, clientY: 80});
-        map._renderTaskQueue.run();
-        setNow(1016);
-        simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY: 100});
-        map._renderTaskQueue.run();
-        setNow(1032);
-        simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY: 120});
-        map._renderTaskQueue.run();
-        setNow(1048);
-        simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY: 140});
-        map._renderTaskQueue.run();
+        let now = 1000;
+        setNow(now);
+        simulate.dragInMoves(map.getCanvas(), [100, 80], [100, 140], 3, () => {
+            setNow(now += 16);
+            map.redraw();
+        });
         simulate.mouseup(map.getCanvas(), {clientX: 100, clientY: 140});
-        map._renderTaskQueue.run();
+        map.redraw();
 
         expect(map.getCenter().lat).toBeLessThan(88);
         expect(map.getCenter().lng).toBeCloseTo(0, 6);
 
-        setNow(6048);
-        map._renderTaskQueue.run();
+        setNow(now + 5000);
+        map.redraw();
 
         expect(map.getCenter().lat).toBeLessThan(88);
         expect(Math.abs(map.getCenter().lng)).toBeCloseTo(180, 6);
