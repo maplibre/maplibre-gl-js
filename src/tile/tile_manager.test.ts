@@ -8,6 +8,8 @@ import Point from '@mapbox/point-geometry';
 import {ErrorEvent, Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
 import {TileBounds} from './tile_bounds.ts';
+import {DEMData} from '../data/dem_data.ts';
+import {RGBAImage} from '../util/image.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap as globalCreateMap, createPolarStereographicCrs, sleep, waitForEvent} from '../util/test/util.ts';
 import {now, restoreNow, setNow} from '../util/time_control.ts';
@@ -209,6 +211,28 @@ describe('TileManager.addTile', () => {
 
         expect(updateFeaturesSpy).toHaveBeenCalledTimes(1);
 
+    });
+
+    test('fills a raster-dem tile\'s borders both ways when it comes back from the cache', () => {
+        const tileManager = createTileManager();
+        extend(tileManager._source, {type: 'raster-dem'});
+        const tr = createMercatorTransform();
+        tr.resize(512, 512);
+        tileManager.updateCacheSize(tr);
+
+        const back = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512), inView = new Tile(new OverscaledTileID(1, 0, 1, 1, 0), 512);
+        for (const [t, v, other] of [[back, 100, inView], [inView, 200, back]] as const) {
+            t.state = 'loaded';
+            t.dem = flatDEM(v);
+            t.neighboringTiles = {[other.tileID.key]: {backfilled: false}};
+        }
+        // its neighbour came into view (or changed) while it was out of view
+        tileManager._inViewTiles.setTile(inView.tileID.key, inView);
+        tileManager._outOfViewCache.add(back.tileID, back);
+
+        expect(tileManager._addTile(back.tileID)).toBe(back);
+        expect(back.dem.get(4, 0)).toBe(200);
+        expect(inView.dem.get(-1, 0)).toBe(100);
     });
 
     test('moves timers when adding tile from cache', () => {
@@ -2892,3 +2916,10 @@ describe('TileManager content elevation', () => {
             }
         });
 });
+
+// A DEM tile 4 pixels a side, all at height v (terrarium), its border (as constructed) its own edge
+function flatDEM(v: number): DEMData {
+    const size = 4 + 4, pixels = new Uint8Array(size * size * 4), h = v + 32768;
+    for (let i = 0; i < size * size; i++) pixels.set([Math.floor(h / 256), h % 256, 0, 255], i * 4);
+    return new DEMData(String(v), new RGBAImage({width: size, height: size}, pixels), 'terrarium');
+}
