@@ -7,8 +7,8 @@ import type {TouchPanHandler} from './../touch_pan.ts';
 export type DragPanOptions = {
     /**
      * How a drag on the globe treats the bearing. If `'fixed'` is passed, the bearing stays as it is and the center
-     * stops at a pole. If `'free'` is passed, the point under the pointer stays under it, so the globe rolls over a
-     * pole, also while it glides on after a flick, and the bearing turns with it. Has no effect in mercator.
+     * stops at a pole. If `'free'` is passed, the globe turns with the pointer like a ball, so the bearing changes on
+     * any drag and the globe rolls over a pole, also while it glides on after a flick. Has no effect in mercator.
      * @defaultValue 'fixed'
      */
     bearing?: 'fixed' | 'free';

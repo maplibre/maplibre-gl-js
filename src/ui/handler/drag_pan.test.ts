@@ -534,4 +534,34 @@ describe('drag_pan', () => {
 
         map.remove();
     });
+
+    test('DragPanHandler keeps the zoom inertia of a pinch that pans the globe with a free bearing', async () => {
+        const map = globalCreateMap({interactive: true, style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}, center: [0, 30], zoom: 3, dragPan: {bearing: 'free'}});
+        await map.once('load');
+        const target = map.getCanvas();
+
+        setNow(1000);
+        simulate.touchstart(target, {touches: [{target, identifier: 1, clientX: 70, clientY: 100}, {target, identifier: 2, clientX: 130, clientY: 100}]});
+        map.redraw();
+        setNow(1016);
+        simulate.touchmove(target, {touches: [{target, identifier: 1, clientX: 65, clientY: 105}, {target, identifier: 2, clientX: 145, clientY: 105}]});
+        map.redraw();
+        setNow(1032);
+        simulate.touchmove(target, {touches: [{target, identifier: 1, clientX: 60, clientY: 110}, {target, identifier: 2, clientX: 160, clientY: 110}]});
+        map.redraw();
+        setNow(1048);
+        simulate.touchmove(target, {touches: [{target, identifier: 1, clientX: 55, clientY: 115}, {target, identifier: 2, clientX: 175, clientY: 115}]});
+        map.redraw();
+        simulate.touchend(target, {touches: []});
+        map.redraw();
+
+        expect(map.getZoom()).toBeCloseTo(4, 1);
+
+        setNow(6048);
+        map.redraw();
+
+        expect(map.getZoom()).toBeCloseTo(6.5, 1);
+
+        map.remove();
+    });
 });

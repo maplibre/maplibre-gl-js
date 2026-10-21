@@ -45,8 +45,8 @@ export type InertiaOptions = {
 };
 
 /**
- * The ease that carries a gesture on after it ends. A gesture that panned also gives its pan in pixels, for a drag
- * with a free bearing that pans on instead of easing to `center`.
+ * The ease that carries a gesture on after it ends. A gesture that only panned also gives its pan in pixels, for a
+ * drag with a free bearing that pans on instead of easing to `center`.
  */
 type InertialEase = EaseToOptions & {
     pan?: Point;
@@ -169,7 +169,7 @@ export class HandlerInertia {
             const computedEaseOptions = this._map._camera.cameraHelper.handlePanInertia(finalPan, this._map._camera.transform);
             easeOptions.center = computedEaseOptions.easingCenter;
             easeOptions.offset = computedEaseOptions.easingOffset;
-            easeOptions.pan = finalPan;
+            if (!deltas.zoom && !deltas.bearing && !deltas.pitch && !deltas.roll) easeOptions.pan = finalPan;
             extendDuration(easeOptions, result);
         }
 
