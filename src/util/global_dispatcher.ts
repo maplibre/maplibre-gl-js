@@ -57,7 +57,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private workersAbortController: AbortController | undefined;
     private workerPool: WorkerPool;
     private watchingHealth = false;
-    private healthCheckInFlight = false;
+    private healthCheckPromise: Promise<void> | undefined;
 
     /**
      * Workers created before construction, e.g. by prewarm() before this module evaluated, fired
@@ -163,15 +163,24 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     watchHealth(): void {
         if (this.watchingHealth || typeof document === 'undefined') return;
         this.watchingHealth = true;
-        document.addEventListener('visibilitychange', async () => {
-            if (document.visibilityState !== 'visible' || this.healthCheckInFlight) return;
-            this.healthCheckInFlight = true;
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') this.ensureWorkers();
+        }, false);
+    }
+
+    /**
+     * Restarts the workers if they don't answer a ping, for apps that learn of a return to the
+     * foreground some other way. Calls made while a check is running share that check.
+     */
+    ensureWorkers(): Promise<void> {
+        this.healthCheckPromise ??= (async () => {
             try {
                 if (!await this.ping()) this.workerPool.restart();
             } finally {
-                this.healthCheckInFlight = false;
+                this.healthCheckPromise = undefined;
             }
-        }, false);
+        })();
+        return this.healthCheckPromise;
     }
 
     /**
