@@ -11,7 +11,7 @@ import type {MessageType, RequestResponseMessageMap} from './actor_messages.ts';
 export class Dispatcher extends Evented<ErrorEventType> {
     workerPool: WorkerPool;
     actors: Actor[];
-    actorsPromise: Promise<Actor[]>;
+    private actorsPromise: Promise<Actor[]>;
     currentActor: number;
     id: string | number;
     private removed: boolean;

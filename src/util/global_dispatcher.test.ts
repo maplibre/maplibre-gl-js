@@ -17,7 +17,7 @@ describe('global dispatcher', () => {
         const globalWorkersCreated = vi.fn();
         getGlobalDispatcher().on('workersCreated', globalWorkersCreated);
 
-        await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
+        await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
 
         expect(globalWorkersCreated).toHaveBeenCalled();
     });
@@ -37,12 +37,12 @@ describe('global dispatcher', () => {
 
     test('a message handler registered on the global dispatcher comes back with the new workers', async () => {
         const handler = vi.fn();
-        await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
+        await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
         await getGlobalDispatcher().registerMessageHandler('my-plugin-message', handler);
         terminateGlobalWorkers();
         const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
 
-        await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
+        await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
 
         expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
     });
@@ -122,7 +122,7 @@ describe('importScript', () => {
         terminateGlobalWorkers();
         sendSpy.mockClear();
 
-        await new Dispatcher(getGlobalWorkerPool(), 1).actorsPromise;
+        await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
 
         expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'});
     });
