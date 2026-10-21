@@ -56,8 +56,8 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private actorsPromise: Promise<Actor[]> | undefined;
     private workersAbortController: AbortController | undefined;
     private workerPool: WorkerPool;
-    private watchingHealth = false;
-    private healthCheckPromise: Promise<void> | undefined;
+    private watchingWorkers = false;
+    private ensureWorkersPromise: Promise<void> | undefined;
 
     /**
      * Builds actors on the pool's workers as soon as they exist, including workers started before
@@ -163,16 +163,16 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     }
 
     /**
-     * Checks worker health on every return to the foreground, restarting the workers if the browser
+     * Pings the workers on every return to the foreground, restarting them if the browser
      * terminated them while the page was hidden, as iOS does under memory pressure. Browsers fire no
-     * event for the termination, so the health check is the only way to notice it. Each map then
+     * event for the termination, so the ping is the only way to notice it. Each map then
      * recovers through the same contract as a lost WebGL context, see `Map._handleWorkersRestarted`.
      */
-    watchHealth(): void {
-        if (this.watchingHealth || typeof document === 'undefined') return;
-        this.watchingHealth = true;
+    watchWorkers(): void {
+        if (this.watchingWorkers || typeof document === 'undefined') return;
+        this.watchingWorkers = true;
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') this.checkHealth();
+            if (document.visibilityState === 'visible') this.ensureWorkers();
         }, false);
     }
 
@@ -180,16 +180,16 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      * Restarts the workers if they don't answer a ping, for apps that learn of a return to the
      * foreground some other way. Calls made while a check is running share that check.
      */
-    checkHealth(): Promise<void> {
-        this.healthCheckPromise ??= this.restartIfUnresponsive();
-        return this.healthCheckPromise;
+    ensureWorkers(): Promise<void> {
+        this.ensureWorkersPromise ??= this.ensureWorkersInternal();
+        return this.ensureWorkersPromise;
     }
 
-    private async restartIfUnresponsive(): Promise<void> {
+    private async ensureWorkersInternal(): Promise<void> {
         try {
             if (!await this.ping()) await this.workerPool.restart();
         } finally {
-            this.healthCheckPromise = undefined;
+            this.ensureWorkersPromise = undefined;
         }
     }
 

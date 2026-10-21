@@ -119,7 +119,7 @@ describe('GlobalDispatcher', () => {
         await getGlobalWorkerPool().acquire('map-1');
         vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockReturnValue(new Promise(() => {}));
         const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
-        getGlobalDispatcher().watchHealth();
+        getGlobalDispatcher().watchWorkers();
 
         vi.useFakeTimers();
         document.dispatchEvent(new Event('visibilitychange'));
@@ -130,7 +130,7 @@ describe('GlobalDispatcher', () => {
 
     test('restarts nothing when the page returns to the foreground with no workers', async () => {
         const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
-        getGlobalDispatcher().watchHealth();
+        getGlobalDispatcher().watchWorkers();
 
         vi.useFakeTimers();
         document.dispatchEvent(new Event('visibilitychange'));
