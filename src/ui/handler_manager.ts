@@ -834,7 +834,7 @@ export class HandlerManager {
             if (inertialEase && (inertialEase.essential || !browser.prefersReducedMotion)) {
                 const {pan, ...ease} = inertialEase;
                 if (pan && this._camera.cameraHelper.panTurnsBearing(this._map.dragPan.bearing)) {
-                    this._camera._glidePan(pan, ease, {originalEvent: originalEndEvent});
+                    this._camera.glidePan(pan, ease, {originalEvent: originalEndEvent});
                 } else {
                     if (shouldSnapToNorth(ease.bearing || this._map.getBearing())) {
                         ease.bearing = 0;

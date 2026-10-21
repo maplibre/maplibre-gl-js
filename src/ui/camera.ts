@@ -940,7 +940,7 @@ export class Camera extends Evented<MapEventType> {
      * Keeps a drag with a free bearing going after it ends, moving the map on by `pan` in steps through the camera
      * helper's pan, so a globe glides over a pole. Holds the center elevation over terrain like other inertia.
      */
-    _glidePan(pan: Point, options: AnimationOptions, eventData?: Record<string, unknown>): void {
+    glidePan(pan: Point, options: AnimationOptions, eventData?: Record<string, unknown>): void {
         this._stop(false);
         const tr = this.getTransformForUpdate();
         const startBearing = tr.bearing;
