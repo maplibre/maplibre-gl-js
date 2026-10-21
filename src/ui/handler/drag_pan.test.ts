@@ -564,4 +564,26 @@ describe('drag_pan', () => {
 
         map.remove();
     });
+
+    test('DragPanHandler keeps the bearing a slow drag with a free bearing leaves near north', async () => {
+        const map = globalCreateMap({interactive: true, style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}, center: [0, 40], zoom: 0, dragPan: {bearing: 'free'}});
+        await map.once('load');
+
+        let now = 1000;
+        setNow(now);
+        simulate.dragInMoves(map.getCanvas(), [100, 100], [110, 125], 3, () => {
+            setNow(now += 16);
+            map.redraw();
+        });
+        setNow(now + 500);
+        map.redraw();
+        simulate.mouseup(map.getCanvas(), {clientX: 110, clientY: 125});
+        map.redraw();
+        setNow(now + 5500);
+        map.redraw();
+
+        expect(map.getBearing()).toBeCloseTo(-6.75, 2);
+
+        map.remove();
+    });
 });

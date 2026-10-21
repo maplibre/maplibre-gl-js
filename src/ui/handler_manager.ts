@@ -828,8 +828,9 @@ export class HandlerManager {
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
             const inertialEase = this._inertia._onMoveEnd(this._map.dragPan._inertiaOptions);
+            const freePanEnded = 'dragend' in endEvents && this._camera.cameraHelper.panTurnsBearing(this._map.dragPan.bearing);
 
-            const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
+            const shouldSnapToNorth = bearing => !freePanEnded && bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 
             if (inertialEase && (inertialEase.essential || !browser.prefersReducedMotion)) {
                 const {pan, ...ease} = inertialEase;

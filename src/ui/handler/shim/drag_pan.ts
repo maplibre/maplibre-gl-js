@@ -8,7 +8,9 @@ export type DragPanOptions = {
     /**
      * How a drag on the globe treats the bearing. If `'fixed'` is passed, the bearing stays as it is and the center
      * stops at a pole. If `'free'` is passed, the globe turns with the pointer like a ball, so the bearing changes on
-     * any drag and the globe rolls over a pole, also while it glides on after a flick. Has no effect in mercator.
+     * any drag and the globe rolls over a pole, also while it glides on after a flick. The map keeps the bearing a free
+     * drag leaves, without `bearingSnap`, so after a pole crossing it stays upside down until it is turned back, for
+     * example with the compass. Has no effect in mercator.
      * @defaultValue 'fixed'
      */
     bearing?: 'fixed' | 'free';
