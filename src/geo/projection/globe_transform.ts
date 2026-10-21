@@ -12,7 +12,7 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, NearFarZ, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -216,10 +216,13 @@ export class GlobeTransform implements ITransform {
         return this._helper.constrainOverride;
     }
     public get nearZ(): number {
-        return this._helper.nearZ;
+        return this.currentTransform.nearZ;
     }
     public get farZ(): number {
-        return this._helper.farZ;
+        return this.currentTransform.farZ;
+    }
+    public get nearFarZOverride(): NearFarZ | null {
+        return this._helper.nearFarZOverride;
     }
     public get autoCalculateNearFarZ(): boolean {
         return this._helper.autoCalculateNearFarZ;
@@ -327,16 +330,17 @@ export class GlobeTransform implements ITransform {
     }
 
     /**
-     * Both children write their near/far Z into the shared helper, so the order here is what keeps the two render
-     * paths at the same depth across the globe-to-mercator transition: vertical perspective computes the globe's Z
-     * first, and while the globe is rendering mercator is made to reuse that result instead of computing its own.
+     * Vertical perspective computes its depth range first, and while the globe is rendering, mercator uses that range
+     * instead of its own, which keeps the two render paths at the same depth across the globe-to-mercator transition.
      */
     private _calcMatrices(): void {
-        if (!this._helper._width || !this._helper._height) {
+        if (!this._helper.width || !this._helper.height) {
             return;
         }
-        this._verticalPerspectiveTransform._calcMatrices();
-        this._mercatorTransform._calcMatrices(this.autoCalculateNearFarZ && !this.isGlobeRendering);
+        const verticalPerspective = this._verticalPerspectiveTransform;
+        verticalPerspective._calcMatrices();
+        const nearFarZ = this.isGlobeRendering ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : this._helper.nearFarZOverride;
+        this._mercatorTransform._calcMatrices(nearFarZ);
     }
 
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {

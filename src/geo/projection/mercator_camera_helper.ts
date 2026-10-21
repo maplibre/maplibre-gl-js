@@ -129,7 +129,7 @@ export class MercatorCameraHelper implements ICameraHelper {
                 const speedup = Math.pow(base, 1 - k);
                 const newCenterWorld = from.add(delta.mult(k * speedup)).mult(scale);
                 const newCenter = unprojectFromWorldCoordinates(tr.worldSize, newCenterWorld, worldCoordinateHelper);
-                tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+                tr.setLocationAtPoint(tr.renderWorldCopies && worldCoordinateHelper.wraps ? newCenter.wrap() : newCenter, pointAtOffset);
             }
         };
 
@@ -182,7 +182,7 @@ export class MercatorCameraHelper implements ICameraHelper {
             const newCenter = k === 1
                 ? constrainedCenter
                 : unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)), worldCoordinateHelper);
-            tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+            tr.setLocationAtPoint(tr.renderWorldCopies && worldCoordinateHelper.wraps ? newCenter.wrap() : newCenter, pointAtOffset);
         };
 
         const endTransform = this._transformAtAnimationEnd(tr, targetZoom, {roll: options.roll, pitch: options.pitch, bearing: options.bearing}, options.padding);

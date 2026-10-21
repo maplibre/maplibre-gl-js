@@ -64,6 +64,22 @@ describe('GlobeTransform', () => {
         });
     });
 
+    test('uses the overridden depth range until the override is cleared', () => {
+        const globeTransform = createDefaultTransform();
+
+        globeTransform.overrideNearFarZ(5, 500);
+
+        expect(globeTransform.autoCalculateNearFarZ).toBe(false);
+        expect(globeTransform.nearZ).toBe(5);
+        expect(globeTransform.farZ).toBe(500);
+
+        globeTransform.clearNearFarZOverride();
+
+        expect(globeTransform.autoCalculateNearFarZ).toBe(true);
+        expect(globeTransform.nearZ).toBe(0.5);
+        expect(globeTransform.farZ).toBe(742.3859166956437);
+    });
+
     describe('getProjectionData', () => {
         const globeTransform = createDefaultTransform();
         test('mercator tile extents are set', () => {

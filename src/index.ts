@@ -36,7 +36,7 @@ import {type GlobalDispatcher, type GlobalDispatcherEventType, type CustomMessag
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
 import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
-import {DragRotateHandler} from './ui/handler/shim/drag_rotate.ts';
+import {DragRotateHandler, type DragRotateOptions} from './ui/handler/shim/drag_rotate.ts';
 import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan.ts';
 import {ScrollZoomHandler} from './ui/handler/scroll_zoom.ts';
 import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch.ts';
@@ -319,6 +319,7 @@ export {
     type ImageSourceImage,
     type UpdateImageOptions,
     type DragPanOptions,
+    type DragRotateOptions,
     type FullscreenControlOptions,
     type GetClusterOptions,
     type SetClusterOptions,
