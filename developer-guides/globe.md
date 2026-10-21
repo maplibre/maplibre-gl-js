@@ -213,8 +213,12 @@ Thus this behavior is slowly faded out at low zooms and replaced with an approxi
 
 There are also other edge cases, such as when looking at the planet's poles
 and trying to zoom in to a location that is on the other hemisphere ("behind the pole").
-MapLibre does not support moving the camera across poles, so instead we need to rotate around.
+Zooming does not move the camera across poles, so instead we need to rotate around.
 In this case, an approximation instead of exact zooming is used as well.
 
 Globe controls also use panning inertia, just like mercator.
 Special care was taken to keep the movement speed of inertia consistent.
+
+With `dragPan: {bearing: 'free'}` a drag turns the globe like a ball instead of keeping the bearing,
+so it moves the camera across the poles and the bearing changes with it.
+Its inertia continues the same rotation in `Camera.glidePan`, holding the center elevation over terrain like other inertia.
