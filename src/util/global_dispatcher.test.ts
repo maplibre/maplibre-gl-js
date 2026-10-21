@@ -109,15 +109,17 @@ describe('GlobalDispatcher', () => {
     });
 
     test('reports workers that never answer the ping as dead', async () => {
-        await getGlobalWorkerPool().acquire('map-1');
-        vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockReturnValue(new Promise(() => {}));
+        for (const worker of await getGlobalWorkerPool().acquire('map-1')) {
+            vi.spyOn(worker, 'postMessage').mockImplementation(() => {});
+        }
 
         await expect(getGlobalDispatcher().ping(1)).resolves.toBe(false);
     });
 
     test('restarts dead workers when the page returns to the foreground', async () => {
-        await getGlobalWorkerPool().acquire('map-1');
-        vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockReturnValue(new Promise(() => {}));
+        for (const worker of await getGlobalWorkerPool().acquire('map-1')) {
+            vi.spyOn(worker, 'postMessage').mockImplementation(() => {});
+        }
         const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
         getGlobalDispatcher().watchWorkers();
 
