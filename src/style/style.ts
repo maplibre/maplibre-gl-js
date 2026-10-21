@@ -128,7 +128,7 @@ export type StyleSetterOptions = {
 };
 
 /**
- * Part of {@link Map.setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
+ * Part of {@link MapOptions.transformStyle} and {@link Map.setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
  *
  * This function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
  *
@@ -1957,7 +1957,7 @@ export class Style extends Evented<MapEventType> {
                     .sort((a, b) => (b.tileID.overscaledZ - a.tileID.overscaledZ) || (a.tileID.isLessThan(b.tileID) ? -1 : 1));
             }
 
-            const layerBucketsChanged = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.center.lng);
+            const layerBucketsChanged = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.worldCoordinateHelper.wraps ? transform.center.lng : 0);
             symbolBucketsChanged ||= layerBucketsChanged;
         }
         this.crossTileSymbolIndex.pruneUnusedLayers(this._order);

@@ -38,6 +38,11 @@ export interface WorldCoordinateHelper {
      */
     lngLatFromWorld(x: number, y: number): LngLat;
     /**
+     * Whether a world square position has a lng/lat of its own: everywhere for mercator, and for a planar CRS
+     * wherever its inverse answers, which past the edge of a world projection it does not.
+     */
+    hasLngLat(x: number, y: number): boolean;
+    /**
      * Meters per world unit at a world position (mercator: the circumference at that latitude; planar: constant, arguments ignored).
      * Takes the world position because the camera-to-center iteration only has one; it avoids a lng/lat object per step.
      */
@@ -80,6 +85,15 @@ export type TransformConstrainFunction =  (
 ) => {
     center: LngLat;
     zoom: number;
+};
+
+/**
+ * @internal
+ * The depth range of a projection matrix, from the near to the far clipping plane.
+ */
+export type NearFarZ = {
+    readonly nearZ: number;
+    readonly farZ: number;
 };
 
 export interface ITransformGetters {
@@ -157,8 +171,10 @@ export interface ITransformGetters {
      */
     get cameraToCenterDistance(): number;
 
-    get nearZ(): number;
-    get farZ(): number;
+    /**
+     * The depth range set with {@link ITransform.overrideNearFarZ}, or null while each projection computes its own.
+     */
+    get nearFarZOverride(): NearFarZ | null;
     get autoCalculateNearFarZ(): boolean;
 
     get constrainOverride(): TransformConstrainFunction;
@@ -316,6 +332,14 @@ export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: numb
  */
 export interface IReadonlyTransform extends ITransformGetters {
     /**
+     * The near clipping plane of the projection matrix, computed by the projection unless overridden.
+     */
+    get nearZ(): number;
+    /**
+     * The far clipping plane of the projection matrix, computed by the projection unless overridden.
+     */
+    get farZ(): number;
+    /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.
      * Center is considered to be in the middle of the viewport.
@@ -448,7 +472,8 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * @internal
      * Returns whether the specified screen point lies on the map.
-     * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled.
+     * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled,
+     * or if it lies where a projection registered with {@link addProjection} has no lng/lat, such as past the edge of a world projection.
      * @param p - The point's coordinates.
      * @param terrain - Optional terrain.
      */

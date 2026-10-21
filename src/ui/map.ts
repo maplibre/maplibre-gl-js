@@ -6,7 +6,7 @@ import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
-import {Style, type StyleSwapOptions} from '../style/style.ts';
+import {Style, type StyleSwapOptions, type TransformStyleFunction} from '../style/style.ts';
 import {validateStyle, validateAndEmit} from '../style/validate_style.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {Painter} from '../render/painter.ts';
@@ -46,7 +46,7 @@ import type {PointLike} from './camera.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
 import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom.ts';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch.ts';
-import type {DragRotateHandler} from './handler/shim/drag_rotate.ts';
+import type {DragRotateHandler, DragRotateOptions} from './handler/shim/drag_rotate.ts';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan.ts';
 import type {CooperativeGesturesHandler, GestureOptions} from './handler/cooperative_gestures.ts';
 import type {KeyboardHandler} from './handler/keyboard.ts';
@@ -187,10 +187,10 @@ export type MapOptions = {
      */
     boxZoom?: boolean | BoxZoomHandlerOptions;
     /**
-     * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
+     * If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}). An `Object` value is passed as options to {@link DragRotateHandler.enable}.
      * @defaultValue true
      */
-    dragRotate?: boolean;
+    dragRotate?: boolean | DragRotateOptions;
     /**
      * If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler.enable}.
      * @defaultValue true
@@ -392,6 +392,10 @@ export type MapOptions = {
      */
     globalState?: Record<string, any>;
     /**
+     * TransformStyleFunction is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}. Subsequent calls to {@link Map.setStyle} will use the same transform if the {@link StyleSwapOptions.transformStyle} option is not set.
+     */
+    transformStyle?: TransformStyleFunction;
+    /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
      * A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
@@ -445,6 +449,9 @@ export type MapOptions = {
      *   rotates counter-clockwise (like spinning a physical globe).
      * - When false: Uses "Linear" logic where horizontal mouse movement translates directly
      *   to bearing change regardless of cursor position.
+     *
+     * @deprecated Use {@link MapOptions.dragRotate} instead, with `{around: 'center', movement: 'circular'}` for `true`
+     * and `{around: 'center', movement: 'linear'}` for `false`. Its `movement` takes precedence over this option when both are passed.
      */
     aroundCenter?: boolean;
 };
@@ -555,6 +562,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     reduceMotion: undefined,
     validateStyle: true,
     globalState: undefined,
+    transformStyle: undefined,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     cancelPendingTileRequestsWhileZooming: true,
@@ -641,6 +649,7 @@ export class Map extends Evented<MapEventType> {
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _initialGlobalState: Record<string, any>;
+    _transformStyle: TransformStyleFunction | undefined;
     _styleUrl: string | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
@@ -868,6 +877,7 @@ export class Map extends Evented<MapEventType> {
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
         this._initialGlobalState = resolvedOptions.globalState;
+        this._transformStyle = resolvedOptions.transformStyle;
 
         if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
@@ -1642,8 +1652,9 @@ export class Map extends Evented<MapEventType> {
         this.painter.resize(width, height, this._clampedPixelRatio);
 
         // check if we've reached GL limits, in that case further clamps pixelRatio
-        if (this.painter.overLimit()) {
-            const gl = this.painter.context.gl;
+        // a lost context reports a 0x0 drawing buffer, which is not a real limit
+        const gl = this.painter.context.gl;
+        if (!gl.isContextLost() && this.painter.overLimit()) {
             // store updated _maxCanvasSize value
             this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
             this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
@@ -1745,7 +1756,7 @@ export class Map extends Evented<MapEventType> {
      * as close as possible to the operation's request while still
      * remaining within the bounds.
      *
-     * @param bounds - The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
+     * @param bounds - The maximum bounds to set. Use `-Infinity` and `Infinity` for an unconstrained longitude range, with finite latitude limits. Pass `null` or `undefined` to remove all bounds.
      * @example
      * Define bounds that conform to the `LngLatBoundsLike` object as set the max bounds.
      * ```ts
@@ -2703,6 +2714,7 @@ export class Map extends Evented<MapEventType> {
                 localIdeographFontFamily: this._localIdeographFontFamily,
                 validate: this._validateStyle,
                 globalState: this._initialGlobalState,
+                transformStyle: this._transformStyle,
             }, options);
         this._styleUrl = typeof style === 'string' ? style : null;
 
