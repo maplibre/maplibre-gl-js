@@ -13,7 +13,7 @@ describe('global dispatcher', () => {
         terminateGlobalWorkers();
     });
 
-    test('creating a map dispatcher notifies the listeners that new global workers exist', async () => {
+    test('fires workersCreated when a map creates the workers', async () => {
         const globalWorkersCreated = vi.fn();
         getGlobalDispatcher().on('workersCreated', globalWorkersCreated);
 
