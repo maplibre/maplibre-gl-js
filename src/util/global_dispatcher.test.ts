@@ -23,6 +23,18 @@ describe('GlobalDispatcher', () => {
         expect(workersCreateListener).toHaveBeenCalledTimes(1);
     });
 
+    test('fires workersterminate after dropping the actors on the terminated workers', async () => {
+        await getGlobalWorkerPool().acquire('map-1');
+        let broadcastPromise: Promise<void[]>;
+        getGlobalDispatcher().once('workersterminate', () => {
+            broadcastPromise = getGlobalDispatcher().broadcast(MessageType.ping, undefined);
+        });
+
+        getGlobalWorkerPool().restart();
+
+        await expect(broadcastPromise).resolves.toHaveLength(WorkerPool.workerCount);
+    });
+
     test('broadcasts to new workers after the old ones terminate', async () => {
         const globalDispatcher = getGlobalDispatcher();
         await getGlobalWorkerPool().acquire('map-1');

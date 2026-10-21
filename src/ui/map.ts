@@ -756,7 +756,7 @@ export class Map extends Evented<MapEventType> {
     constructor(options: MapOptions) {
         super();
         const globalDispatcher = getGlobalDispatcher();
-        globalDispatcher.on('workerscreate', this._handleWorkersCreated);
+        globalDispatcher.on('workersterminate', this._handleWorkersTerminated);
         globalDispatcher.watchHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
@@ -4315,16 +4315,16 @@ export class Map extends Evented<MapEventType> {
     };
 
     /**
-     * Rebuilds the style after `WorkerPool.restart` replaces the workers, which then hold none of this map's state.
+     * Rebuilds the style when `WorkerPool.restart` terminates the workers, which take this map's state with them.
      * Assumes apps treat a worker restart like a WebGL context loss: it fires synthetic `webglcontextlost` and
      * `webglcontextrestored` events, so the custom layers and feature state the rebuild drops get re-added by the
      * same listeners. A style still loading is rebuilt once it loads.
      */
-    private _handleWorkersCreated = (): void => {
+    private _handleWorkersTerminated = (): void => {
         if (!this.style) return;
         if (!this.style._loaded) {
-            this.style.off('style.load', this._handleWorkersCreated);
-            this.style.once('style.load', this._handleWorkersCreated);
+            this.style.off('style.load', this._handleWorkersTerminated);
+            this.style.once('style.load', this._handleWorkersTerminated);
             return;
         }
 
@@ -4610,7 +4610,7 @@ export class Map extends Evented<MapEventType> {
         this._diffStyleRequest?.abort();
         this.painter.destroy();
         this._handlers.destroy();
-        getGlobalDispatcher().off('workerscreate', this._handleWorkersCreated);
+        getGlobalDispatcher().off('workersterminate', this._handleWorkersTerminated);
         this.setStyle(null);
         if (typeof window !== 'undefined') {
             this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);

@@ -26,6 +26,8 @@ export type GlobalDispatcherEventType = {
      * ```
      */
     workerscreate: Event;
+    /** Fires each time the global workers are terminated, after the dispatcher drops its actors on them. */
+    workersterminate: Event;
     error: ErrorEvent;
 };
 
@@ -70,8 +72,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     }
 
     private handleWorkersCreated(): void {
-        this.workersAbortController = new AbortController();
-        this.actorsPromise = this.buildActors(this.workersAbortController.signal);
+        this.getActors();
         for (const url of this.importedScriptUrls) {
             (async () => {
                 try {
@@ -87,11 +88,16 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private handleWorkersTerminated(): void {
         this.workersAbortController?.abort(new Error('The workers were terminated while a message was in flight.'));
         this.actorsPromise = undefined;
+        this.fire('workersterminate');
     }
 
-    /** Returns the actors, creating the workers on first use. Relies on `start` firing `create` before it returns. */
+    /** Returns the actors, creating the workers and the actors on first use. */
     private getActors(): Promise<Actor[]> {
         if (!this.workerPool.isStarted()) this.workerPool.start();
+        if (!this.actorsPromise) {
+            this.workersAbortController = new AbortController();
+            this.actorsPromise = this.buildActors(this.workersAbortController.signal);
+        }
         return this.actorsPromise;
     }
 
@@ -152,7 +158,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      * Checks worker health on every return to the foreground, restarting the workers if the browser
      * terminated them while the page was hidden, as iOS does under memory pressure. Browsers fire no
      * event for the termination, so the health check is the only way to notice it. Each map then
-     * recovers through the same contract as a lost WebGL context, see `Map._handleWorkersCreated`.
+     * recovers through the same contract as a lost WebGL context, see `Map._handleWorkersTerminated`.
      */
     watchHealth(): void {
         if (this.watchingHealth || typeof document === 'undefined') return;
