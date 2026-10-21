@@ -280,11 +280,6 @@ export class Actor implements IActor {
     }
 }
 
-/** Sends a message to every actor and collects the responses. */
-export function broadcastToActors<T extends MessageType>(actors: Actor[], type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>> {
-    return Promise.all(actors.map(actor => actor.sendAsync({type, data})));
-}
-
 /** Builds a named actor per worker and reports worker errors to `errorTarget`. */
 export function createActors(workers: ActorTarget[], mapId: string | number, errorTarget: Evented<ErrorEventType>): {actors: Actor[]; workerErrorSubscriptions: Subscription[]} {
     const workerErrorSubscriptions = workers.map(worker => subscribe(worker, 'error', () => {

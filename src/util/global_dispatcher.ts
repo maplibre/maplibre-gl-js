@@ -1,4 +1,4 @@
-import {broadcastToActors, createActors} from './actor.ts';
+import {createActors} from './actor.ts';
 import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
@@ -121,7 +121,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
     async broadcast(type: string, data: any): Promise<unknown[]> {
         const actors = await this.getActors();
-        return broadcastToActors(actors, type as MessageType, data);
+        return Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data})));
     }
 
     /**

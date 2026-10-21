@@ -1,4 +1,4 @@
-import {type Actor, broadcastToActors, createActors, type MessageHandler} from './actor.ts';
+import {type Actor, createActors, type MessageHandler} from './actor.ts';
 import {Evented, type ErrorEventType} from './evented.ts';
 
 import type {Subscription} from './util.ts';
@@ -43,7 +43,7 @@ export class Dispatcher extends Evented<ErrorEventType> {
      */
     async broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>> {
         const actors = await this.actorsPromise;
-        return broadcastToActors(actors, type, data);
+        return Promise.all(actors.map(actor => actor.sendAsync({type, data})));
     }
 
     /**
