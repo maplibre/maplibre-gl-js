@@ -212,3 +212,67 @@ test('Hit WebGL max drawing buffer limit', () => {
     // Check if maxCanvasSize is updated
     expect(map._maxCanvasSize).toEqual([7536, 4239]);
 });
+
+test('keeps the canvas size after a resize lands before "webglcontextlost" is dispatched', async () => {
+    const container = window.document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', {value: 400});
+    Object.defineProperty(container, 'clientHeight', {value: 300});
+    const map = createMap({container, pixelRatio: 2});
+    const canvas = map.getCanvas();
+    const gl = map.painter.context.gl;
+    vi.spyOn(gl, 'isContextLost').mockReturnValue(true);
+    vi.spyOn(gl, 'drawingBufferWidth', 'get').mockReturnValue(0);
+    vi.spyOn(gl, 'drawingBufferHeight', 'get').mockReturnValue(0);
+    map.resize();
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+    vi.restoreAllMocks();
+
+    const contextRestoredPromise = map.once('webglcontextrestored');
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    await contextRestoredPromise;
+
+    expect(canvas.width).toBe(800);
+    expect(canvas.height).toBe(600);
+    map.remove();
+});
+
+test('keeps the canvas size when the context is lost again while it is restored', async () => {
+    const container = window.document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', {value: 400});
+    Object.defineProperty(container, 'clientHeight', {value: 300});
+    const map = createMap({container, pixelRatio: 2});
+    const canvas = map.getCanvas();
+
+    let contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+
+    // the restore creates a new gl context, which is lost again right away
+    HTMLCanvasElement.prototype.getContext = function (...args) {
+        const gl = originalGetContext.apply(this, args);
+        vi.spyOn(gl, 'isContextLost').mockReturnValue(true);
+        vi.spyOn(gl, 'drawingBufferWidth', 'get').mockReturnValue(0);
+        vi.spyOn(gl, 'drawingBufferHeight', 'get').mockReturnValue(0);
+        return gl;
+    };
+    let contextRestoredPromise = map.once('webglcontextrestored');
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    await contextRestoredPromise;
+
+    contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+    vi.restoreAllMocks();
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+
+    contextRestoredPromise = map.once('webglcontextrestored');
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+    await contextRestoredPromise;
+
+    expect(canvas.width).toBe(800);
+    expect(canvas.height).toBe(600);
+    map.remove();
+});
