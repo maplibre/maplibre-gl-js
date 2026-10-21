@@ -761,6 +761,11 @@ export class TileManager extends Evented<SourceEventType> {
 
         tile.uses++;
         this._inViewTiles.setTile(tileID.key, tile);
+        // back from the out-of-view cache: its neighbours in view may have changed while it was away (or it was
+        // loaded straight into the cache, never filled from them)
+        if (cached?.dem && this.getSource().type === 'raster-dem') {
+            backfillDEM(cached, this._inViewTiles);
+        }
         if (!cached) {
             this._source.fire(new MapSourceDataEvent('dataloading', {tile, coord: tile.tileID}));
         }

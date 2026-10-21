@@ -2,7 +2,12 @@ import type {Tile} from './tile.ts';
 import type {InViewTiles} from './tile_manager_in_view_tiles.ts';
 
 /**
- * For raster terrain source, backfill DEM to eliminate visible tile boundaries
+ * For raster terrain source, backfill DEM to eliminate visible tile boundaries.
+ *
+ * Called when `tile` has new DEM data (a load or reload) or comes back into view from the out-of-view cache, so the
+ * borders are filled both ways every time: a `backfilled` mark says a border was filled once, not that it holds the
+ * neighbour's current data. Skipping on it left a reloaded tile's neighbours with its old edge, and a tile whose
+ * neighbour landed while it was reloading with the old data's border.
  */
 export function backfillDEM(tile: Tile, inViewTiles: InViewTiles): void {
     const renderables = inViewTiles.getRenderableIds();
@@ -11,12 +16,7 @@ export function backfillDEM(tile: Tile, inViewTiles: InViewTiles): void {
             continue;
         }
         const borderTile = inViewTiles.getTileById(borderId);
-        if (!tile.neighboringTiles[borderId].backfilled) {
-            fillBorder(tile, borderTile);
-        }
-        if (borderTile.neighboringTiles?.[tile.tileID.key]?.backfilled) {
-            continue;
-        }
+        fillBorder(tile, borderTile);
         fillBorder(borderTile, tile);
     }
 }
