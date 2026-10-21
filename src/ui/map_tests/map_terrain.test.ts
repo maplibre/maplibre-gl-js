@@ -1664,6 +1664,23 @@ describe('Terrain changing under and around a gesture', () => {
         expect(cameraMoveAfterRelease).toBeLessThan(0.01);
     });
 
+    test('a flick on the globe with a free bearing holds the center elevation while it glides and puts the center on the terrain at its end', async () => {
+        const slopeRisingWest: TerrainHeight = (lng) => 2000 - 1000 * lng;
+        const {map, frame} = await createMapOverShapedTerrain({style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}}, zoom: 8, pitch: 60, dragPan: {bearing: 'free'}}, slopeRisingWest, 0, 4000);
+        simulate.dragInMoves(map.getCanvas(), [100, 100], [160, 100], 3, frame);
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 160, clientY: 100});
+
+        renderFrames(frame, 6);
+
+        expect(map.isMoving()).toBe(true);
+        expect(map.getCameraTargetElevation()).toBe(2000);
+
+        renderFrames(frame, 90);
+
+        expect(map.isMoving()).toBe(false);
+        expect(map.getCameraTargetElevation()).toBeCloseTo(2270.36, 1);
+    });
+
     test('a flick at maxZoom toward a slope never moves the camera back, through the inertia and its end', async () => {
         const slopeRisingNorth: TerrainHeight = (_lng, lat) => Math.max(0, 0.5 * (lat * metersPerDegree - 20));
         const {map, frame} = await createMapOverShapedTerrain({zoom: 18, pitch: 70, maxPitch: 85, maxZoom: 18}, slopeRisingNorth, 0, 1000);
