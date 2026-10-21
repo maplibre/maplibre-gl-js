@@ -246,10 +246,14 @@ export default class Worker {
     private _importScript(url: string): Promise<void> {
         let importPromise = this.importedScripts.get(url);
         if (!importPromise) {
-            importPromise = loadScript(url).catch((error) => {
-                this.importedScripts.delete(url);
-                throw error;
-            });
+            importPromise = (async () => {
+                try {
+                    await loadScript(url);
+                } catch (error) {
+                    this.importedScripts.delete(url);
+                    throw error;
+                }
+            })();
             this.importedScripts.set(url, importPromise);
         }
         return importPromise;

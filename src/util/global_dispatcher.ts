@@ -72,22 +72,29 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private handleWorkersCreated(): void {
         this.actorsPromise = this.buildActors();
         for (const url of this.importedScriptUrls) {
-            this.broadcast(MessageType.importScript, url).catch((error) => {
-                warnOnce(`Failed to import script ${url} into the workers: ${error}`);
-            });
+            (async () => {
+                try {
+                    await this.broadcast(MessageType.importScript, url);
+                } catch (error) {
+                    warnOnce(`Failed to import script ${url} into the workers: ${error}`);
+                }
+            })();
         }
         this.fire('workersCreated');
     }
 
     private handleWorkersTerminated(): void {
-        this.actorsPromise?.then((actors) => {
-            for (const actor of actors) {
-                actor.remove(new Error('The workers were terminated while a message was in flight.'));
-            }
-        }).catch((error) => {
-            warnOnce(`The terminated workers' actors were never created: ${error}`);
-        });
+        const actorsPromise = this.actorsPromise;
         this.actorsPromise = undefined;
+        (async () => {
+            try {
+                for (const actor of (await actorsPromise) ?? []) {
+                    actor.remove(new Error('The workers were terminated while a message was in flight.'));
+                }
+            } catch (error) {
+                warnOnce(`The terminated workers' actors were never created: ${error}`);
+            }
+        })();
         for (const subscription of this.workerErrorSubscriptions) {
             subscription.unsubscribe();
         }
@@ -183,7 +190,14 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         let timer: ReturnType<typeof setTimeout>;
         try {
             return await Promise.race([
-                this.broadcast(MessageType.ping, undefined).then(() => true, () => true),
+                (async () => {
+                    try {
+                        await this.broadcast(MessageType.ping, undefined);
+                        return true;
+                    } catch {
+                        return true;
+                    }
+                })(),
                 new Promise<boolean>((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); })
             ]);
         } finally {

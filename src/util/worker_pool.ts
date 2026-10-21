@@ -59,9 +59,13 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     restart(): void {
         if (!this.workersPromise) return;
         this.terminate();
-        this.start().catch((error) => {
-            warnOnce(`Failed to create replacement workers: ${error}`);
-        });
+        (async () => {
+            try {
+                await this.start();
+            } catch (error) {
+                warnOnce(`Failed to create replacement workers: ${error}`);
+            }
+        })();
     }
 
     release(mapId: number | string): void {
@@ -77,13 +81,15 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
         if (!promise) return;
         this.workersPromise = null;
         this.fire('terminate');
-        promise.then(workers => {
-            for (const w of workers) {
-                w.terminate();
+        (async () => {
+            try {
+                for (const w of await promise) {
+                    w.terminate();
+                }
+            } catch (error) {
+                warnOnce(`The terminated workers were never created: ${error}`);
             }
-        }).catch((error) => {
-            warnOnce(`The terminated workers were never created: ${error}`);
-        });
+        })();
     }
 
     isPreloaded(): boolean {
