@@ -2,6 +2,7 @@ import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {beforeMapTest} from '../../util/test/util.ts';
+import {restoreNow, setNow} from '../../util/time_control.ts';
 import {Map} from '../map.ts';
 
 import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
@@ -501,6 +502,37 @@ describe('drag_pan', () => {
         expect(map.getCenter().lng).toBeCloseTo(-14.0625, 10);
         expect(map.getCenter().lat).toBeCloseTo(0, 10);
 
+        map.remove();
+    });
+
+    test('DragPanHandler keeps the globe moving after a flick with fixedBearing false', async () => {
+        const map = new Map({
+            container: DOM.create('div', '', window.document.body),
+            style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}},
+            center: [0, 20],
+            dragPan: {fixedBearing: false},
+        });
+        await map.once('load');
+
+        let time = 1000;
+        setNow(time);
+        simulate.mousedown(map.getCanvas(), {buttons, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+        for (let x = 110; x <= 150; x += 10) {
+            setNow(time += 16);
+            simulate.mousemove(map.getCanvas(), {buttons, clientX: x, clientY: 100});
+            map._renderTaskQueue.run();
+        }
+        simulate.mouseup(map.getCanvas(), {clientX: 150, clientY: 100});
+        map._renderTaskQueue.run();
+        const releasedLng = map.getCenter().lng;
+
+        setNow(time += 5000);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lng).toBeLessThan(releasedLng - 5);
+
+        restoreNow();
         map.remove();
     });
 });

@@ -631,7 +631,7 @@ export class HandlerManager {
             combinedEventsInProgress.rotate = combinedEventsInProgress.drag;
         }
 
-        this._commitFrame(tr, freeGlobePan ? {...combinedResult, panDelta: undefined} : combinedResult, combinedEventsInProgress, deactivatedHandlers);
+        this._commitFrame(tr, combinedResult, combinedEventsInProgress, deactivatedHandlers);
     }
 
     /** Applies the frame's camera to the map, records the frame for inertia and fires its events. */
