@@ -599,10 +599,10 @@ export class HandlerManager {
         let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, tr);
         const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : undefined;
 
-        const freeGlobePan = this._camera.cameraHelper.useGlobeControls && !this._map.dragPan._fixedBearing;
+        const freeGlobePan = this._camera.cameraHelper.useGlobeControls && this._map.dragPan.bearing === 'free';
         const previousBearing = tr.bearing;
         const deltasForHelper: MapControlsDeltas = {
-            fixedBearing: this._map.dragPan._fixedBearing,
+            bearing: this._map.dragPan.bearing,
             panDelta,
             zoomDelta,
             rollDelta,
@@ -829,7 +829,7 @@ export class HandlerManager {
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
             const inertialEase = this._inertia._onMoveEnd(this._map.dragPan._inertiaOptions);
-            const freeGlobePan = this._camera.cameraHelper.useGlobeControls && !this._map.dragPan._fixedBearing;
+            const freeGlobePan = this._camera.cameraHelper.useGlobeControls && this._map.dragPan.bearing === 'free';
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 

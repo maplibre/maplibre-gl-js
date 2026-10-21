@@ -505,7 +505,7 @@ describe('drag_pan', () => {
         map.remove();
     });
 
-    test('DragPanHandler glides the globe on over the pole after a flick with fixedBearing false', async () => {
+    test('DragPanHandler glides the globe on over the pole after a flick with a free bearing', async () => {
         const container = DOM.create('div', '', window.document.body);
         Object.defineProperty(container, 'clientWidth', {value: 200});
         Object.defineProperty(container, 'clientHeight', {value: 200});
@@ -513,7 +513,7 @@ describe('drag_pan', () => {
             container,
             style: {version: 8, sources: {}, layers: [], projection: {type: 'globe'}},
             center: [0, 70],
-            dragPan: {fixedBearing: false},
+            dragPan: {bearing: 'free'},
         });
         await map.once('load');
 

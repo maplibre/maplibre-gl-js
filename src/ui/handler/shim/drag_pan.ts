@@ -6,12 +6,12 @@ import type {TouchPanHandler} from './../touch_pan.ts';
  */
 export type DragPanOptions = {
     /**
-     * Preserve bearing while dragging the globe. Set to false to allow free
-     * rotation across the poles, also while the globe glides on after a flick.
-     * Has no effect on Mercator panning.
-     * @defaultValue true
+     * How a drag on the globe treats the bearing. If `'fixed'` is passed, the bearing stays as it is and the center
+     * stops at a pole. If `'free'` is passed, the point under the pointer stays under it, so the globe rolls over a
+     * pole, also while it glides on after a flick, and the bearing turns with it. Has no effect in mercator.
+     * @defaultValue 'fixed'
      */
-    fixedBearing?: boolean;
+    bearing?: 'fixed' | 'free';
     /**
      * factor used to scale the drag velocity
      * @defaultValue 0
@@ -47,7 +47,8 @@ export class DragPanHandler {
     _mousePan: MousePanHandler;
     _touchPan: TouchPanHandler;
     _inertiaOptions: DragPanOptions | boolean;
-    _fixedBearing = true;
+    /** @internal */
+    bearing: 'fixed' | 'free' = 'fixed';
 
     /** @internal */
     constructor(el: HTMLElement, mousePan: MousePanHandler, touchPan: TouchPanHandler) {
@@ -63,6 +64,7 @@ export class DragPanHandler {
      * @example
      * ```ts
      *   map.dragPan.enable();
+     *   map.dragPan.enable({bearing: 'free'});
      *   map.dragPan.enable({
      *      linearity: 0.3,
      *      easing: bezier(0, 0, 0.3, 1),
@@ -73,7 +75,7 @@ export class DragPanHandler {
      */
     enable(options?: DragPanOptions | boolean): void {
         this._inertiaOptions = options || {};
-        this._fixedBearing = typeof options === 'object' ? options.fixedBearing ?? true : true;
+        this.bearing = typeof options === 'object' ? options.bearing ?? 'fixed' : 'fixed';
         this._mousePan.enable();
         this._touchPan.enable();
         this._el.classList.add('maplibregl-touch-drag-pan');

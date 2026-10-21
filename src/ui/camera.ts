@@ -952,7 +952,7 @@ export class Camera extends Evented<MapEventType> {
             const panDelta = pan.mult(k - panned);
             panned = k;
             const around = tr.centerPoint;
-            const deltas: MapControlsDeltas = {panDelta, zoomDelta: 0, bearingDelta: 0, pitchDelta: 0, rollDelta: 0, around, fixedBearing: false};
+            const deltas: MapControlsDeltas = {panDelta, zoomDelta: 0, bearingDelta: 0, pitchDelta: 0, rollDelta: 0, around, bearing: 'free'};
             this.cameraHelper.handleMapControlsPan(deltas, tr, tr.screenPointToLocation(around.sub(panDelta)));
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
