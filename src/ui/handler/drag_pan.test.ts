@@ -1,4 +1,4 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {beforeMapTest} from '../../util/test/util.ts';
@@ -17,6 +17,10 @@ function createMap(clickTolerance?, dragPan?) {
 
 beforeEach(() => {
     beforeMapTest();
+});
+
+afterEach(() => {
+    restoreNow();
 });
 
 // MouseEvent.buttons = 1 // left button
@@ -517,29 +521,31 @@ describe('drag_pan', () => {
         });
         await map.once('load');
 
-        let time = 1000;
-        setNow(time);
+        setNow(1000);
         simulate.mousedown(map.getCanvas(), {buttons, clientX: 100, clientY: 80});
         map._renderTaskQueue.run();
-        for (const clientY of [100, 120, 140]) {
-            setNow(time += 16);
-            simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY});
-            map._renderTaskQueue.run();
-        }
+        setNow(1016);
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY: 100});
+        map._renderTaskQueue.run();
+        setNow(1032);
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY: 120});
+        map._renderTaskQueue.run();
+        setNow(1048);
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY: 140});
+        map._renderTaskQueue.run();
         simulate.mouseup(map.getCanvas(), {clientX: 100, clientY: 140});
         map._renderTaskQueue.run();
 
         expect(map.getCenter().lat).toBeLessThan(88);
         expect(map.getCenter().lng).toBeCloseTo(0, 6);
 
-        setNow(time += 5000);
+        setNow(6048);
         map._renderTaskQueue.run();
 
         expect(map.getCenter().lat).toBeLessThan(88);
         expect(Math.abs(map.getCenter().lng)).toBeCloseTo(180, 6);
         expect(Math.abs(map.getBearing())).toBeCloseTo(180, 6);
 
-        restoreNow();
         map.remove();
     });
 });

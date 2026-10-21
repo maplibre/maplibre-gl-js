@@ -30,6 +30,10 @@ export class GlobeCameraHelper implements ICameraHelper {
         return this.useGlobeControls ? this._verticalPerspectiveCameraHelper : this._mercatorCameraHelper;
     }
 
+    panTurnsBearing(bearing: 'fixed' | 'free'): boolean {
+        return this.currentHelper.panTurnsBearing(bearing);
+    }
+
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
         easingCenter: LngLat;
         easingOffset: Point;

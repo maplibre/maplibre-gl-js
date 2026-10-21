@@ -17,6 +17,8 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 export class MercatorCameraHelper implements ICameraHelper {
     get useGlobeControls(): boolean { return false; }
 
+    panTurnsBearing(): boolean { return false; }
+
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
         easingCenter: LngLat;
         easingOffset: Point;

@@ -58,6 +58,8 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
     get useGlobeControls(): boolean { return true; }
 
+    panTurnsBearing(bearing: 'fixed' | 'free'): boolean { return bearing === 'free'; }
+
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
         easingCenter: LngLat;
         easingOffset: Point;

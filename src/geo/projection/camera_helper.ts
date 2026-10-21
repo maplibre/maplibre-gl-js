@@ -120,6 +120,11 @@ export function cameraBoundsWarning(): void {
 export interface ICameraHelper {
     get useGlobeControls(): boolean;
 
+    /**
+     * Returns whether a pan turns the bearing, which a drag with a free bearing does where the pan rotates a globe.
+     */
+    panTurnsBearing(bearing: 'fixed' | 'free'): boolean;
+
     handlePanInertia(pan: Point, transform: IReadonlyTransform): {
         easingCenter: LngLat;
         easingOffset: Point;

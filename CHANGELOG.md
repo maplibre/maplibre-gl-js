@@ -1,6 +1,6 @@
 ## main
 ### ✨ Features and improvements
-- Add `dragPan: {bearing: 'free'}` to drag the globe freely over the poles, with the bearing turning along ([#8623](https://github.com/maplibre/maplibre-gl-js/issues/8623))
+- Add `dragPan: {bearing: 'free'}`, which lets a drag roll the globe over the poles and turns the bearing with it ([#8625](https://github.com/maplibre/maplibre-gl-js/pull/8625)) (by [@SeanPedersen](https://github.com/SeanPedersen))
 - Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
 - Allow calling `new Map({ transformStyle: { ... }})` to provide a style transformation function similar to the same option in `setStyle` ([#8786](https://github.com/maplibre/maplibre-gl-js/pull/8786)) (by [@hiddewie](https://github.com/hiddewie))
 - _...Add new stuff here..._

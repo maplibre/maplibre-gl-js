@@ -48,7 +48,7 @@ export type InertiaOptions = {
  * The ease that carries a gesture on after it ends. A gesture that panned also gives its pan in pixels, for a drag
  * with a free bearing that pans on instead of easing to `center`.
  */
-export type InertialEase = EaseToOptions & {
+type InertialEase = EaseToOptions & {
     pan?: Point;
 };
 

@@ -599,7 +599,6 @@ export class HandlerManager {
         let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, tr);
         const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : undefined;
 
-        const freeGlobePan = this._camera.cameraHelper.useGlobeControls && this._map.dragPan.bearing === 'free';
         const previousBearing = tr.bearing;
         const deltasForHelper: MapControlsDeltas = {
             bearing: this._map.dragPan.bearing,
@@ -627,7 +626,7 @@ export class HandlerManager {
             panDelta,
         });
 
-        if (freeGlobePan && tr.bearing !== previousBearing && combinedEventsInProgress.drag) {
+        if (combinedEventsInProgress.drag && tr.bearing !== previousBearing && this._camera.cameraHelper.panTurnsBearing(this._map.dragPan.bearing)) {
             combinedEventsInProgress.rotate = combinedEventsInProgress.drag;
         }
 
@@ -829,13 +828,12 @@ export class HandlerManager {
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
             const inertialEase = this._inertia._onMoveEnd(this._map.dragPan._inertiaOptions);
-            const freeGlobePan = this._camera.cameraHelper.useGlobeControls && this._map.dragPan.bearing === 'free';
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 
             if (inertialEase && (inertialEase.essential || !browser.prefersReducedMotion)) {
                 const {pan, ...ease} = inertialEase;
-                if (freeGlobePan && pan) {
+                if (pan && this._camera.cameraHelper.panTurnsBearing(this._map.dragPan.bearing)) {
                     this._camera._glidePan(pan, {duration: ease.duration, easing: ease.easing}, {originalEvent: originalEndEvent});
                 } else {
                     if (shouldSnapToNorth(ease.bearing || this._map.getBearing())) {
