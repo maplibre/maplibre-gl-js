@@ -1,5 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {WorkerPool} from './worker_pool.ts';
+import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 
 describe('WorkerPool', () => {
     test('acquire', async () => {
@@ -91,5 +92,19 @@ describe('WorkerPool', () => {
         pool.release('map-1');
 
         expect(terminateListener).toHaveBeenCalled();
+    });
+
+    test('prewarm keeps the workers alive once the last map is removed, until they are cleared', async () => {
+        prewarm();
+        const pool = getGlobalWorkerPool();
+        const terminateListener = vi.fn();
+        pool.on('terminate', terminateListener);
+        await pool.acquire('map-1');
+        pool.release('map-1');
+        expect(terminateListener).not.toHaveBeenCalled();
+
+        clearPrewarmedResources();
+
+        expect(terminateListener).toHaveBeenCalledTimes(1);
     });
 });

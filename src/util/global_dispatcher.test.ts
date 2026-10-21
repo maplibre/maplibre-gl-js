@@ -1,54 +1,38 @@
 import {describe, afterEach, test, expect, vi} from 'vitest';
 import {Actor, type ActorTarget} from './actor.ts';
 import {MessageType} from './actor_messages.ts';
-import {Dispatcher} from './dispatcher.ts';
 import {GlobalDispatcher, getGlobalDispatcher} from './global_dispatcher.ts';
-import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
+import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {terminateGlobalWorkers} from './test/util.ts';
 import {WorkerPool} from './worker_pool.ts';
 
-describe('global dispatcher', () => {
+describe('GlobalDispatcher', () => {
     afterEach(() => {
         vi.restoreAllMocks();
+        vi.useRealTimers();
         terminateGlobalWorkers();
     });
 
     test('fires workerscreate when a map creates the workers', async () => {
-        const globalWorkersCreated = vi.fn();
-        getGlobalDispatcher().on('workerscreate', globalWorkersCreated);
+        const workersCreateListener = vi.fn();
+        getGlobalDispatcher().on('workerscreate', workersCreateListener);
 
-        await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
+        await getGlobalWorkerPool().acquire('map-1');
 
-        expect(globalWorkersCreated).toHaveBeenCalled();
+        expect(workersCreateListener).toHaveBeenCalledTimes(1);
     });
 
-    test('the global dispatcher broadcasts through fresh actors after its workers terminate', async () => {
-        const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
+    test('broadcasts to new workers after the old ones terminate', async () => {
         const globalDispatcher = getGlobalDispatcher();
-        await globalDispatcher.broadcast('my-plugin-message', 1);
-        const actorBefore = sendSpy.mock.contexts[0];
+        await getGlobalWorkerPool().acquire('map-1');
 
         terminateGlobalWorkers();
-        sendSpy.mockClear();
-        await globalDispatcher.broadcast('my-plugin-message', 2);
 
-        expect(sendSpy.mock.contexts[0]).not.toBe(actorBefore);
+        await expect(globalDispatcher.broadcast(MessageType.ping, undefined)).resolves.toHaveLength(WorkerPool.workerCount);
     });
 
-    test('a message handler registered on the global dispatcher comes back with the new workers', async () => {
-        const handler = vi.fn();
-        await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
-        await getGlobalDispatcher().registerMessageHandler('my-plugin-message', handler);
-        terminateGlobalWorkers();
-        const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
-
-        await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
-
-        expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
-    });
-
-    test('an in-flight broadcast rejects when the workers terminate', async () => {
-        const workers = await getGlobalWorkerPool().start();
+    test('rejects an in-flight broadcast when the workers terminate', async () => {
+        const workers = await getGlobalWorkerPool().acquire('map-1');
         for (const worker of workers) {
             vi.spyOn(worker, 'postMessage').mockImplementation(() => {});
         }
@@ -59,91 +43,63 @@ describe('global dispatcher', () => {
         await expect(resultPromise).rejects.toMatchObject({name: 'AbortError', message: 'The workers were terminated while a message was in flight.'});
     });
 
-    test('registers and unregisters a handler for a plugin-defined message type', async () => {
+    test('registers and unregisters a message handler on the workers', async () => {
         const handler = vi.fn();
-        vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
-        const globalDispatcher = getGlobalDispatcher();
-        await globalDispatcher.broadcast('my-plugin-message', 1);
+        await getGlobalWorkerPool().acquire('map-1');
         const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
         const unregisterSpy = vi.spyOn(Actor.prototype, 'unregisterMessageHandler');
 
-        await globalDispatcher.registerMessageHandler('my-plugin-message', handler);
+        await getGlobalDispatcher().registerMessageHandler('my-plugin-message', handler);
         expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
 
-        await globalDispatcher.unregisterMessageHandler('my-plugin-message');
+        await getGlobalDispatcher().unregisterMessageHandler('my-plugin-message');
         expect(unregisterSpy).toHaveBeenCalledWith('my-plugin-message');
     });
 
-    test('fires worker errors through Evented until the workers terminate', async () => {
+    test('registers message handlers again on the workers that replace terminated ones', async () => {
+        const handler = vi.fn();
+        await getGlobalWorkerPool().acquire('map-1');
+        await getGlobalDispatcher().registerMessageHandler('my-plugin-message', handler);
+        terminateGlobalWorkers();
+        const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
+
+        await getGlobalWorkerPool().acquire('map-1');
+
+        expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
+    });
+
+    test('imports scripts again into the workers that replace terminated ones', async () => {
+        const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
+        await getGlobalDispatcher().importScript('plugin.js');
+        terminateGlobalWorkers();
+        sendSpy.mockClear();
+
+        await getGlobalWorkerPool().acquire('map-1');
+
+        await vi.waitFor(() => expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'}));
+    });
+
+    test('fires an error event for worker errors until the workers terminate', async () => {
         vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
         const worker = new EventTarget() as ActorTarget & EventTarget;
         worker.postMessage = vi.fn();
         worker.terminate = vi.fn();
         const workerPool = new WorkerPool();
         workerPool.workersPromise = Promise.resolve([worker]);
+        await workerPool.acquire('map-1');
         const globalDispatcher = new GlobalDispatcher(workerPool);
         const errorListener = vi.fn();
         globalDispatcher.on('error', errorListener);
         await globalDispatcher.broadcast('my-plugin-message', 1);
 
         worker.dispatchEvent(new ErrorEvent('error'));
-
         expect(errorListener).toHaveBeenCalledWith(expect.objectContaining({
             error: new Error('Worker failed to load. Check that the worker URL is correct.')
         }));
-        workerPool.release(1);
+
+        workerPool.release('map-1');
         worker.dispatchEvent(new ErrorEvent('error'));
         expect(errorListener).toHaveBeenCalledTimes(1);
-    });
-
-    test('prewarm keeps the workers alive once the last map is removed, until they are cleared', () => {
-        prewarm();
-        const pool = getGlobalWorkerPool();
-        const terminateSpy = vi.fn();
-        pool.on('terminate', terminateSpy);
-        new Dispatcher(pool, 1).remove();
-        expect(terminateSpy).not.toHaveBeenCalled();
-
-        clearPrewarmedResources();
-
-        expect(terminateSpy).toHaveBeenCalled();
-    });
-});
-
-describe('importScript', () => {
-    afterEach(() => {
-        vi.restoreAllMocks();
-        terminateGlobalWorkers();
-    });
-
-    test('re-imports the scripts into the workers that replace terminated ones', async () => {
-        const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
-        await getGlobalDispatcher().importScript('plugin.js');
-        terminateGlobalWorkers();
-        sendSpy.mockClear();
-
-        await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
-
-        expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'});
-    });
-});
-
-describe('worker recovery', () => {
-    afterEach(() => {
-        vi.restoreAllMocks();
-        vi.useRealTimers();
-        terminateGlobalWorkers();
-    });
-
-    test('does nothing when no workers exist', async () => {
-        const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
-        getGlobalDispatcher().watchHealth();
-
-        vi.useFakeTimers();
-        document.dispatchEvent(new Event('visibilitychange'));
-        await vi.advanceTimersByTimeAsync(2000);
-
-        expect(restartSpy).not.toHaveBeenCalled();
     });
 
     test('reports workers that answer the ping as alive', async () => {
@@ -170,5 +126,16 @@ describe('worker recovery', () => {
         await vi.advanceTimersByTimeAsync(2000);
 
         expect(restartSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('restarts nothing when the page returns to the foreground with no workers', async () => {
+        const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
+        getGlobalDispatcher().watchHealth();
+
+        vi.useFakeTimers();
+        document.dispatchEvent(new Event('visibilitychange'));
+        await vi.advanceTimersByTimeAsync(2000);
+
+        expect(restartSpy).not.toHaveBeenCalled();
     });
 });
