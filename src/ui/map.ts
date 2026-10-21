@@ -4315,12 +4315,10 @@ export class Map extends Evented<MapEventType> {
     };
 
     /**
-     * The shared workers were replaced (see `WorkerPool.restart`) and hold none of this map's
-     * state. Recovery reuses the context-loss contract: the style is rebuilt from a snapshot, the
-     * same context events fire, and custom layers and feature state are dropped. A style still
-     * loading is rebuilt once it loads, since its load finishes on the main thread regardless of
-     * the workers. The initial worker creation never reaches this handler: it happens while this
-     * map's style is constructed, before `this.style` is set.
+     * Rebuilds the style after `WorkerPool.restart` replaces the workers, which then hold none of this map's state.
+     * Assumes apps treat a worker restart like a WebGL context loss: it fires synthetic `webglcontextlost` and
+     * `webglcontextrestored` events, so the custom layers and feature state the rebuild drops get re-added by the
+     * same listeners. A style still loading is rebuilt once it loads.
      */
     private _handleWorkersCreated = (): void => {
         if (!this.style) return;
