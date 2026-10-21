@@ -56,7 +56,7 @@ describe('global dispatcher', () => {
 
         terminateGlobalWorkers();
 
-        await expect(resultPromise).rejects.toThrow('The workers were terminated while a message was in flight.');
+        await expect(resultPromise).rejects.toMatchObject({name: 'AbortError', message: 'The workers were terminated while a message was in flight.'});
     });
 
     test('registers and unregisters a handler for a plugin-defined message type', async () => {

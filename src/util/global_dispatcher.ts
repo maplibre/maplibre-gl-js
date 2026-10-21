@@ -3,7 +3,7 @@ import {getGlobalWorkerPool} from './global_worker_pool.ts';
 import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 import {MessageType} from './actor_messages.ts';
 import {type ErrorEvent, Evented, type Event} from './evented.ts';
-import {warnOnce, type Subscription} from './util.ts';
+import {warnOnce} from './util.ts';
 
 import type {Actor, MessageHandler} from './actor.ts';
 import type {WorkerPool} from './worker_pool.ts';
@@ -52,7 +52,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     private importedScriptUrls = new Set<string>();
     private messageHandlers: Record<string, MessageHandler<MessageType>> = {};
     private actorsPromise: Promise<Actor[]> | undefined;
-    private workerErrorSubscriptions: Subscription[] = [];
+    private workersAbortController: AbortController | undefined;
     private workerPool: WorkerPool;
     private watchingHealth = false;
     private healthCheckInFlight = false;
@@ -70,7 +70,8 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     }
 
     private handleWorkersCreated(): void {
-        this.actorsPromise = this.buildActors();
+        this.workersAbortController = new AbortController();
+        this.actorsPromise = this.buildActors(this.workersAbortController.signal);
         for (const url of this.importedScriptUrls) {
             (async () => {
                 try {
@@ -84,21 +85,8 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     }
 
     private handleWorkersTerminated(): void {
-        const actorsPromise = this.actorsPromise;
+        this.workersAbortController?.abort(new Error('The workers were terminated while a message was in flight.'));
         this.actorsPromise = undefined;
-        (async () => {
-            try {
-                for (const actor of (await actorsPromise) ?? []) {
-                    actor.remove(new Error('The workers were terminated while a message was in flight.'));
-                }
-            } catch (error) {
-                warnOnce(`The terminated workers' actors were never created: ${error}`);
-            }
-        })();
-        for (const subscription of this.workerErrorSubscriptions) {
-            subscription.unsubscribe();
-        }
-        this.workerErrorSubscriptions = [];
     }
 
     /** Returns the actors, creating the workers on first use: `start` fires the pool's `create` event synchronously. */
@@ -107,10 +95,9 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         return this.actorsPromise;
     }
 
-    private async buildActors(): Promise<Actor[]> {
+    private async buildActors(signal: AbortSignal): Promise<Actor[]> {
         const workers = await this.workerPool.start();
-        const {actors, workerErrorSubscriptions} = createActors(workers, GLOBAL_DISPATCHER_ID, this);
-        this.workerErrorSubscriptions = workerErrorSubscriptions;
+        const {actors} = createActors(workers, GLOBAL_DISPATCHER_ID, this, signal);
         const handlers = Object.entries(this.messageHandlers);
         for (const actor of actors) {
             for (const [type, handler] of handlers) {
