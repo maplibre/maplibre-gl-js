@@ -287,7 +287,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     /**
      * Sets the Accept header specifically for MLT requests.
      * 
-     * @param request parameters to update.
+     * @param request - parameters to update.
      * @see {@link https://github.com/maplibre/maplibre-native/pull/4231#discussion_r4216650681}
      */
     private _setAcceptHeader(request: RequestParameters) {
