@@ -37,7 +37,8 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
 
     /**
      * Starts the shared workers if they are not running and returns them, without claiming them.
-     * The `terminate` event still fires once the last claim is released.
+     * The `terminate` event still fires once the last claim is released. The `create` event fires
+     * before this returns, which the global dispatcher relies on, so keep it ahead of any `await`.
      */
     async start(): Promise<ActorTarget[]> {
         if (!this.workersPromise) {

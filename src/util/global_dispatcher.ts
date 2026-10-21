@@ -89,7 +89,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         this.actorsPromise = undefined;
     }
 
-    /** Returns the actors, creating the workers on first use: `start` fires the pool's `create` event synchronously. */
+    /** Returns the actors, creating the workers on first use. Relies on `start` firing `create` before it returns. */
     private getActors(): Promise<Actor[]> {
         if (!this.workerPool.workersPromise) this.workerPool.start();
         return this.actorsPromise;

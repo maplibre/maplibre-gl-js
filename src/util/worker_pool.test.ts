@@ -70,6 +70,16 @@ describe('WorkerPool', () => {
         expect(pool.workersPromise).toBeFalsy();
     });
 
+    test('start fires create before it returns', () => {
+        const pool = new WorkerPool();
+        const createListener = vi.fn();
+        pool.on('create', createListener);
+
+        pool.start();
+
+        expect(createListener).toHaveBeenCalledTimes(1);
+    });
+
     test('starting the workers does not keep them alive', async () => {
         const terminateListener = vi.fn();
 
