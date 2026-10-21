@@ -112,7 +112,7 @@ describe('GlobalDispatcher', () => {
         await expect(getGlobalDispatcher().ping(5000)).resolves.toBe(true);
     });
 
-    test('restarts nothing when the page returns to the foreground with no workers', async () => {
+    test('does nothing when the page returns to the foreground before any workers exist', async () => {
         const restartSpy = vi.spyOn(getGlobalWorkerPool(), 'restart');
         getGlobalDispatcher().watchWorkers();
 
