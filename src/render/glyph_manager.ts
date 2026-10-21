@@ -1,6 +1,6 @@
-import {FontFaceManager} from './font_face_manager.ts';
+import {FontFaceManager, type FontFeature} from './font_face_manager.ts';
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
-import {codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
+import {codePointIsInComplexShapingScript, codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
 import {isCluster} from '../util/graphemes.ts';
 import {AlphaImage} from '../util/image.ts';
 import {ensureError, warnOnce} from '../util/util.ts';
@@ -15,12 +15,12 @@ import type {FontFacesSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type Entry = {
     /**
-     * The glyphs drawn or downloaded so far, keyed by variant and grapheme cluster.
+     * The glyphs requested so far, keyed by variant and grapheme cluster.
      * `null` means the requested glyph is unavailable.
      */
     glyphs: Record<string, Record<string, StyleGlyph | null>>;
-    requests: Record<number, Promise<{[_: number]: StyleGlyph | null}>>;
-    ranges: Record<number, boolean | null>;
+    /** The PBF ranges downloaded or being downloaded, keyed by range number. */
+    requests: Record<number, Promise<Record<number, StyleGlyph | null>>>;
     tinySDF?: Promise<Rasterizer>;
     ideographTinySDF?: Promise<Rasterizer>;
     /**
@@ -59,6 +59,23 @@ const defaultGenericFontFamily = 'sans-serif';
 const textureScale = 2;
 
 /**
+ * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
+ * Server-generated fonts specify "top" relative to an origin above the em box (the origin
+ * comes from FreeType, but I'm unclear on exactly how it's derived)
+ * ref: https://github.com/mapbox/sdf-glyph-foundry
+ *
+ * Server fonts don't yet include baseline information, so we can't line up exactly with them
+ * (and they don't line up with each other)
+ * ref: https://github.com/mapbox/node-fontnik/pull/160
+ *
+ * To approximately align TinySDF glyphs with server-provided glyphs, we use this baseline adjustment
+ * factor calibrated to be in between DIN Pro and Arial Unicode (but closer to Arial Unicode)
+ */
+const topAdjustment = 27.5;
+
+const leftAdjustment = 0.5;
+
+/**
  * The rasterizer, as it really is. TinySDF carries the `buffer` it was built with, which its type
  * declaration leaves out and which the canvas has to be widened through.
  */
@@ -87,6 +104,23 @@ const defaultCreateRasterizer: CreateRasterizer = (options, padding) => {
  */
 const clusterEmsWide = 3;
 
+/**
+ * The OpenType feature each alternate variant is drawn with. A variant is `null` where the font has
+ * no distinct alternate, so that layout can fall back to rotation or a compatibility character.
+ */
+const variantFeatures: Record<string, FontFeature> = {
+    vertical: 'vert'
+};
+
+/** Whether two glyphs have identical bitmaps and metrics. */
+function glyphsEqual(a: StyleGlyph, b: StyleGlyph): boolean {
+    return a.bitmap.width === b.bitmap.width && a.bitmap.height === b.bitmap.height &&
+        a.metrics.width === b.metrics.width && a.metrics.height === b.metrics.height &&
+        a.metrics.left === b.metrics.left && a.metrics.top === b.metrics.top &&
+        a.metrics.advance === b.metrics.advance &&
+        a.bitmap.data.every((value, index) => value === b.bitmap.data[index]);
+}
+
 export class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string | false;
@@ -95,6 +129,8 @@ export class GlyphManager {
     lang?: string;
     fontFaceManager: FontFaceManager;
     createRasterizer: CreateRasterizer;
+    /** Default glyphs shared by requests and alternate comparisons, keyed by rasterizer. */
+    rasterizedGlyphs: WeakMap<Rasterizer, Record<string, StyleGlyph>> = new WeakMap();
 
     constructor(
         requestManager: RequestManager,
@@ -125,9 +161,11 @@ export class GlyphManager {
 
     async getGlyphs(glyphs: GlyphRequests): Promise<GlyphMap> {
         const glyphsPromises: Array<Promise<GlyphResult>> = [];
+        const hasFontFaces = this.fontFaceManager.hasFontFaces();
 
         for (const stack in glyphs) {
             for (const variant in glyphs[stack]) {
+                if (variantFeatures[variant] && !hasFontFaces) continue;
                 for (const id of glyphs[stack][variant]) {
                     glyphsPromises.push(this._getAndCacheGlyphsPromise(stack, id, variant));
                 }
@@ -160,11 +198,15 @@ export class GlyphManager {
      * has no way to serve the one shape they are written as. A file the style pinned with
      * `font-faces` draws it where one covers it, and the local fonts otherwise. For a single
      * codepoint a declared file still wins over the glyphs URL and the local fallbacks.
-     * Providers support the `default` variant; unsupported variants return `null`.
+     *
+     * Lone letters of scripts that form clusters are drawn locally too, so a word isn't split across
+     * two fonts.
+     *
+     * Other variants use only declared font files and variantFeatures; unknown ones return `null`.
      */
     async _getAndCacheGlyphsPromise(stack: string, id: string, variant: string): Promise<GlyphResult> {
         // Create an entry for this fontstack if it doesn’t already exist.
-        this.entries[stack] ??= {glyphs: {default: {}}, requests: {}, ranges: {}};
+        this.entries[stack] ??= {glyphs: {default: {}}, requests: {}};
         const entry = this.entries[stack];
         const glyphs = (entry.glyphs[variant] ||= {});
 
@@ -175,24 +217,30 @@ export class GlyphManager {
         }
 
         if (variant !== 'default') {
-            glyphs[id] = null;
-            return {stack, id, variant, glyph: null};
+            const feature = variantFeatures[variant];
+            glyph = feature ? await this._drawAlternateGlyph(entry, stack, id, feature) : null;
+            glyphs[id] = glyph;
+            return {stack, id, variant, glyph};
         }
 
         const codePoint = id.codePointAt(0);
         const fontFaceFamily = this.fontFaceManager.hasFontFaces() ?
-            await this.fontFaceManager.getFontFamily(stack, codePoint) :
+            await this.fontFaceManager.getFontFamily(stack, codePoint, 'normal') :
             null;
 
         if (fontFaceFamily) {
-            glyph = glyphs[id] = await this._drawGlyph(entry, stack, id, fontFaceFamily);
+            glyph = await this._drawGlyph(entry, stack, id, fontFaceFamily);
+            glyphs[id] = glyph;
             return {stack, id, variant, glyph};
         }
 
-        // If the style hasn’t opted into server-side fonts, this codepoint is CJK, or this is a cluster
-        // that a codepoint-keyed glyphs URL cannot serve, draw the glyph locally and cache it.
-        if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint)) {
-            glyph = glyphs[id] = await this._drawGlyph(entry, stack, id);
+        // If the style hasn’t opted into server-side fonts, this codepoint is CJK or in a script that
+        // forms clusters, or this is a cluster that a codepoint-keyed glyphs URL cannot serve, draw the
+        // glyph locally and cache it.
+        if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint) ||
+            codePointIsInComplexShapingScript(codePoint)) {
+            glyph = await this._drawGlyph(entry, stack, id);
+            glyphs[id] = glyph;
             return {stack, id, variant, glyph};
         }
 
@@ -200,33 +248,48 @@ export class GlyphManager {
     }
 
     /**
+     * Draws a font's glyph with `feature` enabled and compares it with its default glyph.
+     * Returns the alternate, or `null` if it is missing, empty, identical, or its font was replaced.
+     */
+    async _drawAlternateGlyph(entry: Entry, stack: string, id: string, feature: FontFeature): Promise<StyleGlyph | null> {
+        const alternateTinySDF = await this._getFontFaceTinySDF(entry, stack, id, feature);
+        if (!alternateTinySDF || this.entries[stack] !== entry) return null;
+
+        const char = alternateTinySDF.draw(id);
+        if (!char.glyphWidth || !char.glyphHeight) return null;
+
+        const defaultTinySDF = await this._getFontFaceTinySDF(entry, stack, id, 'normal');
+        if (!defaultTinySDF || this.entries[stack] !== entry) return null;
+
+        const glyph = this._createGlyph(id, char);
+        const original = this._getRasterizedGlyph(defaultTinySDF, id);
+        return glyphsEqual(original, glyph) ? null : glyph;
+    }
+
+    /**
      * Gets a glyph from the server-side cache, downloading the PBF range it falls in if need be.
      *
      * Only reached for a single codepoint. What comes back is keyed by codepoint, as the file is,
-     * and is cached by cluster -- which for one codepoint is the character itself.
+     * and is cached by cluster -- which for one codepoint is the character itself. Only the
+     * requested glyph is cached, because the rest of the range may be covered by a declared font.
      */
     async _downloadAndCacheRangePromise(stack: string, id: string): Promise<{stack: string; id: string; glyph: StyleGlyph}> {
         const codePoint = id.codePointAt(0);
         const entry = this.entries[stack];
         const range = Math.floor(codePoint / 256);
-        if (entry.ranges[range]) {
-            return {stack, id, glyph: null};
-        }
 
         // Start downloading this range unless we’re currently downloading it.
         entry.requests[range] ||= this._loadGlyphRange(stack, range);
 
         try {
-            // Get the response and cache the glyphs from it.
             const response = await entry.requests[range];
-            for (const responseId in response) {
-                entry.glyphs.default[String.fromCodePoint(+responseId)] = response[+responseId];
-            }
-            entry.ranges[range] = true;
-            return {stack, id, glyph: response[codePoint] || null};
+            const glyph = response[codePoint] || null;
+            entry.glyphs.default[id] = glyph;
+            return {stack, id, glyph};
         } catch (e) {
             // Fall back to drawing the glyph locally and caching it.
-            const glyph = entry.glyphs.default[id] = await this._drawGlyph(entry, stack, id);
+            const glyph = await this._drawGlyph(entry, stack, id);
+            entry.glyphs.default[id] = glyph;
             this._warnOnMissingGlyphRange(glyph, range, codePoint, ensureError(e));
             return {stack, id, glyph};
         }
@@ -274,29 +337,30 @@ export class GlyphManager {
      * Draws a glyph offscreen using TinySDF, created lazily. The whole cluster goes to TinySDF, which
      * is what lets the browser's text engine place a letter's marks on it.
      *
-     * @param fontFaceFamily - the CSS family of the `font-faces` file covering this codepoint, if any
+     * @param entry - cached glyphs and rasterizers for this font stack
+     * @param stack - font stack used for local font fallback
+     * @param id - grapheme cluster to rasterize
+     * @param fontFaceFamily - the CSS family of the selected declared font, if any
+     * @returns the rasterized glyph with metrics at the atlas's base resolution
      */
     async _drawGlyph(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<StyleGlyph> {
         const tinySDF = await this._getTinySDF(entry, stack, id, fontFaceFamily);
-        const char = tinySDF.draw(id);
+        return this._getRasterizedGlyph(tinySDF, id);
+    }
 
-        /**
-         * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
-         * Server-generated fonts specify "top" relative to an origin above the em box (the origin
-         * comes from FreeType, but I'm unclear on exactly how it's derived)
-         * ref: https://github.com/mapbox/sdf-glyph-foundry
-         *
-         * Server fonts don't yet include baseline information, so we can't line up exactly with them
-         * (and they don't line up with each other)
-         * ref: https://github.com/mapbox/node-fontnik/pull/160
-         *
-         * To approximately align TinySDF glyphs with server-provided glyphs, we use this baseline adjustment
-         * factor calibrated to be in between DIN Pro and Arial Unicode (but closer to Arial Unicode)
-         */
-        const topAdjustment = 27.5;
+    /** Draws each default glyph once per rasterizer, including concurrent requests. */
+    _getRasterizedGlyph(tinySDF: Rasterizer, id: string): StyleGlyph {
+        let glyphs = this.rasterizedGlyphs.get(tinySDF);
+        if (!glyphs) {
+            glyphs = {};
+            this.rasterizedGlyphs.set(tinySDF, glyphs);
+        }
+        glyphs[id] ??= this._createGlyph(id, tinySDF.draw(id));
+        return glyphs[id];
+    }
 
-        const leftAdjustment = 0.5;
-
+    /** Converts a TinySDF bitmap and metrics to a style glyph. */
+    _createGlyph(id: string, char: ReturnType<TinySDF['draw']>): StyleGlyph {
         // By definition, control characters are invisible and nonspacing.
         const isControl = /^\p{gc=Cf}+$/u.test(id);
 
@@ -312,6 +376,16 @@ export class GlyphManager {
                 isDoubleResolution: true
             }
         };
+    }
+
+    /** Resolves a declared font and its rasterizer, skipping obsolete cache entries. */
+    async _getFontFaceTinySDF(entry: Entry, stack: string, id: string, feature: FontFeature): Promise<Rasterizer | null> {
+        if (this.entries[stack] !== entry) return null;
+
+        const family = await this.fontFaceManager.getFontFamily(stack, id.codePointAt(0), feature);
+        if (!family || this.entries[stack] !== entry) return null;
+
+        return this._getTinySDF(entry, stack, id, family);
     }
 
     /**
@@ -439,7 +513,6 @@ export class GlyphManager {
             entry.fontFaceTinySDFs = {};
             entry.glyphs = {default: {}};
             entry.requests = {};
-            entry.ranges = {};
         }
         this.entries = {};
         this.fontFaceManager.destroy();

@@ -36,7 +36,7 @@ import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
 import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
-import {DragRotateHandler} from './ui/handler/shim/drag_rotate.ts';
+import {DragRotateHandler, type DragRotateOptions} from './ui/handler/shim/drag_rotate.ts';
 import {DragPanHandler, type DragPanOptions} from './ui/handler/shim/drag_pan.ts';
 import {ScrollZoomHandler} from './ui/handler/scroll_zoom.ts';
 import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch.ts';
@@ -67,7 +67,7 @@ import type {RequestTransformFunction, ResourceType} from './util/request_manage
 import type {OverscaledTileID} from './tile/tile_id.ts';
 import type {PositionAnchor} from './ui/anchor.ts';
 import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, ProjectionMatrix, RendererProjectionData} from './geo/projection/projection_data.ts';
-import type {CRSDefinition} from './geo/projection/crs.ts';
+import type {CRS} from './geo/projection/crs.ts';
 import type {TileMatrixSet} from './geo/projection/tile_matrix_set.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
 import type {Actor, IActor} from './util/actor.ts';
@@ -315,6 +315,7 @@ export {
     type ImageSourceImage,
     type UpdateImageOptions,
     type DragPanOptions,
+    type DragRotateOptions,
     type FullscreenControlOptions,
     type GetClusterOptions,
     type SetClusterOptions,
@@ -360,7 +361,7 @@ export {
     type Mat4f64,
     type ProjectionMatrix,
     type RendererProjectionData,
-    type CRSDefinition,
+    type CRS,
     type TileMatrixSet,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,

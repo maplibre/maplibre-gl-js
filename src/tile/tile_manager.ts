@@ -74,6 +74,11 @@ export class TileManager extends Evented<SourceEventType> {
     _sourceLoaded: boolean;
     _maxContentElevationSeen: number = 0;
 
+    /**
+     * @internal
+     * signifies that the source itself failed to load and had no pending loads, so `loaded()` stops waiting for it
+     * until it starts loading again. A tile that fails does not set it, since `loaded()` already counts a failed tile as done.
+     */
     _sourceErrored: boolean;
     _inViewTiles: InViewTiles;
     _prevLng: number;
@@ -108,9 +113,8 @@ export class TileManager extends Evented<SourceEventType> {
             this._sourceErrored = false;
         });
 
-        this.on('error', () => {
-            // Only set _sourceErrored if the source does not have pending loads.
-            this._sourceErrored = this._source.loaded();
+        this.on('error', (e: ErrorEvent & {tile?: Tile}) => {
+            if (!e.tile) this._sourceErrored = this._source.loaded();
         });
 
         this._source = createSource(id, options, dispatcher, this);
@@ -541,7 +545,9 @@ export class TileManager extends Evented<SourceEventType> {
         this.terrain = terrain;
 
         this.updateCacheSize(transform);
-        this.handleWrapJump(this.transform.center.lng);
+        if (this.transform.worldCoordinateHelper.wraps) {
+            this.handleWrapJump(this.transform.center.lng);
+        }
 
         let idealTileIDs: OverscaledTileID[];
 

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display GeoJSON in a polar stereographic projection</title>
+    <meta property="og:description" content="Draw a GeoJSON source on a map in the EPSG:3413 CRS, projected in the workers by a proj4 projection handler." />
+    <meta property="og:category" content="Vector & GeoJSON" />
+    <meta property="og:created" content="2026-10-11" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/proj4@2.15.0/dist/proj4.js'></script>
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    // GeoJSON is parsed and tiled in the workers, so they need the projection too: this handler builds it there
+    // from the projection's `definition` with proj4.
+    const projectionHandlerScript = new Blob([`
+        import proj4 from 'https://cdn.jsdelivr.net/npm/proj4@2.15.0/+esm';
+        self.setProjectionHandler(definition => proj4(definition));
+    `], {type: 'text/javascript'});
+    await maplibregl.importScriptInWorkers(URL.createObjectURL(projectionHandlerScript));
+
+    // NSIDC Sea Ice Polar Stereographic North. The same string goes to proj4 on the page and to the handler.
+    const epsg3413 = '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
+
+    maplibregl.addProjection({
+        name: 'EPSG:3413',
+        definition: epsg3413,
+        projection: proj4('EPSG:4326', epsg3413),
+        // The grid NASA GIBS serves EPSG:3413 in, centered on the North Pole.
+        tileMatrixSet: {origin: [-4194304, 4194304], extentAtZoom0: 8388608}
+    });
+
+    const gibs = layer => `https://gibs.earthdata.nasa.gov/wms/epsg3413/best/wms.cgi?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&SRS=EPSG:3413&BBOX={bbox}&WIDTH=512&HEIGHT=512&FORMAT=image/png&TRANSPARENT=TRUE&LAYERS=${layer}`;
+
+    const places = [
+        ['Longyearbyen', 15.63, 78.22],
+        ['Nuuk', -51.72, 64.18],
+        ['Resolute', -94.83, 74.7],
+        ['Alert', -62.35, 82.5],
+        ['Murmansk', 33.08, 68.97],
+        ['Reykjavik', -21.94, 64.15],
+        ['Kiruna', 20.23, 67.86]
+    ];
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: {
+            version: 8,
+            projection: {type: 'EPSG:3413'},
+            sources: {
+                'blue-marble': {
+                    type: 'raster',
+                    tiles: [gibs('BlueMarble_ShadedRelief_Bathymetry')],
+                    tileSize: 512,
+                    maxzoom: 6,
+                    attribution: 'Imagery: NASA GIBS'
+                },
+                // Plain lng/lat data, as on any other map.
+                'places': {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: places.map(([name, lng, lat]) => ({
+                            type: 'Feature',
+                            properties: {name},
+                            geometry: {type: 'Point', coordinates: [lng, lat]}
+                        }))
+                    }
+                }
+            },
+            layers: [
+                {id: 'blue-marble', type: 'raster', source: 'blue-marble'},
+                {
+                    id: 'places',
+                    type: 'circle',
+                    source: 'places',
+                    paint: {'circle-radius': 7, 'circle-color': '#e8590c', 'circle-stroke-width': 2, 'circle-stroke-color': '#fff'}
+                }
+            ]
+        },
+        center: [-40, 78],
+        zoom: 1.2
+    });
+    map.addControl(new maplibregl.NavigationControl());
+
+    // Queries return lng/lat, so popups and the rest of the API work unchanged.
+    map.on('click', 'places', (e) => {
+        new maplibregl.Popup().setLngLat(e.features[0].geometry.coordinates).setText(e.features[0].properties.name).addTo(map);
+    });
+    map.on('mouseenter', 'places', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'places', () => { map.getCanvas().style.cursor = ''; });
+</script>
+</body>
+</html>

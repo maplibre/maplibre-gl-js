@@ -285,6 +285,37 @@ describe('terrainTileRevision', () => {
         expect(terrainTiles).toBeGreaterThan(0);
         expect(renderToTerrainTile).toHaveBeenCalledTimes(terrainTiles);
     });
+
+    test('keeps the terrain tiles of a custom layer below a layer that is not draped when one above it changes', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256}},
+            layers: [],
+            terrain: {source: 'dem'}
+        }});
+        const renderBelowToTerrainTile = vi.fn();
+        const renderAboveToTerrainTile = vi.fn();
+        const below = {id: 'below', type: 'custom' as const, render: () => {}, renderToTerrainTile: renderBelowToTerrainTile, terrainTileRevision: 0};
+        const notDraped = {id: 'not-draped', type: 'custom' as const, render: () => {}};
+        const above = {id: 'above', type: 'custom' as const, render: () => {}, renderToTerrainTile: renderAboveToTerrainTile, terrainTileRevision: 0};
+        await map.once('load');
+        map.addLayer(below);
+        map.addLayer(notDraped);
+        map.addLayer(above);
+        await map.once('idle');
+        const terrainTiles = map.terrain.tileManager.getRenderableTiles().length;
+        renderBelowToTerrainTile.mockClear();
+        renderAboveToTerrainTile.mockClear();
+
+        above.terrainTileRevision++;
+        map.triggerRepaint();
+        await map.once('idle');
+
+        expect(terrainTiles).toBeGreaterThan(0);
+        expect(renderAboveToTerrainTile).toHaveBeenCalledTimes(terrainTiles);
+        expect(renderBelowToTerrainTile).not.toHaveBeenCalled();
+    });
 });
 
 describe('renderTerrainHeightMap', () => {
@@ -962,6 +993,24 @@ describe('Terrain changing under and around a gesture', () => {
         map._renderTaskQueue.run();
 
         expect(bearingAfterSecondMove - bearingAfterFirstMove).toBeCloseTo(bearingAfterFirstMove - bearingAtStart, 5);
+        expect(map.getCameraTargetElevation()).toBe(3000);
+    });
+
+    test('a drag around the pointer holds the center elevation until it ends', async () => {
+        const map = await createMapOverTerrain(60);
+        map.dragRotate.enable({around: 'pointer'});
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 40, clientY: 180});
+        simulate.mousemove(window.document.body, {buttons: 2, clientX: 50, clientY: 180});
+        map.redraw();
+        terrainElevation.mockReturnValue(3000);
+        map.redraw();
+        const elevationDuringDrag = map.getCameraTargetElevation();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 50, clientY: 180});
+        map.redraw();
+
+        expect(elevationDuringDrag).toBe(0);
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
