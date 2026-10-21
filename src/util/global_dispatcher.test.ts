@@ -9,6 +9,7 @@ import {WorkerPool} from './worker_pool.ts';
 describe('GlobalDispatcher', () => {
     afterEach(() => {
         vi.restoreAllMocks();
+        vi.unstubAllGlobals();
         vi.useRealTimers();
         terminateGlobalWorkers();
     });
@@ -82,10 +83,9 @@ describe('GlobalDispatcher', () => {
     test('fires an error event for worker errors until the workers terminate', async () => {
         vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
         const worker = new EventTarget() as ActorTarget & EventTarget;
-        worker.postMessage = vi.fn();
         worker.terminate = vi.fn();
+        vi.stubGlobal('Worker', function () { return worker; });
         const workerPool = new WorkerPool();
-        workerPool.workersPromise = Promise.resolve([worker]);
         await workerPool.acquire('map-1');
         const globalDispatcher = new GlobalDispatcher(workerPool);
         const errorListener = vi.fn();

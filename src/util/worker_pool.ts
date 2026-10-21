@@ -21,7 +21,7 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
     active: {
         [_ in number | string]: boolean;
     };
-    workersPromise: Promise<ActorTarget[]> | null;
+    private workersPromise: Promise<ActorTarget[]> | null;
 
     constructor() {
         super();
@@ -91,6 +91,10 @@ export class WorkerPool extends Evented<WorkerPoolEventType> {
                 warnOnce(`The terminated workers were never created: ${error}`);
             }
         })();
+    }
+
+    isStarted(): boolean {
+        return !!this.workersPromise;
     }
 
     isPreloaded(): boolean {

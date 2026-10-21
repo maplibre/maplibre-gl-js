@@ -8,7 +8,7 @@ describe('WorkerPool', () => {
 
         const pool = new WorkerPool();
 
-        expect(pool.workersPromise).toBeFalsy();
+        expect(pool.isStarted()).toBe(false);
         const workers1 = await pool.acquire('map-1');
         const workers2 = await pool.acquire('map-2');
         expect(workers1).toHaveLength(4);
@@ -34,12 +34,12 @@ describe('WorkerPool', () => {
         await Promise.resolve();
 
         expect(workersTerminated).toBe(0);
-        expect(pool.workersPromise).toBeTruthy();
+        expect(pool.isStarted()).toBe(true);
 
         pool.release('map-1');
         await Promise.resolve();
         expect(workersTerminated).toBe(4);
-        expect(pool.workersPromise).toBeFalsy();
+        expect(pool.isStarted()).toBe(false);
     });
 
     test('restart terminates the workers and creates replacements, keeping the claims', async () => {
@@ -68,7 +68,7 @@ describe('WorkerPool', () => {
         pool.restart();
 
         expect(createListener).not.toHaveBeenCalled();
-        expect(pool.workersPromise).toBeFalsy();
+        expect(pool.isStarted()).toBe(false);
     });
 
     test('start fires create before it returns', () => {

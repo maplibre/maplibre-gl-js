@@ -66,7 +66,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         this.workerPool = workerPool;
         workerPool.on('create', () => this.handleWorkersCreated());
         workerPool.on('terminate', () => this.handleWorkersTerminated());
-        if (workerPool.workersPromise) this.handleWorkersCreated();
+        if (workerPool.isStarted()) this.handleWorkersCreated();
     }
 
     private handleWorkersCreated(): void {
@@ -91,7 +91,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
 
     /** Returns the actors, creating the workers on first use. Relies on `start` firing `create` before it returns. */
     private getActors(): Promise<Actor[]> {
-        if (!this.workerPool.workersPromise) this.workerPool.start();
+        if (!this.workerPool.isStarted()) this.workerPool.start();
         return this.actorsPromise;
     }
 
@@ -173,7 +173,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
      * are alive. Resolves true when no workers exist, since there is nothing to restart.
      */
     async ping(timeoutMs: number = PING_TIMEOUT_MS): Promise<boolean> {
-        if (!this.workerPool.workersPromise) return true;
+        if (!this.workerPool.isStarted()) return true;
         let timer: ReturnType<typeof setTimeout>;
         try {
             return await Promise.race([
