@@ -265,9 +265,9 @@ export class Actor implements IActor {
     }
 
     /**
-     * Stops this actor. When the target is gone for good, e.g. a terminated worker, pass
-     * `rejectInFlightWith` to reject the requests still awaiting an answer instead of
-     * leaving them pending forever.
+     * Stops this actor.
+     * @param rejectInFlightWith - when the target is gone for good, e.g. a terminated worker, the error that rejects
+     * requests still awaiting an answer instead of leaving them pending forever
      */
     remove(rejectInFlightWith?: Error): void {
         this.invoker.remove();
