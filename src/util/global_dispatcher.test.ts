@@ -57,27 +57,21 @@ describe('GlobalDispatcher', () => {
         expect(unregisterSpy).toHaveBeenCalledWith('my-plugin-message');
     });
 
-    test('registers message handlers again on the workers that replace terminated ones', async () => {
+    test('restores message handlers and scripts on the workers that replace terminated ones', async () => {
         const handler = vi.fn();
-        await getGlobalWorkerPool().acquire('map-1');
+        const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
         await getGlobalDispatcher().registerMessageHandler('my-plugin-message', handler);
+        await getGlobalDispatcher().importScript('plugin.js');
         await terminateGlobalWorkers();
+        sendSpy.mockClear();
         const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
 
         await getGlobalWorkerPool().acquire('map-1');
 
-        await vi.waitFor(() => expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler));
-    });
-
-    test('imports scripts again into the workers that replace terminated ones', async () => {
-        const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
-        await getGlobalDispatcher().importScript('plugin.js');
-        await terminateGlobalWorkers();
-        sendSpy.mockClear();
-
-        await getGlobalWorkerPool().acquire('map-1');
-
-        await vi.waitFor(() => expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'}));
+        await vi.waitFor(() => {
+            expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
+            expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'});
+        });
     });
 
     test('fires an error event for worker errors until the workers terminate', async () => {
@@ -102,20 +96,6 @@ describe('GlobalDispatcher', () => {
         expect(errorListener).toHaveBeenCalledTimes(1);
     });
 
-    test('reports workers that answer the ping as alive', async () => {
-        await getGlobalWorkerPool().acquire('map-1');
-
-        await expect(getGlobalDispatcher().ping(5000)).resolves.toBe(true);
-    });
-
-    test('reports workers that never answer the ping as dead', async () => {
-        for (const worker of await getGlobalWorkerPool().acquire('map-1')) {
-            vi.spyOn(worker, 'postMessage').mockImplementation(() => {});
-        }
-
-        await expect(getGlobalDispatcher().ping(1)).resolves.toBe(false);
-    });
-
     test('restarts dead workers when the page returns to the foreground', async () => {
         for (const worker of await getGlobalWorkerPool().acquire('map-1')) {
             vi.spyOn(worker, 'postMessage').mockImplementation(() => {});
@@ -128,6 +108,8 @@ describe('GlobalDispatcher', () => {
         await vi.advanceTimersByTimeAsync(2000);
 
         expect(restartSpy).toHaveBeenCalledTimes(1);
+        vi.useRealTimers();
+        await expect(getGlobalDispatcher().ping(5000)).resolves.toBe(true);
     });
 
     test('restarts nothing when the page returns to the foreground with no workers', async () => {
