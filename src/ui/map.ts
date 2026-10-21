@@ -5,6 +5,7 @@ import {DOM} from '../util/dom.ts';
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {getGlobalDispatcher} from '../util/global_dispatcher.ts';
+import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {RequestManager, ResourceType} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions, type TransformStyleFunction} from '../style/style.ts';
@@ -755,9 +756,8 @@ export class Map extends Evented<MapEventType> {
 
     constructor(options: MapOptions) {
         super();
-        const globalDispatcher = getGlobalDispatcher();
-        globalDispatcher.on('workersterminate', this._handleWorkersTerminated);
-        globalDispatcher.watchHealth();
+        getGlobalWorkerPool().on('restart', this._handleWorkersRestarted);
+        getGlobalDispatcher().watchHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
             ...options.canvasContextAttributes
@@ -4315,16 +4315,16 @@ export class Map extends Evented<MapEventType> {
     };
 
     /**
-     * Rebuilds the style when `WorkerPool.restart` terminates the workers, which take this map's state with them.
+     * Rebuilds the style after `WorkerPool.restart` replaces the workers, which then hold none of this map's state.
      * Assumes apps treat a worker restart like a WebGL context loss: it fires synthetic `webglcontextlost` and
      * `webglcontextrestored` events, so the custom layers and feature state the rebuild drops get re-added by the
      * same listeners. A style still loading is rebuilt once it loads.
      */
-    private _handleWorkersTerminated = (): void => {
+    private _handleWorkersRestarted = (): void => {
         if (!this.style) return;
         if (!this.style._loaded) {
-            this.style.off('style.load', this._handleWorkersTerminated);
-            this.style.once('style.load', this._handleWorkersTerminated);
+            this.style.off('style.load', this._handleWorkersRestarted);
+            this.style.once('style.load', this._handleWorkersRestarted);
             return;
         }
 
@@ -4610,7 +4610,7 @@ export class Map extends Evented<MapEventType> {
         this._diffStyleRequest?.abort();
         this.painter.destroy();
         this._handlers.destroy();
-        getGlobalDispatcher().off('workersterminate', this._handleWorkersTerminated);
+        getGlobalWorkerPool().off('restart', this._handleWorkersRestarted);
         this.setStyle(null);
         if (typeof window !== 'undefined') {
             this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);

@@ -30,14 +30,12 @@ describe('WorkerPool', () => {
             w.terminate = function () { workersTerminated += 1; };
         }
 
-        pool.release('map-2');
-        await Promise.resolve();
+        await pool.release('map-2');
 
         expect(workersTerminated).toBe(0);
         expect(pool.isStarted()).toBe(true);
 
-        pool.release('map-1');
-        await Promise.resolve();
+        await pool.release('map-1');
         expect(workersTerminated).toBe(4);
         expect(pool.isStarted()).toBe(false);
     });
@@ -47,8 +45,7 @@ describe('WorkerPool', () => {
         const before = await pool.acquire('map-1');
         const terminateSpies = before.map((w) => vi.spyOn(w, 'terminate'));
 
-        pool.restart();
-        await Promise.resolve();
+        await pool.restart();
 
         for (const spy of terminateSpies) {
             expect(spy).toHaveBeenCalledTimes(1);
@@ -71,14 +68,27 @@ describe('WorkerPool', () => {
         expect(pool.isStarted()).toBe(false);
     });
 
-    test('start fires create before it returns', () => {
+    test('start fires create once the workers exist, and only for the start that created them', async () => {
         const pool = new WorkerPool();
         const createListener = vi.fn();
         pool.on('create', createListener);
 
-        pool.start();
+        await Promise.all([pool.start(), pool.start()]);
 
         expect(createListener).toHaveBeenCalledTimes(1);
+    });
+
+    test('start does not fire create for workers terminated while being created', async () => {
+        const pool = new WorkerPool();
+        const createListener = vi.fn();
+        pool.on('create', createListener);
+
+        const startPromise = pool.start();
+        pool.acquire('map-1');
+        pool.release('map-1');
+        await startPromise;
+
+        expect(createListener).not.toHaveBeenCalled();
     });
 
     test('starting the workers does not keep them alive', async () => {

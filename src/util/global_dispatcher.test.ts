@@ -7,11 +7,11 @@ import {terminateGlobalWorkers} from './test/util.ts';
 import {WorkerPool} from './worker_pool.ts';
 
 describe('GlobalDispatcher', () => {
-    afterEach(() => {
+    afterEach(async () => {
         vi.restoreAllMocks();
         vi.unstubAllGlobals();
         vi.useRealTimers();
-        terminateGlobalWorkers();
+        await terminateGlobalWorkers();
     });
 
     test('fires workerscreate when a map creates the workers', async () => {
@@ -20,26 +20,14 @@ describe('GlobalDispatcher', () => {
 
         await getGlobalWorkerPool().acquire('map-1');
 
-        expect(workersCreateListener).toHaveBeenCalledTimes(1);
-    });
-
-    test('fires workersterminate after dropping the actors on the terminated workers', async () => {
-        await getGlobalWorkerPool().acquire('map-1');
-        let broadcastPromise: Promise<void[]>;
-        getGlobalDispatcher().once('workersterminate', () => {
-            broadcastPromise = getGlobalDispatcher().broadcast(MessageType.ping, undefined);
-        });
-
-        getGlobalWorkerPool().restart();
-
-        await expect(broadcastPromise).resolves.toHaveLength(WorkerPool.workerCount);
+        await vi.waitFor(() => expect(workersCreateListener).toHaveBeenCalledTimes(1));
     });
 
     test('broadcasts to new workers after the old ones terminate', async () => {
         const globalDispatcher = getGlobalDispatcher();
         await getGlobalWorkerPool().acquire('map-1');
 
-        terminateGlobalWorkers();
+        await terminateGlobalWorkers();
 
         await expect(globalDispatcher.broadcast(MessageType.ping, undefined)).resolves.toHaveLength(WorkerPool.workerCount);
     });
@@ -73,18 +61,18 @@ describe('GlobalDispatcher', () => {
         const handler = vi.fn();
         await getGlobalWorkerPool().acquire('map-1');
         await getGlobalDispatcher().registerMessageHandler('my-plugin-message', handler);
-        terminateGlobalWorkers();
+        await terminateGlobalWorkers();
         const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
 
         await getGlobalWorkerPool().acquire('map-1');
 
-        expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
+        await vi.waitFor(() => expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler));
     });
 
     test('imports scripts again into the workers that replace terminated ones', async () => {
         const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
         await getGlobalDispatcher().importScript('plugin.js');
-        terminateGlobalWorkers();
+        await terminateGlobalWorkers();
         sendSpy.mockClear();
 
         await getGlobalWorkerPool().acquire('map-1');
@@ -109,7 +97,7 @@ describe('GlobalDispatcher', () => {
             error: new Error('Worker failed to load. Check that the worker URL is correct.')
         }));
 
-        workerPool.release('map-1');
+        await workerPool.release('map-1');
         worker.dispatchEvent(new ErrorEvent('error'));
         expect(errorListener).toHaveBeenCalledTimes(1);
     });

@@ -243,20 +243,22 @@ export default class Worker {
         });
     }
 
-    private _importScript(url: string): Promise<void> {
-        let importPromise = this.importedScripts.get(url);
-        if (!importPromise) {
-            importPromise = (async () => {
-                try {
-                    await loadScript(url);
-                } catch (error) {
-                    this.importedScripts.delete(url);
-                    throw error;
-                }
-            })();
-            this.importedScripts.set(url, importPromise);
+    /**
+     * Loads a script once per url, so concurrent and repeated imports share one load. A failed load
+     * is forgotten, so the next import of the url tries again.
+     */
+    private async _importScript(url: string): Promise<void> {
+        const existing = this.importedScripts.get(url);
+        if (existing) return existing;
+
+        const importPromise = loadScript(url);
+        this.importedScripts.set(url, importPromise);
+        try {
+            await importPromise;
+        } catch (error) {
+            this.importedScripts.delete(url);
+            throw error;
         }
-        return importPromise;
     }
 
     private _getGlobalState(mapId: string): Record<string, any> {

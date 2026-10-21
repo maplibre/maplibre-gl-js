@@ -208,12 +208,12 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
  * Simulates the last map being removed, which terminates the pooled workers. The global dispatcher
  * survives and builds new actors on its next use. Also releases claims earlier tests left behind.
  */
-export function terminateGlobalWorkers(): void {
+export async function terminateGlobalWorkers(): Promise<void> {
     const pool = getGlobalWorkerPool();
     for (const mapId of Object.keys(pool.active)) {
-        pool.release(mapId);
+        await pool.release(mapId);
     }
-    pool.release('terminateGlobalWorkers');
+    await pool.release('terminateGlobalWorkers');
 }
 
 /**
