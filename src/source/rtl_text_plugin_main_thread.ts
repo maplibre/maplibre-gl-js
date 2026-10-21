@@ -18,7 +18,7 @@ class RTLMainThreadPlugin extends Evented {
      */
     constructor() {
         super();
-        this.dispatcher.on('workersCreated', async () => {
+        this.dispatcher.on('workerscreate', async () => {
             try {
                 if (this.status === 'deferred') {
                     await this._syncState('deferred');

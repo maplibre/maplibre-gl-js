@@ -756,7 +756,7 @@ export class Map extends Evented<MapEventType> {
     constructor(options: MapOptions) {
         super();
         const globalDispatcher = getGlobalDispatcher();
-        globalDispatcher.on('workersCreated', this._handleWorkersCreated);
+        globalDispatcher.on('workerscreate', this._handleWorkersCreated);
         globalDispatcher.watchHealth();
         const resolvedOptions = {...defaultOptions, ...options, canvasContextAttributes: {
             ...defaultOptions.canvasContextAttributes,
@@ -4610,7 +4610,7 @@ export class Map extends Evented<MapEventType> {
         this._diffStyleRequest?.abort();
         this.painter.destroy();
         this._handlers.destroy();
-        getGlobalDispatcher().off('workersCreated', this._handleWorkersCreated);
+        getGlobalDispatcher().off('workerscreate', this._handleWorkersCreated);
         this.setStyle(null);
         if (typeof window !== 'undefined') {
             this._ownerWindow.removeEventListener('online', this._onWindowOnline, false);

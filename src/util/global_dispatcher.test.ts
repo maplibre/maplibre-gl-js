@@ -13,9 +13,9 @@ describe('global dispatcher', () => {
         terminateGlobalWorkers();
     });
 
-    test('fires workersCreated when a map creates the workers', async () => {
+    test('fires workerscreate when a map creates the workers', async () => {
         const globalWorkersCreated = vi.fn();
-        getGlobalDispatcher().on('workersCreated', globalWorkersCreated);
+        getGlobalDispatcher().on('workerscreate', globalWorkersCreated);
 
         await new Dispatcher(getGlobalWorkerPool(), 1).waitForInitComplete();
 

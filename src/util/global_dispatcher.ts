@@ -20,12 +20,12 @@ export type GlobalDispatcherEventType = {
      *
      * @example
      * ```ts
-     * getGlobalDispatcher().on('workersCreated', () => {
+     * getGlobalDispatcher().on('workerscreate', () => {
      *     getGlobalDispatcher().broadcast('my-plugin-config', {tiles: 'https://example.com/{z}/{x}/{y}.png'});
      * });
      * ```
      */
-    workersCreated: Event;
+    workerscreate: Event;
     error: ErrorEvent;
 };
 
@@ -80,7 +80,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
                 }
             })();
         }
-        this.fire('workersCreated');
+        this.fire('workerscreate');
     }
 
     private handleWorkersTerminated(): void {
@@ -216,7 +216,7 @@ let globalDispatcher: GlobalDispatcher;
  *
  * The same dispatcher is returned for the life of the page, so it is safe to keep, and the message
  * handlers registered on it come back on the workers that replace terminated ones. Configuration
- * you broadcast into the workers does not, so send that from a `workersCreated` listener.
+ * you broadcast into the workers does not, so send that from a `workerscreate` listener.
  * @returns The global dispatcher instance.
  */
 export function getGlobalDispatcher(): GlobalDispatcher {

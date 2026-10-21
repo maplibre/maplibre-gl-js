@@ -135,7 +135,7 @@ describe('RTLMainThreadPlugin', () => {
         rtlMainThreadPlugin.setRTLTextPlugin(url);
         expect(rtlMainThreadPlugin.status).toBe('loading');
 
-        rtlMainThreadPlugin.dispatcher.fire('workersCreated');
+        rtlMainThreadPlugin.dispatcher.fire('workerscreate');
 
         expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
