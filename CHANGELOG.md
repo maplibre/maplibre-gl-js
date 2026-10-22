@@ -11,6 +11,7 @@
 - Fix the map shrinking to a single stretched pixel for good when it resizes after the WebGL context is lost but before `webglcontextlost` fires, e.g. when a mobile browser returns from the background ([#8837](https://github.com/maplibre/maplibre-gl-js/issues/8837)) (by [@lazerg](https://github.com/lazerg))
 - Fix `TypeError: Cannot read properties of undefined (reading '0')` when drawing a line layer with a constant `line-dasharray` whose dash positions were never set ([#8846](https://github.com/maplibre/maplibre-gl-js/issues/8846)) (by [@yulman2207](https://github.com/yulman2207))
 - Fix `GeoJSONSource.updateData` applying a queued update to a feature that a later call adds again ([#8804](https://github.com/maplibre/maplibre-gl-js/issues/8804)) (by [@architpai](https://github.com/architpai))
+- Fix images added with `addImage`, e.g. from `styleimagemissing`, not showing in tiles that were reloaded after the map was panned across 180° ([#8858](https://github.com/maplibre/maplibre-gl-js/pull/8858)) (by [@birkskyum](https://github.com/birkskyum))
 - _...Add new stuff here..._
 
 ## 6.15.0
