@@ -270,6 +270,41 @@ describe('Style.loadJSON', () => {
         expect(spy.mock.calls[0][0].dataType).toBe('style');
     });
 
+    test('fires an error event when the style object fails to load', async () => {
+        const style = new Style(getStubMap());
+        // The worker cannot build the same layer, and its failure is not what this test covers.
+        vi.spyOn(style.dispatcher, 'broadcast').mockResolvedValue([]);
+        const errorSpy = vi.fn();
+        const loadSpy = vi.fn();
+        style.on('error', errorSpy);
+        style.on('style.load', loadSpy);
+
+        style.loadJSON(createStyleJSON({
+            sources: {geojson: createGeoJSONSource()},
+            layers: [{id: 'pts', type: 'circle', source: 'geojson', filter: ['==', ['get', 'kind']] as any as FilterSpecification}]
+        }), {validate: false});
+
+        const event = await waitForEvent(style, 'error', () => true);
+
+        expect(event.error.message).toMatch(/Expected two or three arguments/);
+        expect(loadSpy).not.toHaveBeenCalled();
+    });
+
+    test('ignores an aborted style object load', async () => {
+        const style = new Style(getStubMap());
+        const errorSpy = vi.fn();
+        style.on('error', errorSpy);
+        vi.spyOn(browser, 'frameAsync').mockImplementationOnce((abortController) => {
+            abortController.abort();
+            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+        });
+
+        style.loadJSON(createStyleJSON());
+        await sleep(0);
+
+        expect(errorSpy).not.toHaveBeenCalled();
+    });
+
     test('fires "data" (asynchronously)', async () => {
         const style = new Style(getStubMap());
 
