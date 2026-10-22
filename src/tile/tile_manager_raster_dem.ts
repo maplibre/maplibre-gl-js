@@ -1,5 +1,40 @@
+import {OverscaledTileID} from './tile_id.ts';
+
 import type {Tile} from './tile.ts';
 import type {InViewTiles} from './tile_manager_in_view_tiles.ts';
+
+/**
+ * The tiles around a raster terrain tile, whose borders get backfilled into it
+ */
+export function getNeighboringTiles(tileID: OverscaledTileID): Record<string, {backfilled: boolean}> {
+    const canonical = tileID.canonical;
+    const dim = Math.pow(2, canonical.z);
+
+    const px = (canonical.x - 1 + dim) % dim;
+    const pxw = canonical.x === 0 ? tileID.wrap - 1 : tileID.wrap;
+    const nx = (canonical.x + 1 + dim) % dim;
+    const nxw = canonical.x + 1 === dim ? tileID.wrap + 1 : tileID.wrap;
+
+    const neighboringTiles: Record<string, {backfilled: boolean}> = {};
+    // add adjacent tiles
+    neighboringTiles[new OverscaledTileID(tileID.overscaledZ, pxw, canonical.z, px, canonical.y).key] = {backfilled: false};
+    neighboringTiles[new OverscaledTileID(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y).key] = {backfilled: false};
+
+    // Add upper neighboringTiles
+    if (canonical.y > 0) {
+        neighboringTiles[new OverscaledTileID(tileID.overscaledZ, pxw, canonical.z, px, canonical.y - 1).key] = {backfilled: false};
+        neighboringTiles[new OverscaledTileID(tileID.overscaledZ, tileID.wrap, canonical.z, canonical.x, canonical.y - 1).key] = {backfilled: false};
+        neighboringTiles[new OverscaledTileID(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y - 1).key] = {backfilled: false};
+    }
+    // Add lower neighboringTiles
+    if (canonical.y + 1 < dim) {
+        neighboringTiles[new OverscaledTileID(tileID.overscaledZ, pxw, canonical.z, px, canonical.y + 1).key] = {backfilled: false};
+        neighboringTiles[new OverscaledTileID(tileID.overscaledZ, tileID.wrap, canonical.z, canonical.x, canonical.y + 1).key] = {backfilled: false};
+        neighboringTiles[new OverscaledTileID(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y + 1).key] = {backfilled: false};
+    }
+
+    return neighboringTiles;
+}
 
 /**
  * For raster terrain source, backfill DEM to eliminate visible tile boundaries

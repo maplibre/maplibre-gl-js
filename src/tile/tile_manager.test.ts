@@ -15,12 +15,14 @@ import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
+import {getNeighboringTiles} from './tile_manager_raster_dem.ts';
 
 import type {TileCache} from './tile_cache.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import type {DEMData} from '../data/dem_data.ts';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -44,6 +46,9 @@ class SourceMock extends Evented implements Source {
         }
         if (sourceOptions.raster) {
             this.type = 'raster';
+        }
+        if (sourceOptions.rasterDem) {
+            this.type = 'raster-dem';
         }
     }
     loadTile(tile: Tile): Promise<void> {
@@ -769,6 +774,33 @@ describe('TileManager.update', () => {
         tileManager.update(transform);
 
         expect(loadTile).toHaveBeenCalledTimes(1);
+    });
+
+    test('backfills a raster-dem tile from its neighbors after it moves to another world copy', async () => {
+        const transform = createGlobeTransform();
+        transform.resize(512, 512);
+        transform.setZoom(2);
+        transform.setCenter(new LngLat(40, 80));
+        const tileManager = createTileManager({rasterDem: true});
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+            tile.dem = {backfillBorder: vi.fn()} as any as DEMData;
+            tile.neighboringTiles = getNeighboringTiles(tile.tileID);
+        };
+        const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await dataPromise;
+        tileManager.update(transform);
+        await sleep(0);
+        const movedTile = tileManager.getTileByID(new OverscaledTileID(2, 0, 2, 0, 1).key);
+        const neighborTile = tileManager.getTileByID(new OverscaledTileID(2, 0, 2, 3, 1).key);
+
+        transform.setCenter(new LngLat(50, 80));
+        tileManager.update(transform);
+
+        expect(tileManager.getTileByID(new OverscaledTileID(2, 1, 2, 0, 1).key)).toBe(movedTile);
+        expect(movedTile.dem.backfillBorder).toHaveBeenCalledWith(neighborTile.dem, -1, 0);
+        expect(neighborTile.dem.backfillBorder).toHaveBeenCalledWith(movedTile.dem, 1, 0);
     });
 
     test('adds ideal (covering) tiles only once for zoom level on raster maps', async () => {

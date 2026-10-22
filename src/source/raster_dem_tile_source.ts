@@ -3,8 +3,8 @@ import {ResourceType} from '../util/request_manager.ts';
 import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported.ts';
-import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RasterTileSource} from './raster_tile_source.ts';
+import {getNeighboringTiles} from '../tile/tile_manager_raster_dem.ts';
 // ensure DEMData is registered for worker transfer on main thread:
 import '../data/dem_data.ts';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted.ts';
@@ -55,7 +55,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     override async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
-        tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
+        tile.neighboringTiles = getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
         try {
             const response = await ImageRequest.transformAndGetImage(this.map._requestManager, url, ResourceType.Tile, tile.abortController, this.map._refreshExpiredTiles, {colorSpaceConversion: 'none'});
@@ -125,36 +125,6 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             }
         }
         return browser.getImageData(img, 2);
-    }
-
-    _getNeighboringTiles(tileID: OverscaledTileID): Record<string, {backfilled: boolean}> {
-        const canonical = tileID.canonical;
-        const dim = Math.pow(2, canonical.z);
-
-        const px = (canonical.x - 1 + dim) % dim;
-        const pxw = canonical.x === 0 ? tileID.wrap - 1 : tileID.wrap;
-        const nx = (canonical.x + 1 + dim) % dim;
-        const nxw = canonical.x + 1 === dim ? tileID.wrap + 1 : tileID.wrap;
-
-        const neighboringTiles: Record<string, {backfilled: boolean}> = {};
-        // add adjacent tiles
-        neighboringTiles[new OverscaledTileID(tileID.overscaledZ, pxw, canonical.z, px, canonical.y).key] = {backfilled: false};
-        neighboringTiles[new OverscaledTileID(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y).key] = {backfilled: false};
-
-        // Add upper neighboringTiles
-        if (canonical.y > 0) {
-            neighboringTiles[new OverscaledTileID(tileID.overscaledZ, pxw, canonical.z, px, canonical.y - 1).key] = {backfilled: false};
-            neighboringTiles[new OverscaledTileID(tileID.overscaledZ, tileID.wrap, canonical.z, canonical.x, canonical.y - 1).key] = {backfilled: false};
-            neighboringTiles[new OverscaledTileID(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y - 1).key] = {backfilled: false};
-        }
-        // Add lower neighboringTiles
-        if (canonical.y + 1 < dim) {
-            neighboringTiles[new OverscaledTileID(tileID.overscaledZ, pxw, canonical.z, px, canonical.y + 1).key] = {backfilled: false};
-            neighboringTiles[new OverscaledTileID(tileID.overscaledZ, tileID.wrap, canonical.z, canonical.x, canonical.y + 1).key] = {backfilled: false};
-            neighboringTiles[new OverscaledTileID(tileID.overscaledZ, nxw, canonical.z, nx, canonical.y + 1).key] = {backfilled: false};
-        }
-
-        return neighboringTiles;
     }
 
     async unloadTile(tile: Tile): Promise<void> {

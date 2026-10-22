@@ -14,7 +14,7 @@ import {Bounds} from '../geo/bounds.ts';
 import {EXTENT_BOUNDS} from '../data/extent_bounds.ts';
 import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manager_raster.ts';
-import {backfillDEM} from './tile_manager_raster_dem.ts';
+import {backfillDEM, getNeighboringTiles} from './tile_manager_raster_dem.ts';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 
@@ -613,6 +613,7 @@ export class TileManager extends Evented<SourceEventType> {
     /**
      * The globe gives each tile the world copy nearest the center, so a tile changes copy as the map moves.
      * Every copy is the same place there, so a loaded tile moves to the copy the ideal tiles ask for instead of loading again.
+     * A raster terrain tile then backfills its borders from its neighbors in the new copy.
      */
     _moveTilesToWorldCopies(idealTileIDs: OverscaledTileID[]): void {
         if (this.transform.getCoveringTilesDetailsProvider().allowWorldCopies()) return;
@@ -621,6 +622,10 @@ export class TileManager extends Evented<SourceEventType> {
             const tile = movedTiles[previousKey];
             this._clearTileReloadTimer(previousKey);
             this._setTileReloadTimer(tile.tileID.key, tile);
+            if (this.getSource().type === 'raster-dem' && tile.dem) {
+                tile.neighboringTiles = getNeighboringTiles(tile.tileID);
+                backfillDEM(tile, this._inViewTiles);
+            }
         }
     }
 
