@@ -215,6 +215,22 @@ describe('CrossTileSymbolIndex.addLayer', () => {
 
     });
 
+    test('keeps cross-tile IDs when a tile moves to another world copy', () => {
+        const index = new CrossTileSymbolIndex();
+        const tileID = new OverscaledTileID(6, -1, 6, 8, 8);
+        const instances = [
+            makeSymbolInstance(1000, 1000, ''),
+        ];
+        const tile = makeTile(tileID, instances);
+        index.addLayer(styleLayer, [tile], 0);
+        expect(instances[0].crossTileID).toBe(1);
+
+        tile.tileID = tileID.wrapped();
+        index.addLayer(styleLayer, [tile], 0);
+
+        expect(instances[0].crossTileID).toBe(1);
+    });
+
     test('indexes data for findMatches perf', () => {
         const index = new CrossTileSymbolIndex();
 

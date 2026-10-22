@@ -578,6 +578,16 @@ export class Tile {
         this.symbolFadeHoldUntil = now() + duration;
     }
 
+    /**
+     * Moves the tile to another world copy, together with its feature index.
+     */
+    moveToWorldCopy(tileID: OverscaledTileID): void {
+        this.tileID = tileID;
+        if (this.latestFeatureIndex) {
+            this.latestFeatureIndex.tileID = tileID;
+        }
+    }
+
     setDependencies(namespace: string, dependencies: string[]): void {
         const index = {};
         for (const dep of dependencies) {

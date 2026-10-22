@@ -748,6 +748,29 @@ describe('TileManager.update', () => {
         expect(loadTile).toHaveBeenCalledTimes(4);
     });
 
+    test('does not load the zoom 0 tile again when the globe center crosses 180°', async () => {
+        const transform = createGlobeTransform();
+        transform.resize(512, 512);
+        transform.setZoom(0);
+        transform.setCenter(new LngLat(179.9, 0));
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+        const loadTile = vi.spyOn(tileManager._source, 'loadTile');
+        const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await dataPromise;
+        tileManager.update(transform);
+        await sleep(0);
+        expect(loadTile).toHaveBeenCalledTimes(1);
+
+        transform.setCenter(new LngLat(-179.9, 0));
+        tileManager.update(transform);
+
+        expect(loadTile).toHaveBeenCalledTimes(1);
+    });
+
     test('adds ideal (covering) tiles only once for zoom level on raster maps', async () => {
         const transform = createMercatorTransform();
         transform.resize(512, 512);
