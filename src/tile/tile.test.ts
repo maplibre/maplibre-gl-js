@@ -244,6 +244,18 @@ describe('Tile.isLessThan', () => {
     });
 });
 
+describe('moveToWorldCopy', () => {
+    test('moves the feature index to the new world copy', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        tile.latestFeatureIndex = new FeatureIndex(tile.tileID);
+        const tileID = new OverscaledTileID(1, 1, 1, 0, 0);
+
+        tile.moveToWorldCopy(tileID);
+
+        expect(tile.latestFeatureIndex.tileID).toBe(tileID);
+    });
+});
+
 describe('expiring tiles', () => {
     test('regular tiles do not expire', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
