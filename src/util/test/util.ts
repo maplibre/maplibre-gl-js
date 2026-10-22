@@ -419,8 +419,8 @@ export function createIdentityCrsTransform(width: number, height: number): Merca
         minPitch: 0,
         maxPitch: 85,
         renderWorldCopies: true,
+        worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs),
     });
-    transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(identityCrs));
     transform.resize(width, height);
     return transform;
 }

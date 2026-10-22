@@ -660,8 +660,7 @@ describe('transform', () => {
     });
 
     test('isPointOnMapSurface is false past the edge of a world projection', () => {
-        const transform = createMercatorTransform({minZoom: -2, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-        transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(createWrappingWorldCrs()));
+        const transform = createMercatorTransform({minZoom: -2, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, worldCoordinateHelper: new CRSWorldCoordinateHelper(createWrappingWorldCrs())});
         transform.resize(500, 500);
         transform.setZoom(-1);
 

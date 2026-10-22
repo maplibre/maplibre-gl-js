@@ -310,24 +310,13 @@ export class MercatorTransform implements ITransform {
     }
 
     public clone(): ITransform {
-        const clone = new MercatorTransform();
-        clone.setWorldCoordinateHelper(this.worldCoordinateHelper);
+        const clone = new MercatorTransform({worldCoordinateHelper: this.worldCoordinateHelper});
         clone.apply(this, false);
         return clone;
     }
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
         return this._helper.worldCoordinateHelper;
-    }
-
-    /**
-     * Replaces the lng/lat to world coordinate mapping the transform positions the camera in, mercator by default.
-     * The projection factory calls this on a transform built for a registered CRS; `apply` never copies the mapping,
-     * since migrating a map to a new projection applies the old transform onto the new one.
-     */
-    setWorldCoordinateHelper(worldCoordinateHelper: WorldCoordinateHelper): void {
-        this._helper.setWorldCoordinateHelper(worldCoordinateHelper);
-        this._maxBoundsWorldBox = null;
     }
 
     public apply(that: IReadonlyTransform, constrain: boolean): void {
