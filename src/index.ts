@@ -32,7 +32,7 @@ import {VideoSource} from './source/video_source.ts';
 import {type Source, type SourceClass, addSourceType} from './source/source.ts';
 import {addProtocol, removeProtocol} from './source/protocol_crud.ts';
 import {addProjection, removeProjection} from './geo/projection/projection_crud.ts';
-import {type Dispatcher, getGlobalDispatcher} from './util/dispatcher.ts';
+import {type GlobalDispatcher, type GlobalDispatcherEventType, type CustomMessageHandler, getGlobalDispatcher} from './util/global_dispatcher.ts';
 import {EdgeInsets, type PaddingOptions} from './geo/edge_insets.ts';
 import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapStyleLoadEvent, MapSourceDataEvent, MapBoxZoomEvent, MapLibreEvent, MapMovementEvent, type MapLayerTouchEvent, type MapLayerMouseEvent, type MapLayerEventType, type MapEventType, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent, type MapSourceDataType, type SourceEventType, MapProjectionEvent} from './ui/events.ts';
 import {BoxZoomHandler, type BoxZoomEndHandler, type BoxZoomHandlerOptions} from './ui/handler/box_zoom.ts';
@@ -45,11 +45,12 @@ import {CooperativeGesturesHandler, type GestureOptions} from './ui/handler/coop
 import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom.ts';
 import {KeyboardHandler} from './ui/handler/keyboard.ts';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler, type AroundCenterOptions} from './ui/handler/two_fingers_touch.ts';
-import {MessageType, type ActorMessage, type RequestResponseMessageMap} from './util/actor_messages.ts';
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh.ts';
 import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
 
+import type {Dispatcher} from './util/dispatcher.ts';
+import type {MessageType, ActorMessage, RequestResponseMessageMap} from './util/actor_messages.ts';
 import type {ControlPosition, IControl} from './ui/control/control.ts';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, CustomTerrainRenderInput, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
 import type {AnchoredCameraOptions, AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
@@ -70,7 +71,7 @@ import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, Pr
 import type {CRS} from './geo/projection/crs.ts';
 import type {TileMatrixSet} from './geo/projection/tile_matrix_set.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
-import type {Actor, IActor} from './util/actor.ts';
+import type {Actor, IActor, MessageHandler} from './util/actor.ts';
 import type {Bucket} from './data/bucket.ts';
 import type {CollisionBoxArray} from './data/array_types.g.ts';
 import type {AlphaImage} from './util/image.ts';
@@ -186,6 +187,9 @@ function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
  * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
  * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which should come with `addSourceType` usually.
  * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
+ *
+ * Each url is imported once, and imported again automatically whenever the pooled workers are
+ * recreated.
  * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
  * @returns
  *
@@ -209,7 +213,7 @@ function setWorkerUrl(value: string): void { config.WORKER_URL = value; }
  * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
-async function importScriptInWorkers(workerUrl: string): Promise<void> { await getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
+async function importScriptInWorkers(workerUrl: string): Promise<void> { await getGlobalDispatcher().importScript(workerUrl); }
 
 export {
     Map,
@@ -374,9 +378,13 @@ export {
     type WorkerTileResult,
     type ResourceType,
     type Dispatcher,
+    type GlobalDispatcher,
+    type GlobalDispatcherEventType,
+    type CustomMessageHandler,
     type Actor,
     type IActor,
     type ActorMessage,
+    type MessageHandler,
     type Bucket,
     type CollisionBoxArray,
     type FeatureIndex,

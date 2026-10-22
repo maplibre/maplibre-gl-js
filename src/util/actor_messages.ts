@@ -116,6 +116,7 @@ export const enum MessageType {
     abortTile = 'AT',
     removeDEMTile = 'RDT',
     getResource = 'GR',
+    ping = 'PI',
 }
 
 /**
@@ -146,6 +147,7 @@ export type RequestResponseMessageMap = {
     [MessageType.removeDEMTile]: [TileParameters, void];
     [MessageType.getResource]: [RequestParameters, GetResourceResponse<any>];
     [MessageType.getDashes]: [GetDashesParameters, GetDashesResponse];
+    [MessageType.ping]: [undefined, void];
 };
 
 /**
