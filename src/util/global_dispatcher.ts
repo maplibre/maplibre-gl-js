@@ -13,8 +13,8 @@ import type {RequestResponseMessageMap} from './actor_messages.ts';
 export type GlobalDispatcherEventType = {
     /**
      * Fires each time the global workers are created, including the first. Removing the last map
-     * terminates them, so a listener here is the place to restore state that lives in the workers
-     * rather than in any one map.
+     * terminates them unless `prewarm()` holds them, so a listener here is the place to restore
+     * state that lives in the workers rather than in any one map.
      *
      * Message handlers registered through {@link getGlobalDispatcher} and scripts loaded through
      * {@link importScriptInWorkers} come back on their own and do not need this.
