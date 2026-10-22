@@ -24,11 +24,38 @@ function isCrossOrigin(url: string): boolean {
     if (!url) return false;
     const loc = (globalThis as any).location;
     if (!loc) return false;
+    // Inside a `srcdoc` iframe `location.origin` is the string "null", because the
+    // document has no location of its own, while its real origin is inherited from
+    // the parent and exposed as `globalThis.origin`. Comparing against "null" marked
+    // every same-origin worker URL as cross-origin (#8850).
+    const origin = (globalThis as any).origin || loc.origin;
     try {
-        return new URL(url, loc.href).origin !== loc.origin;
+        return new URL(url, loc.href).origin !== origin;
     } catch {
         return false;
     }
+}
+
+/**
+ * Release a Blob URL once the worker has actually read it.
+ *
+ * `new Worker(blobUrl)` returns before the browser has fetched the script, so
+ * revoking immediately races worker startup and fails the load outright on
+ * slower engines (#8854). Module workers have no "loaded" event; the first
+ * `message` — or `error` — is the earliest point at which the script is known
+ * to have been evaluated, and is when the URL is no longer needed.
+ */
+function releaseBlobUrlWhenLoaded(worker: Worker, blobUrl: string): void {
+    let released = false;
+    const release = () => {
+        if (released) return;
+        released = true;
+        worker.removeEventListener('message', release);
+        worker.removeEventListener('error', release);
+        URL.revokeObjectURL(blobUrl);
+    };
+    worker.addEventListener('message', release);
+    worker.addEventListener('error', release);
 }
 
 /**
@@ -87,16 +114,22 @@ export async function workerFactory(): Promise<Worker> {
     if (asModule) {
         const blobUrl = importAsBlobUrl(url);
         try {
-            return createWorker(blobUrl, asModule);
-        } finally {
+            const worker = createWorker(blobUrl, asModule);
+            releaseBlobUrlWhenLoaded(worker, blobUrl);
+            return worker;
+        } catch (e) {
             URL.revokeObjectURL(blobUrl);
+            throw e;
         }
     }
 
     const blobUrl = await fetchAsBlobUrl(url);
     try {
-        return createWorker(blobUrl, asModule);
-    } finally {
+        const worker = createWorker(blobUrl, asModule);
+        releaseBlobUrlWhenLoaded(worker, blobUrl);
+        return worker;
+    } catch (e) {
         URL.revokeObjectURL(blobUrl);
+        throw e;
     }
 }
