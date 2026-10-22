@@ -55,7 +55,7 @@ describe('GlobalDispatcher', () => {
         await vi.waitFor(() => {
             expect(workersCreateListener).toHaveBeenCalledTimes(1);
             expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
-            expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'});
+            expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'}, expect.any(AbortController));
         });
     });
 

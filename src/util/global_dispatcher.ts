@@ -101,14 +101,18 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         const workers = await this.workerPool.start();
         throwIfAborted(abortController.signal);
 
-        const {actors} = createActors(workers, GLOBAL_DISPATCHER_ID, this, abortController.signal);
+        const {actors, workerErrorSubscriptions} = createActors(workers, GLOBAL_DISPATCHER_ID, this);
+        abortController.signal.addEventListener('abort', () => {
+            for (const actor of actors) actor.remove();
+            for (const subscription of workerErrorSubscriptions) subscription.unsubscribe();
+        }, {once: true});
         for (const actor of actors) {
             for (const [type, handler] of Object.entries(this.messageHandlers)) {
                 actor.registerMessageHandler(type as MessageType, handler);
             }
         }
         for (const url of this.importedScriptUrls) {
-            this.importScriptInto(actors, url);
+            this.importScriptInto(actors, abortController, url);
         }
         this.fire('workerscreate');
         return actors;
@@ -124,9 +128,9 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         }
     }
 
-    private async importScriptInto(actors: Actor[], url: string): Promise<void> {
+    private async importScriptInto(actors: Actor[], abortController: AbortController, url: string): Promise<void> {
         try {
-            await Promise.all(actors.map(actor => actor.sendAsync({type: MessageType.importScript, data: url})));
+            await Promise.all(actors.map(actor => actor.sendAsync({type: MessageType.importScript, data: url}, abortController)));
         } catch (error) {
             warnOnce(`Failed to import script ${url} into the workers: ${error}`);
         }
@@ -139,8 +143,12 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<Array<RequestResponseMessageMap[T][1]>>;
     broadcast<TData = any, TResult = any>(type: string, data: TData): Promise<TResult[]>;
     async broadcast(type: string, data: any): Promise<unknown[]> {
-        const actors = await this.getActors();
-        return Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data})));
+        const actorsPromise = this.getActors();
+        // Read before awaiting: once these workers terminate, the field holds the next workers' controller.
+        const abortController = this.workersAbortController;
+        const actors = await actorsPromise;
+        throwIfAborted(abortController.signal);
+        return Promise.all(actors.map(actor => actor.sendAsync({type: type as MessageType, data}, abortController)));
     }
 
     /**

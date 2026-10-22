@@ -1,6 +1,6 @@
 import {type Subscription, ensureError, isWorker, subscribe} from './util.ts';
 import {ErrorEvent, type Evented, type ErrorEventType} from './evented.ts';
-import {AbortError, throwIfAborted} from './abort_error.ts';
+import {AbortError} from './abort_error.ts';
 import {serialize, deserialize, type Serialized} from './web_worker_transfer.ts';
 import {ThrottledInvoker} from './throttled_invoker.ts';
 
@@ -68,14 +68,12 @@ export class Actor implements IActor {
     globalScope: ActorTarget;
     messageHandlers: { [K in MessageType]?: MessageHandler<K>};
     subscription: Subscription;
-    signal: AbortSignal | undefined;
 
     /**
      * @param target - The target
      * @param mapId - A unique identifier for the Map instance using this Actor.
-     * @param signal - stops this actor when aborted, rejecting the requests still awaiting an answer with an `AbortError`
      */
-    constructor(target: ActorTarget, mapId?: string | number, signal?: AbortSignal) {
+    constructor(target: ActorTarget, mapId?: string | number) {
         this.target = target;
         this.mapId = mapId;
         this.resolveRejects = {};
@@ -86,14 +84,6 @@ export class Actor implements IActor {
         this.invoker = new ThrottledInvoker(() => this.process());
         this.subscription = subscribe(this.target, 'message', (message) => this.receive(message), false);
         this.globalScope = isWorker(self) ? target : window;
-        this.signal = signal;
-        signal?.addEventListener('abort', () => {
-            this.remove();
-            for (const {reject} of Object.values(this.resolveRejects)) {
-                reject(new AbortError(signal.reason));
-            }
-            this.resolveRejects = {};
-        }, {once: true});
     }
 
     registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>): void {
@@ -113,7 +103,6 @@ export class Actor implements IActor {
      */
     sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
         return new Promise((resolve, reject) => {
-            if (this.signal) throwIfAborted(this.signal);
             // We're using a string ID instead of numbers because they are being used as object keys
             // anyway, and thus stringified implicitly. We use random IDs because an actor may receive
             // message from multiple other actors which could run in different execution context. A
@@ -281,13 +270,13 @@ export class Actor implements IActor {
     }
 }
 
-/** Builds a named actor per worker and reports worker errors to `errorTarget`, both until `signal` aborts. */
-export function createActors(workers: ActorTarget[], mapId: string | number, errorTarget: Evented<ErrorEventType>, signal?: AbortSignal): {actors: Actor[]; workerErrorSubscriptions: Subscription[]} {
+/** Builds a named actor per worker and reports worker errors to `errorTarget`. */
+export function createActors(workers: ActorTarget[], mapId: string | number, errorTarget: Evented<ErrorEventType>): {actors: Actor[]; workerErrorSubscriptions: Subscription[]} {
     const workerErrorSubscriptions = workers.map(worker => subscribe(worker, 'error', () => {
         errorTarget.fire(new ErrorEvent(new Error('Worker failed to load. Check that the worker URL is correct.')));
-    }, {signal}));
+    }, false));
     const actors = workers.map((worker, i) => {
-        const actor = new Actor(worker, mapId, signal);
+        const actor = new Actor(worker, mapId);
         actor.name = `Worker ${i}`;
         return actor;
     });
