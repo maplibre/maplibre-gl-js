@@ -10,9 +10,9 @@
 - Fix characters covered by `font-faces` switching to glyphs from the glyphs URL once their PBF range is downloaded ([#8490](https://github.com/maplibre/maplibre-gl-js/pull/8490)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - Fix the map shrinking to a single stretched pixel for good when it resizes after the WebGL context is lost but before `webglcontextlost` fires, e.g. when a mobile browser returns from the background ([#8837](https://github.com/maplibre/maplibre-gl-js/issues/8837)) (by [@lazerg](https://github.com/lazerg))
 - Automatically recover every map, through the same contract as a lost WebGL context, after the browser terminates the shared web workers as iOS does to a backgrounded page ([#8461](https://github.com/maplibre/maplibre-gl-js/issues/8461)) (by [@lucaswoj](https://github.com/lucaswoj) and [@ingalls](https://github.com/ingalls))
-- Terminate the pooled web workers when the last map is removed; plugins can restore worker state via the global dispatcher's `workerscreate` event ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491), [#8735](https://github.com/maplibre/maplibre-gl-js/pull/8735)) (by [@lucaswoj](https://github.com/lucaswoj) and [@HarelM](https://github.com/HarelM))
 - Fix `TypeError: Cannot read properties of undefined (reading '0')` when drawing a line layer with a constant `line-dasharray` whose dash positions were never set ([#8846](https://github.com/maplibre/maplibre-gl-js/issues/8846)) (by [@yulman2207](https://github.com/yulman2207))
 - Fix `GeoJSONSource.updateData` applying a queued update to a feature that a later call adds again ([#8804](https://github.com/maplibre/maplibre-gl-js/issues/8804)) (by [@architpai](https://github.com/architpai))
+- Fix maps that stop loading after iOS shuts down their background workers to save memory ([#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491)) (by [@lucaswoj](https://github.com/lucaswoj) and [@HarelM](https://github.com/HarelM))
 - _...Add new stuff here..._
 
 ## 6.15.0
