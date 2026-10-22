@@ -132,25 +132,17 @@ describe('Worker generic testing', () => {
         server.restore();
     });
 
-    test('imports a script only once when requested twice', async () => {
+    test('imports a script only once when requested twice, and retries it after a failure', async () => {
         const fetchSpy = vi.fn().mockResolvedValue(new Response(null, {status: 404}));
         vi.stubGlobal('fetch', fetchSpy);
 
         const first = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
         const second = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
-
         await expect(first).rejects.toThrow('Failed to load /error: 404');
         await expect(second).rejects.toThrow('Failed to load /error: 404');
         expect(fetchSpy).toHaveBeenCalledTimes(1);
-    });
-
-    test('retries importing a script that failed', async () => {
-        const fetchSpy = vi.fn().mockResolvedValue(new Response(null, {status: 404}));
-        vi.stubGlobal('fetch', fetchSpy);
 
         await expect(worker.actor.messageHandlers[MessageType.importScript]('0', '/error')).rejects.toThrow('Failed to load /error: 404');
-        await expect(worker.actor.messageHandlers[MessageType.importScript]('0', '/error')).rejects.toThrow('Failed to load /error: 404');
-
         expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
 

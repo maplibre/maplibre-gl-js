@@ -1,8 +1,13 @@
-import {describe, test, expect, vi} from 'vitest';
+import {describe, afterEach, test, expect, vi} from 'vitest';
 import {WorkerPool} from './worker_pool.ts';
 import {clearPrewarmedResources, getGlobalWorkerPool, prewarm} from './global_worker_pool.ts';
 
 describe('WorkerPool', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
+    });
+
     test('acquire', async () => {
         Object.defineProperty(WorkerPool, 'workerCount', {value: 4});
 
@@ -55,6 +60,20 @@ describe('WorkerPool', () => {
         for (const w of after) {
             expect(before).not.toContain(w);
         }
+    });
+
+    test('restart fires no restart event when the replacement workers fail to start', async () => {
+        const pool = new WorkerPool();
+        await pool.acquire('map-1');
+        const restartListener = vi.fn();
+        pool.on('restart', restartListener);
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.stubGlobal('Worker', function () { throw new Error('Out of memory'); });
+
+        await pool.restart();
+
+        expect(restartListener).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to create replacement workers'));
     });
 
     test('restart before any worker exists does nothing', () => {

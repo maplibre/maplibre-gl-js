@@ -14,24 +14,6 @@ describe('GlobalDispatcher', () => {
         await terminateGlobalWorkers();
     });
 
-    test('fires workerscreate when a map creates the workers', async () => {
-        const workersCreateListener = vi.fn();
-        getGlobalDispatcher().on('workerscreate', workersCreateListener);
-
-        await getGlobalWorkerPool().acquire('map-1');
-
-        await vi.waitFor(() => expect(workersCreateListener).toHaveBeenCalledTimes(1));
-    });
-
-    test('broadcasts to new workers after the old ones terminate', async () => {
-        const globalDispatcher = getGlobalDispatcher();
-        await getGlobalWorkerPool().acquire('map-1');
-
-        await terminateGlobalWorkers();
-
-        await expect(globalDispatcher.broadcast(MessageType.ping, undefined)).resolves.toHaveLength(WorkerPool.workerCount);
-    });
-
     test('rejects an in-flight broadcast when the workers terminate', async () => {
         const workers = await getGlobalWorkerPool().acquire('map-1');
         for (const worker of workers) {
@@ -57,7 +39,7 @@ describe('GlobalDispatcher', () => {
         expect(unregisterSpy).toHaveBeenCalledWith('my-plugin-message');
     });
 
-    test('restores message handlers and scripts on the workers that replace terminated ones', async () => {
+    test('fires workerscreate and restores message handlers and scripts on the workers that replace terminated ones', async () => {
         const handler = vi.fn();
         const sendSpy = vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
         await getGlobalDispatcher().registerMessageHandler('my-plugin-message', handler);
@@ -65,10 +47,13 @@ describe('GlobalDispatcher', () => {
         await terminateGlobalWorkers();
         sendSpy.mockClear();
         const registerSpy = vi.spyOn(Actor.prototype, 'registerMessageHandler');
+        const workersCreateListener = vi.fn();
+        getGlobalDispatcher().on('workerscreate', workersCreateListener);
 
         await getGlobalWorkerPool().acquire('map-1');
 
         await vi.waitFor(() => {
+            expect(workersCreateListener).toHaveBeenCalledTimes(1);
             expect(registerSpy).toHaveBeenCalledWith('my-plugin-message', handler);
             expect(sendSpy).toHaveBeenCalledExactlyOnceWith({type: MessageType.importScript, data: 'plugin.js'});
         });

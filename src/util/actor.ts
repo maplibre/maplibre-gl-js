@@ -87,7 +87,6 @@ export class Actor implements IActor {
         this.subscription = subscribe(this.target, 'message', (message) => this.receive(message), false);
         this.globalScope = isWorker(self) ? target : window;
         this.signal = signal;
-        if (signal?.aborted) this.remove();
         signal?.addEventListener('abort', () => {
             this.remove();
             for (const {reject} of Object.values(this.resolveRejects)) {

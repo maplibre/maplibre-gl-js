@@ -140,6 +140,25 @@ describe('RTLMainThreadPlugin', () => {
         expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
 
+    test('should load the plugin again into new workers', async () => {
+        broadcastSpy = vi.spyOn(GlobalDispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess);
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        broadcastSpy.mockClear();
+
+        rtlMainThreadPlugin.dispatcher.fire('workerscreate');
+
+        expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
+    });
+
+    test('should sync a deferred plugin again into new workers', async () => {
+        await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
+        broadcastSpy.mockClear();
+
+        rtlMainThreadPlugin.dispatcher.fire('workerscreate');
+
+        expect(broadcastSpy).toHaveBeenCalledExactlyOnceWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
+    });
+
     test('should set status to requested if RTL plugin was not set', async () => {
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');

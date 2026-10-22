@@ -114,6 +114,16 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
         return actors;
     }
 
+    /** Returns the actors already built or being built, without starting any workers. */
+    private async getBuiltActors(): Promise<Actor[]> {
+        try {
+            return (await this.actorsPromise) ?? [];
+        } catch {
+            // The workers terminated first, and the next actors pick up messageHandlers.
+            return [];
+        }
+    }
+
     private async importScriptInto(actors: Actor[], url: string): Promise<void> {
         try {
             await Promise.all(actors.map(actor => actor.sendAsync({type: MessageType.importScript, data: url})));
@@ -141,14 +151,14 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
     registerMessageHandler<TData = any, TResult = any>(type: string, handler: CustomMessageHandler<TData, TResult>): Promise<void>;
     async registerMessageHandler(type: string, handler: CustomMessageHandler<any, any>): Promise<void> {
         this.messageHandlers[type] = handler;
-        for (const actor of (await this.actorsPromise) ?? []) {
+        for (const actor of await this.getBuiltActors()) {
             actor.registerMessageHandler(type as MessageType, handler);
         }
     }
 
     async unregisterMessageHandler(type: MessageType | string): Promise<void> {
         delete this.messageHandlers[type];
-        for (const actor of (await this.actorsPromise) ?? []) {
+        for (const actor of await this.getBuiltActors()) {
             actor.unregisterMessageHandler(type as MessageType);
         }
     }
