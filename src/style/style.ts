@@ -482,12 +482,20 @@ export class Style extends Evented<MapEventType> {
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification): void {
         this.fire(new MapStyleDataEvent('dataloading'));
 
-        this._frameRequest = new AbortController();
-        browser.frameAsync(this._frameRequest, this.map._ownerWindow).then(() => {
+        const abortController = new AbortController();
+        this._frameRequest = abortController;
+        browser.frameAsync(abortController, this.map._ownerWindow).then(() => {
             this._frameRequest = null;
             options.validate = options.validate !== false;
             this._load(json, options, previousStyle);
-        }).catch(() => {}); // ignore abort
+        }).catch((error) => {
+            this._frameRequest = null;
+            if (!abortController.signal.aborted) { // ignore abort
+                // A style object that fails to load must report the failure the same way a
+                // style URL does, instead of rejecting a promise nobody observes.
+                this.fire(new ErrorEvent(ensureError(error)));
+            }
+        });
     }
 
     loadEmpty(): void {
