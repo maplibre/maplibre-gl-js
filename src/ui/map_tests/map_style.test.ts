@@ -625,42 +625,38 @@ describe('setStyle', () => {
     });
 
     test('map loads with a transform style function', async () => {
+        const transformStyle = vi.fn((_, nextStyle) => ({
+            ...nextStyle,
+            zoom: 13,
+        }));
         const map = createMap({
-            transformStyle: (prevStyle, nextStyle) => {
-                expect(prevStyle).toBeUndefined();
-                expect(nextStyle).toBeDefined();
-                return {
-                    ...nextStyle,
-                    zoom: 13,
-                };
-            }
+            transformStyle,
         });
 
         await map.once('load');
 
+        expect(transformStyle).toHaveBeenCalledTimes(1);
         expect(map.getStyle().zoom).toBe(13);
     });
 
     test('calling setStyle with a transform style function overrides the default set in the map options', async () => {
+        const mapTransformStyle = vi.fn();
+        const transformStyle = vi.fn((_, nextStyle) => ({
+            ...nextStyle,
+            zoom: 13,
+        }));
         const map = createMap({
             deleteStyle: true,
-            transformStyle: () => {
-                throw 'this should not be called';
-            }
+            transformStyle: mapTransformStyle,
         });
         map.setStyle(createStyle(), {
-            transformStyle: (prevStyle, nextStyle) => {
-                expect(prevStyle).toBeUndefined();
-                expect(nextStyle).toBeDefined();
-                return {
-                    ...nextStyle,
-                    zoom: 13,
-                };
-            },
+            transformStyle,
         });
 
         await map.once('load');
 
+        expect(mapTransformStyle).not.toHaveBeenCalled();
+        expect(transformStyle).toHaveBeenCalledTimes(1);
         expect(map.getStyle().zoom).toBe(13);
     });
 
