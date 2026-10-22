@@ -664,7 +664,7 @@ describe('setStyle', () => {
         await map.once('load');
 
         expect(mapTransformStyle).not.toHaveBeenCalled();
-        expect(transformStyle).toHaveBeenCalled();
+        expect(transformStyle).toHaveBeenCalledTimes(1);
         expect(map.getStyle().zoom).toBe(13);
     });
 
