@@ -216,11 +216,16 @@ class CrossTileSymbolLayerIndex {
             [crossTileID: number]: boolean;
         };
     };
+    /**
+     * The index of each bucket, so that a bucket keeps its index when its tile moves to another world copy.
+     */
+    bucketIndexes: Record<number, TileLayerIndex>;
     lng: number;
 
     constructor() {
         this.indexes = {};
         this.usedCrossTileIDs = {};
+        this.bucketIndexes = {};
         this.lng = 0;
     }
 
@@ -247,10 +252,25 @@ class CrossTileSymbolLayerIndex {
         this.lng = lng;
     }
 
+    /**
+     * The tile manager can move a tile to another world copy without reloading it. Moves the index of
+     * its bucket along, so that the symbols keep their cross-tile IDs.
+     * @returns whether the bucket had an index under another world copy
+     */
+    handleTileWrapChange(tileID: OverscaledTileID, bucketInstanceId: number): boolean {
+        const index = this.bucketIndexes[bucketInstanceId];
+        if (!index) return false;
+        const zoomIndexes = this.indexes[tileID.overscaledZ];
+        delete zoomIndexes[index.tileID.key];
+        index.tileID = tileID;
+        zoomIndexes[tileID.key] = index;
+        return true;
+    }
+
     addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs): boolean {
-        if (this.indexes[tileID.overscaledZ]?.[tileID.key]) {
-            if (this.indexes[tileID.overscaledZ][tileID.key].bucketInstanceId ===
-                bucket.bucketInstanceId) {
+        const previousIndex = this.indexes[tileID.overscaledZ]?.[tileID.key];
+        if (previousIndex) {
+            if (previousIndex.bucketInstanceId === bucket.bucketInstanceId) {
                 return false;
             } else {
                 // We're replacing this bucket with an updated version
@@ -258,9 +278,12 @@ class CrossTileSymbolLayerIndex {
                 // the new bucket can claim them.
                 // The old index entries themselves stick around until
                 // 'removeStaleBuckets' is called.
-                this.removeBucketCrossTileIDs(tileID.overscaledZ,
-                    this.indexes[tileID.overscaledZ][tileID.key]);
+                this.removeBucketCrossTileIDs(tileID.overscaledZ, previousIndex);
+                delete this.bucketIndexes[previousIndex.bucketInstanceId];
             }
+        }
+        if (this.handleTileWrapChange(tileID, bucket.bucketInstanceId)) {
+            return !!previousIndex;
         }
 
         for (let i = 0; i < bucket.symbolInstances.length; i++) {
@@ -301,7 +324,7 @@ class CrossTileSymbolLayerIndex {
         if (this.indexes[tileID.overscaledZ] === undefined) {
             this.indexes[tileID.overscaledZ] = {};
         }
-        this.indexes[tileID.overscaledZ][tileID.key] = new TileLayerIndex(tileID, bucket.symbolInstances, bucket.bucketInstanceId);
+        this.indexes[tileID.overscaledZ][tileID.key] = this.bucketIndexes[bucket.bucketInstanceId] = new TileLayerIndex(tileID, bucket.symbolInstances, bucket.bucketInstanceId);
 
         return true;
     }
@@ -323,6 +346,7 @@ class CrossTileSymbolLayerIndex {
             for (const tileKey in zoomIndexes) {
                 if (!currentIDs[zoomIndexes[tileKey].bucketInstanceId]) {
                     this.removeBucketCrossTileIDs(z, zoomIndexes[tileKey]);
+                    delete this.bucketIndexes[zoomIndexes[tileKey].bucketInstanceId];
                     delete zoomIndexes[tileKey];
                     tilesChanged = true;
                 }

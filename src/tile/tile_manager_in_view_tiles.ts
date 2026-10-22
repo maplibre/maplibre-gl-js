@@ -18,6 +18,37 @@ export class InViewTiles {
         this._tiles = tiles;
     }
 
+    /**
+     * Moves a loaded tile whose world copy is not in `tileIDs` to a copy in `tileIDs` that has no tile yet.
+     * Only for a projection where every world copy of a tile is the same place.
+     * @returns the moved tiles by their previous key
+     */
+    public moveTilesToWorldCopies(tileIDs: OverscaledTileID[]): Record<string, Tile> {
+        const movedTiles: Record<string, Tile> = {};
+        const missingTileIDs = tileIDs.filter(tileID => !this._tiles[tileID.key]);
+        if (missingTileIDs.length === 0) return movedTiles;
+
+        const wantedKeys = new Set(tileIDs.map(tileID => tileID.key));
+        const spareTiles = new Map<string, Tile>();
+        for (const tile of Object.values(this._tiles)) {
+            if (tile.state === 'loaded' && !wantedKeys.has(tile.tileID.key)) {
+                spareTiles.set(tile.tileID.wrapped().key, tile);
+            }
+        }
+
+        for (const tileID of missingTileIDs) {
+            const wrappedKey = tileID.wrapped().key;
+            const tile = spareTiles.get(wrappedKey);
+            if (!tile) continue;
+            spareTiles.delete(wrappedKey);
+            movedTiles[tile.tileID.key] = tile;
+            delete this._tiles[tile.tileID.key];
+            tile.moveToWorldCopy(tileID);
+            this._tiles[tileID.key] = tile;
+        }
+        return movedTiles;
+    }
+
     public setFeatureState(featuresChanged: LayerFeatureStates, style: Style, revision: number): void {
         for (const id in this._tiles) {
             const tile = this._tiles[id];
