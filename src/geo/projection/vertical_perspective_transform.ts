@@ -764,9 +764,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * The center and zoom that {@link setLocationAtPoint} moves the camera to, or null where `lnglat` already renders
-     * at the screen `point` or no center puts it there. The zoom keeps the planet at the size it has now, from the latitude the constrain lets the
-     * center reach.
+     * The center and zoom that {@link setLocationAtPoint} moves the camera to, or null where the camera stays where it
+     * is. The zoom keeps the planet at the size it has now, from the latitude the constrain lets the center reach.
      */
     getCameraForLocationAtPoint(lnglat: LngLat, point: Point): {center: LngLat; zoom: number} | null {
         // The elevation is ignored: this transform solves on the planet's surface.
@@ -861,9 +860,13 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         const newLng = validLng / Math.PI * 180;
         const newLat = clamp(validLat / Math.PI * 180, -90, 90);
-        if (newLng === this.center.lng && newLat === this.center.lat) return null;
-        const {center, zoom} = this._helper.getConstrainedCamera(new LngLat(newLng, newLat), this.zoom);
-        return this._helper.getConstrainedCamera(center, this.applyConstrain(center, zoom + getZoomAdjustment(this.center.lat, center.lat)).zoom);
+        const moved = newLng !== this.center.lng || newLat !== this.center.lat;
+        const {center, zoom} = moved ?
+            this._helper.getConstrainedCamera(new LngLat(newLng, newLat), this.zoom) :
+            {center: this.center, zoom: this.zoom};
+        const adjustedZoom = this.applyConstrain(center, zoom + getZoomAdjustment(this.center.lat, center.lat)).zoom;
+        if (adjustedZoom !== zoom) return this._helper.getConstrainedCamera(center, adjustedZoom);
+        return moved ? {center, zoom} : null;
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
