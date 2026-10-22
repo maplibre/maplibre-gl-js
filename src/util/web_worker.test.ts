@@ -2,6 +2,25 @@ import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {workerFactory} from './web_worker.ts';
 import {config} from './config.ts';
 
+function makeFakeWorker() {
+    const listeners: Record<string, Array<() => void>> = {};
+    return {
+        postMessage: vi.fn(),
+        addEventListener: vi.fn((type: string, handler: () => void) => {
+            (listeners[type] ||= []).push(handler);
+        }),
+        removeEventListener: vi.fn((type: string, handler: () => void) => {
+            listeners[type] = (listeners[type] || []).filter(h => h !== handler);
+        }),
+        terminate: vi.fn(),
+        emit(type: string) {
+            for (const handler of [...(listeners[type] || [])]) {
+                handler();
+            }
+        }
+    };
+}
+
 describe('workerFactory', () => {
     const originalWorker = (globalThis as any).Worker;
     const originalWorkerUrl = config.WORKER_URL;
@@ -100,10 +119,9 @@ describe('workerFactory', () => {
         );
     });
 
-    test('cross-origin module worker URL is converted to an import script and the worker is constructed from a Blob URL', async () => {
-        const WorkerSpy = vi.fn(function() {
-            return {postMessage: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), terminate: vi.fn()};
-        });
+    test('cross-origin module worker URL is converted to an import script and the Blob URL outlives worker startup', async () => {
+        const worker = makeFakeWorker();
+        const WorkerSpy = vi.fn(function() { return worker; });
         (globalThis as any).Worker = WorkerSpy;
 
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
@@ -116,20 +134,29 @@ describe('workerFactory', () => {
 
         config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
 
-        await workerFactory();
+        const created = await workerFactory();
 
         expect(fetchSpy).toHaveBeenCalledTimes(0);
         expect(BlobSpy).toHaveBeenCalledWith(['import "https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs"'], {type: 'text/javascript'});
         expect(createObjectURLSpy).toHaveBeenCalled();
-        expect(WorkerSpy).toHaveBeenCalledTimes(1);
+        expect(created).toBe(worker);
         expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc', {type: 'module'}]);
+        // Revoking here would race the worker's own fetch of the script (#8854).
+        expect(revokeObjectURLSpy).not.toHaveBeenCalled();
+
+        worker.emit('message');
         expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
+        expect(revokeObjectURLSpy).toHaveBeenCalledTimes(1);
+
+        // Either event releases the URL, but only once.
+        worker.emit('message');
+        worker.emit('error');
+        expect(revokeObjectURLSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('cross-origin classic worker URL is fetched and the worker is constructed from a Blob URL', async () => {
-        const WorkerSpy = vi.fn(function() {
-            return {postMessage: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(), terminate: vi.fn()};
-        });
+    test('cross-origin classic worker URL is fetched and the Blob URL outlives worker startup', async () => {
+        const worker = makeFakeWorker();
+        const WorkerSpy = vi.fn(function() { return worker; });
         (globalThis as any).Worker = WorkerSpy;
 
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
@@ -141,12 +168,32 @@ describe('workerFactory', () => {
 
         config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.cjs';
 
-        await workerFactory();
+        const created = await workerFactory();
 
         expect(fetchSpy).toHaveBeenCalledWith('https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.cjs');
         expect(createObjectURLSpy).toHaveBeenCalled();
-        expect(WorkerSpy).toHaveBeenCalledTimes(1);
+        expect(created).toBe(worker);
         expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc']);
+        expect(revokeObjectURLSpy).not.toHaveBeenCalled();
+
+        worker.emit('error');
+        expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
+    });
+
+    test('a worker that fails to construct still releases its Blob URL', async () => {
+        (globalThis as any).Worker = vi.fn(() => {
+            throw new Error('cannot construct');
+        });
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: true,
+            text: () => Promise.resolve('// worker code'),
+        } as any);
+        const revokeObjectURLSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+        vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:http://localhost/abc');
+
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.cjs';
+
+        await expect(workerFactory()).rejects.toThrow('cannot construct');
         expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
     });
 
@@ -155,5 +202,44 @@ describe('workerFactory', () => {
         config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.cjs';
 
         await expect(workerFactory()).rejects.toThrow('Failed to fetch worker script (404)');
+    });
+    describe('srcdoc iframes', () => {
+        afterEach(() => {
+            vi.unstubAllGlobals();
+        });
+
+        test('a same-origin worker URL in a srcdoc iframe is not treated as cross-origin', async () => {
+            // `location.origin` is "null" for `about:srcdoc`; the document's real
+            // origin is inherited from the parent and exposed as `globalThis.origin`.
+            vi.stubGlobal('location', {href: 'about:srcdoc', origin: 'null'});
+            vi.stubGlobal('origin', 'https://example.com');
+
+            const worker = makeFakeWorker();
+            const WorkerSpy = vi.fn(function() { return worker; });
+            (globalThis as any).Worker = WorkerSpy;
+            const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL');
+
+            config.WORKER_URL = 'https://example.com/dist/maplibre-gl-worker.mjs';
+
+            await workerFactory();
+
+            expect(WorkerSpy.mock.calls[0]).toEqual(['https://example.com/dist/maplibre-gl-worker.mjs', {type: 'module'}]);
+            expect(createObjectURLSpy).not.toHaveBeenCalled();
+        });
+
+        test('a genuinely cross-origin worker URL in a srcdoc iframe still goes through a Blob', async () => {
+            vi.stubGlobal('location', {href: 'about:srcdoc', origin: 'null'});
+            vi.stubGlobal('origin', 'https://example.com');
+
+            const worker = makeFakeWorker();
+            (globalThis as any).Worker = vi.fn(function() { return worker; });
+            vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:http://localhost/abc');
+
+            config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+
+            await workerFactory();
+
+            expect((globalThis as any).Worker.mock.calls[0]).toEqual(['blob:http://localhost/abc', {type: 'module'}]);
+        });
     });
 });
