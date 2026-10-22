@@ -240,6 +240,7 @@ export function mergeSourceDiffs(
  *
  * - If you `removeAll` and then `add` features in the same diff, the added features will be kept.
  * - Updates only apply to features that exist after removes and adds have been processed.
+ * - An `add` replaces the whole feature, so earlier updates to the same id are dropped before updates are merged.
  */
 function resolveMergeConflicts(prev: GeoJSONSourceDiffHashed, next: GeoJSONSourceDiffHashed) {
     // Removing all features with added or updated features in previous - and clear no-op removes
@@ -253,6 +254,11 @@ function resolveMergeConflicts(prev: GeoJSONSourceDiffHashed, next: GeoJSONSourc
     // Removing features that were added or updated in previous
     for (const id of next.remove) {
         prev.add.delete(id);
+        prev.update.delete(id);
+    }
+
+    // Adding features that were updated in previous - the add replaces them
+    for (const id of next.add.keys()) {
         prev.update.delete(id);
     }
 
