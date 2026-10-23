@@ -2133,7 +2133,10 @@ describe('flyTo', () => {
 
         const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
-        camera._updateElevationFromTerrainIfNeeded = () => terrainCallbacks.update++;
+        camera._updateElevationFromTerrainIfNeeded = (k, tr, freezeElevation) => {
+            if (!terrain || freezeElevation) return;
+            terrainCallbacks.update++;
+        };
         camera.setCenter([-10, 0]);
         terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
