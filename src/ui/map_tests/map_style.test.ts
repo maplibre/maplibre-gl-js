@@ -624,6 +624,42 @@ describe('setStyle', () => {
         await map.once('load');
     });
 
+    test('map loads with a transform style function', async () => {
+        const transformStyle = vi.fn((_, nextStyle) => ({
+            ...nextStyle,
+            zoom: 13,
+        }));
+        const map = createMap({
+            transformStyle,
+        });
+
+        await map.once('load');
+
+        expect(transformStyle).toHaveBeenCalledTimes(1);
+        expect(map.getStyle().zoom).toBe(13);
+    });
+
+    test('calling setStyle with a transform style function overrides the default set in the map options', async () => {
+        const mapTransformStyle = vi.fn();
+        const transformStyle = vi.fn((_, nextStyle) => ({
+            ...nextStyle,
+            zoom: 13,
+        }));
+        const map = createMap({
+            deleteStyle: true,
+            transformStyle: mapTransformStyle,
+        });
+        map.setStyle(createStyle(), {
+            transformStyle,
+        });
+
+        await map.once('load');
+
+        expect(mapTransformStyle).not.toHaveBeenCalled();
+        expect(transformStyle).toHaveBeenCalledTimes(1);
+        expect(map.getStyle().zoom).toBe(13);
+    });
+
     test('Override default style validation', () => {
         let validationOption = true;
         vi.spyOn(Style.prototype, 'loadJSON').mockImplementationOnce((styleJson, options) => {

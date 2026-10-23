@@ -64,6 +64,22 @@ describe('GlobeTransform', () => {
         });
     });
 
+    test('uses the overridden depth range until the override is cleared', () => {
+        const globeTransform = createDefaultTransform();
+
+        globeTransform.overrideNearFarZ(5, 500);
+
+        expect(globeTransform.autoCalculateNearFarZ).toBe(false);
+        expect(globeTransform.nearZ).toBe(5);
+        expect(globeTransform.farZ).toBe(500);
+
+        globeTransform.clearNearFarZOverride();
+
+        expect(globeTransform.autoCalculateNearFarZ).toBe(true);
+        expect(globeTransform.nearZ).toBe(0.5);
+        expect(globeTransform.farZ).toBe(742.3859166956437);
+    });
+
     describe('getProjectionData', () => {
         const globeTransform = createDefaultTransform();
         test('mercator tile extents are set', () => {
@@ -462,6 +478,15 @@ describe('GlobeTransform', () => {
                 // exact up to the center-latitude change the solve itself causes (~1e-5 deg)
                 expect(unprojected.lng).toBeCloseTo(coords.lng, 3);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, 3);
+            });
+
+            test('does not move the camera where no center puts the location at the point', () => {
+                const transform = createDefaultTransform();
+                transform.setZoom(1);
+                coords = new LngLat(0, 89);
+                point = new Point(470, 240);
+                transform.setLocationAtPoint(coords, point);
+                expect(transform.center).toEqual(new LngLat(0, 0));
             });
         });
     });

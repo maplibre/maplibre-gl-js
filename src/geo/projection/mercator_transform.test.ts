@@ -150,6 +150,30 @@ describe('transform', () => {
         expect(fixedLngLat(transform.screenPointToLocation(new Point(15, 45)))).toEqual({lng: 13, lat: 10});
     });
 
+    test('setLocationAt wraps a center it leaves in place', () => {
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform.resize(500, 500);
+        transform.setZoom(4);
+        transform.setCenter(new LngLat(360, 0));
+        transform.setLocationAtPoint(transform.center, transform.centerPoint);
+        expect(transform.center).toEqual({lng: 0, lat: 0});
+    });
+
+    test('getCameraForLocationAtPoint gives the camera setLocationAtPoint moves to, without moving it', () => {
+        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
+        transform.resize(500, 500);
+        transform.setZoom(4);
+
+        const camera = transform.getCameraForLocationAtPoint(new LngLat(179, 0), transform.centerPoint);
+
+        expect(transform.center).toEqual({lng: 0, lat: 0});
+        expect(camera.center.lng).toBeLessThan(179);
+        expect(transform.getCameraForLocationAtPoint(transform.center, transform.centerPoint)).toBeNull();
+        transform.setLocationAtPoint(new LngLat(179, 0), transform.centerPoint);
+        expect(transform.center).toEqual(camera.center);
+        expect(transform.zoom).toBe(camera.zoom);
+    });
+
     test('has a default zoom', () => {
         const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(500, 500);
@@ -660,8 +684,7 @@ describe('transform', () => {
     });
 
     test('isPointOnMapSurface is false past the edge of a world projection', () => {
-        const transform = createMercatorTransform({minZoom: -2, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-        transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(createWrappingWorldCrs()));
+        const transform = createMercatorTransform({minZoom: -2, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, worldCoordinateHelper: new CRSWorldCoordinateHelper(createWrappingWorldCrs())});
         transform.resize(500, 500);
         transform.setZoom(-1);
 

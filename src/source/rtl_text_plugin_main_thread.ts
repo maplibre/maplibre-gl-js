@@ -1,14 +1,37 @@
 
 import {browser} from '../util/browser.ts';
 import {Event, Evented} from '../util/evented.ts';
+import {warnOnce} from '../util/util.ts';
 import {type RTLPluginStatus, RTLPluginLoadedEventName, type PluginState} from './rtl_text_plugin_status.ts';
-import {type Dispatcher, getGlobalDispatcher} from '../util/dispatcher.ts';
+import {type GlobalDispatcher, getGlobalDispatcher} from '../util/global_dispatcher.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
     url: string = null;
-    dispatcher: Dispatcher = getGlobalDispatcher();
+    dispatcher: GlobalDispatcher = getGlobalDispatcher();
+
+    constructor() {
+        super();
+        this.dispatcher.on('workerscreate', () => this._resyncWorkers());
+    }
+
+    /**
+     * Re-syncs the plugin into freshly created workers. A `loading` plugin needs no re-sync: its
+     * in-flight request targets the newest workers, and re-requesting would double-load the
+     * script when the plugin's own broadcast is what created the workers.
+     */
+    async _resyncWorkers(): Promise<void> {
+        try {
+            if (this.status === 'deferred') {
+                await this._syncState('deferred');
+            } else if (this.status === 'loaded') {
+                await this._requestImport();
+            }
+        } catch (error) {
+            warnOnce(`Failed to load the RTL text plugin into the new workers: ${error}`);
+        }
+    }
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
