@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Apply and interpolate elevation changes when elevation option passed into `easeTo` and `flyTo` ([#8644](https://github.com/maplibre/maplibre-gl-js/pull/8644)) (by [@bogger12](https://github.com/bogger12))
 - Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
 - Allow calling `new Map({ transformStyle: { ... }})` to provide a style transformation function similar to the same option in `setStyle` ([#8786](https://github.com/maplibre/maplibre-gl-js/pull/8786)) (by [@hiddewie](https://github.com/hiddewie))
 - _...Add new stuff here..._

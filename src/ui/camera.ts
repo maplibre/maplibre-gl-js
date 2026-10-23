@@ -304,6 +304,7 @@ export type AnimationOptions = {
      * Default false. Needed in 3D maps to let the camera stay in a constant
      * height based on sea-level. After the animation finished the zoom-level will be recalculated in respect of
      * the distance from the camera to the center-coordinate-altitude.
+     * `elevation` option will take priority over this if it is present
      */
     freezeElevation?: boolean;
 };
@@ -372,6 +373,7 @@ export class Camera extends Evented<MapEventType> {
     _pitching: boolean;
     _rolling: boolean;
     _padding: boolean;
+    _elevating: boolean;
 
     _bearingSnap: number;
     _zoomSnap: number;
@@ -879,10 +881,13 @@ export class Camera extends Evented<MapEventType> {
         const startBearing = this.getBearing(),
             startPitch = tr.pitch,
             startRoll = tr.roll,
+            startElevation = tr.elevation,
             bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
             pitch = options.pitch !== undefined ? +options.pitch : startPitch,
             roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll,
-            padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
+            padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions,
+            elevation = options.elevation !== undefined ? +options.elevation : startElevation;
+
         const offsetAsPoint = Point.convert(options.offset);
 
         let around, aroundPoint;
@@ -918,13 +923,17 @@ export class Camera extends Evented<MapEventType> {
         this._rolling ||= (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
         this._zooming ||= easeHandler.isZooming;
+        this._elevating ||= (startElevation !== elevation);
         this._easeId = options.easeId;
+
         this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation});
 
         this._ease((k) => {
             easeHandler.easeFunc(k);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            if (this._elevating) {
+                tr.setElevation(interpolates.number(startElevation, elevation, k));
+            } else this._updateElevationFromTerrainIfNeeded(k, tr, options.freezeElevation);
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
 
@@ -989,7 +998,9 @@ export class Camera extends Evented<MapEventType> {
      * @param k - the animation's progress, 0 to 1
      * @param tr - the transform the animation edits
      */
-    _updateElevation(k: number, tr: ITransform): void {
+    _updateElevationFromTerrainIfNeeded(k: number, tr: ITransform, freezeElevation: boolean): void {
+        if (!this.terrain || freezeElevation) return;
+
         if (this._elevationStart === undefined || this._elevationCenter === undefined) {
             this._prepareElevation(tr.center, tr);
         }
@@ -1397,6 +1408,7 @@ export class Camera extends Evented<MapEventType> {
         this._pitching = false;
         this._rolling = false;
         this._padding = false;
+        this._elevating = false;
 
         if (wasZooming) {
             this.fire(new MapMovementEvent('zoomend', eventData));
@@ -1444,12 +1456,14 @@ export class Camera extends Evented<MapEventType> {
             startBearing = tr.bearing,
             startPitch = tr.pitch,
             startRoll = tr.roll,
-            startPadding = tr.padding;
+            startPadding = tr.padding,
+            startElevation = tr.elevation;
 
         const bearing = options.bearing !== undefined ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
         const pitch = options.pitch !== undefined ? +options.pitch : startPitch;
         const roll = options.roll !== undefined ? this._normalizeBearing(options.roll, startRoll) : startRoll;
         const padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
+        const elevation = options.elevation !== undefined ? options.elevation : startElevation;
 
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
@@ -1547,6 +1561,7 @@ export class Camera extends Evented<MapEventType> {
         this._pitching = (pitch !== startPitch);
         this._rolling = (roll !== startRoll);
         this._padding = !tr.isPaddingEqual(padding);
+        this._elevating = (startElevation !== elevation);
 
         this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
 
@@ -1573,7 +1588,10 @@ export class Camera extends Evented<MapEventType> {
 
             flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
+            if (this._elevating) {
+                tr.setElevation(interpolates.number(startElevation, elevation, k));
+            } else this._updateElevationFromTerrainIfNeeded(k, tr, options.freezeElevation);
+
             this.applyUpdatedTransform(tr);
             this._fireMoveEvents(eventData);
         }, () => {
