@@ -364,35 +364,55 @@ export class MercatorTransform implements ITransform {
 
     recalculateZoomAndCenter(terrain?: Terrain): void {
         for (let pass = 0; pass < CENTER_ON_TERRAIN_PASSES; pass++) {
-            // find position the camera is looking on
-            const center = (terrain && this._terrainPointPastMaxZoom(terrain)) || this.screenPointToLocation(this.centerPoint, terrain);
-            const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
-            if (this.pitch < 90 && elevation >= this.getCameraAltitude()) return;
+            const elevation = this.getGroundElevationAtCenter(terrain);
+            if (elevation === null) return;
             this._helper.recalculateZoomAndCenter(elevation);
             if (!terrain || Math.abs(terrain.getElevationForLngLat(this.center, this) - this.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return;
         }
     }
 
     /**
-     * Moves the center so that `lnglat`, on the ground at `elevation` meters, renders
-     * at the screen `point`. Both rays are cast through the same inverse pixel matrix
-     * so its inversion error cancels out of their difference; the current-center ray
-     * must be intersected at the center's own elevation (z=0) — intersecting it with
-     * the elevated plane would land `(elevation - centerElevation)·tan(pitch)` away
-     * from the center and make repeated calls drift.
+     * The elevation of the ground the camera looks at, which {@link recalculateZoomAndCenter} moves the center to,
+     * or null where the camera would end up below that ground.
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point, elevation: number = this.elevation): void {
+    getGroundElevationAtCenter(terrain?: Terrain): number | null {
+        const center = (terrain && this._terrainPointPastMaxZoom(terrain)) || this.screenPointToLocation(this.centerPoint, terrain);
+        const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
+        if (this.pitch < 90 && elevation >= this.getCameraAltitude()) return null;
+        return elevation;
+    }
+
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void {
+        const camera = this.getCameraForLocationAtPoint(lnglat, point, elevation);
+        if (camera) this._helper.setCenterAndZoom(camera.center, camera.zoom);
+    }
+
+    /**
+     * The center and zoom that {@link setLocationAtPoint} moves the camera to, so that `lnglat`, on the ground at
+     * `elevation` meters, renders at the screen `point`, or null where the camera stays where it is. Both rays are
+     * cast through the same inverse pixel matrix so its inversion error cancels out of their difference; the
+     * current-center ray must be intersected at the center's own elevation (z=0), since intersecting it with the
+     * elevated plane would land `(elevation - centerElevation)·tan(pitch)` away from the center and make repeated
+     * calls drift. In a world that wraps, a center outside the main world is then wrapped into it and constrained
+     * again.
+     */
+    getCameraForLocationAtPoint(lnglat: LngLat, point: Point, elevation: number = this.elevation): {center: LngLat; zoom: number} | null {
         const z = elevation - this.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(this.centerPoint, 0);
         const worldCoordinateHelper = this.worldCoordinateHelper;
         const loc = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
-        this.setCenter(worldCoordinateHelper.lngLatFromWorld(
+        const center = worldCoordinateHelper.lngLatFromWorld(
             loc.x - (a.x - b.x),
-            loc.y - (a.y - b.y)));
-        if (this._helper.renderWorldCopies && this.worldCoordinateHelper.wraps) {
-            this.setCenter(this.center.wrap());
+            loc.y - (a.y - b.y));
+        const moved = center.lng !== this.center.lng || center.lat !== this.center.lat;
+        let camera = moved ? this._helper.getConstrainedCamera(center, this.zoom) : null;
+        if (this._helper.renderWorldCopies && worldCoordinateHelper.wraps) {
+            const unwrapped = camera ?? {center: this.center, zoom: this.zoom};
+            const wrapped = unwrapped.center.wrap();
+            if (wrapped.lng !== unwrapped.center.lng) camera = this._helper.getConstrainedCamera(wrapped, unwrapped.zoom);
         }
+        return camera;
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {

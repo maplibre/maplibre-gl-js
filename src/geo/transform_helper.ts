@@ -357,6 +357,19 @@ export class TransformHelper implements ITransformGetters {
     }
 
     /**
+     * Moves the center and the zoom in one write, to a camera that is already constrained.
+     */
+    setCenterAndZoom(center: LngLat, zoom: number): void {
+        const state = this._cameraState;
+        this._unmodified = false;
+        state.center = center;
+        state.zoom = zoom;
+        state.tileZoom = Math.max(0, Math.floor(zoom));
+        state.scale = zoomScale(zoom);
+        this._calcMatrices();
+    }
+
+    /**
      * Elevation at current center point, meters above sea level
      */
     get elevation(): number { return this._cameraState.elevation; }
@@ -514,6 +527,16 @@ export class TransformHelper implements ITransformGetters {
             return this._callbacks.defaultConstrain(lngLat, zoom);
         }
     };
+
+    /**
+     * Where the constrain puts a camera moved to `center` and `zoom`. A transform without a size is not constrained,
+     * so it keeps the two as they are.
+     */
+    getConstrainedCamera(center: LngLat, zoom: number): {center: LngLat; zoom: number} {
+        if (!this._cameraState.width || !this._cameraState.height) return {center, zoom};
+        const constrained = this.applyConstrain(center, zoom);
+        return {center: constrained.center, zoom: this.applyConstrain(constrained.center, constrained.zoom).zoom};
+    }
 
     /**
      * @internal

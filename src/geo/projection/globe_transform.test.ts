@@ -479,6 +479,15 @@ describe('GlobeTransform', () => {
                 expect(unprojected.lng).toBeCloseTo(coords.lng, 3);
                 expect(unprojected.lat).toBeCloseTo(coords.lat, 3);
             });
+
+            test('does not move the camera where no center puts the location at the point', () => {
+                const transform = createDefaultTransform();
+                transform.setZoom(1);
+                coords = new LngLat(0, 89);
+                point = new Point(470, 240);
+                transform.setLocationAtPoint(coords, point);
+                expect(transform.center).toEqual(new LngLat(0, 0));
+            });
         });
     });
 
