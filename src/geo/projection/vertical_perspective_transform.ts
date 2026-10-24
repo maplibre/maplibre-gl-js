@@ -394,7 +394,7 @@ export class VerticalPerspectiveTransform implements ITransform {
     /** {@inheritDoc ITransform.isLocationOccluded} */
     public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
         const coverage = terrain?.getCoverageIndex();
-        elevation ??= coverage ? terrain.getElevationForLngLat(lngLat, this) : 0;
+        elevation ??= coverage ? terrain.getElevationForLngLat(lngLat, this.tileZoom) : 0;
         const location = raisedSurfaceVector(lngLat, elevation);
         if (!this.isSurfacePointVisible(location)) return true;
         if (!coverage) return false;
@@ -873,7 +873,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         const pos = angularCoordinatesToSurfaceVector(lnglat);
 
         if (terrain) {
-            const elevation = terrain.getElevationForLngLat(lnglat, this);
+            const elevation = terrain.getElevationForLngLat(lnglat, this.tileZoom);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
 
