@@ -113,7 +113,7 @@ const MAX_CENTER_PASSES = 10;
 export class TransformHelper implements ITransformGetters {
     private _callbacks: TransformHelperCallbacks;
 
-    private _cameraState: CameraState;
+    private readonly _cameraState: CameraState;
     /**
      * Whether the camera was never deliberately positioned, in which case a loading style may apply its own camera.
      * Cleared by the setters that move the camera, but not by ones that only snap it into a valid range.
