@@ -307,6 +307,7 @@ describe('RasterDEMTileSource', () => {
         await sleep(0);
         server.respond();
         await sleep(0);
+        const stateAfterEmptyRefresh = tile.state;
         server.respondWith(tileUrl, [200, {}, 'png']);
         tile.state = 'expired';
         const overlappingRefresh = source.loadTile(tile);
@@ -316,6 +317,7 @@ describe('RasterDEMTileSource', () => {
         releaseRemoval();
         await emptyRefresh;
 
+        expect(stateAfterEmptyRefresh).toBe('errored');
         expect(tile.state).toBe('loaded');
     });
 

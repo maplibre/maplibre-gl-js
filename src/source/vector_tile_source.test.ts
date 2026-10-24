@@ -501,6 +501,7 @@ describe('VectorTileSource', () => {
         await tilePromise;
         getEntriesByName.mockRestore();
 
+        expect(tile.state).toBe('errored');
         expect(tile.resourceTiming).toEqual([timing]);
     });
 
