@@ -94,7 +94,7 @@ export type WorkerTileWithData = ExpiryData & {
     encoding?: TileEncoding;
     resourceTiming?: PerformanceResourceTiming[];
     /**
-     * `true` when the tile response had an empty body (such as HTTP 204), so the buckets hold nothing because there was nothing to parse.
+     * `true` when the tile response had an empty body, such as HTTP 204.
      */
     emptyBody?: boolean;
     // Only used for benchmarking:

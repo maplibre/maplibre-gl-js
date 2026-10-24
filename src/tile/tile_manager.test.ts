@@ -490,9 +490,8 @@ describe('TileManager / Source lifecycle', () => {
         tileManager._source.loadTile = async (tile) => {
             requestedZooms.push(tile.tileID.canonical.z);
             await sleep(0);
-            // the four z1 tiles come back without data, as a source with emptyResponse missing
-            // leaves them on an empty response; the single z0 parent loads
-            tile.state = tile.tileID.canonical.z === 1 ? 'errored' : 'loaded';
+            const isIdealTile = tile.tileID.canonical.z === 1;
+            tile.state = isIdealTile ? 'errored' : 'loaded';
         };
         const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
@@ -503,7 +502,6 @@ describe('TileManager / Source lifecycle', () => {
         await idealTileLoaded;
         expect(requestedZooms).toEqual([1, 1, 1, 1]);
 
-        // the map marks its sources dirty on that event and updates on its next frame
         const parentLoaded = waitForEvent(tileManager, 'data', e => e.tile?.tileID.canonical.z === 0);
         tileManager.update(transform);
         await parentLoaded;
