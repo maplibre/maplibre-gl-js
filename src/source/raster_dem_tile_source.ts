@@ -65,9 +65,11 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 return;
             }
             if (response) {
-                // An empty response (e.g. HTTP 204) under `emptyResponse: 'missing'` is left without data
-                // or expiry, so another zoom level supplies the elevation.
+                // An empty response (e.g. HTTP 204) under `emptyResponse: 'missing'` leaves the tile errored without
+                // elevation, worker or expiry, so another zoom level supplies the elevation and a reload requests it again.
                 if (!response.data && this.emptyResponse === 'missing') {
+                    await this.unloadTile(tile);
+                    delete tile.actor;
                     tile.state = 'errored';
                     tile.expirationTime = null;
                     return;
@@ -165,7 +167,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
     }
 
     async unloadTile(tile: Tile): Promise<void> {
-        if (tile.demTexture) this.map.painter.saveTileTexture(tile.demTexture);
+        tile.clearTextures(this.map.painter);
         if (tile.fbo) {
             tile.fbo.destroy();
             delete tile.fbo;

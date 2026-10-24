@@ -16,7 +16,7 @@ import {VectorTileWorkerSource} from './vector_tile_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 import type {Map} from '../ui/map.ts';
-import type {WorkerTileParameters} from './worker_source.ts';
+import type {TileParameters, WorkerTileParameters} from './worker_source.ts';
 import type {Source} from './source.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {IActor} from '../util/actor.ts';
@@ -48,11 +48,15 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
 function createSourceWithWorker(options) {
     const source = createSource(options);
     const workerSource = new VectorTileWorkerSource({sendAsync: () => Promise.resolve({})} as IActor, new StyleLayerIndex([]), []);
-    source.dispatcher = getWrapDispatcher()({
+    const actor: IActor = {
         sendAsync(message) {
-            return workerSource.loadTile(message.data as WorkerTileParameters);
+            return message.type === MessageType.removeTile ?
+                workerSource.removeTile(message.data as TileParameters) :
+                workerSource.loadTile(message.data as WorkerTileParameters);
         }
-    });
+    };
+    source.dispatcher = getWrapDispatcher()(actor);
+    source.dispatcher.broadcast = (type, data) => Promise.all([actor.sendAsync({type, data})]);
     return source;
 }
 
@@ -355,7 +359,7 @@ describe('VectorTileSource', () => {
         expect(loadVectorData).not.toHaveBeenCalled();
     });
 
-    test('a 204 with emptyResponse missing leaves the tile without data, so another zoom level shows through', async () => {
+    test('a 204 with emptyResponse missing leaves the tile without data', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
         const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
@@ -374,7 +378,7 @@ describe('VectorTileSource', () => {
         expect(loadVectorData).not.toHaveBeenCalled();
     });
 
-    test('a tile that falls back records neither the expiry nor the etag of its 204, so it is requested again in full when it is needed again', async () => {
+    test('a tile left missing by a 204 records neither its expiry nor its etag', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
         const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
@@ -395,7 +399,7 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBeUndefined();
     });
 
-    test('an expired tile that falls back on its refresh drops the old expiry and etag, so no timer keeps requesting it', async () => {
+    test('an expired tile left missing by its refresh drops the old expiry and etag', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
         const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
@@ -414,6 +418,29 @@ describe('VectorTileSource', () => {
 
         expect(tile.getExpiryTimeout()).toBeUndefined();
         expect(tile.etag).toBeUndefined();
+    });
+
+    test('a tile left missing by a 204 is requested again when the tile manager reloads it', async () => {
+        const tileUrl = 'http://example.com/10/5/5.png';
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith(tileUrl, [204, {}, '']);
+        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+        tile.state = 'loading';
+        const reloadPromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await reloadPromise;
+
+        expect(server.requests.filter(request => request.url === tileUrl)).toHaveLength(2);
     });
 
     test('reloads a loading tile properly', async () => {

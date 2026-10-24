@@ -136,7 +136,7 @@ describe('RasterDEMTileSource', () => {
         expect((tile.actor as any).sendAsync).not.toHaveBeenCalled();
     });
 
-    test('a 204 with emptyResponse missing leaves the tile without data, so another zoom level supplies the elevation', async () => {
+    test('a 204 with emptyResponse missing leaves the tile without data', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -158,7 +158,7 @@ describe('RasterDEMTileSource', () => {
         expect(tile.dem).toBeUndefined();
     });
 
-    test('a tile that falls back does not record the expiry of its 204, so it is requested again in full when it is needed again', async () => {
+    test('a tile left missing by a 204 does not record its expiry', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -182,7 +182,7 @@ describe('RasterDEMTileSource', () => {
         expect(setExpiryData).not.toHaveBeenCalled();
     });
 
-    test('an expired tile that falls back on its refresh drops the old expiry, so no timer keeps requesting it', async () => {
+    test('an expired tile left missing by its refresh drops the old expiry', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -203,6 +203,52 @@ describe('RasterDEMTileSource', () => {
         await tilePromise;
 
         expect(tile.getExpiryTimeout()).toBeUndefined();
+    });
+
+    test('an expired tile left missing by its refresh drops its elevation', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        const image = await createImageBitmap(new ImageData(16, 16));
+        const getImage = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        await source.loadTile(tile);
+        getImage.mockResolvedValue({data: null});
+        tile.state = 'expired';
+        await source.loadTile(tile);
+
+        expect(tile.dem).toBeUndefined();
+    });
+
+    test('an expired tile left missing by its refresh loads when the tile manager reloads it', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        const image = await createImageBitmap(new ImageData(16, 16));
+        const getImage = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        await source.loadTile(tile);
+        getImage.mockResolvedValueOnce({data: null});
+        tile.state = 'expired';
+        await source.loadTile(tile);
+        tile.state = 'loading';
+        await source.loadTile(tile);
+
+        expect(tile.state).toBe('loaded');
     });
 
     test('can asynchronously transform tile request', async () => {
