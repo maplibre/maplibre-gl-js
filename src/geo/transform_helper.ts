@@ -8,7 +8,7 @@ import {MercatorCoordinate, mercatorWorldCoordinateHelper} from './mercator_coor
 import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 import {Bounds} from './bounds.ts';
-import {createCameraState, getBearing, getCenterOffset, getCenterPoint, getFov, getPitch, getRoll, getWorldSize, type CameraState} from './camera_state.ts';
+import {createCameraState, getBearing, getCenterPoint, getFov, getPitch, getRoll, getWorldSize, type CameraState} from './camera_state.ts';
 
 import type {WorldCoordinateHelper} from './transform_interface.ts';
 import type {PaddingOptions} from './edge_insets.ts';
@@ -263,10 +263,6 @@ export class TransformHelper implements ITransformGetters {
 
     get worldSize(): number {
         return getWorldSize(this._cameraState);
-    }
-
-    get centerOffset(): Point {
-        return getCenterOffset(this._cameraState);
     }
 
     /**

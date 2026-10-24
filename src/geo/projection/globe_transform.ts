@@ -45,9 +45,6 @@ export class GlobeTransform implements ITransform {
     get pixelsToGLUnits(): [number, number] {
         return this._helper.pixelsToGLUnits;
     }
-    get centerOffset(): Point {
-        return this._helper.centerOffset;
-    }
     get size(): Point {
         return this._helper.size;
     }
