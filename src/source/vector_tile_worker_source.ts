@@ -93,7 +93,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             // Tile data hasn't changed (etag support) - return an unmodified result
             if (params.etag && params.etag === tileResponse.etag && loadedTile?.etag === tileResponse.etag) {
                 this.tileState.finishLoading(uid);
-                return this._getEtagUnmodifiedResult(tileResponse, timing);
+                return extend(this._getEtagUnmodifiedResult(tileResponse, timing), {emptyBody: loadedTile.emptyBody});
             }
 
             const tileResult = this.loadVectorTile(params, tileResponse.data);

@@ -109,6 +109,10 @@ export type WorkerTileWithData = ExpiryData & {
 export type WorkerTileWithoutData = ExpiryData & {
     etagUnmodified: true;  // Strict for type narrowing
     resourceTiming?: PerformanceResourceTiming[];
+    /**
+     * `true` when the tile response had an empty body, such as HTTP 204.
+     */
+    emptyBody?: boolean;
 };
 
 export type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;

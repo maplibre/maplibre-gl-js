@@ -460,6 +460,30 @@ describe('VectorTileSource', () => {
         expect(server.requests.filter(request => request.url === tileUrl)).toHaveLength(2);
     });
 
+    test('an unchanged empty tile is left missing once emptyResponse turns missing', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith('http://example.com/10/5/5.png', [204, {'ETag': '"empty"'}, '']);
+        const source = createSourceWithWorker({url: '/source.json'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+        source.emptyResponse = 'missing';
+        tile.state = 'expired';
+        const refreshPromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        const refreshResult = await refreshPromise;
+
+        expect(tile.state).toBe('errored');
+        expect(refreshResult).toEqual({});
+    });
+
     test('reloads a loading tile properly', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
