@@ -1554,7 +1554,7 @@ export class Map extends Evented<MapEventType> {
         if (!this.terrain) {
             return null;
         }
-        return this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this._camera.transform);
+        return this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this._camera.transform.tileZoom);
     }
     /**
      * Returns the value of `centerClampedToGround`.
@@ -1588,7 +1588,7 @@ export class Map extends Evented<MapEventType> {
      */
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
         if (altitudeTo == null && this.terrain) {
-            altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.transform);
+            altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.transform.tileZoom);
         }
         return this._camera.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo ?? 0);
     }
@@ -4495,7 +4495,7 @@ export class Map extends Evented<MapEventType> {
             }
             this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
             if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
-                const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._camera.transform.center, this._camera.transform);
+                const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._camera.transform.center, this._camera.transform.tileZoom);
                 if (demState !== 'loading') this._camera.transform.setElevation(elevation);
             }
         } else {
