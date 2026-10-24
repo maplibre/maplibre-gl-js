@@ -15,6 +15,7 @@ import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
+import * as jxlSupport from '../jxl_supported.ts';
 import {DEMData} from '../../data/dem_data.ts';
 import {RGBAImage} from '../image.ts';
 import {shaders} from '../../shaders/shaders.ts';
@@ -175,7 +176,9 @@ export function getMockDispatcher(): Dispatcher {
     });
 }
 
+/** Stub image loading and format detection independently of the mocked decoder's behavior. */
 export function stubAjaxGetImage(createImageBitmap: typeof global.createImageBitmap): void {
+    vi.spyOn(jxlSupport, 'isJXLSupported').mockReturnValue(false);
     global.createImageBitmap = createImageBitmap;
 
     global.URL.revokeObjectURL = () => {};

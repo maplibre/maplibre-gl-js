@@ -5,6 +5,8 @@ import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from './image_request.ts';
 import {isAbortError} from './abort_error.ts';
 import * as ajax from './ajax.ts';
+import * as jxlSupport from './jxl_supported.ts';
+import {addProtocol, removeProtocol} from '../source/protocol_crud.ts';
 
 describe('ImageRequest', () => {
     let server: FakeServer;
@@ -16,6 +18,7 @@ describe('ImageRequest', () => {
     });
     afterEach(() => {
         server.restore();
+        vi.restoreAllMocks();
     });
 
     test('getImage respects maxParallelImageRequests', async () => {
@@ -206,16 +209,86 @@ describe('ImageRequest', () => {
         expect((response.data as HTMLImageElement).crossOrigin).toBe('use-credentials');
     });
 
-    test('getImage using HTMLImageElement with accept header', async () => {
-        const makeRequestSky = vi.spyOn(ajax, 'makeRequest');
-        const promise = ImageRequest.getImage({url: '', credentials: 'include', headers: {accept: 'accept'}}, new AbortController(), false);
+    test.each([
+        {headers: {accept: 'image/png'}},
+        {headers: {Accept: 'image/png'}},
+        {headers: {ACCEPT: 'image/png'}},
+        {headers: new Headers({accept: 'image/png'})},
+        {headers: [['ACCEPT', 'image/png']]}
+    ])('preserves Accept overrides in supported header representations: %j', async ({headers}) => {
+        const promise = ImageRequest.getImage({url: 'http://localhost/image', headers}, new AbortController(), false);
+        expect(server.requests).toHaveLength(1);
+        expect(jxlSupport.isJXLSupported).not.toHaveBeenCalled();
+        expect(server.requests[0].url).toBe('http://localhost/image');
+        expect(new Headers(server.requests[0].requestHeaders).get('Accept')).toBe('image/png');
+        server.requests[0].respond(200);
+        await expect(promise).resolves.toBeDefined();
+    });
 
-        expect(makeRequestSky).toHaveBeenCalledTimes(0);
-        makeRequestSky.mockClear();
+    test.each([true, false])('sends a detected Accept header with JXL support = %s', async (supported) => {
+        vi.mocked(jxlSupport.isJXLSupported).mockResolvedValue(supported);
+        const promise = ImageRequest.getImage({url: ''}, new AbortController());
+        expect(server.requests).toHaveLength(0);
+        await sleep(0);
+        expect(server.requests[0].requestHeaders.accept).toBe(supported ? 'image/jxl,image/webp,*/*' : 'image/webp,*/*');
+        server.requests[0].respond(200);
+        await expect(promise).resolves.toBeDefined();
+    });
 
-        const response = await promise;
-        expect(response.data).toBeInstanceOf(HTMLImageElement);
-        expect((response.data as HTMLImageElement).crossOrigin).toBe('use-credentials');
+    test('native image requests bypass detection and do not add headers to caller parameters', async () => {
+        const parameters = {url: ''};
+        await ImageRequest.getImage(parameters, new AbortController(), false);
+        expect(jxlSupport.isJXLSupported).not.toHaveBeenCalled();
+        expect(parameters).toEqual({url: ''});
+        expect(server.requests).toHaveLength(0);
+    });
+
+    test('generated headers do not affect later requests reusing the same parameters', async () => {
+        const parameters = {url: '', headers: {}};
+        const first = ImageRequest.getImage(parameters, new AbortController());
+        server.requests[0].respond(200);
+        await first;
+        await ImageRequest.getImage(parameters, new AbortController(), false);
+        expect(parameters.headers).toEqual({});
+        expect(server.requests).toHaveLength(1);
+    });
+
+    test('canceling during detection releases a queue slot without canceling shared detection', async () => {
+        let finishDetection: (supported: boolean) => void;
+        const detection = new Promise<boolean>(resolve => { finishDetection = resolve; });
+        vi.mocked(jxlSupport.isJXLSupported).mockReturnValue(detection);
+        const controller = new AbortController();
+        const canceled = ImageRequest.getImage({url: 'canceled'}, controller);
+        const others = Array.from({length: config.MAX_PARALLEL_IMAGE_REQUESTS}, (_, i) =>
+            ImageRequest.getImage({url: `image-${i}`}, new AbortController()));
+        expect(jxlSupport.isJXLSupported).toHaveBeenCalledTimes(config.MAX_PARALLEL_IMAGE_REQUESTS);
+        controller.abort();
+        await expect(canceled).rejects.toMatchObject({name: 'AbortError'});
+        expect(jxlSupport.isJXLSupported).toHaveBeenCalledTimes(config.MAX_PARALLEL_IMAGE_REQUESTS + 1);
+        expect(server.requests).toHaveLength(0);
+        finishDetection(true);
+        await sleep(0);
+        expect(server.requests).toHaveLength(config.MAX_PARALLEL_IMAGE_REQUESTS);
+        for (const request of server.requests) {
+            expect(request.url).not.toBe('canceled');
+            expect(request.requestHeaders.accept).toContain('image/jxl');
+            request.respond(200);
+        }
+        await Promise.all(others);
+    });
+
+    test('custom protocols receive detected headers and retain cache metadata', async () => {
+        vi.mocked(jxlSupport.isJXLSupported).mockResolvedValue(true);
+        const handler = vi.fn().mockResolvedValue({data: new ArrayBuffer(0), cacheControl: 'max-age=60', expires: 'expiry'});
+        addProtocol('jxl-test', handler);
+        try {
+            const response = await ImageRequest.getImage({url: 'jxl-test://image'}, new AbortController(), false);
+            expect(handler.mock.calls[0][0].headers.accept).toBe('image/jxl,image/webp,*/*');
+            expect(response.cacheControl).toBe('max-age=60');
+            expect(response.expires).toBe('expiry');
+        } finally {
+            removeProtocol('jxl-test');
+        }
     });
 
     test('getImage uses makeRequest when custom Headers are added', () => {

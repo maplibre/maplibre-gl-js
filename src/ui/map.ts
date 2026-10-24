@@ -3423,7 +3423,9 @@ export class Map extends Evented<MapEventType> {
      * Load an image from an external URL to be used with {@link Map.addImage}. External
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
-     * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
+     * @param url - The URL of an image in a raster format supported by the browser, such as PNG, WebP, JPEG, or JPEG XL.
+     * Image requests advertise JPEG XL support after a successful decoding probe. An explicit `Accept` header
+     * supplied through `transformRequest` overrides automatic format negotiation. SVG images are not supported.
      * @returns a promise that is resolved when the image is loaded, or rejected when the response has no image data (for example an HTTP 204)
      *
      * @example

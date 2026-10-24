@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Detect JPEG XL decoding support and advertise it for image requests, while preserving caller-provided `Accept` headers ([#8866](https://github.com/maplibre/maplibre-gl-js/issues/8866)).
 - Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
 - Allow calling `new Map({ transformStyle: { ... }})` to provide a style transformation function similar to the same option in `setStyle` ([#8786](https://github.com/maplibre/maplibre-gl-js/pull/8786)) (by [@hiddewie](https://github.com/hiddewie))
 - _...Add new stuff here..._
