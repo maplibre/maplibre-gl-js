@@ -201,6 +201,16 @@ describe('clipGeometry', () => {
         expect(clipGeometry([line], 2, -299, -200, 300, 200)).toEqual([]);
     });
 
+    test('Line ending on the border from outside', () => {
+        const line = [
+            new Point(-400, 0),
+            new Point(-350, 0),
+            new Point(-300, 0)
+        ];
+
+        expect(clipGeometry([line], 2, -300, -200, 300, 200)).toEqual([]);
+    });
+
     test('Intersect with borders', () => {
         const line = [
             new Point(-400, 0),
