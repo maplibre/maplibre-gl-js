@@ -22,6 +22,7 @@ import type {
 
 export type RasterTileSourceOptions = (RasterSourceSpecification | RasterDEMSourceSpecification) & {
     /**
+     * @experimental
      * What a tile response with an empty body means in the tileset, see {@link EmptyResponse}.
      * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
      */

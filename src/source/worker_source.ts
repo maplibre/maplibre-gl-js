@@ -19,6 +19,7 @@ import type {DashEntry} from '../render/line_atlas.ts';
 export type TileEncoding = 'mlt' | 'mvt';
 
 /**
+ * @experimental
  * What a tile response with an empty body (HTTP 204, or 200 with no content) means in a tileset.
  * `blank` (the default): the tile is in the tileset and has nothing there, so it loads with nothing to draw: a raster tile draws fully transparent, a raster-dem tile carries no elevation, a vector tile has no features.
  * `missing`: the tileset has no tile there at that zoom level, so the tile is left without data and a loaded tile from another zoom level shows through in its place.
