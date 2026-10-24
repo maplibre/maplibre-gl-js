@@ -266,9 +266,12 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
         const result: LoadTileResult = {};
         // Under `emptyResponse: 'missing'` a response with an empty body, such as a 204, leaves the tile errored without data, worker, expiry or etag, so a reload requests it again.
+        // It stays loading until the workers drop their copies, so a reload in the meantime waits for that.
         if (data?.emptyBody && this.emptyResponse === 'missing') {
-            await this.unloadTile(tile);
+            tile.state = 'loading';
+            await this.dispatcher.broadcast(MessageType.removeTile, {uid: tile.uid, type: this.type, source: this.id});
             delete tile.actor;
+            tile.unloadVectorData();
             tile.state = 'errored';
             tile.expirationTime = null;
             tile.etag = undefined;
