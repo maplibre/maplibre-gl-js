@@ -5,8 +5,9 @@ import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {createMercatorTransform, type MercatorTransform} from '../../geo/projection/mercator_transform.ts';
-import {CRSWorldCoordinateHelper, identityCrs, type CRSDefinition} from '../../geo/projection/crs.ts';
+import {CRSWorldCoordinateHelper, identityCrs, type CRS} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
+import {getGlobalWorkerPool} from '../global_worker_pool.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {Painter} from '../../render/painter.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
@@ -151,7 +152,6 @@ export function beforeMapTest(): void {
 export function getWrapDispatcher(): (actor: IActor) => Dispatcher {
     return (actor: IActor) => {
         return {
-            actorsPromise: Promise.resolve([actor]),
             waitForInitComplete() {
                 return Promise.resolve();
             },
@@ -202,6 +202,18 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
     const view = new Uint8Array(newBuffer);
     data.copy(view);
     return view.buffer;
+}
+
+/**
+ * Simulates the last map being removed, which terminates the pooled workers. The global dispatcher
+ * survives and builds new actors on its next use. Also releases claims earlier tests left behind.
+ */
+export async function terminateGlobalWorkers(): Promise<void> {
+    const pool = getGlobalWorkerPool();
+    for (const mapId of Object.keys(pool.active)) {
+        await pool.release(mapId);
+    }
+    await pool.release('terminateGlobalWorkers');
 }
 
 /**
@@ -419,8 +431,8 @@ export function createIdentityCrsTransform(width: number, height: number): Merca
         minPitch: 0,
         maxPitch: 85,
         renderWorldCopies: true,
+        worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs),
     });
-    transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(identityCrs));
     transform.resize(width, height);
     return transform;
 }
@@ -429,7 +441,7 @@ export function createIdentityCrsTransform(width: number, height: number): Merca
  * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
  * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
  */
-export function createRotatedCrs(): CRSDefinition {
+export function createRotatedCrs(): CRS {
     const cos = Math.cos(Math.PI / 6);
     const sin = Math.sin(Math.PI / 6);
     return {
@@ -450,7 +462,7 @@ export function createRotatedCrs(): CRSDefinition {
  * The identity CRS with a converter that answers only inside its tile matrix set, -90..90 on both axes,
  * and gives `answerOutside` everywhere else.
  */
-export function createIdentityCrsAnsweringInside(answerOutside: number[] | null): CRSDefinition {
+export function createIdentityCrsAnsweringInside(answerOutside: number[] | null): CRS {
     return {
         name: 'test:identity-answering-inside',
         projection: {
@@ -466,10 +478,48 @@ export function createIdentityCrsAnsweringInside(answerOutside: number[] | null)
 }
 
 /**
+ * Plate carrée on a tile 0/0/0 twice as wide as the world, with an inverse that wraps a position past ±180 around
+ * to the other side of the world, as proj4 does past the edge of a world projection.
+ */
+export function createWrappingWorldCrs(): CRS {
+    return {
+        name: 'test:wrapping-world',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return [(x + 540) % 360 - 180, y];
+            },
+        },
+        tileMatrixSet: {origin: [-360, 360], extentAtZoom0: 720},
+    };
+}
+
+/**
+ * Plate carrée on a tile 0/0/0 twice as wide as the world, with an inverse that answers everywhere, so a position
+ * past ±180 has a longitude of its own.
+ */
+export function createWidePlateCarreeCrs(): CRS {
+    return {
+        name: 'test:wide-plate-carree',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return [x, y];
+            },
+        },
+        tileMatrixSet: {origin: [-360, 360], extentAtZoom0: 720},
+    };
+}
+
+/**
  * A north polar stereographic CRS on a sphere, oriented like EPSG:3413 (lng -45 points down) and true to scale
  * at 70N, with tile 0/0/0 spanning the EPSG:3413 grid NASA GIBS serves. Parallels are circles around the pole.
  */
-export function createPolarStereographicCrs(): CRSDefinition {
+export function createPolarStereographicCrs(): CRS {
     const degrees = 180 / Math.PI;
     const scale = 6378137 * (1 + Math.sin(70 / degrees));
     const centralLng = -45;

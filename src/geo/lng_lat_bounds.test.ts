@@ -173,6 +173,13 @@ describe('LngLatBounds', () => {
         ).toEqual(bounds);
     });
 
+    test('convert preserves infinite longitude endpoints', () => {
+        expect(LngLatBounds.convert([[-Infinity, -50], [Infinity, 65]]).toArray())
+            .toEqual([[-Infinity, -50], [Infinity, 65]]);
+        expect(LngLatBounds.convert([-Infinity, -50, Infinity, 65]).toArray())
+            .toEqual([[-Infinity, -50], [Infinity, 65]]);
+    });
+
     test('toArray', () => {
         const llb = new LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
         expect(llb.toArray()).toEqual([[-73.9876, 40.7661], [-73.9397, 40.8002]]);

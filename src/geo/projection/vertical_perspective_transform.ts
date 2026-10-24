@@ -14,7 +14,7 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, NearFarZ, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -232,10 +232,13 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.constrainOverride;
     }
     public get nearZ(): number {
-        return this._helper.nearZ;
+        return this._nearZ;
     }
     public get farZ(): number {
-        return this._helper.farZ;
+        return this._farZ;
+    }
+    public get nearFarZOverride(): NearFarZ | null {
+        return this._helper.nearFarZOverride;
     }
     public get autoCalculateNearFarZ(): boolean {
         return this._helper.autoCalculateNearFarZ;
@@ -256,6 +259,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
     private _cameraPosition: vec3 = createVec3f64();
+    private _nearZ: number;
+    private _farZ: number;
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
      * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
@@ -405,8 +410,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     public transformLightDirection(dir: vec3): vec3 {
-        const sphereX = this._helper._center.lng * Math.PI / 180.0;
-        const sphereY = this._helper._center.lat * Math.PI / 180.0;
+        const sphereX = this._helper.center.lng * Math.PI / 180.0;
+        const sphereY = this._helper.center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
         const spherePos: vec3 = [
@@ -433,11 +438,11 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     public getPixelScale(): number {
-        return 1.0 / planetScaleAtLatitude(this._helper._center.lat);
+        return 1.0 / planetScaleAtLatitude(this._helper.center.lat);
     }
 
     public getCircleRadiusCorrection(): number {
-        return planetScaleAtLatitude(this._helper._center.lat);
+        return planetScaleAtLatitude(this._helper.center.lat);
     }
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
@@ -489,25 +494,24 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * @param calculateNearFarZ - Whether to compute the near/far Z range, or leave the range the helper already
-     * holds. Defaults to {@link autoCalculateNearFarZ}; a composing transform such as {@link GlobeTransform}
-     * overrides it so that its two children share a single depth range.
+     * The computed far plane only has to be far enough to take in the globe, since the vertex shader computes its own
+     * depth.
+     * @param nearFarZ - The depth range to use instead of computing one, by default the camera state's override.
      */
-    _calcMatrices(calculateNearFarZ: boolean = this._helper.autoCalculateNearFarZ): void {
+    _calcMatrices(nearFarZ: NearFarZ | null = this._helper.nearFarZOverride): void {
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4f64();
-        if (calculateNearFarZ) {
-            this._helper._nearZ = 0.5;
-            this._helper._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
-        }
-        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._helper._nearZ, this._helper._farZ);
+        const {nearZ, farZ} = nearFarZ ?? {nearZ: 0.5, farZ: this.cameraToCenterDistance + globeRadiusPixels * 2.0};
+        this._nearZ = nearZ;
+        this._farZ = farZ;
+        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
         const offset = this.centerOffset;
-        globeMatrix[8] = -offset.x * 2 / this._helper._width;
-        globeMatrix[9] = offset.y * 2 / this._helper._height;
+        globeMatrix[8] = -offset.x * 2 / this._helper.width;
+        globeMatrix[9] = offset.y * 2 / this._helper.height;
         this._projectionMatrix = mat4.clone(globeMatrix);
 
         this._globeProjMatrixInverted = createMat4f64();
@@ -755,6 +759,15 @@ export class VerticalPerspectiveTransform implements ITransform {
      * (same size before and after a {@link setLocationAtPoint} call).
      */
     setLocationAtPoint(lnglat: LngLat, point: Point, _elevation?: number): void {
+        const camera = this.getCameraForLocationAtPoint(lnglat, point);
+        if (camera) this._helper.setCenterAndZoom(camera.center, camera.zoom);
+    }
+
+    /**
+     * The center and zoom that {@link setLocationAtPoint} moves the camera to, or null where the camera stays where it
+     * is. The zoom keeps the planet at the size it has now, from the latitude the constrain lets the center reach.
+     */
+    getCameraForLocationAtPoint(lnglat: LngLat, point: Point): {center: LngLat; zoom: number} | null {
         // The elevation is ignored: this transform solves on the planet's surface.
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
@@ -793,7 +806,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
         if (vecToTargetXZLengthSquared < targetXSquared) {
             // Zero solutions - setLocationAtPoint is impossible.
-            return;
+            return null;
         }
 
         // The intersection's Z coordinates
@@ -842,14 +855,18 @@ export class VerticalPerspectiveTransform implements ITransform {
             validLat = latB;
         } else {
             // No solution.
-            return;
+            return null;
         }
 
         const newLng = validLng / Math.PI * 180;
-        const newLat = validLat / Math.PI * 180;
-        const oldLat = this.center.lat;
-        this.setCenter(new LngLat(newLng, clamp(newLat, -90, 90)));
-        this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
+        const newLat = clamp(validLat / Math.PI * 180, -90, 90);
+        const moved = newLng !== this.center.lng || newLat !== this.center.lat;
+        const {center, zoom} = moved ?
+            this._helper.getConstrainedCamera(new LngLat(newLng, newLat), this.zoom) :
+            {center: this.center, zoom: this.zoom};
+        const adjustedZoom = this.applyConstrain(center, zoom + getZoomAdjustment(this.center.lat, center.lat)).zoom;
+        if (adjustedZoom !== zoom) return this._helper.getConstrainedCamera(center, adjustedZoom);
+        return moved ? {center, zoom} : null;
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {

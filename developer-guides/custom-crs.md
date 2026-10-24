@@ -6,17 +6,18 @@ This is the internal counterpart to the [Custom Planar Coordinate Reference Syst
 
 The transform, camera, covering tiles, terrain, sources and queries used to call `MercatorCoordinate.fromLngLat`, `mercatorXfromLng`, `mercatorZfromAltitude` and friends directly. Those calls now go through a `WorldCoordinateHelper`:
 
-- `worldFromLngLat(lng, lat, altitude?)` and `lngLatFromWorld(x, y)` map between lng/lat and world coordinates, the unit square that tile 0/0/0 covers and that the quad tree subdivides. `MercatorCoordinate` stays the container type for a world position; `z` is the altitude in world units, and stays `0` when no altitude is given. For a CRS, `lngLatFromWorld` uses the nearest position inside the world square wherever the converter's `inverse` has no answer, which it may only do outside the tile matrix set.
+- `worldFromLngLat(lng, lat, altitude?)` and `lngLatFromWorld(x, y)` map between lng/lat and world coordinates, the unit square that tile 0/0/0 covers and that the quad tree subdivides. `MercatorCoordinate` stays the container type for a world position; `z` is the altitude in world units, and stays `0` when no altitude is given. For a CRS, an `inverse` counts as an answer only where `forward` takes it back to the position; where it has none, `lngLatFromWorld` uses the nearest position inside the world square, or else the edge of the answers on the line to the square's center, assuming they form one stretch from the center outwards.
+- `hasLngLat(x, y)` tells whether a world position has an answer of its own: always for Mercator, and for a CRS where its `inverse` answers. `MercatorTransform.isPointOnMapSurface` is `false` where it has none, so gestures past the edge of a world projection zoom around the center and drag by pixels, as they do above the horizon.
 - `metersPerWorldUnit(x, y)` is the local scale at a world position, used by the camera-to-center search and terrain skirts. Mercator returns the latitude-dependent value; a planar CRS returns a constant (`extentAtZoom0`, its units taken as meters) and ignores the arguments.
 - `worldZFromAltitude(altitude, lngLat)` is the same idea for the vertical axis: an altitude in meters to world z.
 - `wraps` is `true` only for Mercator. It gates world copies, `LngLat.wrap()`, antimeridian handling, the `MAX_VALID_LATITUDE` clamp and the hillshade latitude correction. With a non-wrapping helper `MercatorTransform._constrainToWorldSquare` keeps the center inside tile 0/0/0 and leaves the zoom to `minZoom`, or keeps the view inside the `maxBounds` box.
 - `tileMatrixSet` is the grid whose tile 0/0/0 is the world square, in CRS units, which the `{bbox}` tile URL token is expressed in; EPSG:3857 meters for Mercator.
 
-A `CRSDefinition` becomes a helper through `new CRSWorldCoordinateHelper(definition)`, which applies the world-coordinate formula from the user guide.
+A `CRS` becomes a helper through `new CRSWorldCoordinateHelper(crs)`, which applies the world-coordinate formula from the user guide.
 
 ## Who holds the helper
 
-The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to both halves of the map's projection: the `MercatorProjection` it constructs, and the `MercatorTransform`, through `setWorldCoordinateHelper`, which `clone()` carries along. Mercator, globe and vertical-perspective share the one mercator helper.
+The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to both the `MercatorProjection` and the `MercatorTransform`. The transform receives it through its `worldCoordinateHelper` constructor option and keeps it when cloned. Mercator, globe and vertical-perspective share the one mercator helper.
 
 Readers take the helper from what they already hold: the transform, camera and covering tiles from the transform; sources and queries from `map.style.projection.worldCoordinateHelper`; the terrain from a reader the `Map` passes it, since the painter holds no transform.
 

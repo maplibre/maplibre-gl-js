@@ -9,11 +9,12 @@ import {ErrorEvent, Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
 import {TileBounds} from './tile_bounds.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
-import {beforeMapTest, createMap as globalCreateMap, sleep, waitForEvent} from '../util/test/util.ts';
+import {beforeMapTest, createMap as globalCreateMap, createPolarStereographicCrs, sleep, waitForEvent} from '../util/test/util.ts';
 import {now, restoreNow, setNow} from '../util/time_control.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 
 import type {TileCache} from './tile_cache.ts';
 import type {Map} from '../ui/map.ts';
@@ -757,6 +758,25 @@ describe('TileManager.update', () => {
         await dataPromise;
         tileManager.update(transform);
         expect(tileManager.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
+    });
+
+    test('does not load tiles again when the center of a registered projection crosses 180°', async () => {
+        const transform = createMercatorTransform({worldCoordinateHelper: new CRSWorldCoordinateHelper(createPolarStereographicCrs())});
+        transform.resize(512, 512);
+        transform.setZoom(2);
+        transform.setCenter(new LngLat(179.9, 72));
+        const tileManager = createTileManager();
+        const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile');
+        const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await dataPromise;
+        tileManager.update(transform);
+        expect(loadTile).toHaveBeenCalledTimes(4);
+
+        transform.setCenter(new LngLat(-179.9, 72));
+        tileManager.update(transform);
+
+        expect(loadTile).toHaveBeenCalledTimes(4);
     });
 
     test('adds ideal (covering) tiles only once for zoom level on raster maps', async () => {

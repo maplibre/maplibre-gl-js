@@ -693,12 +693,8 @@ describe('vector tile worker source', () => {
         );
     });
 
-    test('VectorTileWorkerSource.loadTile skips parsing and returns unmodified when e-tags match', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-
-        source.loadVectorTile = () => {
-            throw new Error('loadVectorTile should not be called when etag matches');
-        };
+    test('VectorTileWorkerSource.loadTile parses a tile with an unchanged e-tag that this worker has not loaded', async () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
 
         const rawTileData = new ArrayBuffer(0);
         server.respondWith(request => {
@@ -721,6 +717,6 @@ describe('vector tile worker source', () => {
         const res = await promise;
 
         expect(res).toBeDefined();
-        expect(res.etagUnmodified).toBe(true);
+        expect(res.etagUnmodified).toBeUndefined();
     });
 });
