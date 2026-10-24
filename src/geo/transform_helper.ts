@@ -1,14 +1,14 @@
 import {LngLat, type LngLatLike} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom, warnOnce} from '../util/util.ts';
+import {wrap, clamp, degreesToRadians, zoomScale, MAX_VALID_LATITUDE, scaleZoom, warnOnce} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {MercatorCoordinate, mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 import {Bounds} from './bounds.ts';
-import {createCameraState, type CameraState} from './camera_state.ts';
+import {createCameraState, getBearing, getCenterOffset, getCenterPoint, getFov, getPitch, getRoll, getWorldSize, type CameraState} from './camera_state.ts';
 
 import type {WorldCoordinateHelper} from './transform_interface.ts';
 import type {PaddingOptions} from './edge_insets.ts';
@@ -262,11 +262,11 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get worldSize(): number {
-        return this._cameraState.tileSize * this._cameraState.scale;
+        return getWorldSize(this._cameraState);
     }
 
     get centerOffset(): Point {
-        return this.centerPoint._sub(this.size._div(2));
+        return getCenterOffset(this._cameraState);
     }
 
     /**
@@ -277,7 +277,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get bearing(): number {
-        return this._cameraState.bearingInRadians / Math.PI * 180;
+        return getBearing(this._cameraState);
     }
     setBearing(bearing: number): void {
         const b = wrap(bearing, -180, 180) * Math.PI / 180;
@@ -297,7 +297,7 @@ export class TransformHelper implements ITransformGetters {
         return this._cameraState.pitchInRadians;
     }
     get pitch(): number {
-        return this._cameraState.pitchInRadians / Math.PI * 180;
+        return getPitch(this._cameraState);
     }
     setPitch(pitch: number): void {
         const p = clamp(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
@@ -311,7 +311,7 @@ export class TransformHelper implements ITransformGetters {
         return this._cameraState.rollInRadians;
     }
     get roll(): number {
-        return this._cameraState.rollInRadians / Math.PI * 180;
+        return getRoll(this._cameraState);
     }
     setRoll(roll: number): void {
         const r = roll / 180 * Math.PI;
@@ -325,7 +325,7 @@ export class TransformHelper implements ITransformGetters {
         return this._cameraState.fovInRadians;
     }
     get fov(): number {
-        return radiansToDegrees(this._cameraState.fovInRadians);
+        return getFov(this._cameraState);
     }
     setFov(fov: number): void {
         fov = clamp(fov, 0.1, 150);
@@ -395,7 +395,7 @@ export class TransformHelper implements ITransformGetters {
      * and +y axis pointing downwards. This accounts for padding.
      */
     get centerPoint(): Point {
-        return this._cameraState.edgeInsets.getCenter(this._cameraState.width, this._cameraState.height);
+        return getCenterPoint(this._cameraState);
     }
 
     /**
@@ -404,6 +404,11 @@ export class TransformHelper implements ITransformGetters {
     get pixelsPerMeter(): number { return this._cameraState.pixelsPerMeter; }
 
     get unmodified(): boolean { return this._unmodified; }
+
+    /**
+     * The camera state, which only the helper changes and the projection classes read their camera values from.
+     */
+    get cameraState(): Readonly<CameraState> { return this._cameraState; }
 
     get cameraToCenterDistance(): number { return this._cameraState.cameraToCenterDistance; }
 

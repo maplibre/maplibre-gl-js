@@ -3,6 +3,7 @@ import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {lerp} from '../../util/util.ts';
 
+import type {CameraState} from '../camera_state.ts';
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
 import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
@@ -29,6 +30,7 @@ import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provid
  */
 export class GlobeTransform implements ITransform {
     private _helper: TransformHelper;
+    private readonly _cameraState: Readonly<CameraState>;
 
     //
     // Implementation of transform getters and setters
@@ -264,6 +266,7 @@ export class GlobeTransform implements ITransform {
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
+        this._cameraState = this._helper.cameraState;
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._mercatorTransform = new MercatorTransform(undefined, this._helper);
         this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(undefined, this._helper);
@@ -334,12 +337,12 @@ export class GlobeTransform implements ITransform {
      * instead of its own, which keeps the two render paths at the same depth across the globe-to-mercator transition.
      */
     private _calcMatrices(): void {
-        if (!this._helper.width || !this._helper.height) {
+        if (!this._cameraState.width || !this._cameraState.height) {
             return;
         }
         const verticalPerspective = this._verticalPerspectiveTransform;
         verticalPerspective._calcMatrices();
-        const nearFarZ = this.isGlobeRendering ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : this._helper.nearFarZOverride;
+        const nearFarZ = this.isGlobeRendering ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : this._cameraState.nearFarZOverride;
         this._mercatorTransform._calcMatrices(nearFarZ);
     }
 
