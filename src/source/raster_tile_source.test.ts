@@ -260,6 +260,29 @@ describe('RasterTileSource', () => {
         expect(setExpiryData).not.toHaveBeenCalled();
     });
 
+    test('an expired tile that falls back on its refresh drops the old expiry, so no timer keeps requesting it', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        source.map._refreshExpiredTiles = true;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        tile.setExpiryData({expires: new Date(Date.now() - 1000).toUTCString()});
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.getExpiryTimeout()).toBeUndefined();
+    });
+
     test('can asynchronously transform tile request', async () => {
         server.respondWith('http://example.com/10/5/5.png',
             [200, {'Content-Type': 'image/png', 'Content-Length': 1, 'Cache-Control': 'max-age=100'}, '0']

@@ -238,6 +238,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 // or expiry, so a loaded tile from another zoom level shows in its place.
                 if (!response.data && this.emptyResponse === 'missing') {
                     tile.state = 'errored';
+                    tile.expirationTime = null;
                     return;
                 }
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {

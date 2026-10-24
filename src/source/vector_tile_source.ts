@@ -268,6 +268,8 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         const emptyBody = data && data.etagUnmodified !== true && data.emptyBody;
         if (emptyBody && this.emptyResponse === 'missing') {
             tile.state = 'errored';
+            tile.expirationTime = null;
+            tile.etag = undefined;
         } else {
             this._afterTileLoadWorkerResponse(tile, data);
         }

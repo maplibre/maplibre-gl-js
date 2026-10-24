@@ -69,6 +69,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 // or expiry, so another zoom level supplies the elevation.
                 if (!response.data && this.emptyResponse === 'missing') {
                     tile.state = 'errored';
+                    tile.expirationTime = null;
                     return;
                 }
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {

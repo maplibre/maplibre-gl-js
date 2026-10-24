@@ -395,6 +395,27 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBeUndefined();
     });
 
+    test('an expired tile that falls back on its refresh drops the old expiry and etag, so no timer keeps requesting it', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
+        source.map._refreshExpiredTiles = true;
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        tile.setExpiryData({expires: new Date(Date.now() - 1000).toUTCString()});
+        tile.etag = '"from-the-earlier-load"';
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.getExpiryTimeout()).toBeUndefined();
+        expect(tile.etag).toBeUndefined();
+    });
+
     test('reloads a loading tile properly', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
