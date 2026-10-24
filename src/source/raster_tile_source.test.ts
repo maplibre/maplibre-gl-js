@@ -191,7 +191,7 @@ describe('RasterTileSource', () => {
             expect.anything());
     });
 
-    test('a 204 with emptyResponse missing leaves the tile without data, so another zoom level shows through', async () => {
+    test('a 204 with emptyResponse missing leaves the tile without data', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -236,7 +236,7 @@ describe('RasterTileSource', () => {
         expect(tile.texture).toBeUndefined();
     });
 
-    test('a tile that falls back does not record the expiry of its 204, so it is requested again in full when it is needed again', async () => {
+    test('a tile left missing by a 204 does not record its expiry', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -260,7 +260,7 @@ describe('RasterTileSource', () => {
         expect(setExpiryData).not.toHaveBeenCalled();
     });
 
-    test('an expired tile that falls back on its refresh drops the old expiry, so no timer keeps requesting it', async () => {
+    test('an expired tile left missing by its refresh drops the old expiry', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -337,6 +337,29 @@ describe('RasterTileSource', () => {
         await source.loadTile(tile);
         expect(imageConstructorSpy).toHaveBeenCalledTimes(1);
         expect(tile.state).toBe('loaded');
+    });
+
+    test('a 204 with emptyResponse missing leaves the tile without data when refreshExpiredTiles is false', async () => {
+        stubAjaxGetImage(undefined);
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        source.map._refreshExpiredTiles = false;
+        const promise = waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
     });
 
     test('supports updating tiles', async () => {

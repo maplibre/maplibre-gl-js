@@ -220,12 +220,14 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
         tile.abortController = new AbortController();
         try {
+            // An image element cannot tell an empty response from a broken image, so `emptyResponse: 'missing'` requests
+            // the tile through fetch, as refreshing expired tiles does.
             const response = await ImageRequest.transformAndGetImage(
                 this.map._requestManager,
                 url,
                 ResourceType.Tile,
                 tile.abortController,
-                this.map._refreshExpiredTiles,
+                this.emptyResponse === 'missing' || this.map._refreshExpiredTiles,
                 imageBitmapOptions
             );
             delete tile.abortController;
