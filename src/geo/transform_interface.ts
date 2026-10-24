@@ -354,7 +354,6 @@ export interface IReadonlyTransform extends ITransformGetters {
     get pixelsToClipSpaceMatrix(): mat4;
     get clipSpaceToPixelsMatrix(): mat4;
     get pixelsToGLUnits(): [number, number];
-    get centerOffset(): Point;
     /**
      * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
      */
