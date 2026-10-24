@@ -191,7 +191,8 @@ function clipLineInternal(line: Point[], start: number, end: number, axis: AxisT
     if (isPolygon && slice.length > 0 && !slice[0].equals(slice[slice.length - 1])) {
         slice.push(new Point(slice[0].x, slice[0].y));
     }
-    if (slice.length > 0) {
+    // a line that reaches the boundary from outside and ends on it leaves a single point, which is not a line
+    if (slice.length > 1) {
         newLine.push(slice);
     }
     return newLine;
