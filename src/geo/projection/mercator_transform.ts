@@ -69,7 +69,6 @@ type MercatorRay = {
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
-    private readonly _cameraState: Readonly<CameraState>;
 
     //
     // Implementation of transform getters and setters
@@ -306,8 +305,11 @@ export class MercatorTransform implements ITransform {
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
-        this._cameraState = this._helper.cameraState;
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
+    }
+
+    private get _cameraState(): Readonly<CameraState> {
+        return this._helper.cameraState;
     }
 
     /** The {@link getMercatorHorizon} of this camera. */

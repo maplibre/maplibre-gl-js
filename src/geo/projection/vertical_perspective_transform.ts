@@ -50,7 +50,6 @@ type GlobeRay = {
 
 export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
-    private readonly _cameraState: Readonly<CameraState>;
 
     //
     // Implementation of transform getters and setters
@@ -279,8 +278,11 @@ export class VerticalPerspectiveTransform implements ITransform {
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
-        this._cameraState = this._helper.cameraState;
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
+    }
+
+    private get _cameraState(): Readonly<CameraState> {
+        return this._helper.cameraState;
     }
 
     clone(): ITransform {

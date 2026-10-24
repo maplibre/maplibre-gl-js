@@ -30,7 +30,6 @@ import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provid
  */
 export class GlobeTransform implements ITransform {
     private _helper: TransformHelper;
-    private readonly _cameraState: Readonly<CameraState>;
 
     //
     // Implementation of transform getters and setters
@@ -263,10 +262,13 @@ export class GlobeTransform implements ITransform {
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
-        this._cameraState = this._helper.cameraState;
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._mercatorTransform = new MercatorTransform(undefined, this._helper);
         this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(undefined, this._helper);
+    }
+
+    private get _cameraState(): Readonly<CameraState> {
+        return this._helper.cameraState;
     }
 
     clone(): ITransform {
