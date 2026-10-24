@@ -16,7 +16,7 @@ export type LoadTileJsonResponse = {
     scheme: RasterSourceSpecification['scheme'];
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
-    emptyResponse?: EmptyResponse;
+    emptyResponse: EmptyResponse;
     vectorLayerIds?: string[];
 };
 
@@ -38,7 +38,7 @@ export async function loadTileJson(
     }
     const result = pick(
         // explicit source options take precedence over TileJSON
-        extend(tileJSON, options),
+        extend({emptyResponse: 'blank'}, tileJSON, options),
         ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding', 'emptyResponse']
     ) as LoadTileJsonResponse;
 

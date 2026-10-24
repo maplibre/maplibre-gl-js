@@ -45,7 +45,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result).toEqual(mockTileJSON);
+        expect(result).toEqual({...mockTileJSON, emptyResponse: 'blank'});
     });
 
     test('fetches and returns TileJSON (async transformRequest)', async () => {
@@ -77,7 +77,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result).toEqual(mockTileJSON);
+        expect(result).toEqual({...mockTileJSON, emptyResponse: 'blank'});
         expect(server.requests[0].url).toBe('http://example.com/test.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
     });
@@ -113,6 +113,7 @@ describe('loadTileJson', () => {
             ...mockTileJSON,
             minzoom: options.minzoom,
             tiles: options.tiles,
+            emptyResponse: 'blank',
         });
     });
 

@@ -359,6 +359,23 @@ describe('VectorTileSource', () => {
         expect(loadVectorData).not.toHaveBeenCalled();
     });
 
+    test('setUrl to a TileJSON without emptyResponse returns the source to blank', async () => {
+        server.respondWith('/missing.json', JSON.stringify({...fixturesSource, emptyResponse: 'missing'}));
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        const source = createSource({url: '/missing.json'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const reloaded = waitForMetadataEvent(source);
+        source.setUrl('/source.json');
+        await sleep(0);
+        server.respond();
+        await reloaded;
+
+        expect(source.emptyResponse).toBe('blank');
+    });
+
     test('a 204 with emptyResponse missing leaves the tile without data', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
