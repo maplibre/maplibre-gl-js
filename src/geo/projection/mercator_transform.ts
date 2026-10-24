@@ -367,7 +367,7 @@ export class MercatorTransform implements ITransform {
             const elevation = this.getGroundElevationAtCenter(terrain);
             if (elevation === null) return;
             this._helper.recalculateZoomAndCenter(elevation);
-            if (!terrain || Math.abs(terrain.getElevationForLngLat(this.center, this) - this.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return;
+            if (!terrain || Math.abs(terrain.getElevationForLngLat(this.center, this.tileZoom) - this.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return;
         }
     }
 
@@ -377,7 +377,7 @@ export class MercatorTransform implements ITransform {
      */
     getGroundElevationAtCenter(terrain?: Terrain): number | null {
         const center = (terrain && this._terrainPointPastMaxZoom(terrain)) || this.screenPointToLocation(this.centerPoint, terrain);
-        const elevation = terrain ? terrain.getElevationForLngLat(center, this) : 0;
+        const elevation = terrain ? terrain.getElevationForLngLat(center, this.tileZoom) : 0;
         if (this.pitch < 90 && elevation >= this.getCameraAltitude()) return null;
         return elevation;
     }
@@ -418,7 +418,7 @@ export class MercatorTransform implements ITransform {
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
         const coord = this.worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
         return terrain ?
-            this.coordinatePoint(coord, terrain.getElevationForLngLat(lnglat, this), this._pixelMatrix3D) :
+            this.coordinatePoint(coord, terrain.getElevationForLngLat(lnglat, this.tileZoom), this._pixelMatrix3D) :
             this.coordinatePoint(coord);
     }
 
@@ -1072,7 +1072,7 @@ export class MercatorTransform implements ITransform {
         if (!terrain?.getCoverageIndex()) return false;
 
         const location = this.worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
-        elevation ??= terrain.getElevationForLngLat(lngLat, this);
+        elevation ??= terrain.getElevationForLngLat(lngLat, this.tileZoom);
         const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
         const w = clip[3];
         if (w <= 0 || clip[2] > w) return true;
