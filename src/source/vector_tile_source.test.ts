@@ -460,7 +460,7 @@ describe('VectorTileSource', () => {
         expect(server.requests.filter(request => request.url === tileUrl)).toHaveLength(2);
     });
 
-    test('a tile left missing by a 204 stays loading until the workers drop their copy', async () => {
+    test('a tile left missing while a reload waits stays loading for that reload', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
         const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
@@ -468,20 +468,40 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await promise;
-        let releaseRemoval: () => void;
-        const removalHeld = new Promise<void>((resolve) => { releaseRemoval = resolve; });
-        const removeFromWorkers = source.dispatcher.broadcast;
-        source.dispatcher.broadcast = (type, data) => removalHeld.then(() => removeFromWorkers(type, data));
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        const reloadPromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+        const stateWhileReloading = tile.state;
+        await sleep(0);
+        server.respond();
+        await reloadPromise;
+
+        expect(stateWhileReloading).toBe('loading');
+    });
+
+    test('a tile left missing by a 204 keeps the resource timing of the response', async () => {
+        const tileUrl = 'http://example.com/10/5/5.png';
+        const timing = {name: tileUrl, entryType: 'resource', startTime: 1, duration: 2};
+        const getEntriesByName = vi.spyOn(performance, 'getEntriesByName').mockReturnValue([{...timing, toJSON: () => timing}]);
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+        server.respondWith(tileUrl, [204, {}, '']);
+        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing', collectResourceTiming: true});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
         const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
         const tilePromise = source.loadTile(tile);
         await sleep(0);
         server.respond();
-        await sleep(0);
-        const stateWhileRemoving = tile.state;
-        releaseRemoval();
         await tilePromise;
+        getEntriesByName.mockRestore();
 
-        expect(stateWhileRemoving).toBe('loading');
+        expect(tile.resourceTiming).toEqual([timing]);
     });
 
     test('an unchanged empty tile is left missing once emptyResponse turns missing', async () => {

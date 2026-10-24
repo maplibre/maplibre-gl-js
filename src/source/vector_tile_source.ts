@@ -265,14 +265,15 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             return;
         }
         const result: LoadTileResult = {};
+        if (data?.resourceTiming) {
+            tile.resourceTiming = data.resourceTiming;
+        }
         // Under `emptyResponse: 'missing'` a response with an empty body, such as a 204, leaves the tile errored without data, worker, expiry or etag, so a reload requests it again.
-        // It stays loading until the workers drop their copies, so a reload in the meantime waits for that.
+        // A reload requested while it loaded starts right away, so the tile stays loading for it.
         if (data?.emptyBody && this.emptyResponse === 'missing') {
-            tile.state = 'loading';
-            await this.dispatcher.broadcast(MessageType.removeTile, {uid: tile.uid, type: this.type, source: this.id});
+            this.unloadTile(tile);
             delete tile.actor;
-            tile.unloadVectorData();
-            tile.state = 'errored';
+            tile.state = tile.reloadPromise ? 'loading' : 'errored';
             tile.expirationTime = null;
             tile.etag = undefined;
         } else {
@@ -319,10 +320,6 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult | null) {
-        if (data?.resourceTiming) {
-            tile.resourceTiming = data.resourceTiming;
-        }
-
         if (data && this.map._refreshExpiredTiles) {
             tile.setExpiryData(data);
         }

@@ -6,10 +6,12 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {Tile} from '../tile/tile.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {getMockDispatcher} from '../util/test/util.ts';
+import {getMockDispatcher, getWrapDispatcher} from '../util/test/util.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {IActor} from '../util/actor.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -247,6 +249,41 @@ describe('RasterDEMTileSource', () => {
         await source.loadTile(tile);
         tile.state = 'loading';
         await source.loadTile(tile);
+
+        expect(tile.state).toBe('loaded');
+    });
+
+    test('a reload that overlaps the cleanup of a tile left missing keeps the elevation it loads', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        let releaseRemoval: () => void;
+        const removalHeld = new Promise<void>((resolve) => { releaseRemoval = resolve; });
+        const actor: IActor = {
+            sendAsync(message) {
+                return message.type === MessageType.removeDEMTile ? removalHeld : Promise.resolve({});
+            }
+        };
+        source.dispatcher = getWrapDispatcher()(actor);
+        const image = await createImageBitmap(new ImageData(16, 16));
+        const getImage = vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: image});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        await source.loadTile(tile);
+        getImage.mockResolvedValueOnce({data: null});
+        tile.state = 'expired';
+        const emptyRefresh = source.loadTile(tile);
+        await sleep(0);
+        tile.state = 'expired';
+        await source.loadTile(tile);
+        releaseRemoval();
+        await emptyRefresh;
 
         expect(tile.state).toBe('loaded');
     });
