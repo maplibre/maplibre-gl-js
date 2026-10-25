@@ -12,6 +12,7 @@
 - Fix `TypeError: Cannot read properties of undefined (reading '0')` when drawing a line layer with a constant `line-dasharray` whose dash positions were never set ([#8846](https://github.com/maplibre/maplibre-gl-js/issues/8846)) (by [@yulman2207](https://github.com/yulman2207))
 - Fix `GeoJSONSource.updateData` applying a queued update to a feature that a later call adds again ([#8804](https://github.com/maplibre/maplibre-gl-js/issues/8804)) (by [@architpai](https://github.com/architpai))
 - Fix maps that stop loading after iOS shuts down their background workers to save memory ([#8461](https://github.com/maplibre/maplibre-gl-js/issues/8461), [#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491)) (by [@lucaswoj](https://github.com/lucaswoj), [@ingalls](https://github.com/ingalls), and [@HarelM](https://github.com/HarelM))
+- Fix `GeolocateControl` keeping its geolocation watch slot after a permission error or a removal, which forced the timeout-free position options on later watches ([#8698](https://github.com/maplibre/maplibre-gl-js/issues/8698)) (by [@VIVAAN-DHAWAN](https://github.com/VIVAAN-DHAWAN))
 - _...Add new stuff here..._
 
 ## 6.15.0

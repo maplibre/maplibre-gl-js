@@ -919,6 +919,45 @@ describe('GeolocateControl with no options', () => {
         }).not.toThrow();
     });
 
+    test('a denied watch releases its slot so the next watch uses the default options', async () => {
+        const geolocate = new GeolocateControl({trackUserLocation: true});
+        map.addControl(geolocate);
+        await sleep(0);
+
+        const watch = vi.spyOn(window.navigator.geolocation, 'watchPosition');
+        geolocate.trigger();
+        geolocation.sendError({code: 1, message: 'permission was denied'});
+        expect(geolocate._geolocationWatchID).toBeUndefined();
+
+        geolocate.trigger();
+
+        expect(watch).toHaveBeenCalledTimes(2);
+        expect(watch.mock.calls[1][2]).toEqual(geolocate.options.positionOptions);
+        watch.mockRestore();
+    });
+
+    test('a denied watch does not force the timeout options on another control', async () => {
+        (checkGeolocationSupport as unknown as MockInstance).mockResolvedValue(true);
+        const otherMap = createMap();
+        const denied = new GeolocateControl({trackUserLocation: true});
+        const other = new GeolocateControl({trackUserLocation: true});
+        map.addControl(denied);
+        otherMap.addControl(other);
+        await sleep(0);
+
+        denied.trigger();
+        expect(denied._geolocationWatchID).toBeDefined();
+        geolocation.sendError({code: 1, message: 'permission was denied'});
+
+        const watch = vi.spyOn(window.navigator.geolocation, 'watchPosition');
+        other.trigger();
+
+        expect(watch).toHaveBeenCalledTimes(1);
+        expect(watch.mock.calls[0][2]).toEqual(other.options.positionOptions);
+        watch.mockRestore();
+        otherMap.remove();
+    });
+
     test('Geolocate control should appear only once', async () => {
         const geolocateControl = new GeolocateControl({});
 
