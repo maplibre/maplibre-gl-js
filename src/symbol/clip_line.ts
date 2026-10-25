@@ -152,12 +152,12 @@ function clipLineInternal(line: Point[], start: number, end: number, axis: AxisT
 
         if (pos1 < start) {
             // ---|-->  | (line enters the clip region from the left)
-            if (pos2 > start) {
+            if (pos2 >= start) {
                 slice.push(intersectionPoint(p1, p2, start));
             }
         } else if (pos1 > end) {
             // |  <--|--- (line enters the clip region from the right)
-            if (pos2 < end) {
+            if (pos2 <= end) {
                 slice.push(intersectionPoint(p1, p2, end));
             }
         } else {
@@ -191,8 +191,7 @@ function clipLineInternal(line: Point[], start: number, end: number, axis: AxisT
     if (isPolygon && slice.length > 0 && !slice[0].equals(slice[slice.length - 1])) {
         slice.push(new Point(slice[0].x, slice[0].y));
     }
-    // a line that reaches the boundary from outside and ends on it leaves a single point, which is not a line
-    if (slice.length > 1) {
+    if (slice.length > 0) {
         newLine.push(slice);
     }
     return newLine;
