@@ -248,7 +248,7 @@ What warrants a changelog entry?
 
 How to add your changelog?
 
-- Edit the [`CHANGELOG.md`](CHANGELOG.md) file directly, inserting a new entry at the top of the appropriate list
+- Write the PR title as the entry. The release workflow adds the titles of merged PRs to [`CHANGELOG.md`](CHANGELOG.md), so a PR doesn't edit that file
 - Any changelog entry should be descriptive and concise; it should explain the change to a reader without context
 
 ## Recommended Reading
