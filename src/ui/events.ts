@@ -195,9 +195,9 @@ export type MapEventType = {
     /**
      * Fired when the WebGL context is lost.
      *
-     * The map drops its style when the context is lost and rebuilds it from a copy once the context is restored.
-     * Until the rebuilt style fires `style.load`, {@link Map.getSource} returns `undefined` and changes to sources
-     * or layers are not kept, so apply them again on that `style.load` event.
+     * The map rebuilds its style once the context is restored. Until the rebuilt style fires `style.load`,
+     * {@link Map.getSource} may return `undefined` and changes to sources or layers are not kept, so apply them
+     * again on that `style.load` event.
      */
     webglcontextlost: MapContextEvent;
     /**
