@@ -394,26 +394,6 @@ async function joinsToTheFollowingGrapheme(): Promise<string> {
 }
 
 /**
- * The blocks the Arabic script is written from, plus the two joiners that steer it.
- *
- * Only Arabic is tabulated. A cursive script outside these blocks has no presentation forms, and so
- * no code point by which MapLibre could name a shaped glyph.
- */
-const arabicBlocks: Array<[number, number]> = [
-    [0x0600, 0x06ff],
-    [0x0750, 0x077f],
-    [0x0870, 0x089f],
-    [0x08a0, 0x08ff],
-    [0xfb50, 0xfdff],
-    [0xfe70, 0xfeff],
-    [0x200c, 0x200d],
-];
-
-function isArabic(codePoint: number): boolean {
-    return arabicBlocks.some(([start, end]) => codePoint >= start && codePoint <= end);
-}
-
-/**
  * How a character joins to the ones beside it: `R` to the character before it, `L` to the one after
  * it, `D` to both, `C` without being written itself, `T` not at all while letting the two around it
  * join through it, and `U` not at all.
@@ -444,131 +424,6 @@ async function readJoiningTypes(): Promise<Map<number, JoiningType>> {
     }
 
     return joiningTypes;
-}
-
-/** The four shapes a cursive script writes a letter in. */
-type PresentationForms = {isolated: number; final: number; initial: number; medial: number};
-
-/** The `Decomposition_Mapping` types that name each of the four shapes. */
-const decompositionTypeNames: Record<keyof PresentationForms, string> = {
-    isolated: 'Isolated',
-    final: 'Final',
-    initial: 'Initial',
-    medial: 'Medial',
-};
-
-/**
- * Tatweel, the stroke a word is stretched along, and the space a mark is shown over on its own.
- *
- * A mark has no shape without a letter under it, so the database gives its presentation forms as
- * decompositions onto one of these: `<medial> 0640 064B` is "fathatan, as written over a letter
- * mid-word", and `<isolated> 0020 064B` is the same mark standing by itself.
- */
-const markCarriers = new Set([0x0020, 0x0640]);
-
-/**
- * The Presentation Forms shape of each Arabic letter, and the two shapes of each lam-alef ligature.
- *
- * The shapes come from the compatibility decompositions of the presentation blocks: `<final> 0628`
- * is what says U+FE90 is the final form of beh.
- *
- * Of the two-character decompositions only lam-alef is taken. It is the one ligature Arabic shaping
- * is required to form; the rest of the presentation blocks are typographic ligatures, which a font
- * offers and the text is free to do without.
- */
-async function readPresentationForms(): Promise<{
-    forms: Map<number, PresentationForms>;
-    ligatures: Map<string, {isolated: number; final: number}>;
-}> {
-    const forms = new Map<number, PresentationForms>();
-    const ligatures = new Map<string, {isolated: number; final: number}>();
-
-    for (const [shape, name] of Object.entries(decompositionTypeNames) as Array<[keyof PresentationForms, string]>) {
-        const decompositions: Map<number, number | number[]> = (await import(`@unicode/unicode-${unicodeVersion}/Decomposition_Mapping/${name}/code-points.mjs`)).default;
-        for (const [codePoint, decomposition] of decompositions) {
-            if (codePoint < 0xfb50 || codePoint > 0xfeff) continue;
-
-            const bases = [decomposition].flat();
-            const carried = bases.length === 2 && markCarriers.has(bases[0]);
-
-            if (bases.length === 1 || carried) {
-                const base = carried ? bases[1] : bases[0];
-                const existing = forms.get(base) ?? {isolated: 0, final: 0, initial: 0, medial: 0};
-                existing[shape] = codePoint;
-                forms.set(base, existing);
-            } else if (codePoint >= 0xfef5 && codePoint <= 0xfefc) {
-                const pair = String.fromCodePoint(...bases);
-                const existing = ligatures.get(pair) ?? {isolated: 0, final: 0};
-                existing[shape as 'isolated' | 'final'] = codePoint;
-                ligatures.set(pair, existing);
-            }
-        }
-    }
-
-    return {forms, ligatures};
-}
-
-/**
- * Packs a sorted list of code points into `start,length` pairs, delta-encoded in base 36.
- *
- * The joining types run in long unbroken stretches, so the ranges take a fraction of the space the
- * code points would.
- */
-function encodeCodePointRanges(codePoints: number[]): string {
-    const ranges: number[][] = [];
-    for (const codePoint of codePoints.sort((a, b) => a - b)) {
-        const last = ranges[ranges.length - 1];
-        if (last && last[0] + last[1] === codePoint) {
-            last[1]++;
-        } else {
-            ranges.push([codePoint, 1]);
-        }
-    }
-
-    let previousEnd = 0;
-    return ranges
-        .map(([start, length]) => {
-            const encoded = `${(start - previousEnd).toString(36)},${length.toString(36)}`;
-            previousEnd = start + length;
-            return encoded;
-        })
-        .join(';');
-}
-
-/** The joining types, as one encoded set of ranges per type, ready to print as an object literal. */
-async function encodedJoiningTypes(): Promise<string> {
-    const byType = new Map<JoiningType, number[]>();
-    for (const [codePoint, type] of await readJoiningTypes()) {
-        if (type === 'U' || !isArabic(codePoint)) continue;
-        byType.set(type, (byType.get(type) ?? []).concat(codePoint));
-    }
-
-    return [...byType]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([type, codePoints]) => `    ${type}: '${encodeCodePointRanges(codePoints)}',`)
-        .join('\n');
-}
-
-/** Each Arabic letter's four presentation forms, ready to print as an object literal. */
-async function encodedPresentationForms(): Promise<string> {
-    return [...(await readPresentationForms()).forms]
-        .sort(([a], [b]) => a - b)
-        .map(([base, {isolated, final, initial, medial}]) =>
-            `    ${base}: [${isolated}, ${final}, ${initial}, ${medial}],`)
-        .join('\n');
-}
-
-/** The lam-alef ligatures, ready to print as an object literal. */
-async function encodedLigatures(): Promise<string> {
-    return [...(await readPresentationForms()).ligatures]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([pair, {isolated, final}]) => {
-            const escaped = [...pair]
-                .map(character => `\\u${character.codePointAt(0).toString(16).padStart(4, '0')}`)
-                .join('');
-            return `    '${escaped}': [${isolated}, ${final}],`;
-        })
-        .join('\n');
 }
 
 fs.writeFileSync('src/util/unicode_properties.g.ts',
@@ -669,25 +524,4 @@ export function codePointIsWrittenWithoutSpaces(codePoint: number): boolean {
 export function canCombineGraphemes(former: string, latter: string): boolean {
     return /(?:${await joinsToTheFollowingGrapheme()})$/.test(former) || /^\\p{gc=Mc}/u.test(latter);
 }
-
-/**
- * The joining type of each Arabic character, as \`start,length\` code point ranges delta-encoded in
- * base 36, one entry per type. Anything absent from all of them is non-joining.
- */
-export const ENCODED_JOINING_TYPES: Record<string, string> = {
-${await encodedJoiningTypes()}
-};
-
-/**
- * Each Arabic letter's Presentation Forms code points, as \`[isolated, final, initial, medial]\`.
- * A shape the letter is not written in is 0.
- */
-export const PRESENTATION_FORMS: Record<number, [number, number, number, number]> = {
-${await encodedPresentationForms()}
-};
-
-/** The lam-alef ligatures, keyed by the pair of letters they replace, as \`[isolated, final]\`. */
-export const LIGATURES: Record<string, [number, number]> = {
-${await encodedLigatures()}
-};
 `);

@@ -2,6 +2,7 @@ import {FontFaceManager, type FontFeature} from './font_face_manager.ts';
 import TinySDF, {type TinySDFOptions} from '@mapbox/tiny-sdf';
 import {codePointIsInComplexShapingScript, codePointUsesLocalIdeographFontFamily} from '../util/unicode_properties.g.ts';
 import {isCluster} from '../util/graphemes.ts';
+import {isArabicCodePoint, withoutArabicJoiners} from '../symbol/arabic_text.ts';
 import {AlphaImage} from '../util/image.ts';
 import {ensureError, warnOnce} from '../util/util.ts';
 import {getArrayBuffer} from '../util/ajax.ts';
@@ -103,6 +104,17 @@ const defaultCreateRasterizer: CreateRasterizer = (options, padding) => {
  * syllable: Burmese `လား` is nearly twice the font size. Three ems fits the ones that occur.
  */
 const clusterEmsWide = 3;
+
+/**
+ * How wide the canvas must be, in multiples of the font size, to draw a cluster without cutting it
+ * off: {@link clusterEmsWide}, doubled until it holds the cluster at three quarters of an em for each
+ * of its codepoints. A connected run of Arabic letters is a whole word, which can be many ems wide.
+ */
+function clusterEmsWideFor(cluster: string): number {
+    let emsWide = clusterEmsWide;
+    while ([...withoutArabicJoiners(cluster)].length * 0.75 > emsWide) emsWide *= 2;
+    return emsWide;
+}
 
 /**
  * The OpenType feature each alternate variant is drawn with. A variant is `null` where the font has
@@ -235,10 +247,10 @@ export class GlyphManager {
         }
 
         // If the style hasn’t opted into server-side fonts, this codepoint is CJK or in a script that
-        // forms clusters, or this is a cluster that a codepoint-keyed glyphs URL cannot serve, draw the
-        // glyph locally and cache it.
+        // forms clusters, or this is a cluster that a codepoint-keyed glyphs URL cannot serve, or a
+        // letter of an Arabic word drawn whole, draw the glyph locally and cache it.
         if (!this.url || isCluster(id) || this._charUsesLocalIdeographFontFamily(codePoint) ||
-            codePointIsInComplexShapingScript(codePoint)) {
+            codePointIsInComplexShapingScript(codePoint) || isArabicCodePoint(codePoint)) {
             glyph = await this._drawGlyph(entry, stack, id);
             glyphs[id] = glyph;
             return {stack, id, variant, glyph};
@@ -355,7 +367,7 @@ export class GlyphManager {
             glyphs = {};
             this.rasterizedGlyphs.set(tinySDF, glyphs);
         }
-        glyphs[id] ??= this._createGlyph(id, tinySDF.draw(id));
+        glyphs[id] ??= this._createGlyph(id, tinySDF.draw(withoutArabicJoiners(id)));
         return glyphs[id];
     }
 
@@ -398,13 +410,16 @@ export class GlyphManager {
      */
     _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<Rasterizer> {
         const cluster = isCluster(id);
+        const emsWide = cluster ? clusterEmsWideFor(id) : 1;
+        const clusterKey = (family: string) => emsWide === clusterEmsWide ? family : `${family}:${emsWide}`;
 
         if (fontFaceFamily) {
             const cache = cluster ? 'clusterTinySDFs' : 'fontFaceTinySDFs';
+            const key = cluster ? clusterKey(fontFaceFamily) : fontFaceFamily;
 
             entry[cache] ??= {};
-            entry[cache][fontFaceFamily] ||= this._createTinySDF(fontFaceFamily, false, cluster ? clusterEmsWide : 1);
-            return entry[cache][fontFaceFamily];
+            entry[cache][key] ||= this._createTinySDF(fontFaceFamily, false, emsWide);
+            return entry[cache][key];
         }
 
         const usesLocalIdeographFontFamily = stack === defaultStack &&
@@ -413,9 +428,10 @@ export class GlyphManager {
         const family = usesLocalIdeographFontFamily ? this.localIdeographFontFamily as string : stack;
 
         if (cluster) {
+            const key = clusterKey(family);
             entry.clusterTinySDFs ??= {};
-            entry.clusterTinySDFs[family] ||= this._createTinySDF(family, true, clusterEmsWide);
-            return entry.clusterTinySDFs[family];
+            entry.clusterTinySDFs[key] ||= this._createTinySDF(family, true, emsWide);
+            return entry.clusterTinySDFs[key];
         }
 
         const cache = usesLocalIdeographFontFamily ? 'ideographTinySDF' : 'tinySDF';

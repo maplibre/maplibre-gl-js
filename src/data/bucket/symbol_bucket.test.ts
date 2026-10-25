@@ -240,8 +240,8 @@ describe('SymbolBucket', () => {
         expect(ltrBucket.hasRTLText).toBeFalsy();
     });
 
-    test('SymbolBucket shapes rtl text', () => {
-        expect(glyphsRequestedFor('مرحبا')).toEqual(['ﻣ', 'ﺮ', 'ﺣ', 'ﺒ', 'ﺎ']);
+    test('SymbolBucket asks for an Arabic word as one glyph, not a glyph for each of its letters', () => {
+        expect(glyphsRequestedFor('مرحبا')).toEqual(['م\u200dر\u200dح\u200dب\u200dا']);
     });
 
     test('SymbolBucket detects rtl text mixed with ltr text', () => {

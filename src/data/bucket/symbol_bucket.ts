@@ -22,6 +22,7 @@ import {TriangleIndexArray, LineIndexArray} from '../array_types.g.ts';
 import {transformText} from '../../symbol/transform_text.ts';
 import {mergeLines} from '../../symbol/merge_lines.ts';
 import {isCluster} from '../../util/graphemes.ts';
+import {isArabicCodePoint} from '../../symbol/arabic_text.ts';
 import {TaggedString} from '../../symbol/tagged_string.ts';
 import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
 import {mayUseVerticalGlyph, WritingMode} from '../../symbol/shaping.ts';
@@ -455,6 +456,7 @@ export class SymbolBucket implements Bucket {
             const needsVerticalGlyph = needsVerticalForms && mayUseVerticalGlyph(grapheme.codePointAt(0), this.allowVerticalPlacement);
             if (isCluster(grapheme)) stack.default[grapheme] = true;
             if (needsVerticalGlyph) stack.vertical[grapheme] = true;
+            if (isCluster(grapheme) && isArabicCodePoint(grapheme.codePointAt(0))) continue;
 
             for (const char of grapheme) {
                 stack.default[char] = true;

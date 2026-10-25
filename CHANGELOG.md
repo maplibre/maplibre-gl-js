@@ -13,6 +13,7 @@
 - Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
 - Allow calling `new Map({ transformStyle: { ... }})` to provide a style transformation function similar to the same option in `setStyle` ([#8786](https://github.com/maplibre/maplibre-gl-js/pull/8786)) (by [@hiddewie](https://github.com/hiddewie))
 - Add accept headers for MLT according to the current capabilities ([#7483](https://github.com/maplibre/maplibre-gl-js/pull/7483)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Draw Arabic-script text in the browser a word at a time, so that letters with no presentation forms, such as Kurdish `ڵ`, `ێ` and `ە`, are no longer missing from labels
 
 ### 🐞 Bug fixes
 - Fix expired vector tiles erroring on their next reload, e.g. after `setFilter()`, when the server returns an unchanged ETag ([#8771](https://github.com/maplibre/maplibre-gl-js/pull/8771)) (by [@DoFabien](https://github.com/DoFabien))

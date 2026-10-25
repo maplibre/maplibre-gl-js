@@ -1,13 +1,13 @@
 import type {PluginState, RTLPluginStatus} from './rtl_text_plugin_status.ts';
 
 /**
- * The three functions a right-to-left text plugin supplies.
+ * The functions a right-to-left text plugin supplies for ordering bidirectional text.
  *
- * @deprecated MapLibre implements all three itself. A registered plugin still replaces the built-in
- * implementation, but this will be removed in a future release.
+ * @deprecated MapLibre implements both itself. A registered plugin still replaces the built-in
+ * implementation, but this will be removed in a future release. Arabic is no longer shaped by a
+ * plugin: its letters are drawn joined by the browser.
  */
 export interface RTLTextPlugin {
-    applyArabicShaping: (a: string) => string;
     processBidirectionalText: ((b: string, a: number[]) => string[]);
     processStyledBidirectionalText: ((c: string, b: number[], a: number[]) => Array<[string, number[]]>);
 }
@@ -15,7 +15,6 @@ export interface RTLTextPlugin {
 class RTLWorkerPlugin implements RTLTextPlugin {
     readonly TIMEOUT = 5000;
 
-    applyArabicShaping: (a: string) => string = null;
     processBidirectionalText: ((b: string, a: number[]) => string[]) = null;
     processStyledBidirectionalText: ((c: string, b: number[], a: number[]) => Array<[string, number[]]>) = null;
     pluginStatus: RTLPluginStatus = 'unavailable';
@@ -38,15 +37,13 @@ class RTLWorkerPlugin implements RTLTextPlugin {
         if (rtlWorkerPlugin.isParsed()) {
             throw new Error('RTL text plugin already registered.');
         }
-        this.applyArabicShaping = rtlTextPlugin.applyArabicShaping;
         this.processBidirectionalText = rtlTextPlugin.processBidirectionalText;
         this.processStyledBidirectionalText = rtlTextPlugin.processStyledBidirectionalText;
         this.loadScriptResolve();
     }
 
     public isParsed(): boolean {
-        return this.applyArabicShaping != null &&
-            this.processBidirectionalText != null &&
+        return this.processBidirectionalText != null &&
             this.processStyledBidirectionalText != null;
     }
 

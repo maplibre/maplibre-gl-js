@@ -1,5 +1,4 @@
-import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
-import {applyArabicShaping} from './arabic_shaping.ts';
+import {joinArabicWords} from './arabic_text.ts';
 
 import type {Formatted} from '@maplibre/maplibre-gl-style-spec';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
@@ -13,7 +12,7 @@ function transformTextInternal(text: string, layer: SymbolStyleLayer, feature: F
         text = text.toLocaleLowerCase();
     }
 
-    return (rtlWorkerPlugin.applyArabicShaping ?? applyArabicShaping)(text);
+    return joinArabicWords(text);
 }
 
 export function transformText(text: Formatted, layer: SymbolStyleLayer, feature: Feature): Formatted {

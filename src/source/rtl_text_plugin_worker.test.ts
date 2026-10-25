@@ -8,12 +8,10 @@ describe('RTLWorkerPlugin', () => {
         // This is a static class, so we need to reset the properties before each test
         rtlWorkerPlugin.processStyledBidirectionalText = null;
         rtlWorkerPlugin.processBidirectionalText = null;
-        rtlWorkerPlugin.applyArabicShaping = null;
     });
 
     test('should throw if already parsed', () => {
         const rtlTextPlugin = {
-            applyArabicShaping: vi.fn(),
             processBidirectionalText: vi.fn(),
             processStyledBidirectionalText: vi.fn(),
         };
@@ -43,7 +41,6 @@ describe('RTLWorkerPlugin', () => {
         rtlWorkerPlugin.pluginURL = originalUrl;
         rtlWorkerPlugin.pluginStatus = 'loaded';
         rtlWorkerPlugin.setMethods({
-            applyArabicShaping: vi.fn(),
             processBidirectionalText: vi.fn(),
             processStyledBidirectionalText: vi.fn(),
         });
@@ -65,7 +62,6 @@ describe('RTLWorkerPlugin', () => {
         const originalUrl = 'https://somehost/somescript1';
         const loadScriptsMock = vi.fn().mockImplementation((_) => {
             rtlWorkerPlugin.setMethods({
-                applyArabicShaping: vi.fn(),
                 processBidirectionalText: vi.fn(),
                 processStyledBidirectionalText: vi.fn(),
             });
@@ -87,7 +83,6 @@ describe('RTLWorkerPlugin', () => {
         const loadScriptsMock = vi.fn().mockImplementation((_) => {
             setTimeout(() => {
                 rtlWorkerPlugin.setMethods({
-                    applyArabicShaping: vi.fn(),
                     processBidirectionalText: vi.fn(),
                     processStyledBidirectionalText: vi.fn(),
                 });

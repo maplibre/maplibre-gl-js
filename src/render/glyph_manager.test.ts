@@ -227,6 +227,33 @@ describe('GlyphManager', () => {
         expect(glyphRangeRequests()).toHaveLength(0);
     });
 
+    test('GlyphManager draws a connected run of Arabic letters whole, without the joiners that hold it together, on a canvas as wide as the run needs', async () => {
+        const drawn = [];
+        const createRasterizer = fakeRasterizer((text) => { drawn.push(text); return GLYPHS[0]; });
+        const manager = createGlyphManager(true, 'sans-serif', undefined, createRasterizer);
+        const short = '\u06b5\u200d\u0627';
+        const long = '\u0628\u200d\u062c\u200d\u0628\u200d\u062c\u200d\u0628\u200d\u062c\u200d\u0627';
+
+        await manager.getGlyphs({'Noto Sans': {default: [short, long]}});
+
+        expect(drawn).toEqual(['\u06b5\u0627', '\u0628\u062c\u0628\u062c\u0628\u062c\u0627']);
+        const [shortOptions, longOptions] = createRasterizer.mock.calls.map(([options]) => options);
+        expect(longOptions.buffer).toBeGreaterThan(shortOptions.buffer);
+    });
+
+    test('GlyphManager locally generates a lone Arabic letter, so that a word is not split across two fonts', async () => {
+        serveGlyphRanges();
+        const drawn = [];
+        const createRasterizer = fakeRasterizer((text) => { drawn.push(text); return GLYPHS[0]; });
+        const manager = createGlyphManager(true, 'sans-serif', undefined, createRasterizer);
+
+        // \u0648 is Arabic WAW, which does not join the letter after it and so stands alone in a word
+        await manager.getGlyphs({'Noto Sans': {default: ['\u0648']}});
+
+        expect(drawn).toEqual(['\u0648']);
+        expect(glyphRangeRequests()).toHaveLength(0);
+    });
+
     test('GlyphManager fetches letters of scripts whose vowel signs do not form clusters', async () => {
         serveGlyphRanges();
         const createRasterizer = fakeRasterizer();
