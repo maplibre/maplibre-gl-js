@@ -59,7 +59,26 @@ vec3 projectToSphere(vec2 translatedPos, vec2 rawPos) {
     vec2 mercator_pos = u_projection_tile_mercator_coords.xy + u_projection_tile_mercator_coords.zw * translatedPos;
 
     // Now compute angular coordinates on the surface of a perfect sphere
-    float spherical_x = mercator_pos.x * PI * 2.0 + PI;
+    // Longitude trigonometry must be stable across GPU implementations:
+    // imprecise native sin/cos can move extrusion walls by several screen pixels,
+    // while CPU feature queries use the mathematically projected geometry.
+    // Shift to [-PI, PI] before evaluating both functions with a short
+    // polynomial on [-PI/2, PI/2], avoiding GPU-specific sin/cos errors.
+    float spherical_x = mercator_pos.x * PI * 2.0 - PI;
+    if (spherical_x > PI) spherical_x -= 2.0 * PI;
+    if (spherical_x < -PI) spherical_x += 2.0 * PI;
+    float reduced_x = spherical_x;
+    float cosine_sign = 1.0;
+    if (reduced_x > PI * 0.5) {
+        reduced_x = PI - reduced_x;
+        cosine_sign = -1.0;
+    } else if (reduced_x < -PI * 0.5) {
+        reduced_x = -PI - reduced_x;
+        cosine_sign = -1.0;
+    }
+    float x2 = reduced_x * reduced_x;
+    float sin_x = reduced_x * (1.0 + x2 * (-0.16666666666666667 + x2 * (0.008333333333333333 + x2 * (-0.0001984126984126984 + x2 * (0.0000027557319223985893 + x2 * (-0.00000002505210838544172))))));
+    float cos_x = cosine_sign * (1.0 + x2 * (-0.5 + x2 * (0.041666666666666664 + x2 * (-0.001388888888888889 + x2 * (0.0000248015873015873 + x2 * (-0.0000002755731922398589 + x2 * 0.00000000208767569878681))))));
 
     // sin_sy/cos_sy are sin(spherical_y)/cos(spherical_y), where
     // spherical_y = 2*atan(exp(PI - mercator_pos.y*2*PI)) - PI/2 (the Gudermannian
@@ -78,9 +97,9 @@ vec3 projectToSphere(vec2 translatedPos, vec2 rawPos) {
     float cos_sy = (2.0 * t) / denom;
 
     vec3 pos = vec3(
-        sin(spherical_x) * cos_sy,
+        sin_x * cos_sy,
         sin_sy,
-        cos(spherical_x) * cos_sy
+        cos_x * cos_sy
     );
 
     // North pole
