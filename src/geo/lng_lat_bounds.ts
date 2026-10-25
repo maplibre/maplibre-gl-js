@@ -281,8 +281,14 @@ export class LngLatBounds {
         const {lng, lat} = LngLat.convert(lnglat);
 
         const containsLatitude = this._sw.lat <= lat && lat <= this._ne.lat;
+        const crossesAntimeridian = this._sw.lng > this._ne.lng &&
+            this._sw.lng >= -180 && this._sw.lng <= 180 &&
+            this._ne.lng >= -180 && this._ne.lng <= 180;
         let containsLongitude = this._sw.lng <= lng && lng <= this._ne.lng;
-        if (this._sw.lng > this._ne.lng) { // wrapped coordinates
+        if (crossesAntimeridian) {
+            const normalizedLng = wrap(lng, -180, 180);
+            containsLongitude = normalizedLng >= this._sw.lng || normalizedLng <= this._ne.lng;
+        } else if (this._sw.lng > this._ne.lng) {
             containsLongitude = this._sw.lng >= lng && lng >= this._ne.lng;
         }
 

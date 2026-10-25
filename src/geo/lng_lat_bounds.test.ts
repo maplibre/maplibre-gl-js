@@ -353,6 +353,23 @@ describe('LngLatBounds', () => {
                 expect(llb.contains(ll)).toBe(false);
             });
 
+            test('point is within bounds crossing the antimeridian in standard coordinates', () => {
+                const bounds = new LngLatBounds([170, -20], [-170, 20]);
+                expect(bounds.contains([175, 0])).toBe(true);
+                expect(bounds.contains([-175, 0])).toBe(true);
+                expect(bounds.contains([180, 0])).toBe(true);
+                expect(bounds.contains([-180, 0])).toBe(true);
+                expect(bounds.contains([0, 0])).toBe(false);
+                expect(bounds.contains([175, 25])).toBe(false);
+            });
+
+            test('antimeridian bounds normalize equivalent point longitudes', () => {
+                const bounds = new LngLatBounds([170, -20], [-170, 20]);
+                expect(bounds.contains([185, 0])).toBe(true);
+                expect(bounds.contains([535, 0])).toBe(true);
+                expect(bounds.contains([270, 0])).toBe(false);
+            });
+
             test('point is in bounds that spans dateline', () => {
                 const llb = new LngLatBounds([190, -10], [170, 10]);
                 const ll = {lng: 180, lat: 0};
