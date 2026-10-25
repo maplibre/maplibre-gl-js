@@ -3117,7 +3117,8 @@ export class Map extends Evented<MapEventType> {
      *
      * @param id - The ID of the source to get.
      * @returns The style source with the specified ID or `undefined` if the ID
-     * corresponds to no existing sources.
+     * corresponds to no existing sources. Also returns `undefined` after a WebGL context
+     * loss until the restored style fires `style.load`.
      * The shape of the object varies by source type.
      * A list of options for each source type is available on the MapLibre Style Specification's
      * [Sources](https://maplibre.org/maplibre-style-spec/sources/) page.
