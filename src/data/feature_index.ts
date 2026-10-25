@@ -38,7 +38,7 @@ export {GEOJSON_TILE_LAYER_NAME};
  * lie in that plane. The plane is a conservative, height-independent test
  * for candidate 3D footprint bounds.
  */
-function getGlobeQueryPlane(point: Point, tileID: OverscaledTileID, transform: IReadonlyTransform): [number, number, number] | null {
+export function getGlobeQueryPlane(point: Point, tileID: OverscaledTileID, transform: IReadonlyTransform): [number, number, number] | null {
     const {x, y, z} = tileID.canonical;
     const scale = Math.pow(2, z);
     const coordinate = new MercatorCoordinate((x + point.x / EXTENT) / scale, (y + point.y / EXTENT) / scale);
@@ -67,7 +67,7 @@ function getGlobeQueryPlane(point: Point, tileID: OverscaledTileID, transform: I
  * than the corresponding Mercator Y angular distance, so the half-width
  * plus half-height of this tile-space box is a conservative angular bound.
  */
-function mayIntersectGlobeQueryPlane(normal: [number, number, number], tileID: OverscaledTileID, bx1: number, by1: number, bx2: number, by2: number, padding: number): boolean {
+export function mayIntersectGlobeQueryPlane(normal: [number, number, number], tileID: OverscaledTileID, bx1: number, by1: number, bx2: number, by2: number, padding: number): boolean {
     const {x, y, z} = tileID.canonical;
     const angularScale = 2 * Math.PI / (EXTENT * Math.pow(2, z));
     const angularRadius = (bx2 - bx1 + by2 - by1 + padding * 4) * angularScale * 0.5;
