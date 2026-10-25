@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix Globe `queryRenderedFeatures` missing most fill-extrusion walls at low zoom ([#8864](https://github.com/maplibre/maplibre-gl-js/issues/8864)) (by [@erenbati](https://github.com/erenbati))
 - Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 - _...Add new stuff here..._
 
