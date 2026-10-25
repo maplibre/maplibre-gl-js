@@ -288,7 +288,7 @@ export class TerrainTileManager extends Evented {
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile | undefined {
         const source = this.tileManager._source;
-        let z = this._getSourceZoom(tileID);
+        let z = this._getSourceZoom(tileID, source);
         if (z === undefined) return undefined;
         // cache for tileID to terrain-tileID
         if (this._sourceTileCache[tileID.key]?.zoom !== z) this._sourceTileCache[tileID.key] = {zoom: z, key: tileID.scaledTo(z).key};
@@ -309,7 +309,7 @@ export class TerrainTileManager extends Evented {
      */
     isStillWaitingForDEM(tileID: OverscaledTileID): boolean {
         const source = this.tileManager._source;
-        const z = this._getSourceZoom(tileID);
+        const z = this._getSourceZoom(tileID, source);
         if (z === undefined) return false;
         const sourceTileID = tileID.scaledTo(z);
         if (source.hasTile && !source.hasTile(sourceTileID)) return false;
@@ -320,10 +320,10 @@ export class TerrainTileManager extends Evented {
      * The zoom of the raster-dem tile that covers a terrain tile: `deltaZoom` below the terrain tile, kept within the
      * source's zoom range, so a terrain tile at the source's minzoom uses the source tile at that zoom.
      * @param tileID - the terrain tile
+     * @param source - the raster-dem source
      * @returns the zoom, or undefined where the source has no tiles at or below the terrain tile's zoom
      */
-    private _getSourceZoom(tileID: OverscaledTileID): number | undefined {
-        const source = this.tileManager._source;
+    private _getSourceZoom(tileID: OverscaledTileID, source: Source): number | undefined {
         let z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
         if (z < source.minzoom) z = source.minzoom;
         return z <= tileID.overscaledZ ? z : undefined;
