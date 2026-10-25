@@ -1,16 +1,16 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
-import {cameraMercatorCoordinate, degreesPerWorldUnit, getMercatorHorizon, lngLatBoxToWorldBox, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates, worldBoxToLngLatBox} from './mercator_utils.ts';
+import {cameraMercatorCoordinate, degreesPerWorldUnit, getMercatorHorizon, getMercatorTileCoordinates, lngLatBoxToWorldBox, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates, worldBoxToLngLatBox} from './mercator_utils.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from './crs.ts';
 import {createMercatorTransform} from './mercator_transform.ts';
 import {createGlobeTransform} from './globe_transform.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
-import {CanonicalTileID} from '../../tile/tile_id.ts';
+import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {createIdentityMat4f32, MAX_VALID_LATITUDE} from '../../util/util.ts';
-import {createRotatedCrs} from '../../util/test/util.ts';
+import {createRotatedCrs, expectToBeCloseToArray} from '../../util/test/util.ts';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
@@ -119,6 +119,19 @@ describe('mercator utils', () => {
             const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
             const projectionData = transform.getProjectionData({overscaledTileID: null});
             expect(projectionData.fallbackMatrix).toEqual(createIdentityMat4f32());
+        });
+    });
+
+    describe('getMercatorTilesCoordinates', () => {
+        test('mercator tile extents are set', () => {
+            let tileMercatorCoords = getMercatorTileCoordinates(new OverscaledTileID(0, 0, 0, 0, 0));
+            expectToBeCloseToArray(tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
+
+            tileMercatorCoords = getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 0, 0));
+            expectToBeCloseToArray(tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+
+            tileMercatorCoords = getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 1, 0));
+            expectToBeCloseToArray(tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
     });
 
