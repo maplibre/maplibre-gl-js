@@ -2693,6 +2693,39 @@ describe('TileManager::refreshTiles', () => {
         expect(spy.mock.calls[0][1]).toBe('expired');
     });
 
+    test('reloads an errored tile as loading, not expired', () => {
+        const coord = new OverscaledTileID(1, 0, 1, 0, 1);
+        const tileManager = createTileManager();
+
+        const spy = vi.fn();
+        tileManager._reloadTile = spy;
+
+        const tile = tileManager._addTile(coord);
+        tile.state = 'errored';
+
+        tileManager.refreshTiles([new CanonicalTileID(1, 0, 1)]);
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy.mock.calls[0][1]).toBe('loading');
+    });
+
+    test('keeps an errored tile non-renderable while it is refreshed', () => {
+        const coord = new OverscaledTileID(1, 0, 1, 0, 1);
+        const tileManager = createTileManager();
+        // hold the reload in-flight so the state the tile is reloaded into stays observable
+        tileManager._source.loadTile = () => new Promise<void>(() => {});
+
+        const tile = tileManager._addTile(coord);
+        tile.state = 'errored';
+
+        tileManager.refreshTiles([new CanonicalTileID(1, 0, 1)]);
+
+        // errored tiles have no texture; as 'expired' they'd count as renderable and crash
+        // the raster renderer, so the parent has to keep covering the hole instead.
+        expect(tile.state).toBe('loading');
+        expect(tile.hasData()).toBe(false);
+        expect(tileManager._inViewTiles.isIdRenderable(coord.key)).toBe(false);
+    });
+
     test('does not call reloadTile when tile does not exist', async () => {
         const coord = new OverscaledTileID(1, 0, 1, 1, 1);
         const tileManager = createTileManager();
