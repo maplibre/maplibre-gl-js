@@ -15,6 +15,7 @@
 - Fix maps that stop loading after iOS shuts down their background workers to save memory ([#8461](https://github.com/maplibre/maplibre-gl-js/issues/8461), [#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491)) (by [@lucaswoj](https://github.com/lucaswoj), [@ingalls](https://github.com/ingalls), and [@HarelM](https://github.com/HarelM))
 - Fix vector tiles past the source's maxzoom failing to load when slicing leaves a one-point line ([#8681](https://github.com/maplibre/maplibre-gl-js/issues/8681)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix terrain drawing flat at low zoom, where its tiles are at the DEM source's minzoom ([#8772](https://github.com/maplibre/maplibre-gl-js/issues/8772)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix `LngLatBounds.contains()` returning inverted results for bounds crossing the antimeridian ([#8696](https://github.com/maplibre/maplibre-gl-js/issues/8696)) (by [@erenbati](https://github.com/erenbati))
 - _...Add new stuff here..._
 
 ## 6.15.0
