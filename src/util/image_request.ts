@@ -1,8 +1,9 @@
 import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax.ts';
-import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, extend, isWorker, isImageBitmap} from './util.ts';
+import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, isWorker, isImageBitmap} from './util.ts';
 import {config} from './config.ts';
 import {AbortError, throwIfAborted} from './abort_error.ts';
 import {getProtocol} from '../source/protocol_crud.ts';
+import {isJXLSupported} from './jxl_supported.ts';
 
 import type {RequestManager, ResourceType} from './request_manager.ts';
 
@@ -127,6 +128,7 @@ export namespace ImageRequest {
 
     /**
      * Request to load an image.
+     * Generated headers are kept separate from caller-provided headers so parameters can be reused.
      * @param requestParameters - Request parameters.
      * @param abortController - allows to abort the request.
      * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
@@ -141,12 +143,14 @@ export namespace ImageRequest {
         imageBitmapOptions?: ImageBitmapOptions
     ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
         return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
-            requestParameters.headers ||= {};
-            requestParameters.headers.accept = 'image/webp,*/*';
-            extend(requestParameters, {type: 'image'});
+            const headers = requestParameters.headers;
             const request: ImageRequestQueueItem = {
                 abortController,
-                requestParameters,
+                requestParameters: {
+                    ...requestParameters,
+                    type: 'image',
+                    headers: headers instanceof Headers || Array.isArray(headers) ? Object.fromEntries(new Headers(headers)) : {...headers}
+                },
                 supportImageRefresh,
                 imageBitmapOptions,
                 state: 'queued',
@@ -172,6 +176,16 @@ export namespace ImageRequest {
         }
     };
 
+    /** Wait for shared format detection without letting one request cancel the probe. */
+    const waitForJXLSupport = (support: Promise<boolean>, signal: AbortSignal): Promise<boolean> => {
+        return new Promise((resolve, reject) => {
+            throwIfAborted(signal);
+            const onAbort = () => reject(new AbortError(signal.reason));
+            signal.addEventListener('abort', onAbort, {once: true});
+            support.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+        });
+    };
+
     /**
      * Runs one queued image request.
      *
@@ -195,20 +209,25 @@ export namespace ImageRequest {
             !imageBitmapOptions &&
             !isWorker(self) &&
             !getProtocol(requestParameters.url) &&
-            (!requestParameters.headers ||
-                Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === 'accept', true));
+            Object.keys(requestParameters.headers).length === 0;
 
         currentParallelImageRequests++;
 
-        const getImagePromise = canUseHTMLImageElement ?
-            getImageUsingHtmlImage(requestParameters, abortController) :
-            makeRequest(requestParameters, abortController);
-
         try {
-            const response = await getImagePromise;
+            if (!canUseHTMLImageElement && !Object.keys(requestParameters.headers).some(key => key.toLowerCase() === 'accept')) {
+                let supported = isJXLSupported();
+                if (typeof supported !== 'boolean') {
+                    supported = await waitForJXLSupport(supported, abortController.signal);
+                }
+                requestParameters.headers.accept = supported ? 'image/jxl,image/webp,*/*' : 'image/webp,*/*';
+            }
+            throwIfAborted(abortController.signal);
+            const response = await (canUseHTMLImageElement ?
+                getImageUsingHtmlImage(requestParameters, abortController) :
+                makeRequest(requestParameters, abortController));
             delete itemInQueue.abortController;
             itemInQueue.state = 'completed';
-            if (response.data instanceof HTMLImageElement || isImageBitmap(response.data)) {
+            if ((typeof HTMLImageElement !== 'undefined' && response.data instanceof HTMLImageElement) || isImageBitmap(response.data)) {
                 // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
                 onSuccess(response);
@@ -243,6 +262,8 @@ export namespace ImageRequest {
 
             const topItemInQueue: ImageRequestQueueItem = imageRequestQueue.shift();
             if (topItemInQueue.abortController.signal.aborted) {
+                topItemInQueue.state = 'completed';
+                topItemInQueue.onError(new AbortError(topItemInQueue.abortController.signal.reason));
                 numImageRequests--;
                 continue;
             }
