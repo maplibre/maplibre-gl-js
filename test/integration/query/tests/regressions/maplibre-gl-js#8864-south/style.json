@@ -1,0 +1,87 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 512,
+      "queryGeometry": [
+        316,
+        140
+      ]
+    }
+  },
+  "projection": {
+    "type": "globe"
+  },
+  "center": [
+    -70,
+    -45
+  ],
+  "zoom": 10,
+  "pitch": 60,
+  "bearing": 30,
+  "sources": {
+    "square": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "id": "square"
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -70.022,
+                    -45.022
+                  ],
+                  [
+                    -69.978,
+                    -45.022
+                  ],
+                  [
+                    -69.978,
+                    -44.978
+                  ],
+                  [
+                    -70.022,
+                    -44.978
+                  ],
+                  [
+                    -70.022,
+                    -45.022
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "base",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffffff"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "square",
+      "paint": {
+        "fill-extrusion-height": 8000,
+        "fill-extrusion-base": 0,
+        "fill-extrusion-color": "#ff0000",
+        "fill-extrusion-opacity": 1,
+        "fill-extrusion-vertical-gradient": false
+      }
+    }
+  ]
+}
