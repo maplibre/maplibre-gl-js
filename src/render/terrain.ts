@@ -20,7 +20,6 @@ import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Painter} from './painter.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 /**
  * @experimental
@@ -237,12 +236,13 @@ export class Terrain {
      * zoom levels to find the first tile with data to return. Where no DEM data has loaded it gives 0, which
      * {@link getElevationAndDEMStateForLngLat} tells apart from 0 m.
      * @param lnglat - the location
+     * @param tileZoom - the camera's tile zoom, at which the terrain's tiles are loaded
      * @returns the elevation
      */
-    getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
+    getElevationForLngLat(lnglat: LngLat, tileZoom: number): number {
         const elevation = this.getDrawnElevationForLngLat(lnglat);
         if (elevation !== undefined) return elevation;
-        return this.getElevationForLngLatZoom(lnglat, this._getFallbackZoom(transform));
+        return this.getElevationForLngLatZoom(lnglat, this._getFallbackZoom(tileZoom));
     }
 
     /**
@@ -262,13 +262,13 @@ export class Terrain {
      * 0 it gives for want of DEM data apart from 0 m. DEM data has loaded where a drawn tile or the tile it falls back
      * to has it, its own or a loaded parent's, and any elevation other than 0 comes from loaded DEM data.
      * @param lnglat - the location
-     * @param transform - the transform {@link getElevationForLngLat} is given
+     * @param tileZoom - the camera's tile zoom, which {@link getElevationForLngLat} is given
      * @returns the elevation, and the state of the DEM data there
      */
-    getElevationAndDEMStateForLngLat(lnglat: LngLat, transform: IReadonlyTransform): {elevation: number; demState: DEMState} {
-        const elevation = this.getElevationForLngLat(lnglat, transform);
+    getElevationAndDEMStateForLngLat(lnglat: LngLat, tileZoom: number): {elevation: number; demState: DEMState} {
+        const elevation = this.getElevationForLngLat(lnglat, tileZoom);
         if (elevation !== 0 || this.getDrawnElevationForLngLat(lnglat) !== undefined) return {elevation, demState: 'loaded'};
-        const zoom = this._getFallbackZoom(transform);
+        const zoom = this._getFallbackZoom(tileZoom);
         const worldCoordinateHelper = this._worldCoordinateHelper;
         if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return {elevation, demState: 'none'};
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
@@ -278,10 +278,10 @@ export class Terrain {
 
     /**
      * The zoom {@link getElevationForLngLat} passes to {@link getElevationForLngLatZoom} where no drawn tile has DEM
-     * data: the transform's tile zoom, where the terrain's tiles are loaded.
+     * data: the camera's tile zoom, where the terrain's tiles are loaded.
      */
-    private _getFallbackZoom(transform: IReadonlyTransform): number {
-        return Math.min(transform.tileZoom, this.tileManager.maxzoom);
+    private _getFallbackZoom(tileZoom: number): number {
+        return Math.min(tileZoom, this.tileManager.maxzoom);
     }
 
     /**

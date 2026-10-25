@@ -43,11 +43,12 @@ describe('geojson tile worker source', () => {
             '0': {
                 status: 'done',
                 vectorTile: {},
+                tileID: new OverscaledTileID(0, 0, 0, 0, 0),
                 parse
             } as any as WorkerTile
         };
 
-        const reloadPromise = source.reloadTile({uid: 0} as any as WorkerTileParameters);
+        const reloadPromise = source.reloadTile({uid: 0, tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as any as WorkerTileParameters);
         expect(parse).toHaveBeenCalledTimes(1);
         await expect(reloadPromise).resolves.toBeTruthy();
     });
@@ -61,11 +62,12 @@ describe('geojson tile worker source', () => {
             '0': {
                 status: 'parsing',
                 vectorTile: {},
+                tileID: new OverscaledTileID(0, 0, 0, 0, 0),
                 parse
             } as any as WorkerTile
         };
 
-        const result = await source.reloadTile({uid: 0} as any as WorkerTileParameters) as WorkerTileWithData;
+        const result = await source.reloadTile({uid: 0, tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as any as WorkerTileParameters) as WorkerTileWithData;
 
         expect(parse).toHaveBeenCalledTimes(1);
         expect(result).toBe(parseResult);
@@ -390,6 +392,23 @@ describe('reloadTile', () => {
 
         // validate supported features are present in the index
         expect(featureLayers[GEOJSON_TILE_LAYER_NAME].feature(0).properties['stringProperty']).toBeDefined();
+    });
+
+    test('parses the tile for the world copy it is reloaded in', async () => {
+        const source = new GeoJSONWorkerSource(actor, new StyleLayerIndex([]), []);
+        const tileParams = {
+            source: 'sourceId',
+            uid: 0,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            maxZoom: 10
+        } as WorkerTileParameters;
+        await source.loadData({source: 'sourceId', data: {type: 'Point', coordinates: [0, 0]}, geojsonVtOptions: {}} as LoadGeoJSONParameters);
+        await source.reloadTile(tileParams);
+        const tileID = new OverscaledTileID(0, 1, 0, 0, 0);
+
+        const data = await source.reloadTile({...tileParams, tileID}) as WorkerTileWithData;
+
+        expect(data.featureIndex.tileID).toEqual(tileID);
     });
 });
 

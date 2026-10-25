@@ -8,7 +8,7 @@ import {OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import {StubMap} from '../util/test/util.ts';
+import {StubMap, beforeMapTest, createMap} from '../util/test/util.ts';
 import {TileManager} from './tile_manager.ts';
 
 import type {DEMData} from '../data/dem_data.ts';
@@ -99,6 +99,14 @@ describe('TerrainTileManager', () => {
         expect(terrainTileManager.getSourceTile(terrainTileID)).toBe(demTile);
     });
 
+    test('getSourceTile gives a terrain tile at the source minzoom the source tile at that zoom', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const tile = new Tile(tileID, 256);
+        tsc.tileManager._inViewTiles.setTile(tileID.key, tile);
+
+        expect(tsc.getSourceTile(tileID)).toBe(tile);
+    });
+
     test('getSourceTile should get tile from out of view cache when tile in not in view', () => {
         const tileID = new OverscaledTileID(6, 0, 6, 0, 0);
         const underzoomTileID = tileID.scaledTo(tileID.canonical.z - tsc.deltaZoom);
@@ -117,6 +125,27 @@ describe('TerrainTileManager', () => {
         tsc.tileManager._inViewTiles.setTile(sourceTile.tileID.key, sourceTile);
 
         expect(tsc.isStillWaitingForDEM(terrainTileInsideTheBounds)).toBe(false);
+    });
+
+    test('isStillWaitingForDEM is true for a terrain tile at the source minzoom while its source tile loads', () => {
+        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+        const sourceTile = new Tile(tileID, 256);
+        sourceTile.state = 'loading';
+        tsc.tileManager._inViewTiles.setTile(tileID.key, sourceTile);
+
+        expect(tsc.isStillWaitingForDEM(tileID)).toBe(true);
+    });
+
+    test('isStillWaitingForDEM is false for a terrain tile below the source minzoom', async () => {
+        beforeMapTest();
+        const map = createMap();
+        await map.once('style.load');
+        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], minzoom: 5});
+        await map.style.tileManagers.dem.once('data');
+        const terrainTileManager = new TerrainTileManager(map.style.tileManagers.dem);
+
+        expect(terrainTileManager.isStillWaitingForDEM(new OverscaledTileID(4, 0, 4, 5, 8))).toBe(false);
+        map.remove();
     });
 
     describe('update', () => {
