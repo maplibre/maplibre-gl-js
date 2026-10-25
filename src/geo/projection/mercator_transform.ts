@@ -7,7 +7,7 @@ import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKe
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation, lngLatBoxToWorldBox} from './mercator_utils.ts';
+import {getMercatorHorizon, getMercatorTileCoordinates, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation, lngLatBoxToWorldBox} from './mercator_utils.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
@@ -1054,7 +1054,7 @@ export class MercatorTransform implements ITransform {
 
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
-        const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
+        const mercatorTileCoordinates = getMercatorTileCoordinates(overscaledTileID);
         const tilePosMatrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned, true) : null;
 
         let mainMatrix: Mat4f32;

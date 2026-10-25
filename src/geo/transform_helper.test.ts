@@ -2,9 +2,7 @@ import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
 import {normalizeCenter, TransformHelper} from './transform_helper.ts';
-import {OverscaledTileID} from '../tile/tile_id.ts';
-import {createRotatedCrs, expectToBeCloseToArray} from '../util/test/util.ts';
-import {EXTENT} from '../data/extent.ts';
+import {createRotatedCrs} from '../util/test/util.ts';
 import {createMercatorTransform} from './projection/mercator_transform.ts';
 import {CRSWorldCoordinateHelper} from './projection/crs.ts';
 
@@ -147,21 +145,6 @@ describe('TransformHelper', () => {
             const target = new LngLat(-140, 0);
             normalizeCenter(transform, target);
             expect(target.lng).toBe(-140);
-        });
-    });
-
-    describe('getMercatorTilesCoordinates', () => {
-        test('mercator tile extents are set', () => {
-            const helper = new TransformHelper(emptyCallbacks);
-
-            let tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(0, 0, 0, 0, 0));
-            expectToBeCloseToArray(tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
-
-            tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 0, 0));
-            expectToBeCloseToArray(tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-
-            tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 1, 0));
-            expectToBeCloseToArray(tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
     });
 });
