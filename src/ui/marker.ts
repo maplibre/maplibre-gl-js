@@ -731,7 +731,7 @@ export class Marker extends Evented<MarkerEventType> {
      */
     _isCovered(terrain: Terrain): boolean {
         const transform = this._map._camera.transform;
-        const elevation = terrain.getElevationForLngLat(this._lngLat, transform);
+        const elevation = terrain.getElevationForLngLat(this._lngLat, transform.tileZoom);
         const metersToCenter = Math.max(0, -this._offset.y) / transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
         return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter);
