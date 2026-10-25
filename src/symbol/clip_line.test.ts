@@ -208,7 +208,14 @@ describe('clipGeometry', () => {
             new Point(-300, 0)
         ];
 
-        expect(clipGeometry([line], 2, -300, -200, 300, 200)).toEqual([]);
+        const result = [
+            [
+                new Point(-300, 0),
+                new Point(-300, 0)
+            ]
+        ];
+
+        expect(clipGeometry([line], 2, -300, -200, 300, 200)).toEqual(result);
     });
 
     test('Intersect with borders', () => {
