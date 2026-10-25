@@ -390,10 +390,9 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove(): void {
-        // clear the geolocation watch if exists
+        // clear the geolocation watch if exists, releasing its slot for other controls
         if (this._geolocationWatchID !== undefined) {
-            window.navigator.geolocation.clearWatch(this._geolocationWatchID);
-            this._geolocationWatchID = undefined;
+            this._clearWatch();
         }
 
         // clear the markers from the map
@@ -411,8 +410,6 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
         this._map.off('rotate', this._onUpdate);
         this._map.off('pitch', this._onUpdate);
         this._map = undefined;
-        numberOfWatches = 0;
-        noTimeout = false;
     }
 
     /**
@@ -763,8 +760,6 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
                 case 'ACTIVE_ERROR':
                 case 'BACKGROUND_ERROR':
                 // turn off the Geolocate Control
-                    numberOfWatches--;
-                    noTimeout = false;
                     this._watchState = 'OFF';
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-waiting');
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
@@ -841,6 +836,8 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
         window.navigator.geolocation.clearWatch(this._geolocationWatchID);
 
         this._geolocationWatchID = undefined;
+        numberOfWatches = Math.max(0, numberOfWatches - 1);
+        noTimeout = numberOfWatches > 1;
         this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-waiting');
         this._geolocateButton.setAttribute('aria-pressed', 'false');
 
