@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed.ts';
-import {MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
+import {type MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
@@ -11,7 +11,7 @@ import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createR
 import {CRSWorldCoordinateHelper} from './crs.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {EXTENT} from '../../data/extent.ts';
-import {MercatorCoordinate, mercatorWorldCoordinateHelper, mercatorZfromAltitude} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 
 import type {Tile} from '../../tile/tile.ts';
 
@@ -970,12 +970,10 @@ function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Mer
     return transform;
 }
 
-function createRayTransform(near: number[], far: number[], worldSize: number): MercatorTransform {
-    const transform = Object.create(MercatorTransform.prototype);
-    Object.defineProperty(transform, 'worldSize', {value: worldSize});
-    Object.defineProperty(transform, 'worldCoordinateHelper', {value: mercatorWorldCoordinateHelper});
-    transform.getRaySegmentFromPixel = () => ({near, far});
-    return transform as MercatorTransform;
+function createRayTransform(near: number[], far: number[]): MercatorTransform {
+    const transform = createMercatorTransform();
+    Object.defineProperty(transform, 'getRaySegmentFromPixel', {value: () => ({near, far})});
+    return transform;
 }
 
 function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCoordinate, worldSize: number): void {
@@ -1220,12 +1218,11 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
     test('handles a ray with no vertical component', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const terrain = createDEMTerrain([tileID], createDEM((x) => x * 200));
-        const worldSize = 512;
 
-        const crossing = createRayTransform([0, 256, 500], [512, 256, 500], worldSize);
+        const crossing = createRayTransform([0, 256, 500], [512, 256, 500]);
         expect(crossing.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).not.toBeNull();
 
-        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000], worldSize);
+        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000]);
         expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
     });
 });

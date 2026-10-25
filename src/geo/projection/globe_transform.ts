@@ -3,6 +3,7 @@ import {MercatorTransform} from './mercator_transform.ts';
 import {VerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {lerp} from '../../util/util.ts';
 
+import type {CameraState} from '../camera_state.ts';
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
 import type {mat2, mat4, vec3, vec4} from 'gl-matrix';
 import type {OverscaledTileID, UnwrappedTileID, CanonicalTileID} from '../../tile/tile_id.ts';
@@ -42,9 +43,6 @@ export class GlobeTransform implements ITransform {
     }
     get pixelsToGLUnits(): [number, number] {
         return this._helper.pixelsToGLUnits;
-    }
-    get centerOffset(): Point {
-        return this._helper.centerOffset;
     }
     get size(): Point {
         return this._helper.size;
@@ -269,6 +267,10 @@ export class GlobeTransform implements ITransform {
         this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(undefined, this._helper);
     }
 
+    private get _cameraState(): Readonly<CameraState> {
+        return this._helper.cameraState;
+    }
+
     clone(): ITransform {
         const clone = new GlobeTransform();
         clone._globeness = this._globeness;
@@ -334,12 +336,12 @@ export class GlobeTransform implements ITransform {
      * instead of its own, which keeps the two render paths at the same depth across the globe-to-mercator transition.
      */
     private _calcMatrices(): void {
-        if (!this._helper.width || !this._helper.height) {
+        if (!this._cameraState.width || !this._cameraState.height) {
             return;
         }
         const verticalPerspective = this._verticalPerspectiveTransform;
         verticalPerspective._calcMatrices();
-        const nearFarZ = this.isGlobeRendering ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : this._helper.nearFarZOverride;
+        const nearFarZ = this.isGlobeRendering ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : this._cameraState.nearFarZOverride;
         this._mercatorTransform._calcMatrices(nearFarZ);
     }
 

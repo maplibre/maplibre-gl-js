@@ -1,6 +1,7 @@
+import Point from '@mapbox/point-geometry';
 import {LngLat} from './lng_lat.ts';
 import {EdgeInsets} from './edge_insets.ts';
-import {MAX_VALID_LATITUDE} from '../util/util.ts';
+import {MAX_VALID_LATITUDE, radiansToDegrees} from '../util/util.ts';
 
 import type {mat2, mat4} from 'gl-matrix';
 import type {TransformOptions} from './transform_helper.ts';
@@ -9,7 +10,8 @@ import type {NearFarZ} from './transform_interface.ts';
 /**
  * @internal
  * The camera of a transform, which is its position, its size and limits, and the values that follow from them
- * in every projection. It is plain data, and {@link TransformHelper} is the only one to change it.
+ * in every projection. It is plain data. {@link TransformHelper} is the only one to change it, and the projection
+ * classes read it.
  */
 export type CameraState = {
     readonly tileSize: number;
@@ -95,4 +97,61 @@ export function createCameraState(options?: TransformOptions): CameraState {
         pixelsToClipSpaceMatrix: undefined,
         clipSpaceToPixelsMatrix: undefined,
     };
+}
+
+/**
+ * @internal
+ * The center of the screen in pixels with the top-left corner being (0,0) and +y axis pointing downwards.
+ * This accounts for padding.
+ */
+export function getCenterPoint(cameraState: Readonly<CameraState>): Point {
+    return cameraState.edgeInsets.getCenter(cameraState.width, cameraState.height);
+}
+
+/**
+ * @internal
+ * How far the padding moves the center point away from the middle of the screen, in pixels.
+ */
+export function getCenterOffset(cameraState: Readonly<CameraState>): Point {
+    return getCenterPoint(cameraState)._sub(new Point(cameraState.width, cameraState.height)._div(2));
+}
+
+/**
+ * @internal
+ * The size of the world in pixels at the zoom.
+ */
+export function getWorldSize(cameraState: Readonly<CameraState>): number {
+    return cameraState.tileSize * cameraState.scale;
+}
+
+/**
+ * @internal
+ * The bearing in degrees.
+ */
+export function getBearing(cameraState: Readonly<CameraState>): number {
+    return cameraState.bearingInRadians / Math.PI * 180;
+}
+
+/**
+ * @internal
+ * The pitch in degrees.
+ */
+export function getPitch(cameraState: Readonly<CameraState>): number {
+    return cameraState.pitchInRadians / Math.PI * 180;
+}
+
+/**
+ * @internal
+ * The roll in degrees.
+ */
+export function getRoll(cameraState: Readonly<CameraState>): number {
+    return cameraState.rollInRadians / Math.PI * 180;
+}
+
+/**
+ * @internal
+ * The vertical field of view in degrees.
+ */
+export function getFov(cameraState: Readonly<CameraState>): number {
+    return radiansToDegrees(cameraState.fovInRadians);
 }
