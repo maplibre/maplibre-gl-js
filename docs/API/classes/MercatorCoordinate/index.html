@@ -29,7 +29,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.71">
     
     
       
@@ -3449,6 +3449,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../interfaces/GlobalDispatcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GlobalDispatcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../interfaces/Handler/" class="md-nav__link">
         
   
@@ -4384,6 +4411,33 @@
     
   
   CustomLayerProjectionDataParams
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/CustomMessageHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  CustomMessageHandler&lt;TData, TResult&gt;
 
     
   </span>
@@ -11315,7 +11369,7 @@
 
 
 <h1 id="mercatorcoordinate">MercatorCoordinate</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/mercator_coordinate.ts#L83">geo/mercator_coordinate.ts:83</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/mercator_coordinate.ts#L83">geo/mercator_coordinate.ts:83</a></p>
 <p>A <code>MercatorCoordinate</code> object represents a projected three dimensional position.</p>
 <p><code>MercatorCoordinate</code> uses the web mercator projection (<a href="https://epsg.io/3857">EPSG:3857</a>) with slightly different units:</p>
 <ul>
@@ -11345,7 +11399,7 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 <blockquote>
 <p><strong>new MercatorCoordinate</strong>(<code>x</code>: <code>number</code>, <code>y</code>: <code>number</code>, <code>z?</code>: <code>number</code>): <code>MercatorCoordinate</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/mercator_coordinate.ts#L93">geo/mercator_coordinate.ts:93</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/mercator_coordinate.ts#L93">geo/mercator_coordinate.ts:93</a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -11370,7 +11424,7 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 <td>The y component of the position.</td>
 </tr>
 <tr>
-<td><code>z</code></td>
+<td><code>z?</code></td>
 <td><code>number</code></td>
 <td><code>0</code></td>
 <td>The z component of the position.</td>
@@ -11384,7 +11438,7 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 <blockquote>
 <p><strong>meterInMercatorCoordinateUnits</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/mercator_coordinate.ts#L158">geo/mercator_coordinate.ts:158</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/mercator_coordinate.ts#L158">geo/mercator_coordinate.ts:158</a></p>
 <p>Returns the distance of 1 meter in <code>MercatorCoordinate</code> units at this latitude.</p>
 <p>For coordinates in real world units using meters, this naturally provides the scale
 to transform into <code>MercatorCoordinate</code>s.</p>
@@ -11398,7 +11452,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><strong>toAltitude</strong>(): <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/mercator_coordinate.ts#L146">geo/mercator_coordinate.ts:146</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/mercator_coordinate.ts#L146">geo/mercator_coordinate.ts:146</a></p>
 <p>Returns the altitude in meters of the coordinate.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>number</code></p>
@@ -11414,7 +11468,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><strong>toLngLat</strong>(): <a href="../LngLat/"><code>LngLat</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/mercator_coordinate.ts#L130">geo/mercator_coordinate.ts:130</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/mercator_coordinate.ts#L130">geo/mercator_coordinate.ts:130</a></p>
 <p>Returns the <code>LngLat</code> for the coordinate.</p>
 <h4 id="returns_3">Returns</h4>
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
@@ -11430,7 +11484,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <blockquote>
 <p><code>static</code> <strong>fromLngLat</strong>(<code>lngLatLike</code>: <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>, <code>altitude?</code>: <code>number</code>): <code>MercatorCoordinate</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/mercator_coordinate.ts#L111">geo/mercator_coordinate.ts:111</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/mercator_coordinate.ts#L111">geo/mercator_coordinate.ts:111</a></p>
 <p>Project a <code>LngLat</code> to a <code>MercatorCoordinate</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -11450,7 +11504,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <td>The location to project.</td>
 </tr>
 <tr>
-<td><code>altitude</code></td>
+<td><code>altitude?</code></td>
 <td><code>number</code></td>
 <td><code>0</code></td>
 <td>The altitude in meters of the position.</td>

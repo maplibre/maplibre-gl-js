@@ -2,9 +2,9 @@
 
 > **TransformStyleFunction** = (`previous`: `StyleSpecification` | `undefined`, `next`: `StyleSpecification`) =\> `StyleSpecification`
 
-Defined in: [style/style.ts:185](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style.ts#L185>)
+Defined in: [style/style.ts:185](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style.ts#L185>)
 
-Part of [Map.setStyle](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setstyle>) options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
+Part of [MapOptions.transformStyle](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapOptions/#transformstyle>) and [Map.setStyle](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setstyle>) options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
 
 This function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
 

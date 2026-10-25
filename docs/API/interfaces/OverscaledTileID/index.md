@@ -1,6 +1,6 @@
 # OverscaledTileID
 
-Defined in: [tile/tile\_id.ts:91](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile_id.ts#L91>)
+Defined in: [tile/tile\_id.ts:91](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile_id.ts#L91>)
 
 An overscaled tile identifier
 
@@ -10,7 +10,7 @@ An overscaled tile identifier
 
 > **normalizeCoordinates**(`x`: `number`, `y`: `number`, `extent?`: `number`): `object`
 
-Defined in: [tile/tile\_id.ts:247](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile_id.ts#L247>)
+Defined in: [tile/tile\_id.ts:247](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile_id.ts#L247>)
 
 Maps tile-local coordinates that may fall outside the `[0, extent)` range to the correct neighbor tile and the corresponding in-tile position.
 
@@ -24,7 +24,7 @@ When the coordinates are already in bounds, the original tile ID is returned.
 | --- | --- | --- | --- |
 | `x` | `number` | `undefined` | x coordinate relative to this tile, may be outside `[0, extent)` |
 | `y` | `number` | `undefined` | y coordinate relative to this tile, may be outside `[0, extent)` |
-| `extent` | `number` | `EXTENT` | tile coordinate extent, default [EXTENT](<https://maplibre.org/maplibre-gl-js/docs/API/variables/EXTENT/index.md>) |
+| `extent?` | `number` | `EXTENT` | tile coordinate extent, default [EXTENT](<https://maplibre.org/maplibre-gl-js/docs/API/variables/EXTENT/index.md>) |
 
 #### Returns
 
@@ -50,7 +50,7 @@ the resolved tile ID and in-tile coordinates, or `null` if the target is beyond 
 
 > **scaledTo**(`targetZ`: `number`): `OverscaledTileID`
 
-Defined in: [tile/tile\_id.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile_id.ts#L128>)
+Defined in: [tile/tile\_id.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile_id.ts#L128>)
 
 Returns a new `OverscaledTileID` representing the tile at the target zoom level. When targetZ is greater than the current canonical z, the canonical coordinates are unchanged. When targetZ is less than the current canonical z, the canonical coordinates are updated.
 
@@ -76,6 +76,6 @@ if targetZ is greater than this.overscaledZ
 
 > **terrainRttPosMatrix32f**: [`Mat4f32`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Mat4f32/index.md>) = `null`
 
-Defined in: [tile/tile\_id.ts:102](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile_id.ts#L102>)
+Defined in: [tile/tile\_id.ts:102](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile_id.ts#L102>)
 
 This matrix is used during terrain's render-to-texture stage only. If the render-to-texture stage is active, this matrix will be present and should be used, otherwise this matrix will be null. The matrix should be float32 in order to avoid slow WebGL calls in Chrome.

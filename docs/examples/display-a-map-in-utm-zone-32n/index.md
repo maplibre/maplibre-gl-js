@@ -3,7 +3,7 @@
 Register the EPSG:25832 (UTM zone 32N) CRS with addProjection and proj4, and draw WMTS tiles from a national mapping agency in their native grid.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
 
 // ETRS89 / UTM zone 32N. Swap in the proj4 definition of your own CRS.
 proj4.defs('EPSG:25832', '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
@@ -52,7 +52,7 @@ map.addControl(new maplibregl.ScaleControl());
     <meta property="og:created" content="2026-10-09" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css' />
     <script src='https://unpkg.com/proj4@2.15.0/dist/proj4.js'></script>
 
     <style>
@@ -63,7 +63,7 @@ map.addControl(new maplibregl.ScaleControl());
 <body>
 <div id="map"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
 
     // ETRS89 / UTM zone 32N. Swap in the proj4 definition of your own CRS.
     proj4.defs('EPSG:25832', '+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');

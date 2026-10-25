@@ -40,6 +40,7 @@
 - 💙 [maplibre-gl-geocoder](<https://github.com/maplibre/maplibre-gl-geocoder>) - Adds a geocoder control.
 - [maplibre-search-box](<https://github.com/stadiamaps/maplibre-search-box>) - Adds a control for searching for places using Stadia Maps.
 - [maptiler-geocoding-control](<https://github.com/maptiler/maptiler-geocoding-control>) - Adds a geocoding control for searching for places using MapTiler API. [docs](<https://docs.maptiler.com/sdk-js/modules/geocoding/>)
+- [opengeocoding-maplibre](<https://github.com/Mokto/opengeocoding-maplibre>) - Adds address search and free autocomplete from OpenGeocoding to maplibre-gl-geocoder.
 
 ## Map Rendering Plugins
 
@@ -116,6 +117,7 @@
 - [mapbox-gl-fps](<https://github.com/MazeMap/mapbox-gl-fps>) - A frames-per-seconds GUI control and measurer with statistic report output.
 - [mapgrab](<https://mapgrab.github.io/>) - A tool for creating end-to-end (e2e) map tests using popular testing frameworks like Playwright, Cypress, and Selenium.
 - [maplibre-gl-inspect](<https://github.com/acalcutt/maplibre-gl-inspect>) - Adds an inspect control to view vector source features and properties.
+- [geowright](<https://github.com/geowright/geowright>) - Grey-box Playwright testing for MapLibre canvas maps: query rendered features by layer and id, assert on them, and click or drag through real input. [docs](<https://geowright.dev>) · [npm](<https://www.npmjs.com/package/geowright>)
 
 ## Framework Integrations
 

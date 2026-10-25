@@ -1,6 +1,6 @@
 # ResourceType
 
-Defined in: [util/request\_manager.ts:6](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L6>)
+Defined in: [util/request\_manager.ts:6](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L6>)
 
 A type of MapLibre resource.
 
@@ -10,7 +10,7 @@ A type of MapLibre resource.
 
 > **Glyphs**: `"Glyphs"`
 
-Defined in: [util/request\_manager.ts:7](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L7>)
+Defined in: [util/request\_manager.ts:7](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L7>)
 
 ---
 
@@ -18,7 +18,7 @@ Defined in: [util/request\_manager.ts:7](<https://github.com/maplibre/maplibre-g
 
 > **Image**: `"Image"`
 
-Defined in: [util/request\_manager.ts:8](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L8>)
+Defined in: [util/request\_manager.ts:8](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L8>)
 
 ---
 
@@ -26,7 +26,7 @@ Defined in: [util/request\_manager.ts:8](<https://github.com/maplibre/maplibre-g
 
 > **Source**: `"Source"`
 
-Defined in: [util/request\_manager.ts:9](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L9>)
+Defined in: [util/request\_manager.ts:9](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L9>)
 
 ---
 
@@ -34,7 +34,7 @@ Defined in: [util/request\_manager.ts:9](<https://github.com/maplibre/maplibre-g
 
 > **SpriteImage**: `"SpriteImage"`
 
-Defined in: [util/request\_manager.ts:10](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L10>)
+Defined in: [util/request\_manager.ts:10](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L10>)
 
 ---
 
@@ -42,7 +42,7 @@ Defined in: [util/request\_manager.ts:10](<https://github.com/maplibre/maplibre-
 
 > **SpriteJSON**: `"SpriteJSON"`
 
-Defined in: [util/request\_manager.ts:11](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L11>)
+Defined in: [util/request\_manager.ts:11](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L11>)
 
 ---
 
@@ -50,7 +50,7 @@ Defined in: [util/request\_manager.ts:11](<https://github.com/maplibre/maplibre-
 
 > **Style**: `"Style"`
 
-Defined in: [util/request\_manager.ts:12](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L12>)
+Defined in: [util/request\_manager.ts:12](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L12>)
 
 ---
 
@@ -58,7 +58,7 @@ Defined in: [util/request\_manager.ts:12](<https://github.com/maplibre/maplibre-
 
 > **Tile**: `"Tile"`
 
-Defined in: [util/request\_manager.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L13>)
+Defined in: [util/request\_manager.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L13>)
 
 ---
 
@@ -66,4 +66,4 @@ Defined in: [util/request\_manager.ts:13](<https://github.com/maplibre/maplibre-
 
 > **Unknown**: `"Unknown"`
 
-Defined in: [util/request\_manager.ts:14](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/request_manager.ts#L14>)
+Defined in: [util/request\_manager.ts:14](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/request_manager.ts#L14>)

@@ -1,6 +1,6 @@
 # GlobeControl
 
-Defined in: [ui/control/globe\_control.ts:20](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/control/globe_control.ts#L20>)
+Defined in: [ui/control/globe\_control.ts:20](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/control/globe_control.ts#L20>)
 
 A `GlobeControl` control contains a button for toggling the map projection between "mercator" and "globe".
 
@@ -26,7 +26,7 @@ let map = new Map()
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `HTMLElement`
 
-Defined in: [ui/control/globe\_control.ts:26](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/control/globe_control.ts#L26>)
+Defined in: [ui/control/globe\_control.ts:26](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/control/globe_control.ts#L26>)
 
 Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) internally.
 
@@ -52,7 +52,7 @@ The control's container element. This should be created by the control and retur
 
 > **onRemove**(): `void`
 
-Defined in: [ui/control/globe\_control.ts:41](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/control/globe_control.ts#L41>)
+Defined in: [ui/control/globe\_control.ts:41](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/control/globe_control.ts#L41>)
 
 Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removecontrol>) internally.
 

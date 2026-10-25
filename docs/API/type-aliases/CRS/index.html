@@ -29,7 +29,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.71">
     
     
       
@@ -3278,6 +3278,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../interfaces/GlobalDispatcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GlobalDispatcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../interfaces/Handler/" class="md-nav__link">
         
   
@@ -4323,6 +4350,33 @@
     
   
   CustomLayerProjectionDataParams
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CustomMessageHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  CustomMessageHandler&lt;TData, TResult&gt;
 
     
   </span>
@@ -11196,7 +11250,7 @@
 <blockquote>
 <p><strong>CRS</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/projection/crs.ts#L33">geo/projection/crs.ts:33</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/projection/crs.ts#L33">geo/projection/crs.ts:33</a></p>
 <p><strong><code>Experimental</code></strong></p>
 <p>Describes a planar coordinate reference system (CRS) together with the square, power-of-two
 quad tile grid laid over it, so a map can render tiles that were pre-projected in that CRS.
@@ -11211,7 +11265,7 @@ and the camera distance.</p>
 <blockquote>
 <p><code>optional</code> <strong>definition?</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/projection/crs.ts#L63">geo/projection/crs.ts:63</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/projection/crs.ts#L63">geo/projection/crs.ts:63</a></p>
 <p>The CRS as a string the workers' projection handler accepts, such as WKT or a PROJ string.
 GeoJSON sources need it: their data is parsed and tiled in the workers, where <code>projection</code> cannot go,
 so a handler set there builds the same converter from this string, see the custom CRS guide.
@@ -11221,7 +11275,7 @@ Without it, GeoJSON sources warn and draw in the wrong place.</p>
 <blockquote>
 <p><strong>name</strong>: <code>string</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/projection/crs.ts#L39">geo/projection/crs.ts:39</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/projection/crs.ts#L39">geo/projection/crs.ts:39</a></p>
 <p>Name used in <code>projection.type</code>, e.g. <code>'EPSG:2193'</code> or <code>'custom:floor-plan'</code>. It must contain a colon: names
 without one, like <code>'mercator'</code>, <code>'globe'</code>, <code>'vertical-perspective'</code> and the pre-registered <code>'identity'</code>, are
 reserved for built-in projections.</p>
@@ -11230,7 +11284,7 @@ reserved for built-in projections.</p>
 <blockquote>
 <p><strong>projection</strong>: <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/projection/crs.ts#L49">geo/projection/crs.ts:49</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/projection/crs.ts#L49">geo/projection/crs.ts:49</a></p>
 <p>Converts between lng/lat (degrees) and CRS coordinates (e.g. meters easting/northing): <code>forward([lng, lat])</code>
 returns <code>[x, y]</code> and <code>inverse([x, y])</code> returns <code>[lng, lat]</code>. This is the shape of a proj4 converter such as
 <code>proj4('EPSG:4326', 'EPSG:2193')</code>, which deck.gl's custom projection view takes as well.
@@ -11285,7 +11339,7 @@ projection's tile matrix set should be centered on its world.</p>
 <blockquote>
 <p><strong>tileMatrixSet</strong>: <a href="../TileMatrixSet/"><code>TileMatrixSet</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/projection/crs.ts#L56">geo/projection/crs.ts:56</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/projection/crs.ts#L56">geo/projection/crs.ts:56</a></p>
 <p>The quad tile matrix set over the CRS plane.</p>
 
 

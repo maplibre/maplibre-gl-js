@@ -22,14 +22,14 @@
         <link rel="prev" href="../CustomLayerProjectionData/">
       
       
-        <link rel="next" href="../CustomRenderMethod/">
+        <link rel="next" href="../CustomMessageHandler/">
       
       
         
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.70">
+      <meta name="generator" content="zensical-0.0.71">
     
     
       
@@ -3278,6 +3278,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../interfaces/GlobalDispatcher/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GlobalDispatcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../interfaces/Handler/" class="md-nav__link">
         
   
@@ -4330,6 +4357,33 @@
   
 </nav>
       
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CustomMessageHandler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  CustomMessageHandler&lt;TData, TResult&gt;
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -11196,7 +11250,7 @@
 <blockquote>
 <p><strong>CustomLayerProjectionDataParams</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_layer/custom_style_layer.ts#L34">style/style_layer/custom_style_layer.ts:34</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_layer/custom_style_layer.ts#L34">style/style_layer/custom_style_layer.ts:34</a></p>
 <p>Parameters object for the <a href="../CustomRenderMethodInput/#getprojectiondata">CustomRenderMethodInput.getProjectionData</a> function.
 Contains the requested tile ID and more.</p>
 <h2 id="properties">Properties</h2>
@@ -11204,7 +11258,7 @@ Contains the requested tile ID and more.</p>
 <blockquote>
 <p><code>optional</code> <strong>aligned?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_layer/custom_style_layer.ts#L43">style/style_layer/custom_style_layer.ts:43</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_layer/custom_style_layer.ts#L43">style/style_layer/custom_style_layer.ts:43</a></p>
 <p>Set to true if a pixel-aligned matrix should be used, if possible.
 This flag is mostly used for raster tiles under mercator projection.</p>
 <hr />
@@ -11212,21 +11266,21 @@ This flag is mostly used for raster tiles under mercator projection.</p>
 <blockquote>
 <p><code>optional</code> <strong>applyGlobeMatrix?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_layer/custom_style_layer.ts#L51">style/style_layer/custom_style_layer.ts:51</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_layer/custom_style_layer.ts#L51">style/style_layer/custom_style_layer.ts:51</a></p>
 <p>Set to true if the globe matrix should be applied when using globe projection.</p>
 <hr />
 <h3 id="applyterrainmatrix">applyTerrainMatrix?</h3>
 <blockquote>
 <p><code>optional</code> <strong>applyTerrainMatrix?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_layer/custom_style_layer.ts#L47">style/style_layer/custom_style_layer.ts:47</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_layer/custom_style_layer.ts#L47">style/style_layer/custom_style_layer.ts:47</a></p>
 <p>Set to true if the terrain matrix should be applied when pre-rendering tiles into textures for 3D terrain.</p>
 <hr />
 <h3 id="tileid">tileID</h3>
 <blockquote>
 <p><strong>tileID</strong>: <a href="../UnwrappedTileIDLiteral/"><code>UnwrappedTileIDLiteral</code></a> | <code>null</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_layer/custom_style_layer.ts#L38">style/style_layer/custom_style_layer.ts:38</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_layer/custom_style_layer.ts#L38">style/style_layer/custom_style_layer.ts:38</a></p>
 <p>The coordinates of the current tile.</p>
 
 

@@ -1,6 +1,6 @@
 # Tile
 
-Defined in: [tile/tile.ts:71](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile.ts#L71>)
+Defined in: [tile/tile.ts:71](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile.ts#L71>)
 
 A tile object is the combination of a Coordinate, which defines its place, as well as a unique ID and data tracking for its content
 
@@ -10,7 +10,7 @@ A tile object is the combination of a Coordinate, which defines its place, as we
 
 > **isRenderable**(`symbolLayer`: `boolean`): `boolean`
 
-Defined in: [tile/tile.ts:171](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile.ts#L171>)
+Defined in: [tile/tile.ts:171](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile.ts#L171>)
 
 Incoming and self-fading raster tiles must remain renderable at zero opacity because drawing advances their opacity. Only transparent departing tiles have finished fading.
 
@@ -30,7 +30,7 @@ Incoming and self-fading raster tiles must remain renderable at zero opacity bec
 
 > **loadVectorData**(`data`: `WorkerTileResult`, `style`: [`Style`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Style/index.md>), `justReloaded?`: `boolean`): `void`
 
-Defined in: [tile/tile.ts:272](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile.ts#L272>)
+Defined in: [tile/tile.ts:272](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile.ts#L272>)
 
 Given a data object with a 'buffers' property, load it into this tile's elementGroups and buffers properties and set loaded to true. If the data is null, like in the case of an empty GeoJSON tile, no-op but still set loaded to true.
 
@@ -52,7 +52,7 @@ Given a data object with a 'buffers' property, load it into this tile's elementG
 
 > **setSelfFadeLogic**(`fadeEndTime`: `number`): `void`
 
-Defined in: [tile/tile.ts:195](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile.ts#L195>)
+Defined in: [tile/tile.ts:195](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile.ts#L195>)
 
 Self fading for edge tiles (when panning map)
 
@@ -72,7 +72,7 @@ Self fading for edge tiles (when panning map)
 
 > **unloadVectorData**(): `void`
 
-Defined in: [tile/tile.ts:354](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/tile/tile.ts#L354>)
+Defined in: [tile/tile.ts:354](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/tile/tile.ts#L354>)
 
 Release any data or WebGL resources referenced by this tile.
 

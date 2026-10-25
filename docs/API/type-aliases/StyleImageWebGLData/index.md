@@ -2,7 +2,7 @@
 
 > **StyleImageWebGLData** = `object`
 
-Defined in: [style/style\_image.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_image.ts#L116>)
+Defined in: [style/style\_image.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_image.ts#L116>)
 
 What a [StyleImageInterface](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/StyleImageInterface/index.md>) gives as its `data` when it renders itself with WebGL rather than handing over an array of pixels.
 
@@ -16,7 +16,7 @@ What a [StyleImageInterface](<https://maplibre.org/maplibre-gl-js/docs/API/inter
 
 > **renderWithWebGL**: (`target`: [`StyleImageWebGLTarget`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageWebGLTarget/index.md>)) =\> `void`
 
-Defined in: [style/style\_image.ts:134](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_image.ts#L134>)
+Defined in: [style/style\_image.ts:134](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_image.ts#L134>)
 
 Render exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of `target.texture`. That rectangle is the only part of the shared atlas that belongs to this image; drawing outside it corrupts the others.
 

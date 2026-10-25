@@ -2,7 +2,7 @@
 
 > **setRTLTextPlugin**(`pluginURL`: `string`, `lazy`: `boolean`): `Promise`\<`void`\>
 
-Defined in: [index.ts:105](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/index.ts#L105>)
+Defined in: [index.ts:106](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/index.ts#L106>)
 
 Sets the map's [RTL text plugin](<https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text>).
 

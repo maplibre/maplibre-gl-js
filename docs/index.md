@@ -5,10 +5,10 @@ MapLibre GL JS is a TypeScript library that uses WebGL to render interactive map
 ## Quickstart
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.15.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.16.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.15.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.16.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map', // container id
@@ -198,10 +198,10 @@ This needs Next.js 15 or later. In Next.js 14, `next build` fails to minify the 
 Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](<https://unpkg.com>) for instructions on selecting specific versions and semver ranges.
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.15.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.16.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.15.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.16.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',

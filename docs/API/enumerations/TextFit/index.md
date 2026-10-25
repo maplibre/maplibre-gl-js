@@ -1,6 +1,6 @@
 # TextFit
 
-Defined in: [style/style\_image.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_image.ts#L37>)
+Defined in: [style/style\_image.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_image.ts#L37>)
 
 Enumeration of possible values for StyleImageMetadata.textFitWidth and textFitHeight.
 
@@ -10,7 +10,7 @@ Enumeration of possible values for StyleImageMetadata.textFitWidth and textFitHe
 
 > **proportional**: `"proportional"`
 
-Defined in: [style/style\_image.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_image.ts#L52>)
+Defined in: [style/style\_image.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_image.ts#L52>)
 
 The image will be resized on the specified axis to fit the content rectangle to the target text and will resize the other axis to maintain the aspect ratio of the content rectangle.
 
@@ -20,7 +20,7 @@ The image will be resized on the specified axis to fit the content rectangle to 
 
 > **stretchOnly**: `"stretchOnly"`
 
-Defined in: [style/style\_image.ts:47](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_image.ts#L47>)
+Defined in: [style/style\_image.ts:47](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_image.ts#L47>)
 
 The image will be resized on the specified axis to fit the content rectangle to the target text, but will not fall below the aspect ratio of the original content rectangle if the other axis is set to proportional.
 
@@ -30,6 +30,6 @@ The image will be resized on the specified axis to fit the content rectangle to 
 
 > **stretchOrShrink**: `"stretchOrShrink"`
 
-Defined in: [style/style\_image.ts:42](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/style/style_image.ts#L42>)
+Defined in: [style/style\_image.ts:42](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/style/style_image.ts#L42>)
 
 The image will be resized on the specified axis to tightly fit the content rectangle to target text. This is the same as not being defined.

@@ -2,7 +2,7 @@
 
 > **PaddingOptions** = [`RequireAtLeastOne`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequireAtLeastOne/index.md>)\<{ `bottom`: `number`; `left`: `number`; `right`: `number`; `top`: `number`; }\>
 
-Defined in: [geo/edge\_insets.ts:129](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/geo/edge_insets.ts#L129>)
+Defined in: [geo/edge\_insets.ts:129](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L129>)
 
 Options for setting padding on calls to methods such as [Map.fitBounds](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#fitbounds>), [Map.fitScreenCoordinates](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#fitscreencoordinates>), and [Map.setPadding](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setpadding>). Adjust these options to set the amount of padding in pixels added to the edges of the canvas. Set a uniform padding on all edges or individual values for each edge. All properties of this object must be non-negative integers.
 

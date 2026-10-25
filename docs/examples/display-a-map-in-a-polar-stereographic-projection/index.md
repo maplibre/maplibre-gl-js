@@ -3,7 +3,7 @@
 Register the EPSG:3413 polar stereographic CRS with addProjection and proj4, and draw NASA GIBS imagery requested with the {bbox} tile URL token.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
 
 // NSIDC Sea Ice Polar Stereographic North. Swap in the proj4 definition of your own CRS.
 proj4.defs('EPSG:3413', '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');
@@ -66,7 +66,7 @@ for (const [name, lng, lat] of [['Longyearbyen', 15.63, 78.22], ['Nuuk', -51.72,
     <meta property="og:created" content="2026-10-09" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css' />
     <script src='https://unpkg.com/proj4@2.15.0/dist/proj4.js'></script>
 
     <style>
@@ -77,7 +77,7 @@ for (const [name, lng, lat] of [['Longyearbyen', 15.63, 78.22], ['Nuuk', -51.72,
 <body>
 <div id="map"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
 
     // NSIDC Sea Ice Polar Stereographic North. Swap in the proj4 definition of your own CRS.
     proj4.defs('EPSG:3413', '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs');

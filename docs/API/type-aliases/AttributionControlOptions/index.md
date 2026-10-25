@@ -2,7 +2,7 @@
 
 > **AttributionControlOptions** = `object`
 
-Defined in: [ui/control/attribution\_control.ts:10](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/control/attribution_control.ts#L10>)
+Defined in: [ui/control/attribution\_control.ts:10](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/control/attribution_control.ts#L10>)
 
 The [AttributionControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/AttributionControl/index.md>) options object
 
@@ -12,7 +12,7 @@ The [AttributionControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/A
 
 > `optional` **compact?**: `boolean`
 
-Defined in: [ui/control/attribution\_control.ts:16](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/control/attribution_control.ts#L16>)
+Defined in: [ui/control/attribution\_control.ts:16](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/control/attribution_control.ts#L16>)
 
 If `true`, the attribution control will always collapse when moving the map. If `false`, force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide. **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.**
 
@@ -22,6 +22,6 @@ If `true`, the attribution control will always collapse when moving the map. If 
 
 > `optional` **customAttribution?**: `string` | `string`\[\]
 
-Defined in: [ui/control/attribution\_control.ts:20](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/ui/control/attribution_control.ts#L20>)
+Defined in: [ui/control/attribution\_control.ts:20](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/control/attribution_control.ts#L20>)
 
 Attributions to show in addition to any other attributions.

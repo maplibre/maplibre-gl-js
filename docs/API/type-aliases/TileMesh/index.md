@@ -2,7 +2,7 @@
 
 > **TileMesh** = `object`
 
-Defined in: [util/create\_tile\_mesh.ts:48](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/create_tile_mesh.ts#L48>)
+Defined in: [util/create\_tile\_mesh.ts:48](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/create_tile_mesh.ts#L48>)
 
 Stores the prepared vertex and index buffer bytes for a mesh.
 
@@ -12,7 +12,7 @@ Stores the prepared vertex and index buffer bytes for a mesh.
 
 > **indices**: `ArrayBuffer`
 
-Defined in: [util/create\_tile\_mesh.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/create_tile_mesh.ts#L57>)
+Defined in: [util/create\_tile\_mesh.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/create_tile_mesh.ts#L57>)
 
 The index data. Each triangle is defined by three indices. The indices may either be 16 bit or 32 bit unsigned integers, depending on the mesh creation arguments and on whether the mesh can fit into 16 bit indices.
 
@@ -22,7 +22,7 @@ The index data. Each triangle is defined by three indices. The indices may eithe
 
 > **uses32bitIndices**: `boolean`
 
-Defined in: [util/create\_tile\_mesh.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/create_tile_mesh.ts#L61>)
+Defined in: [util/create\_tile\_mesh.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/create_tile_mesh.ts#L61>)
 
 A helper boolean indicating whether the indices are 32 bit.
 
@@ -32,6 +32,6 @@ A helper boolean indicating whether the indices are 32 bit.
 
 > **vertices**: `ArrayBuffer`
 
-Defined in: [util/create\_tile\_mesh.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/create_tile_mesh.ts#L52>)
+Defined in: [util/create\_tile\_mesh.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/create_tile_mesh.ts#L52>)
 
 The vertex data. Each vertex is two 16 bit signed integers, one for X, one for Y.

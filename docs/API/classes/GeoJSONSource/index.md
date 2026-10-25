@@ -1,6 +1,6 @@
 # GeoJSONSource
 
-Defined in: [source/geojson\_source.ts:167](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L167>)
+Defined in: [source/geojson\_source.ts:167](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L167>)
 
 A source containing GeoJSON. (See the [Style Specification](<https://maplibre.org/maplibre-style-spec/#sources-geojson>) for detailed documentation of options.)
 
@@ -70,7 +70,7 @@ map.getSource('some id').setData({
 
 > **abortTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/geojson\_source.ts:693](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L693>)
+Defined in: [source/geojson\_source.ts:693](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L693>)
 
 Allows to abort a tile loading.
 
@@ -96,7 +96,7 @@ Allows to abort a tile loading.
 
 > **fire**(`event`: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) | [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -122,7 +122,7 @@ Calls every listener registered for the event's type.
 
 > **fire**(`type`: keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -151,7 +151,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **getBounds**(): `Promise`\<[`LngLatBounds`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLatBounds/index.md>)\>
 
-Defined in: [source/geojson\_source.ts:354](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L354>)
+Defined in: [source/geojson\_source.ts:354](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L354>)
 
 Allows getting the source's boundaries. If there's a problem with the source's data, it will return an empty [LngLatBounds](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLatBounds/index.md>).
 
@@ -167,7 +167,7 @@ a promise which resolves to the source's boundaries
 
 > **getClusterChildren**(`clusterId`: `number`): `Promise`\<`Feature`\<`Geometry`, {\[`name`: `string`\]: `any`; }\>\[\]\>
 
-Defined in: [source/geojson\_source.ts:431](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L431>)
+Defined in: [source/geojson\_source.ts:431](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L431>)
 
 For clustered sources, fetches the children of the given cluster on the next zoom level (as an array of GeoJSON features).
 
@@ -189,7 +189,7 @@ a promise that is resolved when the features are retrieved
 
 > **getClusterExpansionZoom**(`clusterId`: `number`): `Promise`\<`number`\>
 
-Defined in: [source/geojson\_source.ts:421](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L421>)
+Defined in: [source/geojson\_source.ts:421](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L421>)
 
 For clustered sources, fetches the zoom at which the given cluster expands.
 
@@ -211,7 +211,7 @@ a promise that is resolved with the zoom number
 
 > **getClusterLeaves**(`clusterId`: `number`, `limit`: `number`, `offset`: `number`): `Promise`\<`Feature`\<`Geometry`, {\[`name`: `string`\]: `any`; }\>\[\]\>
 
-Defined in: [source/geojson\_source.ts:460](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L460>)
+Defined in: [source/geojson\_source.ts:460](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L460>)
 
 For clustered sources, fetches the original points that belong to the cluster (as an array of GeoJSON features).
 
@@ -255,7 +255,7 @@ map.on('click', 'clusters', (e) => {
 
 > **getClusterOptions**(): [`GetClusterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GetClusterOptions/index.md>)
 
-Defined in: [source/geojson\_source.ts:406](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L406>)
+Defined in: [source/geojson\_source.ts:406](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L406>)
 
 Gets the cluster options currently configured on the source. The returned values mirror the options accepted by `setClusterOptions`.
 
@@ -277,7 +277,7 @@ const {cluster, clusterMaxZoom, clusterRadius} = map.getSource('some id').getClu
 
 > **getData**(): `Promise`\<`GeoJSON`\<`Geometry`, {\[`name`: `string`\]: `any`; }\>\>
 
-Defined in: [source/geojson\_source.ts:336](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L336>)
+Defined in: [source/geojson\_source.ts:336](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L336>)
 
 Allows to get the source's actual GeoJSON data.
 
@@ -295,7 +295,7 @@ a promise which resolves to the source's actual GeoJSON data
 
 > **hasTransition**(): `boolean`
 
-Defined in: [source/geojson\_source.ts:728](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L728>)
+Defined in: [source/geojson\_source.ts:728](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L728>)
 
 True if the source has transition, false otherwise.
 
@@ -313,7 +313,7 @@ True if the source has transition, false otherwise.
 
 > **listens**(`type`: keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -339,7 +339,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **loaded**(): `boolean`
 
-Defined in: [source/geojson\_source.ts:654](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L654>)
+Defined in: [source/geojson\_source.ts:654](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L654>)
 
 True if the source is loaded, false otherwise.
 
@@ -357,7 +357,7 @@ True if the source is loaded, false otherwise.
 
 > **loadTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/geojson\_source.ts:658](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L658>)
+Defined in: [source/geojson\_source.ts:658](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L658>)
 
 This method does the heavy lifting of loading a tile. In most cases it will defer the work to the relevant worker source.
 
@@ -381,7 +381,7 @@ This method does the heavy lifting of loading a tile. In most cases it will defe
 
 > **off**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -412,7 +412,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -443,7 +443,7 @@ Adds a listener to a specified event type.
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `void`
 
-Defined in: [source/geojson\_source.ts:289](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L289>)
+Defined in: [source/geojson\_source.ts:289](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L289>)
 
 This method is called when the source is added to the map.
 
@@ -469,7 +469,7 @@ This method is called when the source is added to the map.
 
 > **once**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`): `Promise`\<[`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -501,7 +501,7 @@ a promise that resolves with the event
 
 > **once**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -536,7 +536,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **onRemove**(): `void`
 
-Defined in: [source/geojson\_source.ts:710](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L710>)
+Defined in: [source/geojson\_source.ts:710](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L710>)
 
 Drops the worker updates waiting to be sent, which would otherwise rebuild the worker's state for a source that is gone. The update being sent ends in a `dataabort` event.
 
@@ -554,7 +554,7 @@ Drops the worker updates waiting to be sent, which would otherwise rebuild the w
 
 > **serialize**(): `GeoJSONSourceSpecification`
 
-Defined in: [source/geojson\_source.ts:716](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L716>)
+Defined in: [source/geojson\_source.ts:716](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L716>)
 
 #### Returns
 
@@ -572,7 +572,7 @@ A plain (stringifiable) JS object representing the current state of the source. 
 
 > **setClusterOptions**(`options`: [`SetClusterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SetClusterOptions/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/geojson\_source.ts:367](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L367>)
+Defined in: [source/geojson\_source.ts:367](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L367>)
 
 To disable/enable clustering on the source options
 
@@ -599,7 +599,7 @@ map.getSource('some id').setClusterOptions({cluster: false, clusterRadius: 50, c
 
 > **setData**(`data`: `string` | `GeoJSON`\<`Geometry`, {\[`name`: `string`\]: `any`; }\>): `Promise`\<`void`\>
 
-Defined in: [source/geojson\_source.ts:299](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L299>)
+Defined in: [source/geojson\_source.ts:299](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L299>)
 
 Sets the GeoJSON data and re-renders the map.
 
@@ -619,7 +619,7 @@ Sets the GeoJSON data and re-renders the map.
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -644,7 +644,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **unloadTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/geojson\_source.ts:701](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L701>)
+Defined in: [source/geojson\_source.ts:701](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L701>)
 
 Allows to unload a tile.
 
@@ -668,7 +668,7 @@ Allows to unload a tile.
 
 > **updateData**(`diff`: [`GeoJSONSourceDiff`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeoJSONSourceDiff/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/geojson\_source.ts:319](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L319>)
+Defined in: [source/geojson\_source.ts:319](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L319>)
 
 Updates the source's GeoJSON, and re-renders the map.
 
@@ -696,7 +696,7 @@ Updates are applied on a best-effort basis, updating an ID that does not exist w
 
 > **attribution**: `string`
 
-Defined in: [source/geojson\_source.ts:173](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L173>)
+Defined in: [source/geojson\_source.ts:173](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L173>)
 
 The attribution for the source.
 
@@ -710,7 +710,7 @@ The attribution for the source.
 
 > **id**: `string`
 
-Defined in: [source/geojson\_source.ts:169](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L169>)
+Defined in: [source/geojson\_source.ts:169](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L169>)
 
 The id for the source. Must not be used by any existing source.
 
@@ -724,7 +724,7 @@ The id for the source. Must not be used by any existing source.
 
 > **isTileClipped**: `boolean`
 
-Defined in: [source/geojson\_source.ts:176](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L176>)
+Defined in: [source/geojson\_source.ts:176](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L176>)
 
 `false` if tiles can be drawn outside their boundaries, `true` if they cannot.
 
@@ -738,7 +738,7 @@ Defined in: [source/geojson\_source.ts:176](<https://github.com/maplibre/maplibr
 
 > **maxzoom**: `number`
 
-Defined in: [source/geojson\_source.ts:171](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L171>)
+Defined in: [source/geojson\_source.ts:171](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L171>)
 
 The maximum zoom level for the source.
 
@@ -752,7 +752,7 @@ The maximum zoom level for the source.
 
 > **minzoom**: `number`
 
-Defined in: [source/geojson\_source.ts:170](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L170>)
+Defined in: [source/geojson\_source.ts:170](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L170>)
 
 The minimum zoom level for the source.
 
@@ -766,7 +766,7 @@ The minimum zoom level for the source.
 
 > **reparseOverscaled**: `boolean`
 
-Defined in: [source/geojson\_source.ts:177](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L177>)
+Defined in: [source/geojson\_source.ts:177](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L177>)
 
 `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
 
@@ -780,7 +780,7 @@ Defined in: [source/geojson\_source.ts:177](<https://github.com/maplibre/maplibr
 
 > **tileSize**: `number`
 
-Defined in: [source/geojson\_source.ts:172](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/geojson_source.ts#L172>)
+Defined in: [source/geojson\_source.ts:172](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/geojson_source.ts#L172>)
 
 The tile size for the source.
 

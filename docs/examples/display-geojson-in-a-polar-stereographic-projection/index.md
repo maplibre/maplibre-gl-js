@@ -3,7 +3,7 @@
 Draw a GeoJSON source on a map in the EPSG:3413 CRS, projected in the workers by a proj4 projection handler.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
 
 // GeoJSON is parsed and tiled in the workers, so they need the projection too: this handler builds it there
 // from the projection's `definition` with proj4.
@@ -95,7 +95,7 @@ map.on('mouseleave', 'places', () => { map.getCanvas().style.cursor = ''; });
     <meta property="og:created" content="2026-10-11" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css' />
     <script src='https://unpkg.com/proj4@2.15.0/dist/proj4.js'></script>
 
     <style>
@@ -106,7 +106,7 @@ map.on('mouseleave', 'places', () => { map.getCanvas().style.cursor = ''; });
 <body>
 <div id="map"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
 
     // GeoJSON is parsed and tiled in the workers, so they need the projection too: this handler builds it there
     // from the projection's `definition` with proj4.

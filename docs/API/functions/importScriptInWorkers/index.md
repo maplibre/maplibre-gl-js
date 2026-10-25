@@ -2,11 +2,13 @@
 
 > **importScriptInWorkers**(`workerUrl`: `string`): `Promise`\<`void`\>
 
-Defined in: [index.ts:212](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/index.ts#L212>)
+Defined in: [index.ts:216](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/index.ts#L216>)
 
 Allows loading javascript code in the worker thread. *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
 
 It can be useful for the following examples: 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread. 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which should come with `addSourceType` usually. 3. using `self.actor.registerMessageHandler` to override some internal worker operations
+
+Each url is imported once, and imported again automatically whenever the pooled workers are recreated.
 
 ## Parameters
 

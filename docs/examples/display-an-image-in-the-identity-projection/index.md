@@ -3,7 +3,7 @@
 Place an image by its four corners on a flat, image-space map using the built-in identity projection.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
 
 // Draw a labelled grid so the image's corners are easy to spot on the map.
 const canvas = document.createElement('canvas');
@@ -85,7 +85,7 @@ map.addControl(new maplibregl.NavigationControl());
     <meta property="og:created" content="2026-08-24" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -96,7 +96,7 @@ map.addControl(new maplibregl.NavigationControl());
 <div id="map"></div>
 
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs';
 
     // Draw a labelled grid so the image's corners are easy to spot on the map.
     const canvas = document.createElement('canvas');

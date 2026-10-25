@@ -2,7 +2,7 @@
 
 > **addProtocol**(`customProtocol`: `string`, `loadFn`: [`AddProtocolAction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AddProtocolAction/index.md>)): `void`
 
-Defined in: [source/protocol\_crud.ts:45](<https://github.com/maplibre/maplibre-gl-js/blob/638b3f9ecab4b743fd4d086d3bfd19bce7b7b032/src/source/protocol_crud.ts#L45>)
+Defined in: [source/protocol\_crud.ts:45](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/source/protocol_crud.ts#L45>)
 
 Adds a custom load resource function that will be called when using a URL that starts with a custom url schema. This will happen in the main thread, and workers might call it if they don't know how to handle the protocol. The example below will be triggered for custom:// urls defined in the sources list in the style definitions. The function passed will receive the request parameters and should return with the resulting resource. `requestParameters.type` says which kind of resource is expected. A tile is an `ArrayBuffer`, for example a non-compressed pbf vector tile. An image is either its encoded bytes or an `ImageBitmap`/`HTMLImageElement`, which is used without decoding. See [AddProtocolResponseData](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AddProtocolResponseData/index.md>) for every accepted shape.
 

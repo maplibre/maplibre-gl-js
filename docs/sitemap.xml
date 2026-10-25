@@ -283,6 +283,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/GeoJSONFeature/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/GlobalDispatcher/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/</loc>
       </url>
       <url>
@@ -380,6 +383,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomLayerProjectionDataParams/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomMessageHandler/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomRenderMethod/</loc>
