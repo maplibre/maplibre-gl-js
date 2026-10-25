@@ -1,8 +1,27 @@
 ## main
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+- CSC-1.8 Read the camera state directly in the projection classes ([#8870](https://github.com/maplibre/maplibre-gl-js/pull/8870)) (by [@birkskyum](https://github.com/birkskyum))
+- fix: keep two points when clipping a line that ends on the slice's edge ([#8869](https://github.com/maplibre/maplibre-gl-js/pull/8869)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- CSC-1.7 Pass the tile zoom to the terrain elevation lookups instead of the transform ([#8867](https://github.com/maplibre/maplibre-gl-js/pull/8867)) (by [@birkskyum](https://github.com/birkskyum))
+- CSC-1.6 Split the camera calculations from the writes in the projection classes ([#8860](https://github.com/maplibre/maplibre-gl-js/pull/8860)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix CrossFadedConstantBinder throwing when dash positions were never set ([#8847](https://github.com/maplibre/maplibre-gl-js/pull/8847)) (by [@yulman2207](https://github.com/yulman2207))
+- chore: Add spies to map transformStyle tests ([#8849](https://github.com/maplibre/maplibre-gl-js/pull/8849)) (by [@hiddewie](https://github.com/hiddewie))
+- fix: drop queued update when a later updateData call adds the same feature ([#8848](https://github.com/maplibre/maplibre-gl-js/pull/8848)) (by [@architpai](https://github.com/architpai))
+- fix: add accept headers for MLT according to the current capabilities ([#7483](https://github.com/maplibre/maplibre-gl-js/pull/7483)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- chore(deps-dev): drop unused mapbox-gl-rtl-text ([#8844](https://github.com/maplibre/maplibre-gl-js/pull/8844)) (by [@kkokkojeong](https://github.com/kkokkojeong))
+- CSC-1.4 Keep the depth range in the projection classes ([#8838](https://github.com/maplibre/maplibre-gl-js/pull/8838)) (by [@birkskyum](https://github.com/birkskyum))
+- CSC-1.3 Extract the camera state into its own type ([#8816](https://github.com/maplibre/maplibre-gl-js/pull/8816)) (by [@birkskyum](https://github.com/birkskyum))
+- docs: restore the quickstart map on the docs home page ([#8819](https://github.com/maplibre/maplibre-gl-js/pull/8819)) (by [@birkskyum](https://github.com/birkskyum))
+- Allow maxBounds to leave one axis unconstrained ([#8622](https://github.com/maplibre/maplibre-gl-js/pull/8622)) (by [@erenbati](https://github.com/erenbati))
+## 6.16.0
+### ✨ Features and improvements
 - Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
 - Allow calling `new Map({ transformStyle: { ... }})` to provide a style transformation function similar to the same option in `setStyle` ([#8786](https://github.com/maplibre/maplibre-gl-js/pull/8786)) (by [@hiddewie](https://github.com/hiddewie))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix expired vector tiles erroring on their next reload, e.g. after `setFilter()`, when the server returns an unchanged ETag ([#8771](https://github.com/maplibre/maplibre-gl-js/pull/8771)) (by [@DoFabien](https://github.com/DoFabien))
@@ -16,7 +35,6 @@
 - Fix vector tiles past the source's maxzoom failing to load when slicing leaves a one-point line ([#8681](https://github.com/maplibre/maplibre-gl-js/issues/8681)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix terrain drawing flat at low zoom, where its tiles are at the DEM source's minzoom ([#8772](https://github.com/maplibre/maplibre-gl-js/issues/8772)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - Fix `queryRenderedFeatures` missing part of a GeoJSON polygon whose ring does not repeat its first point ([#8874](https://github.com/maplibre/maplibre-gl-js/issues/8874)) (by [@johncarmack1984](https://github.com/johncarmack1984))
-- _...Add new stuff here..._
 
 ## 6.15.0
 
