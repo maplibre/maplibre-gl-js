@@ -1782,7 +1782,7 @@ describe('queryTerrainElevation', () => {
 
         expect(map.terrain.getElevationForLngLat).toHaveBeenCalledWith(
             expect.objectContaining({lng: 1, lat: 2,}),
-            map._camera.transform
+            map._camera.transform.tileZoom
         );
     });
 });

@@ -661,8 +661,7 @@ describe('coveringTiles', () => {
         });
 
         test('only includes tiles for a single world over a non-wrapping CRS, even where a pitched view sees past its edge', () => {
-            const identityTransform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            identityTransform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(identityCrs));
+            const identityTransform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs)});
             identityTransform.resize(512, 512);
             identityTransform.setZoom(1);
             identityTransform.setPitch(60);

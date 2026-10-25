@@ -1,14 +1,14 @@
 import {LngLat, type LngLatLike} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, degreesToRadians, radiansToDegrees, zoomScale, MAX_VALID_LATITUDE, scaleZoom, warnOnce} from '../util/util.ts';
+import {wrap, clamp, degreesToRadians, zoomScale, MAX_VALID_LATITUDE, scaleZoom, warnOnce} from '../util/util.ts';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {MercatorCoordinate, mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projection/mercator_utils.ts';
 import {EXTENT} from '../data/extent.ts';
 import {Bounds} from './bounds.ts';
-import {createCameraState, type CameraState} from './camera_state.ts';
+import {createCameraState, getBearing, getCenterPoint, getFov, getPitch, getRoll, getWorldSize, type CameraState} from './camera_state.ts';
 
 import type {WorldCoordinateHelper} from './transform_interface.ts';
 import type {PaddingOptions} from './edge_insets.ts';
@@ -91,6 +91,10 @@ export type TransformOptions = {
      * An override of the transform's default constraining function for respecting its longitude and latitude bounds.
      */
     constrainOverride?: TransformConstrainFunction | null;
+    /**
+     * The camera's lng/lat to world coordinate mapping, fixed for the transform's lifetime. Defaults to mercator.
+     */
+    worldCoordinateHelper?: WorldCoordinateHelper;
 };
 
 function getTileZoom(zoom: number): number {
@@ -109,7 +113,7 @@ const MAX_CENTER_PASSES = 10;
 export class TransformHelper implements ITransformGetters {
     private _callbacks: TransformHelperCallbacks;
 
-    private _cameraState: CameraState;
+    private readonly _cameraState: CameraState;
     /**
      * Whether the camera was never deliberately positioned, in which case a loading style may apply its own camera.
      * Cleared by the setters that move the camera, but not by ones that only snap it into a valid range.
@@ -120,12 +124,12 @@ export class TransformHelper implements ITransformGetters {
 
     _constrainOverride: TransformConstrainFunction;
 
-    _worldCoordinateHelper: WorldCoordinateHelper;
+    private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
     constructor(callbacks: TransformHelperCallbacks, options?: TransformOptions) {
         this._callbacks = callbacks;
         this._cameraState = createCameraState(options);
-        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
+        this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
 
         this._constrainOverride = options?.constrainOverride ?? null;
 
@@ -258,11 +262,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get worldSize(): number {
-        return this._cameraState.tileSize * this._cameraState.scale;
-    }
-
-    get centerOffset(): Point {
-        return this.centerPoint._sub(this.size._div(2));
+        return getWorldSize(this._cameraState);
     }
 
     /**
@@ -273,7 +273,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     get bearing(): number {
-        return this._cameraState.bearingInRadians / Math.PI * 180;
+        return getBearing(this._cameraState);
     }
     setBearing(bearing: number): void {
         const b = wrap(bearing, -180, 180) * Math.PI / 180;
@@ -293,7 +293,7 @@ export class TransformHelper implements ITransformGetters {
         return this._cameraState.pitchInRadians;
     }
     get pitch(): number {
-        return this._cameraState.pitchInRadians / Math.PI * 180;
+        return getPitch(this._cameraState);
     }
     setPitch(pitch: number): void {
         const p = clamp(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
@@ -307,7 +307,7 @@ export class TransformHelper implements ITransformGetters {
         return this._cameraState.rollInRadians;
     }
     get roll(): number {
-        return this._cameraState.rollInRadians / Math.PI * 180;
+        return getRoll(this._cameraState);
     }
     setRoll(roll: number): void {
         const r = roll / 180 * Math.PI;
@@ -321,7 +321,7 @@ export class TransformHelper implements ITransformGetters {
         return this._cameraState.fovInRadians;
     }
     get fov(): number {
-        return radiansToDegrees(this._cameraState.fovInRadians);
+        return getFov(this._cameraState);
     }
     setFov(fov: number): void {
         fov = clamp(fov, 0.1, 150);
@@ -353,6 +353,19 @@ export class TransformHelper implements ITransformGetters {
     }
 
     /**
+     * Moves the center and the zoom in one write, to a camera that is already constrained.
+     */
+    setCenterAndZoom(center: LngLat, zoom: number): void {
+        const state = this._cameraState;
+        this._unmodified = false;
+        state.center = center;
+        state.zoom = zoom;
+        state.tileZoom = Math.max(0, Math.floor(zoom));
+        state.scale = zoomScale(zoom);
+        this._calcMatrices();
+    }
+
+    /**
      * Elevation at current center point, meters above sea level
      */
     get elevation(): number { return this._cameraState.elevation; }
@@ -378,7 +391,7 @@ export class TransformHelper implements ITransformGetters {
      * and +y axis pointing downwards. This accounts for padding.
      */
     get centerPoint(): Point {
-        return this._cameraState.edgeInsets.getCenter(this._cameraState.width, this._cameraState.height);
+        return getCenterPoint(this._cameraState);
     }
 
     /**
@@ -387,6 +400,11 @@ export class TransformHelper implements ITransformGetters {
     get pixelsPerMeter(): number { return this._cameraState.pixelsPerMeter; }
 
     get unmodified(): boolean { return this._unmodified; }
+
+    /**
+     * The camera state, which only the helper changes and the projection classes read their camera values from.
+     */
+    get cameraState(): Readonly<CameraState> { return this._cameraState; }
 
     get cameraToCenterDistance(): number { return this._cameraState.cameraToCenterDistance; }
 
@@ -450,14 +468,6 @@ export class TransformHelper implements ITransformGetters {
     }
 
     /**
-     * Replaces the lng/lat to world coordinate mapping, mercator by default. The projection factory calls this on a
-     * transform it just built for a registered CRS, and `clone` calls it to keep the mapping.
-     */
-    setWorldCoordinateHelper(worldCoordinateHelper: WorldCoordinateHelper): void {
-        this._worldCoordinateHelper = worldCoordinateHelper;
-    }
-
-    /**
      * Sets or clears the map's geographical constraints.
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
@@ -518,6 +528,16 @@ export class TransformHelper implements ITransformGetters {
             return this._callbacks.defaultConstrain(lngLat, zoom);
         }
     };
+
+    /**
+     * Where the constrain puts a camera moved to `center` and `zoom`. A transform without a size is not constrained,
+     * so it keeps the two as they are.
+     */
+    getConstrainedCamera(center: LngLat, zoom: number): {center: LngLat; zoom: number} {
+        if (!this._cameraState.width || !this._cameraState.height) return {center, zoom};
+        const constrained = this.applyConstrain(center, zoom);
+        return {center: constrained.center, zoom: this.applyConstrain(constrained.center, constrained.zoom).zoom};
+    }
 
     /**
      * @internal

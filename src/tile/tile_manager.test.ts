@@ -729,8 +729,7 @@ describe('TileManager.update', () => {
     });
 
     test('does not load tiles again when the center of a registered projection crosses 180°', async () => {
-        const transform = createMercatorTransform();
-        transform.setWorldCoordinateHelper(new CRSWorldCoordinateHelper(createPolarStereographicCrs()));
+        const transform = createMercatorTransform({worldCoordinateHelper: new CRSWorldCoordinateHelper(createPolarStereographicCrs())});
         transform.resize(512, 512);
         transform.setZoom(2);
         transform.setCenter(new LngLat(179.9, 72));

@@ -17,7 +17,7 @@ A `CRS` becomes a helper through `new CRSWorldCoordinateHelper(crs)`, which appl
 
 ## Who holds the helper
 
-The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to both halves of the map's projection: the `MercatorProjection` it constructs, and the `MercatorTransform`, through `setWorldCoordinateHelper`, which `clone()` carries along. Mercator, globe and vertical-perspective share the one mercator helper.
+The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to both the `MercatorProjection` and the `MercatorTransform`. The transform receives it through its `worldCoordinateHelper` constructor option and keeps it when cloned. Mercator, globe and vertical-perspective share the one mercator helper.
 
 Readers take the helper from what they already hold: the transform, camera and covering tiles from the transform; sources and queries from `map.style.projection.worldCoordinateHelper`; the terrain from a reader the `Map` passes it, since the painter holds no transform.
 

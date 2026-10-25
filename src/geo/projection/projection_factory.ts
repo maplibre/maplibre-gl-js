@@ -37,11 +37,9 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
     const registered = getRegisteredProjection(name);
     if (registered) {
         const worldCoordinateHelper = new CRSWorldCoordinateHelper(registered);
-        const transform = createMercatorTransform(transformOptions);
-        transform.setWorldCoordinateHelper(worldCoordinateHelper);
         return {
             projection: new MercatorProjection(worldCoordinateHelper),
-            transform,
+            transform: createMercatorTransform({...transformOptions, worldCoordinateHelper}),
             cameraHelper: new MercatorCameraHelper(),
         };
     }

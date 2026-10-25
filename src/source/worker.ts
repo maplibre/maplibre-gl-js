@@ -103,6 +103,8 @@ export default class Worker {
     };
     referrer: string;
     globalStates: Map<string, Record<string, any>>;
+    /** Scripts imported into this worker, by url, so a url sent twice runs once. */
+    importedScripts: Map<string, Promise<void>>;
 
     constructor(self: WorkerGlobalScopeInterface & ActorTarget) {
         this.self = self;
@@ -116,6 +118,7 @@ export default class Worker {
         this.externalWorkerSourceTypes = {};
 
         this.globalStates = new Map<string, Record<string, any>>();
+        this.importedScripts = new Map<string, Promise<void>>();
 
         this.self.registerWorkerSource = (name: string, WorkerSource: WorkerSourceConstructor) => {
             if (this.externalWorkerSourceTypes[name]) {
@@ -210,12 +213,14 @@ export default class Worker {
             this.referrer = params;
         });
 
+        this.actor.registerMessageHandler(MessageType.ping, async () => {});
+
         this.actor.registerMessageHandler(MessageType.syncRTLPluginState, (mapId: string, params: PluginState) => {
             return this._syncRTLPluginState(mapId, params);
         });
 
-        this.actor.registerMessageHandler(MessageType.importScript, async (_mapId: string, params: string) => {
-            await loadScript(params);
+        this.actor.registerMessageHandler(MessageType.importScript, (_mapId: string, params: string) => {
+            return this._importScript(params);
         });
 
         this.actor.registerMessageHandler(MessageType.setImages, (mapId: string, params: string[]) => {
@@ -238,6 +243,24 @@ export default class Worker {
         });
     }
 
+    /**
+     * Loads a script once per url, so concurrent and repeated imports share one load. A failed load
+     * is forgotten, so the next import of the url tries again.
+     */
+    private async _importScript(url: string): Promise<void> {
+        const existing = this.importedScripts.get(url);
+        if (existing) return existing;
+
+        const importPromise = loadScript(url);
+        this.importedScripts.set(url, importPromise);
+        try {
+            await importPromise;
+        } catch (error) {
+            this.importedScripts.delete(url);
+            throw error;
+        }
+    }
+
     private _getGlobalState(mapId: string): Record<string, any> {
         let state = this.globalStates.get(mapId);
         if (!state) {
@@ -258,7 +281,7 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        return await rtlWorkerPlugin.syncState(incomingState, loadScript);
+        return await rtlWorkerPlugin.syncState(incomingState, (url) => this._importScript(url));
     }
 
     private _getAvailableImages(mapId: string) {
