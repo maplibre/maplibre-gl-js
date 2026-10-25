@@ -123,7 +123,7 @@ export class GlobeTransform implements ITransform {
         this._helper.clearNearFarZOverride();
     }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
+        return this._helper.getCameraQueryGeometry(queryGeometry);
     }
 
     get tileSize(): number {
