@@ -26,11 +26,24 @@ import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
+import type {FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform, GetElevation, WorldCoordinateHelper} from '../geo/transform_interface.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
+
+/**
+ * Culling across wrapped tiles and horizon-scale tiles can lose valid
+ * candidates because a canonical tile is not a unique globe projection.
+ * Translated extrusions similarly invalidate footprint-only ray filtering.
+ */
+export function mayUseGlobeQueryPlane(tileID: OverscaledTileID, isPointQuery: boolean, hasElevation: boolean, hasTranslatedExtrusion: boolean): boolean {
+    const {z, x} = tileID.canonical;
+    const worldTiles = Math.pow(2, z);
+    return z >= 6 && x > 1 && x < worldTiles - 2 &&
+        isPointQuery && !hasElevation && !hasTranslatedExtrusion;
+}
 
 /**
  * Returns the normal of the plane containing the camera and the pixel ray.
@@ -227,8 +240,21 @@ export class FeatureIndex {
             // For point queries without terrain, prune feature bounds that
             // cannot meet the camera's pixel ray at any elevation. Preserve
             // the original conservative box for horizon and polygon queries.
-            const queryPlane = args.queryGeometry.length === 1 && !args.getElevation ?
-                getGlobeQueryPlane(args.queryGeometry[0], this.tileID, args.transform) : null;
+            // At low zoom the query ray can graze the horizon and a tile's
+            // footprint covers a large angular area. At the antimeridian,
+            // wrapped copies can generate multiple candidate instances that
+            // are not safely represented by a single canonical tile plane.
+            // Keep the original broadphase in both cases.
+            // The shader can translate extrusions away from their indexed
+            // footprints. Their unshifted footprint may no longer intersect
+            // the pixel ray plane, so never prune translated layers this way.
+            const hasTranslatedExtrusion = Object.values(styleLayers).some(layer =>
+                layer.type === 'fill-extrusion' && (!params.layers || params.layers.has(layer.id)) &&
+                (layer as FillExtrusionStyleLayer).queryRadius() > 0
+            );
+            const queryPlane = mayUseGlobeQueryPlane(
+                this.tileID, args.queryGeometry.length === 1, !!args.getElevation, hasTranslatedExtrusion
+            ) ? getGlobeQueryPlane(args.queryGeometry[0], this.tileID, args.transform) : null;
             const nadirMatches = this.grid3D.query(
                 candidateBounds.minX, candidateBounds.minY, candidateBounds.maxX, candidateBounds.maxY,
                 queryPlane ? (bx1, by1, bx2, by2) =>

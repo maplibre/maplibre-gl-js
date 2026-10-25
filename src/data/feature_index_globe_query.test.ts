@@ -4,11 +4,21 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 import {projectTileCoordinatesToSphere} from '../geo/projection/globe_utils.ts';
-import {getGlobeQueryPlane, mayIntersectGlobeQueryPlane} from './feature_index.ts';
+import {getGlobeQueryPlane, mayIntersectGlobeQueryPlane, mayUseGlobeQueryPlane} from './feature_index.ts';
 import {EXTENT} from './extent.ts';
 
 describe('globe extrusion query plane broadphase', () => {
     const tile = new OverscaledTileID(10, 0, 10, 312, 655);
+
+    test('falls back at antimeridian, low zoom, terrain and translations', () => {
+        expect(mayUseGlobeQueryPlane(tile, true, false, false)).toBe(true);
+        expect(mayUseGlobeQueryPlane(new OverscaledTileID(10, 0, 10, 0, 655), true, false, false)).toBe(false);
+        expect(mayUseGlobeQueryPlane(new OverscaledTileID(10, 0, 10, 1023, 655), true, false, false)).toBe(false);
+        expect(mayUseGlobeQueryPlane(new OverscaledTileID(2, 0, 2, 2, 2), true, false, false)).toBe(false);
+        expect(mayUseGlobeQueryPlane(tile, false, false, false)).toBe(false);
+        expect(mayUseGlobeQueryPlane(tile, true, true, false)).toBe(false);
+        expect(mayUseGlobeQueryPlane(tile, true, false, true)).toBe(false);
+    });
 
     test('only rejects footprints too far from the ray plane', () => {
         // The equatorial plane cannot contain a small footprint at -45 degrees.
