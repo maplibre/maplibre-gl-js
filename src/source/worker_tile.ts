@@ -44,9 +44,9 @@ export class WorkerTile {
      */
     etag?: string;
     /**
-     * `true` when the response this tile was loaded from had an empty body, kept so a reload reports it again.
+     * `true` when the response this tile was loaded from had no content, kept so a reload reports it again.
      */
-    emptyBody?: boolean;
+    noContent?: boolean;
     inFlightDependencies: AbortController[];
 
     constructor(params: WorkerTileParameters) {

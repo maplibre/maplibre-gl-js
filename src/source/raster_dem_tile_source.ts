@@ -66,9 +66,9 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 return;
             }
             if (response) {
-                // An empty response (e.g. HTTP 204) under `emptyResponse: 'missing'` leaves the tile errored without
-                // elevation, worker or expiry, so another zoom level supplies the elevation and a reload requests it again.
-                if (!response.data && this.emptyResponse === 'missing') {
+                // A response without content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
+                // leaves the tile errored without elevation, worker or expiry, so another zoom level supplies the elevation and a reload requests it again.
+                if (response.noContent && this.emptyResponse === 'missing') {
                     this.unloadTile(tile);
                     delete tile.actor;
                     tile.state = 'errored';

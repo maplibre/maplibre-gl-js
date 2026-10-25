@@ -1,4 +1,4 @@
-import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax.ts';
+import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse, type ResourceResponse} from './ajax.ts';
 import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, extend, isWorker, isImageBitmap} from './util.ts';
 import {config} from './config.ts';
 import {AbortError, throwIfAborted} from './abort_error.ts';
@@ -15,7 +15,7 @@ export type ImageRequestQueueItem  = {
     state: 'queued' | 'running' | 'completed';
     abortController: AbortController;
     onError: (error: Error) => void;
-    onSuccess: (response: GetResourceResponse<HTMLImageElement | ImageBitmap | null>) => void;
+    onSuccess: (response: ResourceResponse<HTMLImageElement | ImageBitmap | null>) => void;
 };
 
 type ImageQueueThrottleCallbackDictionary = {
@@ -119,7 +119,7 @@ export namespace ImageRequest {
         abortController: AbortController,
         supportImageRefresh: boolean = true,
         imageBitmapOptions?: ImageBitmapOptions
-    ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> {
+    ): Promise<ResourceResponse<HTMLImageElement | ImageBitmap | null>> {
         const requestParameters = await requestManager.transformRequest(url, resourceType);
         throwIfAborted(abortController.signal);
         return ImageRequest.getImage(requestParameters, abortController, supportImageRefresh, imageBitmapOptions);
@@ -139,8 +139,8 @@ export namespace ImageRequest {
         abortController: AbortController,
         supportImageRefresh: boolean = true,
         imageBitmapOptions?: ImageBitmapOptions
-    ): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
-        return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
+    ): Promise<ResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
+        return new Promise<ResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
             requestParameters.headers ||= {};
             requestParameters.headers.accept = 'image/webp,*/*';
             extend(requestParameters, {type: 'image'});
@@ -176,7 +176,7 @@ export namespace ImageRequest {
      * Runs one queued image request.
      *
      * An empty response body (e.g. HTTP 204 for a tile without content) resolves with
-     * `data: null`, keeping the expiry headers, so callers can handle the absence
+     * `data: null`, keeping the expiry headers and `noContent`, so callers can handle the absence
      * explicitly and re-request when the headers say so.
      */
     const doImageRequest = async (itemInQueue: ImageRequestQueueItem) => {
@@ -205,7 +205,7 @@ export namespace ImageRequest {
             makeRequest(requestParameters, abortController);
 
         try {
-            const response = await getImagePromise;
+            const response: ResourceResponse<any> = await getImagePromise;
             delete itemInQueue.abortController;
             itemInQueue.state = 'completed';
             if (response.data instanceof HTMLImageElement || isImageBitmap(response.data)) {
@@ -213,7 +213,7 @@ export namespace ImageRequest {
                 // If HtmlImageElement is used to get image then response type will be HTMLImageElement
                 onSuccess(response);
             } else if (!response.data || response.data.byteLength === 0) {
-                onSuccess({data: null, cacheControl: response.cacheControl, expires: response.expires});
+                onSuccess({data: null, cacheControl: response.cacheControl, expires: response.expires, noContent: response.noContent});
             } else {
                 const img = await arrayBufferToCanvasImageSource(response.data, imageBitmapOptions);
                 onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});

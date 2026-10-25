@@ -220,7 +220,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
         tile.abortController = new AbortController();
         try {
-            // An image element cannot tell an empty response from a broken image, so `emptyResponse: 'missing'` requests
+            // An image element cannot tell a 204 from a broken image, so `emptyResponse: 'missing'` requests
             // the tile through fetch, as refreshing expired tiles does.
             const response = await ImageRequest.transformAndGetImage(
                 this.map._requestManager,
@@ -236,9 +236,9 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 return;
             }
             if (response) {
-                // An empty response (e.g. HTTP 204) under `emptyResponse: 'missing'` is left without data
-                // or expiry, so a loaded tile from another zoom level shows in its place.
-                if (!response.data && this.emptyResponse === 'missing') {
+                // A response without content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
+                // is left without data or expiry, so a loaded tile from another zoom level shows in its place.
+                if (response.noContent && this.emptyResponse === 'missing') {
                     tile.state = 'errored';
                     tile.expirationTime = null;
                     return;

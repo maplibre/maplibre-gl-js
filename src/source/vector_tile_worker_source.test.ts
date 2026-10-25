@@ -498,7 +498,7 @@ describe('vector tile worker source', () => {
         expect(parse).not.toHaveBeenCalled();
     });
 
-    test('VectorTileWorkerSource.loadTile reports the empty body of a 204 on the load and on a reload', async () => {
+    test('VectorTileWorkerSource.loadTile reports a 204 as no content on the load and on a reload', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
         server.respondWith(request => {
@@ -524,8 +524,8 @@ describe('vector tile worker source', () => {
         const loadResult = await loadPromise as WorkerTileWithData;
         const reloadResult = await source.reloadTile(params) as WorkerTileWithData;
 
-        expect(loadResult.emptyBody).toBe(true);
-        expect(reloadResult.emptyBody).toBe(true);
+        expect(loadResult.noContent).toBe(true);
+        expect(reloadResult.noContent).toBe(true);
     });
 
     test('VectorTileWorkerSource.loadTile returns null for an empty tile', async () => {

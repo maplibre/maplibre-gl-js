@@ -160,6 +160,27 @@ describe('RasterDEMTileSource', () => {
         expect(tile.dem).toBeUndefined();
     });
 
+    test('an empty 200 with emptyResponse missing loads as a tile without DEM data', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [200, {}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('loaded');
+    });
+
     test('a tile left missing by a 204 does not record its expiry', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,

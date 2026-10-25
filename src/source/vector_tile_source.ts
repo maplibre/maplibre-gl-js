@@ -268,9 +268,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         if (data?.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
-        // Under `emptyResponse: 'missing'` a response with an empty body, such as a 204, leaves the tile errored without data, worker, expiry or etag, so a reload requests it again.
+        // Under `emptyResponse: 'missing'` a response without content, such as a 204, leaves the tile errored without data, worker, expiry or etag, so a reload requests it again.
         // A reload requested while it loaded starts right away, so the tile stays loading for it.
-        if (data?.emptyBody && this.emptyResponse === 'missing') {
+        if (data?.noContent && this.emptyResponse === 'missing') {
             this.unloadTile(tile);
             delete tile.actor;
             tile.state = tile.reloadPromise ? 'loading' : 'errored';

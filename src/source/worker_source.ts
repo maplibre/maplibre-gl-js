@@ -94,9 +94,9 @@ export type WorkerTileWithData = ExpiryData & {
     encoding?: TileEncoding;
     resourceTiming?: PerformanceResourceTiming[];
     /**
-     * `true` when the tile response had an empty body, such as HTTP 204.
+     * `true` when the tile response had no content: an HTTP 204, or a custom protocol's answer without data.
      */
-    emptyBody?: boolean;
+    noContent?: boolean;
     // Only used for benchmarking:
     glyphMap?: GlyphMap | null;
     iconMap?: {
@@ -110,9 +110,9 @@ export type WorkerTileWithoutData = ExpiryData & {
     etagUnmodified: true;  // Strict for type narrowing
     resourceTiming?: PerformanceResourceTiming[];
     /**
-     * `true` when the tile response had an empty body, such as HTTP 204.
+     * `true` when the tile response had no content: an HTTP 204, or a custom protocol's answer without data.
      */
-    emptyBody?: boolean;
+    noContent?: boolean;
 };
 
 export type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;
