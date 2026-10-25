@@ -15,6 +15,8 @@ import {PossiblyEvaluated} from '../style/properties.ts';
 import {FeatureIndexArray} from './array_types.g.ts';
 import {MLTVectorTile} from '../source/vector_tile_mlt.ts';
 import {Bounds} from '../geo/bounds.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {sphereSurfacePointToCoordinates} from '../geo/projection/globe_utils.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 
 import type Point from '@mapbox/point-geometry';
@@ -32,7 +34,7 @@ export {GEOJSON_TILE_LAYER_NAME};
 
 type QueryParameters = {
     scale: number;
-    pixelPosMatrix: mat4;
+    pixelPosMatrix: mat4 | undefined;
     transform: IReadonlyTransform;
     tileSize: number;
     queryGeometry: Point[];
@@ -153,6 +155,21 @@ export class FeatureIndex {
                 return polygonIntersectsBox(args.cameraQueryGeometry, bx1 - queryPadding, by1 - queryPadding, bx2 + queryPadding, by2 + queryPadding);
             });
 
+        // Experimental bounded query region from the camera's radial surface projection.
+        if (!args.pixelPosMatrix) {
+            const position = args.transform.cameraPosition;
+            const magnitude = Math.hypot(position[0], position[1], position[2]);
+            const nadir = sphereSurfacePointToCoordinates([position[0] / magnitude, position[1] / magnitude, position[2] / magnitude]);
+            const tilePoint = this.tileID.canonical.getTilePoint(MercatorCoordinate.fromLngLat(nadir));
+            const worldWidth = EXTENT * Math.pow(2, this.z);
+            const normalizedQuery = args.queryGeometry.map(point => ({
+                x: point.x - Math.round((point.x - tilePoint.x) / worldWidth) * worldWidth,
+                y: point.y
+            }));
+            const candidateBounds = Bounds.fromPoints([...normalizedQuery, tilePoint]).expandBy(queryPadding);
+            const nadirMatches = this.grid3D.query(candidateBounds.minX, candidateBounds.minY, candidateBounds.maxX, candidateBounds.maxY);
+            matching3D.push(...nadirMatches);
+        }
         for (const key of matching3D) {
             matching.push(key);
         }

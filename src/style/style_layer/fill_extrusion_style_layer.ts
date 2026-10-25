@@ -5,8 +5,15 @@ import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
 import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
+import {earthRadius} from '../../geo/lng_lat.ts';
+import {projectTileCoordinatesToSphere} from '../../geo/projection/globe_utils.ts';
+import {subdivideVertexLine} from '../../render/subdivision.ts';
+import {OverscaledTileID} from '../../tile/tile_id.ts';
 
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
+import type {RendererProjectionData} from '../../geo/projection/projection_data.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {UnwrappedTileID} from '../../tile/tile_id.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
 import type {FillExtrusionLayoutProps, FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
@@ -48,7 +55,8 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         geometry,
         transform,
         pixelsToTileUnits,
-        pixelPosMatrix}: QueryIntersectsFeatureParams
+        pixelPosMatrix,
+        unwrappedTileID}: QueryIntersectsFeatureParams
     ): boolean | number {
 
         const translatedPolygon = translate(queryGeometry,
@@ -59,13 +67,55 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         const height = this.paint.get('fill-extrusion-height').evaluate(feature, featureState);
         const base = this.paint.get('fill-extrusion-base').evaluate(feature, featureState);
 
-        const projectedQueryGeometry = projectQueryGeometry(translatedPolygon, pixelPosMatrix, 0);
+        const projectionData = pixelPosMatrix ? undefined : getGlobeProjectionData(transform, unwrappedTileID);
+        const projectedQueryGeometry = pixelPosMatrix ?
+            projectQueryGeometry(translatedPolygon, pixelPosMatrix, 0) :
+            translatedPolygon.map(p => projectGlobePoint(p, 0, transform, unwrappedTileID, projectionData));
 
-        const projected = projectExtrusion(geometry, base, height, pixelPosMatrix);
+        const projected = pixelPosMatrix ?
+            projectExtrusion(geometry, base, height, pixelPosMatrix) :
+            projectGlobeExtrusion(geometry, base, height, transform, unwrappedTileID, projectionData);
         const projectedBase = projected[0];
         const projectedTop = projected[1];
         return checkIntersection(projectedBase, projectedTop, projectedQueryGeometry);
     }
+}
+
+function getGlobeProjectionData(transform: IReadonlyTransform, tileID: UnwrappedTileID): RendererProjectionData {
+    const {z, x, y} = tileID.canonical;
+    const overscaledTileID = new OverscaledTileID(z, tileID.wrap, z, x, y);
+    return transform.getProjectionData({overscaledTileID, applyGlobeMatrix: true});
+}
+
+function projectGlobePoint(point: Point, elevation: number, transform: IReadonlyTransform, tileID: UnwrappedTileID, projectionData: RendererProjectionData): Point3D {
+    const {x, y, z} = tileID.canonical;
+    const sphere = projectTileCoordinatesToSphere(point.x, point.y, x, y, z);
+    const ratio = 1 + elevation / earthRadius;
+    const globe: vec4 = [sphere[0] * ratio, sphere[1] * ratio, sphere[2] * ratio, 1];
+    vec4.transformMat4(globe, globe, projectionData.mainMatrix);
+    const flat: vec4 = [point.x, point.y, elevation, 1];
+    const t = projectionData.projectionTransition;
+    if (t < 1) {
+        vec4.transformMat4(flat, flat, projectionData.fallbackMatrix);
+    }
+    const w = (t < 1 ? flat[3] * (1 - t) : 0) + globe[3] * t;
+    const xx = (t < 1 ? flat[0] * (1 - t) : 0) + globe[0] * t;
+    const yy = (t < 1 ? flat[1] * (1 - t) : 0) + globe[1] * t;
+    const zz = (t < 1 ? flat[2] * (1 - t) : 0) + globe[2] * t;
+    const result = new Point((xx / w + 1) * transform.width * 0.5,
+        (1 - yy / w) * transform.height * 0.5) as Point3D;
+    result.z = zz / w;
+    return result;
+}
+
+function projectGlobeExtrusion(geometry: Point[][], base: number, height: number, transform: IReadonlyTransform, tileID: UnwrappedTileID, projectionData: RendererProjectionData): [Point3D[][], Point3D[][]] {
+    // Mirror the fill extrusion bucket's spherical sidewall tessellation.
+    const granularity = Math.max(Math.floor(128 / (1 << tileID.canonical.z)), 2);
+    const split = geometry.map(ring => subdivideVertexLine(ring, granularity, true));
+    return [
+        split.map(ring => ring.map(point => projectGlobePoint(point, base, transform, tileID, projectionData))),
+        split.map(ring => ring.map(point => projectGlobePoint(point, height, transform, tileID, projectionData)))
+    ];
 }
 
 function dot(a, b) {
