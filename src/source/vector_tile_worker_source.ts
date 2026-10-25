@@ -233,6 +233,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
 
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
+        workerTile.tileID = workerTile.tileID.unwrapTo(params.tileID.wrap);
         return await this._parseWorkerTile(workerTile, params);
     }
 

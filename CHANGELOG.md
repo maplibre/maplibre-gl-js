@@ -1,19 +1,32 @@
 ## main
 ### ✨ Features and improvements
-- Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
-- Allow calling `new Map({ transformStyle: { ... }})` to provide a style transformation function similar to the same option in `setStyle` ([#8786](https://github.com/maplibre/maplibre-gl-js/pull/8786)) (by [@hiddewie](https://github.com/hiddewie))
 - Add experimental `emptyResponse` source and TileJSON property: with `missing`, another zoom level shows through an empty (HTTP 204) tile ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 6.16.0
+
+### ✨ Features and improvements
+
+- Allow `Map#setMaxBounds` to constrain one geographic axis without constraining the other ([#6148](https://github.com/maplibre/maplibre-gl-js/issues/6148)) (by [@erenbati](https://github.com/erenbati))
+- Allow calling `new Map({ transformStyle: { ... }})` to provide a style transformation function similar to the same option in `setStyle` ([#8786](https://github.com/maplibre/maplibre-gl-js/pull/8786)) (by [@hiddewie](https://github.com/hiddewie))
+- Add accept headers for MLT according to the current capabilities ([#7483](https://github.com/maplibre/maplibre-gl-js/pull/7483)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+
+### 🐞 Bug fixes
+
 - Fix expired vector tiles erroring on their next reload, e.g. after `setFilter()`, when the server returns an unchanged ETag ([#8771](https://github.com/maplibre/maplibre-gl-js/pull/8771)) (by [@DoFabien](https://github.com/DoFabien))
 - Fix `GeoJSONSource.getBounds` throwing when a feature has a `null` geometry ([#8814](https://github.com/maplibre/maplibre-gl-js/pull/8814)) (by [@auraseb](https://github.com/auraseb))
 - Fix characters covered by `font-faces` switching to glyphs from the glyphs URL once their PBF range is downloaded ([#8490](https://github.com/maplibre/maplibre-gl-js/pull/8490)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))
 - Fix the map shrinking to a single stretched pixel for good when it resizes after the WebGL context is lost but before `webglcontextlost` fires, e.g. when a mobile browser returns from the background ([#8837](https://github.com/maplibre/maplibre-gl-js/issues/8837)) (by [@lazerg](https://github.com/lazerg))
 - Fix `TypeError: Cannot read properties of undefined (reading '0')` when drawing a line layer with a constant `line-dasharray` whose dash positions were never set ([#8846](https://github.com/maplibre/maplibre-gl-js/issues/8846)) (by [@yulman2207](https://github.com/yulman2207))
 - Fix `GeoJSONSource.updateData` applying a queued update to a feature that a later call adds again ([#8804](https://github.com/maplibre/maplibre-gl-js/issues/8804)) (by [@architpai](https://github.com/architpai))
+- Fix images added with `addImage`, e.g. from `styleimagemissing`, not showing in tiles that were reloaded after the map was panned across 180° ([#8858](https://github.com/maplibre/maplibre-gl-js/pull/8858)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix maps that stop loading after iOS shuts down their background workers to save memory ([#8461](https://github.com/maplibre/maplibre-gl-js/issues/8461), [#8491](https://github.com/maplibre/maplibre-gl-js/pull/8491)) (by [@lucaswoj](https://github.com/lucaswoj), [@ingalls](https://github.com/ingalls), and [@HarelM](https://github.com/HarelM))
-- _...Add new stuff here..._
+- Fix vector tiles past the source's maxzoom failing to load when slicing leaves a one-point line ([#8681](https://github.com/maplibre/maplibre-gl-js/issues/8681)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix terrain drawing flat at low zoom, where its tiles are at the DEM source's minzoom ([#8772](https://github.com/maplibre/maplibre-gl-js/issues/8772)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Fix `queryRenderedFeatures` missing part of a GeoJSON polygon whose ring does not repeat its first point ([#8874](https://github.com/maplibre/maplibre-gl-js/issues/8874)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 
 ## 6.15.0
 

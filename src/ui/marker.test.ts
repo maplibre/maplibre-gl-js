@@ -1380,7 +1380,7 @@ describe('marker', () => {
             .addTo(map);
 
         map.terrain = createTerrain();
-        const locationElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform);
+        const locationElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform.tileZoom);
         map._camera.transform.isLocationOccluded = (_lngLat, terrain, elevation) => !!terrain && elevation === locationElevation;
         await sleep(100);
         map.fire('terrain');
@@ -1397,7 +1397,7 @@ describe('marker', () => {
             .addTo(map);
 
         map.terrain = createTerrain();
-        const locationElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform);
+        const locationElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform.tileZoom);
         map._camera.transform.isLocationOccluded = (_lngLat, terrain, elevation) => !!terrain && elevation === locationElevation;
         await sleep(100);
         map.fire('terrain');

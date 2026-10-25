@@ -288,9 +288,8 @@ export class TerrainTileManager extends Evented {
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile | undefined {
         const source = this.tileManager._source;
-        let z = tileID.overscaledZ - this.deltaZoom;
-        if (z > source.maxzoom) z = source.maxzoom;
-        if (z < source.minzoom) return undefined;
+        let z = this._getSourceZoom(tileID, source);
+        if (z === undefined) return undefined;
         // cache for tileID to terrain-tileID
         if (this._sourceTileCache[tileID.key]?.zoom !== z) this._sourceTileCache[tileID.key] = {zoom: z, key: tileID.scaledTo(z).key};
         let tile = this.findTileInCaches(this._sourceTileCache[tileID.key].key);
@@ -310,11 +309,24 @@ export class TerrainTileManager extends Evented {
      */
     isStillWaitingForDEM(tileID: OverscaledTileID): boolean {
         const source = this.tileManager._source;
-        const z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
-        if (z < source.minzoom) return false;
+        const z = this._getSourceZoom(tileID, source);
+        if (z === undefined) return false;
         const sourceTileID = tileID.scaledTo(z);
         if (source.hasTile && !source.hasTile(sourceTileID)) return false;
         return this.findTileInCaches(sourceTileID.key)?.state !== 'errored';
+    }
+
+    /**
+     * The zoom of the raster-dem tile that covers a terrain tile: `deltaZoom` below the terrain tile, kept within the
+     * source's zoom range, so a terrain tile at the source's minzoom uses the source tile at that zoom.
+     * @param tileID - the terrain tile
+     * @param source - the raster-dem source
+     * @returns the zoom, or undefined where the source has no tiles at or below the terrain tile's zoom
+     */
+    private _getSourceZoom(tileID: OverscaledTileID, source: Source): number | undefined {
+        let z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
+        if (z < source.minzoom) z = source.minzoom;
+        return z <= tileID.overscaledZ ? z : undefined;
     }
 
     findTileInCaches(key: string): Tile | undefined {

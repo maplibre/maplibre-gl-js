@@ -73,13 +73,36 @@ describe('vector tile worker source', () => {
             '0': {
                 status: 'done',
                 vectorTile: {},
+                tileID: new OverscaledTileID(0, 0, 0, 0, 0),
                 parse
             } as any as WorkerTile
         };
 
-        const reloadPromise = source.reloadTile({uid: 0} as any as WorkerTileParameters);
+        const reloadPromise = source.reloadTile({uid: 0, tileID: new OverscaledTileID(0, 0, 0, 0, 0)} as any as WorkerTileParameters);
         expect(parse).toHaveBeenCalledTimes(1);
         await expect(reloadPromise).resolves.toBeTruthy();
+    });
+
+    test('VectorTileWorkerSource.reloadTile parses the tile for the world copy it is reloaded in', async () => {
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, '');
+        });
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
+        const params = {
+            source: 'source',
+            uid: 0,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as WorkerTileParameters;
+        const loadPromise = source.loadTile(params);
+        server.respond();
+        await loadPromise;
+        const tileID = new OverscaledTileID(0, 1, 0, 0, 0);
+
+        const result = await source.reloadTile({...params, tileID}) as WorkerTileWithData;
+
+        expect(result.featureIndex.tileID).toEqual(tileID);
     });
 
     test('VectorTileWorkerSource keeps the etag across reloadTile so the next expiry refresh can return unmodified', async () => {

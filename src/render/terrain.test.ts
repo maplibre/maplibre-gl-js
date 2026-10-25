@@ -311,7 +311,7 @@ describe('Terrain', () => {
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
 
-        expect(terrain.getElevationForLngLat(new LngLat(0, 40), transform)).toBeCloseTo(500, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(0, 40), transform.tileZoom)).toBeCloseTo(500, 6);
     });
 
     test('getElevationForLngLat traverses the covering tiles while the rendered tile\'s DEM is loading', () => {
@@ -322,7 +322,7 @@ describe('Terrain', () => {
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === 0 ? undefined : ({tileID, dem: coveringDEM}) as any as Tile;
 
-        expect(terrain.getElevationForLngLat(new LngLat(0, 40), transform)).toBeCloseTo(100, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(0, 40), transform.tileZoom)).toBeCloseTo(100, 6);
     });
 
     test('getElevationForLngLat traverses the covering tiles outside the rendered tiles', () => {
@@ -335,7 +335,7 @@ describe('Terrain', () => {
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
         terrain.tileManager.getRenderableTiles = () => [{tileID: new OverscaledTileID(1, 0, 1, 0, 0)}] as any as Tile[];
 
-        expect(terrain.getElevationForLngLat(new LngLat(90, -40), transform)).toBeCloseTo(100, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(90, -40), transform.tileZoom)).toBeCloseTo(100, 6);
     });
 
     test('getElevationForLngLat reads at the tile zoom outside the drawn tiles', () => {
@@ -364,7 +364,7 @@ describe('Terrain', () => {
         const transform = createMercatorTransform({minZoom: 3, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         transform.resize(200, 200);
         transform.setZoom(zoom);
-        terrain.getElevationForLngLat(new LngLat(0, 0), transform);
+        terrain.getElevationForLngLat(new LngLat(0, 0), transform.tileZoom);
 
         expect(spy).toHaveBeenCalled();
         expect((spy.mock.calls[0][0] as OverscaledTileID).canonical.z).toBe(zoom);
@@ -380,7 +380,7 @@ describe('Terrain', () => {
         transform.setCenter(new LngLat(11.4, 47.3));
         terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === transform.tileZoom ? {tileID, dem} as Tile : undefined;
 
-        expect(terrain.getElevationForLngLat(transform.center, transform)).toBe(demElevation);
+        expect(terrain.getElevationForLngLat(transform.center, transform.tileZoom)).toBe(demElevation);
     });
 
     test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
