@@ -395,7 +395,7 @@ describe('getCameraTargetElevation', () => {
         transform.setZoom(14);
         transform.resize(512, 512);
         transform.setElevation(2000);
-        map._camera.transform = transform;
+        map._camera.applyTransformChange(tr => tr.apply(transform, false));
 
         expect(map.getCameraTargetElevation()).toBe(2000);
     });
@@ -1776,7 +1776,7 @@ describe('queryTerrainElevation', () => {
     test('calls getElevationForLngLat with the location and the transform', () => {
         const getElevationForLngLat = vi.fn();
         map.terrain = {getElevationForLngLat} as any as Terrain;
-        map._camera.transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        map._camera.applyTransformChange(tr => tr.apply(createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true}), false));
 
         map.queryTerrainElevation([1, 2]);
 

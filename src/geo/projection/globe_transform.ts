@@ -390,11 +390,6 @@ export class GlobeTransform implements ITransform {
         return this._helper.worldCoordinateHelper;
     }
 
-    populateCache(coords: OverscaledTileID[]): void {
-        this._mercatorTransform.populateCache(coords);
-        this._verticalPerspectiveTransform.populateCache(coords);
-    }
-
     getBounds(): LngLatBounds {
         return this.currentTransform.getBounds();
     }

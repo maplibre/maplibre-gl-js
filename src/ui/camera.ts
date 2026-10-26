@@ -351,7 +351,13 @@ export type CameraInitOptions = {
 };
 
 export class Camera extends Evented<MapEventType> {
-    transform: ITransform;
+    private _transform: ITransform;
+    /**
+     * @internal
+     * The transform the map is drawn with. Other classes read it here, and a camera movement edits it through
+     * {@link Camera.getTransformForUpdate}.
+     */
+    get transform(): IReadonlyTransform { return this._transform; }
     /**
      * @internal
      * Copy of the map's `terrain` (which the `Map` owns).
@@ -444,25 +450,25 @@ export class Camera extends Evented<MapEventType> {
         // For now we will use a temporary MercatorTransform instance.
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
-        this.transform = createMercatorTransform();
+        this._transform = createMercatorTransform();
         this.cameraHelper = new MercatorCameraHelper();
         if (options.minZoom !== undefined) {
-            this.transform.setMinZoom(options.minZoom);
+            this._transform.setMinZoom(options.minZoom);
         }
         if (options.maxZoom !== undefined) {
-            this.transform.setMaxZoom(options.maxZoom);
+            this._transform.setMaxZoom(options.maxZoom);
         }
         if (options.minPitch !== undefined) {
-            this.transform.setMinPitch(options.minPitch);
+            this._transform.setMinPitch(options.minPitch);
         }
         if (options.maxPitch !== undefined) {
-            this.transform.setMaxPitch(options.maxPitch);
+            this._transform.setMaxPitch(options.maxPitch);
         }
         if (options.renderWorldCopies !== undefined) {
-            this.transform.setRenderWorldCopies(options.renderWorldCopies);
+            this._transform.setRenderWorldCopies(options.renderWorldCopies);
         }
         if (options.transformConstrain !== null) {
-            this.transform.setConstrainOverride(options.transformConstrain);
+            this._transform.setConstrainOverride(options.transformConstrain);
         }
         this._moving = false;
         this._zooming = false;
@@ -494,7 +500,7 @@ export class Camera extends Evented<MapEventType> {
 
     migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
         newTransform.apply(this.transform, true);
-        this.transform = newTransform;
+        this._transform = newTransform;
         this.cameraHelper = newCameraHelper;
         if (this._requestedCameraState) {
             // The requested camera state is a transform of the old projection, so it has to be
@@ -511,7 +517,7 @@ export class Camera extends Evented<MapEventType> {
      * Resizes the transform, and the requested camera state of a movement that is running, to the map's size.
      */
     resize(width: number, height: number, constrainTransform: boolean): void {
-        this.transform.resize(width, height, constrainTransform);
+        this._transform.resize(width, height, constrainTransform);
         this._requestedCameraState?.resize(width, height, constrainTransform);
     }
 
@@ -521,7 +527,7 @@ export class Camera extends Evented<MapEventType> {
      * @param transition - how far the style's projection is between mercator, at 0, and globe, at 1
      */
     prepareNextFrame(transition: number): void {
-        this.transform.setTransitionState(transition);
+        this._transform.setTransitionState(transition);
     }
 
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
@@ -1106,7 +1112,7 @@ export class Camera extends Evented<MapEventType> {
      * the center onto the terrain, or onto sea level without terrain.
      */
     clampCenterToGround(terrain: Terrain | null): void {
-        const tr = this.transform;
+        const tr = this._transform;
         tr.setMinElevationForCurrentTile(terrain ? terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
         if (!this.getCenterClampedToGround()) return;
         if (!terrain) {
@@ -1128,7 +1134,7 @@ export class Camera extends Evented<MapEventType> {
      * @returns Transform to apply changes to
      */
     getTransformForUpdate(): ITransform {
-        if (!this.transformCameraUpdate && !this.terrain) return this.transform;
+        if (!this.transformCameraUpdate && !this.terrain) return this._transform;
 
         this._requestedCameraState ||= this.transform.clone();
         return this._requestedCameraState;
@@ -1345,7 +1351,7 @@ export class Camera extends Evented<MapEventType> {
         this._takeLandedElevation(tr);
         const corrected = this._keepCameraAboveTerrain(tr);
         if (!this.transformCameraUpdate) {
-            if (corrected !== this.transform) this.transform.apply(corrected, false);
+            if (corrected !== this._transform) this._transform.apply(corrected, false);
             return;
         }
         const nextTransform = corrected.clone();
@@ -1363,7 +1369,7 @@ export class Camera extends Evented<MapEventType> {
         if (roll !== undefined) nextTransform.setRoll(roll);
         if (pitch !== undefined) nextTransform.setPitch(pitch);
         if (bearing !== undefined) nextTransform.setBearing(bearing);
-        this.transform.apply(elevation === undefined ? nextTransform : this._raiseCameraByPitchAndZoom(nextTransform), false);
+        this._transform.apply(elevation === undefined ? nextTransform : this._raiseCameraByPitchAndZoom(nextTransform), false);
     }
 
     /**
@@ -1403,10 +1409,10 @@ export class Camera extends Evented<MapEventType> {
      * landed since its last frame and puts the center back onto the terrain, see {@link Camera.putCenterBackOnTerrain}
      */
     _afterEase(eventData?: Record<string, unknown>, easeId?: string, freezeElevation: boolean = false): void {
-        this._takeLandedElevation(this.transform);
+        this._takeLandedElevation(this._transform);
         const tookDem = this.releaseElevation();
         if (this.terrain && freezeElevation && this.getCenterClampedToGround()) {
-            this.putCenterBackOnTerrain(this.transform, this.terrain, tookDem);
+            this.putCenterBackOnTerrain(this._transform, this.terrain, tookDem);
         }
         // if this easing is being stopped to start another easing with
         // the same id then don't fire any events to avoid extra start/stop events

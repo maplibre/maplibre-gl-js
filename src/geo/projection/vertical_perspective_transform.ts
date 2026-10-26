@@ -616,10 +616,6 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.worldCoordinateHelper;
     }
 
-    populateCache(_coords: OverscaledTileID[]): void {
-        // Do nothing
-    }
-
     getBounds(): LngLatBounds {
         const xMid = this._cameraState.width * 0.5;
         const yMid = this._cameraState.height * 0.5;
