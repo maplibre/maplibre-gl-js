@@ -109,7 +109,7 @@
     "postcss-cli": "^12.0.0",
     "postcss-inline-svg": "^6.0.0",
     "pretty-bytes": "^7.2.0",
-    "puppeteer": "^25.14.0",
+    "puppeteer": "^25.16.0",
     "regenerate": "^1.5.0",
     "rolldown": "^1.2.15",
     "rolldown-plugin-dts": "^0.28.8",
