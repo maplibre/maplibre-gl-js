@@ -7,6 +7,7 @@ import {GlyphAtlas} from '../render/glyph_atlas.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {type GetDashesResponse, MessageType, type GetImagesResponse} from '../util/actor_messages.ts';
+import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 
 import type {Bucket, PopulateParameters} from '../data/bucket.ts';
 import type {IActor} from '../util/actor.ts';
@@ -81,6 +82,9 @@ export class WorkerTile {
             subdivisionGranularity
         };
 
+        // vt-pbf's GeoJSONWrapper turns string ids into numbers, so give the promoted id back for ["id"] in filters and layout
+        const restorePromotedId = this.promoteId && data instanceof GeoJSONWrapper;
+
         const layerFamilies = layerIndex.familiesBySource[this.source];
         for (const sourceLayerId in layerFamilies) {
             const sourceLayer = data.layers[sourceLayerId];
@@ -98,6 +102,7 @@ export class WorkerTile {
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
                 const id = featureIndex.getId(feature, sourceLayerId);
+                if (restorePromotedId) (feature as {id: string | number}).id = id;
                 features.push({feature, id, index, sourceLayerIndex});
             }
 
