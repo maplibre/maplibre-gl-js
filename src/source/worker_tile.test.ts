@@ -18,7 +18,7 @@ import type {PossiblyEvaluated} from '../style/properties.ts';
 import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
 
-function createWorkerTile(params?: {globalState?: Record<string, any>; promoteId?: string}): WorkerTile {
+function createWorkerTile(params?: {globalState?: Record<string, any>; promoteId?: WorkerTileParameters['promoteId']}): WorkerTile {
     return new WorkerTile({
         uid: '',
         zoom: 0,
@@ -361,6 +361,20 @@ describe('worker tile', () => {
         const tile = createWorkerTile({promoteId: 'id'});
         const result = await tile.parse(wrapper, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
         expect((result.buckets[0] as CircleBucket<CircleStyleLayer>).layoutVertexArray).toHaveLength(4 * 4);
+    });
+
+    test('WorkerTile.parse keeps the GeoJSON id when promoteId has no key for the GeoJSON layer', async () => {
+        const wrapper = new GeoJSONWrapper([1, 2].map(id => ({type: 1, id, geometry: [[id, 0]], tags: {name: `n${id}`}} as any as Feature)));
+        const layerIndex = new StyleLayerIndex([{
+            id: 'circle',
+            type: 'circle',
+            source: 'source',
+            filter: ['==', ['id'], 1]
+        }]);
+
+        const tile = createWorkerTile({promoteId: {roads: 'name'}});
+        const result = await tile.parse(wrapper, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        expect((result.buckets[0] as CircleBucket<CircleStyleLayer>).layoutVertexArray).toHaveLength(4);
     });
 
     test('WorkerTile.parse keeps the tile id for vector tile filters with promoteId', async () => {
