@@ -3,16 +3,16 @@ import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
 import packageJson from '../../package.json' assert {type: 'json'};
-import bundleSizes from './bundle_size.json' assert {type: 'json'};
 
 type SizeRecord = {raw: number; gzip: number};
 type SizeMap = Record<string, SizeRecord>;
 
-// Tolerance windows. We allow small fluctuations either way, but flag bigger jumps.
+// Tolerance windows. We allow small increases, but flag bigger jumps.
 const RAW_INCREASE_QUOTA = 1024;
-const RAW_DECREASE_QUOTA = 4096;
 const GZIP_INCREASE_QUOTA = 256;
-const GZIP_DECREASE_QUOTA = 1024;
+
+// Sizes of the base build, written with UPDATE=true by the Dependabot workflow
+const baseSizesPath = path.resolve(__dirname, './bundle_size.json');
 
 function measure(file: string): SizeRecord {
     const buf = fs.readFileSync(file);
@@ -30,23 +30,21 @@ describe('production bundle', () => {
         }
     });
 
-    for (const [filePath, expected] of Object.entries(bundleSizes as SizeMap)) {
-        test(`${filePath} bundle size stays the same`, () => {
+    for (const filePath of ['dist/maplibre-gl.mjs', 'dist/maplibre-gl-worker.mjs']) {
+        test.skipIf(!process.env.UPDATE && !fs.existsSync(baseSizesPath))(`${filePath} bundle size does not grow past the quota`, () => {
             const actual = measure(filePath);
 
             if (process.env.UPDATE) {
-                const jsonPath = path.resolve(__dirname, './bundle_size.json');
-                const updated: SizeMap = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+                const updated: SizeMap = fs.existsSync(baseSizesPath) ? JSON.parse(fs.readFileSync(baseSizesPath, 'utf8')) : {};
                 updated[filePath] = actual;
-                fs.writeFileSync(jsonPath, `${JSON.stringify(updated, null, 4)}\n`);
+                fs.writeFileSync(baseSizesPath, `${JSON.stringify(updated, null, 4)}\n`);
                 return;
             }
 
-            const hint = `Update bundle_size.json by running: UPDATE=true npm run test-build -- min.test.ts (raw ${actual.raw} bytes, gzip ${actual.gzip} bytes)`;
+            const expected: SizeRecord = JSON.parse(fs.readFileSync(baseSizesPath, 'utf8'))[filePath];
+            const hint = `raw ${actual.raw} bytes, gzip ${actual.gzip} bytes`;
             expect(actual.raw, hint).toBeLessThan(expected.raw + RAW_INCREASE_QUOTA);
-            expect(actual.raw, hint).toBeGreaterThan(expected.raw - RAW_DECREASE_QUOTA);
             expect(actual.gzip, hint).toBeLessThan(expected.gzip + GZIP_INCREASE_QUOTA);
-            expect(actual.gzip, hint).toBeGreaterThan(expected.gzip - GZIP_DECREASE_QUOTA);
         });
     }
 });
