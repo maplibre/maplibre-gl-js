@@ -1673,8 +1673,7 @@ export class Map extends Evented<MapEventType> {
     _resizeTransform(constrainTransform = true): void {
         const [width, height] = this._containerDimensions();
 
-        this._camera.transform.resize(width, height, constrainTransform);
-        this._camera._requestedCameraState?.resize(width, height, constrainTransform);
+        this._camera.resize(width, height, constrainTransform);
     }
 
     /**
@@ -4477,7 +4476,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
-        this._camera.transform.setTransitionState(this.style.projection?.transitionState);
+        this._camera.prepareNextFrame(this.style.projection?.transitionState);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we

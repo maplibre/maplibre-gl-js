@@ -506,6 +506,24 @@ export class Camera extends Evented<MapEventType> {
         }
     }
 
+    /**
+     * @internal
+     * Resizes the transform, and the requested camera state of a movement that is running, to the map's size.
+     */
+    resize(width: number, height: number, constrainTransform: boolean): void {
+        this.transform.resize(width, height, constrainTransform);
+        this._requestedCameraState?.resize(width, height, constrainTransform);
+    }
+
+    /**
+     * @internal
+     * Prepares the transform for the next frame.
+     * @param transition - how far the style's projection is between mercator, at 0, and globe, at 1
+     */
+    prepareNextFrame(transition: number): void {
+        this.transform.setTransitionState(transition);
+    }
+
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
 
     setCenter(center: LngLatLike, eventData?: Record<string, unknown>): this {
