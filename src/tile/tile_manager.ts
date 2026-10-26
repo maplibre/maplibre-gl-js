@@ -24,7 +24,7 @@ import type {Source} from '../source/source.ts';
 import type {Map} from '../ui/map.ts';
 import type {Style} from '../style/style.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {TileState} from './tile.ts';
 import type {FeatureState, ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Terrain} from '../render/terrain.ts';
@@ -88,7 +88,7 @@ export class TileManager extends Evented<SourceEventType> {
     _maxTileCacheZoomLevels: number;
     _paused: boolean;
     _shouldReloadOnResume: boolean;
-    transform: ITransform;
+    transform: IReadonlyTransform;
     terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
@@ -537,7 +537,7 @@ export class TileManager extends Evented<SourceEventType> {
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(transform: ITransform, terrain?: Terrain): void {
+    update(transform: IReadonlyTransform, terrain?: Terrain): void {
         if (!this._sourceLoaded || this._paused) {
             return;
         }

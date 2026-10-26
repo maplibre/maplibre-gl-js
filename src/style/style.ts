@@ -45,7 +45,7 @@ import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
 import type {Map} from '../ui/map.ts';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {StyleImage} from './style_image.ts';
 import type {GlyphMap} from './style_glyph.ts';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
@@ -1900,7 +1900,7 @@ export class Style extends Evented<MapEventType> {
         this.tileManagers[id].reload();
     }
 
-    _updateSources(transform: ITransform): void {
+    _updateSources(transform: IReadonlyTransform): void {
         for (const id in this.tileManagers) {
             this.tileManagers[id].update(transform, this.map.terrain);
         }
@@ -1929,7 +1929,7 @@ export class Style extends Evented<MapEventType> {
      *
      * @internal
      */
-    _placementInputsChanged(transform: ITransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): boolean {
+    _placementInputsChanged(transform: IReadonlyTransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): boolean {
         const lastPlacement = this.pauseablePlacement;
         return !lastPlacement ||
             this._symbolPlacementTriggered ||
@@ -1940,7 +1940,7 @@ export class Style extends Evented<MapEventType> {
             !mat4.exactEquals(lastPlacement.placement.transform.modelViewProjectionMatrix, transform.modelViewProjectionMatrix);
     }
 
-    _updatePlacement(transform: ITransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
+    _updatePlacement(transform: IReadonlyTransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
         let symbolBucketsChanged = false;
         let placementCommitted = false;
 

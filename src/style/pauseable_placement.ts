@@ -2,7 +2,7 @@ import {now} from '../util/time_control.ts';
 import {Placement} from '../symbol/placement.ts';
 import {isSymbolStyleLayer, type SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
 
-import type {ITransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {StyleLayer} from './style_layer.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {BucketPart} from '../symbol/placement.ts';
@@ -68,7 +68,7 @@ export class PauseablePlacement {
     _inProgressLayer: LayerPlacement;
 
     constructor(
-        transform: ITransform,
+        transform: IReadonlyTransform,
         terrain: Terrain,
         order: string[],
         forceFullPlacement: boolean,
