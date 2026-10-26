@@ -111,7 +111,7 @@
     "pretty-bytes": "^7.2.0",
     "puppeteer": "^25.14.0",
     "regenerate": "^1.5.0",
-    "rolldown": "^1.2.14",
+    "rolldown": "^1.2.15",
     "rolldown-plugin-dts": "^0.28.8",
     "rw": "^1.3.3",
     "semver": "^7.8.5",
