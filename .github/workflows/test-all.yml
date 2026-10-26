@@ -186,9 +186,13 @@ jobs:
         with:
           node-version-file: '.nvmrc'
       - uses: preactjs/compressed-size-action@f322c295dde06a1cb7ccaef105732dd8a726d1d9 # 2.10.0
+        id: compressed-size
         with:
           build-script: build-dist
           pattern: 'dist/maplibre-gl{,-worker}.mjs'
+      - run: printf '%s\n' "$COMMENT_BODY" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          COMMENT_BODY: ${{ steps.compressed-size.outputs.comment-body }}
 
   benchmarks:
     name: Benchmarks
