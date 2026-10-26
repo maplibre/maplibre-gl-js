@@ -331,14 +331,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     get farZ(): number;
     /**
-     * @internal
-     * Called before rendering to allow the transform implementation
-     * to precompute data needed to render the given tiles.
-     * Used in mercator transform to precompute tile matrices (posMatrix).
-     * @param coords - Array of tile IDs that will be rendered.
-     */
-    populateCache(coords: OverscaledTileID[]): void;
-    /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.
      * Center is considered to be in the middle of the viewport.

@@ -973,11 +973,7 @@ export class TileManager extends Evented<SourceEventType> {
     }
 
     getVisibleCoordinates(symbolLayer?: boolean): OverscaledTileID[] {
-        const coords = this.getRenderableIds(symbolLayer).map((id) => this._inViewTiles.getTileById(id).tileID);
-        if (this.transform) {
-            this.transform.populateCache(coords);
-        }
-        return coords;
+        return this.getRenderableIds(symbolLayer).map((id) => this._inViewTiles.getTileById(id).tileID);
     }
 
     hasTransition(): boolean {
