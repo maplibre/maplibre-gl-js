@@ -18,18 +18,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v4
         with:
           node-version-file: '.nvmrc'
-      - name: Measure the base build
-        run: |
-          git checkout HEAD^1
-          npm ci
-          npm run build-dist
-          UPDATE=true npm run test-build -- min.test.ts
-          git checkout "$GITHUB_SHA"
-      - name: Check the PR build against it
-        run: |
-          npm ci
-          npm run build-dist
-          npm run test-build -- min.test.ts
+      - run: node build/check-bundle-size.ts
 
   dependabot:
     needs: bundle-size
