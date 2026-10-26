@@ -4494,17 +4494,8 @@ export class Map extends Evented<MapEventType> {
             if (renderableTilesChanged) {
                 this.terrain.resetElevationCache();
             }
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
-                const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._camera.transform.center, this._camera.transform.tileZoom);
-                if (demState !== 'loading') this._camera.transform.setElevation(elevation);
-            }
-        } else {
-            this._camera.transform.setMinElevationForCurrentTile(0);
-            if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(0);
-            }
         }
+        this._camera.clampCenterToGround(this.terrain);
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 

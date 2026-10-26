@@ -1079,14 +1079,24 @@ export class Camera extends Evented<MapEventType> {
             if (this._elevationHold?.holder === 'gesture' && tr && this._takeLandedElevation(tr)) this.applyUpdatedTransform(tr);
             return;
         }
+        this.clampCenterToGround(this.terrain);
+    }
+
+    /**
+     * @internal
+     * Tells the transform the lowest elevation of the tile under the center and, with `centerClampedToGround` set, puts
+     * the center onto the terrain, or onto sea level without terrain.
+     */
+    clampCenterToGround(terrain: Terrain | null): void {
         const tr = this.transform;
-        tr.setMinElevationForCurrentTile(this.terrain ? this.terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
+        tr.setMinElevationForCurrentTile(terrain ? terrain.getMinTileElevationForLngLatZoom(tr.center, tr.tileZoom) : 0);
         if (!this.getCenterClampedToGround()) return;
-        if (!this.terrain) {
+        if (!terrain) {
             tr.setElevation(0);
             return;
         }
-        const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(tr.center, tr.tileZoom);
+        if (this.elevationFreeze) return;
+        const {elevation, demState} = terrain.getElevationAndDEMStateForLngLat(tr.center, tr.tileZoom);
         if (demState !== 'loading') tr.setElevation(elevation);
     }
 
