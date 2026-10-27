@@ -7,7 +7,7 @@ import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKe
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {getMercatorHorizon, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation, lngLatBoxToWorldBox} from './mercator_utils.ts';
+import {getMercatorHorizon, getMercatorTileCoordinates, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation, lngLatBoxToWorldBox} from './mercator_utils.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {TransformHelper} from '../transform_helper.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
@@ -162,7 +162,7 @@ export class MercatorTransform implements ITransform {
         this._helper.clearNearFarZOverride();
     }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
+        return this._helper.getCameraQueryGeometry(queryGeometry);
     }
 
     get tileSize(): number {
@@ -1054,7 +1054,7 @@ export class MercatorTransform implements ITransform {
 
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, aligned, applyTerrainMatrix} = params;
-        const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
+        const mercatorTileCoordinates = getMercatorTileCoordinates(overscaledTileID);
         const tilePosMatrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID, aligned, true) : null;
 
         let mainMatrix: Mat4f32;
@@ -1129,14 +1129,6 @@ export class MercatorTransform implements ITransform {
             signedDistanceFromCamera: w,
             isOccluded: false
         };
-    }
-
-    populateCache(coords: OverscaledTileID[]): void {
-        for (const coord of coords) {
-            // Return value is thrown away, but this function will still
-            // place the pos matrix into the transform's internal cache.
-            this.calculatePosMatrix(coord);
-        }
     }
 
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {

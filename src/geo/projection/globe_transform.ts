@@ -123,7 +123,7 @@ export class GlobeTransform implements ITransform {
         this._helper.clearNearFarZOverride();
     }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
+        return this._helper.getCameraQueryGeometry(queryGeometry);
     }
 
     get tileSize(): number {
@@ -388,11 +388,6 @@ export class GlobeTransform implements ITransform {
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
         return this._helper.worldCoordinateHelper;
-    }
-
-    populateCache(coords: OverscaledTileID[]): void {
-        this._mercatorTransform.populateCache(coords);
-        this._verticalPerspectiveTransform.populateCache(coords);
     }
 
     getBounds(): LngLatBounds {

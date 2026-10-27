@@ -1673,8 +1673,7 @@ export class Map extends Evented<MapEventType> {
     _resizeTransform(constrainTransform = true): void {
         const [width, height] = this._containerDimensions();
 
-        this._camera.transform.resize(width, height, constrainTransform);
-        this._camera._requestedCameraState?.resize(width, height, constrainTransform);
+        this._camera.resize(width, height, constrainTransform);
     }
 
     /**
@@ -3117,7 +3116,8 @@ export class Map extends Evented<MapEventType> {
      *
      * @param id - The ID of the source to get.
      * @returns The style source with the specified ID or `undefined` if the ID
-     * corresponds to no existing sources.
+     * corresponds to no existing sources. Also returns `undefined` after a WebGL context
+     * loss until the restored style fires `style.load`.
      * The shape of the object varies by source type.
      * A list of options for each source type is available on the MapLibre Style Specification's
      * [Sources](https://maplibre.org/maplibre-style-spec/sources/) page.
@@ -4476,7 +4476,7 @@ export class Map extends Evented<MapEventType> {
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
-        this._camera.transform.setTransitionState(this.style.projection?.transitionState);
+        this._camera.prepareNextFrame(this.style.projection?.transitionState);
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we
@@ -4493,17 +4493,8 @@ export class Map extends Evented<MapEventType> {
             if (renderableTilesChanged) {
                 this.terrain.resetElevationCache();
             }
-            this._camera.transform.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._camera.transform.center, this._camera.transform.tileZoom));
-            if (!this._camera.elevationFreeze && this.getCenterClampedToGround()) {
-                const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._camera.transform.center, this._camera.transform.tileZoom);
-                if (demState !== 'loading') this._camera.transform.setElevation(elevation);
-            }
-        } else {
-            this._camera.transform.setMinElevationForCurrentTile(0);
-            if (this.getCenterClampedToGround()) {
-                this._camera.transform.setElevation(0);
-            }
         }
+        this._camera.clampCenterToGround(this.terrain);
 
         this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
