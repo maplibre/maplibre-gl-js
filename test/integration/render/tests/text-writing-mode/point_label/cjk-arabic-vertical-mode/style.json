@@ -59,7 +59,7 @@
         "text-writing-mode": ["vertical"],
         "text-font": [
           "Open Sans Semibold",
-          "Arial Unicode MS Bold"
+          "Noto Sans Arabic Condensed"
         ],
         "text-size": 14
       }

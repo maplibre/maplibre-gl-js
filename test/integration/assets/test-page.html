@@ -5,11 +5,11 @@
     <meta charset='utf-8'>
     <link rel='stylesheet' href='/dist/maplibre-gl.css' />
     <style>
-        /* Noto Sans Arabic SemiCondensed SemiBold draws the Arabic letters of the `Arial Unicode MS Bold` fallback in the font stacks the render tests use. */
+        /* Noto Sans Arabic Condensed SemiBold draws the Arabic letters of the render tests. */
         @font-face {
-            font-family: 'Arial Unicode MS Bold';
+            font-family: 'Noto Sans Arabic Condensed';
             font-weight: 100 900;
-            src: url('/font/NotoSansArabic-SemiCondensedSemiBold.ttf') format('truetype');
+            src: url('/font/NotoSansArabic-CondensedSemiBold.ttf') format('truetype');
             unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200D;
         }
         /* Noto Sans Devanagari draws the Devanagari letters of the `is-supported-script` tests. */
@@ -36,7 +36,7 @@
     // so each test reuses the warm worker instead of paying module-worker
     // startup cost on every Map.
     maplibregl.prewarm();
-    await document.fonts.load('600 16px "Arial Unicode MS Bold"', 'ع');
+    await document.fonts.load('600 16px "Noto Sans Arabic Condensed"', 'ع');
     await document.fonts.load('600 16px "Noto Sans Devanagari"', 'द');
     window.maplibregl = maplibregl;
 </script>
