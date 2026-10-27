@@ -12,6 +12,13 @@
             src: url('/font/NotoSansArabic-SemiCondensedSemiBold.ttf') format('truetype');
             unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200D;
         }
+        /* Noto Sans Devanagari draws the Devanagari letters of the `is-supported-script` tests. */
+        @font-face {
+            font-family: 'Noto Sans Devanagari';
+            font-weight: 100 900;
+            src: url('/fonts/noto-sans-devanagari/files/noto-sans-devanagari-devanagari-400-normal.woff2') format('woff2');
+            unicode-range: U+0900-097F, U+1CD0-1CFF, U+A8E0-A8FF;
+        }
         body { margin: 0; padding: 0; }
         #map { 
             box-sizing:content-box;
@@ -30,6 +37,7 @@
     // startup cost on every Map.
     maplibregl.prewarm();
     await document.fonts.load('600 16px "Arial Unicode MS Bold"', 'ع');
+    await document.fonts.load('600 16px "Noto Sans Devanagari"', 'द');
     window.maplibregl = maplibregl;
 </script>
 </body>
