@@ -2,7 +2,7 @@ import {describe, test, expect, vi} from 'vitest';
 import {createStyleLayer} from './create_style_layer.ts';
 import {FillStyleLayer} from './style_layer/fill_style_layer.ts';
 import {extend} from '../util/util.ts';
-import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Color, type FilterSpecification, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {TransitionParameters} from './properties.ts';
@@ -15,6 +15,21 @@ describe('StyleLayer', () => {
         const layer = createStyleLayer({type: 'fill'} as LayerSpecification, {});
 
         expect(layer).toBeInstanceOf(FillStyleLayer);
+    });
+});
+
+describe('StyleLayer.setFilter', () => {
+    test('preserves the prior filter when compilation fails', () => {
+        const priorFilter: FilterSpecification = ['==', 'kind', 'park'];
+        const layer = createStyleLayer({
+            id: 'landuse',
+            type: 'fill',
+            source: 'streets',
+            filter: priorFilter
+        }, {});
+
+        expect(() => layer.setFilter(['+', 1, 2] as any)).toThrow();
+        expect(layer.filter).toEqual(priorFilter);
     });
 });
 

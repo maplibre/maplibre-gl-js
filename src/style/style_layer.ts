@@ -160,8 +160,9 @@ export abstract class StyleLayer extends Evented<ErrorEventType> {
     }
 
     setFilter(filter: FilterSpecification | void): void {
+        const compiledFilter = featureFilter(filter, `layers[${this.id}].filter`, this._globalState);
         this.filter = filter;
-        this._featureFilter = featureFilter(filter, `layers[${this.id}].filter`, this._globalState);
+        this._featureFilter = compiledFilter;
     }
 
     getCrossfadeParameters(): CrossfadeParameters {
