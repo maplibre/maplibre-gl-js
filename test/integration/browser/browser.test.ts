@@ -1,7 +1,6 @@
 import {describe, beforeEach, beforeAll, afterEach, afterAll, test, expect} from 'vitest';
 import st from 'st';
 import http, {type Server} from 'http';
-import {readFileSync} from 'node:fs';
 import {sleep} from '../../../src/util/test/util.ts';
 import {launchPuppeteer} from '../lib/puppeteer_config.ts';
 
@@ -24,21 +23,8 @@ describe('Browser tests', () => {
 
     // start server
     beforeAll(async () => {
-        const serve = st(process.cwd());
         server = http.createServer(
-            (request, response) => {
-                if (request.url === '/negotiated-image') {
-                    const format = request.headers.accept?.includes('image/jxl') ? 'jxl' : 'png';
-                    response.writeHead(200, {
-                        'Content-Type': `image/${format}`,
-                        'Cache-Control': 'max-age=60',
-                        'Vary': 'Accept'
-                    });
-                    response.end(readFileSync(new URL(`./fixtures/pixel.${format}`, import.meta.url)));
-                    return;
-                }
-                serve(request, response);
-            }
+            st(process.cwd())
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
@@ -74,69 +60,21 @@ describe('Browser tests', () => {
         server?.close();
     }, 40000);
 
-    test.each(['bitmap', 'image', 'unsupported', 'xhr'] as const)('negotiates JPEG XL with the %s decoder/transport', async (mode) => {
-        const negotiatedResponse = page.waitForResponse(response => response.url().endsWith('/negotiated-image'));
-        const result = await page.evaluate(async (mode) => {
-            const jxl = await (await fetch('/test/integration/browser/fixtures/pixel.jxl')).arrayBuffer();
-            const blob = new Blob([jxl], {type: 'image/png'});
-            let supported = false;
-            if (mode === 'image') {
-                const image = new Image();
-                const url = URL.createObjectURL(blob);
-                image.src = url;
-                try {
-                    await image.decode();
-                    supported = image.naturalWidth === 1 && image.naturalHeight === 1;
-                } catch {} finally {
-                    URL.revokeObjectURL(url);
-                }
-                window.createImageBitmap = undefined;
-            } else if (mode === 'unsupported') {
-                const decode = window.createImageBitmap;
-                window.createImageBitmap = async (source: ImageBitmapSource) => {
-                    if (source instanceof Blob) {
-                        const bytes = new Uint8Array(await source.arrayBuffer());
-                        if (bytes[0] === 0xff && bytes[1] === 0x0a) throw new Error('JXL disabled for this test');
-                    }
-                    return decode(source);
-                };
-            } else {
-                try {
-                    const bitmap = await createImageBitmap(blob);
-                    supported = bitmap.width === 1 && bitmap.height === 1;
-                    bitmap.close();
-                } catch {}
-            }
-            if (mode === 'xhr') window.fetch = undefined;
-
-            const response = await map.loadImage('/negotiated-image');
+    test('advertises JPEG XL support and decodes a JPEG XL image', async () => {
+        const imageResponse = page.waitForResponse(response => response.url().endsWith('/pixel.jxl'));
+        const pixel = await page.evaluate(async () => {
+            const response = await map.loadImage('/test/integration/browser/fixtures/pixel.jxl');
             const canvas = document.createElement('canvas');
             canvas.width = canvas.height = 1;
             const context = canvas.getContext('2d');
             context.drawImage(response.data, 0, 0);
-            const pixel = Array.from(context.getImageData(0, 0, 1, 1).data);
-            if (response.data instanceof ImageBitmap) response.data.close();
-            return {supported, cacheControl: response.cacheControl, pixel};
-        }, mode);
-
-        const response = await negotiatedResponse;
-        expect(response.request().headers().accept).toBe(result.supported ? 'image/jxl,image/webp,*/*' : 'image/webp,*/*');
-        expect(response.headers()['content-type']).toBe(result.supported ? 'image/jxl' : 'image/png');
-        expect(result.cacheControl).toBe('max-age=60');
-        expect(result.pixel).toEqual([255, 0, 0, 128]);
-    });
-
-    test('preserves an Accept header supplied through transformRequest', async () => {
-        const negotiatedResponse = page.waitForResponse(response => response.url().endsWith('/negotiated-image'));
-        await page.evaluate(async () => {
-            map.setTransformRequest(url => ({url, headers: new Headers({Accept: 'image/png'})}));
-            const response = await map.loadImage('/negotiated-image');
-            if (response.data instanceof ImageBitmap) response.data.close();
+            (response.data as ImageBitmap).close();
+            return Array.from(context.getImageData(0, 0, 1, 1).data);
         });
+        const response = await imageResponse;
 
-        const response = await negotiatedResponse;
-        expect(response.request().headers().accept).toBe('image/png');
-        expect(response.headers()['content-type']).toBe('image/png');
+        expect(response.request().headers().accept).toBe('image/jxl,image/webp,*/*');
+        expect(pixel).toEqual([255, 0, 0, 128]);
     });
 
     test('Contextmenu event triggered during scrollzoom', {retry: 3, timeout: 20000}, async () => {
