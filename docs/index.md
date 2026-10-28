@@ -234,7 +234,7 @@ worker-src 'self' ;
 img-src data: blob: 'self' ;
 ```
 
-A page with an opaque origin, like one opened from a file or in a sandboxed iframe, also needs `blob:` in `worker-src`, and the worker's host in `script-src`, since `'self'` doesn't match there. When `setWorkerUrl` is given a `blob:` URL, it needs `blob:` in `connect-src` and `data:` in `script-src` instead.
+A page with an opaque origin, like one opened from a file or in a sandboxed iframe, also needs `blob:` in `worker-src`, and the worker's host in `script-src`, since `'self'` doesn't match there. When `setWorkerUrl` is given a `blob:` URL, it needs `blob:` in `connect-src`, and `data:` in `script-src` instead of the worker's host.
 
 ## MapLibre CSS
 
