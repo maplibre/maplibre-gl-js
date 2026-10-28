@@ -61,13 +61,16 @@ function createWorker(url: string, asModule: boolean): Worker {
     return new Worker(url);
 }
 
-async function fetchAsBlobUrl(url: string): Promise<string> {
+async function fetchWorkerCode(url: string): Promise<string> {
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Failed to fetch worker script (${response.status}): ${url}`);
     }
-    const code = await response.text();
-    const blob = new Blob([code], {type: 'text/javascript'});
+    return response.text();
+}
+
+async function fetchAsBlobUrl(url: string): Promise<string> {
+    const blob = new Blob([await fetchWorkerCode(url)], {type: 'text/javascript'});
     return URL.createObjectURL(blob);
 }
 
@@ -75,38 +78,11 @@ function hasOpaqueOrigin(): boolean {
     return globalThis.origin === 'null';
 }
 
+/**
+ * On a page with an opaque origin, Chrome doesn't start a module worker from a `blob:` URL, https://issues.chromium.org/issues/40067939
+ */
 async function fetchAsDataUrl(url: string): Promise<string> {
-    const response = await fetch(url);
-    return `data:text/javascript;charset=utf-8,${encodeURIComponent(await response.text())}`;
-}
-
-/**
- * Chrome doesn't start a module worker from a `blob:` URL on a page with an opaque origin, https://issues.chromium.org/issues/40067939
- */
-const CLASSIC_WORKER_BOOTSTRAP = `const queued = [];
-const queue = (event) => {
-    event.stopImmediatePropagation();
-    queued.push(event);
-};
-self.addEventListener('message', ({data}) => {
-    self.addEventListener('message', queue);
-    import(data).then(() => {
-        self.removeEventListener('message', queue);
-        for (const event of queued.splice(0)) self.dispatchEvent(new MessageEvent('message', {data: event.data, ports: event.ports}));
-    }, (error) => {
-        reportError(error);
-        self.close();
-    });
-}, {once: true});`;
-
-let classicWorkerBootstrapUrl: string;
-
-/**
- * Never revoked, since WebKit doesn't let a worker read the page's `blob:` URLs once its own is revoked, https://bugs.webkit.org/show_bug.cgi?id=258443
- */
-function getClassicWorkerBootstrapUrl(): string {
-    classicWorkerBootstrapUrl ||= URL.createObjectURL(new Blob([CLASSIC_WORKER_BOOTSTRAP], {type: 'text/javascript'}));
-    return classicWorkerBootstrapUrl;
+    return `data:text/javascript;charset=utf-8,${encodeURIComponent(await fetchWorkerCode(url))}`;
 }
 
 function importAsBlobUrl(url: string): string {
@@ -119,10 +95,7 @@ export async function workerFactory(): Promise<Worker> {
     const asModule = !isClassicWorkerUrl(url);
 
     if (asModule && hasOpaqueOrigin()) {
-        const moduleUrl = url.startsWith('blob:') ? await fetchAsDataUrl(url) : new URL(url, document.baseURI).href;
-        const worker = createWorker(getClassicWorkerBootstrapUrl(), false);
-        worker.postMessage(moduleUrl);
-        return worker;
+        return createWorker(await fetchAsDataUrl(url), asModule);
     }
 
     if (!isCrossOrigin(url)) {
