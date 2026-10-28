@@ -234,6 +234,8 @@ worker-src 'self' ;
 img-src data: blob: 'self' ;
 ```
 
+A page with an opaque origin, like one opened from a file or in a sandboxed iframe, also needs `blob:` in `worker-src`, and the worker's host in `script-src`, since `'self'` doesn't match there. When `setWorkerUrl` is given a `blob:` URL, it needs `blob:` in `connect-src` and `data:` in `script-src` instead.
+
 ## MapLibre CSS
 
 The CSS referenced in the Quickstart is used to style DOM elements created by MapLibre code. Without the CSS, elements like Popups and Markers won't work.

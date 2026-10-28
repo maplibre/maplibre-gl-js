@@ -14,6 +14,7 @@ describe('workerFactory', () => {
         (globalThis as any).Worker = originalWorker;
         config.WORKER_URL = originalWorkerUrl;
         vi.restoreAllMocks();
+        vi.unstubAllGlobals();
     });
 
     test('creates a module worker when WORKER_URL is empty', async () => {
@@ -148,6 +149,34 @@ describe('workerFactory', () => {
         expect(WorkerSpy).toHaveBeenCalledTimes(1);
         expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc']);
         expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
+    });
+
+    test('a page with an opaque origin starts a classic worker from a Blob URL and sends it the module worker URL to import', async () => {
+        vi.stubGlobal('origin', 'null');
+        const worker = {postMessage: vi.fn()};
+        const WorkerSpy = vi.fn(function() { return worker; });
+        vi.stubGlobal('Worker', WorkerSpy);
+        vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:null/bootstrap');
+        config.WORKER_URL = 'worker/maplibre-gl-worker.mjs';
+
+        await workerFactory();
+
+        expect(WorkerSpy).toHaveBeenCalledWith(expect.stringMatching(/^blob:/));
+        expect(worker.postMessage).toHaveBeenCalledWith('http://localhost/worker/maplibre-gl-worker.mjs');
+    });
+
+    test('a page with an opaque origin sends a blob: worker URL to the classic worker as a data URL holding the fetched module', async () => {
+        vi.stubGlobal('origin', 'null');
+        const worker = {postMessage: vi.fn()};
+        vi.stubGlobal('Worker', vi.fn(function() { return worker; }));
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('self.worker = 1'));
+        vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:null/bootstrap');
+        config.WORKER_URL = 'blob:null/worker';
+
+        await workerFactory();
+
+        expect(fetchSpy).toHaveBeenCalledWith('blob:null/worker');
+        expect(worker.postMessage).toHaveBeenCalledWith('data:text/javascript;charset=utf-8,self.worker%20%3D%201');
     });
 
     test('cross-origin fetch failure rejects the promise', async () => {

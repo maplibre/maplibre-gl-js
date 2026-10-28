@@ -71,6 +71,54 @@ async function fetchAsBlobUrl(url: string): Promise<string> {
     return URL.createObjectURL(blob);
 }
 
+/**
+ * Whether the page has an opaque origin, as a page opened from a file or in a sandboxed iframe does.
+ */
+function hasOpaqueOrigin(): boolean {
+    return globalThis.origin === 'null';
+}
+
+/**
+ * Returns the module at the Blob URL `url` as a `data:` URL. On a page opened from a file, Chrome and Safari
+ * don't let a worker import the page's `blob:` URLs, while the page itself can read them.
+ */
+async function fetchAsDataUrl(url: string): Promise<string> {
+    const response = await fetch(url);
+    return `data:text/javascript;charset=utf-8,${encodeURIComponent(await response.text())}`;
+}
+
+/**
+ * A classic worker script that imports the module worker whose URL it receives as its first message, and holds
+ * back later messages until that module has loaded, or closes if it fails to. On a page with an opaque origin,
+ * Chrome starts a classic worker from a `blob:` URL, but not a module worker.
+ */
+const CLASSIC_WORKER_BOOTSTRAP = `const queued = [];
+const queue = (event) => {
+    event.stopImmediatePropagation();
+    queued.push(event);
+};
+self.addEventListener('message', ({data}) => {
+    self.addEventListener('message', queue);
+    import(data).then(() => {
+        self.removeEventListener('message', queue);
+        for (const event of queued.splice(0)) self.dispatchEvent(new MessageEvent('message', {data: event.data, ports: event.ports}));
+    }, (error) => {
+        reportError(error);
+        self.close();
+    });
+}, {once: true});`;
+
+let classicWorkerBootstrapUrl: string;
+
+/**
+ * Returns the Blob URL of {@link CLASSIC_WORKER_BOOTSTRAP}. It's created once and never revoked, since WebKit
+ * doesn't let a worker read the page's `blob:` URLs when the worker's own Blob URL is revoked before it loads.
+ */
+function getClassicWorkerBootstrapUrl(): string {
+    classicWorkerBootstrapUrl ||= URL.createObjectURL(new Blob([CLASSIC_WORKER_BOOTSTRAP], {type: 'text/javascript'}));
+    return classicWorkerBootstrapUrl;
+}
+
 function importAsBlobUrl(url: string): string {
     const blob = new Blob([`import ${JSON.stringify(new URL(url, import.meta.url).href)}`], {type: 'text/javascript'});
     return URL.createObjectURL(blob);
@@ -79,6 +127,13 @@ function importAsBlobUrl(url: string): string {
 export async function workerFactory(): Promise<Worker> {
     const url = config.WORKER_URL || defaultWorkerUrl();
     const asModule = !isClassicWorkerUrl(url);
+
+    if (asModule && hasOpaqueOrigin()) {
+        const moduleUrl = url.startsWith('blob:') ? await fetchAsDataUrl(url) : new URL(url, document.baseURI).href;
+        const worker = createWorker(getClassicWorkerBootstrapUrl(), false);
+        worker.postMessage(moduleUrl);
+        return worker;
+    }
 
     if (!isCrossOrigin(url)) {
         return createWorker(url, asModule);

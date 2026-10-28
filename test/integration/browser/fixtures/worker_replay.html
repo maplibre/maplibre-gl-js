@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset='utf-8'>
+</head>
+<body>
+<script type='module'>
+import * as maplibregl from '../../../../dist/maplibre-gl-dev.mjs';
+
+const created = new Promise((resolve) => {
+    window.Worker = class extends Worker {
+        constructor(...args) {
+            super(...args);
+            resolve(this);
+        }
+    };
+});
+
+maplibregl.setWorkerCount(1);
+maplibregl.setWorkerUrl('worker_replay.mjs');
+maplibregl.prewarm();
+
+const worker = await created;
+const received = [];
+worker.addEventListener('message', ({data}) => {
+    received.push(data);
+    if (data === 'installed') worker.postMessage('during');
+    if (data === 'ready') worker.postMessage('after');
+    if (data === 'after') {
+        maplibregl.clearPrewarmedResources();
+        parent.postMessage(received, '*');
+    }
+});
+worker.postMessage('before');
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix the map not loading from a file or in a sandboxed iframe ([#8912](https://github.com/maplibre/maplibre-gl-js/pull/8912)) (by [@birkskyum](https://github.com/birkskyum))
 - Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 - _...Add new stuff here..._
 
