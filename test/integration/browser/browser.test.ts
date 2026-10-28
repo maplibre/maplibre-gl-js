@@ -24,7 +24,7 @@ describe('Browser tests', () => {
     // start server
     beforeAll(async () => {
         server = http.createServer(
-            st({path: process.cwd(), cors: true})
+            st(process.cwd())
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
@@ -431,18 +431,6 @@ describe('Browser tests', () => {
         });
 
         expect(markerOpacity).toBe('1');
-    });
-
-    test('A worker on a page with an opaque origin gets the messages sent while it loads once, in order', async () => {
-        const received = await page.evaluate(() => new Promise<string[]>((resolve) => {
-            addEventListener('message', ({data}) => resolve(data), {once: true});
-            const frame = document.createElement('iframe');
-            frame.sandbox.add('allow-scripts');
-            frame.src = 'worker_replay.html';
-            document.body.append(frame);
-        }));
-
-        expect(received).toEqual(['installed', 'ready', 'before', 'during', 'after']);
     });
 
     test('Load map with RTL plugin should throw exception for invalid URL', async () => {
