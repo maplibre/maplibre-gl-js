@@ -71,26 +71,17 @@ async function fetchAsBlobUrl(url: string): Promise<string> {
     return URL.createObjectURL(blob);
 }
 
-/**
- * Whether the page has an opaque origin, as a page opened from a file or in a sandboxed iframe does.
- */
 function hasOpaqueOrigin(): boolean {
     return globalThis.origin === 'null';
 }
 
-/**
- * Returns the module at the Blob URL `url` as a `data:` URL. On a page opened from a file, Chrome and Safari
- * don't let a worker import the page's `blob:` URLs, while the page itself can read them.
- */
 async function fetchAsDataUrl(url: string): Promise<string> {
     const response = await fetch(url);
     return `data:text/javascript;charset=utf-8,${encodeURIComponent(await response.text())}`;
 }
 
 /**
- * A classic worker script that imports the module worker whose URL it receives as its first message, and holds
- * back later messages until that module has loaded, or closes if it fails to. On a page with an opaque origin,
- * Chrome starts a classic worker from a `blob:` URL, but not a module worker.
+ * Chrome doesn't start a module worker from a `blob:` URL on a page with an opaque origin, https://issues.chromium.org/issues/40067939
  */
 const CLASSIC_WORKER_BOOTSTRAP = `const queued = [];
 const queue = (event) => {
@@ -111,8 +102,7 @@ self.addEventListener('message', ({data}) => {
 let classicWorkerBootstrapUrl: string;
 
 /**
- * Returns the Blob URL of {@link CLASSIC_WORKER_BOOTSTRAP}. It's created once and never revoked, since WebKit
- * doesn't let a worker read the page's `blob:` URLs when the worker's own Blob URL is revoked before it loads.
+ * Never revoked, since WebKit doesn't let a worker read the page's `blob:` URLs once its own is revoked, https://bugs.webkit.org/show_bug.cgi?id=258443
  */
 function getClassicWorkerBootstrapUrl(): string {
     classicWorkerBootstrapUrl ||= URL.createObjectURL(new Blob([CLASSIC_WORKER_BOOTSTRAP], {type: 'text/javascript'}));
