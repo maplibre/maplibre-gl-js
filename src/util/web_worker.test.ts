@@ -14,6 +14,7 @@ describe('workerFactory', () => {
         (globalThis as any).Worker = originalWorker;
         config.WORKER_URL = originalWorkerUrl;
         vi.restoreAllMocks();
+        vi.unstubAllGlobals();
     });
 
     test('creates a module worker when WORKER_URL is empty', async () => {
@@ -148,6 +149,19 @@ describe('workerFactory', () => {
         expect(WorkerSpy).toHaveBeenCalledTimes(1);
         expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc']);
         expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
+    });
+
+    test('a page with an opaque origin starts the module worker from a data URL holding the fetched code', async () => {
+        vi.stubGlobal('origin', 'null');
+        const WorkerSpy = vi.fn();
+        vi.stubGlobal('Worker', WorkerSpy);
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('self.worker = 1'));
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+
+        await workerFactory();
+
+        expect(fetchSpy).toHaveBeenCalledWith('https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs');
+        expect(WorkerSpy).toHaveBeenCalledWith('data:text/javascript;charset=utf-8,self.worker%20%3D%201', {type: 'module'});
     });
 
     test('cross-origin fetch failure rejects the promise', async () => {
