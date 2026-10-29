@@ -29,6 +29,7 @@ describe('vector tile worker source', () => {
     afterEach(() => {
         server.restore();
         vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
     test('VectorTileWorkerSource.abortTile aborts pending request', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
@@ -413,7 +414,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource loadTile uses _getOverzoomTile when overzoomParameters is provided', async () => {
-        const source = new VectorTileWorkerSource({} as any, new StyleLayerIndex(), []);
+        const source = new VectorTileWorkerSource({} as any, new StyleLayerIndex([]), []);
         const mockVectorTile = {layers: {}} as any;
 
         source.loadVectorTile = vi.fn().mockReturnValue({
@@ -448,7 +449,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource uses mvt encoding for overzoomed mlt tiles', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
         const mockVectorTile = {layers: {}} as any;
 
         source.loadVectorTile = vi.fn().mockReturnValue({
@@ -481,6 +482,66 @@ describe('vector tile worker source', () => {
         const res = await promise as WorkerTileWithData;
 
         expect(res.encoding).toBe('mvt');
+    });
+
+    test('VectorTileWorkerSource.reloadTile of an overzoomed tile includes a source layer added after it loaded', async () => {
+        const rawTileData = new Uint8Array(fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))).buffer;
+        const layerIndex = new StyleLayerIndex([{id: 'borders', type: 'line', source: 'source', 'source-layer': 'admin'}]);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
+        });
+        const params = {
+            source: 'source',
+            uid: '1',
+            tileID: new OverscaledTileID(7, 0, 7, 36, 46),
+            request: {url: 'http://localhost:2900/7/36/46.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(6, 18, 23),
+                overzoomRequest: {url: 'http://localhost:2900/6/18/23.pbf'}
+            }
+        } as any as WorkerTileParameters;
+
+        const loadPromise = source.loadTile(params);
+        server.respond();
+        await loadPromise;
+        layerIndex.update([{id: 'water', type: 'fill', source: 'source', 'source-layer': 'water'}], []);
+        const reloadPromise = source.reloadTile(params);
+        server.respond();
+        const result = await reloadPromise as WorkerTileWithData;
+
+        expect(result.buckets.some(bucket => bucket.layerIds.includes('water'))).toBe(true);
+        expect(result.rawTileData).toBeDefined();
+    });
+
+    test('VectorTileWorkerSource.reloadTile of an overzoomed tile reuses its slice when no source layer was added', async () => {
+        const rawTileData = new Uint8Array(fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))).buffer;
+        const layerIndex = new StyleLayerIndex([{id: 'water', type: 'fill', source: 'source', 'source-layer': 'water'}]);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
+        });
+        const params = {
+            source: 'source',
+            uid: '1',
+            tileID: new OverscaledTileID(7, 0, 7, 36, 46),
+            request: {url: 'http://localhost:2900/7/36/46.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(6, 18, 23),
+                overzoomRequest: {url: 'http://localhost:2900/6/18/23.pbf'}
+            }
+        } as any as WorkerTileParameters;
+
+        const loadPromise = source.loadTile(params);
+        server.respond();
+        await loadPromise;
+        layerIndex.update([{id: 'water-outline', type: 'line', source: 'source', 'source-layer': 'water'}], []);
+        const result = await source.reloadTile(params) as WorkerTileWithData;
+
+        expect(server.requests).toHaveLength(1);
+        expect(result.buckets.some(bucket => bucket.layerIds.includes('water-outline'))).toBe(true);
     });
 
     test('VectorTileWorkerSource.reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {

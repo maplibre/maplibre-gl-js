@@ -17,7 +17,6 @@ import type {
     WorkerTileResult
 } from '../source/worker_source.ts';
 import type {IActor} from '../util/actor.ts';
-import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 export type LoadVectorTileResult = {
@@ -184,18 +183,18 @@ export class VectorTileWorkerSource implements WorkerSource {
     private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTileLike): LoadVectorTileResult {
         const {tileID, source, overzoomParameters} = params;
         const {maxZoomTileID} = overzoomParameters;
+        const sourceLayerIds = this._styleSourceLayers(source);
 
-        const cacheKey = `${maxZoomTileID.key}_${tileID.key}_${params.request?.url}`;
+        const cacheKey = `${maxZoomTileID.key}_${tileID.key}_${params.request?.url}_${JSON.stringify(sourceLayerIds)}`;
         const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
 
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }
 
-        const overzoomedVectorTile = new VectorTileOverzoomed();
-        const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
+        const overzoomedVectorTile = new VectorTileOverzoomed(sourceLayerIds);
 
-        for (const sourceLayerId in layerFamilies) {
+        for (const sourceLayerId of sourceLayerIds) {
             const sourceLayer: VectorTileLayerLike = maxZoomVectorTile.layers[sourceLayerId];
             if (!sourceLayer) {
                 continue;
@@ -215,6 +214,17 @@ export class VectorTileWorkerSource implements WorkerSource {
         return overzoomedVectorTileResult;
     }
 
+    private _styleSourceLayers(source: string): string[] {
+        return Object.keys(this.layerIndex.familiesBySource[source] ?? {}).sort();
+    }
+
+    private _lacksSourceLayers(workerTile: WorkerTile, source: string): boolean {
+        const {vectorTile} = workerTile;
+        if (!(vectorTile instanceof VectorTileOverzoomed)) return false;
+
+        return this._styleSourceLayers(source).some(id => !vectorTile.slicedSourceLayerIds.includes(id));
+    }
+
     /**
      * Implements {@link WorkerSource.reloadTile}.
      */
@@ -226,6 +236,9 @@ export class VectorTileWorkerSource implements WorkerSource {
         // If there was no vector tile data on the initial load, don't try to reparse the tile.
         if (!workerTile.vectorTile) {
             return;
+        }
+        if (this._lacksSourceLayers(workerTile, params.source)) {
+            return this.loadTile({...params, etag: undefined});
         }
 
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
