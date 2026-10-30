@@ -962,7 +962,9 @@ export class TileManager extends Evented<SourceEventType> {
 
             const newBounds = Bounds.fromPoints(transformed);
 
-            if (!newBounds.covers(projected)) {
+            // A geometry that wrapped around the antimeridian spans more than half the world, so this skips
+            // geometries that only fail the cover check by a rounding error, e.g. a query line near the prime meridian.
+            if (newBounds.width() > 0.5 && !newBounds.covers(projected)) {
                 transformed = transformed.map((coord) => coord.x > 0.5 ?
                     new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
                     coord

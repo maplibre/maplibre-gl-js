@@ -48,6 +48,11 @@ type GlobeRay = {
     direction: vec3;
 };
 
+/**
+ * The number of segments a point query's path to the camera is sampled with to follow the curve of the globe.
+ */
+const CAMERA_QUERY_ARC_SEGMENTS = 8;
+
 export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
 
@@ -143,7 +148,19 @@ export class VerticalPerspectiveTransform implements ITransform {
         this._helper.clearNearFarZOverride();
     }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(queryGeometry);
+        if (queryGeometry.length !== 1 || !this.isPointOnMapSurface(queryGeometry[0])) {
+            return this._helper.getCameraQueryGeometry(queryGeometry);
+        }
+        // An extrusion visible at the query point stands between it and the point on the globe below the camera.
+        // That path is an arc on the sphere rather than a straight line on the map, so it is sampled along the arc.
+        const query = angularCoordinatesToSurfaceVector(this.unprojectScreenPoint(queryGeometry[0]));
+        const nadir = vec3.normalize(createVec3f64(), this._cameraPosition);
+        const geometry = [queryGeometry[0]];
+        for (let i = 1; i <= CAMERA_QUERY_ARC_SEGMENTS; i++) {
+            const point = vec3.lerp(createVec3f64(), query, nadir, i / CAMERA_QUERY_ARC_SEGMENTS);
+            geometry.push(this._projectSurfacePointToScreen(vec3.normalize(point, point)));
+        }
+        return geometry;
     }
 
     get tileSize(): number {

@@ -15,6 +15,7 @@ import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
+import {EXTENT} from '../data/extent.ts';
 
 import type {TileCache} from './tile_cache.ts';
 import type {Map} from '../ui/map.ts';
@@ -2125,6 +2126,36 @@ describe('TileManager.tilesIn', () => {
                     new Point(7219, 7261),
                 ]]
             ]);
+    });
+
+    test('globe does not wrap a camera query line crossing the prime meridian', async () => {
+        const transform = createGlobeTransform();
+        transform.resize(600, 400);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(0.02, 0.02));
+        transform.setPitch(60);
+        transform.setBearing(30);
+
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await dataPromise;
+
+        tileManager.update(transform);
+
+        const tiles = tileManager.tilesIn([new Point(290, 170)], 1, true);
+        expect(tiles.length).toBeGreaterThan(0);
+        for (const {tileID, queryGeometry, cameraQueryGeometry} of tiles) {
+            // Wrapping would move the geometry a whole world width away from the tile.
+            const worldWidth = EXTENT * Math.pow(2, tileID.canonical.z);
+            for (const point of [...queryGeometry, ...cameraQueryGeometry]) {
+                expect(Math.abs(point.x)).toBeLessThan(worldWidth / 2);
+            }
+        }
     });
 
     test('globe wrap bounding box spanning antimeridian from 179.9°W', async () => {
