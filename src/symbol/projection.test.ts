@@ -97,6 +97,11 @@ describe('Find offset line intersections', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
+
+    // A three point line diagonally to origin and straight back
+    lineVertexArray.emplaceBack(-997, -331, -1000);
+    lineVertexArray.emplaceBack(0, 0, 0);
+    lineVertexArray.emplaceBack(-997, -331, 1000);
     const transform = createMercatorTransform();
 
     const projectionContext = createProjectionContext({
@@ -198,6 +203,42 @@ describe('Find offset line intersections', () => {
         );
         expect(intersectionPoint.x).toBeCloseTo(0);
         expect(intersectionPoint.y).toBeCloseTo(1);
+    });
+
+    test('doubling back', () => {
+        /*
+             ___
+          __/___| <- origin, where the line turns back the way it came
+        */
+        // A scaled label plane leaves the rounding error that makes the two offset segments almost, not exactly, parallel
+        const scale = 0.37;
+        const scaledProjectionContext = createProjectionContext({
+            lineVertexArray,
+            getElevation: (_x, _y) => 0,
+            transform,
+            pitchWithMap: true,
+            pitchedLabelPlaneMatrix: mat4.fromScaling(mat4.create(), [scale, scale, 1]),
+            unwrappedTileID: null,
+            width: 1,
+            height: 1
+        });
+        const lineOffsetY = 1;
+
+        const prevToCurrent = new Point(997 * scale, 331 * scale);
+        const normal = transformToOffsetNormal(prevToCurrent, lineOffsetY, syntheticVertexArgs.direction);
+        const intersectionPoint = findOffsetIntersectionPoint(
+            7,
+            normal,
+            new Point(0, 0),
+            6,
+            9,
+            new Point(-997 * scale, -331 * scale).add(normal),
+            lineOffsetY,
+            scaledProjectionContext,
+            syntheticVertexArgs
+        );
+        expect(intersectionPoint.x).toBeCloseTo(normal.x);
+        expect(intersectionPoint.y).toBeCloseTo(normal.y);
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and roll', () => {

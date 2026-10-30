@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix line labels with `text-offset` drawn reversed or collapsed where the line turns straight back on itself, since 3.0.0 ([#5179](https://github.com/maplibre/maplibre-gl-js/issues/5179)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
 - Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 - _...Add new stuff here..._
 
