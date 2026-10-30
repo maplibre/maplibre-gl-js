@@ -55,12 +55,6 @@ class VectorTileLayerOverzoomed implements VectorTileLayerLike {
 export class VectorTileOverzoomed implements VectorTileLike {
     layers: Record<string, VectorTileLayerLike> = {};
 
-    readonly slicedSourceLayerIds: string[];
-
-    constructor(slicedSourceLayerIds: string[]) {
-        this.slicedSourceLayerIds = slicedSourceLayerIds;
-    }
-
     addLayer(layer: VectorTileLayerOverzoomed): void {
         this.layers[layer.name] = layer;
     }

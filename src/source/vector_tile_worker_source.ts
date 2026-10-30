@@ -17,6 +17,7 @@ import type {
     WorkerTileResult
 } from '../source/worker_source.ts';
 import type {IActor} from '../util/actor.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 export type LoadVectorTileResult = {
@@ -34,6 +35,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     availableImages: string[];
     tileState: WorkerTileState;
     overzoomedTileResultCache: BoundedLRUCache<string, LoadVectorTileResult>;
+    private _slicedSourceLayers: Set<string>;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[]) {
         this.actor = actor;
@@ -41,6 +43,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.availableImages = availableImages;
         this.tileState = new WorkerTileState();
         this.overzoomedTileResultCache = new BoundedLRUCache<string, LoadVectorTileResult>(1000);
+        this._slicedSourceLayers = new Set();
     }
 
     /**
@@ -183,18 +186,17 @@ export class VectorTileWorkerSource implements WorkerSource {
     private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTileLike): LoadVectorTileResult {
         const {tileID, source, overzoomParameters} = params;
         const {maxZoomTileID} = overzoomParameters;
-        const sourceLayerIds = this._styleSourceLayers(source);
 
-        const cacheKey = `${maxZoomTileID.key}_${tileID.key}_${params.request?.url}_${JSON.stringify(sourceLayerIds)}`;
-        const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
+        const cachedOverzoomTile = this._getCachedSlice(params);
 
         if (cachedOverzoomTile) {
             return cachedOverzoomTile;
         }
 
-        const overzoomedVectorTile = new VectorTileOverzoomed(sourceLayerIds);
+        const overzoomedVectorTile = new VectorTileOverzoomed();
+        const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
 
-        for (const sourceLayerId of sourceLayerIds) {
+        for (const sourceLayerId in layerFamilies) {
             const sourceLayer: VectorTileLayerLike = maxZoomVectorTile.layers[sourceLayerId];
             if (!sourceLayer) {
                 continue;
@@ -209,20 +211,19 @@ export class VectorTileWorkerSource implements WorkerSource {
             vectorTile: overzoomedVectorTile,
             rawData: fromVectorTileJs(overzoomedVectorTile).buffer
         };
-        this.overzoomedTileResultCache.set(cacheKey, overzoomedVectorTileResult);
+        this.overzoomedTileResultCache.set(overzoomCacheKey(params), overzoomedVectorTileResult);
 
         return overzoomedVectorTileResult;
     }
 
-    private _styleSourceLayers(source: string): string[] {
-        return Object.keys(this.layerIndex.familiesBySource[source] ?? {}).sort();
-    }
+    private _getCachedSlice(params: WorkerTileParameters): LoadVectorTileResult | undefined {
+        const sourceLayers = Object.keys(this.layerIndex.familiesBySource[params.source] ?? {});
+        if (sourceLayers.some(sourceLayer => !this._slicedSourceLayers.has(sourceLayer))) {
+            this.overzoomedTileResultCache.clear();
+        }
+        this._slicedSourceLayers = new Set(sourceLayers);
 
-    private _lacksSourceLayers(workerTile: WorkerTile, source: string): boolean {
-        const {vectorTile} = workerTile;
-        if (!(vectorTile instanceof VectorTileOverzoomed)) return false;
-
-        return this._styleSourceLayers(source).some(id => !vectorTile.slicedSourceLayerIds.includes(id));
+        return this.overzoomedTileResultCache.get(overzoomCacheKey(params));
     }
 
     /**
@@ -237,7 +238,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         if (!workerTile.vectorTile) {
             return;
         }
-        if (this._lacksSourceLayers(workerTile, params.source)) {
+        if (params.overzoomParameters && this._getCachedSlice(params)?.vectorTile !== workerTile.vectorTile) {
             return this.loadTile({...params, etag: undefined});
         }
 
@@ -259,4 +260,9 @@ export class VectorTileWorkerSource implements WorkerSource {
     async removeTile(params: TileParameters): Promise<void> {
         this.tileState.removeLoaded(params.uid);
     }
+}
+
+function overzoomCacheKey({tileID, overzoomParameters}: WorkerTileParameters): string {
+    const {maxZoomTileID, overzoomRequest} = overzoomParameters;
+    return `${maxZoomTileID.key}_${tileID.key}_${overzoomRequest.url}`;
 }

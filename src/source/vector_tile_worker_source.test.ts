@@ -544,6 +544,37 @@ describe('vector tile worker source', () => {
         expect(result.buckets.some(bucket => bucket.layerIds.includes('water-outline'))).toBe(true);
     });
 
+    test('VectorTileWorkerSource.loadTile of an overzoomed tile includes a source layer added after its slice was cached', async () => {
+        const rawTileData = new Uint8Array(fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))).buffer;
+        const layerIndex = new StyleLayerIndex([{id: 'borders', type: 'line', source: 'source', 'source-layer': 'admin'}]);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
+        });
+        const params = {
+            source: 'source',
+            uid: '1',
+            tileID: new OverscaledTileID(7, 0, 7, 36, 46),
+            request: {url: 'http://localhost:2900/7/36/46.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(6, 18, 23),
+                overzoomRequest: {url: 'http://localhost:2900/6/18/23.pbf'}
+            }
+        } as any as WorkerTileParameters;
+
+        const firstLoadPromise = source.loadTile(params);
+        server.respond();
+        await firstLoadPromise;
+        await source.removeTile(params);
+        layerIndex.update([{id: 'water', type: 'fill', source: 'source', 'source-layer': 'water'}], []);
+        const secondLoadPromise = source.loadTile({...params, uid: '2'});
+        server.respond();
+        const result = await secondLoadPromise as WorkerTileWithData;
+
+        expect(result.buckets.some(bucket => bucket.layerIds.includes('water'))).toBe(true);
+    });
+
     test('VectorTileWorkerSource.reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = vi.fn();
