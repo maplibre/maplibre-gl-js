@@ -15,6 +15,8 @@ import {PossiblyEvaluated} from '../style/properties.ts';
 import {FeatureIndexArray} from './array_types.g.ts';
 import {MLTVectorTile} from '../source/vector_tile_mlt.ts';
 import {Bounds} from '../geo/bounds.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {sphereSurfacePointToCoordinates} from '../geo/projection/globe_utils.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 
 import type Point from '@mapbox/point-geometry';
@@ -24,15 +26,85 @@ import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
+import type {FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {IReadonlyTransform, GetElevation, WorldCoordinateHelper} from '../geo/transform_interface.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
 
+/**
+ * Culling across wrapped tiles and horizon-scale tiles can lose valid
+ * candidates because a canonical tile is not a unique globe projection.
+ * Translated extrusions similarly invalidate footprint-only ray filtering.
+ */
+export function mayUseGlobeQueryPlane(tileID: OverscaledTileID, isPointQuery: boolean, hasElevation: boolean, hasTranslatedExtrusion: boolean): boolean {
+    const {z, x} = tileID.canonical;
+    const worldTiles = Math.pow(2, z);
+    return z >= 6 && x > 1 && x < worldTiles - 2 &&
+        isPointQuery && !hasElevation && !hasTranslatedExtrusion;
+}
+
+/**
+ * Returns the normal of the plane containing the camera and the pixel ray.
+ * Any globe surface point hit by this ray, at any extrusion height, must
+ * lie in that plane. The plane is a conservative, height-independent test
+ * for candidate 3D footprint bounds.
+ */
+export function getGlobeQueryPlane(point: Point, tileID: OverscaledTileID, transform: IReadonlyTransform): [number, number, number] | null {
+    const {x, y, z} = tileID.canonical;
+    const scale = Math.pow(2, z);
+    const coordinate = new MercatorCoordinate((x + point.x / EXTENT) / scale, (y + point.y / EXTENT) / scale);
+    const screenPoint = transform.locationToScreenPoint(coordinate.toLngLat());
+    if (!Number.isFinite(screenPoint.x) || !Number.isFinite(screenPoint.y) ||
+        !transform.isPointOnMapSurface(screenPoint)) return null;
+
+    const direction = transform.getRayDirectionFromPixel(screenPoint);
+    const origin = transform.cameraPosition;
+    const normal: [number, number, number] = [
+        origin[1] * direction[2] - origin[2] * direction[1],
+        origin[2] * direction[0] - origin[0] * direction[2],
+        origin[0] * direction[1] - origin[1] * direction[0]
+    ];
+    const length = Math.hypot(...normal);
+    // Globe unprojection clamps points outside the planet to the horizon.
+    // A reprojected horizon point cannot recover the original screen ray;
+    // leave such ambiguous cases to the unfiltered candidate search.
+    if (!Number.isFinite(length) || length < 1e-12 || length >= 1 - 1e-4) return null;
+    return normal.map(value => value / length) as [number, number, number];
+}
+
+/**
+ * Exclude a footprint box only when its entire spherical image is too far
+ * from the query ray's great-circle plane. Latitude changes by no more
+ * than the corresponding Mercator Y angular distance, so the half-width
+ * plus half-height of this tile-space box is a conservative angular bound.
+ */
+export function mayIntersectGlobeQueryPlane(normal: [number, number, number], tileID: OverscaledTileID, bx1: number, by1: number, bx2: number, by2: number, padding: number): boolean {
+    const {x, y, z} = tileID.canonical;
+    const angularScale = 2 * Math.PI / (EXTENT * Math.pow(2, z));
+    const angularRadius = (bx2 - bx1 + by2 - by1 + padding * 4) * angularScale * 0.5;
+    if (angularRadius >= Math.PI * 0.5) return true;
+
+    const worldScale = Math.pow(2, z);
+    const mercatorX = (x + (bx1 + bx2) / (2 * EXTENT)) / worldScale;
+    const mercatorY = (y + (by1 + by2) / (2 * EXTENT)) / worldScale;
+    const longitude = mercatorX * 2 * Math.PI + Math.PI;
+    const t = Math.exp(Math.PI - mercatorY * 2 * Math.PI);
+    const t2 = t * t;
+    const sinLatitude = (t2 - 1) / (t2 + 1);
+    const cosLatitude = 2 * t / (t2 + 1);
+    const distance = Math.abs(
+        normal[0] * Math.sin(longitude) * cosLatitude +
+        normal[1] * sinLatitude +
+        normal[2] * Math.cos(longitude) * cosLatitude
+    );
+    return distance <= angularRadius + 1e-8;
+}
+
 type QueryParameters = {
     scale: number;
-    pixelPosMatrix: mat4;
+    pixelPosMatrix: mat4 | undefined;
     transform: IReadonlyTransform;
     tileSize: number;
     queryGeometry: Point[];
@@ -153,6 +225,43 @@ export class FeatureIndex {
                 return polygonIntersectsBox(args.cameraQueryGeometry, bx1 - queryPadding, by1 - queryPadding, bx2 + queryPadding, by2 + queryPadding);
             });
 
+        // Experimental bounded query region from the camera's radial surface projection.
+        if (!args.pixelPosMatrix) {
+            const position = args.transform.cameraPosition;
+            const magnitude = Math.hypot(position[0], position[1], position[2]);
+            const nadir = sphereSurfacePointToCoordinates([position[0] / magnitude, position[1] / magnitude, position[2] / magnitude]);
+            const tilePoint = this.tileID.canonical.getTilePoint(MercatorCoordinate.fromLngLat(nadir));
+            const worldWidth = EXTENT * Math.pow(2, this.z);
+            const normalizedQuery = args.queryGeometry.map(point => ({
+                x: point.x - Math.round((point.x - tilePoint.x) / worldWidth) * worldWidth,
+                y: point.y
+            }));
+            const candidateBounds = Bounds.fromPoints([...normalizedQuery, tilePoint]).expandBy(queryPadding);
+            // For point queries without terrain, prune feature bounds that
+            // cannot meet the camera's pixel ray at any elevation. Preserve
+            // the original conservative box for horizon and polygon queries.
+            // At low zoom the query ray can graze the horizon and a tile's
+            // footprint covers a large angular area. At the antimeridian,
+            // wrapped copies can generate multiple candidate instances that
+            // are not safely represented by a single canonical tile plane.
+            // Keep the original broadphase in both cases.
+            // The shader can translate extrusions away from their indexed
+            // footprints. Their unshifted footprint may no longer intersect
+            // the pixel ray plane, so never prune translated layers this way.
+            const hasTranslatedExtrusion = Object.values(styleLayers).some(layer =>
+                layer.type === 'fill-extrusion' && (!params.layers || params.layers.has(layer.id)) &&
+                (layer as FillExtrusionStyleLayer).queryRadius() > 0
+            );
+            const queryPlane = mayUseGlobeQueryPlane(
+                this.tileID, args.queryGeometry.length === 1, !!args.getElevation, hasTranslatedExtrusion
+            ) ? getGlobeQueryPlane(args.queryGeometry[0], this.tileID, args.transform) : null;
+            const nadirMatches = this.grid3D.query(
+                candidateBounds.minX, candidateBounds.minY, candidateBounds.maxX, candidateBounds.maxY,
+                queryPlane ? (bx1, by1, bx2, by2) =>
+                    mayIntersectGlobeQueryPlane(queryPlane, this.tileID, bx1, by1, bx2, by2, queryPadding) : undefined
+            );
+            matching3D.push(...nadirMatches);
+        }
         for (const key of matching3D) {
             matching.push(key);
         }
