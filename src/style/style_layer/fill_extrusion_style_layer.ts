@@ -3,17 +3,31 @@ import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
 import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
-import {type mat4, vec4} from 'gl-matrix';
+import {type mat4, vec3, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
+import {projectTileCoordinatesToSphere} from '../../geo/projection/globe_utils.ts';
+import {subdivideVertexLine} from '../../render/subdivision.ts';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
 import type {FillExtrusionLayoutProps, FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
+import type {UnwrappedTileID} from '../../tile/tile_id.ts';
+
+/**
+ * How close to the horizon, relative to the camera's height above the globe, a query point counts as moved onto it.
+ */
+const HORIZON_EPSILON = 1e-6;
 
 export class Point3D extends Point {
     z: number;
 }
+
+type ProjectedPoint = {
+    projected: Point3D;
+    isOccluded: boolean;
+};
 
 export const isFillExtrusionStyleLayer = (layer: StyleLayer): layer is FillExtrusionStyleLayer => layer.type === 'fill-extrusion';
 
@@ -48,7 +62,8 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         geometry,
         transform,
         pixelsToTileUnits,
-        pixelPosMatrix}: QueryIntersectsFeatureParams
+        pixelPosMatrix,
+        unwrappedTileID}: QueryIntersectsFeatureParams
     ): boolean | number {
 
         const translatedPolygon = translate(queryGeometry,
@@ -59,13 +74,45 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         const height = this.paint.get('fill-extrusion-height').evaluate(feature, featureState);
         const base = this.paint.get('fill-extrusion-base').evaluate(feature, featureState);
 
-        const projectedQueryGeometry = projectQueryGeometry(translatedPolygon, pixelPosMatrix, 0);
+        if (pixelPosMatrix) {
+            const projectedQueryGeometry = projectQueryGeometry(translatedPolygon, pixelPosMatrix, 0);
+            const [projectedBase, projectedTop] = projectExtrusion(geometry, base, height, pixelPosMatrix);
+            return checkIntersection(projectedBase, projectedTop, projectedQueryGeometry);
+        }
 
-        const projected = projectExtrusion(geometry, base, height, pixelPosMatrix);
-        const projectedBase = projected[0];
-        const projectedTop = projected[1];
-        return checkIntersection(projectedBase, projectedTop, projectedQueryGeometry);
+        // No matrix maps tile coordinates to the screen while the globe renders as a sphere,
+        // so every vertex is projected the same way the globe shader projects it.
+        // A query in the sky above the globe arrives moved onto the horizon, where it would hit whatever stands there.
+        if (queryGeometry.length === 1 && isOnGlobeHorizon(queryGeometry[0], unwrappedTileID, transform.cameraPosition)) return false;
+        const project = (p: Point, elevation: number): ProjectedPoint => {
+            const {point, signedDistanceFromCamera, isOccluded} = transform.projectTileCoordinates(p.x, p.y, unwrappedTileID, elevation);
+            const projected = point as Point3D;
+            projected.z = signedDistanceFromCamera;
+            return {projected, isOccluded};
+        };
+        // Subdivide the rings like the bucket does, so walls and roof edges follow the curve of the globe.
+        const granularity = SubdivisionGranularitySetting.globe.fill.getGranularityForZoomLevel(unwrappedTileID.canonical.z);
+        const rings = geometry.map(ring => subdivideVertexLine(ring, granularity, true));
+        const projectRings = (elevation: number) => rings.map(ring => ring.map(p => project(p, elevation)));
+        const baseRings = projectRings(base);
+        const topRings = projectRings(height);
+        // Skip extrusions on the far side of the globe, which project onto the screen but are not visible.
+        if ([...baseRings, ...topRings].every(ring => ring.every(p => p.isOccluded))) return false;
+
+        const unwrap = (rings: ProjectedPoint[][]) => rings.map(ring => ring.map(p => p.projected));
+        const projectedQueryGeometry = translatedPolygon.map(p => project(p, 0).projected);
+        return checkIntersection(unwrap(baseRings), unwrap(topRings), projectedQueryGeometry);
     }
+}
+
+/*
+ * Whether a point lies on the horizon as seen from `camera`, both in the globe's unit sphere space.
+ * A surface point is visible when its dot product with the camera exceeds 1 and is exactly on the horizon at 1.
+ */
+function isOnGlobeHorizon(point: Point, tileID: UnwrappedTileID, camera: vec3): boolean {
+    const {x, y, z} = tileID.canonical;
+    const surface = projectTileCoordinatesToSphere(point.x, point.y, x, y, z);
+    return vec3.dot(surface, camera) - 1 < HORIZON_EPSILON * (vec3.squaredLength(camera) - 1);
 }
 
 function dot(a, b) {
@@ -78,9 +125,9 @@ export function getIntersectionDistance(projectedQueryGeometry: Point3D[], proje
         // For point queries calculate the z at which the point intersects the face
         // using barycentric coordinates.
 
-        // Find the barycentric coordinates of the projected point within the first
+        // Find the barycentric coordinates of the projected point within a
         // triangle of the face, using only the xy plane. It doesn't matter if the
-        // point is outside the first triangle because all the triangles in the face
+        // point is outside that triangle because all the triangles in the face
         // are in the same plane.
         //
         // Check whether points are coincident and use other points if they are.
@@ -92,32 +139,38 @@ export function getIntersectionDistance(projectedQueryGeometry: Point3D[], proje
             if (!b) return Infinity;
         }
 
-        // Loop until point `c` is not colinear with points `a` and `b`.
+        // Use the point `c` that forms the largest triangle with `a` and `b`. Faces subdivided on the globe
+        // have many nearly colinear points, and a sliver triangle would extrapolate the distance wildly.
+        const p = projectedQueryGeometry[0];
+        const ab = b.sub(a);
+        const ap = p.sub(a);
+        const dotABAB = dot(ab, ab);
+        const dotAPAB = dot(ap, ab);
+        let c: Point3D;
+        let ac: Point;
+        let denom = 0;
         for (; i < projectedFace.length; i++) {
-            const c = projectedFace[i];
-
-            const p = projectedQueryGeometry[0];
-
-            const ab = b.sub(a);
-            const ac = c.sub(a);
-            const ap = p.sub(a);
-
-            const dotABAB = dot(ab, ab);
-            const dotABAC = dot(ab, ac);
-            const dotACAC = dot(ac, ac);
-            const dotAPAB = dot(ap, ab);
-            const dotAPAC = dot(ap, ac);
-            const denom = dotABAB * dotACAC - dotABAC * dotABAC;
-
-            const v = (dotACAC * dotAPAB - dotABAC * dotAPAC) / denom;
-            const w = (dotABAB * dotAPAC - dotABAC * dotAPAB) / denom;
-            const u = 1 - v - w;
-
-            // Use the barycentric weighting along with the original triangle z coordinates to get the point of intersection.
-            const distance = a.z * u + b.z * v + c.z * w;
-
-            if (isFinite(distance)) return distance;
+            const candidateAC = projectedFace[i].sub(a);
+            const dotABAC = dot(ab, candidateAC);
+            const candidateDenom = dotABAB * dot(candidateAC, candidateAC) - dotABAC * dotABAC;
+            if (candidateDenom > denom) {
+                c = projectedFace[i];
+                ac = candidateAC;
+                denom = candidateDenom;
+            }
         }
+        if (!c) return Infinity;
+
+        const dotABAC = dot(ab, ac);
+        const dotACAC = dot(ac, ac);
+        const dotAPAC = dot(ap, ac);
+        const v = (dotACAC * dotAPAB - dotABAC * dotAPAC) / denom;
+        const w = (dotABAB * dotAPAC - dotABAC * dotAPAB) / denom;
+        const u = 1 - v - w;
+
+        // Use the barycentric weighting along with the original triangle z coordinates to get the point of intersection.
+        const distance = a.z * u + b.z * v + c.z * w;
+        if (isFinite(distance)) return distance;
 
         return Infinity;
 
