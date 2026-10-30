@@ -9,7 +9,8 @@ import Point from '@mapbox/point-geometry';
 import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode.ts';
 import {TextAnchorEnum, type TextAnchor} from '../style/style_layer/variable_text_anchor.ts';
 import {translatePosition, warnOnce} from '../util/util.ts';
-import {symbolInstance as symbolInstanceLayout} from '../data/bucket/symbol_attributes.ts';
+import {symbolInstance as symbolInstanceLayout, placement as placedSymbolLayout} from '../data/bucket/symbol_attributes.ts';
+import ONE_EM from './one_em.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
@@ -138,6 +139,65 @@ function calculateVariableLayoutShift(
         shiftX + textOffset[0] * textBoxScale,
         shiftY + textOffset[1] * textBoxScale
     );
+}
+
+/** Where `lowerSize` and `upperSize` sit within one `PlacedSymbolArray` element, counted in uint16s. */
+const LOWER_SIZE_UINT16_OFFSET: number =
+    placedSymbolLayout.members.find(member => member.name === 'lowerSize').offset / 2;
+const UPPER_SIZE_UINT16_OFFSET: number =
+    placedSymbolLayout.members.find(member => member.name === 'upperSize').offset / 2;
+
+/**
+ * Returns the factor by which a point label's text with a composite `text-size` is drawn larger than
+ * the size its collision boxes were laid out for, or 1 when it is drawn at that size or smaller.
+ *
+ * The worker lays out text collision boxes for `text-size` at the tile's zoom + 1, while a composite
+ * `text-size` is drawn at the size interpolated for the current zoom. That is larger than the layout size
+ * below zoom + 1 when the size shrinks with zoom, and above zoom + 1 when it grows with zoom, as on parent
+ * tiles and on distant tiles in pitched views. Constant and data-driven sizes are drawn at their layout size,
+ * and a camera size is capped at it, so only composite sizes need this.
+ * Every placed symbol of a label carries the label's sizes, so any one that exists will do.
+ * A label laid out at size 0 has no extent to grow from and keeps its boxes.
+ *
+ * @param uSizeT - The bucket's composite size interpolation factor at the current zoom.
+ */
+function getCompositeTextBoxGrowth(bucket: SymbolBucket, symbolInstance: SymbolInstance, uSizeT: number): number {
+    const placedSymbolIndex = Math.max(
+        symbolInstance.centerJustifiedTextSymbolIndex,
+        symbolInstance.rightJustifiedTextSymbolIndex,
+        symbolInstance.leftJustifiedTextSymbolIndex,
+        symbolInstance.verticalPlacedTextSymbolIndex
+    );
+    if (placedSymbolIndex < 0) return 1;
+
+    // Straight out of the buffer: `get` builds a struct per symbol.
+    const placedSymbols = bucket.text.placedSymbolArray;
+    const offset = placedSymbolIndex * placedSymbols.bytesPerElement / 2;
+    const lowerSize = placedSymbols.uint16[offset + LOWER_SIZE_UINT16_OFFSET] / symbolSize.SIZE_PACK_FACTOR;
+    const upperSize = placedSymbols.uint16[offset + UPPER_SIZE_UINT16_OFFSET] / symbolSize.SIZE_PACK_FACTOR;
+    const drawnSize = lowerSize + uSizeT * (upperSize - lowerSize);
+    const layoutSize = symbolInstance.textBoxScale * ONE_EM / bucket.tilePixelRatio;
+    // `textBoxScale` is a float32, so a label drawn at its layout size can read back as a hair larger.
+    if (layoutSize <= 0 || drawnSize <= layoutSize * (1 + 1e-6)) return 1;
+    return drawnSize / layoutSize;
+}
+
+/**
+ * Scales a text collision box about its anchor by `growth`, leaving the `text-padding` around it,
+ * which is in pixels rather than ems, at its laid out width.
+ * `padding` is `text-padding` at the current zoom while the worker padded the box with it at the tile's zoom,
+ * so a zoom-dependent `text-padding` leaves each edge off by `(growth - 1)` times their difference.
+ */
+function growTextBox(box: SingleCollisionBox | undefined, growth: number, padding: number): SingleCollisionBox | undefined {
+    if (!box || growth === 1) return box;
+    return {
+        x1: (box.x1 + padding) * growth - padding,
+        y1: (box.y1 + padding) * growth - padding,
+        x2: (box.x2 - padding) * growth + padding,
+        y2: (box.y2 - padding) * growth + padding,
+        anchorPointX: box.anchorPointX,
+        anchorPointY: box.anchorPointY
+    };
 }
 
 export type VariableOffset = {
@@ -454,6 +514,7 @@ export class Placement {
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
         const zOrderByViewportY = layout.get('symbol-z-order') === 'viewport-y';
         const heightAnchorGround = layout.get('symbol-height-anchor') === 'ground';
+        const textPadding = layout.get('text-padding') * bucket.tilePixelRatio;
 
         // This logic is similar to the "defaultOpacityState" logic below in updateBucketOpacities
         // If we know a symbol is always supposed to show, force it to be marked visible even if
@@ -515,8 +576,11 @@ export class Placement {
                 verticalTextFeatureIndex = collisionArrays.verticalTextFeatureIndex;
             }
 
-            const textBox = collisionArrays.textBox;
-            if (textBox) {
+            if (collisionArrays.textBox) {
+                const textBoxGrowth = bucket.textSizeData.kind === 'composite' ?
+                    getCompositeTextBoxGrowth(bucket, symbolInstance, partiallyEvaluatedTextSize.uSizeT) : 1;
+                const textBox = growTextBox(collisionArrays.textBox, textBoxGrowth, textPadding);
+                const verticalTextBox = growTextBox(collisionArrays.verticalTextBox, textBoxGrowth, textPadding);
 
                 const updatePreviousOrientationIfNotPlaced = (isPlaced) => {
                     let previousOrientation = WritingMode.horizontal;
@@ -532,7 +596,7 @@ export class Placement {
                 };
 
                 const placeTextForPlacementModes = (placeHorizontalFn, placeVerticalFn) => {
-                    if (bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && collisionArrays.verticalTextBox) {
+                    if (bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
                         for (const placementMode of bucket.writingModes) {
                             if (placementMode === WritingMode.vertical) {
                                 placed = placeVerticalFn();
@@ -581,7 +645,6 @@ export class Placement {
                     };
 
                     const placeVertical = () => {
-                        const verticalTextBox = collisionArrays.verticalTextBox;
                         if (bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
                             return placeBox(verticalTextBox, WritingMode.vertical);
                         }
@@ -598,7 +661,7 @@ export class Placement {
                     const placeBoxForVariableAnchors = (collisionTextBox, collisionIconBox, orientation) => {
                         const width = collisionTextBox.x2 - collisionTextBox.x1;
                         const height = collisionTextBox.y2 - collisionTextBox.y1;
-                        const textBoxScale = symbolInstance.textBoxScale;
+                        const textBoxScale = symbolInstance.textBoxScale * textBoxGrowth;
                         const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
 
                         let placedBox: PlacedBox = null;
@@ -674,7 +737,6 @@ export class Placement {
                     };
 
                     const placeVertical = () => {
-                        const verticalTextBox = collisionArrays.verticalTextBox;
                         const wasPlaced = placed?.placeable;
                         if (bucket.allowVerticalPlacement && !wasPlaced && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
                             return placeBoxForVariableAnchors(verticalTextBox, collisionArrays.verticalIconBox, WritingMode.vertical);
