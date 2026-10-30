@@ -32,7 +32,7 @@ export {GEOJSON_TILE_LAYER_NAME};
 
 type QueryParameters = {
     scale: number;
-    pixelPosMatrix: mat4;
+    pixelPosMatrix: mat4 | undefined;
     transform: IReadonlyTransform;
     tileSize: number;
     queryGeometry: Point[];

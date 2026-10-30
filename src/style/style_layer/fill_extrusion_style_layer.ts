@@ -15,6 +15,11 @@ export class Point3D extends Point {
     z: number;
 }
 
+type ProjectedPoint = {
+    projected: Point3D;
+    isOccluded: boolean;
+};
+
 export const isFillExtrusionStyleLayer = (layer: StyleLayer): layer is FillExtrusionStyleLayer => layer.type === 'fill-extrusion';
 
 export class FillExtrusionStyleLayer extends StyleLayer {
@@ -48,7 +53,8 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         geometry,
         transform,
         pixelsToTileUnits,
-        pixelPosMatrix}: QueryIntersectsFeatureParams
+        pixelPosMatrix,
+        unwrappedTileID}: QueryIntersectsFeatureParams
     ): boolean | number {
 
         const translatedPolygon = translate(queryGeometry,
@@ -59,12 +65,29 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         const height = this.paint.get('fill-extrusion-height').evaluate(feature, featureState);
         const base = this.paint.get('fill-extrusion-base').evaluate(feature, featureState);
 
-        const projectedQueryGeometry = projectQueryGeometry(translatedPolygon, pixelPosMatrix, 0);
+        if (pixelPosMatrix) {
+            const projectedQueryGeometry = projectQueryGeometry(translatedPolygon, pixelPosMatrix, 0);
+            const [projectedBase, projectedTop] = projectExtrusion(geometry, base, height, pixelPosMatrix);
+            return checkIntersection(projectedBase, projectedTop, projectedQueryGeometry);
+        }
 
-        const projected = projectExtrusion(geometry, base, height, pixelPosMatrix);
-        const projectedBase = projected[0];
-        const projectedTop = projected[1];
-        return checkIntersection(projectedBase, projectedTop, projectedQueryGeometry);
+        // No matrix maps tile coordinates to the screen while the globe renders as a sphere,
+        // so every vertex is projected the same way the globe shader projects it.
+        const project = (p: Point, elevation: number): ProjectedPoint => {
+            const {point, signedDistanceFromCamera, isOccluded} = transform.projectTileCoordinates(p.x, p.y, unwrappedTileID, elevation);
+            const projected = point as Point3D;
+            projected.z = signedDistanceFromCamera;
+            return {projected, isOccluded};
+        };
+        const projectRings = (elevation: number) => geometry.map(ring => ring.map(p => project(p, elevation)));
+        const baseRings = projectRings(base);
+        const topRings = projectRings(height);
+        // Skip extrusions on the far side of the globe, which project onto the screen but are not visible.
+        if ([...baseRings, ...topRings].every(ring => ring.every(p => p.isOccluded))) return false;
+
+        const unwrap = (rings: ProjectedPoint[][]) => rings.map(ring => ring.map(p => p.projected));
+        const projectedQueryGeometry = translatedPolygon.map(p => project(p, 0).projected);
+        return checkIntersection(unwrap(baseRings), unwrap(topRings), projectedQueryGeometry);
     }
 }
 

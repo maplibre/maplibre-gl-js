@@ -63,8 +63,9 @@ export type QueryIntersectsFeatureParams = {
     /**
      * The matrix to convert from tile coordinates to pixel coordinates.
      * The pixel coordinates are relative to the center of the screen.
+     * `undefined` when the projection has no such matrix, e.g. while the globe renders as a sphere.
      */
-    pixelPosMatrix: mat4;
+    pixelPosMatrix: mat4 | undefined;
     /**
      * The unwrapped tile ID for the tile being queried.
      */

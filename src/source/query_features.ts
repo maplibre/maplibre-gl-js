@@ -88,14 +88,16 @@ export type QueryRenderedFeaturesResultsItem = QueryResultsItem & { feature: Map
 
 /*
  * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
- * While the globe renders as a sphere there is no such matrix, so extrusions are hit-tested by their footprint only.
+ * While the globe renders as a sphere there is no such matrix, so `undefined` is returned and
+ * layers that need it project each point with the transform instead.
  */
-function getPixelPosMatrix(transform: IReadonlyTransform, tileID: OverscaledTileID): mat4 {
+function getPixelPosMatrix(transform: IReadonlyTransform, tileID: OverscaledTileID): mat4 | undefined {
+    const posMatrix = transform.getFastPathSimpleProjectionMatrix(tileID);
+    if (!posMatrix) return undefined;
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    const posMatrix = transform.getFastPathSimpleProjectionMatrix(tileID);
-    return posMatrix ? mat4.multiply(t, t, posMatrix) : t;
+    return mat4.multiply(t, t, posMatrix);
 }
 
 function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
