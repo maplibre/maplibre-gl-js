@@ -43,6 +43,10 @@ export class WorkerTile {
      * to keep the main thread's tile etag intact for the next expiry refresh.
      */
     etag?: string;
+    /**
+     * `true` when the response this tile was loaded from had no content, kept so a reload reports it again.
+     */
+    noContent?: boolean;
     inFlightDependencies: AbortController[];
 
     constructor(params: WorkerTileParameters) {

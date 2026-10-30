@@ -3,13 +3,15 @@ import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Tile} from '../tile/tile.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {getMockDispatcher} from '../util/test/util.ts';
+import {getMockDispatcher, getWrapDispatcher} from '../util/test/util.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
-import type {Tile} from '../tile/tile.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
+import type {IActor} from '../util/actor.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -134,6 +136,210 @@ describe('RasterDEMTileSource', () => {
         expect(tile.state).toBe('loaded');
         expect(tile.dem).toBeUndefined();
         expect((tile.actor as any).sendAsync).not.toHaveBeenCalled();
+    });
+
+    test('a 204 with emptyResponse missing leaves the tile without data', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(tile.dem).toBeUndefined();
+    });
+
+    test('an empty 200 with emptyResponse missing loads as a tile without DEM data', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [200, {}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('loaded');
+    });
+
+    test('a tile left missing by a 204 does not record its expiry', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300'}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        source.map._refreshExpiredTiles = true;
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const setExpiryData = vi.spyOn(tile, 'setExpiryData');
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.state).toBe('errored');
+        expect(setExpiryData).not.toHaveBeenCalled();
+    });
+
+    test('an expired tile left missing by its refresh drops the old expiry', async () => {
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        source.map._refreshExpiredTiles = true;
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        tile.setExpiryData({expires: new Date(Date.now() - 1000).toUTCString()});
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+
+        expect(tile.getExpiryTimeout()).toBeUndefined();
+    });
+
+    test('an expired tile left missing by its refresh drops its elevation', async () => {
+        const tileUrl = 'http://example.com/10/5/5.png';
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith(tileUrl, [200, {}, 'png']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        const image = await createImageBitmap(new ImageData(16, 16));
+        vi.spyOn(globalThis, 'createImageBitmap').mockResolvedValue(image);
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+        server.respondWith(tileUrl, [204, {}, '']);
+        tile.state = 'expired';
+        const refreshPromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await refreshPromise;
+
+        expect(tile.dem).toBeUndefined();
+    });
+
+    test('an expired tile left missing by its refresh loads when the tile manager reloads it', async () => {
+        const tileUrl = 'http://example.com/10/5/5.png';
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith(tileUrl, [200, {}, 'png']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        const image = await createImageBitmap(new ImageData(16, 16));
+        vi.spyOn(globalThis, 'createImageBitmap').mockResolvedValue(image);
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+        server.respondWith(tileUrl, [204, {}, '']);
+        tile.state = 'expired';
+        const refreshPromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await refreshPromise;
+        server.respondWith(tileUrl, [200, {}, 'png']);
+        tile.state = 'loading';
+        const reloadPromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await reloadPromise;
+
+        expect(tile.state).toBe('loaded');
+    });
+
+    test('a reload that overlaps the cleanup of a tile left missing keeps the elevation it loads', async () => {
+        const tileUrl = 'http://example.com/10/5/5.png';
+        server.respondWith('/source.json', JSON.stringify({
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        }));
+        server.respondWith(tileUrl, [200, {}, 'png']);
+        const source = createSource({url: '/source.json', emptyResponse: 'missing'});
+        let releaseRemoval: () => void;
+        const removalHeld = new Promise<void>((resolve) => { releaseRemoval = resolve; });
+        const actor: IActor = {
+            sendAsync(message) {
+                return message.type === MessageType.removeDEMTile ? removalHeld : Promise.resolve({});
+            }
+        };
+        source.dispatcher = getWrapDispatcher()(actor);
+        const image = await createImageBitmap(new ImageData(16, 16));
+        vi.spyOn(globalThis, 'createImageBitmap').mockResolvedValue(image);
+        const promise = waitForMetadataEvent(source);
+        await sleep(0);
+        server.respond();
+        await promise;
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const tilePromise = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await tilePromise;
+        server.respondWith(tileUrl, [204, {}, '']);
+        tile.state = 'expired';
+        const emptyRefresh = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await sleep(0);
+        const stateAfterEmptyRefresh = tile.state;
+        server.respondWith(tileUrl, [200, {}, 'png']);
+        tile.state = 'expired';
+        const overlappingRefresh = source.loadTile(tile);
+        await sleep(0);
+        server.respond();
+        await overlappingRefresh;
+        releaseRemoval();
+        await emptyRefresh;
+
+        expect(stateAfterEmptyRefresh).toBe('errored');
+        expect(tile.state).toBe('loaded');
     });
 
     test('can asynchronously transform tile request', async () => {

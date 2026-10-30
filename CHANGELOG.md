@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add experimental `emptyResponse` source and TileJSON property: with `missing`, another zoom level shows through an empty (HTTP 204) tile ([#3990](https://github.com/maplibre/maplibre-gl-js/issues/3990)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

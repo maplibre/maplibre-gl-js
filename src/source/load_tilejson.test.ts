@@ -6,6 +6,7 @@ import {ABORT_ERROR} from '../util/abort_error.ts';
 import {sleep} from '../util/test/util.ts';
 
 import type {RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {RasterTileSourceOptions} from './raster_tile_source.ts';
 
 describe('loadTileJson', () => {
     let server: FakeServer;
@@ -44,7 +45,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result).toEqual(mockTileJSON);
+        expect(result).toEqual({...mockTileJSON, emptyResponse: 'blank'});
     });
 
     test('fetches and returns TileJSON (async transformRequest)', async () => {
@@ -76,7 +77,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result).toEqual(mockTileJSON);
+        expect(result).toEqual({...mockTileJSON, emptyResponse: 'blank'});
         expect(server.requests[0].url).toBe('http://example.com/test.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
     });
@@ -112,7 +113,51 @@ describe('loadTileJson', () => {
             ...mockTileJSON,
             minzoom: options.minzoom,
             tiles: options.tiles,
+            emptyResponse: 'blank',
         });
+    });
+
+    test('reads emptyResponse from the TileJSON', async () => {
+        const options = {
+            type: 'raster',
+            url: 'http://example.com/test.json',
+        } satisfies RasterTileSourceOptions;
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
+                tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
+                emptyResponse: 'missing',
+            }));
+        });
+
+        const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
+        server.respond();
+        const result = await promise;
+
+        expect(result.emptyResponse).toBe('missing');
+    });
+
+    test('the emptyResponse option wins over the TileJSON', async () => {
+        const options = {
+            type: 'raster',
+            url: 'http://example.com/test.json',
+            emptyResponse: 'blank',
+        } satisfies RasterTileSourceOptions;
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
+                tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
+                emptyResponse: 'missing',
+            }));
+        });
+
+        const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
+        server.respond();
+        const result = await promise;
+
+        expect(result.emptyResponse).toBe('blank');
     });
 
     test('excludes non-TileJSON data', async () => {

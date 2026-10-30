@@ -498,6 +498,36 @@ describe('vector tile worker source', () => {
         expect(parse).not.toHaveBeenCalled();
     });
 
+    test('VectorTileWorkerSource.loadTile reports a 204 as no content on the load and on a reload', async () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+
+        server.respondWith(request => {
+            request.respond(204, {}, '');
+        });
+
+        const params: WorkerTileParameters = {
+            type: 'vector',
+            source: 'source',
+            uid: 0,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            zoom: 0,
+            tileSize: 512,
+            promoteId: undefined,
+            pixelRatio: 1,
+            showCollisionBoxes: false,
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        };
+
+        const loadPromise = source.loadTile(params);
+        server.respond();
+        const loadResult = await loadPromise as WorkerTileWithData;
+        const reloadResult = await source.reloadTile(params) as WorkerTileWithData;
+
+        expect(loadResult.noContent).toBe(true);
+        expect(reloadResult.noContent).toBe(true);
+    });
+
     test('VectorTileWorkerSource.loadTile returns null for an empty tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         source.loadVectorTile = (_params, _rawData) => null;

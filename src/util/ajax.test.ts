@@ -373,4 +373,27 @@ describe('ajax', () => {
             fetchSpy.mockRestore();
         });
     });
+
+    describe('noContent', () => {
+
+        test('marks a 204 from fetch as a response without content', async () => {
+            global.fetch = originalFetch;
+            const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(null, {status: 204}));
+
+            const response = await getArrayBuffer({url: 'http://example.com/tile.pbf'}, new AbortController());
+
+            expect(response.noContent).toBe(true);
+            fetchSpy.mockRestore();
+        });
+
+        test('leaves an empty 200 from fetch as a response with content', async () => {
+            global.fetch = originalFetch;
+            const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response(new ArrayBuffer(0)));
+
+            const response = await getArrayBuffer({url: 'http://example.com/tile.pbf'}, new AbortController());
+
+            expect(response.noContent).toBeUndefined();
+            fetchSpy.mockRestore();
+        });
+    });
 });

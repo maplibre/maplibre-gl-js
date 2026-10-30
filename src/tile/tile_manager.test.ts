@@ -481,6 +481,36 @@ describe('TileManager / Source lifecycle', () => {
         expect(tileManager.loaded()).toBeTruthy();
     });
 
+    test('requests the parent when an ideal tile loads without data and without an error', async () => {
+        const transform = createMercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(1);
+        const tileManager = createTileManager();
+        const requestedZooms: number[] = [];
+        tileManager._source.loadTile = async (tile) => {
+            requestedZooms.push(tile.tileID.canonical.z);
+            await sleep(0);
+            const isIdealTile = tile.tileID.canonical.z === 1;
+            tile.state = isIdealTile ? 'errored' : 'loaded';
+        };
+        const metadataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await metadataPromise;
+
+        const idealTileLoaded = waitForEvent(tileManager, 'data', e => e.tile?.tileID.canonical.z === 1);
+        tileManager.update(transform);
+        await idealTileLoaded;
+        expect(requestedZooms).toEqual([1, 1, 1, 1]);
+
+        const parentLoaded = waitForEvent(tileManager, 'data', e => e.tile?.tileID.canonical.z === 0);
+        tileManager.update(transform);
+        await parentLoaded;
+
+        expect(requestedZooms).toEqual([1, 1, 1, 1, 0]);
+        const renderableZooms = tileManager.getRenderableIds().map((id) => tileManager.getTileByID(id).tileID.canonical.z);
+        expect(renderableZooms).toEqual([0]);
+    });
+
     test('loaded() true after tile error', async () => {
         const transform = createMercatorTransform();
         transform.resize(511, 511);

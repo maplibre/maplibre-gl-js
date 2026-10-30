@@ -76,6 +76,16 @@ export type GetResourceResponse<T> = ExpiryData & {
 };
 
 /**
+ * A {@link GetResourceResponse} that says whether the response had no content.
+ */
+export type ResourceResponse<T> = GetResourceResponse<T> & {
+    /**
+     * `true` for an HTTP 204, and for a custom protocol's answer without data, since that carries no status.
+     */
+    noContent?: boolean;
+};
+
+/**
  * The response callback used in various places
  */
 export type ResponseCallback<T> = (
@@ -151,7 +161,7 @@ export function getReferrer(): string {
  */
 const isFileURL = url => url.startsWith('file:') || (getReferrer()?.startsWith('file:') && !/^\w+:/.test(url));
 
-async function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+async function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<ResourceResponse<any>> {
     const request = new Request(requestParameters.url, {
         method: requestParameters.method || 'GET',
         body: requestParameters.body,
@@ -197,10 +207,12 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
     }
     const result = await parsePromise;
     throwIfAborted(abortController.signal);
-    return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires'), etag: response.headers.get('ETag')};
+    const resourceResponse: ResourceResponse<any> = {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires'), etag: response.headers.get('ETag')};
+    if (response.status === 204) resourceResponse.noContent = true;
+    return resourceResponse;
 }
 
-function makeXMLHttpRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+function makeXMLHttpRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<ResourceResponse<any>> {
     return new Promise((resolve, reject) => {
         const xhr: XMLHttpRequest = new XMLHttpRequest();
 
@@ -237,7 +249,9 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
                         return;
                     }
                 }
-                resolve({data, cacheControl: xhr.getResponseHeader('Cache-Control'), expires: xhr.getResponseHeader('Expires'), etag: xhr.getResponseHeader('ETag')});
+                const resourceResponse: ResourceResponse<any> = {data, cacheControl: xhr.getResponseHeader('Cache-Control'), expires: xhr.getResponseHeader('Expires'), etag: xhr.getResponseHeader('ETag')};
+                if (xhr.status === 204) resourceResponse.noContent = true;
+                resolve(resourceResponse);
             } else {
                 const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
                 reject(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
@@ -259,11 +273,12 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
  * @param abortController - The abort controller allowing to cancel the request
  * @returns a promise resolving to the response, including cache control and expiry data
  */
-export const makeRequest = async function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+export const makeRequest = async function(requestParameters: RequestParameters, abortController: AbortController): Promise<ResourceResponse<any>> {
     if (requestParameters.url.includes('://') && !(/^https?:|^file:/.test(requestParameters.url))) {
         const protocolLoadFn = getProtocol(requestParameters.url);
         if (protocolLoadFn) {
-            const response = await protocolLoadFn(requestParameters, abortController);
+            const response: ResourceResponse<any> = await protocolLoadFn(requestParameters, abortController);
+            if (!response.data || response.data.byteLength === 0) response.noContent = true;
             if (!response.data && requestParameters.type === 'arrayBuffer') {
                 // A successful array buffer request should always return data even if empty
                 return extend(response, {data: new ArrayBuffer(0)});
@@ -289,7 +304,7 @@ export const getJSON = <T>(requestParameters: RequestParameters, abortController
     return makeRequest(extend(requestParameters, {type: 'json'}), abortController);
 };
 
-export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<{data: ArrayBuffer} & ExpiryData> => {
+export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<ResourceResponse<ArrayBuffer>> => {
     return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), abortController);
 };
 

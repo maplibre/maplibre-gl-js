@@ -1,5 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
-import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
+import fs from 'fs';
+import path from 'path';
+import {createMap, beforeMapTest, createStyle, sleep, bufferToArrayBuffer} from '../../util/test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {PauseablePlacement} from '../../style/pauseable_placement.ts';
 import {FrameRenderContext} from '../../render/frame_render_context.ts';
@@ -8,6 +10,7 @@ import {now, setNow, restoreNow} from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {VectorTileSource, VectorTileSourceOptions} from '../../source/vector_tile_source.ts';
 
 let server: FakeServer;
 
@@ -137,6 +140,54 @@ describe('when one tile request fails with a server error while the others are l
         await map.once('render');
 
         expect(idle).not.toHaveBeenCalled();
+    });
+});
+
+describe('when tiles come back empty from a source with emptyResponse missing', () => {
+    let style: StyleSpecification;
+    let parentTile: ArrayBuffer;
+
+    beforeEach(() => {
+        server.respondImmediately = true;
+        const source: VectorTileSourceOptions = {
+            type: 'vector',
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf'],
+            emptyResponse: 'missing'
+        };
+        style = {
+            version: 8,
+            center: [0, 0],
+            zoom: 1,
+            sources: {maplibre: source},
+            layers: [{id: 'layerId', type: 'circle', source: 'maplibre', 'source-layer': 'sourceLayer'}]
+        };
+        parentTile = bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf')));
+    });
+
+    test('the parent tile shows in their place', async () => {
+        server.respondWith(/example\.com\/1\//, [204, {}, '']);
+        server.respondWith(/example\.com\/0\//, [200, {}, parentTile]);
+        const map = createMap({style});
+        await map.once('idle');
+
+        const tileManager = map.style.tileManagers.maplibre;
+        const renderableZooms = tileManager.getRenderableIds().map(id => tileManager.getTileByID(id).tileID.canonical.z);
+        expect(renderableZooms).toEqual([0]);
+    });
+
+    test('the parent tile of the new tiles shows in their place after setTiles', async () => {
+        server.respondWith(/example\.com\/\d+\//, [204, {}, '']);
+        server.respondWith(/example\.com\/v2\/1\//, [204, {}, '']);
+        server.respondWith(/example\.com\/v2\/0\//, [200, {}, parentTile]);
+        const map = createMap({style});
+        await map.once('idle');
+        const idle = map.once('idle');
+        map.getSource<VectorTileSource>('maplibre').setTiles(['http://example.com/v2/{z}/{x}/{y}.pbf']);
+        await idle;
+
+        const tileManager = map.style.tileManagers.maplibre;
+        const renderableZooms = tileManager.getRenderableIds().map(id => tileManager.getTileByID(id).tileID.canonical.z);
+        expect(renderableZooms).toEqual([0]);
     });
 });
 
