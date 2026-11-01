@@ -530,7 +530,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource.loadTile reports a 204 as no content on the load and on a reload', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
 
         server.respondWith(request => {
             request.respond(204, {}, '');
