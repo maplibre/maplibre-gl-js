@@ -6,7 +6,6 @@ import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets.ts';
 import {MercatorCoordinate, mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projection/mercator_utils.ts';
-import {EXTENT} from '../data/extent.ts';
 import {Bounds} from './bounds.ts';
 import {createCameraState, getBearing, getCenterPoint, getFov, getPitch, getRoll, getWorldSize, type CameraState} from './camera_state.ts';
 
@@ -506,7 +505,8 @@ export class TransformHelper implements ITransformGetters {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(cameraPoint: Point, queryGeometry: Point[]): Point[] {
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
+        const cameraPoint = this.getCameraPoint();
         if (queryGeometry.length === 1) {
             return [queryGeometry[0], cameraPoint];
         } else {
@@ -681,18 +681,5 @@ export class TransformHelper implements ITransformGetters {
         const pitch = this.pitchInRadians;
         const offset = Math.tan(pitch) * (this.cameraToCenterDistance || 1);
         return this.centerPoint.add(new Point(offset * Math.sin(this.rollInRadians), offset * Math.cos(this.rollInRadians)));
-    }
-
-    getMercatorTileCoordinates(overscaledTileID?: { canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {
-        if (!overscaledTileID) {
-            return [0, 0, 1, 1];
-        }
-        const scale = (overscaledTileID.canonical.z >= 0) ? (1 << overscaledTileID.canonical.z) : Math.pow(2.0, overscaledTileID.canonical.z);
-        return [
-            overscaledTileID.canonical.x / scale,
-            overscaledTileID.canonical.y / scale,
-            1.0 / scale / EXTENT,
-            1.0 / scale / EXTENT
-        ];
     }
 }

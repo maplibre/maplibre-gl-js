@@ -32,6 +32,23 @@ export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: n
 }
 
 /**
+ * A tile's `[x, y, scaleX, scaleY]` in the world's 0..1 coordinates, where `x` and `y` are its top-left corner and
+ * both scales are the size of one tile unit, `1 / EXTENT` of the tile. Without a tile it is `[0, 0, 1, 1]`.
+ */
+export function getMercatorTileCoordinates(overscaledTileID?: {canonical: {x: number; y: number; z: number}} | null): [number, number, number, number] {
+    if (!overscaledTileID) {
+        return [0, 0, 1, 1];
+    }
+    const scale = (overscaledTileID.canonical.z >= 0) ? (1 << overscaledTileID.canonical.z) : Math.pow(2.0, overscaledTileID.canonical.z);
+    return [
+        overscaledTileID.canonical.x / scale,
+        overscaledTileID.canonical.y / scale,
+        1.0 / scale / EXTENT,
+        1.0 / scale / EXTENT
+    ];
+}
+
+/**
  * Returns LngLat for given in-tile coordinates and tile ID.
  * @param inTileX - X coordinate in tile units - range [0..EXTENT].
  * @param inTileY - Y coordinate in tile units - range [0..EXTENT].

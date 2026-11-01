@@ -10,7 +10,7 @@
  - [ ] Write tests for all new functionality.
  - [ ] Document any changes to public APIs.
  - [ ] If you changed code in a file that has a benchmark file next to it (`*.bench.ts`), post before/after results of `npm run bench` (the compare workflow is in `test/bench/README.md`).
- - [ ] Add an entry to `CHANGELOG.md` under the `## main` section.
+ - [ ] Write the PR title as the changelog entry. It goes into `CHANGELOG.md` at release, so leave that file alone.
  - [ ] Confirm you have read our AI policy [here](https://github.com/maplibre/maplibre/blob/main/AI_POLICY.md).
 <!--
   Add one of:    Assisted-By: | Generated-By:     and the model/version

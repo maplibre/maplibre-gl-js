@@ -13,7 +13,7 @@ import {symbolInstance as symbolInstanceLayout} from '../data/bucket/symbol_attr
 
 import type {mat4} from 'gl-matrix';
 import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
-import type {IReadonlyTransform, ITransform, GetElevation} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {PossiblyEvaluated} from '../style/properties.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
@@ -223,7 +223,7 @@ export class Placement {
     }>>;
     lastOpacityInputs: WeakMap<SymbolBucket, OpacityInputs>;
 
-    constructor(transform: ITransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+    constructor(transform: IReadonlyTransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
         this.terrain = terrain;
         this.collisionIndex = new CollisionIndex(this.transform);

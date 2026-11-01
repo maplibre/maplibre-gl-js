@@ -6,7 +6,7 @@ import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../til
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
+import {getMercatorTileCoordinates, tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, planetScaleAtLatitude, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
@@ -143,7 +143,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         this._helper.clearNearFarZOverride();
     }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
+        return this._helper.getCameraQueryGeometry(queryGeometry);
     }
 
     get tileSize(): number {
@@ -317,7 +317,7 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
-        const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
+        const mercatorTileCoordinates = getMercatorTileCoordinates(overscaledTileID);
         return {
             mainMatrix: this._globeViewProjMatrix32f,
             tileMercatorCoords: mercatorTileCoordinates,
@@ -614,10 +614,6 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
         return this._helper.worldCoordinateHelper;
-    }
-
-    populateCache(_coords: OverscaledTileID[]): void {
-        // Do nothing
     }
 
     getBounds(): LngLatBounds {

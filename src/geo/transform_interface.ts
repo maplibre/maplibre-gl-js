@@ -185,8 +185,6 @@ export interface ITransformGetters {
  * All the functions that may mutate a transform.
  */
 interface ITransformMutators {
-    clone(): ITransform;
-
     /**
      * Applies a transform to the current transform.
      * @param that - The transform to apply to the current transform.
@@ -304,15 +302,6 @@ interface ITransformMutators {
 
     /**
      * @internal
-     * Called before rendering to allow the transform implementation
-     * to precompute data needed to render the given tiles.
-     * Used in mercator transform to precompute tile matrices (posMatrix).
-     * @param coords - Array of tile IDs that will be rendered.
-     */
-    populateCache(coords: OverscaledTileID[]): void;
-
-    /**
-     * @internal
      * Sets the transform's transition state from one projection to another.
      * @param value - The transition state value.
      */
@@ -331,6 +320,8 @@ export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: numb
  * by code that has a reference to in under the {@link ITransform} type.
  */
 export interface IReadonlyTransform extends ITransformGetters {
+    clone(): ITransform;
+
     /**
      * The near clipping plane of the projection matrix, computed by the projection unless overridden.
      */
