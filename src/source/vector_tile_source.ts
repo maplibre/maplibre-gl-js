@@ -262,14 +262,8 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         if (data?.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
-        // Under `emptyResponse: 'missing'` a response without content, such as a 204, leaves the tile errored without data, worker, expiry or etag, so a reload requests it again.
-        // A reload requested while it loaded starts right away, so the tile stays loading for it.
         if (data?.noContent && this.emptyResponse === 'missing') {
-            this.unloadTile(tile);
-            delete tile.actor;
-            tile.state = tile.reloadPromise ? 'loading' : 'errored';
-            tile.expirationTime = null;
-            tile.etag = undefined;
+            this._markTileMissing(tile);
         } else {
             this._afterTileLoadWorkerResponse(tile, data);
             if (data?.etagUnmodified) result.unmodified = true;
@@ -311,6 +305,19 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             request.headers ??= {};
             request.headers.Accept ??= 'application/vnd.maplibre-tile';
         }
+    }
+
+    /**
+     * Leaves a tile whose response had no content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
+     * errored without data, worker, expiry or etag, so a reload requests it again.
+     * A reload requested while it loaded starts right away, so the tile stays loading for it.
+     */
+    private _markTileMissing(tile: Tile) {
+        this.unloadTile(tile);
+        delete tile.actor;
+        tile.state = tile.reloadPromise ? 'loading' : 'errored';
+        tile.expirationTime = null;
+        tile.etag = undefined;
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult | null) {

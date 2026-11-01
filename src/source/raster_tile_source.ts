@@ -226,11 +226,8 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 return;
             }
             if (response) {
-                // A response without content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
-                // is left without data or expiry, so a loaded tile from another zoom level shows in its place.
                 if (response.noContent && this.emptyResponse === 'missing') {
-                    tile.state = 'errored';
-                    tile.expirationTime = null;
+                    this._markTileMissing(tile);
                     return;
                 }
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
@@ -260,6 +257,16 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 throw err;
             }
         }
+    }
+
+    /**
+     * Leaves a tile whose response had no content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
+     * errored without data or expiry, so a loaded tile from another zoom level shows in its place.
+     * @internal
+     */
+    protected _markTileMissing(tile: Tile): void {
+        tile.state = 'errored';
+        tile.expirationTime = null;
     }
 
     async abortTile(tile: Tile): Promise<void> {

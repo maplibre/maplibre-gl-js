@@ -65,13 +65,8 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 return;
             }
             if (response) {
-                // A response without content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
-                // leaves the tile errored without elevation, worker or expiry, so another zoom level supplies the elevation and a reload requests it again.
                 if (response.noContent && this.emptyResponse === 'missing') {
-                    this.unloadTile(tile);
-                    delete tile.actor;
-                    tile.state = 'errored';
-                    tile.expirationTime = null;
+                    this._markTileMissing(tile);
                     return;
                 }
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
@@ -121,6 +116,17 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 throw err;
             }
         }
+    }
+
+    /**
+     * Leaves a tile whose response had no content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
+     * errored without elevation, worker or expiry, so another zoom level supplies the elevation and a reload requests it again.
+     * @internal
+     */
+    protected override _markTileMissing(tile: Tile): void {
+        this.unloadTile(tile);
+        delete tile.actor;
+        super._markTileMissing(tile);
     }
 
     async readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
