@@ -241,6 +241,37 @@ describe('Find offset line intersections', () => {
         expect(intersectionPoint.y).toBeCloseTo(normal.y);
     });
 
+    test('doubling back only counts when both neighbours are on the line', () => {
+        // The same vertices as above, but the line starts at the turning vertex, so the vertex before it belongs to
+        // another line and the turn is not a reversal of this one.
+        const scale = 0.37;
+        const scaledProjectionContext = createProjectionContext({
+            lineVertexArray,
+            getElevation: (_x, _y) => 0,
+            transform,
+            pitchWithMap: true,
+            pitchedLabelPlaneMatrix: mat4.fromScaling(mat4.create(), [scale, scale, 1]),
+            unwrappedTileID: null,
+            width: 1,
+            height: 1
+        });
+        const lineOffsetY = 1;
+
+        const normal = transformToOffsetNormal(new Point(997 * scale, 331 * scale), lineOffsetY, syntheticVertexArgs.direction);
+        const intersectionPoint = findOffsetIntersectionPoint(
+            7,
+            normal,
+            new Point(0, 0),
+            7,
+            9,
+            new Point(-997 * scale, -331 * scale).add(normal),
+            lineOffsetY,
+            scaledProjectionContext,
+            syntheticVertexArgs
+        );
+        expect(intersectionPoint.dist(normal)).toBeGreaterThan(1);
+    });
+
     test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
         const transform = createMercatorTransform();
         transform.setBearing(0);

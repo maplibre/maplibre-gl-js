@@ -781,7 +781,7 @@ export function findOffsetIntersectionPoint(
 
     // find the intersection of these two lines
     // if the lines are parallel, offsetCurrent/offsetNextBegin will touch
-    const doublesBack = lineDoublesBackAt(index, syntheticVertexArgs.direction, projectionContext.lineVertexArray);
+    const doublesBack = isLineDoublingBack(index, syntheticVertexArgs.direction, lineStartIndex, lineEndIndex, projectionContext.lineVertexArray);
     projectionContext.projectionCache.offsets[index] = doublesBack ? offsetCurrentVertex :
         findLineIntersection(offsetPreviousVertex, offsetCurrentVertex, offsetNextSegmentBegin, offsetNextSegmentEnd) || offsetCurrentVertex;
 
@@ -792,10 +792,16 @@ export function findOffsetIntersectionPoint(
  * Whether the line turns straight back on itself at the vertex `index`, reached by walking it in `direction`: the
  * segment after the vertex runs along the segment before it, the other way. Tile coordinates are integers, so the test
  * is exact.
+ *
+ * A vertex without a neighbour on both sides within `[lineStartIndex, lineEndIndex)` is not a turn at all, so a line
+ * end, or a line of a single point, never doubles back. A zero-length segment from a repeated vertex has no direction
+ * and does not count either.
  */
-function lineDoublesBackAt(index: number, direction: number, lineVertexArray: SymbolLineVertexArray): boolean {
+function isLineDoublingBack(index: number, direction: number, lineStartIndex: number, lineEndIndex: number, lineVertexArray: SymbolLineVertexArray): boolean {
     const previous = index - direction;
     const next = index + direction;
+    if (Math.min(previous, next) < lineStartIndex || Math.max(previous, next) >= lineEndIndex) return false;
+
     const inX = lineVertexArray.getx(index) - lineVertexArray.getx(previous);
     const inY = lineVertexArray.gety(index) - lineVertexArray.gety(previous);
     const outX = lineVertexArray.getx(next) - lineVertexArray.getx(index);
