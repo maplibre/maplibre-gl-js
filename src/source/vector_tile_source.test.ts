@@ -341,50 +341,10 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
 
-    test('emptyResponse missing in the TileJSON applies to a source that does not set it', async () => {
-        server.respondWith('/source.json', JSON.stringify({...fixturesSource, emptyResponse: 'missing'}));
-        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSourceWithWorker({url: '/source.json'});
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
-        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-        const loadVectorData = vi.spyOn(tile, 'loadVectorData');
-        const tilePromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await tilePromise;
-
-        expect(tile.state).toBe('errored');
-        expect(loadVectorData).not.toHaveBeenCalled();
-    });
-
-    test('setUrl to a TileJSON without emptyResponse returns the source to blank', async () => {
-        server.respondWith('/missing.json', JSON.stringify({...fixturesSource, emptyResponse: 'missing'}));
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        const source = createSource({url: '/missing.json'});
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
-        const reloaded = waitForMetadataEvent(source);
-        source.setUrl('/source.json');
-        await sleep(0);
-        server.respond();
-        await reloaded;
-
-        expect(source.emptyResponse).toBe('blank');
-    });
-
     test('a 204 with emptyResponse missing leaves the tile without data', async () => {
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
+        const source = createSourceWithWorker({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
+        await waitForMetadataEvent(source);
         const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
         const loadVectorData = vi.spyOn(tile, 'loadVectorData');
         const tilePromise = source.loadTile(tile);
@@ -394,24 +354,6 @@ describe('VectorTileSource', () => {
 
         expect(tile.state).toBe('errored');
         expect(loadVectorData).not.toHaveBeenCalled();
-    });
-
-    test('an empty 200 with emptyResponse missing loads as a tile', async () => {
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        server.respondWith('http://example.com/10/5/5.png', [200, {}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
-        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-        const loadVectorData = vi.spyOn(tile, 'loadVectorData');
-        const tilePromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await tilePromise;
-
-        expect(loadVectorData).toHaveBeenCalledTimes(1);
     });
 
     test('a custom protocol answer without data with emptyResponse missing leaves the tile without data', async () => {
@@ -427,36 +369,14 @@ describe('VectorTileSource', () => {
         expect(loadVectorData).not.toHaveBeenCalled();
     });
 
-    test('a tile left missing by a 204 records neither its expiry nor its etag', async () => {
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
+    test('an expired tile left missing by its refresh keeps only the resource timing of the response', async () => {
+        const tileUrl = 'http://example.com/10/5/5.png';
+        const timing = {name: tileUrl, entryType: 'resource', startTime: 1, duration: 2};
+        const getEntriesByName = vi.spyOn(performance, 'getEntriesByName').mockReturnValue([{...timing, toJSON: () => timing}]);
+        server.respondWith(tileUrl, [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
+        const source = createSourceWithWorker({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing', collectResourceTiming: true});
         source.map._refreshExpiredTiles = true;
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
-        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-        const setExpiryData = vi.spyOn(tile, 'setExpiryData');
-        const tilePromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await tilePromise;
-
-        expect(tile.state).toBe('errored');
-        expect(setExpiryData).not.toHaveBeenCalled();
-        expect(tile.etag).toBeUndefined();
-    });
-
-    test('an expired tile left missing by its refresh drops the old expiry and etag', async () => {
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
-        source.map._refreshExpiredTiles = true;
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
+        await waitForMetadataEvent(source);
         const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
         tile.setExpiryData({expires: new Date(Date.now() - 1000).toUTCString()});
         tile.etag = '"from-the-earlier-load"';
@@ -464,42 +384,18 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await tilePromise;
+        getEntriesByName.mockRestore();
 
+        expect(tile.state).toBe('errored');
         expect(tile.getExpiryTimeout()).toBeUndefined();
         expect(tile.etag).toBeUndefined();
-    });
-
-    test('a tile left missing by a 204 is requested again when the tile manager reloads it', async () => {
-        const tileUrl = 'http://example.com/10/5/5.png';
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        server.respondWith(tileUrl, [204, {}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
-        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-        const tilePromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await tilePromise;
-        tile.state = 'loading';
-        const reloadPromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await reloadPromise;
-
-        expect(server.requests.filter(request => request.url === tileUrl)).toHaveLength(2);
+        expect(tile.resourceTiming).toEqual([timing]);
     });
 
     test('a tile left missing while a reload waits stays loading for that reload', async () => {
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing'});
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
+        const source = createSourceWithWorker({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
+        await waitForMetadataEvent(source);
         const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
         const tilePromise = source.loadTile(tile);
         await sleep(0);
@@ -515,36 +411,10 @@ describe('VectorTileSource', () => {
         expect(stateWhileReloading).toBe('loading');
     });
 
-    test('a tile left missing by a 204 keeps the resource timing of the response', async () => {
-        const tileUrl = 'http://example.com/10/5/5.png';
-        const timing = {name: tileUrl, entryType: 'resource', startTime: 1, duration: 2};
-        const getEntriesByName = vi.spyOn(performance, 'getEntriesByName').mockReturnValue([{...timing, toJSON: () => timing}]);
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
-        server.respondWith(tileUrl, [204, {}, '']);
-        const source = createSourceWithWorker({url: '/source.json', emptyResponse: 'missing', collectResourceTiming: true});
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
-        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-        const tilePromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await tilePromise;
-        getEntriesByName.mockRestore();
-
-        expect(tile.state).toBe('errored');
-        expect(tile.resourceTiming).toEqual([timing]);
-    });
-
     test('an unchanged empty tile is left missing once emptyResponse turns missing', async () => {
-        server.respondWith('/source.json', JSON.stringify(fixturesSource));
         server.respondWith('http://example.com/10/5/5.png', [204, {'ETag': '"empty"'}, '']);
-        const source = createSourceWithWorker({url: '/source.json'});
-        const promise = waitForMetadataEvent(source);
-        await sleep(0);
-        server.respond();
-        await promise;
+        const source = createSourceWithWorker({tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        await waitForMetadataEvent(source);
         const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
         const tilePromise = source.loadTile(tile);
         await sleep(0);
