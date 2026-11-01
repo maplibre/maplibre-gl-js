@@ -392,7 +392,7 @@ describe('ajax', () => {
 
             const response = await getArrayBuffer({url: 'http://example.com/tile.pbf'}, new AbortController());
 
-            expect(response.noContent).toBeUndefined();
+            expect(response.noContent).toBe(false);
             fetchSpy.mockRestore();
         });
     });
