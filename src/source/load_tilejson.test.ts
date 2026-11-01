@@ -6,7 +6,6 @@ import {ABORT_ERROR} from '../util/abort_error.ts';
 import {sleep} from '../util/test/util.ts';
 
 import type {RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {RasterTileSourceOptions} from './raster_tile_source.ts';
 
 describe('loadTileJson', () => {
     let server: FakeServer;
@@ -121,7 +120,7 @@ describe('loadTileJson', () => {
         const options = {
             type: 'raster',
             url: 'http://example.com/test.json',
-        } satisfies RasterTileSourceOptions;
+        } satisfies RasterSourceSpecification;
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
@@ -143,7 +142,7 @@ describe('loadTileJson', () => {
             type: 'raster',
             url: 'http://example.com/test.json',
             emptyResponse: 'blank',
-        } satisfies RasterTileSourceOptions;
+        } satisfies RasterSourceSpecification;
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({

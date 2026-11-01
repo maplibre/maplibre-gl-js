@@ -14,17 +14,11 @@ import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {RequestParameters} from '../util/ajax';
-import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding, EmptyResponse} from './worker_source.ts';
+import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding} from './worker_source.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
-    /**
-     * @experimental
-     * What a tile response with an empty body means in the tileset, see {@link EmptyResponse}.
-     * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
-     */
-    emptyResponse?: EmptyResponse;
 };
 
 export type LoadTileResult = {
@@ -78,10 +72,10 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     scheme: string;
     encoding: TileEncoding;
     tileSize: number;
-    emptyResponse: EmptyResponse;
+    emptyResponse: VectorSourceSpecification['emptyResponse'];
     promoteId: PromoteIdSpecification;
 
-    _options: VectorTileSourceOptions;
+    _options: VectorSourceSpecification;
     _collectResourceTiming: boolean;
     dispatcher: Dispatcher;
     map: Map;

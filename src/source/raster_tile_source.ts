@@ -10,7 +10,6 @@ import {RGBAImage} from '../util/image.ts';
 import {isAbortError} from '../util/abort_error.ts';
 
 import type {Source} from './source.ts';
-import type {EmptyResponse} from './worker_source.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
@@ -19,15 +18,6 @@ import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
-
-export type RasterTileSourceOptions = (RasterSourceSpecification | RasterDEMSourceSpecification) & {
-    /**
-     * @experimental
-     * What a tile response with an empty body means in the tileset, see {@link EmptyResponse}.
-     * The TileJSON of a `url` source can carry it as well; a value set on the source wins.
-     */
-    emptyResponse?: EmptyResponse;
-};
 
 /**
  * A source containing raster tiles (See the [raster source documentation](https://maplibre.org/maplibre-style-spec/sources/#raster) for detailed documentation of options.)
@@ -68,7 +58,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     url: string;
     scheme: string;
     tileSize: number;
-    emptyResponse: EmptyResponse;
+    emptyResponse: RasterSourceSpecification['emptyResponse'];
 
     bounds: [number, number, number, number];
     tileBounds: TileBounds;
@@ -78,11 +68,11 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     tiles: string[];
 
     _loaded: boolean;
-    _options: RasterTileSourceOptions;
+    _options: RasterSourceSpecification | RasterDEMSourceSpecification;
     _premultiplyAlpha: boolean;
     _tileJSONRequest: AbortController;
 
-    constructor(id: string, options: RasterTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;

@@ -15,7 +15,6 @@ import type {DEMEncoding} from '../data/dem_data.ts';
 import type {Source} from './source.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
-import type {EmptyResponse} from './worker_source.ts';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Evented} from '../util/evented.ts';
 
@@ -42,7 +41,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
     blueFactor?: number;
     baseShift?: number;
 
-    constructor(id: string, options: RasterDEMSourceSpecification & {emptyResponse?: EmptyResponse}, dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
         this.type = 'raster-dem';
         this.maxzoom = 22;

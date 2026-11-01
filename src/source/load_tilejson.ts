@@ -4,7 +4,6 @@ import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 
 import type {RequestManager} from '../util/request_manager.ts';
-import type {EmptyResponse} from './worker_source.ts';
 import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LoadTileJsonResponse = {
@@ -16,12 +15,12 @@ export type LoadTileJsonResponse = {
     scheme: RasterSourceSpecification['scheme'];
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
-    emptyResponse: EmptyResponse;
+    emptyResponse: RasterSourceSpecification['emptyResponse'];
     vectorLayerIds?: string[];
 };
 
 export async function loadTileJson(
-    options: (RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification) & {emptyResponse?: EmptyResponse},
+    options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,
     requestManager: RequestManager,
     abortController: AbortController,
     targetWindow?: Window,

@@ -10,7 +10,7 @@ import {now, setNow, restoreNow} from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {VectorTileSource, VectorTileSourceOptions} from '../../source/vector_tile_source.ts';
+import type {VectorTileSource} from '../../source/vector_tile_source.ts';
 
 let server: FakeServer;
 
@@ -149,16 +149,13 @@ describe('when tiles come back empty from a source with emptyResponse missing', 
 
     beforeEach(() => {
         server.respondImmediately = true;
-        const source: VectorTileSourceOptions = {
-            type: 'vector',
-            tiles: ['http://example.com/{z}/{x}/{y}.pbf'],
-            emptyResponse: 'missing'
-        };
         style = {
             version: 8,
             center: [0, 0],
             zoom: 1,
-            sources: {maplibre: source},
+            sources: {
+                maplibre: {type: 'vector', tiles: ['http://example.com/{z}/{x}/{y}.pbf'], emptyResponse: 'missing'}
+            },
             layers: [{id: 'layerId', type: 'circle', source: 'maplibre', 'source-layer': 'sourceLayer'}]
         };
         parentTile = bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf')));
