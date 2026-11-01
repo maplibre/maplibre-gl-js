@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Fill in missing tiles from another zoom level</title>
+    <meta property="og:description" content="Use the experimental emptyResponse source option to show a tile from another zoom level where a sparse tileset has no tile." />
+    <meta property="og:category" content="Terrain & Hillshade" />
+    <meta property="og:created" content="2026-11-01" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <script src="https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+        fieldset { position: absolute; top: 10px; left: 10px; background-color: white; padding: 10px; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<fieldset>
+    <label>emptyResponse
+        <select id="empty-response">
+            <option value="missing" selected>missing</option>
+            <option value="blank">blank (default)</option>
+        </select>
+    </label>
+</fieldset>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    // Mapterhorn's terrain comes as PMTiles archives: planet.pmtiles up to zoom 12 and one archive per zoom 6 cell
+    // for the deeper zoom levels, which go deeper in some places than in others. For a tile an archive lacks,
+    // the PMTiles protocol returns no data.
+    const protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol('mapterhorn', (params, abortController) => {
+        const [z, x, y] = params.url.replace('mapterhorn://', '').split('/').map(Number);
+        const name = z <= 12 ? 'planet' : `6-${x >> (z - 6)}-${y >> (z - 6)}`;
+        const url = `pmtiles://https://download.mapterhorn.com/${name}.pmtiles/${z}/${x}/${y}.webp`;
+        return protocol.tile({...params, url}, abortController);
+    });
+
+    // At zoom 15 the archive has tiles to the north-west and none to the south-east, towards Como.
+    const map = new maplibregl.Map({
+        container: 'map',
+        center: [9.0527, 45.8288],
+        zoom: 15,
+        style: {
+            version: 8,
+            sources: {},
+            layers: []
+        }
+    });
+    // Outline each tile and label it with its zoom level and coordinates.
+    map.showTileBoundaries = true;
+
+    function addHillshade(emptyResponse) {
+        map.addSource('mapterhorn', {
+            type: 'raster-dem',
+            tiles: ['mapterhorn://{z}/{x}/{y}'],
+            encoding: 'terrarium',
+            tileSize: 512,
+            // The deepest zoom level anywhere in the tileset.
+            maxzoom: 18,
+            // 'missing': the tileset has no tile there, so a tile from another zoom level shows in its place.
+            // 'blank', the default: the tile is in the tileset and has nothing there, so the hillshade leaves a gap.
+            emptyResponse,
+            attribution: '<a href="https://mapterhorn.com/attribution">© Mapterhorn</a>'
+        });
+        map.addLayer({id: 'hillshade', type: 'hillshade', source: 'mapterhorn'});
+    }
+
+    map.on('load', () => addHillshade('missing'));
+
+    document.getElementById('empty-response').addEventListener('change', (e) => {
+        map.removeLayer('hillshade');
+        map.removeSource('mapterhorn');
+        addHillshade(e.target.value);
+    });
+</script>
+</body>
+</html>
