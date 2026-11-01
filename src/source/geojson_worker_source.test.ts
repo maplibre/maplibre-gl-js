@@ -270,11 +270,13 @@ describe('geojson tile worker source', () => {
             type: 'symbol',
             layout: {'icon-image': 'hello'}
         }]);
-        const imageRequests: Array<() => void> = [];
-        const waitingActor: IActor = {
-            sendAsync: () => new Promise((resolve) => imageRequests.push(() => resolve({})))
-        };
-        const source = new GeoJSONWorkerSource(waitingActor, layerIndex, ['hello']);
+        const imagesForOld = Promise.withResolvers<object>();
+        const imagesForNew = Promise.withResolvers<object>();
+        const sendAsync = vi.fn()
+            .mockResolvedValueOnce({})
+            .mockReturnValueOnce(imagesForOld.promise)
+            .mockReturnValueOnce(imagesForNew.promise);
+        const source = new GeoJSONWorkerSource({sendAsync}, layerIndex, ['hello']);
         const tileParams = {
             source: 'source',
             uid: 0,
@@ -283,17 +285,15 @@ describe('geojson tile worker source', () => {
         } as any as WorkerTileParameters;
 
         await source.loadData({source: 'source', data: pointNamed('old'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
-        const loaded = source.loadTile(tileParams);
-        imageRequests.shift()();
-        await loaded;
+        await source.loadTile(tileParams);
 
         const reparseParams: GeoJSONWorkerTileParameters = {...tileParams, returnRawTileData: true};
         const reparseOfOld = source.reloadTile(reparseParams) as Promise<WorkerTileWithData>;
         await source.loadData({source: 'source', data: pointNamed('new'), geojsonVtOptions: {}} as LoadGeoJSONParameters);
         const loadOfNew = source.reloadTile(tileParams) as Promise<WorkerTileWithData>;
-        imageRequests.pop()();
+        imagesForNew.resolve({});
         const newResult = await loadOfNew;
-        imageRequests.pop()();
+        imagesForOld.resolve({});
         const oldResult = await reparseOfOld;
 
         expect(nameInRawTileData(newResult)).toBe('new');
