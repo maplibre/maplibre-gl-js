@@ -157,8 +157,12 @@ export type MapOptions = {
      */
     scrollZoom?: boolean | AroundCenterOptions;
     /**
-     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
-     * @defaultValue 0
+     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (-2–24)
+     *
+     * With the mercator projection, the map may stop zooming out before it reaches this level, because the world
+     * has to cover the height of the map: a map 512px tall cannot zoom out below zoom 0. {@link Map.getMinZoom}
+     * with `constrained` set to `true` returns the level the map can actually reach.
+     * @defaultValue -2
      */
     minZoom?: number | null;
     /**
