@@ -3,6 +3,7 @@ import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {beforeMapTest} from '../../util/test/util.ts';
 import {Map} from '../map.ts';
+
 import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
 
 function createMap(clickTolerance?, dragPan?) {
@@ -481,6 +482,24 @@ describe('drag_pan', () => {
         expect(dragstart).toHaveBeenCalledTimes(0);
         expect(drag).toHaveBeenCalledTimes(0);
         expect(dragend).toHaveBeenCalledTimes(0);
+
+        map.remove();
+    });
+
+    test('DragPanHandler pans from the center when the drag is above the horizon', () => {
+        const map = createMap();
+        map.setMaxPitch(85);
+        map.setPitch(80);
+
+        simulate.mousedown(map.getCanvas(), {buttons, clientX: 100, clientY: 10});
+        map._renderTaskQueue.run();
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 120, clientY: 10});
+        map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas(), {clientX: 120, clientY: 10});
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lng).toBeCloseTo(-14.0625, 10);
+        expect(map.getCenter().lat).toBeCloseTo(0, 10);
 
         map.remove();
     });

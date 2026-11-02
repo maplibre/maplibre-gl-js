@@ -1,7 +1,8 @@
 import {describe, test, expect} from 'vitest';
-import {type Tile} from './tile.ts';
 import {TileCache, BoundedLRUCache} from './tile_cache.ts';
 import {OverscaledTileID} from './tile_id.ts';
+
+import type {Tile} from './tile.ts';
 
 const idA = new OverscaledTileID(10, 0, 10, 0, 1);
 const idB = new OverscaledTileID(10, 0, 10, 0, 2);

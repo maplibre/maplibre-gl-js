@@ -8,7 +8,8 @@ import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {Style} from '../../style/style.ts';
 import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
-import type {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+
+import type {GeoJSONSourceSpecification, LayerSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
 
@@ -23,6 +24,58 @@ afterEach(() => {
 });
 
 describe('setStyle', () => {
+    test('replaces a terrain style while terrain is loading', async () => {
+        const terrainStyle: StyleSpecification = {
+            version: 8,
+            sources: {
+                dem: {
+                    type: 'raster-dem',
+                    tiles: ['http://example.com/{z}/{x}/{y}.png']
+                }
+            },
+            terrain: {source: 'dem'},
+            layers: []
+        };
+        const nextTerrainStyle: StyleSpecification = {
+            ...terrainStyle,
+            sources: {nextDem: terrainStyle.sources.dem},
+            terrain: {source: 'nextDem'}
+        };
+        const map = createMap({style: terrainStyle});
+        await map.once('style.load');
+        const styleLoad = map.once('style.load');
+
+        map.setStyle(nextTerrainStyle, {diff: false});
+        map.redraw();
+        await styleLoad;
+
+        expect(map.getTerrain()).toEqual({source: 'nextDem'});
+    });
+
+    test('replaces a loading terrain style with a style without terrain', async () => {
+        const map = createMap({
+            style: {
+                version: 8,
+                sources: {
+                    dem: {
+                        type: 'raster-dem',
+                        tiles: ['http://example.com/{z}/{x}/{y}.png']
+                    }
+                },
+                terrain: {source: 'dem'},
+                layers: []
+            }
+        });
+        await map.once('style.load');
+        const styleLoad = map.once('style.load');
+
+        map.setStyle({version: 8, sources: {}, layers: []}, {diff: false});
+        map.redraw();
+        await styleLoad;
+
+        expect(map.getTerrain()).toBeNull();
+    });
+
     test('returns self', () => {
         const map = new Map({container: window.document.createElement('div')});
         expect(map.setStyle({
@@ -193,6 +246,172 @@ describe('setStyle', () => {
         // Cleanup
         spyWorkerPoolAcquire.mockClear();
         spyWorkerPoolRelease.mockClear();
+    });
+
+    test('initial style global state on map overrides defaults', async () => {
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        const map = createMap({
+            style,
+            globalState: {
+                showCircles: false,
+            }
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: false,
+        });
+    });
+
+    test('initial global state on style overrides defaults', async () => {
+        const map = createMap({deleteStyle: true});
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        map.setStyle(style, {
+            globalState: {
+                showCircles: false,
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: false,
+        });
+    });
+
+    test('not setting initial style global state on map uses defaults', async () => {
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        const map = createMap({
+            style,
+            globalState: {},
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: true,
+        });
+    });
+
+    test('not setting initial style global state on style uses defaults', async () => {
+        const map = createMap({deleteStyle: true});
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        map.setStyle(style, {
+            globalState: {},
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: true,
+        });
+    });
+
+    test('allow providing initial style global state on map that has no defaults defined in the style', async () => {
+        const style = createStyle();
+        const map = createMap({
+            style,
+            globalState: {
+                somethingElse: 'something',
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            somethingElse: 'something',
+        });
+    });
+
+    test('allow providing initial style global state on style that has no defaults defined in the style', async () => {
+        const map = createMap({deleteStyle: true});
+        const style = createStyle();
+        map.setStyle(style, {
+            globalState: {
+                somethingElse: 'something',
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            somethingElse: 'something',
+        });
+    });
+
+    test('setting an initial style global state on map with null value resets to the default', async () => {
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        const map = createMap({
+            style,
+            globalState: {
+                showCircles: null,
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: true,
+        });
+    });
+
+    test('setting an initial style global state on style with null value resets to the default', async () => {
+        const map = createMap({deleteStyle: true});
+        const style = {
+            ...createStyle(),
+            state: {
+                showCircles: {
+                    default: true,
+                },
+            },
+        };
+        map.setStyle(style, {
+            globalState: {
+                showCircles: null,
+            },
+        });
+
+        await map.once('style.load');
+
+        expect(map.getGlobalState()).toEqual({
+            showCircles: true,
+        });
     });
 
     test('transformStyle should copy the source and the layer into next style', async () => {
@@ -375,7 +594,6 @@ describe('setStyle', () => {
 
         const map = createMap({deleteStyle: true});
         const initialTransform = map._camera.transform;
-        const initialPainterTransform = map.painter.transform;
         const projectionTransitionSpy = vi.fn();
         map.on('projectiontransition', projectionTransitionSpy);
         map.setTransformRequest(() => transformRequest);
@@ -391,7 +609,6 @@ describe('setStyle', () => {
         expect(map.style).toBeUndefined();
         expect(projectionTransitionSpy).not.toHaveBeenCalled();
         expect(map._camera.transform).toBe(initialTransform);
-        expect(map.painter.transform).toBe(initialPainterTransform);
     });
 
     test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', async () => {
@@ -405,6 +622,42 @@ describe('setStyle', () => {
             }
         });
         await map.once('load');
+    });
+
+    test('map loads with a transform style function', async () => {
+        const transformStyle = vi.fn((_, nextStyle) => ({
+            ...nextStyle,
+            zoom: 13,
+        }));
+        const map = createMap({
+            transformStyle,
+        });
+
+        await map.once('load');
+
+        expect(transformStyle).toHaveBeenCalledTimes(1);
+        expect(map.getStyle().zoom).toBe(13);
+    });
+
+    test('calling setStyle with a transform style function overrides the default set in the map options', async () => {
+        const mapTransformStyle = vi.fn();
+        const transformStyle = vi.fn((_, nextStyle) => ({
+            ...nextStyle,
+            zoom: 13,
+        }));
+        const map = createMap({
+            deleteStyle: true,
+            transformStyle: mapTransformStyle,
+        });
+        map.setStyle(createStyle(), {
+            transformStyle,
+        });
+
+        await map.once('load');
+
+        expect(mapTransformStyle).not.toHaveBeenCalled();
+        expect(transformStyle).toHaveBeenCalledTimes(1);
+        expect(map.getStyle().zoom).toBe(13);
     });
 
     test('Override default style validation', () => {

@@ -1,18 +1,17 @@
 import {mat4} from 'gl-matrix';
-
 import {
     Uniform1i,
     Uniform1f,
     UniformMatrix4f
 } from '../uniform_binding.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
+import {EXTENT} from '../../data/extent.ts';
 
 import type {Context} from '../../webgl/context.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer.ts';
-import {EXTENT} from '../../data/extent.ts';
 
 export type HeatmapUniformsType = {
     'u_extrude_scale': Uniform1f;

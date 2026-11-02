@@ -31,7 +31,7 @@ uniform bool u_height_anchor_ground;
 
 out vec4 v_data0;
 out vec3 v_data1;
-flat out float v_is_sdf;
+out float v_is_sdf;
 
 #pragma maplibre: define highp vec4 fill_color
 #pragma maplibre: define highp vec4 halo_color
@@ -74,7 +74,8 @@ void main() {
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
     // Terrain can hide the ground anchor while the elevated symbol remains visible.
     float visibility = calculate_visibility(projectedPoint);
-    float fade_change = fade_opacity[1] > 0.5 ? u_symbol_fade_change : -u_symbol_fade_change;
+    // Work around the iOS 15 ANGLE shader compiler bug (#8840).
+    float fade_change = mix(-u_symbol_fade_change, u_symbol_fade_change, fade_opacity[1]);
     float interpolated_fade_opacity = max(0.0, min(visibility, fade_opacity[0] + fade_change));
     float total_opacity = opacity * interpolated_fade_opacity;
     if (total_opacity < 0.1){

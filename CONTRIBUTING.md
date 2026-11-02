@@ -187,7 +187,7 @@ See [`test/README.md`](./test/README.md).
 
 See [`test/bench/README.md`](./test/bench/README.md).
 
-Micro benchmarks live next to the code they measure (`src/**/*.bench.ts`) and run with `npm run bench`; the end-to-end benchmarks live in `test/bench/e2e/`. If your PR claims a performance effect, include a before/after table from `npm run bench -- --compare` in the description.
+Micro benchmarks live next to the code they measure (`src/**/*.bench.ts`) and run with `npm run bench`; the end-to-end benchmarks live in `test/bench/e2e/`. If your PR claims a performance effect, include a before/after table from `npm run bench` in the description; the baseline comparison workflow is in [`test/bench/README.md`](./test/bench/README.md).
 
 ## Further guides
 
@@ -248,7 +248,7 @@ What warrants a changelog entry?
 
 How to add your changelog?
 
-- Edit the [`CHANGELOG.md`](CHANGELOG.md) file directly, inserting a new entry at the top of the appropriate list
+- Write the PR title as the entry. The release workflow adds the titles of merged PRs to [`CHANGELOG.md`](CHANGELOG.md), so a PR doesn't edit that file
 - Any changelog entry should be descriptive and concise; it should explain the change to a reader without context
 
 ## Recommended Reading

@@ -2,12 +2,8 @@ uniform lowp float u_lineatlas_width;
 uniform sampler2D u_image;
 uniform float u_mix;
 
-#ifdef TAPER
-in vec2 v_width2;
-#else
-flat in vec2 v_width2;
-#endif
 in vec2 v_normal;
+in vec2 v_width2;
 in vec2 v_tex_a;
 in vec2 v_tex_b;
 in float v_gamma_scale;

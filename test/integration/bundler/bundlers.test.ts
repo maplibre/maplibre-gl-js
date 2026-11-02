@@ -1,13 +1,13 @@
 import {describe, beforeAll, afterAll, test, expect} from 'vitest';
-import {type Browser, type ConsoleMessage, type Page} from 'puppeteer';
 import {execSync} from 'node:child_process';
 import {existsSync, readdirSync, statSync} from 'node:fs';
 import http, {type Server} from 'node:http';
-import type {AddressInfo} from 'node:net';
 import path from 'node:path';
 import st from 'st';
-
 import {launchPuppeteer} from '../lib/puppeteer_config';
+
+import type {Browser, ConsoleMessage, Page} from 'puppeteer';
+import type {AddressInfo} from 'node:net';
 
 // Smoke-tests each bundler example under `test/integration/bundler/`:
 // installs deps, builds, opens the result in headless Chrome, and verifies
@@ -54,8 +54,8 @@ describe('Bundler examples', () => {
             execSync('npm run build', {cwd: dir, stdio: 'inherit'});
 
             // Serve the example's own build output as the site root, so that
-            // root-absolute URLs (`/maplibre/maplibre-gl-worker.mjs`) resolve
-            // the same way they would in a real deployment.
+            // root-absolute URLs resolve the same way they would in a real
+            // deployment.
             const root = outputDirs
                 .map((name) => path.join(dir, name))
                 .find((candidate) => existsSync(path.join(candidate, 'index.html'))) ?? dir;
@@ -119,9 +119,8 @@ describe('Bundler examples', () => {
                 }
 
                 // The canvas appears even when the worker is dead, so it alone
-                // proves very little. A broken worker URL, or a worker that
-                // can't reach its `maplibre-gl-shared.mjs` sibling, produces a
-                // map that mounts and then requests no vector tiles at all.
+                // proves very little. A broken worker URL produces a map that
+                // mounts and then requests no vector tiles at all.
                 for (let waited = 0; tileRequests.length === 0 && waited < TILE_WAIT_MS; waited += 500) {
                     await new Promise((r) => setTimeout(r, 500));
                 }

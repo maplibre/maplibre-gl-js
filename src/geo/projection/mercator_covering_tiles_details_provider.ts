@@ -1,13 +1,19 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {Aabb} from '../../util/primitives/aabb.ts';
-import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 import {clamp} from '../../util/util.ts';
-import {type MercatorCoordinate} from '../mercator_coordinate.ts';
-import {type IReadonlyTransform} from '../transform_interface.ts';
-import {type CoveringTilesOptionsInternal} from './covering_tiles.ts';
-import {type CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+
+import type {LngLat} from '../lng_lat.ts';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
+import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
+
+    getCenter(transform: IReadonlyTransform): LngLat {
+        return transform.center;
+    }
 
     distanceToTile2d(pointX: number, pointY: number, _tileID: {x: number; y: number; z: number}, boundingVolume: IBoundingVolume): number {
         const aabb = boundingVolume as Aabb;

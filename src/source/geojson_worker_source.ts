@@ -9,6 +9,8 @@ import {isAbortError} from '../util/abort_error.ts';
 import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
 import {extend, JSON_PREFIX} from '../util/util.ts';
+import {createWorkerCRSHelper} from './projection_handler_worker.ts';
+import {reprojectGeoJSONFromWorld, reprojectGeoJSONSourceDiffToWorld, reprojectGeoJSONToWorld} from '../util/geojson_reproject.ts';
 
 import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source.ts';
@@ -17,6 +19,7 @@ import type {RequestParameters} from '../util/ajax.ts';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
+import type {CRS, CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -49,19 +52,16 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
      */
     dataDiff?: GeoJSONSourceDiff;
     /**
-     * Update the supercluster using the latest worker cluster options.
+     * Update the supercluster using the latest worker cluster options, after applying {@link dataDiff} if there is one.
      */
     updateCluster?: boolean;
+    /**
+     * The map's registered projection, if it has one: the data is moved into that projection's world square before it
+     * is tiled, the way tiles of the projection's own grid sit in it.
+     */
+    crs?: Pick<CRS, 'name' | 'definition' | 'tileMatrixSet'>;
 };
 
-/**
- * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
- * This class is designed to be easily reused to support custom source types
- * for data formats that can be parsed/converted into an in-memory GeoJSON
- * representation. To do so, create it with
- * `new GeoJSONWorkerSource(actor, layerIndex, customLoadGeoJSONFunction)`.
- * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
- */
 /**
  * A {@link GeoJSONWrapper} that forwards worker-computed taper annotations
  * (see geojson_taper.ts) from the geojson-vt tile features to the per-call
@@ -76,6 +76,14 @@ class TaperGeoJSONWrapper extends GeoJSONWrapper {
     }
 }
 
+/**
+ * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
+ * This class is designed to be easily reused to support custom source types
+ * for data formats that can be parsed/converted into an in-memory GeoJSON
+ * representation. To do so, create it with
+ * `new GeoJSONWorkerSource(actor, layerIndex, customLoadGeoJSONFunction)`.
+ * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
+ */
 export class GeoJSONWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
@@ -85,9 +93,13 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
-    // Original-geometry anchoring for per-vertex taper properties (`line-widths`,
-    // `line-width-factors`), built when the source data is loaded. See geojson_taper.ts.
+    /** Original-geometry anchors that keep line widths continuous across tile boundaries. */
     _taperRegistry: TaperRegistry | null = null;
+    /**
+     * The world coordinate helper of the registered projection the index holds its data in, see
+     * {@link LoadGeoJSONParameters.crs}: `undefined` without one, or without a projection handler to build it with.
+     */
+    _crsHelper: CRSWorldCoordinateHelper | undefined;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
@@ -257,6 +269,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         }
 
         workerTile.showCollisionBoxes = params.showCollisionBoxes;
+        workerTile.tileID = workerTile.tileID.unwrapTo(params.tileID.wrap);
         return await this._parseWorkerTile(workerTile, params);
     }
 
@@ -273,19 +286,20 @@ export class GeoJSONWorkerSource implements WorkerSource {
             params.data = (await getJSON<GeoJSON.GeoJSON>(params.request, abortController)).data;
         }
 
+        this._crsHelper = params.crs ? createWorkerCRSHelper(params.crs) : undefined;
+
         if (params.data) {
             params.data = this._filterGeoJSON(params.data, params.filter, params.source);
-            // Record original-geometry anchoring for per-vertex taper properties
-            // before the data is tiled (see geojson_taper.ts).
-            this._taperRegistry = buildTaperRegistry(params.data);
-            this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
+            const indexData = this._crsHelper ? reprojectGeoJSONToWorld(params.data, this._crsHelper) : params.data;
+            this._taperRegistry = buildTaperRegistry(indexData, this._crsHelper !== undefined);
+            this._geoJSONIndex = this._createGeoJSONIndex(indexData, params, this._crsHelper !== undefined);
             return;
         }
 
         if (params.dataDiff) {
-            this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
-            this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter, params.source));
-            return;
+            this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params, this._crsHelper !== undefined);
+            const indexDiff = this._crsHelper ? reprojectGeoJSONSourceDiffToWorld(params.dataDiff, this._crsHelper) : params.dataDiff;
+            this._geoJSONIndex.updateData(indexDiff, this._getFilterPredicate(params.filter, params.source));
         }
 
         if (params.updateCluster) {
@@ -332,7 +346,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     getClusterChildren(params: ClusterIDAndSource): GeoJSON.Feature[] {
-        return this._geoJSONIndex.getClusterChildren(params.clusterId);
+        return this._toLngLat(this._geoJSONIndex.getClusterChildren(params.clusterId));
     }
 
     getClusterLeaves(params: {
@@ -340,14 +354,27 @@ export class GeoJSONWorkerSource implements WorkerSource {
         limit: number;
         offset: number;
     }): GeoJSON.Feature[] {
-        return this._geoJSONIndex.getClusterLeaves(params.clusterId, params.limit, params.offset);
+        return this._toLngLat(this._geoJSONIndex.getClusterLeaves(params.clusterId, params.limit, params.offset));
+    }
+
+    /**
+     * Moves features the index returns back from the registered projection's world square to lng/lat.
+     */
+    _toLngLat(features: GeoJSON.Feature[]): GeoJSON.Feature[] {
+        return this._crsHelper ? features.map(feature => reprojectGeoJSONFromWorld(feature, this._crsHelper)) : features;
     }
 }
 
-export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
+/**
+ * Builds the geojson-vt index of a GeoJSON source's data.
+ * @param worldCoordinates - whether the data is in the registered projection's world coordinates instead of lng/lat
+ */
+export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters, worldCoordinates: boolean): GeoJSONVT {
     const options = extend(params.geojsonVtOptions || {}, {
         updateable: true,
         clusterOptions: getSuperclusterOptions(params),
+        coordinates: worldCoordinates ? 'unitSquare' : 'lngLat',
+        wrap: !worldCoordinates,
     });
 
     return new GeoJSONVT(data, options);

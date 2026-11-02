@@ -1,107 +1,86 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {FrameRenderContext} from './frame_render_context.ts';
+import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
-import {StubMap} from '../util/test/util.ts';
+import {StubMap, createFrameRenderData} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
-import {OverscaledTileID} from '../tile/tile_id.ts';
 
 describe('render', () => {
     let painter: Painter;
     let map: any;
     let style: Style;
-    const renderOptions = {
-        fadeDuration: 0,
-        moving: false,
-        rotating: false,
-        showOverdrawInspector: false,
-        showPadding: false,
-        showTileBoundaries: false,
-        zooming: false,
-        anisotropicFilterPitch: 20,
-    };
+    let transform: MercatorTransform;
+    const renderOptions = createFrameRenderData();
 
     beforeEach(() => {
         const gl = createNullGL();
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         transform.resize(512, 512);
-        painter = new Painter(gl, transform);
+        painter = new Painter(gl);
         map = new StubMap() as any;
         style = new Style(map);
         style._setProjectionInternal('mercator');
         style._updatePlacement(transform, false, 0, false);
     });
 
-    function mockTerrainData() {
-        const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const terrainData = {tile: null};
-        const getTerrainData = vi.fn(() => terrainData);
-        map.terrain = {getTerrainData};
-        painter.style = style;
-
-        return {tileID, terrainData, getTerrainData};
-    }
-
     test('must not fail with incompletely loaded style', () => {
-        painter.render(style, renderOptions);
-
-        expect(painter.renderOptions.currentPass).toBe('translucent');
+        expect(() => painter.render(style, transform, renderOptions)).not.toThrow();
     });
 
     test('calls terrainDepth', () => {
         const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        painter.render(style, renderOptions);
+        painter.render(style, transform, renderOptions);
 
         expect(terrainDepth).toHaveBeenCalled();
     });
 
-    test('uses terrain data for regular Mercator draws', () => {
-        const {tileID, terrainData, getTerrainData} = mockTerrainData();
+    test('redraws cached terrain depth once after deferred invalidations', ({onTestFinished}) => {
+        const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {}).mockClear();
+        onTestFinished(() => terrainDepth.mockRestore());
+        map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        expect(painter.getTerrainDataForTile(tileID, false)).toBe(terrainData);
-        expect(getTerrainData).toHaveBeenCalledWith(tileID);
+        painter.render(style, transform, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+        painter.render(style, transform, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+
+        painter.markTerrainDepthDirty();
+        painter.markTerrainDepthDirty();
+        expect(terrainDepth).toHaveBeenCalledTimes(1);
+
+        painter.render(style, transform, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(2);
+        painter.render(style, transform, renderOptions);
+        expect(terrainDepth).toHaveBeenCalledTimes(2);
     });
 
-    test('skips terrain data for Mercator render-to-texture draws', () => {
-        const {tileID, getTerrainData} = mockTerrainData();
-
-        expect(painter.getTerrainDataForTile(tileID, true)).toBeNull();
-        expect(getTerrainData).not.toHaveBeenCalled();
-    });
-
-    test('keeps terrain data for non-Mercator render-to-texture draws', () => {
-        const {tileID, terrainData, getTerrainData} = mockTerrainData();
-        style._setProjectionInternal('globe');
-
-        expect(painter.getTerrainDataForTile(tileID, true)).toBe(terrainData);
-        expect(getTerrainData).toHaveBeenCalledWith(tileID);
-    });
-
-    test('builds render options from the transform, globe projection and terrain', () => {
+    test('builds frame render context from the transform, terrain and frame data', () => {
         const terrain = {tileManager: {anyTilesAfterTime: () => false}};
         map.terrain = terrain;
         style.projection = new GlobeProjection({type: 'vertical-perspective'}, {});
-        vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
+        const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         vi.spyOn(painter.drawFunctions, 'atmosphere').mockImplementation(() => {});
 
-        painter.render(style, renderOptions);
+        const data = {...renderOptions, projectionTransition: 1, isRenderingGlobe: true};
 
-        expect(painter.renderOptions.transform).toBe(painter.transform);
-        expect(painter.renderOptions.terrain).toBe(terrain);
-        expect(painter.renderOptions.projectionTransition).toBe(1);
-        expect(painter.renderOptions.isRenderingGlobe).toBe(true);
+        painter.render(style, transform, data);
+
+        const frameRenderContext = terrainDepth.mock.calls[0][2];
+        expect(frameRenderContext.transform).toBe(transform);
+        expect(frameRenderContext.terrain).toBe(terrain);
+        expect(frameRenderContext.data).toBe(data);
     });
 
-    test('uses render options for depth and blending when drawing a custom layer', () => {
-        painter.render(style, renderOptions);
-        const options = painter.renderOptions;
-        options.depthRangeFor3D = [0.1, 0.8];
+    test('uses frame render context for depth and blending when drawing a custom layer', () => {
+        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: renderOptions, context: painter.context, programCache: painter.programCache, currentPass: 'translucent', projection: style.projection});
+        frameRenderContext.depthRangeFor3D = [0.1, 0.8];
         const render = vi.fn((gl: WebGL2RenderingContext) => {
             expect(painter.context.depthRange.get()).toEqual([0.1, 0.8]);
             expect(painter.context.blend.get()).toBe(true);
@@ -109,7 +88,7 @@ describe('render', () => {
         });
         const layer = new CustomStyleLayer({id: 'custom', type: 'custom', renderingMode: '3d', render}, {});
 
-        painter.renderLayer(painter, null, layer, [], options);
+        painter.renderLayer(painter, null, layer, [], frameRenderContext);
 
         expect(render).toHaveBeenCalledTimes(1);
     });
@@ -126,7 +105,7 @@ describe('render', () => {
 
         test('stores terrain render time using the controlled clock', () => {
             setNow(1234);
-            painter.render(style, renderOptions);
+            painter.render(style, transform, renderOptions);
 
             expect(painter.terrainFacilitator.renderTime).toBe(1234);
         });
@@ -136,8 +115,7 @@ describe('render', () => {
 describe('tile texture pool', () => {
     function createPainterWithPool() {
         const gl = createNullGL();
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        return new Painter(gl, transform);
+        return new Painter(gl);
     }
 
     function createTexture(painter: Painter, size: number): Texture {
@@ -173,8 +151,7 @@ describe('RTT pool', () => {
 
     beforeEach(() => {
         const gl = createNullGL();
-        const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        painter = new Painter(gl, transform);
+        painter = new Painter(gl);
     });
 
     afterEach(() => {
@@ -218,6 +195,37 @@ describe('RTT pool', () => {
         const b = painter.acquireRTT(512);
         painter.bindRTT(b);
         expect(painter._rttSharedFbo.size).toBe(512);
+    });
+
+    test('clearRTTPool destroys the pooled textures and leaves the ones tiles hold', () => {
+        const pooled = painter.acquireRTT(256);
+        const held = painter.acquireRTT(256);
+        vi.spyOn(pooled.texture, 'destroy');
+        vi.spyOn(held.texture, 'destroy');
+        painter.releaseRTT(pooled);
+
+        painter.clearRTTPool();
+
+        expect(pooled.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(held.texture.destroy).not.toHaveBeenCalled();
+        expect(painter.acquireRTT(256)).not.toBe(pooled);
+    });
+
+    test('destroyRTTResources frees the pool and the shared FBO, and both come back on the next acquire', () => {
+        const gl = painter.context.gl;
+        const obj = painter.acquireRTT(256);
+        vi.spyOn(obj.texture, 'destroy');
+        painter.bindRTT(obj);
+        painter.releaseRTT(obj);
+
+        painter.destroyRTTResources();
+
+        expect(obj.texture.destroy).toHaveBeenCalledTimes(1);
+        expect(gl.deleteFramebuffer).toHaveBeenCalledTimes(1);
+        expect(gl.deleteRenderbuffer).toHaveBeenCalledTimes(1);
+
+        painter.bindRTT(painter.acquireRTT(256));
+        expect(gl.createFramebuffer).toHaveBeenCalledTimes(2);
     });
 
     test('painter.destroy cleans up pooled RTT textures and shared FBO', () => {

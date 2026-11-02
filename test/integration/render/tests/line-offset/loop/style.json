@@ -1,0 +1,105 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 320,
+      "height": 240,
+      "allowed": 0.0005
+    }
+  },
+  "zoom": 5,
+  "center": [
+    0,
+    0
+  ],
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -0.878906,
+              1.318243
+            ],
+            [
+              -0.878906,
+              -0.878872
+            ],
+            [
+              1.318359,
+              -0.878872
+            ],
+            [
+              1.318359,
+              1.318243
+            ],
+            [
+              -0.878906,
+              1.318243
+            ]
+          ],
+          [
+            [
+              -3.076172,
+              -0.439449
+            ],
+            [
+              -0.878906,
+              1.318243
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "offset-positive",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "line-join": "round"
+      },
+      "paint": {
+        "line-width": 8,
+        "line-color": "#1f78b4",
+        "line-offset": 10
+      }
+    },
+    {
+      "id": "offset-negative",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "line-join": "round"
+      },
+      "paint": {
+        "line-width": 8,
+        "line-color": "#e3211c",
+        "line-offset": -10
+      }
+    },
+    {
+      "id": "centerline",
+      "type": "line",
+      "source": "geojson",
+      "layout": {
+        "line-join": "round"
+      },
+      "paint": {
+        "line-width": 1,
+        "line-color": "#999999",
+        "line-offset": 0
+      }
+    }
+  ]
+}

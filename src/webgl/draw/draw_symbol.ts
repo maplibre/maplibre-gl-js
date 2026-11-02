@@ -1,6 +1,5 @@
 import Point from '@mapbox/point-geometry';
 import {drawCollisionDebug} from './draw_collision_debug.ts';
-
 import {SegmentVector} from '../../data/segment.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 import {type EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../../symbol/symbol_size.ts';
@@ -14,7 +13,6 @@ import {getAnchorAlignment, WritingMode} from '../../symbol/shaping.ts';
 import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, projectWithMatrix, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, type SymbolProjectionContext, updateLineLabels, elevationAt} from '../../symbol/projection.ts';
 import {translatePosition} from '../../util/util.ts';
 import ONE_EM from '../../symbol/one_em.ts';
-
 import {
     type SymbolIconUniformsType,
     symbolIconUniformValues,
@@ -22,8 +20,8 @@ import {
     symbolTextAndIconUniformValues
 } from '../program/symbol_program.ts';
 
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
-import type {RenderOptions} from '../../render/render_options.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {Texture, TextureFilter} from '../texture.ts';
@@ -60,26 +58,23 @@ type SymbolTileRenderState = {
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
-export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], variableOffsets: {
-    [_ in CrossTileID]: VariableOffset;
-}, renderOptions: RenderOptions): void {
-    if (renderOptions.currentPass !== 'translucent') return;
+export function drawSymbols(painter: Painter, tileManager: TileManager, layer: SymbolStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+    if (frameRenderContext.currentPass !== 'translucent') return;
 
-    const {isRenderingToTexture} = renderOptions;
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
     const stencilMode = StencilMode.disabled;
-    const colorMode = painter.colorModeForRenderPass();
+    const colorMode = frameRenderContext.colorModeForRenderPass();
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
     // Compute variable-offsets before painting since icons and text data positioning
     // depend on each other in this case.
     if (hasVariablePlacement) {
-        updateVariableAnchors(coords, painter, layer, tileManager,
+        updateVariableAnchors(coords, layer, tileManager,
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
             layer.paint.get('text-translate'),
             layer.paint.get('text-translate-anchor'),
-            variableOffsets
+            frameRenderContext
         );
     }
 
@@ -90,7 +85,7 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
             layer.layout.get('icon-rotation-alignment').constantOr('viewport'),
             layer.layout.get('icon-pitch-alignment'),
             layer.layout.get('icon-keep-upright'),
-            stencilMode, colorMode, isRenderingToTexture
+            stencilMode, colorMode, frameRenderContext
         );
     }
 
@@ -101,13 +96,13 @@ export function drawSymbols(painter: Painter, tileManager: TileManager, layer: S
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
             layer.layout.get('text-keep-upright'),
-            stencilMode, colorMode, isRenderingToTexture
+            stencilMode, colorMode, frameRenderContext
         );
     }
 
     if (tileManager.map.showCollisionBoxes) {
-        drawCollisionDebug(painter, tileManager, layer, coords, true);
-        drawCollisionDebug(painter, tileManager, layer, coords, false);
+        drawCollisionDebug(tileManager, layer, coords, true, frameRenderContext);
+        drawCollisionDebug(tileManager, layer, coords, false, frameRenderContext);
     }
 }
 
@@ -128,15 +123,15 @@ function calculateVariableRenderShift(
 }
 
 function updateVariableAnchors(coords: OverscaledTileID[],
-    painter: Painter,
     layer:SymbolStyleLayer, tileManager: TileManager,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
-    variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
-    const transform = painter.transform;
-    const terrain = painter.style.map.terrain;
+    frameRenderContext: FrameRenderContext) {
+    const transform = frameRenderContext.transform;
+    const terrain = frameRenderContext.terrain;
+    const variableOffsets = frameRenderContext.data.variableOffsets;
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
 
@@ -148,8 +143,8 @@ function updateVariableAnchors(coords: OverscaledTileID[],
         const sizeData = bucket.textSizeData;
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
 
-        const pixelToTileScale = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, pixelToTileScale);
+        const pixelToTileScale = pixelsToTileUnits(tile, 1, transform.zoom);
+        const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, transform, pixelToTileScale);
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' && bucket.hasIconData();
 
         if (size) {
@@ -309,11 +304,11 @@ function drawLayerSymbols(
     keepUpright: boolean,
     stencilMode: StencilMode,
     colorMode: Readonly<ColorMode>,
-    isRenderingToTexture: boolean) {
+    frameRenderContext: FrameRenderContext) {
 
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
-    const transform = painter.transform;
+    const transform = frameRenderContext.transform;
 
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
@@ -326,7 +321,7 @@ function drawLayerSymbols(
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
 
-    const depthMode = painter.getDepthModeForSublayer(0, DepthMode.ReadOnly);
+    const depthMode = frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly);
 
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
@@ -348,9 +343,9 @@ function drawLayerSymbols(
         const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
         const transformed = pitchWithMap || transform.pitch !== 0;
 
-        const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
+        const program = frameRenderContext.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
-        const terrainData = painter.style.map.terrain?.getTerrainData(coord);
+        const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];
@@ -366,24 +361,24 @@ function drawLayerSymbols(
                 texSizeIcon = tile.imageAtlasTexture.size;
                 atlasTextureIcon = tile.imageAtlasTexture;
                 const zoomDependentSize = sizeData.kind === 'composite' || sizeData.kind === 'camera';
-                atlasInterpolationIcon = transformed || painter.options.rotating || painter.options.zooming || zoomDependentSize ? gl.LINEAR : gl.NEAREST;
+                atlasInterpolationIcon = transformed || frameRenderContext.data.rotating || frameRenderContext.data.zooming || zoomDependentSize ? gl.LINEAR : gl.NEAREST;
             }
         } else {
             const iconScaled = layer.layout.get('icon-size').constantOr(0) !== 1 || bucket.iconsNeedLinear;
             atlasTexture = tile.imageAtlasTexture;
-            atlasInterpolation = isSDF || painter.options.rotating || painter.options.zooming || iconScaled || transformed ?
+            atlasInterpolation = isSDF || frameRenderContext.data.rotating || frameRenderContext.data.zooming || iconScaled || transformed ?
                 gl.LINEAR :
                 gl.NEAREST;
             texSize = tile.imageAtlasTexture.size;
         }
 
         // See the comment at the beginning of src/symbol/projection.ts for an overview of the symbol projection process
-        const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
-        const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
+        const s = pixelsToTileUnits(tile, 1, frameRenderContext.transform.zoom);
+        const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, frameRenderContext.transform, s);
+        const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, frameRenderContext.transform, s);
 
         const translation = translatePosition(transform, tile, translate, translateAnchor);
-        const projectionData = transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: !isRenderingToTexture, applyTerrainMatrix: true});
+        const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
@@ -396,15 +391,15 @@ function drawLayerSymbols(
             const pitchedLabelPlaneMatrixInverse = mat4.create();
             fastInvertTransformMat4(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
 
-            const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : undefined;
+            const getElevation = frameRenderContext.terrain ? (x: number, y: number) => frameRenderContext.terrain.getElevation(coord, x, y) : undefined;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
-            updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchedLabelPlaneMatrixInverse, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
+            updateLineLabels(bucket, painter, transform, isText, pitchedLabelPlaneMatrix, pitchedLabelPlaneMatrixInverse, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), translation, getElevation);
         }
 
         const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
 
         // If the label plane matrix is used, it transforms either map-pitch-aligned pixels, or to screenspace pixels
-        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : painter.transform.clipSpaceToPixelsMatrix;
+        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : frameRenderContext.transform.clipSpaceToPixelsMatrix;
         // Label plane matrix is unused in the shader if variable anchors are used or the text is placed along a line
         const noLabelPlane = (alongLine || shaderVariableAnchor);
         const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : combinedLabelPlaneMatrix;
@@ -415,16 +410,16 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, transform,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling, isOffset, heightAnchorGround);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, transform,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling, isOffset, heightAnchorGround);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
+                size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor,
                 uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling, isOffset, heightAnchorGround);
         }
 
@@ -489,13 +484,13 @@ function drawLayerSymbols(
             if (isGlyphOverlap){
                 // render halo in 2 pass (1 for the halo only, 1 for the text only)
                 uniformValues['u_is_plain'] = 0;
-                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, state.projectionData, segmentState.terrainData);
+                drawSymbolElements(state.buffers, segmentState.segments, layer, frameRenderContext, state.program, depthMode, stencilMode, colorMode, uniformValues, state.projectionData, segmentState.terrainData);
                 uniformValues['u_is_halo'] = 0;
                 uniformValues['u_is_plain'] = 1;
             }
         }
 
-        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, state.projectionData, segmentState.terrainData);
+        drawSymbolElements(state.buffers, segmentState.segments, layer, frameRenderContext, state.program, depthMode, stencilMode, colorMode, state.uniformValues, state.projectionData, segmentState.terrainData);
 
         if (isHalo && !isGlyphOverlap) {
             // for 1 pass halo rendering, restore the uniforms state
@@ -508,7 +503,7 @@ function drawSymbolElements(
     buffers: SymbolBuffers,
     segments: SegmentVector,
     layer: SymbolStyleLayer,
-    painter: Painter,
+    frameRenderContext: FrameRenderContext,
     program: Program<any>,
     depthMode: Readonly<DepthMode>,
     stencilMode: StencilMode,
@@ -516,11 +511,11 @@ function drawSymbolElements(
     uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>,
     projectionData: ProjectionData,
     terrainData: TerrainData) {
-    const context = painter.context;
+    const context = frameRenderContext.context;
     const gl = context.gl;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
         uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
-        painter.transform.zoom, buffers.programConfigurations.get(layer.id),
+        frameRenderContext.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
 }

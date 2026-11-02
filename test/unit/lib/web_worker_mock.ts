@@ -1,4 +1,5 @@
 import MapLibreWorker from '../../../src/source/worker.ts';
+
 import type {WorkerGlobalScopeInterface} from '../../../src/util/web_worker.ts';
 import type {ActorTarget} from '../../../src/util/actor.ts';
 
@@ -12,6 +13,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     addProtocol: any;
     removeProtocol: any;
     makeRequest: any;
+    setProjectionHandler: any;
     worker: any;
 
     constructor(addListeners: EventListener[], postListeners: EventListener[]) {

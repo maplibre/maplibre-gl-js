@@ -143,7 +143,9 @@ float ele(ivec2 pos) {
     #endif
 }
 
-// calculate the elevation with linear interpolation for  a coordinate
+// calculate the elevation with linear interpolation for a coordinate.
+// DEM pixel i describes the cell centred at tile coordinate (i + 0.5) / dim, the same placement hillshade
+// and color-relief use, and sits at texel i + 2 behind the 2 texel border, so the texel coordinate is uv * dim + 1.5.
 float get_elevation(vec2 pos) {
     #ifdef TERRAIN3D
         #ifdef GLOBE
@@ -151,9 +153,9 @@ float get_elevation(vec2 pos) {
                 return 0.0;
             }
         #endif
-        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 2.0;
+        vec2 coord = (u_terrain_matrix * vec4(pos, 0.0, 1.0)).xy * u_terrain_dim + 1.5;
         vec2 f = fract(coord);
-        ivec2 c = ivec2(floor(coord)); // get the pixel center
+        ivec2 c = ivec2(floor(coord));
         ivec2 hi = textureSize(u_terrain, 0) - 1;
         float tl = ele(clamp(c, ivec2(0), hi));
         float tr = ele(clamp(c + ivec2(1, 0), ivec2(0), hi));

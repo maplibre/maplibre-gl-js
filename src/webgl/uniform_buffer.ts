@@ -35,7 +35,8 @@ export function std140Layout(members: readonly Std140Member[]): Std140Layout {
 /**
  * @internal
  * The buffer behind one std140 uniform block, bound to a fixed binding point. Callers write members into
- * `pending` at the layout's offsets and call `upload`, which skips the GPU write when nothing changed.
+ * `pending` at the layout's offsets and call `upload`, which skips the GPU write when nothing changed. Uploads
+ * use `bufferData` because Apple's OpenGL driver stalls a `bufferSubData` into a buffer a pending draw still reads (#8468).
  */
 export class UniformBuffer {
     context: Context;
@@ -47,7 +48,6 @@ export class UniformBuffer {
     uploadedWords: Uint32Array;
     pendingWords: Uint32Array;
     hasData: boolean;
-    bindingDirty: boolean;
 
     constructor(context: Context, binding: number, layout: Std140Layout) {
         this.context = context;
@@ -57,13 +57,11 @@ export class UniformBuffer {
         this.buffer = gl.createBuffer();
         gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
         gl.bufferData(gl.UNIFORM_BUFFER, layout.sizeWords * 4, gl.DYNAMIC_DRAW);
-        gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, this.buffer);
         this.uploaded = new Float32Array(layout.sizeWords);
         this.pending = new Float32Array(layout.sizeWords);
         this.uploadedWords = new Uint32Array(this.uploaded.buffer);
         this.pendingWords = new Uint32Array(this.pending.buffer);
         this.hasData = false;
-        this.bindingDirty = false;
     }
 
     upload(): void {
@@ -80,17 +78,25 @@ export class UniformBuffer {
             }
         }
 
-        if (this.bindingDirty) {
-            gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
-            this.bindingDirty = false;
+        if (!changed) {
+            this.bind();
+            return;
         }
 
-        if (!changed) return;
-
-        gl.bindBuffer(gl.UNIFORM_BUFFER, this.buffer);
-        gl.bufferSubData(gl.UNIFORM_BUFFER, 0, this.pending);
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
+        this.context.boundUniformBuffers[this.binding] = this.buffer;
+        gl.bufferData(gl.UNIFORM_BUFFER, this.pending, gl.DYNAMIC_DRAW);
         this.uploaded.set(this.pending);
         this.hasData = true;
+    }
+
+    /** Restores the indexed binding after external rendering without uploading unchanged data. */
+    bind(): void {
+        const boundUniformBuffers = this.context.boundUniformBuffers;
+        if (boundUniformBuffers[this.binding] === this.buffer) return;
+        const gl = this.context.gl;
+        gl.bindBufferBase(gl.UNIFORM_BUFFER, this.binding, this.buffer);
+        boundUniformBuffers[this.binding] = this.buffer;
     }
 
     destroy(): void {

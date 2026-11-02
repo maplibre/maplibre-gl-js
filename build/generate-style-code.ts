@@ -1,7 +1,6 @@
 'use strict';
 
 import * as fs from 'fs';
-
 import {latest, type StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {lineTaperPaintSpecs} from '../src/style/line_taper_spec.ts';
 

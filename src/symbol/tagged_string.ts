@@ -1,13 +1,14 @@
-import type {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 import ONE_EM from './one_em.ts';
-import type {ImagePosition} from '../render/image_atlas.ts';
-import type {StyleGlyph} from '../style/style_glyph.ts';
 import {verticalizePunctuation} from '../util/verticalize_punctuation.ts';
 import {toGraphemes, wordBoundaries} from '../util/graphemes.ts';
 import {charIsWhitespace} from '../util/script_detection.ts';
 import {codePointAllowsIdeographicBreaking, codePointIsWrittenWithoutSpaces} from '../util/unicode_properties.g.ts';
 import {warnOnce} from '../util/util.ts';
+
+import type {GlyphMap} from '../style/style_glyph.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {Formatted, FormattedSection, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 export type TextSectionOptions = {
     scale: number;
@@ -77,13 +78,13 @@ const breakableBefore: Record<number, boolean> = {
 function getGlyphAdvance(
     grapheme: string,
     section: SectionOptions,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
+    glyphMap: GlyphMap,
     imagePositions: Record<string, ImagePosition>,
     spacing: number,
     layoutTextSize: number
 ): number {
     if ('fontStack' in section) {
-        const positions = glyphMap[section.fontStack];
+        const positions = glyphMap[section.fontStack]?.default;
         const glyph = positions?.[grapheme];
         if (glyph) return glyph.metrics.advance * section.scale + spacing;
 
@@ -202,14 +203,14 @@ export class TaggedString {
      * `text` split into the units it is laid out in. Derived from `text`, so anything that changes
      * `text` clears it.
      */
-    _graphemes: string[] | null;
+    cachedGraphemes: string[] | null;
 
     constructor(text: string = '', sections: SectionOptions[] = [], sectionIndex: number[] = []) {
         this.text = text;
         this.sections = sections;
         this.sectionIndex = sectionIndex;
         this.imageSectionID = null;
-        this._graphemes = null;
+        this.cachedGraphemes = null;
     }
 
     /**
@@ -217,11 +218,12 @@ export class TaggedString {
      * belong to it stay together.
      */
     graphemes(): string[] {
-        this._graphemes ??= toGraphemes(this.text);
-        return this._graphemes;
+        this.cachedGraphemes ??= toGraphemes(this.text);
+        return this.cachedGraphemes;
     }
 
-    static fromFeature(text: Formatted, defaultFontStack: string): TaggedString {
+    /** Creates tagged text, applying vertical punctuation when requested. */
+    static fromFeature(text: Formatted, defaultFontStack: string, vertical: boolean, glyphMap?: GlyphMap): TaggedString {
         const result = new TaggedString();
         for (const section of text.sections) {
             if (!section.image) {
@@ -230,6 +232,7 @@ export class TaggedString {
                 result.addImageSection(section);
             }
         }
+        if (vertical) result.verticalizePunctuation(glyphMap);
         return result;
     }
 
@@ -245,9 +248,24 @@ export class TaggedString {
         return this.sectionIndex[index];
     }
 
-    verticalizePunctuation(): void {
-        this.text = verticalizePunctuation(this.text);
-        this._graphemes = null;
+    /**
+     * Uses compatibility punctuation where a font's vertical form is unavailable or unused, preserving
+     * UTF-16 length, keeping whole-text context, cluster boundaries and section indices intact.
+     *
+     * @param glyphMap - glyph variants used to check for font-provided vertical forms
+     * @param verticals - resolved orientations, if available; only upright glyphs use font alternates
+     */
+    verticalizePunctuation(glyphMap: GlyphMap = {}, verticals?: boolean[]): void {
+        const replacements = verticalizePunctuation(this.text);
+        let offset = 0;
+        this.cachedGraphemes = this.graphemes().map((grapheme, index) => {
+            const replacement = replacements.slice(offset, offset + grapheme.length);
+            offset += grapheme.length;
+            const section = this.getSection(index);
+            return verticals?.[index] !== false && 'fontStack' in section && glyphMap[section.fontStack]?.vertical?.[grapheme] ?
+                grapheme : replacement;
+        });
+        this.text = this.cachedGraphemes.join('');
     }
 
     /**
@@ -275,7 +293,7 @@ export class TaggedString {
 
         this.text = graphemes.slice(start, end).join('');
         this.sectionIndex = this.sectionIndex.slice(start, end);
-        this._graphemes = null;
+        this.cachedGraphemes = null;
     }
 
     substring(start: number, end: number): TaggedString {
@@ -331,7 +349,7 @@ export class TaggedString {
         const joined = toGraphemes(tail + text);
 
         this.text += text;
-        this._graphemes = graphemes.slice(0, tail ? -1 : undefined).concat(joined);
+        this.cachedGraphemes = graphemes.slice(0, tail ? -1 : undefined).concat(joined);
 
         const added = joined.length - (tail ? 1 : 0);
         for (let i = 0; i < added; i++) {
@@ -387,16 +405,25 @@ export class TaggedString {
      * plus, in scripts that do not space their words and so offer no such character, wherever the
      * word segmenter finds a word. It is not consulted elsewhere, isolating a comma as a word of its
      * own, nor until such a script turns up, costing more than the rest of this put together.
+     *
+     * Text that fits on one line is left unbroken without weighing any break, unless it asks for a
+     * newline, has no width (which ties with every break) or uses negative spacing (which can make
+     * spaces advance backwards).
      */
     determineLineBreaks(
         spacing: number,
         maxWidth: number,
-        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number
     ): number[] {
+        const totalWidth = this.determineTotalWidth(spacing, glyphMap, imagePositions, layoutTextSize);
+        if (spacing >= 0 && totalWidth > 0 && totalWidth <= maxWidth && !/[\n\r]/.test(this.text)) {
+            return [this.length()];
+        }
+
         const potentialLineBreaks = [];
-        const targetWidth = this.determineAverageLineWidth(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
+        const targetWidth = totalWidth / Math.max(1, Math.ceil(totalWidth / maxWidth));
 
         const hasZeroWidthSpaces = this.hasZeroWidthSpaces();
 
@@ -449,10 +476,9 @@ export class TaggedString {
                 true));
     }
 
-    determineAverageLineWidth(
+    determineTotalWidth(
         spacing: number,
-        maxWidth: number,
-        glyphMap: Record<string, Record<string, StyleGlyph>>,
+        glyphMap: GlyphMap,
         imagePositions: Record<string, ImagePosition>,
         layoutTextSize: number): number {
         let totalWidth = 0;
@@ -464,7 +490,6 @@ export class TaggedString {
             index++;
         }
 
-        const lineCount = Math.max(1, Math.ceil(totalWidth / maxWidth));
-        return totalWidth / lineCount;
+        return totalWidth;
     }
 }

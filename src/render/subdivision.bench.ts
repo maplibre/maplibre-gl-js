@@ -1,4 +1,4 @@
-import {bench} from 'vitest';
+import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {CanonicalTileID} from '../tile/tile_id.ts';
 import {EXTENT} from '../data/extent.ts';
@@ -32,8 +32,17 @@ generateHole(0.25, 0.5, 0.15, 16 * vertexCountMultiplier);
 generateHole(0.75, 0.5, 0.15, 2 * vertexCountMultiplier);
 generateHole(0.5, 0.1, 0.05, 4 * vertexCountMultiplier);
 
-bench('subdividePolygon', () => {
-    for (let i = 0; i < 10; i++) {
-        subdividePolygon(polygon, tileID, granularity, true);
-    }
+test('subdividePolygon', async ({bench}) => {
+    await bench.compare(
+        bench('subdividePolygon', () => {
+            for (let i = 0; i < 10; i++) {
+                subdividePolygon(polygon, tileID, granularity, true);
+            }
+        }),
+        bench('subdividePolygon without subdivision', () => {
+            for (let i = 0; i < 10; i++) {
+                subdividePolygon(polygon, tileID, 1, true);
+            }
+        }),
+    );
 });

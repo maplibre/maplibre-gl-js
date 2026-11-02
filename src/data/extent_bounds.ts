@@ -1,7 +1,8 @@
 import Point from '@mapbox/point-geometry';
-import {type Point2D} from '@maplibre/maplibre-gl-style-spec';
 import {Bounds, type ReadOnlyBounds} from '../geo/bounds.ts';
 import {EXTENT} from './extent.ts';
+
+import type {Point2D} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * The bounding box covering the entire extent of a tile.
@@ -32,4 +33,13 @@ export function isEntirelyOutside(ring: Point2D[]): boolean {
         ring.every(p => p.x > EXTENT) ||
         ring.every(p => p.y < 0) ||
         ring.every(p => p.y > EXTENT);
+}
+
+/**
+ * Whether a point lies outside the tile, in the buffer the neighbouring tile draws.
+ * @param p - Point to test
+ * @returns True when the point is beyond the left or top edge, or on or beyond the right or bottom edge.
+ */
+export function isOutsideTile(p: Point2D): boolean {
+    return p.x < 0 || p.x >= EXTENT || p.y < 0 || p.y >= EXTENT;
 }

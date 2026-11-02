@@ -1,6 +1,5 @@
 import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
-
 import {ensureError, extend, pick} from '../util/util.ts';
 import {loadTileJson} from './load_tilejson.ts';
 import {TileBounds} from '../tile/tile_bounds.ts';
@@ -14,6 +13,7 @@ import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {RequestParameters} from '../util/ajax';
 import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding} from './worker_source.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
@@ -122,7 +122,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             this._loaded = true;
             if (tileJSON) {
                 extend(this, tileJSON);
-                if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
+                if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom, this.map.style.projection.worldCoordinateHelper);
 
                 // `content` is included here to prevent a race condition where `Style._updateSources` is called
                 // before the TileJSON arrives. this makes sure the tiles needed are loaded once TileJSON arrives
@@ -204,7 +204,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     }
 
     async loadTile(tile: Tile): Promise<LoadTileResult | void> {
-        const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
         const params: WorkerTileParameters = {
             request: await this.map._requestManager.transformRequest(url, ResourceType.Tile),
             uid: tile.uid,
@@ -221,8 +221,12 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             overzoomParameters: await this._getOverzoomParameters(tile),
             etag: tile.etag
         };
+        this._setAcceptHeader(params.request);
         params.request.collectResourceTiming = this._collectResourceTiming;
         await this.dispatcher.waitForInitComplete();
+        if (tile.aborted) {
+            return;
+        }
         let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getReadyActor();
@@ -270,12 +274,27 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             return undefined;
         }
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
-        const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme);
+        const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
 
+        const overzoomRequest = await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
+        this._setAcceptHeader(overzoomRequest);
         return {
             maxZoomTileID,
-            overzoomRequest: await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile)
+            overzoomRequest
         };
+    }
+
+    /**
+     * Sets the Accept header specifically for MLT requests.
+     * 
+     * @param request - parameters to update.
+     * @see {@link https://github.com/maplibre/maplibre-native/pull/4231#discussion_r4216650681}
+     */
+    private _setAcceptHeader(request: RequestParameters) {
+        if (this.encoding === 'mlt') {
+            request.headers ??= {};
+            request.headers.Accept ??= 'application/vnd.maplibre-tile';
+        }
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
@@ -288,7 +307,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
         tile.etag = data?.etag;
 
-        tile.loadVectorData(data, this.map.painter);
+        tile.loadVectorData(data, this.map.style);
 
         if (tile.reloadPromise) {
             const reloadPromise = tile.reloadPromise;
@@ -310,16 +329,13 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
     }
 
+    /**
+     * Removes the tile from every worker, since an expired tile may be reloaded on a different worker.
+     */
     async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         if (tile.actor) {
-            await tile.actor.sendAsync({
-                type: MessageType.removeTile,
-                data: {
-                    uid: tile.uid,
-                    type: this.type,
-                    source: this.id}
-            });
+            await this.dispatcher.broadcast(MessageType.removeTile, {uid: tile.uid, type: this.type, source: this.id});
         }
     }
 

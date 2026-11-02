@@ -12,7 +12,9 @@ function extractCoordinates(coords: DeepCoordinates): number[][] {
     return coords.flatMap(c => extractCoordinates(c));
 }
 
-function getCoordinatesFromGeometry(geometry: GeoJSON.Geometry): number[][] {
+function getCoordinatesFromGeometry(geometry: GeoJSON.Geometry | null): number[][] {
+    if (!geometry) return [];
+
     if (geometry.type === 'GeometryCollection') {
         return geometry.geometries.flatMap(g => getCoordinatesFromGeometry(g));
     }

@@ -1,27 +1,36 @@
 import {vi, expect, onTestFinished, type Mock} from 'vitest';
 import {Map, type MapOptions} from '../../ui/map.ts';
-import {NullWebGL2RenderingContext} from './null_gl.ts';
+import {NullWebGL2RenderingContext, createNullGL} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
-import {type Dispatcher} from '../../util/dispatcher.ts';
-import {type IActor} from '../actor.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
-import {type SourceEventType} from '../../ui/events.ts';
-import {type SourceSpecification, type StyleSpecification, type TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createMercatorTransform, type MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {CRSWorldCoordinateHelper, identityCrs, type CRS} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
-import {type IReadonlyTransform, type ITransform} from '../../geo/transform_interface.ts';
-import {type Style} from '../../style/style.ts';
+import {getGlobalWorkerPool} from '../global_worker_pool.ts';
 import {Terrain} from '../../render/terrain.ts';
-import type {Framebuffer} from '../../webgl/framebuffer.ts';
+import {Painter} from '../../render/painter.ts';
+import {TileManager} from '../../tile/tile_manager.ts';
+import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
+import {EXTENT} from '../../data/extent.ts';
 import {Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
 import {RGBAImage} from '../image.ts';
-import {type OverscaledTileID} from '../../tile/tile_id.ts';
+import {shaders} from '../../shaders/shaders.ts';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../../geo/projection/mercator_projection.ts';
+
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {Style} from '../../style/style.ts';
+import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface.ts';
+import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {SourceEventType} from '../../ui/events.ts';
+import type {IActor} from '../actor.ts';
+import type {FrameRenderData} from '../../render/frame_render_context.ts';
+import type {Dispatcher} from '../../util/dispatcher.ts';
+import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
-import type {TileManager} from '../../tile/tile_manager.ts';
-import type {Painter} from '../../render/painter.ts';
+import type {TerrainCoverageIndex, TerrainElevationSampler} from '../../render/terrain_coverage.ts';
 
 export class StubMap extends Evented {
     style: Style;
@@ -31,7 +40,7 @@ export class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new MercatorTransform();
+        this.transform = createMercatorTransform();
         this._requestManager = new RequestManager();
     }
 
@@ -143,7 +152,6 @@ export function beforeMapTest(): void {
 export function getWrapDispatcher(): (actor: IActor) => Dispatcher {
     return (actor: IActor) => {
         return {
-            actorsPromise: Promise.resolve([actor]),
             waitForInitComplete() {
                 return Promise.resolve();
             },
@@ -194,6 +202,18 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
     const view = new Uint8Array(newBuffer);
     data.copy(view);
     return view.buffer;
+}
+
+/**
+ * Simulates the last map being removed, which terminates the pooled workers. The global dispatcher
+ * survives and builds new actors on its next use. Also releases claims earlier tests left behind.
+ */
+export async function terminateGlobalWorkers(): Promise<void> {
+    const pool = getGlobalWorkerPool();
+    for (const mapId of Object.keys(pool.active)) {
+        await pool.release(mapId);
+    }
+    await pool.release('terminateGlobalWorkers');
 }
 
 /**
@@ -249,10 +269,10 @@ export function createTerrain(): Terrain {
         getCoverageIndex: () => null,
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
+        getElevationAndDEMStateForLngLat: () => ({elevation: 1000, demState: 'loaded'}),
         getMinTileElevationForLngLatZoom: () => 0,
         resetElevationCache: () => {},
         getFramebuffer: () => ({}),
-        depthAtPoint: () => .9,
         tileManager: {
             update: () => {},
             getRenderableTiles: () => [],
@@ -317,13 +337,40 @@ export function createDEM(heightFn: (x: number, y: number) => number, dim: numbe
     return new DEMData('dem', new RGBAImage({width: stride, height: stride}, pixels), 'terrarium');
 }
 
+/** A painter over a null GL context. */
+export function createPainter(): Painter {
+    return new Painter(createNullGL());
+}
+
+/** A tile manager over a raster-dem source that never loads, for terrain built in tests. */
+export function createRasterDEMTileManager(): TileManager {
+    return new TileManager('dem', {type: 'raster-dem', tiles: ['/dem/{z}/{x}/{y}.png'], tileSize: 512}, getMockDispatcher());
+}
+
+/** The margin a terrain's coverage index keeps between its elevation bracket and its tiles' lowest and highest elevation. */
+const COVERAGE_BRACKET_PADDING_M = 10;
+
+/**
+ * The coverage index of a terrain drawn as one world tile whose surface is `height` meters at a location, between
+ * `minElevation` and `maxElevation` meters.
+ */
+export function createCoverageIndex(height: (lng: number, lat: number) => number, minElevation: number, maxElevation: number): TerrainCoverageIndex {
+    const sampler: TerrainElevationSampler = (x, y) => {
+        const {lng, lat} = new MercatorCoordinate(x / EXTENT, y / EXTENT).toLngLat();
+        return height(lng, lat);
+    };
+    return {
+        zooms: [0],
+        samplerPerTile: new globalThis.Map([['0/0/0/0', sampler]]),
+        minElevation: minElevation - COVERAGE_BRACKET_PADDING_M,
+        maxElevation: maxElevation + COVERAGE_BRACKET_PADDING_M
+    };
+}
+
 export function createDEMTerrain(tileIDs: OverscaledTileID[], dem: DEMData | null, exaggeration: number = 1): Terrain {
-    const painter = {} as Painter;
-    const tileManager = {_source: {tileSize: 512, minzoom: 0, maxzoom: 22}} as TileManager;
-    const terrain = new Terrain(painter, tileManager, {exaggeration} as TerrainSpecification);
+    const terrain = new Terrain(createPainter(), createRasterDEMTileManager(), {source: 'dem', exaggeration});
     terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as Tile);
     terrain.tileManager.getSourceTile = (tileID) => (dem ? {tileID, dem} as Tile : undefined);
-    terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
     return terrain;
 }
 
@@ -337,7 +384,9 @@ const fakeImages = {
  */
 const fakeGlyphs = {
     'StandardFont-Bold': {
-        e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+        default: {
+            e: {id: 101, bitmap: {width: 1, height: 1, data: new Uint8Array([0])}, metrics: {width: 1, height: 1, left: 0, top: 0, advance: 1}}
+        }
     }
 };
 
@@ -368,5 +417,149 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
                 });
             });
         })
+    };
+}
+
+/**
+ * A transform over the built-in identity CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
+ * axes), sized to the given viewport.
+ */
+export function createIdentityCrsTransform(width: number, height: number): MercatorTransform {
+    const transform = createMercatorTransform({
+        minZoom: -5,
+        maxZoom: 22,
+        minPitch: 0,
+        maxPitch: 85,
+        renderWorldCopies: true,
+        worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs),
+    });
+    transform.resize(width, height);
+    return transform;
+}
+
+/**
+ * A synthetic CRS whose axes both depend on lng and lat: lng/lat rotated by 30 degrees,
+ * laid out in degrees, with tile 0/0/0 spanning -150..150 on each rotated axis.
+ */
+export function createRotatedCrs(): CRS {
+    const cos = Math.cos(Math.PI / 6);
+    const sin = Math.sin(Math.PI / 6);
+    return {
+        name: 'test:rotated',
+        projection: {
+            forward([lng, lat]) {
+                return [lng * cos - lat * sin, lng * sin + lat * cos];
+            },
+            inverse([x, y]) {
+                return [x * cos + y * sin, -x * sin + y * cos];
+            },
+        },
+        tileMatrixSet: {origin: [-150, 150], extentAtZoom0: 300},
+    };
+}
+
+/**
+ * The identity CRS with a converter that answers only inside its tile matrix set, -90..90 on both axes,
+ * and gives `answerOutside` everywhere else.
+ */
+export function createIdentityCrsAnsweringInside(answerOutside: number[] | null): CRS {
+    return {
+        name: 'test:identity-answering-inside',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return Math.abs(x) <= 90 && Math.abs(y) <= 90 ? [x, y] : answerOutside;
+            },
+        },
+        tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+    };
+}
+
+/**
+ * Plate carrée on a tile 0/0/0 twice as wide as the world, with an inverse that wraps a position past ±180 around
+ * to the other side of the world, as proj4 does past the edge of a world projection.
+ */
+export function createWrappingWorldCrs(): CRS {
+    return {
+        name: 'test:wrapping-world',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return [(x + 540) % 360 - 180, y];
+            },
+        },
+        tileMatrixSet: {origin: [-360, 360], extentAtZoom0: 720},
+    };
+}
+
+/**
+ * Plate carrée on a tile 0/0/0 twice as wide as the world, with an inverse that answers everywhere, so a position
+ * past ±180 has a longitude of its own.
+ */
+export function createWidePlateCarreeCrs(): CRS {
+    return {
+        name: 'test:wide-plate-carree',
+        projection: {
+            forward([lng, lat]) {
+                return [lng, lat];
+            },
+            inverse([x, y]) {
+                return [x, y];
+            },
+        },
+        tileMatrixSet: {origin: [-360, 360], extentAtZoom0: 720},
+    };
+}
+
+/**
+ * A north polar stereographic CRS on a sphere, oriented like EPSG:3413 (lng -45 points down) and true to scale
+ * at 70N, with tile 0/0/0 spanning the EPSG:3413 grid NASA GIBS serves. Parallels are circles around the pole.
+ */
+export function createPolarStereographicCrs(): CRS {
+    const degrees = 180 / Math.PI;
+    const scale = 6378137 * (1 + Math.sin(70 / degrees));
+    const centralLng = -45;
+    return {
+        name: 'test:polar',
+        projection: {
+            forward([lng, lat]) {
+                const rho = scale * Math.tan(Math.PI / 4 - lat / degrees / 2);
+                const angle = (lng - centralLng) / degrees;
+                return [rho * Math.sin(angle), -rho * Math.cos(angle)];
+            },
+            inverse([x, y]) {
+                return [centralLng + Math.atan2(x, -y) * degrees, 90 - 2 * Math.atan(Math.hypot(x, y) / scale) * degrees];
+            },
+        },
+        tileMatrixSet: {origin: [-4194304, 4194304], extentAtZoom0: 8388608},
+    };
+}
+
+/**
+ * Returns frame data for a still mercator map with every debug option off.
+ */
+export function createFrameRenderData(): FrameRenderData {
+    return {
+        showOverdrawInspector: false,
+        showTileBoundaries: false,
+        showPadding: false,
+        rotating: false,
+        zooming: false,
+        moving: false,
+        fadeDuration: 0,
+        symbolFadeChange: 1,
+        variableOffsets: {},
+        anisotropicFilterPitch: 20,
+        projectionTransition: 0,
+        isRenderingGlobe: false,
+        projectionShaderVariant: {name: MercatorShaderVariantKey, define: MercatorShaderDefine, prelude: shaders.projectionMercator},
+        useSubdivision: false,
+        pixelRatio: 1,
+        light: undefined,
+        sky: undefined
     };
 }

@@ -1,5 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import * as timeControl from '../../util/time_control.ts';
 import {beforeMapTest, sleep} from '../../util/test/util.ts';
 import {Map, type MapOptions} from '../map.ts';
 
@@ -38,6 +39,23 @@ describe('dbclick_zoom', () => {
         map._renderTaskQueue.run();
 
         expect(zoom).toHaveBeenCalled();
+
+        map.remove();
+    });
+
+    test('DoubleClickZoomHandler zooms around the center when double-clicking above the horizon', () => {
+        const timeControlNow = vi.spyOn(timeControl, 'now');
+        timeControlNow.mockReturnValue(0);
+        const map = createMap({maxPitch: 85, pitch: 80});
+
+        map.getCanvas().dispatchEvent(new MouseEvent('dblclick', {bubbles: true, clientX: 100, clientY: 10}));
+        map._renderTaskQueue.run();
+        timeControlNow.mockReturnValue(400);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lng).toBeCloseTo(0, 10);
+        expect(map.getCenter().lat).toBeCloseTo(0, 10);
+        expect(map.getZoom()).toBeCloseTo(1, 10);
 
         map.remove();
     });
@@ -104,6 +122,23 @@ describe('dbclick_zoom', () => {
 
         await simulateDoubleTap(map, 100);
         expect(zoom).toHaveBeenCalled();
+
+        map.remove();
+    });
+
+    test('DoubleClickZoomHandler zooms around the center on a double tap above the horizon', async () => {
+        const timeControlNow = vi.spyOn(timeControl, 'now');
+        timeControlNow.mockReturnValue(0);
+        const map = createMap({maxPitch: 85, pitch: 80});
+
+        await simulateDoubleTap(map, 100);
+        map._renderTaskQueue.run();
+        timeControlNow.mockReturnValue(400);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lng).toBeCloseTo(0, 10);
+        expect(map.getCenter().lat).toBeCloseTo(0, 10);
+        expect(map.getZoom()).toBeCloseTo(1, 10);
 
         map.remove();
     });

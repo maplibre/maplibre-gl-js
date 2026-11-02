@@ -1,26 +1,42 @@
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RGBAImage} from '../util/image.ts';
-import {warnOnce} from '../util/util.ts';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g.ts';
 import pos3dAttributes from '../data/pos3d_attributes.ts';
 import {SegmentVector} from '../data/segment.ts';
 import {Texture} from '../webgl/texture.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {TerrainTileManager} from '../tile/terrain_tile_manager.ts';
 import {EXTENT} from '../data/extent.ts';
-import {earthRadius, type LngLat} from '../geo/lng_lat.ts';
 import {Mesh} from './mesh.ts';
 import {isInBoundsForZoomLngLat} from '../util/world_bounds.ts';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
-import {coveringTiles} from '../geo/projection/covering_tiles.ts';
-import type Point from '@mapbox/point-geometry';
+import {TerrainCoverage, type TerrainCoverageIndex} from './terrain_coverage.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
+
+import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {LngLat} from '../geo/lng_lat.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Painter} from './painter.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+
+/**
+ * @experimental
+ * A float texture for {@link CustomRenderMethodInput.renderTerrainHeightMap}, such as `RGBA32F`, which needs the
+ * `EXT_color_buffer_float` extension to be drawn into. Red holds the elevation in meters, including the terrain exaggeration, alpha
+ * is 1 where terrain is loaded and 0 elsewhere, and the first row is the south edge.
+ */
+export type TerrainHeightMapTarget = {
+    /** A texture in the map's WebGL context. */
+    texture: WebGLTexture;
+    /** The width of the texture in pixels. */
+    width: number;
+    /** The height of the texture in pixels. */
+    height: number;
+    /** The area to draw, `[minX, minY, maxX, maxY]` in {@link MercatorCoordinate} units, with x counting world copies. */
+    bounds: [number, number, number, number];
+};
 
 /**
  * @internal
@@ -38,28 +54,15 @@ export type TerrainData = {
     tile: Tile;
 };
 
-export type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
-
-const MAX_BISECTIONS = 40;
-const HIT_EPSILON_M = 1e-6;
-/** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */
-const BRACKET_PADDING_M = 10;
-/** `DEMData.sampleBilinear` throws on the far tile edge, so samples stop just short of it. */
-const MAX_TILE_COORD = EXTENT * (1 - 1e-12);
-
-export type TerrainSample = {
-    covered: boolean;
-    /** Whether the elevation comes from loaded DEM data rather than the flat surface rendered while it loads. */
-    demLoaded: boolean;
-    elevation: number;
-};
-
-export type TerrainCoverageIndex = {
-    zooms: number[];
-    samplerPerTile: Map<string, TerrainElevationSampler | null>;
-    minElevation: number;
-    maxElevation: number;
-};
+/**
+ * @internal
+ * Where the DEM data under a location stands, see {@link Terrain.getElevationAndDEMStateForLngLat}:
+ * - `loaded`: it has loaded.
+ * - `loading`: none has loaded yet, but it can still arrive.
+ * - `none`: none has loaded and none will: the location is outside the source's bounds or zoom range, or its tile
+ * failed to load.
+ */
+export type DEMState = 'loaded' | 'loading' | 'none';
 
 /**
  * @internal
@@ -123,6 +126,7 @@ export class Terrain {
      * holds the framebuffer object in size of the screen to render the depth into a texture.
      */
     _fbo: Framebuffer;
+    _heightMapFbo: Framebuffer;
     _fboDepthTexture: Texture;
     _emptyDepthTexture: Texture;
     /**
@@ -141,24 +145,21 @@ export class Terrain {
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
     _demMatrixCache: Map<string, mat4>;
-    /**
-     * Cache of resolved CPU elevation samplers. It is cleared when the set of renderable
-     * terrain tiles changes and whenever the terrain source changes.
-     * Missing DEM data is deliberately not cached so a later sample can retry.
-     */
-    _elevationSamplerCache: Map<string, TerrainElevationSampler>;
-    /**
-     * Index of the tiles the terrain draws, used by CPU raycasts and elevation lookups.
-     * It is cleared together with the elevation sampler cache; undefined means not built yet.
-     */
-    _coverageIndex: TerrainCoverageIndex | null | undefined;
+    /** The drawn tiles' DEM data as sampled on the CPU, see {@link TerrainCoverage}. */
+    coverage: TerrainCoverage;
     /**
      * Controls how terrain skirt length is calculated.
      * @see {@link MapOptions.terrainSkirtLength}
      */
     _terrainSkirtLength: 'none' | 'auto';
-    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, terrainSkirtLength: 'none' | 'auto' = 'auto') {
+    /** Reads the lng/lat to world mapping of the map's projection, which the map can switch while the terrain is on. */
+    private readonly _getWorldCoordinateHelper: () => WorldCoordinateHelper;
+    /**
+     * @param getWorldCoordinateHelper - reads the lng/lat to world mapping of the map's projection, mercator's by default
+     */
+    constructor(painter: Painter, tileManager: TileManager, options: TerrainSpecification, terrainSkirtLength: 'none' | 'auto' = 'auto', getWorldCoordinateHelper: () => WorldCoordinateHelper = () => mercatorWorldCoordinateHelper) {
         this.painter = painter;
+        this._getWorldCoordinateHelper = getWorldCoordinateHelper;
         this.tileManager = new TerrainTileManager(tileManager);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
@@ -166,13 +167,17 @@ export class Terrain {
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = new Map();
-        this._elevationSamplerCache = new Map();
+        this.coverage = new TerrainCoverage(this.tileManager, this.exaggeration, () => this._worldCoordinateHelper);
     }
 
     destroy(): void {
         if (this._fbo) {
             this._fbo.destroy();
             this._fbo = null;
+        }
+        if (this._heightMapFbo) {
+            this._heightMapFbo.destroy();
+            this._heightMapFbo = null;
         }
         if (this._fboDepthTexture) {
             this._fboDepthTexture.destroy();
@@ -207,7 +212,7 @@ export class Terrain {
         const normalized = tileID.normalizeCoordinates(x, y, extent);
         if (!normalized) return 0;
 
-        const sampler = this.getElevationSampler(normalized.tileID);
+        const sampler = this.coverage.getSampler(normalized.tileID);
         return sampler ? sampler(normalized.x, normalized.y, extent) : 0;
     }
 
@@ -218,34 +223,65 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
-        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
-        const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
-        return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return 0;
+        const {tileID, worldX, worldY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.getElevation(tileID, worldX % EXTENT, worldY % EXTENT, EXTENT);
     }
 
     /**
      * Get the elevation for given {@link LngLat} in respect of exaggeration.
      * Where the location is covered by a rendered tile with loaded DEM data this samples the
      * rendered surface, so the result agrees with what is drawn; elsewhere it traverses up the
-     * zoom levels to find the first tile with data to return.
+     * zoom levels to find the first tile with data to return. Where no DEM data has loaded it gives 0, which
+     * {@link getElevationAndDEMStateForLngLat} tells apart from 0 m.
      * @param lnglat - the location
+     * @param tileZoom - the camera's tile zoom, at which the terrain's tiles are loaded
      * @returns the elevation
      */
-    getElevationForLngLat(lnglat: LngLat, transform: IReadonlyTransform): number {
-        const index = this.getCoverageIndex();
-        if (index) {
-            const mercator = MercatorCoordinate.fromLngLat(lnglat);
-            const sample = sampleAt(index, this.exaggeration, mercator.x, mercator.y);
-            if (sample.demLoaded) return sample.elevation;
-        }
-        const terrainCoveringTiles = coveringTiles(transform, {maxzoom: this.tileManager.maxzoom, minzoom: this.tileManager.minzoom, tileSize: 512, terrain: this});
-        let zoom = 0;
-        for (const tile of terrainCoveringTiles) {
-            if (tile.canonical.z > zoom) {
-                zoom = Math.min(tile.canonical.z, this.tileManager.maxzoom);
-            }
-        }
-        return this.getElevationForLngLatZoom(lnglat, zoom);
+    getElevationForLngLat(lnglat: LngLat, tileZoom: number): number {
+        const elevation = this.getDrawnElevationForLngLat(lnglat);
+        if (elevation !== undefined) return elevation;
+        return this.getElevationForLngLatZoom(lnglat, this._getFallbackZoom(tileZoom));
+    }
+
+    /**
+     * Get the elevation of the terrain as drawn at the given {@link LngLat}, in respect of exaggeration, where a drawn
+     * tile has DEM data there: its own, or with `ownDemOnly` false a loaded parent's drawn in its place, which can be
+     * a few hundred meters off until the tile's own loads.
+     * @param lnglat - the location
+     * @param ownDemOnly - whether only a drawn tile's own DEM data counts
+     * @returns the elevation, or undefined where no drawn tile has that DEM data
+     */
+    getDrawnElevationForLngLat(lnglat: LngLat, ownDemOnly: boolean = false): number | undefined {
+        return this.coverage.sample(lnglat, ownDemOnly);
+    }
+
+    /**
+     * {@link getElevationForLngLat} together with where the DEM data it reads stands, for a caller that has to tell the
+     * 0 it gives for want of DEM data apart from 0 m. DEM data has loaded where a drawn tile or the tile it falls back
+     * to has it, its own or a loaded parent's, and any elevation other than 0 comes from loaded DEM data.
+     * @param lnglat - the location
+     * @param tileZoom - the camera's tile zoom, which {@link getElevationForLngLat} is given
+     * @returns the elevation, and the state of the DEM data there
+     */
+    getElevationAndDEMStateForLngLat(lnglat: LngLat, tileZoom: number): {elevation: number; demState: DEMState} {
+        const elevation = this.getElevationForLngLat(lnglat, tileZoom);
+        if (elevation !== 0 || this.getDrawnElevationForLngLat(lnglat) !== undefined) return {elevation, demState: 'loaded'};
+        const zoom = this._getFallbackZoom(tileZoom);
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return {elevation, demState: 'none'};
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        if (this.tileManager.getSourceTile(tileID, true)?.dem) return {elevation, demState: 'loaded'};
+        return {elevation, demState: this.tileManager.isStillWaitingForDEM(tileID) ? 'loading' : 'none'};
+    }
+
+    /**
+     * The zoom {@link getElevationForLngLat} passes to {@link getElevationForLngLatZoom} where no drawn tile has DEM
+     * data: the camera's tile zoom, where the terrain's tiles are loaded.
+     */
+    private _getFallbackZoom(tileZoom: number): number {
+        return Math.min(tileZoom, this.tileManager.maxzoom);
     }
 
     /**
@@ -261,90 +297,36 @@ export class Terrain {
     }
 
     /**
-     * Clear CPU elevation samplers that may retain a previously selected DEM tile.
+     * Clear the CPU samplers of the drawn tiles' DEM data, which may retain a previously selected DEM tile.
      * @internal
      */
     resetElevationCache(): void {
-        this._elevationSamplerCache.clear();
-        this._coverageIndex = undefined;
+        this.coverage.reset();
     }
 
     /**
      * Index of the tiles the terrain currently renders, for sampling the terrain surface on the CPU.
-     * Built on first use and kept until {@link resetElevationCache}.
      * @returns the index, or null when no terrain tile is renderable
      */
     getCoverageIndex(): TerrainCoverageIndex | null {
-        if (this._coverageIndex === undefined) {
-            this._coverageIndex = this._buildCoverageIndex();
-        }
-        return this._coverageIndex;
-    }
-
-    private _buildCoverageIndex(): TerrainCoverageIndex | null {
-        const zooms: number[] = [];
-        const samplerPerTile = new Map<string, TerrainElevationSampler | null>();
-        let minElevation = 0;
-        let maxElevation = 0;
-
-        for (const tile of this.tileManager.getRenderableTiles()) {
-            if (!tile) continue;
-            const {canonical, wrap} = tile.tileID;
-            if (!zooms.includes(canonical.z)) zooms.push(canonical.z);
-            const sampler = this.getElevationSampler(tile.tileID);
-            samplerPerTile.set(`${wrap}/${canonical.z}/${canonical.x}/${canonical.y}`, sampler);
-            const {minElevation: tileMin, maxElevation: tileMax} = this.getMinMaxElevation(tile.tileID);
-            minElevation = Math.min(minElevation, tileMin ?? 0);
-            maxElevation = Math.max(maxElevation, tileMax ?? 0);
-        }
-
-        if (samplerPerTile.size === 0) return null;
-        zooms.sort((a, b) => b - a);
-        return {zooms, samplerPerTile, minElevation: minElevation - BRACKET_PADDING_M, maxElevation: maxElevation + BRACKET_PADDING_M};
+        return this.coverage.getIndex();
     }
 
     /**
-     * Get a function that samples the raw DEM elevation of a tile, without exaggeration.
+     * Get the matrix that maps a tile's coordinates into the DEM tile it is rendered with.
+     * The transform is derived from the loaded DEM tile's own zoom level, not from the source's
+     * declared maxzoom: getSourceTile falls back to a loaded parent tile while the deepest DEM
+     * tile is still loading, and the scale and offset must match the tile that is actually used.
      * @param tileID - the tile id
-     * @returns the sampler, or null when the tile's DEM data is not loaded
+     * @param sourceTile - the DEM tile that is used for this tile, either its own tile or a loaded parent
+     * @returns the matrix that maps the tile's coordinates onto the DEM tile
      */
-    private getElevationSampler(tileID: OverscaledTileID): TerrainElevationSampler | null {
-        const key = tileID.key;
-        const cachedSampler = this._elevationSamplerCache.get(key);
-        if (cachedSampler) return cachedSampler;
-
-        const sourceTile = this.tileManager.getSourceTile(tileID, true);
-        const dem = sourceTile?.dem;
-        if (!sourceTile || !dem) return null;
-
-        const matrix = this._getDEMTileMatrix(tileID, sourceTile);
-        // Store the vector-tile to DEM-pixel transform once for the hot sampling loop.
-        const demPixelScaleX = matrix[0] * dem.dim;
-        const demPixelScaleY = matrix[5] * dem.dim;
-        const demPixelOffsetX = matrix[12] * dem.dim;
-        const demPixelOffsetY = matrix[13] * dem.dim;
-        const sampler = (x: number, y: number, extent: number): number => {
-            const extentScale = extent === EXTENT ? 1 : EXTENT / extent;
-            return dem.sampleBilinear(
-                x * extentScale * demPixelScaleX + demPixelOffsetX,
-                y * extentScale * demPixelScaleY + demPixelOffsetY
-            );
-        };
-        this._elevationSamplerCache.set(key, sampler);
-        return sampler;
-    }
-
     _getDEMTileMatrix(tileID: OverscaledTileID, sourceTile: Tile): mat4 {
         const matrixKey = `${sourceTile.tileID.key}/${tileID.key}`;
         const cachedMatrix = this._demMatrixCache.get(matrixKey);
         if (cachedMatrix) return cachedMatrix;
 
-        const maxzoom = this.tileManager.getSource().maxzoom;
-        let dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
-        if (tileID.overscaledZ > tileID.canonical.z) {
-            if (tileID.canonical.z >= maxzoom) dz =  tileID.canonical.z - maxzoom;
-            else warnOnce('cannot calculate elevation if elevation maxzoom > source.maxzoom');
-        }
+        const dz = tileID.canonical.z - sourceTile.tileID.canonical.z;
         const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
         const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
         const demMatrix = mat4.fromScaling(new Float64Array(16), [1 / (EXTENT << dz), 1 / (EXTENT << dz), 0]);
@@ -422,26 +404,22 @@ export class Terrain {
     }
 
     /**
-     * Reads the depth value from the depth-framebuffer at a given screen pixel
-     * @param p - Screen coordinate
-     * @returns depth value in clip space (between 0 and 1)
+     * get the framebuffer that draws the height map into a texture of a custom layer
+     * @param texture - the texture to draw into
+     * @returns the frame buffer
      */
-    depthAtPoint(p: Point): number {
-        const rgba = new Uint8Array(4);
-        const context = this.painter.context, gl = context.gl;
-        context.bindFramebuffer.set(this.getFramebuffer().framebuffer);
-        gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
-        context.bindFramebuffer.set(null);
-        // decode the depth value packed by terrain_depth.fragment.glsl
-        return (rgba[0] / (256 * 256 * 256) + rgba[1] / (256 * 256) + rgba[2] / 256 + rgba[3]) / 256;
+    getHeightMapFramebuffer(texture: WebGLTexture): Framebuffer {
+        this._heightMapFbo ||= this.painter.context.createFramebuffer(1, 1, false, false);
+        this._heightMapFbo.colorAttachment.set(texture);
+        return this._heightMapFbo;
     }
 
     /**
      * create a regular mesh which will be used by all terrain-tiles
+     * @param globeEnabled - whether the globe is rendering, which adds the pole geometry of the edge tiles
      * @returns the created regular mesh
      */
-    getTerrainMesh(tileId: OverscaledTileID): Mesh {
-        const globeEnabled = this.painter.style.projection?.transitionState > 0;
+    getTerrainMesh(tileId: OverscaledTileID, globeEnabled: boolean): Mesh {
         const northPole = globeEnabled && tileId.canonical.y === 0;
         const southPole = globeEnabled && tileId.canonical.y === (1 << tileId.canonical.z) - 1;
         const key = `m_${northPole ? 'n' : ''}_${southPole ? 's' : ''}`;
@@ -476,18 +454,21 @@ export class Terrain {
     }
 
     /**
-     * Calculates the height of the tile skirts for the "auto" strategy.
+     * Calculates the height of the tile skirts for the "auto" strategy: a fifth of the tile width in meters, taking
+     * the meters per world unit at the center of the world square (the equator for mercator, where one world unit
+     * is the earth's circumference).
      * @see {@link MapOptions.terrainSkirtLength}
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters
      */
     getSkirtLength(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
-        return 2 * Math.PI * earthRadius / Math.pow(2, Math.max(zoom, 0)) / 5;
+        return this._worldCoordinateHelper.metersPerWorldUnit(0.5, 0.5) / Math.pow(2, Math.max(zoom, 0)) / 5;
     }
 
     getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number): number {
-        if (!isInBoundsForZoomLngLat(zoom, lnglat.wrap())) return 0;
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        if (!isInBoundsForZoomLngLat(zoom, worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat, worldCoordinateHelper)) return 0;
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }
@@ -510,17 +491,26 @@ export class Terrain {
         return minMax;
     }
 
-    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; mercatorX: number; mercatorY: number} {
-        const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
+    /**
+     * The lng/lat to world mapping of the map's projection.
+     */
+    private get _worldCoordinateHelper(): WorldCoordinateHelper {
+        return this._getWorldCoordinateHelper();
+    }
+
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; worldX: number; worldY: number} {
+        const worldCoordinateHelper = this._worldCoordinateHelper;
+        const location = worldCoordinateHelper.wraps ? lnglat.wrap() : lnglat;
+        const worldCoordinate = worldCoordinateHelper.worldFromLngLat(location.lng, location.lat);
         const worldSize = (1 << zoom) * EXTENT;
-        const mercatorX = mercatorCoordinate.x * worldSize;
-        const mercatorY = mercatorCoordinate.y * worldSize;
-        const tileX = Math.floor(mercatorX / EXTENT), tileY = Math.floor(mercatorY / EXTENT);
+        const worldX = worldCoordinate.x * worldSize;
+        const worldY = worldCoordinate.y * worldSize;
+        const tileX = Math.floor(worldX / EXTENT), tileY = Math.floor(worldY / EXTENT);
         const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
         return {
             tileID,
-            mercatorX,
-            mercatorY
+            worldX,
+            worldY
         };
     }
 
@@ -561,52 +551,4 @@ export class Terrain {
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
     }
-}
-
-const NOT_COVERED: TerrainSample = {covered: false, demLoaded: false, elevation: 0};
-
-/**
- * Elevation of the rendered terrain surface at a mercator position, and whether it is covered at all.
- * A covered tile whose DEM has not loaded yet is flat at zero, which is what the terrain mesh renders.
- */
-export function sampleAt(index: TerrainCoverageIndex, exaggeration: number, mercatorX: number, mercatorY: number): TerrainSample {
-    if (mercatorY < 0 || mercatorY >= 1) return NOT_COVERED;
-    const wrap = Math.floor(mercatorX);
-    const wrappedX = mercatorX - wrap;
-
-    for (const z of index.zooms) {
-        const scale = 1 << z;
-        const scaledX = wrappedX * scale;
-        const scaledY = mercatorY * scale;
-        const tileX = Math.floor(scaledX);
-        const tileY = Math.floor(scaledY);
-        const key = `${wrap}/${z}/${tileX}/${tileY}`;
-        if (!index.samplerPerTile.has(key)) continue;
-        const sampler = index.samplerPerTile.get(key);
-        if (!sampler) return {covered: true, demLoaded: false, elevation: 0};
-        const x = Math.min((scaledX - tileX) * EXTENT, MAX_TILE_COORD);
-        const y = Math.min((scaledY - tileY) * EXTENT, MAX_TILE_COORD);
-        return {covered: true, demLoaded: true, elevation: sampler(x, y, EXTENT) * exaggeration};
-    }
-    return NOT_COVERED;
-}
-
-/**
- * Whether a height in meters is at or below the sampled terrain surface.
- * The epsilon absorbs rounding when a bracket endpoint lands exactly on the surface.
- */
-export function isBelowTerrainSample(sample: TerrainSample, height: number): boolean {
-    return sample.covered && height <= sample.elevation + HIT_EPSILON_M;
-}
-
-/**
- * Narrows the bracket `[lo, hi]` around the surface crossing until it is shorter than `tolerance` in ray parameter units.
- */
-export function bisect<Ray>(ray: Ray, isBelowTerrain: (ray: Ray, t: number) => boolean, lo: number, hi: number, tolerance: number): {lo: number; hi: number} {
-    for (let j = 0; j < MAX_BISECTIONS && hi - lo > tolerance; j++) {
-        const mid = (lo + hi) / 2;
-        if (isBelowTerrain(ray, mid)) hi = mid;
-        else lo = mid;
-    }
-    return {lo, hi};
 }

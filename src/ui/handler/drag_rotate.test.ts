@@ -4,7 +4,6 @@ import {Map} from '../map.ts';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import * as timeControl from '../../util/time_control.ts';
-
 import {beforeMapTest} from '../../util/test/util.ts';
 
 function createMap(options?) {
@@ -271,6 +270,30 @@ describe('drag rotate', () => {
         simulate.mouseup(map.getCanvas(),   {buttons: 0, button: 0, ctrlKey: true});
 
         expect(spy).not.toHaveBeenCalled();
+
+        map.remove();
+    });
+
+    test('DragRotateHandler turns the same way above the center as below it if given around: \'center\' and movement: \'linear\'', () => {
+        const map = createMap({dragRotate: {around: 'center', movement: 'linear'}});
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 50});
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 50});
+        map._renderTaskQueue.run();
+
+        expect(map.getBearing()).toBeCloseTo(8);
+
+        map.remove();
+    });
+
+    test('DragRotateHandler turns the other way above the center if given around: \'center\' and movement: \'circular\' with aroundCenter: false', () => {
+        const map = createMap({aroundCenter: false, dragRotate: {around: 'center', movement: 'circular'}});
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 50});
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 50});
+        map._renderTaskQueue.run();
+
+        expect(map.getBearing()).toBeCloseTo(-8);
 
         map.remove();
     });

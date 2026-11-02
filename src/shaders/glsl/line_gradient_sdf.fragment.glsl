@@ -4,11 +4,7 @@ uniform float u_mix;
 uniform lowp float u_lineatlas_width;
 
 in vec2 v_normal;
-#ifdef TAPER
 in vec2 v_width2;
-#else
-flat in vec2 v_width2;
-#endif
 in vec2 v_tex_a;
 in vec2 v_tex_b;
 in float v_gamma_scale;

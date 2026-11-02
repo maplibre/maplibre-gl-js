@@ -1,4 +1,5 @@
 import {clamp} from '../util/util.ts';
+
 import type Point from '@mapbox/point-geometry';
 
 export class PathInterpolator {

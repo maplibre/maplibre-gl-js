@@ -1,12 +1,14 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {type Tile} from '../tile/tile.ts';
 import {getMockDispatcher} from '../util/test/util.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+
+import type {Tile} from '../tile/tile.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options, transformCallback?) {
@@ -15,7 +17,8 @@ function createSource(options, transformCallback?) {
         transform: {angle: 0, pitch: 0, showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
-        getPixelRatio() { return 1; }
+        getPixelRatio() { return 1; },
+        style: {projection: new MercatorProjection()}
     } as any);
 
     source.on('error', (e) => {

@@ -1,0 +1,174 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "description": "Fill-extrusion over 3D terrain, viewed at a pitch across sloping ground: each building is raised by the DEM elevation at its centroid, so its base follows the hillside. The buildings are inline GeoJSON, so the terrain DEM is the only tile fixture involved."
+    }
+  },
+  "center": [
+    11.52517,
+    47.34487
+  ],
+  "zoom": 12,
+  "pitch": 45,
+  "bearing": 0,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "buildings": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "height": 300
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    11.50517,
+                    47.33287
+                  ],
+                  [
+                    11.51117,
+                    47.33287
+                  ],
+                  [
+                    11.51117,
+                    47.33687
+                  ],
+                  [
+                    11.50517,
+                    47.33687
+                  ],
+                  [
+                    11.50517,
+                    47.33287
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "height": 300
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    11.52517,
+                    47.34487
+                  ],
+                  [
+                    11.53117,
+                    47.34487
+                  ],
+                  [
+                    11.53117,
+                    47.34887
+                  ],
+                  [
+                    11.52517,
+                    47.34887
+                  ],
+                  [
+                    11.52517,
+                    47.34487
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "height": 300
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    11.545169999999999,
+                    47.35687
+                  ],
+                  [
+                    11.551169999999999,
+                    47.35687
+                  ],
+                  [
+                    11.551169999999999,
+                    47.36087
+                  ],
+                  [
+                    11.545169999999999,
+                    47.36087
+                  ],
+                  [
+                    11.545169999999999,
+                    47.35687
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "osm": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/number/{z}.png"
+      ],
+      "maxzoom": 17,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "osm",
+      "type": "raster",
+      "source": "osm"
+    },
+    {
+      "id": "buildings",
+      "type": "fill-extrusion",
+      "source": "buildings",
+      "paint": {
+        "fill-extrusion-color": "#c0392b",
+        "fill-extrusion-height": [
+          "get",
+          "height"
+        ],
+        "fill-extrusion-base": 0,
+        "fill-extrusion-opacity": 1.0
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 0.45
+  }
+}

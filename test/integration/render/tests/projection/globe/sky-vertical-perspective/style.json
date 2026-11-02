@@ -1,0 +1,33 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 512,
+      "maxPitch": 85,
+      "operations": [
+        [
+          "wait",
+          500
+        ]
+      ]
+    }
+  },
+  "center": [
+    11.64,
+    47.55
+  ],
+  "zoom": 6,
+  "pitch": 85,
+  "sources": {},
+  "layers": [],
+  "sky": {
+    "sky-color": "#199EF3",
+    "horizon-color": "#daeff0",
+    "sky-horizon-blend": 0.5,
+    "atmosphere-blend": 0
+  },
+  "projection": {
+    "type": "vertical-perspective"
+  }
+}

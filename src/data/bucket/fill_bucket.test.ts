@@ -4,12 +4,13 @@ import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment.ts';
 import {FillBucket} from './fill_bucket.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import {type ZoomHistory} from '../../style/zoom_history.ts';
-import {type BucketDependencyParameters, type BucketFeature, type BucketParameters} from '../bucket.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
+
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import type {ZoomHistory} from '../../style/zoom_history.ts';
+import type {BucketDependencyParameters, BucketFeature, BucketParameters} from '../bucket.ts';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {StyleImage} from '../../style/style_image.ts';
 
@@ -35,13 +36,18 @@ function createFillBucketWithLayers(layerSpecifications: LayerSpecification[], a
     return new FillBucket({layers, zoom: 0, overscaling: 0, index: 0} as BucketParameters<FillStyleLayer>);
 }
 
-function createDependencyParameters(imageMap: Record<string, StyleImage>): BucketDependencyParameters {
+function createDependencyParameters(patternMap: Record<string, StyleImage>): BucketDependencyParameters {
     return {
-        options: createPopulateOptions(Object.keys(imageMap)),
+        options: createPopulateOptions(Object.keys(patternMap)),
         canonical: new CanonicalTileID(0, 0, 0),
-        imagePositions: {},
+        glyphMap: {},
+        glyphPositions: {},
+        iconMap: {},
+        iconPositions: {},
+        patternMap,
+        patternPositions: {},
         dashPositions: {},
-        imageMap
+        showCollisionBoxes: false
     };
 }
 

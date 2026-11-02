@@ -20,6 +20,31 @@ function dragWithMove(target: HTMLElement | Window, start: {x: number; y: number
     target.dispatchEvent(new MouseEvent('mouseup', {bubbles: true, clientX: end.x, clientY: end.y}));
 }
 
+/**
+ * Presses `button` at `from` on `target` and moves the mouse over the document body to `to` in `moves` equal steps,
+ * calling `afterEachMove` after each; the button stays down.
+ */
+function dragInMoves(target: HTMLElement | Window, from: [number, number], to: [number, number], moves: number, afterEachMove: () => void, button: 0 | 1 | 2 = 0): void {
+    const buttons = [1, 4, 2][button];
+    target.dispatchEvent(new MouseEvent('mousedown', {bubbles: true, button, buttons, clientX: from[0], clientY: from[1]}));
+    for (let move = 1; move <= moves; move++) {
+        const clientX = from[0] + (to[0] - from[0]) * move / moves;
+        const clientY = from[1] + (to[1] - from[1]) * move / moves;
+        document.body.dispatchEvent(new MouseEvent('mousemove', {bubbles: true, buttons, clientX, clientY}));
+        afterEachMove();
+    }
+}
+
+/**
+ * Scrolls the wheel by `deltaY` at `point` on `target` `notches` times, calling `afterEachNotch` after each.
+ */
+function wheelNotches(target: HTMLElement | Window, deltaY: number, point: [number, number], notches: number, afterEachNotch: () => void): void {
+    for (let notch = 0; notch < notches; notch++) {
+        target.dispatchEvent(new WheelEvent('wheel', {bubbles: true, deltaY, clientX: point[0], clientY: point[1]}));
+        afterEachNotch();
+    }
+}
+
 function dblclick(target: HTMLElement | Window): void {
     const options = {bubbles: true};
     target.dispatchEvent(new MouseEvent('mousedown', options));
@@ -77,6 +102,8 @@ const events: {
     click: typeof click;
     drag: typeof drag;
     dragWithMove: typeof dragWithMove;
+    dragInMoves: typeof dragInMoves;
+    wheelNotches: typeof wheelNotches;
     dblclick: typeof dblclick;
     keydown: (target: HTMLElement | Window, options: KeyboardEventInit) => void;
     keyup: (target: HTMLElement | Window, options: KeyboardEventInit) => void;
@@ -103,6 +130,8 @@ const events: {
     click,
     drag,
     dragWithMove,
+    dragInMoves,
+    wheelNotches,
     dblclick,
     keydown: keyFunctionFactory('keydown'),
     keyup: keyFunctionFactory('keyup'),

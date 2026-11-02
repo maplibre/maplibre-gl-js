@@ -3,21 +3,25 @@ import {
 } from '../util/unicode_properties.g.ts';
 import {
     charIsWhitespace,
+    charIsSymbolOrPunctuation,
+    charHasRotatedVerticalOrientation,
     charInComplexShapingScript,
-    charInRTLScript
+    charInRTLScript,
+    stringContainsRTLText
 } from '../util/script_detection.ts';
 import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
+import {processBidirectionalText, processStyledBidirectionalText} from './bidi.ts';
 import {isCluster} from '../util/graphemes.ts';
 import {verticalizedCharacterMap} from '../util/verticalize_punctuation.ts';
 import ONE_EM from './one_em.ts';
-
 import {TaggedString, type SectionOptions, type TextSectionOptions, type ImageSectionOptions} from './tagged_string.ts';
-import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.ts';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.ts';
 import {TextFit} from '../style/style_image.ts';
-import type {ImagePosition} from '../render/image_atlas.ts';
 import {IMAGE_PADDING} from '../render/image_atlas.ts';
-import type {Rect, GlyphPosition} from '../render/glyph_atlas.ts';
+
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {StyleGlyph, GlyphMap, GlyphMetrics} from '../style/style_glyph.ts';
+import type {Rect, GlyphPosition, GlyphPositions} from '../render/glyph_atlas.ts';
 import type {Formatted, VerticalAlign} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
@@ -28,7 +32,7 @@ enum WritingMode {
 }
 
 const SHAPING_DEFAULT_OFFSET = -17;
-export {shapeText, shapeIcon, applyTextFit, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
+export {shapeText, shapeIcon, applyTextFit, fitIconToText, getAnchorAlignment, mayUseVerticalGlyph, WritingMode, SHAPING_DEFAULT_OFFSET};
 
 // The position of a glyph relative to the text's anchor point.
 export type PositionedGlyph = {
@@ -167,30 +171,51 @@ function sectionForEachCodeUnit(input: TaggedString): number[] {
 }
 
 /**
+ * Puts a label that reads in both directions into the order it is drawn, and breaks it into lines.
+ *
+ * The bidirectional algorithm works in code units rather than in the graphemes the rest of layout
+ * counts in, so the line breaks are converted on the way in and the sections on the way out. A
+ * plugin registered through the deprecated {@link setRTLTextPlugin} is used in place of the built-in
+ * implementation, so that a map relying on one keeps the behaviour it had.
+ */
+function bidiLines(logicalInput: TaggedString, lineBreaks: number[]): TaggedString[] {
+    const codeUnitBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
+    const plugin = rtlWorkerPlugin.isParsed() ? rtlWorkerPlugin : null;
+
+    if (logicalInput.sections.length === 1) {
+        if (plugin) {
+            return plugin.processBidirectionalText(logicalInput.toString(), codeUnitBreaks)
+                .map(line => taggedLineFromPlugin(line, logicalInput.sections, [...line].map(() => 0)));
+        }
+        return processBidirectionalText(logicalInput.toString(), codeUnitBreaks)
+            .map(line => taggedLine([...line], logicalInput.sections, [...line].map(() => 0)));
+    }
+
+    const sectionForCodeUnit = sectionForEachCodeUnit(logicalInput);
+    if (plugin) {
+        return plugin.processStyledBidirectionalText(logicalInput.text, sectionForCodeUnit, codeUnitBreaks)
+            .map(([line, sections]) => taggedLineFromPlugin(line, logicalInput.sections, sections));
+    }
+    return processStyledBidirectionalText(logicalInput.text, sectionForCodeUnit, codeUnitBreaks)
+        .map(([line, sections]) => {
+            const chars = [...line];
+            return taggedLine(chars, logicalInput.sections, codeUnitOfEachCharacter(chars).map(at => sections[at] ?? 0));
+        });
+}
+
+/**
  * Builds a line out of what a text plugin returned: the text in reading order, and the section of
  * each code unit. A cluster belongs to the section its first character does.
  */
-function taggedLineFromPlugin(
-    line: string,
-    sections: SectionOptions[],
-    sectionForCodeUnit: number[]
-): TaggedString {
-    const chars = [...line];
-    const codeUnitOf: number[] = [];
-    let codeUnit = 0;
-    for (const char of chars) {
-        codeUnitOf.push(codeUnit);
-        codeUnit += char.length;
-    }
+/**
+ * Builds a line of a label from text that is already in the order it is drawn.
+ *
+ * The sections arrive one per code unit, as the bidirectional algorithm counts, and are handed on
+ * one per grapheme cluster, as the rest of layout counts.
+ */
+function taggedLine(chars: string[], sections: SectionOptions[], sectionOfChar: number[]): TaggedString {
+    const tagged = new TaggedString(chars.join(''), sections, []);
 
-    const order = combiningMarksAfterTheirBase(chars);
-    const tagged = new TaggedString(
-        order.map(index => chars[index]).join(''),
-        sections,
-        []
-    );
-
-    const sectionOfChar = order.map(index => sectionForCodeUnit[codeUnitOf[index]] ?? 0);
     let at = 0;
     for (const grapheme of tagged.graphemes()) {
         tagged.sectionIndex.push(sectionOfChar[at] ?? 0);
@@ -200,10 +225,43 @@ function taggedLineFromPlugin(
     return tagged;
 }
 
+/** The code unit each character of a line starts at. */
+function codeUnitOfEachCharacter(chars: string[]): number[] {
+    const offsets: number[] = [];
+    let codeUnit = 0;
+    for (const char of chars) {
+        offsets.push(codeUnit);
+        codeUnit += char.length;
+    }
+    return offsets;
+}
+
+/**
+ * Builds a line from what a plugin registered through the deprecated `setRTLTextPlugin` returned.
+ *
+ * A plugin reorders one code point at a time, as ICU does, which leaves the marks of a right-to-left
+ * run before the letter they are written on, so rule L3 has to be applied here. The built-in
+ * implementation reorders whole grapheme clusters and needs none of this.
+ */
+function taggedLineFromPlugin(
+    line: string,
+    sections: SectionOptions[],
+    sectionForCodeUnit: number[]
+): TaggedString {
+    const chars = [...line];
+    const codeUnitOf = codeUnitOfEachCharacter(chars);
+    const order = combiningMarksAfterTheirBase(chars);
+
+    return taggedLine(
+        order.map(index => chars[index]),
+        sections,
+        order.map(index => sectionForCodeUnit[codeUnitOf[index]] ?? 0));
+}
+
 function shapeText(
     text: Formatted,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
     imagePositions: Record<string, ImagePosition>,
     defaultFontStack: string,
     maxWidth: number,
@@ -217,43 +275,12 @@ function shapeText(
     layoutTextSize: number,
     layoutTextSizeThisZoom: number
 ): Shaping | false {
-    const logicalInput = TaggedString.fromFeature(text, defaultFontStack);
+    const logicalInput = TaggedString.fromFeature(text, defaultFontStack, writingMode === WritingMode.vertical, glyphMap);
 
-    if (writingMode === WritingMode.vertical) {
-        logicalInput.verticalizePunctuation();
-    }
-
-    let lines: TaggedString[];
-
-    let lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
-    const {processBidirectionalText, processStyledBidirectionalText} = rtlWorkerPlugin;
-    if (processBidirectionalText && logicalInput.sections.length === 1) {
-        // Bidi doesn't have to be style-aware
-        lines = [];
-        // ICU operates on code units.
-        lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
-        const untaggedLines =
-            processBidirectionalText(logicalInput.toString(), lineBreaks);
-        for (const line of untaggedLines) {
-            lines.push(taggedLineFromPlugin(line, logicalInput.sections, [...line].map(() => 0)));
-        }
-    } else if (processStyledBidirectionalText) {
-        // Need version of mapbox-gl-rtl-text with style support for combining RTL text
-        // with formatting
-        lines = [];
-        // ICU operates on code units.
-        lineBreaks = lineBreaks.map(index => logicalInput.toCodeUnitIndex(index));
-
-        const sectionIndex = sectionForEachCodeUnit(logicalInput);
-
-        const processedLines =
-            processStyledBidirectionalText(logicalInput.text, sectionIndex, lineBreaks);
-        for (const line of processedLines) {
-            lines.push(taggedLineFromPlugin(line[0], logicalInput.sections, line[1]));
-        }
-    } else {
-        lines = breakLines(logicalInput, lineBreaks);
-    }
+    const lineBreaks = logicalInput.determineLineBreaks(spacing, maxWidth, glyphMap, imagePositions, layoutTextSize);
+    const lines = stringContainsRTLText(logicalInput.text) ?
+        bidiLines(logicalInput, lineBreaks) :
+        breakLines(logicalInput, lineBreaks);
 
     const positionedLines = [];
     const shaping = {
@@ -335,16 +362,12 @@ function getVerticalAlignFactor(
 
 function getRectAndMetrics(
     glyphPosition: GlyphPosition,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    section: TextSectionOptions,
-    key: string
+    glyph: StyleGlyph
 ): GlyphPosition | null {
     if (glyphPosition?.rect) {
         return glyphPosition;
     }
 
-    const glyphs = glyphMap[section.fontStack];
-    const glyph = glyphs?.[key];
     if (!glyph) return null;
 
     const metrics = glyph.metrics;
@@ -372,11 +395,6 @@ function charIsDecimalDigit(codePoint: number): boolean {
 /** Returns whether the codepoint is an uppercase letter of any script (`\p{Lu}`). */
 function charIsUppercaseLetter(codePoint: number): boolean {
     return /\p{Lu}/u.test(String.fromCodePoint(codePoint));
-}
-
-/** Returns whether the codepoint is a punctuation or symbol character (`\p{P}` or `\p{S}`). */
-function charIsSymbolOrPunctuation(codePoint: number): boolean {
-    return /[\p{P}\p{S}]/u.test(String.fromCodePoint(codePoint));
 }
 
 /**
@@ -410,42 +428,63 @@ function charIsUprightInRun(codePoint: number): boolean {
 }
 
 /**
- * Replaces punctuation surrounded by upright characters with its vertical
- * presentation form (“-” in “1-2” becomes “︲”) and marks it upright.
- * `verticalizePunctuation` cannot do this earlier: it doesn't know which
- * characters {@link determineLineVerticals} draws upright.
- *
- * Returns whether anything in `chars` was replaced.
+ * Checks whether a cluster's first codepoint may need a vertical glyph.
+ * Line labels determine the final orientation from the surrounding run.
  */
-function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[]): boolean {
+function mayUseVerticalGlyph(codePoint: number, allowVerticalPlacement: boolean): boolean {
+    if (allowVerticalPlacement) return isLineVertical(WritingMode.vertical, true, codePoint);
+    return !charHasRotatedVerticalOrientation(codePoint) ||
+        charIsUprightInRun(codePoint) || charIsSymbolOrPunctuation(codePoint);
+}
+
+/**
+ * Marks punctuation surrounded by upright characters as upright. Uses a compatibility
+ * character when the font has no vertical alternate.
+ *
+ * @returns whether any character in `chars` was replaced
+ */
+function verticalizeSurroundedPunctuation(chars: string[], verticals: boolean[], verticalForms: boolean[]): boolean {
     let replaced = false;
     for (let i = 0; i < chars.length; i++) {
         if (verticals[i]) continue;
         const verticalizedChar = verticalizedCharacterMap[chars[i]];
         if (!verticalizedChar) continue;
         if ((i === 0 || verticals[i - 1]) && (i === chars.length - 1 || verticals[i + 1])) {
-            chars[i] = verticalizedChar;
             verticals[i] = true;
+            if (verticalForms[i]) continue;
+
+            chars[i] = verticalizedChar;
             replaced = true;
         }
     }
     return replaced;
 }
 
+/** Checks the adjacent run across whitespace for sideways text, excluding upright numbers and codes. */
+function hasSidewaysTextBeside(codePoints: number[], index: number, step: -1 | 1): boolean {
+    while (index >= 0 && index < codePoints.length && charIsWhitespace(codePoints[index])) index += step;
+    const run: number[] = [];
+    while (index >= 0 && index < codePoints.length &&
+        !codePointHasUprightVerticalOrientation(codePoints[index]) && !charIsWhitespace(codePoints[index])) {
+        run.push(codePoints[index]);
+        index += step;
+    }
+    return !runIsUpright(run) && !run.every(charIsSymbolOrPunctuation) && run.some(charHasRotatedVerticalOrientation);
+}
+
 /**
- * Returns, for each grapheme cluster of a vertically laid out line label, whether
- * its glyph is drawn upright rather than lying along the line, and updates
- * `line` with vertical presentation forms of punctuation.
- *
- * A run passed to {@link runIsUpright} is a maximal sequence of non-upright
- * characters that are neither whitespace nor inline images.
- *
- * Counted in clusters, to line up with `getSection` and the layout loop. A cluster's orientation is
- * that of the character it starts with.
+ * Returns an upright flag for each grapheme cluster and applies vertical punctuation to `line`.
+ * Runs use each cluster's first codepoint and end at upright characters, whitespace or inline images.
+ * Font alternates do not split runs. Runs are reclassified after unused alternates fall back
+ * to compatibility characters.
  */
-function determineLineVerticals(line: TaggedString): boolean[] {
+function determineLineVerticals(line: TaggedString, glyphMap: GlyphMap): boolean[] {
     const chars = line.graphemes().slice();
     const codePoints = chars.map(char => char.codePointAt(0));
+    const verticalForms = chars.map((char, index) => {
+        const section = line.getSection(index);
+        return 'fontStack' in section && !!glyphMap[section.fontStack]?.vertical?.[char];
+    });
     const verticals = codePoints.map(codePointHasUprightVerticalOrientation);
 
     const isRunCharacter = (i: number): boolean =>
@@ -456,17 +495,29 @@ function determineLineVerticals(line: TaggedString): boolean[] {
         let end = start;
         while (end + 1 < codePoints.length && isRunCharacter(end + 1)) end++;
 
-        if (runIsUpright(codePoints.slice(start, end + 1))) {
-            for (let i = start; i <= end; i++) {
-                verticals[i] = charIsUprightInRun(codePoints[i]);
-            }
+        const run = codePoints.slice(start, end + 1);
+        const upright = runIsUpright(run);
+        const punctuationOnly = run.every(charIsSymbolOrPunctuation);
+        const besideSidewaysText = punctuationOnly &&
+            (hasSidewaysTextBeside(codePoints, start - 1, -1) || hasSidewaysTextBeside(codePoints, end + 1, 1));
+        const sideways = !upright && run.some(charHasRotatedVerticalOrientation);
+        for (let i = start; i <= end; i++) {
+            verticals[i] = (upright && charIsUprightInRun(codePoints[i])) ||
+                (verticalForms[i] && !besideSidewaysText &&
+                    (punctuationOnly || (!sideways && !charHasRotatedVerticalOrientation(codePoints[i]))));
         }
         start = end;
     }
 
-    if (verticalizeSurroundedPunctuation(chars, verticals)) {
+    if (verticalForms.some((form, index) => form && !verticals[index])) {
+        const previousText = line.text;
+        line.verticalizePunctuation(glyphMap, verticals);
+        if (line.text !== previousText) return determineLineVerticals(line, glyphMap);
+    }
+
+    if (verticalizeSurroundedPunctuation(chars, verticals, verticalForms)) {
         line.text = chars.join('');
-        line._graphemes = null;
+        line.cachedGraphemes = chars;
     }
 
     return verticals;
@@ -479,8 +530,8 @@ function determineLineVerticals(line: TaggedString): boolean[] {
  * does -- which is what a style declaring no `font-faces` keeps doing.
  */
 function shapeLines(shaping: Shaping,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
     imagePositions: Record<string, ImagePosition>,
     lines: TaggedString[],
     lineHeight: number,
@@ -520,7 +571,7 @@ function shapeLines(shaping: Shaping,
 
         const lineShapingSize = calculateLineContentSize(imagePositions, line, layoutTextSizeFactor);
         const lineVerticals = writingMode === WritingMode.vertical && !allowVerticalPlacement ?
-            determineLineVerticals(line) : null;
+            determineLineVerticals(line, glyphMap) : null;
 
         const graphemes = line.graphemes();
         for (let i = 0; i < graphemes.length; i++) {
@@ -529,7 +580,7 @@ function shapeLines(shaping: Shaping,
             const codePoint = grapheme.codePointAt(0);
             const vertical = lineVerticals ? lineVerticals[i] : isLineVertical(writingMode, allowVerticalPlacement, codePoint);
 
-            const keys = 'fontStack' in section && isCluster(grapheme) && !glyphMap[section.fontStack]?.[grapheme] ?
+            const keys = 'fontStack' in section && isCluster(grapheme) && !glyphMap[section.fontStack]?.default?.[grapheme] ?
                 [...grapheme] :
                 [grapheme];
 
@@ -616,13 +667,13 @@ function shapeTextSection(
     key: string,
     vertical: boolean,
     lineShapingSize: LineShapingSize,
-    glyphMap: Record<string, Record<string, StyleGlyph>>,
-    glyphPositions: Record<string, Record<string, GlyphPosition>>,
+    glyphMap: GlyphMap,
+    glyphPositions: GlyphPositions,
 ): ShapingSectionAttributes | null {
-    const positions = glyphPositions[section.fontStack];
-    const glyphPosition = positions?.[key];
-
-    const rectAndMetrics = getRectAndMetrics(glyphPosition, glyphMap, section, key);
+    const variant = vertical && glyphMap[section.fontStack]?.vertical?.[key] ? 'vertical' : 'default';
+    const glyphPosition = glyphPositions[section.fontStack]?.[variant]?.[key];
+    const glyph = glyphMap[section.fontStack]?.[variant]?.[key];
+    const rectAndMetrics = getRectAndMetrics(glyphPosition, glyph);
 
     if (rectAndMetrics === null) return null;
 

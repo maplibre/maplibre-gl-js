@@ -10,7 +10,26 @@ import {
     matchTaperProfile,
     type GeoJSONTaperAnnotation
 } from './geojson_taper.ts';
+
 import type {CanonicalTileID} from '../tile/tile_id.ts';
+import type {Feature, LineString} from 'geojson';
+
+test('anchors taper profiles in projected world coordinates', () => {
+    const data: Feature<LineString> = {
+        type: 'Feature',
+        properties: {widths: [4, 20, 8]},
+        geometry: {type: 'LineString', coordinates: [[0.25, 0.25], [0.5, 0.75], [0.75, 0.25]]}
+    };
+    const registry = buildTaperRegistry(data, true);
+    const index = new GeoJSONVT(data, {coordinates: 'unitSquare', extent: EXTENT, tolerance: 0});
+    const feature = index.getTile(0, 0, 0).features[0];
+
+    annotateGeoJSONTileFeature(feature, {z: 0, x: 0, y: 0} as CanonicalTileID, registry);
+
+    const annotation = (feature as { _taper?: GeoJSONTaperAnnotation })._taper;
+    expect(annotation.pieceKnots).toEqual([[0, 0.5, 1]]);
+    expect(matchTaperProfile(annotation, [4, 20, 8]).knotsPerRing).toEqual([[0, 0.5, 1]]);
+});
 
 describe('geojson taper anchoring', () => {
 
@@ -216,8 +235,8 @@ describe('geojson taper anchoring: self-overlapping (retraced) lines', () => {
         const plainRegistry = buildTaperRegistry(plain as any);
         const info = plainRegistry.get(plain.features[0].properties);
         expect(info).toBeDefined();
-        expect(info!.rings).toHaveLength(1);
-        expect(Object.keys(info!.profiles)).toHaveLength(0);
+        expect(info.rings).toHaveLength(1);
+        expect(Object.keys(info.profiles)).toHaveLength(0);
 
         const plainIndex = new GeoJSONVT(plain as any, {extent: EXTENT, buffer: 256, maxZoom: 12, tolerance: 0});
         const z = 12;
@@ -227,6 +246,6 @@ describe('geojson taper anchoring: self-overlapping (retraced) lines', () => {
         const annotation = (feature as {_taper?: GeoJSONTaperAnnotation})._taper;
         expect(annotation).toBeDefined();
         // the degenerate middle piece lies entirely inside segment B->C (knots > 0.5)
-        expect(annotation!.pieceKnots[0].every((k) => k > 0.5 && k < 1)).toBe(true);
+        expect(annotation.pieceKnots[0].every((k) => k > 0.5 && k < 1)).toBe(true);
     });
 });

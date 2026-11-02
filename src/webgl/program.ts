@@ -1,8 +1,12 @@
 import {type PreparedShader, shaders} from '../shaders/shaders.ts';
-import {type ProgramConfiguration} from '../data/program_configuration.ts';
 import {VertexArrayObject} from './vertex_array_object.ts';
-import {type Context} from './context.ts';
+import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
+import {applyUBOBindings} from './uniform_buffer.ts';
+import {bindProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {updateTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
+import type {Context} from './context.ts';
 import type {SegmentVector} from '../data/segment.ts';
 import type {VertexBuffer} from './vertex_buffer.ts';
 import type {IndexBuffer} from './index_buffer.ts';
@@ -12,11 +16,7 @@ import type {ColorMode} from './color_mode.ts';
 import type {CullFaceMode} from './cull_face_mode.ts';
 import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding.ts';
 import type {BinderUniform} from '../data/program_configuration.ts';
-import {terrainPreludeUniforms, type TerrainPreludeUniformsType} from './program/terrain_program.ts';
 import type {TerrainData} from '../render/terrain.ts';
-import {applyUBOBindings} from './uniform_buffer.ts';
-import {updateProjectionUniformBuffer} from './projection_uniform_buffer.ts';
-import {updateTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import type {ProjectionData} from '../geo/projection/projection_data.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
@@ -118,11 +118,6 @@ export class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(fragmentShader, fragmentSource);
         gl.compileShader(fragmentShader);
-
-        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-            throw new Error(`Could not compile fragment shader: ${gl.getShaderInfoLog(fragmentShader)}`);
-        }
-
         gl.attachShader(this.program, fragmentShader);
 
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -132,11 +127,6 @@ export class Program<Us extends UniformBindings> {
         }
         gl.shaderSource(vertexShader, vertexSource);
         gl.compileShader(vertexShader);
-
-        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-            throw new Error(`Could not compile vertex shader: ${gl.getShaderInfoLog(vertexShader)}`);
-        }
-
         gl.attachShader(this.program, vertexShader);
 
         this.attributes = {};
@@ -144,9 +134,23 @@ export class Program<Us extends UniformBindings> {
 
         this.numAttributes = allAttrInfo.length;
 
+        // Link before reading any status so the driver can overlap both compiles; the shaders are
+        // only asked how they compiled when the link failed, to name the one at fault.
         gl.linkProgram(this.program);
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            // A dead GPU process answers every query with 0 until isContextLost() turns true, so a
+            // failed link with zero attached shaders means the driver died, not the shaders (#8607).
+            if (gl.isContextLost() || gl.getProgramParameter(this.program, gl.ATTACHED_SHADERS) === 0) {
+                this.failedToCreate = true;
+                return;
+            }
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                throw new Error(`Could not compile fragment shader: ${gl.getShaderInfoLog(fragmentShader)}`);
+            }
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                throw new Error(`Could not compile vertex shader: ${gl.getShaderInfoLog(vertexShader)}`);
+            }
             throw new Error(`Program failed to link: ${gl.getProgramInfoLog(this.program)}`);
         }
 
@@ -203,6 +207,8 @@ export class Program<Us extends UniformBindings> {
         if (this.failedToCreate) return;
 
         context.program.set(this.program);
+        context.terrainUniformBuffer.bind();
+        context.frameUniformBuffer.bind();
         context.setDepthMode(depthMode);
         context.setStencilMode(stencilMode);
         context.setColorMode(colorMode);
@@ -220,9 +226,7 @@ export class Program<Us extends UniformBindings> {
             updateTerrainUniformBuffer(context.terrainUniformBuffer, terrain);
         }
 
-        if (projectionData) {
-            updateProjectionUniformBuffer(context.projectionUniformBuffer, projectionData);
-        }
+        bindProjectionUniformBuffer(context, projectionData);
 
         if (uniformValues) {
             for (const name in this.fixedUniforms) {

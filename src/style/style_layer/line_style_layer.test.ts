@@ -1,11 +1,12 @@
 import {describe, test, expect} from 'vitest';
 import {createStyleLayer} from '../create_style_layer.ts';
 import {extend} from '../../util/util.ts';
-import {type LineStyleLayer} from './line_style_layer.ts';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type EvaluationParameters} from '../evaluation_parameters.ts';
 import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import Point from '@mapbox/point-geometry';
+
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {EvaluationParameters} from '../evaluation_parameters.ts';
+import type {LineStyleLayer} from './line_style_layer.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 
 describe('LineStyleLayer', () => {

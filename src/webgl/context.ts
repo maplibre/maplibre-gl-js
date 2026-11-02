@@ -1,18 +1,17 @@
 import {IndexBuffer} from './index_buffer.ts';
-
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
-import {createProjectionUniformBuffer} from './projection_uniform_buffer.ts';
+import {createProjectionUniformBuffer, destroyProjectionUniformBuffers} from './projection_uniform_buffer.ts';
 import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
 import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
-import type {UniformBuffer} from './uniform_buffer.ts';
-import {type DepthMode} from './depth_mode.ts';
-import {type StencilMode} from './stencil_mode.ts';
 import {ColorMode} from './color_mode.ts';
-import {type CullFaceMode} from './cull_face_mode.ts';
 import {deepEqual} from '../util/util.ts';
 import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value.ts';
 
+import type {DepthMode} from './depth_mode.ts';
+import type {StencilMode} from './stencil_mode.ts';
+import type {CullFaceMode} from './cull_face_mode.ts';
+import type {UniformBuffer} from './uniform_buffer.ts';
 import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type.ts';
 import type {
     StructArray,
@@ -67,7 +66,10 @@ export class Context {
     pixelStoreUnpack: PixelStoreUnpack;
     pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
     pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
+    boundUniformBuffers: WebGLBuffer[];
     projectionUniformBuffer: UniformBuffer;
+    keyedProjectionUniformBuffers: Map<string, UniformBuffer>;
+    freeProjectionUniformBuffers: UniformBuffer[];
     terrainUniformBuffer: UniformBuffer;
     frameUniformBuffer: UniformBuffer;
 
@@ -119,9 +121,19 @@ export class Context {
         gl.getExtension('EXT_color_buffer_half_float');
         gl.getExtension('EXT_color_buffer_float');
 
+        this.boundUniformBuffers = [];
         this.projectionUniformBuffer = createProjectionUniformBuffer(this);
+        this.keyedProjectionUniformBuffers = new Map();
+        this.freeProjectionUniformBuffers = [];
         this.terrainUniformBuffer = createTerrainUniformBuffer(this);
         this.frameUniformBuffer = createFrameUniformBuffer(this);
+    }
+
+    /** Destroys the uniform buffers the context created. */
+    destroy(): void {
+        destroyProjectionUniformBuffers(this);
+        this.terrainUniformBuffer.destroy();
+        this.frameUniformBuffer.destroy();
     }
 
     setDefault(): void {
@@ -186,9 +198,7 @@ export class Context {
         this.pixelStoreUnpack.dirty = true;
         this.pixelStoreUnpackPremultiplyAlpha.dirty = true;
         this.pixelStoreUnpackFlipY.dirty = true;
-        this.projectionUniformBuffer.bindingDirty = true;
-        this.terrainUniformBuffer.bindingDirty = true;
-        this.frameUniformBuffer.bindingDirty = true;
+        this.boundUniformBuffers = [];
     }
 
     /**

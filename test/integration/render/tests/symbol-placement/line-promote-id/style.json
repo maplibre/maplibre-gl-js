@@ -1,0 +1,103 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 128,
+      "description": "Three roads from a GeoJSON source with promoteId, each crossing a tile boundary at lng 0, keep one icon every symbol-spacing along their whole length: a promoted feature id must not fold a road's anchors into one cross-tile symbol"
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 2,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "promoteId": "id",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "id": "a"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -36,
+                  7
+                ],
+                [
+                  36,
+                  7
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "id": "b"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -36,
+                  0
+                ],
+                [
+                  36,
+                  0
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "id": "c"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -36,
+                  -7
+                ],
+                [
+                  36,
+                  -7
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/sprite",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "line",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "icon-image": "triangle-stroked-12",
+        "symbol-placement": "line",
+        "symbol-spacing": 20
+      }
+    }
+  ]
+}

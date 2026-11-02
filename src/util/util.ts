@@ -1,10 +1,11 @@
 import Point from '@mapbox/point-geometry';
 import unitBezierFactory from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
-import type {Size} from './image.ts';
-import type {WorkerGlobalScopeInterface} from './web_worker.ts';
 import {mat3, mat4, quat, vec2, vec3, type vec4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
+
+import type {Size} from './image.ts';
+import type {WorkerGlobalScopeInterface} from './web_worker.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {Event} from './evented.ts';
 

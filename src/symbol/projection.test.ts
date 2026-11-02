@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane} from './projection.ts';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {expectToBeCloseToArray} from '../util/test/util.ts';
@@ -17,7 +17,7 @@ const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0));
  * about; everything else falls back to a pitched viewport over flat terrain at `TERRAIN_ELEVATION`.
  */
 function createDefaultTransform(): MercatorTransform {
-    const transform = new MercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+    const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
     transform.resize(500, 500);
     transform.setCenter(new LngLat(10.0, 50.0));
     transform.setPitch(60);
@@ -55,7 +55,7 @@ describe('Vertex to viewport projection', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
-    const transform = new MercatorTransform();
+    const transform = createMercatorTransform();
 
     test('projecting with null matrix', () => {
         const projectionContext = createProjectionContext({
@@ -97,7 +97,7 @@ describe('Find offset line intersections', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
-    const transform = new MercatorTransform();
+    const transform = createMercatorTransform();
 
     const projectionContext = createProjectionContext({
         lineVertexArray,
@@ -201,7 +201,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(0);
         transform.setPitch(45);
         transform.setRoll(45);
@@ -213,7 +213,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(45);
         transform.setPitch(45);
         transform.setRoll(0);
@@ -225,7 +225,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing, pitch, and roll', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(45);
         transform.setPitch(45);
         transform.setRoll(45);
@@ -237,7 +237,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getGlCoordMatrix: bearing, pitch, and roll', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(128, 128);
         transform.setBearing(45);
         transform.setPitch(45);
@@ -254,7 +254,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: bearing', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(45);
         transform.setPitch(0);
         transform.setRoll(0);
@@ -266,7 +266,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: roll', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(0);
         transform.setPitch(0);
         transform.setRoll(45);
@@ -278,7 +278,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: pitch', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(0);
         transform.setPitch(45);
         transform.setRoll(0);
@@ -290,7 +290,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: roll pitch bearing', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(45);
         transform.setPitch(45);
         transform.setRoll(45);
@@ -302,7 +302,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: pitch 90 degrees', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setMaxPitch(180);
         transform.setBearing(0);
         transform.setPitch(89);
@@ -327,7 +327,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: pitch 90 degrees with roll and bearing', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setMaxPitch(180);
         transform.setBearing(45);
         transform.setPitch(89);

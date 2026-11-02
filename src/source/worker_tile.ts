@@ -1,25 +1,24 @@
 import {FeatureIndex} from '../data/feature_index.ts';
-import {performSymbolLayout} from '../symbol/symbol_layout.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
-import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import {warnOnce, mapObject} from '../util/util.ts';
 import {ImageAtlas} from '../render/image_atlas.ts';
 import {GlyphAtlas} from '../render/glyph_atlas.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {type GetDashesResponse, MessageType, type GetImagesResponse} from '../util/actor_messages.ts';
 
 import type {Bucket, PopulateParameters} from '../data/bucket.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 import type {
     WorkerTileParameters,
     WorkerTileResult,
 } from './worker_source.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileLike} from '@maplibre/vt-pbf';
-import {type GetDashesResponse, MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages.ts';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -127,14 +126,14 @@ export class WorkerTile {
             }
         }
 
-        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs));
+        const stacks = mapObject(options.glyphDependencies, variants => mapObject(variants, glyphs => Object.keys(glyphs)));
 
         for (const request of this.inFlightDependencies) {
             request?.abort();
         }
         this.inFlightDependencies = [];
 
-        let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});
+        let getGlyphsPromise = Promise.resolve<GlyphMap>({});
         if (Object.keys(stacks).length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
@@ -172,28 +171,21 @@ export class WorkerTile {
 
         for (const key in buckets) {
             const bucket = buckets[key];
-            if (bucket instanceof SymbolBucket) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages);
-                performSymbolLayout({
-                    bucket,
-                    glyphMap,
-                    glyphPositions: glyphAtlas.positions,
-                    imageMap: iconMap,
-                    imagePositions: imageAtlas.iconPositions,
-                    showCollisionBoxes: this.showCollisionBoxes,
-                    canonical: this.tileID.canonical,
-                    subdivisionGranularity: options.subdivisionGranularity
-                });
-            } else if (bucket.hasDependencies) {
-                recalculateLayers(bucket.layers, this.zoom, availableImages);
-                bucket.addFeatures({
-                    options,
-                    canonical: this.tileID.canonical,
-                    imagePositions: imageAtlas.patternPositions,
-                    dashPositions,
-                    imageMap: patternMap
-                });
-            }
+            if (!bucket.hasDependencies) continue;
+
+            recalculateLayers(bucket.layers, this.zoom, availableImages);
+            bucket.addFeatures({
+                options,
+                canonical: this.tileID.canonical,
+                glyphMap,
+                glyphPositions: glyphAtlas.positions,
+                iconMap,
+                iconPositions: imageAtlas.iconPositions,
+                patternMap,
+                patternPositions: imageAtlas.patternPositions,
+                dashPositions,
+                showCollisionBoxes: this.showCollisionBoxes
+            });
         }
 
         return {

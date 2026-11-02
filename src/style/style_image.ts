@@ -1,5 +1,4 @@
-import {type RGBAImage} from '../util/image.ts';
-
+import type {RGBAImage} from '../util/image.ts';
 import type {Map} from '../ui/map.ts';
 
 export type SpriteJSON = {[id: string]: StyleImageMetadata & {
@@ -17,7 +16,7 @@ export type SpriteOnDemandStyleImage = {
     height: number;
     x: number;
     y: number;
-    context: CanvasRenderingContext2D;
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 };
 
 /**

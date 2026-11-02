@@ -1,4 +1,5 @@
 import {evaluateZoomSnap} from '../../util/util.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {Map} from '../map.ts';
 import type {TransformProvider} from './transform-provider.ts';
@@ -31,7 +32,7 @@ export class ClickZoomHandler implements Handler {
                 map.easeTo({
                     duration: 300,
                     zoom: evaluateZoomSnap(this._tr.zoom + (e.shiftKey ? -1 : 1), map.getZoomSnap()),
-                    around: this._tr.unproject(point)
+                    around: this._tr.transform.isPointOnMapSurface(point) ? this._tr.unproject(point) : undefined
                 }, {originalEvent: e});
             }
         };

@@ -1,14 +1,15 @@
 /* eslint-disable key-spacing */
 import potpack from 'potpack';
-
 import {RGBAImage} from '../util/image.ts';
 import {ImagePosition} from './image_atlas.ts';
 import {Texture} from '../webgl/texture.ts';
 
 import type {ImageManager} from './image_manager.ts';
 import type {StyleImage} from '../style/style_image.ts';
+import type {CrossFaded} from '../style/properties.ts';
 import type {Context} from '../webgl/context.ts';
 import type {PotpackBox} from 'potpack';
+import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 
 type Pattern = {
     bin: PotpackBox;
@@ -89,6 +90,19 @@ export class PatternAtlas {
         this._update();
 
         return this._entries[id].position;
+    }
+
+    /**
+     * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
+     *
+     * @returns true if a needed image is missing and rendering needs to be skipped.
+     */
+    isPatternMissing(image?: CrossFaded<ResolvedImage> | null): boolean {
+        if (!image) return false;
+        if (!image.from || !image.to) return true;
+        const imagePosA = this.getPattern(image.from.toString());
+        const imagePosB = this.getPattern(image.to.toString());
+        return !imagePosA || !imagePosB;
     }
 
     bind(context: Context): void {

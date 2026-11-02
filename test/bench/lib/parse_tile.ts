@@ -12,9 +12,9 @@ import {MessageType} from '../../../src/util/actor_messages.ts';
 import {isCluster} from '../../../src/util/graphemes.ts';
 
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {StyleGlyph} from '../../../src/style/style_glyph.ts';
+import type {GlyphMap, StyleGlyph} from '../../../src/style/style_glyph.ts';
 import type {IActor} from '../../../src/util/actor.ts';
-import type {ActorMessage, GetDashesResponse, GetGlyphsResponse} from '../../../src/util/actor_messages.ts';
+import type {ActorMessage, GetDashesResponse} from '../../../src/util/actor_messages.ts';
 import type {WorkerTileResult} from '../../../src/source/worker_source.ts';
 
 type AnyActorMessage = {[K in MessageType]: ActorMessage<K>}[MessageType];
@@ -48,12 +48,12 @@ const actor = {
         const message = rawMessage as AnyActorMessage;
         if (message.type === MessageType.getGlyphs) {
             const {stacks} = message.data;
-            const response: GetGlyphsResponse = {};
+            const response: GlyphMap = {};
             for (const stack in stacks) {
                 glyphCache[stack] ||= loadGlyphs(stack);
-                response[stack] = {};
-                for (const id of stacks[stack]) {
-                    response[stack][id] = isCluster(id) ? null : glyphCache[stack][id.codePointAt(0)];
+                response[stack] = {default: {}};
+                for (const id of stacks[stack].default) {
+                    response[stack].default[id] = isCluster(id) ? null : glyphCache[stack][id.codePointAt(0)];
                 }
             }
             return Promise.resolve(response);

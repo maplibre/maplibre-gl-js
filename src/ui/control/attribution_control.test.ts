@@ -3,8 +3,9 @@ import {AttributionControl, defaultAttributionControlOptions} from './attributio
 import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {fakeServer} from 'nise';
-import {type Map} from '../../ui/map.ts';
-import {type MapSourceDataEvent} from '../events.ts';
+
+import type {Map} from '../../ui/map.ts';
+import type {MapSourceDataEvent} from '../events.ts';
 
 function createMap() {
 
@@ -371,6 +372,27 @@ describe('AttributionControl', () => {
         await map.once('load');
 
         expect(attributionControl._innerContainer.innerHTML).toBe('MapLibre');
+    });
+
+    test('does not reintroduce dangerous attributes when inserting sanitized attributions', async () => {
+        const attributionControl = new AttributionControl({
+            customAttribution: 'MapLibre<form><math><mtext></form><form><mglyph><style></math><img src onerror="alert(1)">'
+        });
+        map.addControl(attributionControl);
+        await map.once('load');
+
+        expect(attributionControl._innerContainer.querySelector('[onerror]')).toBeNull();
+    });
+
+    test('an unclosed disallowed tag in one attribution does not erase the other attributions', async () => {
+        const attributionControl = new AttributionControl({
+            customAttribution: ['<font>&copy; A', '&copy; OpenStreetMap contributors']
+        });
+        map.addControl(attributionControl);
+        await map.once('load');
+
+        const innerContainer = map.getContainer().querySelector('.maplibregl-ctrl-attrib-inner');
+        expect(innerContainer?.innerHTML).toBe('© OpenStreetMap contributors');
     });
 
     test('only recreates attributions if sanitized attribution content changes', async () => {

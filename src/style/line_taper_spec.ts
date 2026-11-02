@@ -1,4 +1,5 @@
 import {latest} from '@maplibre/maplibre-gl-style-spec';
+
 import type {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /*

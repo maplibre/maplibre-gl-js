@@ -1,11 +1,12 @@
 import {DEMData} from '../data/dem_data.ts';
 import {RGBAImage} from '../util/image.ts';
+import {getImageData, isImageBitmap} from '../util/util.ts';
+
 import type {Actor} from '../util/actor.ts';
 import type {
     WorkerDEMTileParameters,
     TileParameters
 } from './worker_source.ts';
-import {getImageData, isImageBitmap} from '../util/util.ts';
 
 export class RasterDEMTileWorkerSource {
     actor: Actor;

@@ -6,14 +6,14 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import type {Page, Browser, WebWorker} from 'puppeteer';
-
 import {ensureError} from '../../../src/util/util.ts';
 import {localizeURLs} from '../lib/localize-urls.ts';
 import {launchPuppeteer, startCoverage, stopCoverageAndReport} from '../lib/puppeteer_config.ts';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi, type TestContext} from 'vitest';
+
 import type {MapLibreMap, CanvasSource, PointLike, StyleSpecification, MapEventType} from '../../../dist/maplibre-gl';
 import type * as MapLibreGL from '../../../dist/maplibre-gl';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi, type TestContext} from 'vitest';
+import type {Page, Browser, WebWorker} from 'puppeteer';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof MapLibreGL;
@@ -272,6 +272,17 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
 
             render(gl: WebGL2RenderingContext, args) {
+                this.draw(gl, args.defaultProjectionData.mainMatrix);
+            }
+
+            /** Draws the point into a terrain tile, whose south-west corner is (-1, -1) in clip space. */
+            renderToTerrainTile(gl: WebGL2RenderingContext, {tileID}: {tileID: {canonical: {x: number; y: number; z: number}; wrap: number}}) {
+                const tiles = 2 ** tileID.canonical.z;
+                const west = tileID.canonical.x + tileID.wrap * tiles;
+                this.draw(gl, [2 * tiles, 0, 0, 0, 0, -2 * tiles, 0, 0, 0, 0, 1, 0, -2 * west - 1, 2 * tileID.canonical.y + 1, 0, 1]);
+            }
+
+            draw(gl: WebGL2RenderingContext, matrix: Float32List) {
                 const vertexArray = new Float32Array([0.5, 0.5, 0.0]);
                 gl.useProgram(this.program);
                 const vertexBuffer = gl.createBuffer();
@@ -280,7 +291,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 const posAttrib = gl.getAttribLocation(this.program, 'aPos');
                 gl.enableVertexAttribArray(posAttrib);
                 gl.vertexAttribPointer(posAttrib, 3, gl.FLOAT, false, 0, 0);
-                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, args.defaultProjectionData.mainMatrix);
+                gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, matrix);
                 gl.drawArrays(gl.POINTS, 0, 1);
             }
         }
@@ -514,10 +525,24 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             }
         }
 
+        /** Leaves indexed uniform-buffer slots unbound before the next native layer draws. */
+        class UnbindUniformBuffers {
+            id = 'unbind-uniform-buffers';
+            type = 'custom';
+            renderingMode = '3d';
+
+            render(gl: WebGL2RenderingContext) {
+                for (let binding = 0; binding < 3; binding++) {
+                    gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, null);
+                }
+            }
+        }
+
         const customLayerImplementations = {
             'tent-3d': Tent3D,
             'tent-3d-globe': Tent3DGlobe,
-            'null-island': NullIsland
+            'null-island': NullIsland,
+            'unbind-uniform-buffers': UnbindUniformBuffers
         };
 
         async function updateFakeCanvas(document: Document, id: string, imagePath: string) {
@@ -662,13 +687,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
         if (options.addFakeCanvas) {
             const fakeCanvas = await createFakeCanvas(document, options.addFakeCanvas.id, options.addFakeCanvas.image);
             document.body.appendChild(fakeCanvas);
-        }
-
-        if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
-            await maplibregl.setRTLTextPlugin(
-                'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
-                false // Don't lazy load the plugin
-            );
         }
 
         const map = new maplibregl.Map({

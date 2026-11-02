@@ -25,7 +25,7 @@ import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation, WorldCoordinateHelper} from '../geo/transform_interface.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
@@ -179,6 +179,7 @@ export class FeatureIndex {
                 params.availableImages,
                 styleLayers,
                 serializedLayers,
+                args.transform.worldCoordinateHelper,
                 sourceFeatureState,
                 (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
                     featureGeometry ||= loadGeometry(feature);
@@ -212,6 +213,7 @@ export class FeatureIndex {
         availableImages: string[],
         styleLayers: {[_: string]: StyleLayer},
         serializedLayers: {[_: string]: any},
+        worldCoordinateHelper: WorldCoordinateHelper,
         sourceFeatureState?: SourceFeatureState,
         intersectionTest?: (
             feature: VectorTileFeatureLike,
@@ -266,7 +268,7 @@ export class FeatureIndex {
                 continue;
             }
 
-            const geojsonFeature = new GeoJSONFeature(feature, this.z, this.x, this.y, id) as MapGeoJSONFeature;
+            const geojsonFeature = new GeoJSONFeature(feature, this.z, this.x, this.y, id, worldCoordinateHelper) as MapGeoJSONFeature;
             geojsonFeature.layer = serializedLayer;
             let layerResult = result[layerID];
             if (layerResult === undefined) {
@@ -285,6 +287,7 @@ export class FeatureIndex {
         filterParams: {
             filterSpec: FilterSpecification;
             globalState: Record<string, any>;
+            worldCoordinateHelper: WorldCoordinateHelper;
         },
         filterLayerIDs: Set<string> | null,
         availableImages: string[],
@@ -304,7 +307,8 @@ export class FeatureIndex {
                 filterLayerIDs,
                 availableImages,
                 styleLayers,
-                serializedLayers
+                serializedLayers,
+                filterParams.worldCoordinateHelper
             );
 
         }

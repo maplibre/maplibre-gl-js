@@ -3,6 +3,7 @@ import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program.ts';
 import {FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+
 import type {CrossFaded} from '../style/properties.ts';
 import type {FillLayerSpecification, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {ProgramConfiguration} from '../data/program_configuration.ts';

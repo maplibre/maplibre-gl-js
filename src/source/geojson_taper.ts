@@ -1,5 +1,6 @@
 import {mercatorXfromLng, mercatorYfromLat} from '../geo/mercator_coordinate.ts';
 import {EXTENT} from '../data/extent.ts';
+
 import type {CanonicalTileID} from '../tile/tile_id.ts';
 import type {GeoJSON} from 'geojson';
 import type {GeoJSONVTInternalTileFeature} from '@maplibre/geojson-vt';
@@ -61,11 +62,11 @@ export type GeoJSONTaperAnnotation = {
 export type GeoJSONTaperFeature = {_taper?: GeoJSONTaperAnnotation};
 
 type TaperRingInfo = {
-    /** Mercator x of every original ring vertex. */
+    /** Normalized world x of every original ring vertex. */
     xs: number[];
-    /** Mercator y of every original ring vertex. */
+    /** Normalized world y of every original ring vertex. */
     ys: number[];
-    /** Cumulative arc length (mercator units) at every vertex; `cum[0] === 0`. */
+    /** Cumulative arc length in normalized world units at every vertex; `cum[0] === 0`. */
     cum: number[];
     /** Total arc length of the ring. */
     length: number;
@@ -83,23 +84,24 @@ export type TaperFeatureInfo = {
 export type TaperRegistry = WeakMap<object, TaperFeatureInfo>;
 
 /**
- * Scans the source GeoJSON for line features with numeric-array properties and
- * records their original-geometry taper anchoring. Called when the worker loads
- * the source data, before any tiling happens.
+ * Records original-geometry anchors for line features before tiling, including
+ * numeric-array profiles and the positions used by start/end width tapers.
+ *
+ * @param projected - Whether coordinates are already normalized world coordinates in the source's CRS.
  */
-export function buildTaperRegistry(data: GeoJSON.GeoJSON): TaperRegistry {
+export function buildTaperRegistry(data: GeoJSON.GeoJSON, projected: boolean = false): TaperRegistry {
     const registry: TaperRegistry = new WeakMap();
     if (data.type === 'FeatureCollection') {
         for (const feature of data.features) {
-            collectTaperFeatureInfo(feature, registry);
+            collectTaperFeatureInfo(feature, registry, projected);
         }
     } else if (data.type === 'Feature') {
-        collectTaperFeatureInfo(data, registry);
+        collectTaperFeatureInfo(data, registry, projected);
     }
     return registry;
 }
 
-function collectTaperFeatureInfo(feature: GeoJSON.Feature, registry: TaperRegistry): void {
+function collectTaperFeatureInfo(feature: GeoJSON.Feature, registry: TaperRegistry, projected: boolean): void {
     const geometry = feature.geometry;
     if (!geometry) return;
     let lines: GeoJSON.Position[][];
@@ -131,8 +133,8 @@ function collectTaperFeatureInfo(feature: GeoJSON.Feature, registry: TaperRegist
         const cum: number[] = [0];
         let length = 0;
         for (let i = 0; i < line.length; i++) {
-            const x = mercatorXfromLng(line[i][0]);
-            const y = mercatorYfromLat(line[i][1]);
+            const x = projected ? line[i][0] : mercatorXfromLng(line[i][0]);
+            const y = projected ? line[i][1] : mercatorYfromLat(line[i][1]);
             if (i > 0) {
                 const dx = x - xs[i - 1];
                 const dy = y - ys[i - 1];

@@ -1,0 +1,39 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "pixelRatio": 2,
+            "width": 400,
+            "height": 200
+        }
+    },
+    "zoom": 8,
+    "sources": {
+        "sample": {
+            "type": "geojson",
+            "data": {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [0, 0]
+                },
+                "properties": {
+                    "name_hi": "\u092D\u093E\u0930\u0924"
+                }
+            }
+        }
+    },
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "layers": [
+        {
+            "id": "sample-text",
+            "type": "symbol",
+            "source": "sample",
+            "layout": {
+                "text-field": "{name_hi}",
+                "text-font": ["Noto Sans Regular"],
+                "text-size": 60
+            }
+        }
+    ]
+}

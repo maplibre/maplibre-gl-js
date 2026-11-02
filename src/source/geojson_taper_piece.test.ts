@@ -7,11 +7,12 @@ import {LineBucket} from '../data/bucket/line_bucket.ts';
 import {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {buildTaperRegistry, annotateGeoJSONTileFeature} from './geojson_taper.ts';
+
 import type {CanonicalTileID} from '../tile/tile_id.ts';
 
 function makeSCurve() {
     const L0 = 13.34, L1 = 13.56, BASE = 52.41, AMP = 0.007;
-    const coords: [number, number][] = [];
+    const coords: Array<[number, number]> = [];
     for (let i = 0; i <= 40; i++) {
         const t = i / 40;
         coords.push([L0 + (L1 - L0) * t, BASE + AMP * Math.sin(2 * Math.PI * t)]);
@@ -31,11 +32,11 @@ function makeBucket() {
         collisionBoxArray: {} as any,
         sourceLayerIndex: 0,
         sourceID: 'dbg'
-    } as any);
+    });
 }
 
 test('real z13 piece: annotation + bucket emission stay consistent (start/end mode)', () => {
-    const {coords, L0, L1} = makeSCurve();
+    const {coords} = makeSCurve();
     const data = {
         type: 'FeatureCollection',
         features: [{type: 'Feature', properties: {widths: [3, 20, 40]}, geometry: {type: 'LineString', coordinates: coords}}]
@@ -50,14 +51,14 @@ test('real z13 piece: annotation + bucket emission stay consistent (start/end mo
     const tile = index.getTile(z, x, y);
 
     // (1) Annotation prüfen
-    annotateGeoJSONTileFeature(tile.features[0] as any, canonical, registry);
-    const feat = tile.features[0] as {_taper?: {pieceKnots: number[][]; profiles: {}}, geometry: unknown};
+    annotateGeoJSONTileFeature(tile.features[0], canonical, registry);
+    const feat = tile.features[0] as {_taper?: {pieceKnots: number[][]; profiles: {}}; geometry: unknown};
     console.log('ANNOTATION pieceKnots:', JSON.stringify(feat._taper?.pieceKnots.map(k => k.map(v => +v.toFixed(4)))));
 
     // (2) Bucket-Emission mit exakt diesem Piece (start/end-Modus)
     const bucket = makeBucket();
-    const rawLines = feat.geometry as [number, number][][];
-    const geometry = rawLines.map((line: [number, number][]) =>
+    const rawLines = feat.geometry as Array<Array<[number, number]>>;
+    const geometry = rawLines.map((line: Array<[number, number]>) =>
         line.map((p) => new Point(p[0], p[1])));
     const bucketFeature = {
         type: 2, properties: {widths: [3, 20, 40]}, _taper: feat._taper, id: undefined,

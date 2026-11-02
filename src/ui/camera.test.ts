@@ -4,16 +4,18 @@ import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
-import {setMatchMedia} from '../util/test/util.ts';
-import {mercatorZfromAltitude} from '../geo/mercator_coordinate.ts';
+import {createDEM, createDEMTerrain, createTerrain, setMatchMedia} from '../util/test/util.ts';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
 import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Terrain} from '../render/terrain.ts';
+import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
 import type {JumpToOptions} from '../../dist/maplibre-gl';
 
 beforeEach(() => {
@@ -39,7 +41,7 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
         cancelRenderFrame: (id) => queue.remove(id),
         transformCameraUpdate: options.transformCameraUpdate
     });
-    camera.transform.resize(512, 512, true);
+    camera.resize(512, 512, true);
 
     if (globe) {
         const projectionObjects = createProjectionFromName('globe', options.transformConstrain, {});
@@ -60,75 +62,6 @@ async function simulateAllAnimationFrames(stub: ReturnType<typeof vi.spyOn>, cam
         queue.run();
     }
 }
-
-describe('calculateCameraOptionsFromTo', () => {
-    // Choose initial zoom to avoid center being constrained by mercator latitude limits.
-    const {camera} = createCamera(null, false, {zoom: 1});
-
-    test('look at north', () => {
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 1, lat: 1});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.center).toBeDefined();
-        expect(cameraOptions.bearing).toBeCloseTo(0);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('look at west', () => {
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.bearing).toBeCloseTo(-90);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 45', () => {
-        // altitude same as grounddistance => 45°
-        // distance between lng x and lng x+1 is 111.2km at same lat
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(45);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 90', () => {
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 0, {lng: 0, lat: 0});
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(90);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('pitch 153.435', () => {
-
-        // distance between lng x and lng x+1 is 111.2km at same lat
-        // (elevation difference of cam and center) / 2 = grounddistance =>
-        // acos(111.2 / sqrt(111.2² + (111.2 * 2)²)) = acos(1/sqrt(5)) => 63.435 + 90 (looking up) = 153.435
-        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromTo({lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 111200 * 3);
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.pitch).toBeCloseTo(153.435);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('zoom distance 1000', () => {
-        const expectedZoom = Math.log2(camera.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / camera.transform.tileSize);
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 1000);
-
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('zoom distance 1 lng (111.2km), 111.2km altitude away', () => {
-        const expectedZoom = Math.log2(camera.transform.cameraToCenterDistance / mercatorZfromAltitude(Math.hypot(111200, 111200), 0) / camera.transform.tileSize);
-        const cameraOptions = camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 1, lat: 0}, 111200);
-
-        expect(cameraOptions).toBeDefined();
-        expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
-        expect(cameraOptions.roll).toBeUndefined();
-    });
-
-    test('same To as From error', () => {
-        expect(() => camera.calculateCameraOptionsFromTo({lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow('Can\'t calculate camera options with same From and To');
-    });
-});
 
 describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
     // Choose initial zoom to avoid center being constrained by mercator latitude limits.
@@ -162,6 +95,22 @@ describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
         expect(cameraOptions.bearing).toBeCloseTo(0);
         expect(cameraOptions.pitch).toBeCloseTo(180);
         expect(cameraOptions.roll).toBeUndefined();
+    });
+
+    test('a fresh camera can be jumped to the result when no roll was given', () => {
+        const {camera: own} = createCamera({maxPitch: 180}, false, {zoom: 1});
+        const cameraOptions: CameraOptions = own.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 1000, 30, 60);
+        expect(() => own.jumpTo(cameraOptions)).not.toThrow();
+        expect(own.getRoll()).toBe(0);
+        expect(own.getBearing()).toBeCloseTo(30);
+        expect(own.getPitch()).toBeCloseTo(60);
+    });
+
+    test('puts the center on the ground at pitch 85', () => {
+        const cameraOptions: CameraOptions = camera.calculateCameraOptionsFromCameraLngLatAltRotation({lng: 1, lat: 0}, 1000, 0, 85);
+        const center = LngLat.convert(cameraOptions.center);
+        expect(cameraOptions.elevation).toBe(0);
+        expect(center.lat).toBeCloseTo(0.1028, 3);
     });
 
     test('look level', () => {
@@ -1296,7 +1245,6 @@ describe('easeTo', () => {
 
         terrain = {
             getMinTileElevationForLngLatZoom: () => 0,
-            getElevationForLngLatZoom: () => 0,
             getElevationForLngLat: () => 0
         } as any as Terrain;
 
@@ -1953,7 +1901,7 @@ describe('flyTo', () => {
 
     test('flight arc does not zoom below transform minZoom when only map setMinZoom is used', async () => {
         const {camera, queue} = createCamera(null, false, {zoom: 20});
-        camera.transform.setMinZoom(10);
+        camera.applyTransformChange(tr => tr.setMinZoom(10));
         const stub = vi.spyOn(timeControl, 'now');
 
         const mapMinZoom = 10;
@@ -2089,16 +2037,26 @@ describe('flyTo', () => {
         expect(camera.getPadding()).toEqual({top: 50, bottom: 0, left: 0, right: 30});
     });
 
+    test('applies the offset option when prefers-reduce-motion:reduce is set', async () => {
+        const {camera} = createCamera();
+        Object.defineProperty(browser, 'prefersReducedMotion', {value: true});
+
+        camera.flyTo({center: [100, 0], offset: [100, 0]});
+
+        // Same end center as the animated flyTo and easeTo with this offset
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
+    });
+
     test('check elevation events freezeElevation=false', async () => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
-        const {camera, queue} = createCamera({terrain});
+        const terrain = createTerrain();
+        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
         const stub = vi.spyOn(timeControl, 'now');
 
-        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
         camera._updateElevation = () => terrainCallbacks.update++;
-        camera._finalizeElevation = () => terrainCallbacks.finalize++;
         camera.setCenter([-10, 0]);
+        terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
 
         stub.mockReturnValue(0);
@@ -2110,19 +2068,19 @@ describe('flyTo', () => {
         await moveEnded;
         expect(terrainCallbacks.prepare).toBe(1);
         expect(terrainCallbacks.update).toBe(2);
-        expect(terrainCallbacks.finalize).toBe(0);
+        expect(camera.transform.elevation).toBe(1000);
     });
 
     test('check elevation events freezeElevation=true', async() => {
-        const terrain = {getElevationForLngLat: () => 0, getElevationForLngLatZoom: () => 0} as any as Terrain;
-        const {camera, queue} = createCamera({terrain});
+        const terrain = createTerrain();
+        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
         const stub = vi.spyOn(timeControl, 'now');
 
-        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        const terrainCallbacks = {prepare: 0, update: 0} as any;
         camera._prepareElevation = () => terrainCallbacks.prepare++;
         camera._updateElevation = () => terrainCallbacks.update++;
-        camera._finalizeElevation = () => terrainCallbacks.finalize++;
         camera.setCenter([-10, 0]);
+        terrain.getElevationForLngLat = () => 2000;
         const moveEnded = camera.once('moveend');
 
         stub.mockReturnValue(0);
@@ -2134,35 +2092,35 @@ describe('flyTo', () => {
         await moveEnded;
         expect(terrainCallbacks.prepare).toBe(1);
         expect(terrainCallbacks.update).toBe(0);
-        expect(terrainCallbacks.finalize).toBe(1);
+        expect(camera.transform.elevation).toBe(2000);
     });
 
     test('check elevation callbacks', () => {
         const terrain = {
-            getElevationForLngLat: () => 100,
+            getElevationAndDEMStateForLngLat: () => ({elevation: 100, demState: 'loaded'}),
             getMinTileElevationForLngLatZoom: () => 200
         } as any;
         const {camera} = createCamera({terrain});
 
-        camera.transform = {
+        const tr = {
             elevation: 0,
             recalculateZoomAndCenter: () => true,
             setMinElevationForCurrentTile: (_a) => true,
-            setElevation: (e) => (camera.transform as any).elevation = e
+            setElevation: (e) => tr.elevation = e
         } as any;
 
-        camera._prepareElevation(new LngLat(10, 0));
+        camera._prepareElevation(new LngLat(10, 0), tr);
         // expect(camera._elevationCenter).toBe([10, 0]);
         expect(camera._elevationStart).toBe(0);
         expect(camera._elevationTarget).toBe(100);
         expect(camera.elevationFreeze).toBeTruthy();
 
-        terrain.getElevationForLngLat = () => 200;
-        camera._updateElevation(0.5);
+        terrain.getElevationAndDEMStateForLngLat = () => ({elevation: 200, demState: 'loaded'});
+        camera._updateElevation(0.5, tr);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
 
-        camera._finalizeElevation();
+        camera.releaseElevation();
         expect(camera.elevationFreeze).toBeFalsy();
     });
 
@@ -2418,7 +2376,7 @@ describe('cameraForBounds', () => {
 
     test('asymmetrical transform using LngLatBounds instance', () => {
         const {camera} = createCamera({minZoom: 2, maxZoom: 10, minPitch: 0, maxPitch: 60, renderWorldCopies: false});
-        camera.transform.resize(2048, 512, true);
+        camera.resize(2048, 512, true);
 
         const bb = new LngLatBounds();
         bb.extend([-66.9326, 49.5904]);
@@ -2429,6 +2387,44 @@ describe('cameraForBounds', () => {
         expect(fixedLngLat(rotatedTransform.center, 4)).toEqual({lng: -95.9669, lat: 38.3048});
         expect(fixedNum(rotatedTransform.zoom, 3)).toBe(2.507);
         expect(rotatedTransform.bearing).toBe(45);
+    });
+});
+
+describe('absolutePadding', () => {
+    const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+    const padding = {top: 20, right: 150, bottom: 40, left: 60};
+
+    test('cameraForBounds fits for the given padding as the map\'s padding and returns it', () => {
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(padding);
+        const expected = {...paddedCamera.cameraForBounds(bb), padding};
+
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        expect(camera.cameraForBounds(bb, {padding, absolutePadding: true})).toEqual(expected);
+        // the map's own padding is neither used nor changed
+        expect(camera.getPadding()).toEqual({top: 300, right: 300, bottom: 300, left: 300});
+        // a number applies to all sides
+        paddedCamera.setPadding({top: 15, right: 15, bottom: 15, left: 15});
+        expect(camera.cameraForBounds(bb, {padding: 15, absolutePadding: true}))
+            .toEqual({...paddedCamera.cameraForBounds(bb), padding: {top: 15, right: 15, bottom: 15, left: 15}});
+        // missing sides are 0, not taken from the map
+        paddedCamera.setPadding({top: 0, right: 0, bottom: 0, left: 60});
+        expect(camera.cameraForBounds(bb, {padding: {left: 60}, absolutePadding: true}))
+            .toEqual({...paddedCamera.cameraForBounds(bb), padding: {top: 0, right: 0, bottom: 0, left: 60}});
+    });
+
+    test('fitBounds transitions to the given padding', () => {
+        const {camera: paddedCamera} = createCamera();
+        paddedCamera.setPadding(padding);
+        const expected = paddedCamera.cameraForBounds(bb);
+
+        const {camera} = createCamera();
+        camera.setPadding({top: 300, right: 300, bottom: 300, left: 300});
+        camera.fitBounds(bb, {padding, absolutePadding: true, duration: 0});
+        expect(camera.getPadding()).toEqual(padding);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual(fixedLngLat(expected.center, 4));
+        expect(fixedNum(camera.getZoom(), 3)).toBe(fixedNum(expected.zoom, 3));
     });
 });
 
@@ -2688,11 +2684,42 @@ describe('transformCameraUpdate', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 10});
         expect(fixedNum(camera.getZoom())).toBe(3);
     });
+
+    test('keeps a field of view set during easeTo', () => {
+        const {camera, queue} = createCamera({transformCameraUpdate: () => ({})});
+        const stub = vi.spyOn(timeControl, 'now');
+        stub.mockReturnValue(0);
+
+        camera.easeTo({center: [100, 0], duration: 10});
+        camera.setVerticalFieldOfView(50);
+        stub.mockReturnValue(10);
+        queue.run();
+
+        expect(camera.getVerticalFieldOfView()).toBeCloseTo(50, 10);
+    });
 });
 
 test('create camera with globe returns make globe controls true', () => {
     const {camera} = createCamera(null, true);
     expect(camera.cameraHelper.useGlobeControls).toBeTruthy();
+});
+
+describe('migrateProjection', () => {
+    test('moves the requested camera state to the new projection', () => {
+        const {camera} = createCamera({transformCameraUpdate: ({center, zoom}) => ({center, zoom})});
+        const stateBeforeMigration = camera.getTransformForUpdate();
+        stateBeforeMigration.setZoom(5);
+        stateBeforeMigration.setCenter(new LngLat(10, 20));
+
+        const projectionObjects = createProjectionFromName('globe', undefined, {});
+        camera.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
+
+        const requestedState = camera.getTransformForUpdate();
+        expect(requestedState.center.lng).toBeCloseTo(10);
+        expect(requestedState.center.lat).toBeCloseTo(20);
+        expect(requestedState.zoom).toBeCloseTo(5);
+        expect(() => requestedState.getRayDirectionFromPixel(new Point(256, 256))).not.toThrow();
+    });
 });
 
 describe('jumpTo globe projection', () => {
@@ -2707,6 +2734,12 @@ describe('jumpTo globe projection', () => {
             camera.jumpTo({center: [0, 40]});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
             expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
+
+        test('jumps onto the pole while zooming out', () => {
+            camera.jumpTo({zoom: 8});
+            camera.jumpTo({center: [0, 90], zoom: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 90});
         });
 
         test('changing center with zoom specified should not adjusts zoom', () => {
@@ -2872,6 +2905,12 @@ describe('easeTo globe projection', () => {
             camera.easeTo({center: [0, 40], zoom: 3, duration: 0});
             expect(camera.getCenter()).toEqual({lng: 0, lat: 40});
             expect(camera.getZoom()).toBe(3);
+        });
+
+        test('eases onto the pole while zooming out', () => {
+            camera.jumpTo({center: [0, 60.2], zoom: 8});
+            camera.easeTo({center: [0, 90], zoom: 0, duration: 0});
+            expect(camera.getCenter()).toEqual({lng: 0, lat: 90});
         });
     });
 
@@ -3211,6 +3250,12 @@ describe('flyTo globe projection', () => {
             expect(camera.getCenter().lng).toBeCloseTo(0, 9);
             expect(camera.getCenter().lat).toBeCloseTo(40, 9);
             expect(camera.getZoom()).toBe(0.6154999996223638);
+        });
+
+        test('flies onto the pole while zooming out', () => {
+            camera.jumpTo({zoom: 8});
+            camera.flyTo({center: [0, 90], zoom: 0, animate: false});
+            expect(camera.getCenter().lat).toBeCloseTo(90, 9);
         });
 
         test('changing center with zoom specified should not adjusts zoom', () => {
@@ -3815,7 +3860,7 @@ describe('flyTo globe projection', () => {
 
         test('flight arc does not zoom below transform minZoom when only map setMinZoom is used (globe projection)', async () => {
             const {camera, queue} = createCamera(null, true, {zoom: 20});
-            camera.transform.setMinZoom(10);
+            camera.applyTransformChange(tr => tr.setMinZoom(10));
             const stub = vi.spyOn(timeControl, 'now');
 
             const mapMinZoom = 10;
@@ -3838,8 +3883,8 @@ describe('flyTo globe projection', () => {
 
         test('respects transform\'s maxZoom', async () => {
             const {camera, queue} = createCamera(null, true);
-            camera.transform.setMinZoom(2);
-            camera.transform.setMaxZoom(10);
+            camera.applyTransformChange(tr => tr.setMinZoom(2));
+            camera.applyTransformChange(tr => tr.setMaxZoom(10));
 
             const promise = camera.once('moveend');
 
@@ -4019,4 +4064,158 @@ describe('zoomSnap', () => {
         camera.zoomIn({duration: 0});
         expect(camera.getZoom()).toBe(10.0);
     });
+});
+
+describe('camera options given as undefined are treated as absent', () => {
+    const state = (camera: Camera) => ({
+        zoom: camera.getZoom(),
+        bearing: camera.getBearing(),
+        pitch: camera.getPitch(),
+        roll: camera.getRoll(),
+        elevation: camera.transform.elevation
+    });
+    const start = {zoom: 3, bearing: 30, pitch: 40, roll: 5, elevation: 100};
+    function cameraAtStart() {
+        const {camera} = createCamera({maxPitch: 60});
+        camera.jumpTo({center: [10, 20], ...start});
+        return camera;
+    }
+    const undefinedOptions = {zoom: undefined, bearing: undefined, pitch: undefined, roll: undefined, elevation: undefined, padding: undefined};
+
+    test('jumpTo', () => {
+        const camera = cameraAtStart();
+        camera.jumpTo(undefinedOptions);
+        expect(state(camera)).toEqual(start);
+    });
+
+    test('jumpTo with zoom snapping', () => {
+        const {camera} = createCamera({zoomSnap: 1});
+        camera.jumpTo({zoom: 3});
+        camera.jumpTo({zoom: undefined});
+        expect(camera.getZoom()).toBe(3);
+    });
+
+    test('easeTo', () => {
+        const camera = cameraAtStart();
+        camera.easeTo({...undefinedOptions, duration: 0});
+        expect(state(camera)).toEqual(start);
+    });
+
+    test('flyTo', () => {
+        const camera = cameraAtStart();
+        camera.flyTo({...undefinedOptions, center: [10, 20], animate: false});
+        expect(state(camera)).toEqual(start);
+    });
+});
+
+describe('orbitRotationPivot', () => {
+    test('keeps the pivot at its screen point and zooms to keep its distance from the camera', () => {
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 6000));
+        const {camera, tr} = createPivotCamera(terrain);
+        const pivot = camera.captureRotationPivot(tr, new Point(570, 370));
+
+        camera.orbitRotationPivot(tr, pivot, turnBy({bearingDelta: 30, pitchDelta: -20, rollDelta: 10}));
+
+        expect(tr.bearing).toBeCloseTo(30);
+        expect(tr.pitch).toBeCloseTo(40);
+        expect(tr.roll).toBeCloseTo(10);
+        expect(tr.locationToScreenPoint(pivot.location, terrain).dist(new Point(570, 370))).toBeLessThan(0.1);
+        expect(tr.zoom).toBeCloseTo(12.388069, 5);
+    });
+
+    test('keeps a pivot on the globe on the planet\'s surface under the terrain, at its screen point and distance from the camera', () => {
+        const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 3000));
+        const {camera} = createCamera({maxZoom: 22, maxPitch: 85, renderWorldCopies: true, terrain}, true);
+        const tr = camera.transform.clone();
+        tr.resize(800, 600, true);
+        tr.setCenter(new LngLat(10, 45));
+        tr.setZoom(10);
+        tr.setPitch(60);
+        const pivot = camera.captureRotationPivot(tr, new Point(570, 370));
+
+        camera.orbitRotationPivot(tr, pivot, turnBy({bearingDelta: 30, pitchDelta: -20}));
+
+        expect(pivot.elevation).toBeUndefined();
+        expect(tr.bearing).toBeCloseTo(30);
+        expect(tr.pitch).toBeCloseTo(40);
+        expect(tr.locationToScreenPoint(pivot.location).dist(pivot.point)).toBeLessThan(0.1);
+        expect(tr.zoom).toBeCloseTo(10.153954, 5);
+    });
+
+    test('keeps the pivot at its screen point where the zoom is at its limit', () => {
+        const {camera, tr} = createPivotCamera();
+        tr.setZoom(22);
+        const pivot = camera.captureRotationPivot(tr, new Point(570, 370));
+
+        camera.orbitRotationPivot(tr, pivot, turnBy({bearingDelta: 30, pitchDelta: -20}));
+
+        expect(tr.zoom).toBe(22);
+        expect(tr.bearing).toBeCloseTo(30);
+        expect(tr.pitch).toBeCloseTo(40);
+        expect(tr.locationToScreenPoint(pivot.location).dist(new Point(570, 370))).toBeLessThan(0.1);
+    });
+
+    test('keeps only the change of bearing of a frame that would tilt the pivot close to the horizon', () => {
+        const {camera, tr} = createPivotCamera();
+        const pivot = camera.captureRotationPivot(tr, new Point(500, 50));
+
+        camera.orbitRotationPivot(tr, pivot, turnBy({bearingDelta: 10, pitchDelta: 20}));
+
+        expect(tr.bearing).toBeCloseTo(10);
+        expect(tr.pitch).toBe(60);
+        expect(tr.locationToScreenPoint(pivot.location).dist(new Point(500, 50))).toBeLessThan(0.1);
+    });
+
+    test('keeps only the change of bearing of a frame that would make the camera look up', () => {
+        const {camera, tr} = createPivotCamera();
+        tr.setMaxPitch(180);
+        const pivot = camera.captureRotationPivot(tr, new Point(500, 550));
+
+        camera.orbitRotationPivot(tr, pivot, turnBy({bearingDelta: 10, pitchDelta: 40}));
+
+        expect(tr.bearing).toBeCloseTo(10);
+        expect(tr.pitch).toBe(60);
+        expect(tr.locationToScreenPoint(pivot.location).dist(new Point(500, 550))).toBeLessThan(0.1);
+    });
+
+    test('turns the camera in place around the center for a point in the sky, also to where it looks up', () => {
+        const {camera, tr} = createPivotCamera();
+        tr.setMaxPitch(180);
+        tr.setPitch(85);
+        const pivot = camera.captureRotationPivot(tr, new Point(400, 0));
+
+        camera.orbitRotationPivot(tr, pivot, turnBy({bearingDelta: 10, pitchDelta: 10}));
+
+        expect(pivot.point).toEqual(new Point(400, 300));
+        expect(tr.bearing).toBeCloseTo(10);
+        expect(tr.pitch).toBeCloseTo(95);
+        expect(tr.center).toEqual(new LngLat(0, 0));
+    });
+
+    test('turns the camera in place where the edge of the map keeps the pivot from its screen point', () => {
+        const {camera, tr} = createPivotCamera();
+        tr.setZoom(1);
+        const pivot = camera.captureRotationPivot(tr, new Point(700, 100));
+
+        const held = camera.orbitRotationPivot(tr, pivot, turnBy({bearingDelta: 60}));
+
+        expect(held).toBe(false);
+        expect(tr.bearing).toBeCloseTo(60);
+        expect(tr.center).toEqual(new LngLat(0, 0));
+    });
+
+    function createPivotCamera(terrain: Terrain = null): {camera: Camera; tr: ITransform} {
+        const {camera} = createCamera({maxZoom: 22, maxPitch: 85, renderWorldCopies: true, terrain});
+        const tr = camera.transform.clone();
+        tr.resize(800, 600, true);
+        tr.setCenter(new LngLat(0, 0));
+        tr.setZoom(12);
+        tr.setElevation(500);
+        tr.setPitch(60);
+        return {camera, tr};
+    }
+
+    function turnBy(deltas: Partial<MapControlsDeltas>): MapControlsDeltas {
+        return {panDelta: new Point(0, 0), zoomDelta: 0, bearingDelta: 0, pitchDelta: 0, rollDelta: 0, around: new Point(0, 0), ...deltas};
+    }
 });

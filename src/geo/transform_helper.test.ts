@@ -1,10 +1,10 @@
 import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
-import {TransformHelper} from './transform_helper.ts';
-import {OverscaledTileID} from '../tile/tile_id.ts';
-import {expectToBeCloseToArray} from '../util/test/util.ts';
-import {EXTENT} from '../data/extent.ts';
+import {normalizeCenter, TransformHelper} from './transform_helper.ts';
+import {createRotatedCrs} from '../util/test/util.ts';
+import {createMercatorTransform} from './projection/mercator_transform.ts';
+import {CRSWorldCoordinateHelper} from './projection/crs.ts';
 
 const emptyCallbacks = {
     calcMatrices: () => {},
@@ -12,6 +12,64 @@ const emptyCallbacks = {
 };
 
 describe('TransformHelper', () => {
+    describe('max bounds', () => {
+        test('constrains latitude while leaving longitude unbounded', () => {
+            const transform = createMercatorTransform({renderWorldCopies: true});
+            transform.resize(200, 200);
+            transform.setZoom(10);
+
+            transform.setMaxBounds(new LngLatBounds([-Infinity, -50], [Infinity, 65]));
+            transform.setCenter(new LngLat(180, 80));
+
+            expect(transform.center.lng).toBe(180);
+            expect(transform.center.lat).toBeLessThan(65);
+            expect(transform.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
+        });
+
+        test('rejects one-sided infinite longitude bounds', () => {
+            const transform = createMercatorTransform();
+
+            expect(() => transform.setMaxBounds(new LngLatBounds([-Infinity, -50], [30, 65]))).toThrow(
+                'Longitude maxBounds values must either be finite or span from -Infinity to Infinity'
+            );
+            expect(() => transform.setMaxBounds(new LngLatBounds([-30, -50], [Infinity, 65]))).toThrow(
+                'Longitude maxBounds values must either be finite or span from -Infinity to Infinity'
+            );
+        });
+
+        test('can constrain longitude without further restricting latitude', () => {
+            const transform = createMercatorTransform();
+            transform.resize(200, 200);
+            transform.setZoom(10);
+
+            transform.setMaxBounds(new LngLatBounds([-30, -90], [30, 90]));
+            transform.setCenter(new LngLat(80, 80));
+
+            expect(transform.center.lng).toBeLessThan(30);
+            expect(transform.center.lat).toBe(80);
+        });
+
+        test('clears bounds when both axes span their valid ranges', () => {
+            const transform = createMercatorTransform();
+
+            transform.setMaxBounds(new LngLatBounds([-30, -50], [30, 65]));
+            transform.setMaxBounds(new LngLatBounds([-Infinity, -90], [Infinity, 90]));
+
+            expect(transform.getMaxBounds()).toBeNull();
+        });
+    });
+
+    test('does not calculate the projection matrices while the width or height is zero', () => {
+        let calls = 0;
+        const helper = new TransformHelper({...emptyCallbacks, calcMatrices: () => { calls++; }});
+        helper.resize(0, 480, false);
+        helper.resize(640, 0, false);
+        helper.resize(0, 0, false);
+        expect(calls).toBe(0);
+        helper.resize(640, 480, false);
+        expect(calls).toBe(1);
+    });
+
     test('apply', () => {
         const original = new TransformHelper(emptyCallbacks);
         original.setConstrainOverride((lngLat, zoom) => {
@@ -69,18 +127,24 @@ describe('TransformHelper', () => {
         expect(cloned.renderWorldCopies).toEqual(original.renderWorldCopies);
     });
 
-    describe('getMercatorTilesCoordinates', () => {
-        test('mercator tile extents are set', () => {
-            const helper = new TransformHelper(emptyCallbacks);
+    describe('normalizeCenter', () => {
+        test('extends the target past the antimeridian when that path is shorter in a wrapping world', () => {
+            const transform = createMercatorTransform({renderWorldCopies: true});
+            transform.resize(200, 200);
+            transform.setCenter(new LngLat(170, 0));
+            const target = new LngLat(-170, 0);
+            normalizeCenter(transform, target);
+            expect(target.lng).toBe(190);
+        });
 
-            let tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(0, 0, 0, 0, 0));
-            expectToBeCloseToArray(tileMercatorCoords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
-
-            tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 0, 0));
-            expectToBeCloseToArray(tileMercatorCoords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-
-            tileMercatorCoords = helper.getMercatorTileCoordinates(new OverscaledTileID(1, 0, 1, 1, 0));
-            expectToBeCloseToArray(tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        test('leaves the target alone in a world that does not wrap', () => {
+            const transform = createMercatorTransform({renderWorldCopies: true, worldCoordinateHelper: new CRSWorldCoordinateHelper(createRotatedCrs())});
+            transform.resize(200, 200);
+            transform.setZoom(4);
+            transform.setCenter(new LngLat(140, 0));
+            const target = new LngLat(-140, 0);
+            normalizeCenter(transform, target);
+            expect(target.lng).toBe(-140);
         });
     });
 });
