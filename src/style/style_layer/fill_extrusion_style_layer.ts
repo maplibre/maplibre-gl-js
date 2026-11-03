@@ -55,6 +55,14 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         return true;
     }
 
+    /**
+     * Projects the extrusion and the query to the screen and tests them against each other.
+     *
+     * Without `pixelPosMatrix`, as while the globe renders as a sphere, each vertex is projected with
+     * `transform.projectTileCoordinates` the way the globe shader projects it. The rings are subdivided
+     * like the bucket subdivides them, so walls and roofs follow the curve of the globe. Extrusions on the far side of
+     * the globe are skipped, and so is a point query in the sky, which arrives moved onto the horizon.
+     */
     queryIntersectsFeature({
         queryGeometry,
         feature,
@@ -80,9 +88,6 @@ export class FillExtrusionStyleLayer extends StyleLayer {
             return checkIntersection(projectedBase, projectedTop, projectedQueryGeometry);
         }
 
-        // No matrix maps tile coordinates to the screen while the globe renders as a sphere,
-        // so every vertex is projected the same way the globe shader projects it.
-        // A query in the sky above the globe arrives moved onto the horizon, where it would hit whatever stands there.
         if (queryGeometry.length === 1 && isOnGlobeHorizon(queryGeometry[0], unwrappedTileID, transform.cameraPosition)) return false;
         const project = (p: Point, elevation: number): ProjectedPoint => {
             const {point, signedDistanceFromCamera, isOccluded} = transform.projectTileCoordinates(p.x, p.y, unwrappedTileID, elevation);
@@ -90,13 +95,11 @@ export class FillExtrusionStyleLayer extends StyleLayer {
             projected.z = signedDistanceFromCamera;
             return {projected, isOccluded};
         };
-        // Subdivide the rings like the bucket does, so walls and roof edges follow the curve of the globe.
         const granularity = SubdivisionGranularitySetting.globe.fill.getGranularityForZoomLevel(unwrappedTileID.canonical.z);
         const rings = geometry.map(ring => subdivideVertexLine(ring, granularity, true));
         const projectRings = (elevation: number) => rings.map(ring => ring.map(p => project(p, elevation)));
         const baseRings = projectRings(base);
         const topRings = projectRings(height);
-        // Skip extrusions on the far side of the globe, which project onto the screen but are not visible.
         if ([...baseRings, ...topRings].every(ring => ring.every(p => p.isOccluded))) return false;
 
         const unwrap = (rings: ProjectedPoint[][]) => rings.map(ring => ring.map(p => p.projected));
@@ -119,6 +122,12 @@ function dot(a, b) {
     return a.x * b.x + a.y * b.y;
 }
 
+/**
+ * Returns the depth at which a query meets a face, or `Infinity` when the face has no area.
+ *
+ * For a point query the depth is interpolated over the largest triangle of the face. A face subdivided on the globe has
+ * many nearly colinear points, and a small triangle among them extrapolates the depth far off.
+ */
 export function getIntersectionDistance(projectedQueryGeometry: Point3D[], projectedFace: Point3D[]): number {
 
     if (projectedQueryGeometry.length === 1) {
@@ -139,8 +148,6 @@ export function getIntersectionDistance(projectedQueryGeometry: Point3D[], proje
             if (!b) return Infinity;
         }
 
-        // Use the point `c` that forms the largest triangle with `a` and `b`. Faces subdivided on the globe
-        // have many nearly colinear points, and a sliver triangle would extrapolate the distance wildly.
         const p = projectedQueryGeometry[0];
         const ab = b.sub(a);
         const ap = p.sub(a);

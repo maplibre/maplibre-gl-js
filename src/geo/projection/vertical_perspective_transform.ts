@@ -147,12 +147,15 @@ export class VerticalPerspectiveTransform implements ITransform {
     clearNearFarZOverride(): void {
         this._helper.clearNearFarZOverride();
     }
+    /**
+     * For a point query on the globe, returns the path from the query point to the point on the globe below the camera,
+     * sampled along the arc it follows on the sphere. An extrusion visible at the query point stands on that path.
+     * Box queries and points off the globe get the geometry of {@link TransformHelper.getCameraQueryGeometry}.
+     */
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
         if (queryGeometry.length !== 1 || !this.isPointOnMapSurface(queryGeometry[0])) {
             return this._helper.getCameraQueryGeometry(queryGeometry);
         }
-        // An extrusion visible at the query point stands between it and the point on the globe below the camera.
-        // That path is an arc on the sphere rather than a straight line on the map, so it is sampled along the arc.
         const query = angularCoordinatesToSurfaceVector(this.unprojectScreenPoint(queryGeometry[0]));
         const nadir = vec3.normalize(createVec3f64(), this._cameraPosition);
         const geometry = [queryGeometry[0]];
