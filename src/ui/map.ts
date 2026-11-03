@@ -1275,7 +1275,8 @@ export class Map extends Evented<MapEventType> {
     /**
      * Sets the padding in pixels around the viewport.
      *
-     * Equivalent to `jumpTo({padding: padding})`.
+     * Equivalent to `jumpTo({padding: padding})`, except while a camera animation runs: the padding is then
+     * applied once the animation ends or is stopped, so the animation is not interrupted.
      *
      * Triggers the following events: `movestart` and `moveend`.
      *

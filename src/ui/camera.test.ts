@@ -519,6 +519,39 @@ describe('setPadding', () => {
         expect(currentPadding.right).toBe(padding1.right);
         expect(currentPadding.bottom).toBe(padding.bottom);
     });
+
+    test('lets a running flyTo finish and applies the padding when it ends', async () => {
+        const {camera, queue} = createCamera();
+        const stub = vi.spyOn(timeControl, 'now');
+        const padding = {top: 10, bottom: 10, left: 100, right: 10};
+
+        const duration = 10;
+        stub.mockReturnValue(0);
+        camera.flyTo({center: [7, 47], zoom: 5, duration});
+        stub.mockReturnValue(duration / 2);
+        queue.run();
+
+        camera.setPadding(padding);
+        expect(camera.isEasing()).toBe(true);
+
+        await simulateAllAnimationFrames(stub, camera, queue, duration);
+
+        expect(camera.isEasing()).toBe(false);
+        expect(camera.getPadding()).toEqual(padding);
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 7, lat: 47});
+        expect(camera.getZoom()).toBe(5);
+    });
+
+    test('applies the padding when a running animation is stopped', () => {
+        const {camera} = createCamera();
+        const padding = {top: 10, bottom: 10, left: 100, right: 10};
+
+        camera.easeTo({center: [7, 47], duration: 10});
+        camera.setPadding(padding);
+        camera.stop();
+
+        expect(camera.getPadding()).toEqual(padding);
+    });
 });
 
 describe('panBy', () => {

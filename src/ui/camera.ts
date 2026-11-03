@@ -394,6 +394,12 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
+     * Padding passed to {@link Camera.setPadding} while an animation runs, applied once no animation is running.
+     */
+    _pendingPadding: {padding: PaddingOptions; eventData?: any};
+
+    /**
+     * @internal
      * The map center when the animation ends; the animation eases the center elevation to the terrain there.
      */
     _elevationCenter: LngLat;
@@ -613,7 +619,15 @@ export class Camera extends Evented<MapEventType> {
 
     getPadding(): PaddingOptions { return this.transform.padding; }
 
+    /**
+     * Sets the padding, or, while an animation runs, holds it until the animation ends or is stopped so that the
+     * animation still arrives where it was headed.
+     */
     setPadding(padding: PaddingOptions, eventData?: any): this {
+        if (this.isEasing()) {
+            this._pendingPadding = {padding, eventData};
+            return this;
+        }
         this.jumpTo({padding}, eventData);
         return this;
     }
@@ -771,7 +785,13 @@ export class Camera extends Evented<MapEventType> {
 
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
+        return this._jump(options, eventData);
+    }
 
+    /**
+     * Moves the camera as {@link Camera.jumpTo} does, without stopping animations or gestures first.
+     */
+    _jump(options: JumpToOptions, eventData?: any): this {
         if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
         }
@@ -1642,6 +1662,11 @@ export class Camera extends Evented<MapEventType> {
         }
         if (!allowGestures) {
             this._stopHandlers();
+        }
+        if (this._pendingPadding && !this.isEasing()) {
+            const {padding, eventData} = this._pendingPadding;
+            delete this._pendingPadding;
+            this._jump({padding}, eventData);
         }
         return this;
     }
