@@ -1,0 +1,308 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "An overscaled tile holds more than 65535 glyphs of line labels; the labels near the end still read their own glyph offsets",
+      "width": 512,
+      "height": 256
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 8,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "maxzoom": 0,
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  -70
+                ],
+                [
+                  179,
+                  -70
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  -60
+                ],
+                [
+                  179,
+                  -60
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  -50
+                ],
+                [
+                  179,
+                  -50
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  -40
+                ],
+                [
+                  179,
+                  -40
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  -30
+                ],
+                [
+                  179,
+                  -30
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  -20
+                ],
+                [
+                  179,
+                  -20
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  20
+                ],
+                [
+                  179,
+                  20
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  30
+                ],
+                [
+                  179,
+                  30
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  40
+                ],
+                [
+                  179,
+                  40
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  50
+                ],
+                [
+                  179,
+                  50
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  60
+                ],
+                [
+                  179,
+                  60
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Filler label"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  70
+                ],
+                [
+                  179,
+                  70
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "Van Ness Avenue"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -179,
+                  0
+                ],
+                [
+                  179,
+                  0
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "paint": {
+        "line-color": "#88f"
+      }
+    },
+    {
+      "id": "label",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "text-field": [
+          "get",
+          "label"
+        ],
+        "symbol-placement": "line",
+        "text-size": 14,
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      }
+    }
+  ]
+}
