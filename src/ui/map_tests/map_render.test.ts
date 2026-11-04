@@ -156,35 +156,39 @@ describe('when tiles come back empty from a source with emptyResponse missing', 
             sources: {
                 maplibre: {type: 'vector', tiles: ['http://example.com/{z}/{x}/{y}.pbf'], emptyResponse: 'missing'}
             },
-            layers: [{id: 'layerId', type: 'circle', source: 'maplibre', 'source-layer': 'sourceLayer'}]
+            layers: [{id: 'water', type: 'circle', source: 'maplibre', 'source-layer': 'water'}]
         };
         parentTile = bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf')));
     });
 
-    test('the parent tile shows in their place', async () => {
+    function renderableZooms(map: Map): number[] {
+        const tileManager = map.style.tileManagers.maplibre;
+        return tileManager.getRenderableIds().map(id => tileManager.getTileByID(id).tileID.canonical.z);
+    }
+
+    test('each tile shows the part of its parent that covers it', async () => {
         server.respondWith(/example\.com\/1\//, [204, {}, '']);
         server.respondWith(/example\.com\/0\//, [200, {}, parentTile]);
         const map = createMap({style});
         await map.once('idle');
 
-        const tileManager = map.style.tileManagers.maplibre;
-        const renderableZooms = tileManager.getRenderableIds().map(id => tileManager.getTileByID(id).tileID.canonical.z);
-        expect(renderableZooms).toEqual([0]);
+        expect(renderableZooms(map)).toEqual([1, 1, 1, 1]);
+        expect(map.querySourceFeatures('maplibre', {sourceLayer: 'water'}).length).toBeGreaterThan(0);
     });
 
-    test('the parent tile of the new tiles shows in their place after setTiles', async () => {
+    test('the new tiles show the part of their parent that covers them after setTiles', async () => {
         server.respondWith(/example\.com\/\d+\//, [204, {}, '']);
         server.respondWith(/example\.com\/v2\/1\//, [204, {}, '']);
         server.respondWith(/example\.com\/v2\/0\//, [200, {}, parentTile]);
         const map = createMap({style});
         await map.once('idle');
+        expect(map.querySourceFeatures('maplibre', {sourceLayer: 'water'})).toHaveLength(0);
         const idle = map.once('idle');
         map.getSource<VectorTileSource>('maplibre').setTiles(['http://example.com/v2/{z}/{x}/{y}.pbf']);
         await idle;
 
-        const tileManager = map.style.tileManagers.maplibre;
-        const renderableZooms = tileManager.getRenderableIds().map(id => tileManager.getTileByID(id).tileID.canonical.z);
-        expect(renderableZooms).toEqual([0]);
+        expect(renderableZooms(map)).toEqual([1, 1, 1, 1]);
+        expect(map.querySourceFeatures('maplibre', {sourceLayer: 'water'}).length).toBeGreaterThan(0);
     });
 });
 

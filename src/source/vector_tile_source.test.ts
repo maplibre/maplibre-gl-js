@@ -1,4 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {fakeServer, type FakeServer} from 'nise';
@@ -10,7 +12,7 @@ import {Tile} from '../tile/tile.ts';
 import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
-import {beforeMapTest, createMap, getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
+import {beforeMapTest, bufferToArrayBuffer, createMap, getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
 import {addProtocol, removeProtocol} from './protocol_crud.ts';
 
@@ -18,7 +20,8 @@ import type {Map} from '../ui/map.ts';
 import type {WorkerTileParameters} from './worker_source.ts';
 import type {Source} from './source.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
-import type {VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import type {LayerSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 class StubbedEvented extends Evented {}
 
@@ -45,7 +48,8 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
  * A vector source on a map, whose tiles load through the map's worker (in this thread under the unit setup), so the fake server answers the requests.
  */
 async function createSourceOnMap(options: Omit<VectorSourceSpecification, 'type'>): Promise<VectorTileSource> {
-    const map = createMap({style: {version: 8, sources: {maplibre: {type: 'vector', ...options}}, layers: []}});
+    const waterLayer: LayerSpecification = {id: 'water', type: 'fill', source: 'maplibre', 'source-layer': 'water'};
+    const map = createMap({style: {version: 8, sources: {maplibre: {type: 'vector', ...options}}, layers: [waterLayer]}});
     await waitForEvent(map, 'sourcedata', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
     return map.getSource<VectorTileSource>('maplibre');
 }
@@ -331,71 +335,103 @@ describe('VectorTileSource', () => {
     });
 
     describe('emptyResponse', () => {
+        const waterFeaturesInParent = 288;
+        let parentTile: ArrayBuffer;
+
         beforeEach(() => {
             beforeMapTest();
             server.respondImmediately = true;
+            parentTile = bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf')));
         });
 
-        test('a 204 with emptyResponse missing leaves the tile without data', async () => {
-            server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
-            const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-            const loadVectorData = vi.spyOn(tile, 'loadVectorData');
+        function waterFeatures(source: VectorTileSource, tile: Tile): number {
+            const features: GeoJSONFeature[] = [];
+            tile.querySourceFeatures(features, {sourceLayer: 'water', worldCoordinateHelper: source.map.style.projection.worldCoordinateHelper});
+            return features.length;
+        }
+
+        async function loadTile(source: VectorTileSource, tileID = new OverscaledTileID(10, 0, 10, 5, 5)): Promise<{tile: Tile; water: number}> {
+            const tile = new Tile(tileID, 512);
             await source.loadTile(tile);
+            return {tile, water: waterFeatures(source, tile)};
+        }
 
-            expect(tile.state).toBe('errored');
-            expect(loadVectorData).not.toHaveBeenCalled();
+        test('a 204 with emptyResponse missing loads the tile from the part of its parent that covers it', async () => {
+            server.respondWith('http://example.com/10/5/5.pbf', [204, {}, '']);
+            server.respondWith('http://example.com/9/2/2.pbf', [200, {}, parentTile]);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, emptyResponse: 'missing'});
+
+            const {tile, water} = await loadTile(source);
+
+            expect(server.requests.map(request => request.url)).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf']);
+            expect(tile.state).toBe('loaded');
+            expect(water).toBeGreaterThan(0);
+            expect(water).toBeLessThan(waterFeaturesInParent);
         });
 
-        test('a custom protocol answer without data with emptyResponse missing leaves the tile without data', async () => {
-            addProtocol('empty', () => Promise.resolve({data: new Uint8Array(0)}));
-            const source = await createSourceOnMap({tiles: ['empty://{z}/{x}/{y}'], emptyResponse: 'missing'});
-            const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-            const loadVectorData = vi.spyOn(tile, 'loadVectorData');
-            await source.loadTile(tile);
-            removeProtocol('empty');
+        test('steps past an ancestor without content or with a 404 to the nearest one that has content', async () => {
+            server.respondWith('http://example.com/10/5/5.pbf', [204, {}, '']);
+            server.respondWith('http://example.com/9/2/2.pbf', [204, {}, '']);
+            server.respondWith('http://example.com/8/1/1.pbf', [404, {}, '']);
+            server.respondWith('http://example.com/7/0/0.pbf', [200, {}, parentTile]);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, emptyResponse: 'missing'});
 
-            expect(tile.state).toBe('errored');
-            expect(loadVectorData).not.toHaveBeenCalled();
+            const {tile, water} = await loadTile(source);
+
+            expect(server.requests.map(request => request.url)).toEqual([
+                'http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf', 'http://example.com/7/0/0.pbf'
+            ]);
+            expect(tile.state).toBe('loaded');
+            expect(water).toBeGreaterThan(0);
         });
 
-        test('an expired tile left missing by its refresh drops its expiry and etag', async () => {
-            server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
-            const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-            tile.setExpiryData({expires: new Date(Date.now() - 1000).toUTCString()});
-            tile.etag = '"from-the-earlier-load"';
-            await source.loadTile(tile);
+        test('loads an empty tile when no ancestor down to the source minzoom has content', async () => {
+            server.respondWith(/example\.com/, [204, {}, '']);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 8, emptyResponse: 'missing'});
 
-            expect(tile.getExpiryTimeout()).toBeUndefined();
-            expect(tile.etag).toBeUndefined();
+            const {tile, water} = await loadTile(source);
+
+            expect(server.requests.map(request => request.url)).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf']);
+            expect(tile.state).toBe('loaded');
+            expect(water).toBe(0);
         });
 
-        test('a tile left missing while a reload waits stays loading for that reload', async () => {
-            server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
-            const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-            const tilePromise = source.loadTile(tile);
-            await sleep(0);
-            const reloadPromise = source.loadTile(tile);
-            await tilePromise;
-            const stateWhileReloading = tile.state;
-            await reloadPromise;
+        test('an overzoomed tile whose maxzoom tile has no content loads from the level below maxzoom', async () => {
+            server.respondWith('http://example.com/9/2/2.pbf', [204, {}, '']);
+            server.respondWith('http://example.com/8/1/1.pbf', [200, {}, parentTile]);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, maxzoom: 9, emptyResponse: 'missing'});
 
-            expect(stateWhileReloading).toBe('loading');
+            const {tile, water} = await loadTile(source);
+
+            expect(server.requests.map(request => request.url)).toEqual(['http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf']);
+            expect(tile.state).toBe('loaded');
+            expect(water).toBeGreaterThan(0);
         });
 
-        test('an unchanged empty tile is left missing once emptyResponse turns missing', async () => {
-            server.respondWith('http://example.com/10/5/5.png', [204, {'ETag': '"empty"'}, '']);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.png']});
+        test('a custom protocol answer without data with emptyResponse missing loads the tile from its parent', async () => {
+            addProtocol('sparse', params => Promise.resolve({data: params.url === 'sparse://9/2/2' ? parentTile : new Uint8Array(0)}));
+            const source = await createSourceOnMap({tiles: ['sparse://{z}/{x}/{y}'], minzoom: 7, emptyResponse: 'missing'});
+
+            const {tile, water} = await loadTile(source);
+            removeProtocol('sparse');
+
+            expect(tile.state).toBe('loaded');
+            expect(water).toBeGreaterThan(0);
+        });
+
+        test('an unchanged empty tile loads from its parent once emptyResponse turns missing', async () => {
+            server.respondWith('http://example.com/10/5/5.pbf', [204, {'ETag': '"empty"'}, '']);
+            server.respondWith('http://example.com/9/2/2.pbf', [200, {}, parentTile]);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7});
             const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
             await source.loadTile(tile);
             source.emptyResponse = 'missing';
             tile.state = 'expired';
-            const refreshResult = await source.loadTile(tile);
+            await source.loadTile(tile);
 
-            expect(tile.state).toBe('errored');
-            expect(refreshResult).toEqual({});
+            expect(server.requests.map(request => request.url)).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf']);
+            expect(tile.state).toBe('loaded');
+            expect(waterFeatures(source, tile)).toBeGreaterThan(0);
         });
     });
 

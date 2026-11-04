@@ -46,6 +46,7 @@ export type WorkerTileParameters = TileParameters & {
     /**
      * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
      * This allows the worker to know that it needs to overzoom from a source tile.
+     * A tile whose response had no content under `emptyResponse: 'missing'` is loaded the same way from an ancestor that has content.
      */
     overzoomParameters?: OverzoomParameters;
     etag?: string;

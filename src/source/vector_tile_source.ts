@@ -8,7 +8,7 @@ import {MessageType} from '../util/actor_messages.ts';
 import {isAbortError} from '../util/abort_error.ts';
 
 import type {Source} from './source.ts';
-import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
@@ -263,13 +263,52 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             tile.resourceTiming = data.resourceTiming;
         }
         if (data?.noContent && this.emptyResponse === 'missing') {
-            this._markTileMissing(tile);
-        } else {
-            this._afterTileLoadWorkerResponse(tile, data);
-            if (data?.etagUnmodified) result.unmodified = true;
+            data = await this._loadFromNearestAncestor(tile, params);
+            if (tile.aborted) {
+                return;
+            }
         }
+        this._afterTileLoadWorkerResponse(tile, data);
+        if (data?.etagUnmodified) result.unmodified = true;
         this._reloadIfRequestedWhileLoading(tile);
         return result;
+    }
+
+    /**
+     * Loads a tile whose response had no content under `emptyResponse: 'missing'` from the nearest ancestor that has content,
+     * sliced to the tile the way an overzoomed tile is sliced from the source's maxzoom tile.
+     * The walk starts one level above the tile that was fetched (the maxzoom tile when the tile is overzoomed), steps past
+     * an ancestor that has no content or answers with a 404, and ends at the source's minzoom, below which the tile loads empty.
+     */
+    private async _loadFromNearestAncestor(tile: Tile, params: WorkerTileParameters): Promise<WorkerTileResult | null> {
+        let data: WorkerTileResult | null = null;
+        const fetchedZ = Math.min(tile.tileID.canonical.z, this.maxzoom);
+        for (let z = fetchedZ - 1; z >= this.minzoom; z--) {
+            const ancestorID = tile.tileID.scaledTo(z).canonical;
+            params.overzoomParameters = {
+                maxZoomTileID: ancestorID,
+                overzoomRequest: await this._getTileRequest(ancestorID)
+            };
+            tile.abortController = new AbortController();
+            try {
+                data = await tile.actor.sendAsync({type: MessageType.loadTile, data: params}, tile.abortController);
+            } catch (err) {
+                delete tile.abortController;
+                if (tile.aborted || isAbortError(err)) {
+                    return null;
+                }
+                if (err && err.status !== 404) {
+                    throw err;
+                }
+                data = null;
+                continue;
+            }
+            delete tile.abortController;
+            if (tile.aborted || !data?.noContent) {
+                break;
+            }
+        }
+        return data;
     }
 
     /**
@@ -284,14 +323,17 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             return undefined;
         }
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
-        const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
-
-        const overzoomRequest = await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
-        this._setAcceptHeader(overzoomRequest);
         return {
             maxZoomTileID,
-            overzoomRequest
+            overzoomRequest: await this._getTileRequest(maxZoomTileID)
         };
+    }
+
+    private async _getTileRequest(tileID: CanonicalTileID): Promise<RequestParameters> {
+        const url = tileID.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
+        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
+        this._setAcceptHeader(request);
+        return request;
     }
 
     /**
@@ -305,19 +347,6 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             request.headers ??= {};
             request.headers.Accept ??= 'application/vnd.maplibre-tile';
         }
-    }
-
-    /**
-     * Leaves a tile whose response had no content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
-     * errored without data, worker, expiry or etag, so a reload requests it again.
-     * A reload requested while it loaded starts right away, so the tile stays loading for it.
-     */
-    private _markTileMissing(tile: Tile) {
-        this.unloadTile(tile);
-        delete tile.actor;
-        tile.state = tile.reloadPromise ? 'loading' : 'errored';
-        tile.expirationTime = null;
-        tile.etag = undefined;
     }
 
     private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult | null) {
