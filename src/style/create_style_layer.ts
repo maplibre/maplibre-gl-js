@@ -9,8 +9,16 @@ import {SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
 import {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
 import {RasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {CustomStyleLayer, type CustomLayerInterface} from './style_layer/custom_style_layer.ts';
+import {extendStyleSpecWithLineTaper} from './line_taper_spec.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+
+// F-65: Die Taper-Paint-Properties (line-width-start/-end, line-widths,
+// line-width-factors) sind in der veröffentlichten maplibre-style-spec noch nicht
+// enthalten und werden hier zur Laufzeit patched. Der Aufruf muss in einem Modul
+// stehen, das garantiert im Bundle bleibt — der frühere Aufruf in validate_style
+// wurde vom Prod-Tree-Shaking (treeshake: true) entfernt.
+extendStyleSpecWithLineTaper();
 
 export type AnyStyleLayer =
     | HeatmapStyleLayer
