@@ -4,7 +4,7 @@ import path from 'path';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {VectorTileSource} from './vector_tile_source.ts';
+import {VectorTileSource, type VectorTileSourceOptions} from './vector_tile_source.ts';
 import {AJAXError} from '../util/ajax.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -21,7 +21,7 @@ import type {WorkerTileParameters} from './worker_source.ts';
 import type {Source} from './source.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
-import type {LayerSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 class StubbedEvented extends Evented {}
 
@@ -47,11 +47,23 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
 /**
  * A vector source on a map, whose tiles load through the map's worker (in this thread under the unit setup), so the fake server answers the requests.
  */
-async function createSourceOnMap(options: Omit<VectorSourceSpecification, 'type'>): Promise<VectorTileSource> {
+async function createSourceOnMap(options: Omit<VectorTileSourceOptions, 'type'>): Promise<VectorTileSource> {
     const waterLayer: LayerSpecification = {id: 'water', type: 'fill', source: 'maplibre', 'source-layer': 'water'};
     const map = createMap({style: {version: 8, sources: {maplibre: {type: 'vector', ...options}}, layers: [waterLayer]}});
     await waitForEvent(map, 'sourcedata', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
     return map.getSource<VectorTileSource>('maplibre');
+}
+
+function waterFeatures(source: VectorTileSource, tile: Tile): number {
+    const features: GeoJSONFeature[] = [];
+    tile.querySourceFeatures(features, {sourceLayer: 'water', worldCoordinateHelper: source.map.style.projection.worldCoordinateHelper});
+    return features.length;
+}
+
+async function loadTileAndCountWater(source: VectorTileSource, tileID = new OverscaledTileID(10, 0, 10, 5, 5)): Promise<{tile: Tile; water: number}> {
+    const tile = new Tile(tileID, 512);
+    await source.loadTile(tile);
+    return {tile, water: waterFeatures(source, tile)};
 }
 
 describe('VectorTileSource', () => {
@@ -334,7 +346,7 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
 
-    describe('emptyResponse', () => {
+    describe('zoomLevelsToSearchForMissingTiles', () => {
         const waterFeaturesInParent = 288;
         let parentTile: ArrayBuffer;
 
@@ -344,24 +356,12 @@ describe('VectorTileSource', () => {
             parentTile = bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf')));
         });
 
-        function waterFeatures(source: VectorTileSource, tile: Tile): number {
-            const features: GeoJSONFeature[] = [];
-            tile.querySourceFeatures(features, {sourceLayer: 'water', worldCoordinateHelper: source.map.style.projection.worldCoordinateHelper});
-            return features.length;
-        }
-
-        async function loadTile(source: VectorTileSource, tileID = new OverscaledTileID(10, 0, 10, 5, 5)): Promise<{tile: Tile; water: number}> {
-            const tile = new Tile(tileID, 512);
-            await source.loadTile(tile);
-            return {tile, water: waterFeatures(source, tile)};
-        }
-
-        test('a 204 with emptyResponse missing loads the tile from the part of its parent that covers it', async () => {
-            server.respondWith('http://example.com/10/5/5.pbf', [204, {}, '']);
+        test('a missing tile loads from the part of its parent that covers it', async () => {
+            server.respondWith('http://example.com/10/5/5.pbf', [404, {}, '']);
             server.respondWith('http://example.com/9/2/2.pbf', [200, {}, parentTile]);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, emptyResponse: 'missing'});
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, zoomLevelsToSearchForMissingTiles: 1});
 
-            const {tile, water} = await loadTile(source);
+            const {tile, water} = await loadTileAndCountWater(source);
 
             expect(server.requests.map(request => request.url)).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf']);
             expect(tile.state).toBe('loaded');
@@ -369,69 +369,75 @@ describe('VectorTileSource', () => {
             expect(water).toBeLessThan(waterFeaturesInParent);
         });
 
-        test('steps past an ancestor without content or with a 404 to the nearest one that has content', async () => {
-            server.respondWith('http://example.com/10/5/5.pbf', [204, {}, '']);
-            server.respondWith('http://example.com/9/2/2.pbf', [204, {}, '']);
-            server.respondWith('http://example.com/8/1/1.pbf', [404, {}, '']);
-            server.respondWith('http://example.com/7/0/0.pbf', [200, {}, parentTile]);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, emptyResponse: 'missing'});
+        test('searches past a missing parent, up to the number of zoom levels', async () => {
+            server.respondWith('http://example.com/10/5/5.pbf', [404, {}, '']);
+            server.respondWith('http://example.com/9/2/2.pbf', [404, {}, '']);
+            server.respondWith('http://example.com/8/1/1.pbf', [200, {}, parentTile]);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, zoomLevelsToSearchForMissingTiles: 2});
 
-            const {tile, water} = await loadTile(source);
+            const {tile, water} = await loadTileAndCountWater(source);
 
-            expect(server.requests.map(request => request.url)).toEqual([
-                'http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf', 'http://example.com/7/0/0.pbf'
-            ]);
+            expect(server.requests.map(request => request.url)).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf']);
             expect(tile.state).toBe('loaded');
             expect(water).toBeGreaterThan(0);
         });
 
-        test('loads an empty tile when no ancestor down to the source minzoom has content', async () => {
-            server.respondWith(/example\.com/, [204, {}, '']);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 8, emptyResponse: 'missing'});
+        test('loads an empty tile when every ancestor within the zoom levels is missing', async () => {
+            server.respondWith(/example\.com/, [404, {}, '']);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, zoomLevelsToSearchForMissingTiles: 2});
 
-            const {tile, water} = await loadTile(source);
+            const {tile, water} = await loadTileAndCountWater(source);
 
             expect(server.requests.map(request => request.url)).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf']);
             expect(tile.state).toBe('loaded');
             expect(water).toBe(0);
         });
 
-        test('an overzoomed tile whose maxzoom tile has no content loads from the level below maxzoom', async () => {
-            server.respondWith('http://example.com/9/2/2.pbf', [204, {}, '']);
-            server.respondWith('http://example.com/8/1/1.pbf', [200, {}, parentTile]);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, maxzoom: 9, emptyResponse: 'missing'});
+        test('does not search below the source minzoom', async () => {
+            server.respondWith(/example\.com/, [404, {}, '']);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 9, zoomLevelsToSearchForMissingTiles: 5});
 
-            const {tile, water} = await loadTile(source);
+            const {tile} = await loadTileAndCountWater(source);
+
+            expect(server.requests.map(request => request.url)).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf']);
+            expect(tile.state).toBe('loaded');
+        });
+
+        test('an overzoomed tile whose maxzoom tile is missing loads from the level below maxzoom', async () => {
+            server.respondWith('http://example.com/9/2/2.pbf', [404, {}, '']);
+            server.respondWith('http://example.com/8/1/1.pbf', [200, {}, parentTile]);
+            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, maxzoom: 9, zoomLevelsToSearchForMissingTiles: 1});
+
+            const {tile, water} = await loadTileAndCountWater(source);
 
             expect(server.requests.map(request => request.url)).toEqual(['http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf']);
             expect(tile.state).toBe('loaded');
             expect(water).toBeGreaterThan(0);
         });
 
-        test('a custom protocol answer without data with emptyResponse missing loads the tile from its parent', async () => {
-            addProtocol('sparse', params => Promise.resolve({data: params.url === 'sparse://9/2/2' ? parentTile : new Uint8Array(0)}));
-            const source = await createSourceOnMap({tiles: ['sparse://{z}/{x}/{y}'], minzoom: 7, emptyResponse: 'missing'});
+        test('a custom protocol that rejects a missing tile with a 404 status gets the same search', async () => {
+            addProtocol('sparse', params => params.url === 'sparse://9/2/2' ?
+                Promise.resolve({data: parentTile}) :
+                Promise.reject(new AJAXError(404, 'Not Found', params.url, new Blob())));
+            const source = await createSourceOnMap({tiles: ['sparse://{z}/{x}/{y}'], minzoom: 7, zoomLevelsToSearchForMissingTiles: 1});
 
-            const {tile, water} = await loadTile(source);
+            const {tile, water} = await loadTileAndCountWater(source);
             removeProtocol('sparse');
 
             expect(tile.state).toBe('loaded');
             expect(water).toBeGreaterThan(0);
         });
 
-        test('an unchanged empty tile loads from its parent once emptyResponse turns missing', async () => {
-            server.respondWith('http://example.com/10/5/5.pbf', [204, {'ETag': '"empty"'}, '']);
+        test('reads the number of zoom levels from the TileJSON', async () => {
+            server.respondWith('/source.json', JSON.stringify({...fixturesSource, tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7, zoomLevelsToSearchForMissingTiles: 1}));
+            server.respondWith('http://example.com/10/5/5.pbf', [404, {}, '']);
             server.respondWith('http://example.com/9/2/2.pbf', [200, {}, parentTile]);
-            const source = await createSourceOnMap({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 7});
-            const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-            await source.loadTile(tile);
-            source.emptyResponse = 'missing';
-            tile.state = 'expired';
-            await source.loadTile(tile);
+            const source = await createSourceOnMap({url: '/source.json'});
 
-            expect(server.requests.map(request => request.url)).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf']);
-            expect(tile.state).toBe('loaded');
-            expect(waterFeatures(source, tile)).toBeGreaterThan(0);
+            const {water} = await loadTileAndCountWater(source);
+
+            expect(source.zoomLevelsToSearchForMissingTiles).toBe(1);
+            expect(water).toBeGreaterThan(0);
         });
     });
 

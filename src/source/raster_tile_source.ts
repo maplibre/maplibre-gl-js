@@ -58,7 +58,6 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
     url: string;
     scheme: string;
     tileSize: number;
-    emptyResponse: RasterSourceSpecification['emptyResponse'];
 
     bounds: [number, number, number, number];
     tileBounds: TileBounds;
@@ -84,7 +83,6 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         this.roundZoom = true;
         this.scheme = 'xyz';
         this.tileSize = 512;
-        this.emptyResponse = 'blank';
         this._loaded = false;
         this._premultiplyAlpha = true;
 
@@ -210,14 +208,12 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         const imageBitmapOptions = premultiply ? undefined : {premultiplyAlpha: 'none'} as const;
         tile.abortController = new AbortController();
         try {
-            // An image element cannot tell a 204 from a broken image, so `emptyResponse: 'missing'` requests
-            // the tile through fetch, as refreshing expired tiles does.
             const response = await ImageRequest.transformAndGetImage(
                 this.map._requestManager,
                 url,
                 ResourceType.Tile,
                 tile.abortController,
-                this.emptyResponse === 'missing' || this.map._refreshExpiredTiles,
+                this.map._refreshExpiredTiles,
                 imageBitmapOptions
             );
             delete tile.abortController;
@@ -226,19 +222,12 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
                 return;
             }
             if (response) {
-                // A response without content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
-                // is left without data or expiry, so a loaded tile from another zoom level shows in its place.
-                if (response.noContent && this.emptyResponse === 'missing') {
-                    tile.state = 'errored';
-                    tile.expirationTime = null;
-                    return;
-                }
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const context = this.map.painter.context;
                 const gl = context.gl;
-                // An empty response (e.g. HTTP 204) is otherwise a tile that exists but has no content:
+                // An empty response (e.g. HTTP 204) is a tile that exists but has no content:
                 // it is drawn as fully transparent, which keeps it distinct from a missing
                 // tile (404), where the parent tile shows through instead.
                 const img = response.data ?? new RGBAImage({width: 1, height: 1}, new Uint8Array(4));

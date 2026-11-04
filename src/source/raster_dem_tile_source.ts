@@ -65,16 +65,12 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 return;
             }
             if (response) {
-                if (response.noContent && this.emptyResponse === 'missing') {
-                    this._markTileMissing(tile);
-                    return;
-                }
                 if (this.map._refreshExpiredTiles && (response.cacheControl || response.expires)) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
-                // Otherwise an empty response carries no elevation data: treat the tile as loaded without
-                // a DEM instead of building a degenerate one that would fail against its neighbors in
-                // backfillBorder (#1551).
+                // An empty response (e.g. HTTP 204 for a missing DEM tile) carries no elevation
+                // data: treat the tile as loaded without a DEM instead of building a degenerate
+                // one that would fail against its neighbors in backfillBorder (#1551).
                 if (!response.data) {
                     tile.state = 'loaded';
                     return;
@@ -116,17 +112,6 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 throw err;
             }
         }
-    }
-
-    /**
-     * Leaves a tile whose response had no content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
-     * errored without elevation, worker or expiry, so another zoom level supplies the elevation and a reload requests it again.
-     */
-    private _markTileMissing(tile: Tile): void {
-        this.unloadTile(tile);
-        delete tile.actor;
-        tile.state = 'errored';
-        tile.expirationTime = null;
     }
 
     async readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
@@ -173,7 +158,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
     }
 
     async unloadTile(tile: Tile): Promise<void> {
-        tile.clearTextures(this.map.painter);
+        if (tile.demTexture) this.map.painter.saveTileTexture(tile.demTexture);
         if (tile.fbo) {
             tile.fbo.destroy();
             delete tile.fbo;

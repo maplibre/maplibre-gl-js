@@ -19,6 +19,14 @@ import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEnc
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
+    /**
+     * The number of zoom levels to search upward for a tile to show in place of one the server answers with a 404,
+     * sliced from the nearest ancestor that exists the way an overzoomed tile is sliced from the source's maxzoom tile.
+     * With `0` a missing tile loads empty. The source's TileJSON can set it too, with the source option winning.
+     * @defaultValue 0
+     * @experimental
+     */
+    zoomLevelsToSearchForMissingTiles?: number;
 };
 
 export type LoadTileResult = {
@@ -72,7 +80,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     scheme: string;
     encoding: TileEncoding;
     tileSize: number;
-    emptyResponse: VectorSourceSpecification['emptyResponse'];
+    zoomLevelsToSearchForMissingTiles: number;
     promoteId: PromoteIdSpecification;
 
     _options: VectorSourceSpecification;
@@ -97,7 +105,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.maxzoom = 22;
         this.scheme = 'xyz';
         this.tileSize = 512;
-        this.emptyResponse = 'blank';
+        this.zoomLevelsToSearchForMissingTiles = 0;
         this.reparseOverscaled = true;
         this.isTileClipped = true;
         this._loaded = false;
@@ -262,7 +270,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         if (data?.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
-        if (data?.noContent && this.emptyResponse === 'missing') {
+        if (data === null && this.zoomLevelsToSearchForMissingTiles > 0) {
             data = await this._loadFromNearestAncestor(tile, params);
             if (tile.aborted) {
                 return;
@@ -275,15 +283,15 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     }
 
     /**
-     * Loads a tile whose response had no content under `emptyResponse: 'missing'` from the nearest ancestor that has content,
-     * sliced to the tile the way an overzoomed tile is sliced from the source's maxzoom tile.
-     * The walk starts one level above the tile that was fetched (the maxzoom tile when the tile is overzoomed), steps past
-     * an ancestor that has no content or answers with a 404, and ends at the source's minzoom, below which the tile loads empty.
+     * Loads a tile the server answered with a 404 from the nearest ancestor that exists, sliced to the tile the way an
+     * overzoomed tile is sliced from the source's maxzoom tile. The search starts one level above the tile that was fetched
+     * (the maxzoom tile when the tile is overzoomed) and reaches up `zoomLevelsToSearchForMissingTiles` levels, no further
+     * than the source's minzoom. Returns null when every ancestor in reach answered with a 404 too, so the tile loads empty.
      */
     private async _loadFromNearestAncestor(tile: Tile, params: WorkerTileParameters): Promise<WorkerTileResult | null> {
-        let data: WorkerTileResult | null = null;
         const fetchedZ = Math.min(tile.tileID.canonical.z, this.maxzoom);
-        for (let z = fetchedZ - 1; z >= this.minzoom; z--) {
+        const lowestZ = Math.max(fetchedZ - this.zoomLevelsToSearchForMissingTiles, this.minzoom);
+        for (let z = fetchedZ - 1; z >= lowestZ; z--) {
             const ancestorID = tile.tileID.scaledTo(z).canonical;
             params.overzoomParameters = {
                 maxZoomTileID: ancestorID,
@@ -291,7 +299,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             };
             tile.abortController = new AbortController();
             try {
-                data = await tile.actor.sendAsync({type: MessageType.loadTile, data: params}, tile.abortController);
+                const data = await tile.actor.sendAsync({type: MessageType.loadTile, data: params}, tile.abortController);
+                delete tile.abortController;
+                return data;
             } catch (err) {
                 delete tile.abortController;
                 if (tile.aborted || isAbortError(err)) {
@@ -300,15 +310,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
                 if (err && err.status !== 404) {
                     throw err;
                 }
-                data = null;
-                continue;
-            }
-            delete tile.abortController;
-            if (tile.aborted || !data?.noContent) {
-                break;
             }
         }
-        return data;
+        return null;
     }
 
     /**

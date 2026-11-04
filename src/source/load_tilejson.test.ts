@@ -5,7 +5,8 @@ import {RequestManager} from '../util/request_manager.ts';
 import {ABORT_ERROR} from '../util/abort_error.ts';
 import {sleep} from '../util/test/util.ts';
 
-import type {RasterSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {VectorTileSourceOptions} from './vector_tile_source.ts';
+import type {RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 describe('loadTileJson', () => {
     let server: FakeServer;
@@ -44,7 +45,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result).toEqual({...mockTileJSON, emptyResponse: 'blank'});
+        expect(result).toEqual({...mockTileJSON, zoomLevelsToSearchForMissingTiles: 0});
     });
 
     test('fetches and returns TileJSON (async transformRequest)', async () => {
@@ -76,7 +77,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result).toEqual({...mockTileJSON, emptyResponse: 'blank'});
+        expect(result).toEqual({...mockTileJSON, zoomLevelsToSearchForMissingTiles: 0});
         expect(server.requests[0].url).toBe('http://example.com/test.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
     });
@@ -112,51 +113,39 @@ describe('loadTileJson', () => {
             ...mockTileJSON,
             minzoom: options.minzoom,
             tiles: options.tiles,
-            emptyResponse: 'blank',
+            zoomLevelsToSearchForMissingTiles: 0,
         });
     });
 
-    test('reads emptyResponse from the TileJSON', async () => {
+    test('reads zoomLevelsToSearchForMissingTiles from the TileJSON', async () => {
         const options = {
-            type: 'raster',
+            type: 'vector',
             url: 'http://example.com/test.json',
-        } satisfies RasterSourceSpecification;
-
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
-                tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
-                emptyResponse: 'missing',
-            }));
-        });
+        } satisfies VectorSourceSpecification;
+        server.respondWith(JSON.stringify({tiles: ['http://example.com/tile/{z}/{x}/{y}.pbf'], zoomLevelsToSearchForMissingTiles: 2}));
 
         const promise = loadTileJson(options, requestManager, new AbortController());
         await sleep(0);
         server.respond();
         const result = await promise;
 
-        expect(result.emptyResponse).toBe('missing');
+        expect(result.zoomLevelsToSearchForMissingTiles).toBe(2);
     });
 
-    test('the emptyResponse option wins over the TileJSON', async () => {
+    test('the source option for zoomLevelsToSearchForMissingTiles wins over the TileJSON', async () => {
         const options = {
-            type: 'raster',
+            type: 'vector',
             url: 'http://example.com/test.json',
-            emptyResponse: 'blank',
-        } satisfies RasterSourceSpecification;
-
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify({
-                tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
-                emptyResponse: 'missing',
-            }));
-        });
+            zoomLevelsToSearchForMissingTiles: 3,
+        } satisfies VectorTileSourceOptions;
+        server.respondWith(JSON.stringify({tiles: ['http://example.com/tile/{z}/{x}/{y}.pbf'], zoomLevelsToSearchForMissingTiles: 2}));
 
         const promise = loadTileJson(options, requestManager, new AbortController());
         await sleep(0);
         server.respond();
         const result = await promise;
 
-        expect(result.emptyResponse).toBe('blank');
+        expect(result.zoomLevelsToSearchForMissingTiles).toBe(3);
     });
 
     test('excludes non-TileJSON data', async () => {

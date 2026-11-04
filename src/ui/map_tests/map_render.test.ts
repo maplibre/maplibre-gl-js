@@ -10,7 +10,7 @@ import {now, setNow, restoreNow} from '../../util/time_control.ts';
 
 import type {Map} from '../map.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {VectorTileSource} from '../../source/vector_tile_source.ts';
+import type {VectorTileSource, VectorTileSourceOptions} from '../../source/vector_tile_source.ts';
 
 let server: FakeServer;
 
@@ -143,19 +143,18 @@ describe('when one tile request fails with a server error while the others are l
     });
 });
 
-describe('when tiles come back empty from a source with emptyResponse missing', () => {
+describe('when vector tiles are missing from a source that searches lower zoom levels for them', () => {
     let style: StyleSpecification;
     let parentTile: ArrayBuffer;
 
     beforeEach(() => {
         server.respondImmediately = true;
+        const sparseSource: VectorTileSourceOptions = {type: 'vector', tiles: ['http://example.com/{z}/{x}/{y}.pbf'], zoomLevelsToSearchForMissingTiles: 1};
         style = {
             version: 8,
             center: [0, 0],
             zoom: 1,
-            sources: {
-                maplibre: {type: 'vector', tiles: ['http://example.com/{z}/{x}/{y}.pbf'], emptyResponse: 'missing'}
-            },
+            sources: {maplibre: sparseSource},
             layers: [{id: 'water', type: 'circle', source: 'maplibre', 'source-layer': 'water'}]
         };
         parentTile = bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf')));
@@ -167,7 +166,7 @@ describe('when tiles come back empty from a source with emptyResponse missing', 
     }
 
     test('each tile shows the part of its parent that covers it', async () => {
-        server.respondWith(/example\.com\/1\//, [204, {}, '']);
+        server.respondWith(/example\.com\/1\//, [404, {}, '']);
         server.respondWith(/example\.com\/0\//, [200, {}, parentTile]);
         const map = createMap({style});
         await map.once('idle');
@@ -177,8 +176,8 @@ describe('when tiles come back empty from a source with emptyResponse missing', 
     });
 
     test('the new tiles show the part of their parent that covers them after setTiles', async () => {
-        server.respondWith(/example\.com\/\d+\//, [204, {}, '']);
-        server.respondWith(/example\.com\/v2\/1\//, [204, {}, '']);
+        server.respondWith(/example\.com\/\d+\//, [404, {}, '']);
+        server.respondWith(/example\.com\/v2\/1\//, [404, {}, '']);
         server.respondWith(/example\.com\/v2\/0\//, [200, {}, parentTile]);
         const map = createMap({style});
         await map.once('idle');

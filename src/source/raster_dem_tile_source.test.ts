@@ -3,12 +3,12 @@ import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {Tile} from '../tile/tile.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {getMockDispatcher} from '../util/test/util.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 
+import type {Tile} from '../tile/tile.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 
 function createSource(options, transformCallback?) {
@@ -134,72 +134,6 @@ describe('RasterDEMTileSource', () => {
         expect(tile.state).toBe('loaded');
         expect(tile.dem).toBeUndefined();
         expect((tile.actor as any).sendAsync).not.toHaveBeenCalled();
-    });
-
-    test('a 204 with emptyResponse missing leaves the tile without data', async () => {
-        server.respondWith('http://example.com/10/5/5.png', [204, {}, '']);
-        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
-        await waitForMetadataEvent(source);
-        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-        const tilePromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await tilePromise;
-
-        expect(tile.state).toBe('errored');
-        expect(tile.dem).toBeUndefined();
-    });
-
-    test('an expired tile left missing by its refresh drops its elevation and expiry', async () => {
-        const tileUrl = 'http://example.com/10/5/5.png';
-        const image = await createImageBitmap(new ImageData(16, 16));
-        vi.spyOn(globalThis, 'createImageBitmap').mockResolvedValue(image);
-        server.respondWith(tileUrl, [200, {'Cache-Control': 'max-age=300'}, 'png']);
-        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
-        source.map._refreshExpiredTiles = true;
-        await waitForMetadataEvent(source);
-        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-        const tilePromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await tilePromise;
-        server.respondWith(tileUrl, [204, {'Cache-Control': 'max-age=300'}, '']);
-        tile.state = 'expired';
-        const refreshPromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await refreshPromise;
-
-        expect(tile.dem).toBeUndefined();
-        expect(tile.getExpiryTimeout()).toBeUndefined();
-    });
-
-    test('an expired tile left missing by its refresh loads when the tile manager reloads it', async () => {
-        const tileUrl = 'http://example.com/10/5/5.png';
-        const image = await createImageBitmap(new ImageData(16, 16));
-        vi.spyOn(globalThis, 'createImageBitmap').mockResolvedValue(image);
-        server.respondWith(tileUrl, [200, {}, 'png']);
-        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
-        await waitForMetadataEvent(source);
-        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
-        const tilePromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await tilePromise;
-        server.respondWith(tileUrl, [204, {}, '']);
-        tile.state = 'expired';
-        const refreshPromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await refreshPromise;
-        server.respondWith(tileUrl, [200, {}, 'png']);
-        tile.state = 'loading';
-        const reloadPromise = source.loadTile(tile);
-        await sleep(0);
-        server.respond();
-        await reloadPromise;
-
-        expect(tile.state).toBe('loaded');
     });
 
     test('can asynchronously transform tile request', async () => {

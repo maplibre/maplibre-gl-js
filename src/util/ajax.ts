@@ -73,10 +73,6 @@ export type RequestParameters = {
  */
 export type GetResourceResponse<T> = ExpiryData & {
     data: T;
-    /**
-     * `true` for an HTTP 204, and for a custom protocol's answer without data, since that carries no status.
-     */
-    noContent?: boolean;
 };
 
 /**
@@ -201,7 +197,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
     }
     const result = await parsePromise;
     throwIfAborted(abortController.signal);
-    return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires'), etag: response.headers.get('ETag'), noContent: response.status === 204};
+    return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires'), etag: response.headers.get('ETag')};
 }
 
 function makeXMLHttpRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
@@ -241,7 +237,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
                         return;
                     }
                 }
-                resolve({data, cacheControl: xhr.getResponseHeader('Cache-Control'), expires: xhr.getResponseHeader('Expires'), etag: xhr.getResponseHeader('ETag'), noContent: xhr.status === 204});
+                resolve({data, cacheControl: xhr.getResponseHeader('Cache-Control'), expires: xhr.getResponseHeader('Expires'), etag: xhr.getResponseHeader('ETag')});
             } else {
                 const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
                 reject(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
@@ -267,8 +263,7 @@ export const makeRequest = async function(requestParameters: RequestParameters, 
     if (requestParameters.url.includes('://') && !(/^https?:|^file:/.test(requestParameters.url))) {
         const protocolLoadFn = getProtocol(requestParameters.url);
         if (protocolLoadFn) {
-            const response: GetResourceResponse<any> = await protocolLoadFn(requestParameters, abortController);
-            response.noContent = !response.data || response.data.byteLength === 0;
+            const response = await protocolLoadFn(requestParameters, abortController);
             if (!response.data && requestParameters.type === 'arrayBuffer') {
                 // A successful array buffer request should always return data even if empty
                 return extend(response, {data: new ArrayBuffer(0)});
@@ -294,7 +289,7 @@ export const getJSON = <T>(requestParameters: RequestParameters, abortController
     return makeRequest(extend(requestParameters, {type: 'json'}), abortController);
 };
 
-export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<ArrayBuffer>> => {
+export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<{data: ArrayBuffer} & ExpiryData> => {
     return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), abortController);
 };
 

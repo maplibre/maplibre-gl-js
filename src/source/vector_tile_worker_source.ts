@@ -92,7 +92,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             // Tile data hasn't changed (etag support) - return an unmodified result
             if (params.etag && params.etag === tileResponse.etag && loadedTile?.etag === tileResponse.etag) {
                 this.tileState.finishLoading(uid);
-                return extend(this._getEtagUnmodifiedResult(tileResponse, timing), {noContent: loadedTile.noContent});
+                return this._getEtagUnmodifiedResult(tileResponse, timing);
             }
 
             const tileResult = this.loadVectorTile(params, tileResponse.data);
@@ -109,7 +109,6 @@ export class VectorTileWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = vectorTile;
             workerTile.etag = tileResponse.etag;
-            workerTile.noContent = tileResponse.noContent;
             this.tileState.markLoaded(uid, workerTile);
             const parsingState = {rawData, cacheControl, resourceTiming};
             this.tileState.setParsing(uid, parsingState);
@@ -149,7 +148,6 @@ export class VectorTileWorkerSource implements WorkerSource {
             // max-age to the time it receives them, and the tile's expiration already survives a reload.
             result = extend(result, {etag: workerTile.etag});
         }
-        result.noContent = workerTile.noContent;
 
         return result;
     }

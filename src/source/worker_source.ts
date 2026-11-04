@@ -46,7 +46,7 @@ export type WorkerTileParameters = TileParameters & {
     /**
      * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
      * This allows the worker to know that it needs to overzoom from a source tile.
-     * A tile whose response had no content under `emptyResponse: 'missing'` is loaded the same way from an ancestor that has content.
+     * A tile the server answered with a 404 is loaded the same way from an ancestor that exists when the source searches for one.
      */
     overzoomParameters?: OverzoomParameters;
     etag?: string;
@@ -85,10 +85,6 @@ export type WorkerTileWithData = ExpiryData & {
     rawTileData?: ArrayBuffer;
     encoding?: TileEncoding;
     resourceTiming?: PerformanceResourceTiming[];
-    /**
-     * `true` when the tile response had no content: an HTTP 204, or a custom protocol's answer without data.
-     */
-    noContent?: boolean;
     // Only used for benchmarking:
     glyphMap?: GlyphMap | null;
     iconMap?: {
@@ -101,10 +97,6 @@ export type WorkerTileWithData = ExpiryData & {
 export type WorkerTileWithoutData = ExpiryData & {
     etagUnmodified: true;  // Strict for type narrowing
     resourceTiming?: PerformanceResourceTiming[];
-    /**
-     * `true` when the tile response had no content: an HTTP 204, or a custom protocol's answer without data.
-     */
-    noContent?: boolean;
 };
 
 export type WorkerTileResult = WorkerTileWithData | WorkerTileWithoutData;
