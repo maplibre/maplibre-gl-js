@@ -1,4 +1,4 @@
-import {FeatureIndex} from '../data/feature_index.ts';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
 import {warnOnce, mapObject} from '../util/util.ts';
@@ -7,7 +7,6 @@ import {GlyphAtlas} from '../render/glyph_atlas.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {type GetDashesResponse, MessageType, type GetImagesResponse} from '../util/actor_messages.ts';
-import {GeoJSONWrapper} from '@maplibre/vt-pbf';
 
 import type {Bucket, PopulateParameters} from '../data/bucket.ts';
 import type {IActor} from '../util/actor.ts';
@@ -82,9 +81,6 @@ export class WorkerTile {
             subdivisionGranularity
         };
 
-        // vt-pbf's GeoJSONWrapper turns string ids into numbers, so give the promoted id back for ["id"] in filters and layout
-        const restorePromotedId = this.promoteId && data instanceof GeoJSONWrapper;
-
         const layerFamilies = layerIndex.familiesBySource[this.source];
         for (const sourceLayerId in layerFamilies) {
             const sourceLayer = data.layers[sourceLayerId];
@@ -98,6 +94,8 @@ export class WorkerTile {
             }
 
             const sourceLayerIndex = sourceLayerCoder.encode(sourceLayerId);
+            // vt-pbf's GeoJSONWrapper turns string ids into numbers, so give the promoted id back for ["id"] expressions
+            const restorePromotedId = this.promoteId && sourceLayerId === GEOJSON_TILE_LAYER_NAME;
             const features = [];
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);

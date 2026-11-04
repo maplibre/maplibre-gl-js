@@ -349,7 +349,6 @@ describe('worker tile', () => {
 
     test('WorkerTile.parse matches string ids promoted with promoteId in GeoJSON filters', async () => {
         const ids = ['ak1', '101', '12-a', 7, 'ak2'];
-        // geojson-vt puts the promoted property in feature.id
         const wrapper = new GeoJSONWrapper(ids.map((id, i) => ({type: 1, id, geometry: [[i, 0]], tags: {id}} as any as Feature)));
         const layerIndex = new StyleLayerIndex([{
             id: 'circle',
