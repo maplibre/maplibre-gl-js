@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add experimental `zoomLevelsToSearchForMissingVectorTiles` map option to fill a missing (404) vector tile from the part of its nearest parent that covers it
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

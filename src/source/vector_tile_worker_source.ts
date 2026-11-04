@@ -1,7 +1,7 @@
 import {PbfReader} from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import {fromVectorTileJs, type VectorTileLayerLike, type VectorTileLike} from '@maplibre/vt-pbf';
-import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
+import {type ExpiryData, type GetResourceResponse, getArrayBuffer} from '../util/ajax.ts';
 import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
 import {BoundedLRUCache} from '../tile/tile_cache.ts';
@@ -14,7 +14,8 @@ import type {
     WorkerSource,
     WorkerTileParameters,
     TileParameters,
-    WorkerTileResult
+    WorkerTileResult,
+    SourceTileRequest
 } from '../source/worker_source.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
@@ -23,6 +24,12 @@ import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
     rawData: ArrayBufferLike;
+};
+
+type SourceTileResponse = {
+    response: GetResourceResponse<ArrayBuffer>;
+    /** The tile the response holds when it is not the requested tile itself, which is then sliced from it. */
+    sourceTile?: SourceTileRequest;
 };
 
 /**
@@ -86,8 +93,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         const abortController = new AbortController();
         workerTile.abort = abortController;
         try {
-            // Download the tile data from the network.
-            const tileResponse = await getArrayBuffer(params.request, abortController);
+            const {response: tileResponse, sourceTile} = await this._fetchSourceTile(params, abortController);
 
             const loadedTile = this.tileState.getLoaded(uid);
             // Tile data hasn't changed (etag support) - return an unmodified result
@@ -101,9 +107,10 @@ export class VectorTileWorkerSource implements WorkerSource {
             if (!tileResult) return null;
 
             let {vectorTile, rawData} = tileResult;
-            if (overzoomParameters) {
-                ({vectorTile, rawData} = this._getOverzoomTile(params, vectorTile));
+            if (sourceTile) {
+                ({vectorTile, rawData} = this._getSlicedTile(params, sourceTile, vectorTile));
             }
+            const encoding = sourceTile ? 'mvt' : params.encoding;
 
             const cacheControl = this._getExpiryData(tileResponse);
             const resourceTiming = this._finishRequestTiming(timing);
@@ -111,7 +118,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             workerTile.vectorTile = vectorTile;
             workerTile.etag = tileResponse.etag;
             this.tileState.markLoaded(uid, workerTile);
-            const parsingState = {rawData, cacheControl, resourceTiming};
+            const parsingState = {rawData, encoding, cacheControl, resourceTiming};
             this.tileState.setParsing(uid, parsingState);
 
             return await this._parseWorkerTile(workerTile, params);
@@ -137,9 +144,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         // After the main thread has successfully received and stored rawTileData,
         // we no longer need to store it in the worker or transfer additional copies of it.
         if (parseState) {
-            const {rawData, cacheControl, resourceTiming} = parseState;
-            // Overzoomed tiles are always re-encoded to MVT protobuf by _getOverzoomTile
-            const encoding = params.overzoomParameters ? 'mvt' : params.encoding;
+            const {rawData, encoding, cacheControl, resourceTiming} = parseState;
             // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
             result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
             this.tileState.removeParsing(workerTile.uid);
@@ -176,43 +181,79 @@ export class VectorTileWorkerSource implements WorkerSource {
     }
 
     /**
-     * If we are seeking a tile deeper than the source's max available canonical tile, get the overzoomed tile
-     * @param params - the worker tile parameters
-     * @param maxZoomVectorTile - the original vector tile at the source's max available canonical zoom
-     * @returns the overzoomed tile and its raw data
+     * Downloads the data that the tile in `params` is made from.
+     *
+     * That is the tile itself, or the source's maxzoom tile when it is overzoomed. When that responds with a 404, it is the nearest of
+     * `params.parentTileRequests` that exists, and the 404 is rethrown when none of them does.
      */
-    private _getOverzoomTile(params: WorkerTileParameters, maxZoomVectorTile: VectorTileLike): LoadVectorTileResult {
-        const {tileID, source, overzoomParameters} = params;
-        const {maxZoomTileID} = overzoomParameters;
+    private async _fetchSourceTile(params: WorkerTileParameters, abortController: AbortController): Promise<SourceTileResponse> {
+        const {overzoomParameters, parentTileRequests} = params;
+        const sourceTile = overzoomParameters && {tileID: overzoomParameters.maxZoomTileID, request: overzoomParameters.overzoomRequest};
+        try {
+            return {response: await getArrayBuffer(params.request, abortController), sourceTile};
+        } catch (err) {
+            if (err?.status !== 404 || !parentTileRequests?.length) {
+                throw err;
+            }
+            return await this._fetchParentTile(parentTileRequests, abortController, err);
+        }
+    }
 
-        const cacheKey = `${maxZoomTileID.key}_${tileID.key}_${params.request?.url}`;
-        const cachedOverzoomTile = this.overzoomedTileResultCache.get(cacheKey);
+    /**
+     * Downloads the first of `parentTileRequests` that does not respond with a 404, and throws `notFound` when they all do.
+     */
+    private async _fetchParentTile(parentTileRequests: SourceTileRequest[], abortController: AbortController, notFound: Error): Promise<SourceTileResponse> {
+        for (const sourceTile of parentTileRequests) {
+            try {
+                return {response: await getArrayBuffer(sourceTile.request, abortController), sourceTile};
+            } catch (err) {
+                if (err?.status !== 404) {
+                    throw err;
+                }
+            }
+        }
+        throw notFound;
+    }
 
-        if (cachedOverzoomTile) {
-            return cachedOverzoomTile;
+    /**
+     * Slices the tile in `params` out of a tile at a lower zoom that covers it: the source's maxzoom tile when it is overzoomed,
+     * or a parent of a tile that responded with a 404.
+     * @param params - the worker tile parameters
+     * @param sourceTile - the tile that covers the one in `params`, and the request it was fetched with
+     * @param sourceVectorTile - the vector tile of `sourceTile`
+     * @returns the sliced tile and its raw data, encoded as MVT
+     */
+    private _getSlicedTile(params: WorkerTileParameters, sourceTile: SourceTileRequest, sourceVectorTile: VectorTileLike): LoadVectorTileResult {
+        const {tileID, source} = params;
+
+        const cacheKey = `${sourceTile.tileID.key}_${tileID.key}_${sourceTile.request.url}`;
+        const cachedSlicedTile = this.overzoomedTileResultCache.get(cacheKey);
+
+        if (cachedSlicedTile) {
+            return cachedSlicedTile;
         }
 
-        const overzoomedVectorTile = new VectorTileOverzoomed();
+        const slicedVectorTile = new VectorTileOverzoomed();
         const layerFamilies: Record<string, StyleLayer[][]> = this.layerIndex.familiesBySource[source];
 
         for (const sourceLayerId in layerFamilies) {
-            const sourceLayer: VectorTileLayerLike = maxZoomVectorTile.layers[sourceLayerId];
+            const sourceLayer: VectorTileLayerLike = sourceVectorTile.layers[sourceLayerId];
             if (!sourceLayer) {
                 continue;
             }
 
-            const slicedTileLayer = sliceVectorTileLayer(sourceLayer, maxZoomTileID, tileID.canonical);
+            const slicedTileLayer = sliceVectorTileLayer(sourceLayer, sourceTile.tileID, tileID.canonical);
             if (slicedTileLayer.length > 0) {
-                overzoomedVectorTile.addLayer(slicedTileLayer);
+                slicedVectorTile.addLayer(slicedTileLayer);
             }
         }
-        const overzoomedVectorTileResult = {
-            vectorTile: overzoomedVectorTile,
-            rawData: fromVectorTileJs(overzoomedVectorTile).buffer
+        const slicedTileResult = {
+            vectorTile: slicedVectorTile,
+            rawData: fromVectorTileJs(slicedVectorTile).buffer
         };
-        this.overzoomedTileResultCache.set(cacheKey, overzoomedVectorTileResult);
+        this.overzoomedTileResultCache.set(cacheKey, slicedTileResult);
 
-        return overzoomedVectorTileResult;
+        return slicedTileResult;
     }
 
     /**

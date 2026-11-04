@@ -48,6 +48,11 @@ export type WorkerTileParameters = TileParameters & {
      * This allows the worker to know that it needs to overzoom from a source tile.
      */
     overzoomParameters?: OverzoomParameters;
+    /**
+     * Requests for the parents of the tile that is fetched, nearest first.
+     * When that tile responds with a 404, the worker fetches these in order and slices the first one that exists down to the requested tile.
+     */
+    parentTileRequests?: SourceTileRequest[];
     etag?: string;
 };
 
@@ -57,6 +62,14 @@ export type WorkerTileParameters = TileParameters & {
 export type OverzoomParameters = {
     maxZoomTileID: CanonicalTileID;
     overzoomRequest: RequestParameters;
+};
+
+/**
+ * A request for a tile that the requested tile can be sliced from
+ */
+export type SourceTileRequest = {
+    tileID: CanonicalTileID;
+    request: RequestParameters;
 };
 
 /**

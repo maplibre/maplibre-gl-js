@@ -445,6 +445,17 @@ export type MapOptions = {
      */
     zoomLevelsToOverscale?: number;
     /**
+     * Defines the number of zoom levels to go up when a vector tile is missing (the server responds with a 404), searching for a parent tile to show in its place.
+     * Only the part of the parent that covers the missing tile is shown.
+     * When `0`, a missing vector tile is shown as empty.
+     *
+     * For example if a source's `maxzoom` is 14 and `zoomLevelsToSearchForMissingVectorTiles` is set to 2,
+     * a missing zoom 14 tile is filled from its zoom 13 parent, or from its zoom 12 parent if that one is missing as well.
+     * @defaultValue 0
+     * @experimental
+     */
+    zoomLevelsToSearchForMissingVectorTiles?: number;
+    /**
      * Determines the rotation interaction model:
      * - When true: Uses "Orbital" logic where rotation is relative to the pivot center.
      *   Dragging right at the top rotates clockwise, while dragging right at the bottom
@@ -571,6 +582,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     centerClampedToGround: true,
     terrainSkirtLength: 'auto',
     zoomLevelsToOverscale: 4,
+    zoomLevelsToSearchForMissingVectorTiles: 0,
     anisotropicFilterPitch: defaultAnisotropicFilterPitch,
 };
 
@@ -665,6 +677,8 @@ export class Map extends Evented<MapEventType> {
     _missingStyleImageResolver: MissingStyleImageResolver | null = null;
     /** @internal */
     _zoomLevelsToOverscale: number | undefined;
+    /** @internal */
+    _zoomLevelsToSearchForMissingVectorTiles: number;
     _terrainSkirtLength: 'none' | 'auto';
 
     /**
@@ -812,6 +826,7 @@ export class Map extends Evented<MapEventType> {
         this._overridePixelRatio = resolvedOptions.pixelRatio;
         this._maxCanvasSize = resolvedOptions.maxCanvasSize;
         this._zoomLevelsToOverscale = resolvedOptions.zoomLevelsToOverscale;
+        this._zoomLevelsToSearchForMissingVectorTiles = resolvedOptions.zoomLevelsToSearchForMissingVectorTiles;
         this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
         this.setAnisotropicFilterPitch(resolvedOptions.anisotropicFilterPitch);
 

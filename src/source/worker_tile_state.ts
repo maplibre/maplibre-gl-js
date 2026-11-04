@@ -1,8 +1,11 @@
 import type {ExpiryData} from '../util/ajax.ts';
 import type {WorkerTile} from './worker_tile.ts';
+import type {TileEncoding} from './worker_source.ts';
 
 export type ParsingState = {
     rawData: ArrayBufferLike;
+    /** The encoding of `rawData`, which is MVT for a tile sliced from another one whatever the source's encoding. */
+    encoding?: TileEncoding;
     cacheControl?: ExpiryData;
     resourceTiming?: any;
 };

@@ -8,13 +8,13 @@ import {MessageType} from '../util/actor_messages.ts';
 import {isAbortError} from '../util/abort_error.ts';
 
 import type {Source} from './source.ts';
-import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {RequestParameters} from '../util/ajax';
-import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEncoding} from './worker_source.ts';
+import type {WorkerTileParameters, OverzoomParameters, SourceTileRequest, WorkerTileResult, TileEncoding} from './worker_source.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -219,6 +219,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
             encoding: this.encoding,
             overzoomParameters: await this._getOverzoomParameters(tile),
+            parentTileRequests: await this._getParentTileRequests(tile),
             etag: tile.etag
         };
         this._setAcceptHeader(params.request);
@@ -274,14 +275,38 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             return undefined;
         }
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
-        const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
-
-        const overzoomRequest = await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
-        this._setAcceptHeader(overzoomRequest);
         return {
             maxZoomTileID,
-            overzoomRequest
+            overzoomRequest: await this._getTileRequest(maxZoomTileID)
         };
+    }
+
+    /**
+     * Requests for the parents of the tile fetched for `tile`, nearest first, so the worker can slice the nearest one that exists when that tile responds with a 404.
+     * They reach up the map's `zoomLevelsToSearchForMissingVectorTiles` zoom levels, and no further than the source's minzoom.
+     */
+    private async _getParentTileRequests(tile: Tile): Promise<SourceTileRequest[] | undefined> {
+        const zoomLevelsToSearch = this.map._zoomLevelsToSearchForMissingVectorTiles;
+        if (!zoomLevelsToSearch) {
+            return undefined;
+        }
+        const fetchedZ = Math.min(tile.tileID.canonical.z, this.maxzoom);
+        const lowestZ = Math.max(fetchedZ - zoomLevelsToSearch, this.minzoom);
+        if (lowestZ >= fetchedZ) {
+            return undefined;
+        }
+        const parentTileIDs: CanonicalTileID[] = [];
+        for (let z = fetchedZ - 1; z >= lowestZ; z--) {
+            parentTileIDs.push(tile.tileID.scaledTo(z).canonical);
+        }
+        return Promise.all(parentTileIDs.map(async tileID => ({tileID, request: await this._getTileRequest(tileID)})));
+    }
+
+    private async _getTileRequest(tileID: CanonicalTileID): Promise<RequestParameters> {
+        const url = tileID.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
+        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
+        this._setAcceptHeader(request);
+        return request;
     }
 
     /**

@@ -412,7 +412,7 @@ describe('vector tile worker source', () => {
         await expect(loadPromise).resolves.toBeTruthy();
     });
 
-    test('VectorTileWorkerSource loadTile uses _getOverzoomTile when overzoomParameters is provided', async () => {
+    test('VectorTileWorkerSource loadTile uses _getSlicedTile when overzoomParameters is provided', async () => {
         const source = new VectorTileWorkerSource({} as any, new StyleLayerIndex(), []);
         const mockVectorTile = {layers: {}} as any;
 
@@ -421,7 +421,7 @@ describe('vector tile worker source', () => {
             rawData: new ArrayBuffer(0)
         });
 
-        const getOverzoomTileSpy = vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
+        const getOverzoomTileSpy = vi.spyOn(source as any, '_getSlicedTile').mockReturnValue({
             vectorTile: mockVectorTile,
             rawData: new ArrayBuffer(0)
         });
@@ -444,7 +444,7 @@ describe('vector tile worker source', () => {
         server.respond();
         await promise;
 
-        expect(getOverzoomTileSpy).toHaveBeenCalledWith(params, mockVectorTile);
+        expect(getOverzoomTileSpy).toHaveBeenCalledWith(params, expect.objectContaining({tileID: new CanonicalTileID(14, 25, 25)}), mockVectorTile);
     });
 
     test('VectorTileWorkerSource uses mvt encoding for overzoomed mlt tiles', async () => {
@@ -456,7 +456,7 @@ describe('vector tile worker source', () => {
             rawData: new ArrayBuffer(0)
         });
 
-        vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
+        vi.spyOn(source as any, '_getSlicedTile').mockReturnValue({
             vectorTile: mockVectorTile,
             rawData: new ArrayBuffer(0)
         });
@@ -481,6 +481,85 @@ describe('vector tile worker source', () => {
         const res = await promise as WorkerTileWithData;
 
         expect(res.encoding).toBe('mvt');
+    });
+
+    describe('a tile that responds with a 404', () => {
+        function createParams(parentTileRequests: WorkerTileParameters['parentTileRequests']): WorkerTileParameters {
+            return {
+                source: 'source',
+                uid: 0,
+                tileID: new OverscaledTileID(8, 0, 8, 73, 93),
+                request: {url: 'http://localhost:2900/8/73/93.pbf'},
+                subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+                parentTileRequests
+            } as any as WorkerTileParameters;
+        }
+
+        function createWaterSource(): VectorTileWorkerSource {
+            const layerIndex = new StyleLayerIndex([{
+                id: 'water',
+                source: 'source',
+                'source-layer': 'water',
+                type: 'fill'
+            }]);
+            return new VectorTileWorkerSource(actor, layerIndex, []);
+        }
+
+        test('is sliced from the nearest parent that exists', async () => {
+            const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+            server.respondWith('http://localhost:2900/8/73/93.pbf', [404, {}, '']);
+            server.respondWith('http://localhost:2900/7/36/46.pbf', [404, {}, '']);
+            const body = new ArrayBuffer(rawTileData.byteLength);
+            new Uint8Array(body).set(rawTileData);
+            server.respondWith('http://localhost:2900/6/18/23.pbf', request => {
+                request.respond(200, {'Content-Type': 'application/pbf'}, body as any);
+            });
+            server.autoRespond = true;
+            const source = createWaterSource();
+
+            const result = await source.loadTile(createParams([
+                {tileID: new CanonicalTileID(7, 36, 46), request: {url: 'http://localhost:2900/7/36/46.pbf'}},
+                {tileID: new CanonicalTileID(6, 18, 23), request: {url: 'http://localhost:2900/6/18/23.pbf'}}
+            ])) as WorkerTileWithData;
+
+            expect(server.requests.map(request => request.url)).toEqual([
+                'http://localhost:2900/8/73/93.pbf',
+                'http://localhost:2900/7/36/46.pbf',
+                'http://localhost:2900/6/18/23.pbf'
+            ]);
+            expect(result.encoding).toBe('mvt');
+            const slicedTile = new VectorTile(new PbfReader(result.rawTileData));
+            expect(slicedTile.layers.water.length).toBeGreaterThan(0);
+            expect(slicedTile.layers.water.length).toBeLessThan(new VectorTile(new PbfReader(rawTileData)).layers.water.length);
+        });
+
+        test('rethrows the 404 when no parent exists', async () => {
+            server.respondWith([404, {}, '']);
+            server.autoRespond = true;
+            const source = createWaterSource();
+
+            const promise = source.loadTile(createParams([
+                {tileID: new CanonicalTileID(7, 36, 46), request: {url: 'http://localhost:2900/7/36/46.pbf'}}
+            ]));
+
+            await expect(promise).rejects.toThrow(expect.objectContaining({status: 404, url: 'http://localhost:2900/8/73/93.pbf'}));
+            expect(server.requests).toHaveLength(2);
+        });
+
+        test('throws the error of a parent that fails other than with a 404', async () => {
+            server.respondWith('http://localhost:2900/8/73/93.pbf', [404, {}, '']);
+            server.respondWith('http://localhost:2900/7/36/46.pbf', [500, {}, '']);
+            server.autoRespond = true;
+            const source = createWaterSource();
+
+            const promise = source.loadTile(createParams([
+                {tileID: new CanonicalTileID(7, 36, 46), request: {url: 'http://localhost:2900/7/36/46.pbf'}},
+                {tileID: new CanonicalTileID(6, 18, 23), request: {url: 'http://localhost:2900/6/18/23.pbf'}}
+            ]));
+
+            await expect(promise).rejects.toThrow(expect.objectContaining({status: 500}));
+            expect(server.requests).toHaveLength(2);
+        });
     });
 
     test('VectorTileWorkerSource.reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
