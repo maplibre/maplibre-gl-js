@@ -1,0 +1,102 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Two features with the same label run in opposite directions and are merged into a line that turns straight back on itself; with text-offset the glyphs of '22' must stay in order instead of collapsing onto one point",
+      "width": 512,
+      "height": 320
+    }
+  },
+  "center": [
+    8.5453,
+    47.36695
+  ],
+  "zoom": 18,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "22"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  8.545,
+                  47.3668
+                ],
+                [
+                  8.5456,
+                  47.3671
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "label": "22"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  8.5456,
+                  47.3671
+                ],
+                [
+                  8.545,
+                  47.3668
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "paint": {
+        "line-color": "#88f"
+      }
+    },
+    {
+      "id": "label",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "text-field": [
+          "get",
+          "label"
+        ],
+        "symbol-placement": "line",
+        "text-size": 20,
+        "text-offset": [
+          0,
+          1
+        ],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      }
+    }
+  ]
+}
