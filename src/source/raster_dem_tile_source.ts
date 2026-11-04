@@ -121,12 +121,12 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
     /**
      * Leaves a tile whose response had no content (a 204, or a custom protocol's answer without data) under `emptyResponse: 'missing'`
      * errored without elevation, worker or expiry, so another zoom level supplies the elevation and a reload requests it again.
-     * @internal
      */
-    protected override _markTileMissing(tile: Tile): void {
+    private _markTileMissing(tile: Tile): void {
         this.unloadTile(tile);
         delete tile.actor;
-        super._markTileMissing(tile);
+        tile.state = 'errored';
+        tile.expirationTime = null;
     }
 
     async readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
