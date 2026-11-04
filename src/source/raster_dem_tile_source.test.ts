@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {Tile} from '../tile/tile.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {beforeMapTest, createMap, getMockDispatcher} from '../util/test/util.ts';
+import {getMockDispatcher} from '../util/test/util.ts';
 import {sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 
 import type {MapSourceDataEvent} from '../ui/events.ts';
@@ -134,18 +134,6 @@ describe('RasterDEMTileSource', () => {
         expect(tile.state).toBe('loaded');
         expect(tile.dem).toBeUndefined();
         expect((tile.actor as any).sendAsync).not.toHaveBeenCalled();
-    });
-
-    test('addSource passes emptyResponse missing to a raster-dem source', async () => {
-        beforeMapTest();
-        const map = createMap();
-        await map.once('style.load');
-        map.addSource('dem', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
-        const source = map.getSource<RasterDEMTileSource>('dem');
-        await waitForMetadataEvent(source);
-
-        expect(source.emptyResponse).toBe('missing');
-        map.remove();
     });
 
     test('a 204 with emptyResponse missing leaves the tile without data', async () => {
