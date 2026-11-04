@@ -149,9 +149,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             // max-age to the time it receives them, and the tile's expiration already survives a reload.
             result = extend(result, {etag: workerTile.etag});
         }
-        if (workerTile.noContent) {
-            result = extend(result, {noContent: true});
-        }
+        result.noContent = workerTile.noContent;
 
         return result;
     }
