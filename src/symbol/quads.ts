@@ -53,8 +53,8 @@ const border = IMAGE_PADDING;
  *
  * A quad's corner is an offset that the shader scales by the icon size plus a pixel offset that it does not. The
  * pixel offsets hold the parts of a stretchable image that are not stretched, so they are scaled by `iconSize` here:
- * the border of an image fitted to its text grows with `icon-size` like the rest of the icon. `iconSize` is the size
- * at the zoom the tile is laid out for.
+ * a stretchable image grows with `icon-size` as a whole, border included, whether or not it is fitted to its text.
+ * `iconSize` is the size at the zoom the tile is laid out for.
  */
 export function getIconQuads(
     shapedIcon: PositionedIcon,
