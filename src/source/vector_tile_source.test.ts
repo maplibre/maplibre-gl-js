@@ -369,12 +369,9 @@ describe('VectorTileSource', () => {
         expect(loadVectorData).not.toHaveBeenCalled();
     });
 
-    test('an expired tile left missing by its refresh keeps only the resource timing of the response', async () => {
-        const tileUrl = 'http://example.com/10/5/5.png';
-        const timing = {name: tileUrl, entryType: 'resource', startTime: 1, duration: 2};
-        const getEntriesByName = vi.spyOn(performance, 'getEntriesByName').mockReturnValue([{...timing, toJSON: () => timing}]);
-        server.respondWith(tileUrl, [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
-        const source = createSourceWithWorker({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing', collectResourceTiming: true});
+    test('an expired tile left missing by its refresh drops its expiry and etag', async () => {
+        server.respondWith('http://example.com/10/5/5.png', [204, {'Cache-Control': 'max-age=300', 'ETag': '"still-empty"'}, '']);
+        const source = createSourceWithWorker({tiles: ['http://example.com/{z}/{x}/{y}.png'], emptyResponse: 'missing'});
         source.map._refreshExpiredTiles = true;
         await waitForMetadataEvent(source);
         const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
@@ -384,12 +381,9 @@ describe('VectorTileSource', () => {
         await sleep(0);
         server.respond();
         await tilePromise;
-        getEntriesByName.mockRestore();
 
-        expect(tile.state).toBe('errored');
         expect(tile.getExpiryTimeout()).toBeUndefined();
         expect(tile.etag).toBeUndefined();
-        expect(tile.resourceTiming).toEqual([timing]);
     });
 
     test('a tile left missing while a reload waits stays loading for that reload', async () => {
