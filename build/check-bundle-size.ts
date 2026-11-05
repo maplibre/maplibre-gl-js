@@ -66,6 +66,6 @@ const rawGrowth = head[TOTAL].raw - main[TOTAL].raw;
 const gzipGrowth = head[TOTAL].gzip - main[TOTAL].gzip;
 
 if (rawGrowth > RAW_INCREASE_QUOTA || gzipGrowth > GZIP_INCREASE_QUOTA) {
-    console.error(`The bundle size grew by ${rawGrowth} bytes raw and ${gzipGrowth} bytes gzip, which is more than the quota of ${RAW_INCREASE_QUOTA} bytes raw or ${GZIP_INCREASE_QUOTA} bytes gzip.`);
-    process.exit(1);
+    console.log(`The bundle size grew by ${rawGrowth} bytes raw and ${gzipGrowth} bytes gzip, which is more than the quota of ${RAW_INCREASE_QUOTA} bytes raw or ${GZIP_INCREASE_QUOTA} bytes gzip.`);
+    process.exitCode = 1;
 }
