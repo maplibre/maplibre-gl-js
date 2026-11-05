@@ -2812,6 +2812,28 @@ export class Map extends Evented<MapEventType> {
         return this;
     }
 
+    /**
+     * Returns the function the map runs before it makes a request for an external URL, as set with the
+     * `transformRequest` map option or {@link Map.setTransformRequest}, or `null` if there is none.
+     *
+     * Wrapping it lets a part of an application add its own logic to some requests and hand the rest to the
+     * function that was there before.
+     *
+     * @example
+     * ```ts
+     * const previous = map.getTransformRequest();
+     * map.setTransformRequest((url, resourceType) => {
+     *     if (url.startsWith('https://tiles.example.com/')) {
+     *         return {url, headers: {'X-Api-Key': 'my-key'}};
+     *     }
+     *     return previous ? previous(url, resourceType) : {url};
+     * });
+     * ```
+     */
+    getTransformRequest(): RequestTransformFunction | null {
+        return this._requestManager.getTransformRequest();
+    }
+
     _getUIString(key: keyof typeof defaultLocale): string {
         const str = this._locale[key];
         if (str == null) {

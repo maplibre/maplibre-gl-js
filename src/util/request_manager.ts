@@ -38,5 +38,9 @@ export class RequestManager {
     setTransformRequest(transformRequest: RequestTransformFunction | null): void {
         this._transformRequestFn = transformRequest;
     }
+
+    getTransformRequest(): RequestTransformFunction | null {
+        return this._transformRequestFn;
+    }
 }
 

@@ -77,6 +77,21 @@ describe('Map', () => {
         });
     });
 
+    describe('getTransformRequest', () => {
+        test('returns the function from the option or from setTransformRequest, and null without one', () => {
+            const fromOption = vi.fn() as RequestTransformFunction;
+            const map = createMap({transformRequest: fromOption});
+            expect(map.getTransformRequest()).toBe(fromOption);
+
+            const fromSetter = vi.fn() as RequestTransformFunction;
+            map.setTransformRequest(fromSetter);
+            expect(map.getTransformRequest()).toBe(fromSetter);
+
+            map.setTransformRequest(null);
+            expect(map.getTransformRequest()).toBeNull();
+        });
+    });
+
     describe('is_Loaded', () => {
 
         test('Map.isSourceLoaded', async () => {
