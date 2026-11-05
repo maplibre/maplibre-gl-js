@@ -46,6 +46,19 @@ function formatChange(change: number): string {
 }
 
 /**
+ * Prints rows of cells as columns padded to a common width, the first `textColumns` aligned to the
+ * left and the rest, which hold numbers, to the right.
+ */
+function printTable(rows: string[][], textColumns: number) {
+    const widths = rows[0].map((_, column) => Math.max(...rows.map(row => row[column].length)));
+    for (const row of rows) {
+        console.log(row.map((cell, column) => column < textColumns ?
+            cell.padEnd(widths[column]) :
+            cell.padStart(widths[column])).join('  '));
+    }
+}
+
+/**
  * The commit before HEAD and HEAD itself. In CI, HEAD is the PR's merge commit, so the commit
  * before it is the base branch.
  */
@@ -53,14 +66,14 @@ const pr = execSync('git rev-parse HEAD').toString().trim();
 const main = buildAndMeasure('HEAD^1');
 const head = buildAndMeasure(pr);
 
-const rows = BUNDLES.flatMap(bundle => (['raw', 'gzip'] as const).map(kind => ({
+const rows = BUNDLES.flatMap(bundle => (['raw', 'gzip'] as const).map(kind => [
     bundle,
     kind,
-    main: main[bundle][kind],
-    pr: head[bundle][kind],
-    change: formatChange(head[bundle][kind] - main[bundle][kind]),
-})));
-console.table(rows);
+    `${main[bundle][kind]}`,
+    `${head[bundle][kind]}`,
+    formatChange(head[bundle][kind] - main[bundle][kind]),
+]));
+printTable([['bundle', 'kind', 'main', 'pr', 'change'], ...rows], 2);
 
 const rawGrowth = head[TOTAL].raw - main[TOTAL].raw;
 const gzipGrowth = head[TOTAL].gzip - main[TOTAL].gzip;
