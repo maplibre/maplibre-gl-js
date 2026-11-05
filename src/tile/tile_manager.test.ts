@@ -15,7 +15,6 @@ import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
-import {EXTENT} from '../data/extent.ts';
 
 import type {TileCache} from './tile_cache.ts';
 import type {Map} from '../ui/map.ts';
@@ -2147,15 +2146,11 @@ describe('TileManager.tilesIn', () => {
 
         tileManager.update(transform);
 
-        const tiles = tileManager.tilesIn([new Point(290, 170)], 1, true);
-        expect(tiles.length).toBeGreaterThan(0);
-        for (const {tileID, queryGeometry, cameraQueryGeometry} of tiles) {
-            // Wrapping would move the geometry a whole world width away from the tile.
-            const worldWidth = EXTENT * Math.pow(2, tileID.canonical.z);
-            for (const point of [...queryGeometry, ...cameraQueryGeometry]) {
-                expect(Math.abs(point.x)).toBeLessThan(worldWidth / 2);
-            }
-        }
+        const tile = tileManager.tilesIn([new Point(290, 170)], 1, true)
+            .find(({tileID}) => tileID.key === new OverscaledTileID(10, 0, 10, 512, 512).key);
+        expect(tile.queryGeometry.map(p => p.round())).toEqual([new Point(840, -1465)]);
+        expect([tile.cameraQueryGeometry[0].round(), tile.cameraQueryGeometry.at(-1).round()])
+            .toEqual([new Point(840, -1465), new Point(-3676, 6708)]);
     });
 
     test('globe wrap bounding box spanning antimeridian from 179.9°W', async () => {

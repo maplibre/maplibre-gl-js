@@ -33,6 +33,11 @@ import type {LoadTileResult} from '../source/vector_tile_source.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 
+/**
+ * Half the width of the world in mercator coordinates, which span from 0 to 1.
+ */
+const HALF_WORLD = 0.5;
+
 type TileResult = {
     tile: Tile;
     tileID: OverscaledTileID;
@@ -953,9 +958,12 @@ export class TileManager extends Evented<SourceEventType> {
     /**
      * Projects a screen geometry to mercator coordinates.
      *
-     * With `checkWrap`, a geometry that the projection wrapped around the antimeridian is moved back next to the rest of
-     * it. A wrapped geometry always spans more than half the world, which tells it apart from one that only fails the
-     * cover check by a rounding error, such as a query line near the prime meridian.
+     * A geometry that the projection wrapped around the antimeridian always spans more than half the world, which tells
+     * it apart from one that only fails the cover check by a rounding error, such as a query line near the prime meridian.
+     * @param geom - The geometry in screen pixels.
+     * @param project - Projects a screen point to mercator coordinates.
+     * @param checkWrap - Whether to move a geometry that the projection wrapped around the antimeridian back next to the
+     * rest of it, for projections that do not render world copies.
      */
     private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
         let transformed = geom.map(project);
@@ -969,8 +977,8 @@ export class TileManager extends Evented<SourceEventType> {
 
             const newBounds = Bounds.fromPoints(transformed);
 
-            if (newBounds.width() > 0.5 && !newBounds.covers(projected)) {
-                transformed = transformed.map((coord) => coord.x > 0.5 ?
+            if (newBounds.width() > HALF_WORLD && !newBounds.covers(projected)) {
+                transformed = transformed.map((coord) => coord.x > HALF_WORLD ?
                     new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
                     coord
                 );
