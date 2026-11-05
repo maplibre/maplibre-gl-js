@@ -15,7 +15,7 @@ export type LoadTileJsonResponse = {
     scheme: RasterSourceSpecification['scheme'];
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
-    zoomLevelsToSearchForMissingTiles: number;
+    sparse?: boolean;
     vectorLayerIds?: string[];
 };
 
@@ -37,8 +37,8 @@ export async function loadTileJson(
     }
     const result = pick(
         // explicit source options take precedence over TileJSON
-        extend({zoomLevelsToSearchForMissingTiles: 0}, tileJSON, options),
-        ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding', 'zoomLevelsToSearchForMissingTiles']
+        extend(tileJSON, options),
+        ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding', 'sparse']
     ) as LoadTileJsonResponse;
 
     if ('vector_layers' in tileJSON && tileJSON.vector_layers) {

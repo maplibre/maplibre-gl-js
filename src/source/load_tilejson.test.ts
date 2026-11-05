@@ -45,7 +45,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result).toEqual({...mockTileJSON, zoomLevelsToSearchForMissingTiles: 0});
+        expect(result).toEqual(mockTileJSON);
     });
 
     test('fetches and returns TileJSON (async transformRequest)', async () => {
@@ -77,7 +77,7 @@ describe('loadTileJson', () => {
         server.respond();
         const result = await promise;
 
-        expect(result).toEqual({...mockTileJSON, zoomLevelsToSearchForMissingTiles: 0});
+        expect(result).toEqual(mockTileJSON);
         expect(server.requests[0].url).toBe('http://example.com/test.json');
         expect(server.requests[0].requestHeaders.Authorization).toBe('Bearer token');
     });
@@ -113,39 +113,38 @@ describe('loadTileJson', () => {
             ...mockTileJSON,
             minzoom: options.minzoom,
             tiles: options.tiles,
-            zoomLevelsToSearchForMissingTiles: 0,
         });
     });
 
-    test('reads zoomLevelsToSearchForMissingTiles from the TileJSON', async () => {
+    test('reads sparse from the TileJSON', async () => {
         const options = {
             type: 'vector',
             url: 'http://example.com/test.json',
         } satisfies VectorSourceSpecification;
-        server.respondWith(JSON.stringify({tiles: ['http://example.com/tile/{z}/{x}/{y}.pbf'], zoomLevelsToSearchForMissingTiles: 2}));
+        server.respondWith(JSON.stringify({tiles: ['http://example.com/tile/{z}/{x}/{y}.pbf'], sparse: true}));
 
         const promise = loadTileJson(options, requestManager, new AbortController());
         await sleep(0);
         server.respond();
         const result = await promise;
 
-        expect(result.zoomLevelsToSearchForMissingTiles).toBe(2);
+        expect(result.sparse).toBe(true);
     });
 
-    test('the source option for zoomLevelsToSearchForMissingTiles wins over the TileJSON', async () => {
+    test('the source option for sparse wins over the TileJSON', async () => {
         const options = {
             type: 'vector',
             url: 'http://example.com/test.json',
-            zoomLevelsToSearchForMissingTiles: 3,
+            sparse: false,
         } satisfies VectorTileSourceOptions;
-        server.respondWith(JSON.stringify({tiles: ['http://example.com/tile/{z}/{x}/{y}.pbf'], zoomLevelsToSearchForMissingTiles: 2}));
+        server.respondWith(JSON.stringify({tiles: ['http://example.com/tile/{z}/{x}/{y}.pbf'], sparse: true}));
 
         const promise = loadTileJson(options, requestManager, new AbortController());
         await sleep(0);
         server.respond();
         const result = await promise;
 
-        expect(result.zoomLevelsToSearchForMissingTiles).toBe(3);
+        expect(result.sparse).toBe(false);
     });
 
     test('excludes non-TileJSON data', async () => {

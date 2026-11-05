@@ -6,6 +6,7 @@ import {TileBounds} from '../tile/tile_bounds.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {isAbortError} from '../util/abort_error.ts';
+import {TileManager} from '../tile/tile_manager.ts';
 
 import type {Source} from './source.ts';
 import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
@@ -20,13 +21,14 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
     /**
-     * The number of zoom levels to search upward for a tile to show in place of one the server answers with a 404,
-     * sliced from the nearest ancestor that exists the way an overzoomed tile is sliced from the source's maxzoom tile.
-     * With `0` a missing tile loads empty. The source's TileJSON can set it too, with the source option winning.
-     * @defaultValue 0
+     * Whether the tileset leaves tiles out. When `true`, a tile the server answers with a 404 shows the part of the
+     * nearest ancestor that exists, up to 10 zoom levels up and no lower than the source's minzoom, sliced the way an
+     * overzoomed tile is sliced from the source's maxzoom tile. When `false`, a missing tile loads empty. The source's
+     * TileJSON can set it too, with the source option winning.
+     * @defaultValue false
      * @experimental
      */
-    zoomLevelsToSearchForMissingTiles?: number;
+    sparse?: boolean;
 };
 
 export type LoadTileResult = {
@@ -80,7 +82,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     scheme: string;
     encoding: TileEncoding;
     tileSize: number;
-    zoomLevelsToSearchForMissingTiles: number;
+    sparse: boolean;
     promoteId: PromoteIdSpecification;
 
     _options: VectorSourceSpecification;
@@ -105,7 +107,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.maxzoom = 22;
         this.scheme = 'xyz';
         this.tileSize = 512;
-        this.zoomLevelsToSearchForMissingTiles = 0;
+        this.sparse = false;
         this.reparseOverscaled = true;
         this.isTileClipped = true;
         this._loaded = false;
@@ -270,7 +272,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         if (data?.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
-        if (data === null && this.zoomLevelsToSearchForMissingTiles > 0) {
+        if (data === null && this.sparse) {
             data = await this._loadFromNearestAncestor(tile, params);
             if (tile.aborted) {
                 return;
@@ -285,12 +287,14 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     /**
      * Loads a tile the server answered with a 404 from the nearest ancestor that exists, sliced to the tile the way an
      * overzoomed tile is sliced from the source's maxzoom tile. The search starts one level above the tile that was fetched
-     * (the maxzoom tile when the tile is overzoomed) and reaches up `zoomLevelsToSearchForMissingTiles` levels, no further
-     * than the source's minzoom. Returns null when every ancestor in reach answered with a 404 too, so the tile loads empty.
+     * (the maxzoom tile when the tile is overzoomed) and goes up at most `TileManager.maxUnderzooming` levels, as far as
+     * the tile manager looks for a loaded parent to show in place of a missing raster tile, and no further than the
+     * source's minzoom. Returns null when every ancestor in reach answered with a 404 too: the tile then loads empty and
+     * draws nothing, as it does after a 404 when the source is not sparse.
      */
     private async _loadFromNearestAncestor(tile: Tile, params: WorkerTileParameters): Promise<WorkerTileResult | null> {
         const fetchedZ = Math.min(tile.tileID.canonical.z, this.maxzoom);
-        const lowestZ = Math.max(fetchedZ - this.zoomLevelsToSearchForMissingTiles, this.minzoom);
+        const lowestZ = Math.max(fetchedZ - TileManager.maxUnderzooming, this.minzoom);
         for (let z = fetchedZ - 1; z >= lowestZ; z--) {
             const ancestorID = tile.tileID.scaledTo(z).canonical;
             params.overzoomParameters = {
