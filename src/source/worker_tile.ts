@@ -94,7 +94,6 @@ export class WorkerTile {
             }
 
             const sourceLayerIndex = sourceLayerCoder.encode(sourceLayerId);
-            // vt-pbf's GeoJSONWrapper turns string ids into numbers, so give the promoted id back for ["id"] expressions
             const restorePromotedId = this.promoteId && sourceLayerId === GEOJSON_TILE_LAYER_NAME;
             const features = [];
             for (let index = 0; index < sourceLayer.length; index++) {
