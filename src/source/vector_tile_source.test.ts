@@ -624,22 +624,12 @@ describe('VectorTileSource', () => {
     });
 
     describe('Accept header', () => {
-        function captureMessages(source: VectorTileSource) {
-            const captured = {data: null as WorkerTileParameters|null};
-            source.dispatcher = getWrapDispatcher()({
-                sendAsync(message: ActorMessage<MessageType>) {
-                    captured.data = message.data as WorkerTileParameters;
-                    return Promise.resolve({});
-                }
-            });
-            return captured;
-        }
-
         test('requests for MVT tiles do not include an accept header', async () => {
             const source = createSource({
                 tiles: ['http://example.com/{z}/{x}/{y}.pbf']
             });
-            const captured = captureMessages(source);
+            const sendAsync = vi.fn().mockResolvedValue({});
+            source.dispatcher = getWrapDispatcher()({sendAsync});
             await waitForMetadataEvent(source);
 
             await source.loadTile({
@@ -647,7 +637,8 @@ describe('VectorTileSource', () => {
                 loadVectorData() {},
             } as any as Tile);
 
-            expect(captured.data.request.headers).toBeUndefined();
+            const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+            expect(params.request.headers).toBeUndefined();
         });
 
         test('requests for MLT tiles with application/vnd.maplibre-tile', async () => {
@@ -655,7 +646,8 @@ describe('VectorTileSource', () => {
                 tiles: ['http://example.com/{z}/{x}/{y}.mlt'],
                 encoding: 'mlt'
             });
-            const captured = captureMessages(source);
+            const sendAsync = vi.fn().mockResolvedValue({});
+            source.dispatcher = getWrapDispatcher()({sendAsync});
             await waitForMetadataEvent(source);
 
             await source.loadTile({
@@ -663,7 +655,8 @@ describe('VectorTileSource', () => {
                 loadVectorData() {},
             } as any as Tile);
 
-            expect(captured.data.request.headers.Accept).toBe('application/vnd.maplibre-tile');
+            const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+            expect(params.request.headers.Accept).toBe('application/vnd.maplibre-tile');
         });
 
         test('respects Accept header set by transformRequest', async () => {
@@ -673,7 +666,8 @@ describe('VectorTileSource', () => {
                 url,
                 headers: {Accept: 'application/x-custom'}
             }));
-            const captured = captureMessages(source);
+            const sendAsync = vi.fn().mockResolvedValue({});
+            source.dispatcher = getWrapDispatcher()({sendAsync});
             await waitForMetadataEvent(source);
 
             await source.loadTile({
@@ -681,7 +675,8 @@ describe('VectorTileSource', () => {
                 loadVectorData() {},
             } as any as Tile);
 
-            expect(captured.data.request.headers.Accept).toBe('application/x-custom');
+            const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+            expect(params.request.headers.Accept).toBe('application/x-custom');
         });
 
         test('sets Accept header on overzoom requests', async () => {
@@ -690,7 +685,8 @@ describe('VectorTileSource', () => {
                 maxzoom: 10,
                 encoding: 'mlt'
             });
-            const captured = captureMessages(source);
+            const sendAsync = vi.fn().mockResolvedValue({});
+            source.dispatcher = getWrapDispatcher()({sendAsync});
             await waitForMetadataEvent(source);
             source.map._zoomLevelsToOverscale = 2;
 
@@ -699,7 +695,8 @@ describe('VectorTileSource', () => {
                 loadVectorData() {},
             } as any as Tile);
 
-            expect(captured.data.request.headers.Accept).toBe('application/vnd.maplibre-tile');
+            const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+            expect(params.request.headers.Accept).toBe('application/vnd.maplibre-tile');
         });
     });
  
