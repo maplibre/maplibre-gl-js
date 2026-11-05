@@ -5,6 +5,8 @@ import zlib from 'zlib';
 const RAW_INCREASE_QUOTA = 1024;
 const GZIP_INCREASE_QUOTA = 256;
 const BUNDLES = ['dist/maplibre-gl.mjs', 'dist/maplibre-gl-worker.mjs'];
+/** The key under which the sizes of all {@link BUNDLES} together are recorded. */
+const TOTAL = 'total';
 
 type SizeRecord = {raw: number; gzip: number};
 
@@ -21,16 +23,22 @@ function run(command: string) {
 }
 
 /**
- * Checks out a commit, builds it, and returns the raw and gzipped size of each bundle.
+ * Checks out a commit, builds it, and returns the raw and gzipped size of each bundle, and of all
+ * of them together under {@link TOTAL}.
  */
 function buildAndMeasure(commit: string): Record<string, SizeRecord> {
     run(`git checkout --quiet ${commit}`);
     run('npm ci');
     run('npm run build-dist');
-    return Object.fromEntries(BUNDLES.map(file => {
+    const sizes: Record<string, SizeRecord> = Object.fromEntries(BUNDLES.map(file => {
         const buf = fs.readFileSync(file);
         return [file, {raw: buf.length, gzip: zlib.gzipSync(buf).length}];
     }));
+    sizes[TOTAL] = {
+        raw: BUNDLES.reduce((sum, file) => sum + sizes[file].raw, 0),
+        gzip: BUNDLES.reduce((sum, file) => sum + sizes[file].gzip, 0),
+    };
+    return sizes;
 }
 
 function formatChange(change: number): string {
@@ -45,20 +53,20 @@ const pr = execSync('git rev-parse HEAD').toString().trim();
 const main = buildAndMeasure('HEAD^1');
 const head = buildAndMeasure(pr);
 
-const rows = BUNDLES.flatMap(file => (['raw', 'gzip'] as const).map(kind => ({
-    bundle: file,
+const rows = [...BUNDLES, TOTAL].flatMap(bundle => (['raw', 'gzip'] as const).map(kind => ({
+    bundle,
     kind,
-    main: main[file][kind],
-    pr: head[file][kind],
-    change: formatChange(head[file][kind] - main[file][kind]),
+    main: main[bundle][kind],
+    pr: head[bundle][kind],
+    change: formatChange(head[bundle][kind] - main[bundle][kind]),
 })));
 console.table(rows);
 
-const grew = BUNDLES.some(file =>
-    head[file].raw - main[file].raw > RAW_INCREASE_QUOTA ||
-    head[file].gzip - main[file].gzip > GZIP_INCREASE_QUOTA);
+const grew =
+    head[TOTAL].raw - main[TOTAL].raw > RAW_INCREASE_QUOTA ||
+    head[TOTAL].gzip - main[TOTAL].gzip > GZIP_INCREASE_QUOTA;
 
 if (grew) {
-    console.error(`A bundle grew more than ${RAW_INCREASE_QUOTA} bytes raw or ${GZIP_INCREASE_QUOTA} bytes gzip compared to main.`);
+    console.error(`The bundles grew more than ${RAW_INCREASE_QUOTA} bytes raw or ${GZIP_INCREASE_QUOTA} bytes gzip in total compared to main.`);
     process.exit(1);
 }
