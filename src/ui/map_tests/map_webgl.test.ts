@@ -1,5 +1,6 @@
 import {beforeEach, afterEach, test, expect, vi} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {fakeServer} from 'nise';
+import {createMap, beforeMapTest, sleep} from '../../util/test/util.ts';
 import {GPUInitializationError} from '../../util/gpu_initialization_error.ts';
 import {getGlobalWorkerPool} from '../../util/global_worker_pool.ts';
 
@@ -88,6 +89,31 @@ test('renders a style set while the WebGL context is lost without throwing', asy
 
     expect(() => map.redraw()).not.toThrow();
     map.remove();
+});
+
+test('loads a style URL that was still being fetched when the WebGL context was lost', async () => {
+    const server = fakeServer.create();
+    server.respondWith('style.json', JSON.stringify({
+        version: 8,
+        sources: {},
+        layers: [{id: 'background', type: 'background'}]
+    }));
+    const map = createMap({style: 'style.json'});
+    const canvas = map.getCanvas();
+
+    const contextLostPromise = map.once('webglcontextlost');
+    canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    await contextLostPromise;
+    canvas.dispatchEvent(new window.Event('webglcontextrestored'));
+
+    const styleLoadPromise = map.once('style.load');
+    await sleep(0);
+    server.respond();
+    await styleLoadPromise;
+
+    expect(map.getStyle().layers.map(layer => layer.id)).toEqual(['background']);
+    map.remove();
+    server.restore();
 });
 
 test('does not fire "webglcontextrestored" after remove has been called', async () => {
