@@ -53,7 +53,7 @@ const pr = execSync('git rev-parse HEAD').toString().trim();
 const main = buildAndMeasure('HEAD^1');
 const head = buildAndMeasure(pr);
 
-const rows = [...BUNDLES, TOTAL].flatMap(bundle => (['raw', 'gzip'] as const).map(kind => ({
+const rows = BUNDLES.flatMap(bundle => (['raw', 'gzip'] as const).map(kind => ({
     bundle,
     kind,
     main: main[bundle][kind],
@@ -62,11 +62,10 @@ const rows = [...BUNDLES, TOTAL].flatMap(bundle => (['raw', 'gzip'] as const).ma
 })));
 console.table(rows);
 
-const grew =
-    head[TOTAL].raw - main[TOTAL].raw > RAW_INCREASE_QUOTA ||
-    head[TOTAL].gzip - main[TOTAL].gzip > GZIP_INCREASE_QUOTA;
+const rawGrowth = head[TOTAL].raw - main[TOTAL].raw;
+const gzipGrowth = head[TOTAL].gzip - main[TOTAL].gzip;
 
-if (grew) {
-    console.error(`The bundles grew more than ${RAW_INCREASE_QUOTA} bytes raw or ${GZIP_INCREASE_QUOTA} bytes gzip in total compared to main.`);
+if (rawGrowth > RAW_INCREASE_QUOTA || gzipGrowth > GZIP_INCREASE_QUOTA) {
+    console.error(`The bundle size grew by ${rawGrowth} bytes raw and ${gzipGrowth} bytes gzip, which is more than the quota of ${RAW_INCREASE_QUOTA} bytes raw or ${GZIP_INCREASE_QUOTA} bytes gzip.`);
     process.exit(1);
 }
