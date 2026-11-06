@@ -238,13 +238,34 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
  * The {@link Map.easeTo} options object
  */
 export type EaseToOptions = AnimationOptions & CameraOptions & {
+    /**
+     * @deprecated Has no effect, and will be removed in the next major version.
+     */
     delayEndEvents?: number;
+    /**
+     * Dimensions in pixels applied on each side of the viewport for shifting the vanishing point, which the transition
+     * animates to. The map keeps this padding once the transition ends.
+     */
     padding?: number | PaddingOptions;
     /**
      * If `zoom` is specified, `around` determines the point around which the zoom is centered.
      */
     around?: LngLatLike;
+    /**
+     * @internal
+     * An animation started with the `easeId` of the one running continues its movement instead of interrupting it, so
+     * that no end and start events fire between the two, as for a key the keyboard handler sees held down.
+     * @deprecated Set by MapLibre's own handlers and not meant for applications; it will be removed from this type in
+     * the next major version.
+     */
     easeId?: string;
+    /**
+     * @internal
+     * Whether the animation continues a movement whose `movestart` someone else fired, such as the gesture whose
+     * inertia it is.
+     * @deprecated Set by MapLibre's own handlers and not meant for applications; it will be removed from this type in
+     * the next major version.
+     */
     noMoveStart?: boolean;
 };
 
@@ -926,7 +947,7 @@ export class Camera extends Evented<MapEventType> {
             writes: {center: true, zoom: easeHandler.isZooming, bearing: rotating, pitch: rotating, roll: rotating, padding: paddingChanging, elevation: !!this.terrain},
             eventData,
             easeId: options.easeId,
-            noMoveStart: options.noMoveStart
+            movestartFired: options.noMoveStart
         });
 
         return this;
