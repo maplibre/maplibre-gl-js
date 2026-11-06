@@ -402,11 +402,11 @@ describe('setZoom', () => {
         expect(zoomended).toBe('ok');
     });
 
-    test('cancels in-progress easing', () => {
+    test('leaves an in-progress pan running', () => {
         camera.panTo([3, 4]);
-        expect(camera.isMoving()).toBeTruthy();
         camera.setZoom(5);
-        expect(!camera.isMoving()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
+        expect(camera.getZoom()).toBe(5);
     });
 
     test('respects zoomSnap', () => {
@@ -444,11 +444,11 @@ describe('setBearing', () => {
         expect(rotateended).toBe('ok');
     });
 
-    test('cancels in-progress easing', () => {
+    test('leaves an in-progress pan running', () => {
         camera.panTo([4, 3]);
-        expect(camera.isMoving()).toBeTruthy();
         camera.setBearing(6);
-        expect(!camera.isMoving()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
+        expect(camera.getBearing()).toBe(6);
     });
 });
 
@@ -480,11 +480,11 @@ describe('setRoll', () => {
         expect(rollended).toBe('ok');
     });
 
-    test('cancels in-progress easing', () => {
+    test('leaves an in-progress pan running', () => {
         camera.panTo([3, 4]);
-        expect(camera.isMoving()).toBeTruthy();
         camera.setRoll(6);
-        expect(!camera.isMoving()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
+        expect(camera.getRoll()).toBe(6);
     });
 });
 
@@ -1181,21 +1181,44 @@ describe('easeTo', () => {
         expect(spy.mock.calls.find(c => 'done' in c[0])).toBeTruthy();
     });
 
-    test('jumpTo on("zoom") during easeTo', () => {
+    test('jumpTo on("zoom") during easeTo that sets a property the easeTo does not leaves it running', () => {
         const {camera, queue} = createCamera();
+        const stubNow = vi.spyOn(timeControl, 'now');
+        const moveend = vi.fn();
+        camera.on('moveend', moveend);
 
-        const spy = vi.fn();
-        camera.on('moveend', spy);
-
+        stubNow.mockReturnValue(0);
         camera.easeTo({zoom: 20, duration: 500}, {done: true});
         camera.once('zoom', () => {
             camera.jumpTo({pitch: 40});
         });
-
+        stubNow.mockReturnValue(100);
         queue.run();
+        expect(moveend).not.toHaveBeenCalled();
+
+        stubNow.mockReturnValue(500);
         queue.run();
 
-        expect(spy.mock.calls.find(c => 'done' in c[0])).toBeTruthy();
+        expect(moveend).toHaveBeenCalledTimes(1);
+        expect(moveend.mock.calls[0][0]).toEqual(expect.objectContaining({done: true}));
+        expect(camera.getZoom()).toBe(20);
+        expect(camera.getPitch()).toBe(40);
+    });
+
+    test('setPadding during an easeTo leaves the ease running to its center', () => {
+        const {camera, queue} = createCamera({}, false, {zoom: 5});
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        stubNow.mockReturnValue(0);
+        camera.easeTo({center: [7, 47], duration: 20});
+        stubNow.mockReturnValue(10);
+        queue.run();
+        camera.setPadding({top: 100, bottom: 0, left: 0, right: 0});
+        stubNow.mockReturnValue(20);
+        queue.run();
+
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 7, lat: 47});
+        expect(camera.getPadding()).toEqual({top: 100, bottom: 0, left: 0, right: 0});
     });
 
     test('jumpTo on("pitch") during easeTo', () => {
@@ -2148,6 +2171,28 @@ describe('flyTo', () => {
         const {camera} = createCamera({zoomSnap: 0});
         camera.flyTo({zoom: 2.7, animate: false});
         expect(camera.getZoom()).toBe(2.7);
+    });
+
+    test('setPadding during a flyTo leaves the flight running to its center, as one movement', () => {
+        const {camera, queue} = createCamera();
+        const stubNow = vi.spyOn(timeControl, 'now');
+        const movestart = vi.fn();
+        const moveend = vi.fn();
+        camera.on('movestart', movestart);
+        camera.on('moveend', moveend);
+
+        stubNow.mockReturnValue(0);
+        camera.flyTo({center: [7, 47], zoom: 5, duration: 20});
+        stubNow.mockReturnValue(10);
+        queue.run();
+        camera.setPadding({top: 100, bottom: 0, left: 0, right: 0});
+        stubNow.mockReturnValue(20);
+        queue.run();
+
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 7, lat: 47});
+        expect(camera.getPadding()).toEqual({top: 100, bottom: 0, left: 0, right: 0});
+        expect(movestart).toHaveBeenCalledTimes(1);
+        expect(moveend).toHaveBeenCalledTimes(1);
     });
 
     test('flyTo on("move") in the last frame of a flyTo flies to its own target', () => {

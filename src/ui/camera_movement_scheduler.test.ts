@@ -24,6 +24,7 @@ function createOptions(options: Partial<MovementSegmentOptions>): MovementSegmen
         duration: 100,
         easing: t => t,
         axes: {zoom: false, rotate: false, pitch: false, roll: false},
+        writes: {center: true, zoom: false, bearing: false, pitch: false, roll: false, padding: false, elevation: false},
         ...options
     };
 }

@@ -1424,6 +1424,11 @@ export class Map extends Evented<MapEventType> {
      * an animated transition. The map will retain its current values for any
      * details not specified in `options`.
      *
+     * An animated transition underway is stopped only when `options` set a property it animates. Otherwise the change
+     * applies at once and the transition carries on, so that, for example, padding set during a `flyTo` without
+     * padding of its own does not stop the flight. The change is then part of the transition's movement and fires no
+     * `movestart` or `moveend` of its own.
+     *
      * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
      * `pitch`, `pitchend`, `rollstart`, `roll`, `rollend` and `rotate`.
      *

@@ -23,6 +23,7 @@ import type {TaskID} from '../util/task_queue.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {ElevationHolder} from './elevation_hold.ts';
+import type {CameraProperty} from './camera_movement_scheduler.ts';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -36,6 +37,9 @@ import type {ElevationHolder} from './elevation_hold.ts';
  * ```
  */
 export type PointLike = Point | [number, number];
+
+/** The camera properties a `jumpTo` sets when its options name them. */
+const JUMP_PROPERTIES: readonly CameraProperty[] = ['center', 'zoom', 'bearing', 'pitch', 'roll', 'padding', 'elevation'];
 
 /**
  * How many times a camera update outside a held gesture raises a camera it found inside the terrain, each time by as far
@@ -736,7 +740,9 @@ export class Camera extends Evented<MapEventType> {
     }
 
     jumpTo(options: JumpToOptions, eventData?: any): this {
-        this._scheduler.interrupt();
+        const jumpedProperties = JUMP_PROPERTIES.filter(property => options[property] != null);
+        if (this._scheduler.isWritingAny(jumpedProperties)) this._scheduler.interrupt();
+        const joinsMovement = this._scheduler.isMoving();
 
         if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
@@ -780,10 +786,8 @@ export class Camera extends Evented<MapEventType> {
         }
         this.applyUpdatedTransform(tr);
 
-        const events = [
-            new MapMovementEvent('movestart', eventData),
-            new MapMovementEvent('move', eventData)
-        ];
+        const events = joinsMovement ? [] : [new MapMovementEvent('movestart', eventData)];
+        events.push(new MapMovementEvent('move', eventData));
 
         if (zoomChanged) {
             events.push(
@@ -813,7 +817,7 @@ export class Camera extends Evented<MapEventType> {
                 new MapMovementEvent('rollend', eventData));
         }
 
-        events.push(new MapMovementEvent('moveend', eventData));
+        if (!joinsMovement) events.push(new MapMovementEvent('moveend', eventData));
         this._scheduler.fireAfterQueued(events);
         return this;
     }
@@ -890,6 +894,9 @@ export class Camera extends Evented<MapEventType> {
             aroundPoint = tr.locationToScreenPoint(around);
         }
 
+        const rotating = tr.bearing !== bearing || startPitch !== pitch || startRoll !== roll;
+        const paddingChanging = !tr.isPaddingEqual(padding);
+
         const easeHandler = this.cameraHelper.handleEaseTo(tr, {
             bearing,
             pitch,
@@ -916,6 +923,7 @@ export class Camera extends Evented<MapEventType> {
             duration: options.duration,
             easing: options.easing,
             axes: {zoom: easeHandler.isZooming, rotate: startBearing !== bearing, pitch: pitch !== startPitch, roll: roll !== startRoll},
+            writes: {center: true, zoom: easeHandler.isZooming, bearing: rotating, pitch: rotating, roll: rotating, padding: paddingChanging, elevation: !!this.terrain},
             eventData,
             easeId: options.easeId,
             noMoveStart: options.noMoveStart
@@ -1389,7 +1397,7 @@ export class Camera extends Evented<MapEventType> {
         const padding = (options.padding !== undefined ? options.padding : tr.padding) as PaddingOptions;
 
         const offsetAsPoint = Point.convert(options.offset);
-        let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
+        const pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
 
         const flyToHandler = this.cameraHelper.handleFlyTo(tr, {
@@ -1495,14 +1503,10 @@ export class Camera extends Evented<MapEventType> {
                 if (rotating) tr.setBearing(interpolates.number(startBearing, bearing, k));
                 if (pitching) tr.setPitch(interpolates.number(startPitch, pitch, k));
                 if (rolling) tr.setRoll(interpolates.number(startRoll, roll, k));
-                if (paddingChanging) {
-                    tr.interpolatePadding(startPadding, padding, k);
-                    // When padding is being applied, Transform.centerPoint is changing continuously,
-                    // thus we need to recalculate offsetPoint every frame
-                    pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-                }
+                if (paddingChanging) tr.interpolatePadding(startPadding, padding, k);
 
-                flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
+                // Transform.centerPoint moves with the padding, which this flight or a change between its frames can set
+                flyToHandler.easeFunc(k, scale, centerFactor, tr.centerPoint.add(offsetAsPoint));
 
                 elevationHandler.easeFunc(k);
                 this.applyUpdatedTransform(tr);
@@ -1512,6 +1516,7 @@ export class Camera extends Evented<MapEventType> {
             duration: options.animate === false ? 0 : options.duration,
             easing: options.easing,
             axes: {zoom: true, rotate: rotating, pitch: pitching, roll: rolling},
+            writes: {center: true, zoom: true, bearing: rotating, pitch: pitching, roll: rolling, padding: paddingChanging, elevation: !!this.terrain},
             eventData
         });
 

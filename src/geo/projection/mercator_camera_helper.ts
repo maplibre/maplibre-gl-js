@@ -112,12 +112,9 @@ export class MercatorCameraHelper implements ICameraHelper {
                     k,
                     useSlerp: startEulerAngles.roll != endEulerAngles.roll});
             }
-            if (doPadding) {
-                tr.interpolatePadding(startPadding, options.padding, k);
-                // When padding is being applied, Transform.centerPoint is changing continuously,
-                // thus we need to recalculate offsetPoint every frame
-                pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
-            }
+            if (doPadding) tr.interpolatePadding(startPadding, options.padding, k);
+            // Transform.centerPoint moves with the padding, which this ease or a change between its frames can set
+            pointAtOffset = tr.centerPoint.add(options.offsetAsPoint);
 
             if (options.around) {
                 tr.setLocationAtPoint(options.around, options.aroundPoint);

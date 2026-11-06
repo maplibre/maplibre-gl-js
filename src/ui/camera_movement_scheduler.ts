@@ -16,6 +16,9 @@ const MOVEMENT_AXES: readonly MovementAxis[] = ['zoom', 'rotate', 'pitch', 'roll
 /** Which parts of the camera a movement changes. */
 export type MovementAxes = Record<MovementAxis, boolean>;
 
+/** A property of the camera that a segment's frames can set. */
+export type CameraProperty = 'center' | 'zoom' | 'bearing' | 'pitch' | 'roll' | 'padding' | 'elevation';
+
 function noMovementAxes(): MovementAxes {
     return {zoom: false, rotate: false, pitch: false, roll: false};
 }
@@ -48,6 +51,11 @@ export type MovementSegmentOptions = {
     easing: (t: number) => number;
     /** The parts of the camera the segment changes, for which its movement fires start, during and end events. */
     axes: MovementAxes;
+    /**
+     * The properties the segment's frames set. A change made to any other property between its frames survives
+     * them, so it can be made without interrupting the segment, see {@link CameraMovementScheduler.isWritingAny}.
+     */
+    writes: Record<CameraProperty, boolean>;
     /** The properties every event the segment fires carries. */
     eventData?: Record<string, unknown>;
     /**
@@ -121,6 +129,15 @@ export class CameraMovementScheduler extends Evented<MapEventType> {
 
     isMovingAxis(axis: MovementAxis): boolean {
         return this._movingAxes[axis];
+    }
+
+    /**
+     * Whether the running segment's frames set any of these properties, so that a change made to them between its
+     * frames would be overwritten by its next frame.
+     */
+    isWritingAny(properties: readonly CameraProperty[]): boolean {
+        const writes = this._current?.options.writes;
+        return !!writes && properties.some(property => writes[property]);
     }
 
     /**
