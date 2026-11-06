@@ -216,7 +216,7 @@ export class CameraMovementScheduler extends Evented<MapEventType> {
     }
 
     private _requestRenderFrame(): void {
-        if (this._frameRequestId === null) this._frameRequestId = this._renderLoop.requestRenderFrame(this._onRenderFrame);
+        this._frameRequestId = this._renderLoop.requestRenderFrame(this._onRenderFrame);
     }
 
     private _cancelRenderFrame(): void {
