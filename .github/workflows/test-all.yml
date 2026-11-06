@@ -124,6 +124,7 @@ jobs:
           node-version-file: '.nvmrc'
       - name: install fonts for the render tests that draw text locally
         if: runner.os == 'Linux'
+        timeout-minutes: 5
         run: sudo apt install fonts-noto-cjk fonts-noto-core
       - name: Disable AppArmor
         if: runner.os == 'Linux'
