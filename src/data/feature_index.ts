@@ -327,8 +327,8 @@ export class FeatureIndex {
     /**
      * Returns the id of a feature, read from the `promoteId` property when `promoteId` is set, else `feature.id`.
      *
-     * On the GeoJSON tile layer the id is also written onto the feature, so that `["id"]` in a filter
-     * sees it.
+     * On the GeoJSON tile layer a defined id is also written onto the feature, so that `["id"]` in a
+     * filter sees it.
      */
     getId(feature: VectorTileFeatureLike, sourceLayerId: string): string | number {
         let id: string | number = feature.id;
@@ -342,7 +342,9 @@ export class FeatureIndex {
                 id = Number(feature.properties.cluster_id);
             }
 
-            if (sourceLayerId === GEOJSON_TILE_LAYER_NAME && id !== undefined) (feature as {id: string | number}).id = id;
+            if (sourceLayerId === GEOJSON_TILE_LAYER_NAME && id !== undefined) {
+                (feature as {id: string | number}).id = id;
+            }
         }
         return id;
     }
