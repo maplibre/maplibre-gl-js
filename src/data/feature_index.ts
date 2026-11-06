@@ -229,6 +229,7 @@ export class FeatureIndex {
         const sourceLayerName = this.sourceLayerCoder.decode(sourceLayerIndex);
         const sourceLayer = this.vtLayers[sourceLayerName];
         const feature = sourceLayer.feature(featureIndex);
+        const id = this.getId(feature, sourceLayerName);
 
         if (filter.needGeometry) {
             const evaluationFeature = toEvaluationFeature(feature, true);
@@ -238,8 +239,6 @@ export class FeatureIndex {
         } else if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), feature)) {
             return;
         }
-
-        const id = this.getId(feature, sourceLayerName);
 
         for (const layerID of layerIDs) {
 
@@ -325,6 +324,14 @@ export class FeatureIndex {
         return false;
     }
 
+    /**
+     * Returns the id of a feature, read from the property that `promoteId` names when it is set, and
+     * writes that id onto a feature of the GeoJSON tile layer so that `["id"]` in a filter sees it.
+     *
+     * A GeoJSON tile is encoded with vt-pbf, which parses ids as integers: a promoted string id such as
+     * `"ak1"` is `NaN` on the worker and `0` after the tile is decoded again on the main thread. A
+     * vector tile layer keeps the id the tile encodes, and so does a GeoJSON feature with no promoted id.
+     */
     getId(feature: VectorTileFeatureLike, sourceLayerId: string): string | number {
         let id: string | number = feature.id;
         if (this.promoteId) {
@@ -336,6 +343,8 @@ export class FeatureIndex {
             if (id === undefined && feature.properties?.cluster && this.promoteId) {
                 id = Number(feature.properties.cluster_id);
             }
+
+            if (sourceLayerId === GEOJSON_TILE_LAYER_NAME && id !== undefined) (feature as {id: string | number}).id = id;
         }
         return id;
     }

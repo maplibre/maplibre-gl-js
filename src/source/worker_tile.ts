@@ -1,4 +1,4 @@
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
+import {FeatureIndex} from '../data/feature_index.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
 import {warnOnce, mapObject} from '../util/util.ts';
@@ -94,12 +94,10 @@ export class WorkerTile {
             }
 
             const sourceLayerIndex = sourceLayerCoder.encode(sourceLayerId);
-            const restorePromotedId = this.promoteId && sourceLayerId === GEOJSON_TILE_LAYER_NAME;
             const features = [];
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
                 const id = featureIndex.getId(feature, sourceLayerId);
-                if (restorePromotedId && id !== undefined) (feature as {id: string | number}).id = id;
                 features.push({feature, id, index, sourceLayerIndex});
             }
 
