@@ -325,12 +325,10 @@ export class FeatureIndex {
     }
 
     /**
-     * Returns the id of a feature, read from the property that `promoteId` names when it is set, and
-     * writes that id onto a feature of the GeoJSON tile layer so that `["id"]` in a filter sees it.
+     * Returns the id of a feature, read from the `promoteId` property when `promoteId` is set, else `feature.id`.
      *
-     * A GeoJSON tile is encoded with vt-pbf, which parses ids as integers: a promoted string id such as
-     * `"ak1"` is `NaN` on the worker and `0` after the tile is decoded again on the main thread. A
-     * vector tile layer keeps the id the tile encodes, and so does a GeoJSON feature with no promoted id.
+     * On the GeoJSON tile layer the id is also written onto the feature, so that `["id"]` in a filter
+     * sees it.
      */
     getId(feature: VectorTileFeatureLike, sourceLayerId: string): string | number {
         let id: string | number = feature.id;
