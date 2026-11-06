@@ -1626,7 +1626,7 @@ export class Map extends Evented<MapEventType> {
         if (isContextLost) return this;
         this._resizeInternal(constrainTransform);
 
-        const fireMoving = !this._camera._moving;
+        const fireMoving = !this._camera.isMoving();
         if (fireMoving) {
             this.stop();
             this.fire(new MapMovementEvent('movestart', eventData))

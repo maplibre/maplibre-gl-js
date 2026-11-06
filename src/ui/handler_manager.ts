@@ -125,7 +125,8 @@ export type HandlerResult = {
      */
     pinchAround?: Point | null;
     /**
-     * A method that can fire a one-off easing by directly changing the map's camera.
+     * A method that can fire a one-off easing by directly changing the map's camera. The gesture ends with it: every
+     * handler is reset before it runs, so that the next frame of a handler does not stop the easing.
      */
     cameraAnimation?: (map: Map) => void;
     /**
@@ -504,9 +505,7 @@ export class HandlerManager {
 
         const {cameraAnimation} = mergedHandlerResult;
         if (cameraAnimation) {
-            this._inertia.clear();
-            this._fireEvents({}, {}, true);
-            this._changes = [];
+            this.stop(true);
             cameraAnimation(this._map);
         }
     };
