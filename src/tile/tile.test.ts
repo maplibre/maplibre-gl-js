@@ -112,6 +112,44 @@ describe('querySourceFeatures', () => {
         });
     });
 
+    test('filter geojson source features on string ids promoted with promoteId', () => {
+        const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
+        const ids = ['ak1', '101', '12-a', 7, 'ak2'];
+        const geojsonWrapper = new GeoJSONWrapper(ids.map(id => ({type: 1, id, geometry: [[0, 0]], tags: {id}} as any as Feature)));
+        geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
+        tile.loadVectorData(
+            createVectorData({
+                featureIndex: deserialize(serialize(new FeatureIndex(new OverscaledTileID(3, 0, 2, 1, 2), 'id'))),
+                rawTileData: fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}})
+            }),
+            createStyle()
+        );
+
+        const result = [];
+        tile.querySourceFeatures(result, {worldCoordinateHelper: mercatorWorldCoordinateHelper, filter: ['in', ['id'], ['literal', ['ak1', '101', '12-a', 7]]]});
+        expect(result.map(feature => feature.id)).toEqual(['ak1', '101', '12-a', 7]);
+    });
+
+    test('filter vector tile source features on the tile id with promoteId', () => {
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+        const layer = new GeoJSONWrapper([{type: 1, id: 5, geometry: [[0, 0]], tags: {id: 'x'}} as any as Feature]);
+        layer.name = 'road';
+        tile.loadVectorData(
+            createVectorData({
+                featureIndex: deserialize(serialize(new FeatureIndex(new OverscaledTileID(1, 0, 1, 1, 1), 'id'))),
+                rawTileData: fromVectorTileJs({layers: {road: layer}})
+            }),
+            createStyle()
+        );
+
+        let result = [];
+        tile.querySourceFeatures(result, {worldCoordinateHelper: mercatorWorldCoordinateHelper, sourceLayer: 'road', filter: ['==', ['id'], 5]});
+        expect(result).toHaveLength(1);
+        result = [];
+        tile.querySourceFeatures(result, {worldCoordinateHelper: mercatorWorldCoordinateHelper, sourceLayer: 'road', filter: ['==', ['id'], 'x']});
+        expect(result).toHaveLength(0);
+    });
+
     test('empty geojson tile', () => {
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
         let result;
