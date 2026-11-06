@@ -26,6 +26,7 @@ import type {Map, CompleteMapOptions} from './map.ts';
 import type {Camera, RotationPivot} from './camera.ts';
 import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
+import type {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
 import type {Terrain} from '../render/terrain.ts';
 
@@ -161,6 +162,8 @@ export type MapControlsScenarioOptions = {
     tr: ITransform;
     deltasForHelper: MapControlsDeltas;
     preZoomAroundLoc: LngLat;
+    /** The world position under the pointer when `preZoomAroundLoc` doesn't render there. */
+    preZoomAroundCoord?: MercatorCoordinate;
     combinedEventsInProgress: EventsInProgress;
     panDelta?: Point;
 };
@@ -614,12 +617,14 @@ export class HandlerManager {
             around = tr.centerPoint;
         }
         const preZoomAroundLoc = this._computePreZoomAroundLoc(tr, around, panDelta, aroundElevation);
+        const preZoomAroundCoord = this._computePreZoomAroundCoord(tr, terrain, preZoomAroundLoc, around, panDelta);
 
         this._handleMapControls({
             terrain,
             tr,
             deltasForHelper,
             preZoomAroundLoc,
+            preZoomAroundCoord,
             combinedEventsInProgress,
             panDelta,
         });
@@ -717,11 +722,35 @@ export class HandlerManager {
         return tr.screenPointToLocation(aroundPreviousPoint);
     }
 
+    /** The world position under `around` before this frame's pan, when `location` doesn't render there. */
+    _computePreZoomAroundCoord(tr: ITransform, terrain: Terrain | null, location: LngLat, around: Point, panDelta: Point | undefined): MercatorCoordinate | undefined {
+        if (terrain || this._camera.cameraHelper.useGlobeControls) {
+            return undefined;
+        }
+        if (around.distSqr(tr.centerPoint) < 1.0e-2) {
+            return undefined;
+        }
+        const aroundPreviousPoint = panDelta ? around.sub(panDelta) : around;
+        if (tr.locationToScreenPoint(location).distSqr(aroundPreviousPoint) < 1) {
+            return undefined;
+        }
+        return tr.screenPointToMercatorCoordinate(aroundPreviousPoint);
+    }
+
+    /** Moves the center so that the world position `coord` is under `point`. */
+    _setMercatorCoordinateAtPoint(tr: ITransform, coord: MercatorCoordinate, point: Point): void {
+        const pointCoord = tr.screenPointToMercatorCoordinate(point);
+        const centerCoord = tr.screenPointToMercatorCoordinate(tr.centerPoint);
+        const center = tr.worldCoordinateHelper.lngLatFromWorld(centerCoord.x + coord.x - pointCoord.x, centerCoord.y + coord.y - pointCoord.y);
+        tr.setLocationAtPoint(center, tr.centerPoint);
+    }
+
     _handleMapControls({
         terrain,
         tr,
         deltasForHelper,
         preZoomAroundLoc,
+        preZoomAroundCoord,
         combinedEventsInProgress,
         panDelta}: MapControlsScenarioOptions): void {
 
@@ -731,6 +760,11 @@ export class HandlerManager {
 
         if (!terrain && !cameraHelper.useGlobeControls && !tr.isPointOnMapSurface(deltasForHelper.around)) {
             if (panDelta) tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
+            return;
+        }
+
+        if (preZoomAroundCoord) {
+            this._setMercatorCoordinateAtPoint(tr, preZoomAroundCoord, deltasForHelper.around);
             return;
         }
 
