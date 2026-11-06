@@ -722,7 +722,7 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
 
         const moveStartPromise = map.once('movestart');
-        map._camera._moving = false;
+        map.stop();
         map.resize([new ResizeObserverEntry()]);
         await moveStartPromise;
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
