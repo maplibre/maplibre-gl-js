@@ -19,10 +19,6 @@ function spyOnMovementEvents(scheduler: CameraMovementScheduler): Mock<(event: M
     return listener;
 }
 
-function firedTypes(listener: Mock<(event: MapMovementEvent) => void>): string[] {
-    return listener.mock.calls.map(([event]) => event.type);
-}
-
 function createOptions(options: Partial<MovementSegmentOptions>): MovementSegmentOptions {
     return {
         duration: 100,
@@ -40,7 +36,7 @@ test('a segment with the easeId of the one it interrupts continues its movement'
     scheduler.scheduleSegment(first, createOptions({easeId: 'keyboard', axes: {zoom: true, rotate: false, pitch: false, roll: false}}));
     scheduler.scheduleSegment({onFrame: vi.fn(), onFinish: vi.fn()}, createOptions({easeId: 'keyboard', axes: {zoom: true, rotate: true, pitch: false, roll: false}}));
 
-    expect(firedTypes(listener)).toEqual(['movestart', 'zoomstart', 'rotatestart']);
+    expect(listener.mock.calls.map(([event]) => event.type)).toEqual(['movestart', 'zoomstart', 'rotatestart']);
     expect(first.onFinish).toHaveBeenCalledTimes(1);
     expect(scheduler.isMovingAxis('zoom')).toBe(true);
 });
@@ -53,5 +49,5 @@ test('a listener that throws drops the events still queued', () => {
     expect(() => scheduler.scheduleSegment({onFrame: vi.fn(), onFinish: vi.fn()}, createOptions({duration: 0}))).toThrow('listener failed');
     scheduler.fireAfterQueued([new MapMovementEvent('movestart')]);
 
-    expect(firedTypes(listener)).toEqual(['movestart', 'movestart']);
+    expect(listener.mock.calls.map(([event]) => event.type)).toEqual(['movestart', 'movestart']);
 });
