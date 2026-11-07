@@ -473,6 +473,30 @@ describe('TileManager / Source lifecycle', () => {
         expect(errorListener).not.toHaveBeenCalled();
     });
 
+    test('requests a repaint after a tile answers 404', async () => {
+        const transform = createMercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async () => {
+            const error = new Error('Not found') as Error & {status: number};
+            error.status = 404;
+            throw error;
+        };
+        tileManager.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
+                tileManager.update(transform);
+            }
+        });
+        const repainted = new Promise<void>(resolve => {
+            tileManager.onAdd({triggerRepaint: vi.fn(() => resolve())} as unknown as Map);
+        });
+
+        await repainted;
+        expect(tileManager.loaded()).toBeTruthy();
+        expect(tileManager.getIds().map(id => tileManager.getTileByID(id).state)).toEqual(['errored']);
+    });
+
     test('loaded() true after source error', async () => {
         const tileManager = createTileManager({error: 'Error loading source'});
         const errorPromise = tileManager.once('error');
