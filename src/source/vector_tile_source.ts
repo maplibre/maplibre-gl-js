@@ -6,9 +6,10 @@ import {TileBounds} from '../tile/tile_bounds.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {isAbortError} from '../util/abort_error.ts';
+import {TileManager} from '../tile/tile_manager.ts';
 
 import type {Source} from './source.ts';
-import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
@@ -19,6 +20,15 @@ import type {WorkerTileParameters, OverzoomParameters, WorkerTileResult, TileEnc
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
     tileSize?: number;
+    /**
+     * Whether the tileset leaves tiles out. When `true`, a tile the server answers with a 404 shows the part of the
+     * nearest ancestor that exists, up to 10 zoom levels up and no lower than the source's minzoom, sliced the way an
+     * overzoomed tile is sliced from the source's maxzoom tile. When `false`, a missing tile loads empty. The source's
+     * TileJSON can set it too, with the source option winning.
+     * @defaultValue false
+     * @experimental
+     */
+    sparse?: boolean;
 };
 
 export type LoadTileResult = {
@@ -72,6 +82,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     scheme: string;
     encoding: TileEncoding;
     tileSize: number;
+    sparse: boolean;
     promoteId: PromoteIdSpecification;
 
     _options: VectorSourceSpecification;
@@ -96,6 +107,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         this.maxzoom = 22;
         this.scheme = 'xyz';
         this.tileSize = 512;
+        this.sparse = false;
         this.reparseOverscaled = true;
         this.isTileClipped = true;
         this._loaded = false;
@@ -237,18 +249,9 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             });
         }
         tile.abortController = new AbortController();
+        let data: WorkerTileResult | null;
         try {
-            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
-            delete tile.abortController;
-
-            if (tile.aborted) {
-                return;
-            }
-            this._afterTileLoadWorkerResponse(tile, data);
-
-            const result: LoadTileResult = {};
-            if (data?.etagUnmodified) result.unmodified = true;
-            return result;
+            data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
         } catch (err) {
             delete tile.abortController;
 
@@ -258,8 +261,62 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             if (err && err.status !== 404) {
                 throw err;
             }
-            this._afterTileLoadWorkerResponse(tile, null);
+            data = null;
         }
+        delete tile.abortController;
+
+        if (tile.aborted) {
+            return;
+        }
+        const result: LoadTileResult = {};
+        if (data?.resourceTiming) {
+            tile.resourceTiming = data.resourceTiming;
+        }
+        if (data === null && this.sparse) {
+            data = await this._loadFromNearestAncestor(tile, params);
+            if (tile.aborted) {
+                return;
+            }
+        }
+        this._afterTileLoadWorkerResponse(tile, data);
+        if (data?.etagUnmodified) result.unmodified = true;
+        this._reloadIfRequestedWhileLoading(tile);
+        return result;
+    }
+
+    /**
+     * Loads a tile the server answered with a 404 from the nearest ancestor that exists, sliced to the tile the way an
+     * overzoomed tile is sliced from the source's maxzoom tile. The search starts one level above the tile that was fetched
+     * (the maxzoom tile when the tile is overzoomed) and goes up at most `TileManager.maxUnderzooming` levels, as far as
+     * the tile manager looks for a loaded parent to show in place of a missing raster tile, and no further than the
+     * source's minzoom. Returns null when every ancestor in reach answered with a 404 too: the tile then loads empty and
+     * draws nothing, as it does after a 404 when the source is not sparse.
+     */
+    private async _loadFromNearestAncestor(tile: Tile, params: WorkerTileParameters): Promise<WorkerTileResult | null> {
+        const fetchedZ = Math.min(tile.tileID.canonical.z, this.maxzoom);
+        const lowestZ = Math.max(fetchedZ - TileManager.maxUnderzooming, this.minzoom);
+        for (let z = fetchedZ - 1; z >= lowestZ; z--) {
+            const ancestorID = tile.tileID.scaledTo(z).canonical;
+            params.overzoomParameters = {
+                maxZoomTileID: ancestorID,
+                overzoomRequest: await this._getTileRequest(ancestorID)
+            };
+            tile.abortController = new AbortController();
+            try {
+                const data = await tile.actor.sendAsync({type: MessageType.loadTile, data: params}, tile.abortController);
+                delete tile.abortController;
+                return data;
+            } catch (err) {
+                delete tile.abortController;
+                if (tile.aborted || isAbortError(err)) {
+                    return null;
+                }
+                if (err && err.status !== 404) {
+                    throw err;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -274,14 +331,17 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             return undefined;
         }
         const maxZoomTileID = tile.tileID.scaledTo(this.maxzoom).canonical;
-        const maxZoomTileUrl = maxZoomTileID.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
-
-        const overzoomRequest = await this.map._requestManager.transformRequest(maxZoomTileUrl, ResourceType.Tile);
-        this._setAcceptHeader(overzoomRequest);
         return {
             maxZoomTileID,
-            overzoomRequest
+            overzoomRequest: await this._getTileRequest(maxZoomTileID)
         };
+    }
+
+    private async _getTileRequest(tileID: CanonicalTileID): Promise<RequestParameters> {
+        const url = tileID.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
+        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
+        this._setAcceptHeader(request);
+        return request;
     }
 
     /**
@@ -297,18 +357,15 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
         }
     }
 
-    private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
-        if (data?.resourceTiming) {
-            tile.resourceTiming = data.resourceTiming;
-        }
-
+    private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult | null) {
         if (data && this.map._refreshExpiredTiles) {
             tile.setExpiryData(data);
         }
         tile.etag = data?.etag;
-
         tile.loadVectorData(data, this.map.style);
+    }
 
+    private _reloadIfRequestedWhileLoading(tile: Tile) {
         if (tile.reloadPromise) {
             const reloadPromise = tile.reloadPromise;
             tile.reloadPromise = null;
