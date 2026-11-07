@@ -1,4 +1,4 @@
-import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {type PreparedShader, shaders} from '../../shaders/shaders.ts';
 import {createTileMeshWithBuffers, type CreateTileMeshOptions} from '../../util/create_tile_mesh.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
@@ -12,21 +12,6 @@ import type {WorldCoordinateHelper} from '../transform_interface.ts';
 
 export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';
-
-const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
-    fill: new SubdivisionGranularityExpression(128, 2),
-    line: new SubdivisionGranularityExpression(512, 0),
-    // Always keep at least some subdivision on raster tiles, etc,
-    // otherwise they will be visibly warped at high zooms (before mercator transition).
-    // This si not needed on fill, because fill geometry tends to already be
-    // highly tessellated and granular at high zooms.
-    tile: new SubdivisionGranularityExpression(128, 32),
-    // Stencil granularity must never be higher than fill granularity,
-    // otherwise we would get seams in the oceans at zoom levels where
-    // stencil has higher granularity than fill.
-    stencil: new SubdivisionGranularityExpression(128, 1),
-    circle: 3
-});
 
 export class VerticalPerspectiveProjection implements Projection {
     private _tileMeshCache: {[_: string]: Mesh} = {};
@@ -68,7 +53,7 @@ export class VerticalPerspectiveProjection implements Projection {
     }
 
     get subdivisionGranularity(): SubdivisionGranularitySetting {
-        return granularitySettingsGlobe;
+        return SubdivisionGranularitySetting.globe;
     }
 
     get useGlobeControls(): boolean {
@@ -85,7 +70,7 @@ export class VerticalPerspectiveProjection implements Projection {
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, allowPoles: boolean, usage: TileMeshUsage): Mesh {
         // Stencil granularity must match fill granularity
-        const granularityConfig = usage === 'stencil' ? granularitySettingsGlobe.stencil : granularitySettingsGlobe.tile;
+        const granularityConfig = usage === 'stencil' ? SubdivisionGranularitySetting.globe.stencil : SubdivisionGranularitySetting.globe.tile;
         const granularity = granularityConfig.getGranularityForZoomLevel(canonical.z);
         const north = (canonical.y === 0) && allowPoles;
         const south = (canonical.y === (1 << canonical.z) - 1) && allowPoles;

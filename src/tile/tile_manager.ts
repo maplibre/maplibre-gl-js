@@ -950,6 +950,13 @@ export class TileManager extends Evented<SourceEventType> {
         return tileResults;
     }
 
+    /**
+     * Projects a screen geometry to mercator coordinates.
+     *
+     * With `checkWrap`, a geometry that the projection wrapped around the antimeridian is moved back next to the rest of
+     * it. A wrapped geometry always spans more than half the world, which tells it apart from one that only fails the
+     * cover check by a rounding error, such as a query line near the prime meridian.
+     */
     private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
         let transformed = geom.map(project);
         if (checkWrap) {
@@ -962,7 +969,7 @@ export class TileManager extends Evented<SourceEventType> {
 
             const newBounds = Bounds.fromPoints(transformed);
 
-            if (!newBounds.covers(projected)) {
+            if (newBounds.width() > 0.5 && !newBounds.covers(projected)) {
                 transformed = transformed.map((coord) => coord.x > 0.5 ?
                     new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
                     coord
