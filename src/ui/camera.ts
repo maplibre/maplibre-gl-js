@@ -362,13 +362,6 @@ export type CameraInitOptions = {
     requestRenderFrame: (a: () => void) => TaskID;
     cancelRenderFrame: (_: TaskID) => void;
     transformCameraUpdate: CameraUpdateTransformFunction | null;
-    /**
-     * @internal
-     * Callback invoked by {@link Camera.stop} to halt any in-progress user gestures.
-     * The `Camera` does not own the gesture handlers (the `Map` does), so it is injected
-     * with a way to stop them rather than holding a reference to the `HandlerManager`.
-     */
-    stopHandlers?: () => void;
 };
 
 export class Camera extends Evented<MapEventType> {
@@ -386,12 +379,6 @@ export class Camera extends Evented<MapEventType> {
      */
     terrain: Terrain;
     cameraHelper: ICameraHelper;
-    /**
-     * @internal
-     * Stops any in-progress user gestures. Injected by the owner so the camera does not need
-     * a reference to the `HandlerManager`. See {@link CameraInitOptions.stopHandlers}.
-     */
-    _stopHandlers: () => void;
 
     /** Runs `easeTo`, `flyTo` and `jumpTo` and fires their movement events. */
     private readonly _scheduler: CameraMovementScheduler;
@@ -461,7 +448,6 @@ export class Camera extends Evented<MapEventType> {
         this.terrain = options.terrain;
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
-        this._stopHandlers = options.stopHandlers ?? (() => {});
         this._scheduler = new CameraMovementScheduler({
             requestRenderFrame: options.requestRenderFrame,
             cancelRenderFrame: options.cancelRenderFrame
@@ -1539,13 +1525,9 @@ export class Camera extends Evented<MapEventType> {
         return this;
     }
 
-    /**
-     * Ends the running animation where it is, firing its end events.
-     * @param allowGestures - whether to let gestures in progress go on, which are stopped otherwise
-     */
-    stop(allowGestures?: boolean): this {
+    /** Ends the running animation where it is, firing its end events. */
+    stop(): this {
         this._scheduler.interrupt();
-        if (!allowGestures) this._stopHandlers();
         return this;
     }
 
