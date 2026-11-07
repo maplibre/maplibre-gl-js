@@ -1,6 +1,6 @@
 # Map
 
-Defined in: [ui/map.ts:608](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L608>)
+Defined in: [ui/map.ts:612](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L612>)
 
 The `Map` object represents the map on your page. It exposes methods and properties that enable you to programmatically change the map, and fires events as users interact with it.
 
@@ -43,7 +43,7 @@ const map = new Map({
 
 > **get** **repaint**(): `boolean`
 
-Defined in: [ui/map.ts:4744](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4744>)
+Defined in: [ui/map.ts:4739](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4739>)
 
 Gets and sets a Boolean indicating whether the map will continuously repaint. This information is useful for analyzing performance.
 
@@ -59,7 +59,7 @@ Gets and sets a Boolean indicating whether the map will continuously repaint. Th
 
 > **get** **showCollisionBoxes**(): `boolean`
 
-Defined in: [ui/map.ts:4712](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4712>)
+Defined in: [ui/map.ts:4707](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4707>)
 
 Gets and sets a Boolean indicating whether the map will render boxes around all symbols in the data source, revealing which symbols were rendered or which were hidden due to collisions. This information is useful for debugging.
 
@@ -75,7 +75,7 @@ Gets and sets a Boolean indicating whether the map will render boxes around all 
 
 > **get** **showOverdrawInspector**(): `boolean`
 
-Defined in: [ui/map.ts:4733](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4733>)
+Defined in: [ui/map.ts:4728](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4728>)
 
 Gets and sets a Boolean indicating whether the map should color-code each fragment to show how many times it has been shaded. White fragments have been shaded 8 or more times. Black fragments have been shaded 0 times. This information is useful for debugging.
 
@@ -91,7 +91,7 @@ Gets and sets a Boolean indicating whether the map should color-code each fragme
 
 > **get** **showPadding**(): `boolean`
 
-Defined in: [ui/map.ts:4699](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4699>)
+Defined in: [ui/map.ts:4694](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4694>)
 
 Gets and sets a Boolean indicating whether the map will visualize the padding offsets.
 
@@ -107,7 +107,7 @@ Gets and sets a Boolean indicating whether the map will visualize the padding of
 
 > **get** **showTileBoundaries**(): `boolean`
 
-Defined in: [ui/map.ts:4688](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4688>)
+Defined in: [ui/map.ts:4683](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4683>)
 
 Gets and sets a Boolean indicating whether the map will render an outline around each tile and the tile ID. These tile boundaries are useful for debugging.
 
@@ -131,7 +131,7 @@ map.showTileBoundaries = true;
 
 > **get** **version**(): `string`
 
-Defined in: [ui/map.ts:4759](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4759>)
+Defined in: [ui/map.ts:4754](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4754>)
 
 Returns the package version of the library
 
@@ -149,7 +149,7 @@ Package version of the library
 
 > **off**\<`T` *extends* keyof [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\>(`type`: `T`, `layer`: `string`, `listener`: (`ev`: [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): `this`
 
-Defined in: [ui/map.ts:2485](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2485>)
+Defined in: [ui/map.ts:2488](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2488>)
 
 Removes an event listener for events previously added with `{@link Map.on}`.
 
@@ -179,7 +179,7 @@ Removes an event listener for events previously added with `{@link Map.on}`.
 
 > **off**\<`T` *extends* keyof [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\>(`type`: `T`, `layers`: `string`\[\], `listener`: (`ev`: [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): `this`
 
-Defined in: [ui/map.ts:2498](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2498>)
+Defined in: [ui/map.ts:2501](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2501>)
 
 Overload of the `off` method that allows to remove an event created with multiple layers. Provide the same layer IDs as to `on` or `once`, when the listener was registered.
 
@@ -209,7 +209,7 @@ Overload of the `off` method that allows to remove an event created with multipl
 
 > **off**\<`T` *extends* keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\>(`type`: `T`, `listener`: (`ev`: [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): `this`
 
-Defined in: [ui/map.ts:2509](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2509>)
+Defined in: [ui/map.ts:2512](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2512>)
 
 Overload of the `off` method that allows to remove an event created without specifying a layer.
 
@@ -238,7 +238,7 @@ Overload of the `off` method that allows to remove an event created without spec
 
 > **off**(`type`: keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>), `listener`: [`Listener`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Listener/index.md>)): `this`
 
-Defined in: [ui/map.ts:2516](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2516>)
+Defined in: [ui/map.ts:2519](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2519>)
 
 Overload of the `off` method that allows to remove an event created without specifying a layer.
 
@@ -265,7 +265,7 @@ Overload of the `off` method that allows to remove an event created without spec
 
 > **on**\<`T` *extends* keyof [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\>(`type`: `T`, `layer`: `string`, `listener`: (`ev`: [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [ui/map.ts:2337](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2337>)
+Defined in: [ui/map.ts:2340](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2340>)
 
 Adds a listener for events of a specified type, optionally limited to features in a specified style layer(s). See [MapEventType](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>) and [MapLayerEventType](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>) for a full list of events and their description.
 
@@ -392,7 +392,7 @@ map.on('click', 'countries', (e) => {
 
 > **on**\<`T` *extends* keyof [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\>(`type`: `T`, `layerIds`: `string`\[\], `listener`: (`ev`: [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [ui/map.ts:2349](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2349>)
+Defined in: [ui/map.ts:2352](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2352>)
 
 Overload of the `on` method that allows to listen to events specifying multiple layers.
 
@@ -422,7 +422,7 @@ Overload of the `on` method that allows to listen to events specifying multiple 
 
 > **on**\<`T` *extends* keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\>(`type`: `T`, `listener`: (`ev`: [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [ui/map.ts:2360](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2360>)
+Defined in: [ui/map.ts:2363](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2363>)
 
 Overload of the `on` method that allows to listen to events without specifying a layer.
 
@@ -451,7 +451,7 @@ Overload of the `on` method that allows to listen to events without specifying a
 
 > **on**(`type`: keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>), `listener`: [`Listener`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Listener/index.md>)): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [ui/map.ts:2367](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2367>)
+Defined in: [ui/map.ts:2370](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2370>)
 
 Overload of the `on` method that allows to listen to events without specifying a layer.
 
@@ -478,7 +478,7 @@ Overload of the `on` method that allows to listen to events without specifying a
 
 > **once**\<`T` *extends* keyof [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\>(`type`: `T`, `layer`: `string`, `listener`: (`ev`: [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): `this`
 
-Defined in: [ui/map.ts:2401](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2401>)
+Defined in: [ui/map.ts:2404](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2404>)
 
 Adds a listener that will be called only once to a specified event type, optionally limited to features in a specified style layer.
 
@@ -510,7 +510,7 @@ Adds a listener that will be called only once to a specified event type, optiona
 
 > **once**\<`T` *extends* keyof [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\>(`type`: `T`, `layer`: `string`): `Promise`\<[`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\[`T`\] &amp; `Object`\>
 
-Defined in: [ui/map.ts:2413](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2413>)
+Defined in: [ui/map.ts:2416](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2416>)
 
 Overload of the `once` method that, with a single layer and no listener, returns a promise resolving with the event for easier usage of async/await.
 
@@ -539,7 +539,7 @@ Overload of the `once` method that, with a single layer and no listener, returns
 
 > **once**\<`T` *extends* keyof [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\>(`type`: `T`, `layerIds`: `string`\[\], `listener`: (`ev`: [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): `this`
 
-Defined in: [ui/map.ts:2424](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2424>)
+Defined in: [ui/map.ts:2427](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2427>)
 
 Overload of the `once` method that allows to listen to events specifying multiple layers.
 
@@ -569,7 +569,7 @@ Overload of the `once` method that allows to listen to events specifying multipl
 
 > **once**\<`T` *extends* keyof [`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\>(`type`: `T`, `layerIds`: `string`\[\]): `Promise`\<[`MapLayerEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/index.md>)\[`T`\] &amp; `Object`\>
 
-Defined in: [ui/map.ts:2436](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2436>)
+Defined in: [ui/map.ts:2439](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2439>)
 
 Overload of the `once` method that, with multiple layers and no listener, returns a promise resolving with the event for easier usage of async/await.
 
@@ -598,7 +598,7 @@ Overload of the `once` method that, with multiple layers and no listener, return
 
 > **once**\<`T` *extends* keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\>(`type`: `T`, `listener`: (`ev`: [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\[`T`\] &amp; `Object`) =\> `void`): `this`
 
-Defined in: [ui/map.ts:2446](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2446>)
+Defined in: [ui/map.ts:2449](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2449>)
 
 Overload of the `once` method that allows to listen to events without specifying a layer.
 
@@ -627,7 +627,7 @@ Overload of the `once` method that allows to listen to events without specifying
 
 > **once**\<`T` *extends* keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\>(`type`: `T`): `Promise`\<[`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\[`T`\] &amp; `Object`\>
 
-Defined in: [ui/map.ts:2453](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2453>)
+Defined in: [ui/map.ts:2456](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2456>)
 
 Overload of the `once` method that returns a promise resolving with the event, for easier usage of async/await, when no listener is provided.
 
@@ -655,7 +655,7 @@ Overload of the `once` method that returns a promise resolving with the event, f
 
 > **once**(`type`: keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>), `listener?`: [`Listener`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Listener/index.md>)): `Promise`\<`any`\> | `Map`
 
-Defined in: [ui/map.ts:2460](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2460>)
+Defined in: [ui/map.ts:2463](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2463>)
 
 Overload of the `once` method that allows to listen to events without specifying a layer.
 
@@ -680,7 +680,7 @@ Overload of the `once` method that allows to listen to events without specifying
 
 > **\_shouldHandleInitialResize**(): `boolean`
 
-Defined in: [ui/map.ts:4116](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4116>)
+Defined in: [ui/map.ts:4120](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4120>)
 
 Determines if the initial resize event should be handled based on the container's dimensions.
 
@@ -696,7 +696,7 @@ Determines if the initial resize event should be handled based on the container'
 
 > **addControl**(`control`: [`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>), `position?`: [`ControlPosition`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ControlPosition/index.md>)): `this`
 
-Defined in: [ui/map.ts:960](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L960>)
+Defined in: [ui/map.ts:964](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L964>)
 
 Adds an [IControl](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>) to the map, calling `control.onAdd(this)`.
 
@@ -731,7 +731,7 @@ map.addControl(new NavigationControl());
 
 > **addImage**(`id`: `string`, `image`: [`StyleImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageSource/index.md>), `options?`: `Partial`\<[`StyleImageMetadata`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageMetadata/index.md>)\>): `this`
 
-Defined in: [ui/map.ts:3228](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3228>)
+Defined in: [ui/map.ts:3232](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3232>)
 
 Add an image to the style. This image can be displayed on the map like any other icon in the style's sprite using the image's ID with [`icon-image`](<https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-image>), [`background-pattern`](<https://maplibre.org/maplibre-style-spec/layers/#paint-background-background-pattern>), [`fill-pattern`](<https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern>), or [`line-pattern`](<https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern>).
 
@@ -779,7 +779,7 @@ map.addImage('border-image', image.data, {
 
 > **addLayer**(`layer`: [`AddLayerObject`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AddLayerObject/index.md>), `beforeId?`: `string`): `this`
 
-Defined in: [ui/map.ts:3541](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3541>)
+Defined in: [ui/map.ts:3545](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3545>)
 
 Adds a [MapLibre style layer](<https://maplibre.org/maplibre-style-spec/layers>) to the map's style.
 
@@ -869,7 +869,7 @@ map.addLayer({
 
 > **addSource**(`id`: `string`, `source`: [`SourceSpecification`](<https://maplibre.org/maplibre-style-spec/sources/>) | [`CanvasSourceSpecification`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CanvasSourceSpecification/index.md>)): `this`
 
-Defined in: [ui/map.ts:2951](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2951>)
+Defined in: [ui/map.ts:2954](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2954>)
 
 Adds a source to the map's style.
 
@@ -924,7 +924,7 @@ GeoJSON source: [Add live realtime data](<https://maplibre.org/maplibre-gl-js/do
 
 > **addSprite**(`id`: `string`, `url`: `string`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:3823](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3823>)
+Defined in: [ui/map.ts:3827](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3827>)
 
 Adds a sprite to the map's style. Fires the `style` event.
 
@@ -952,7 +952,7 @@ map.addSprite('sprite-two', 'http://example.com/sprite-two');
 
 > **areTilesLoaded**(): `boolean`
 
-Defined in: [ui/map.ts:3086](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3086>)
+Defined in: [ui/map.ts:3089](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3089>)
 
 Returns a Boolean indicating whether all tiles in the viewport from all sources on the style are loaded.
 
@@ -974,7 +974,7 @@ let tilesLoaded = map.areTilesLoaded();
 
 > **calculateAnchoredCameraOptions**(`options`: [`AnchoredCameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnchoredCameraOptions/index.md>)): [`CameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>)
 
-Defined in: [ui/map.ts:1460](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1460>)
+Defined in: [ui/map.ts:1464](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1464>)
 
 Calculates constrained camera options that place a geographic anchor at a screen point without changing the map, using the same logic as MapLibre's interaction handlers.
 
@@ -1007,7 +1007,7 @@ map.jumpTo(cameraOptions);
 
 > **calculateCameraOptionsFromCameraLngLatAltRotation**(`cameraLngLat`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>), `cameraAlt`: `number`, `bearing`: `number`, `pitch`: `number`, `roll?`: `number`): [`CameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>)
 
-Defined in: [ui/map.ts:1484](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1484>)
+Defined in: [ui/map.ts:1488](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1488>)
 
 Given a camera position and rotation, calculates zoom and center point and returns them as [CameraOptions](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>).
 
@@ -1047,7 +1047,7 @@ map.jumpTo(cameraOptions);
 
 > **calculateCameraOptionsFromTo**(`from`: [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>), `altitudeFrom`: `number`, `to`: [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>), `altitudeTo?`: `number`): [`CameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>)
 
-Defined in: [ui/map.ts:1589](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1589>)
+Defined in: [ui/map.ts:1593](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1593>)
 
 Given a camera 'from' position and a position to look at (`to`), calculates zoom and camera rotation and returns them as [CameraOptions](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>). Under `globe` and `vertical-perspective` the calculation follows the sphere while the map renders as a globe, keeping the point looked at on the sea-level sphere; `altitudeTo` only becomes the center elevation.
 
@@ -1085,7 +1085,7 @@ map.jumpTo(cameraOptions);
 
 > **cameraForBounds**(`bounds`: [`LngLatBoundsLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatBoundsLike/index.md>), `options?`: [`CameraForBoundsOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraForBoundsOptions/index.md>)): [`JumpToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/JumpToOptions/index.md>)
 
-Defined in: [ui/map.ts:1373](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1373>)
+Defined in: [ui/map.ts:1377](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1377>)
 
 #### Parameters
 
@@ -1115,7 +1115,7 @@ let newCameraTransform = map.cameraForBounds(bbox, {
 
 > **coveringTiles**(`options`: `CoveringTilesOptions`): [`OverscaledTileID`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/OverscaledTileID/index.md>)\[\]
 
-Defined in: [ui/map.ts:1042](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1042>)
+Defined in: [ui/map.ts:1046](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1046>)
 
 Returns an array of `OverscaledTileID` objects that cover the current viewport for a given tile size. This method is useful for determining which tiles are visible in the current viewport.
 
@@ -1144,7 +1144,7 @@ const tiles = map.coveringTiles({tileSize: 512});
 
 > **easeTo**(`options`: [`EaseToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EaseToOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1503](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1503>)
+Defined in: [ui/map.ts:1507](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1507>)
 
 Changes any combination of `center`, `zoom`, `bearing`, `pitch`, `roll`, and `padding` with an animated transition between old and new values. The map will retain its current values for any details not specified in `options`.
 
@@ -1177,9 +1177,9 @@ Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoo
 
 #### Call Signature
 
-> **fire**(`event`: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) | [`MapStyleImageMissingEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleImageMissingEvent/index.md>) | [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`unknown`\> | [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>) | [`MapContextEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapContextEvent/index.md>) | [`MapStyleDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleDataEvent/index.md>) | [`MapStyleLoadEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleLoadEvent/index.md>) | [`MapBoxZoomEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapBoxZoomEvent/index.md>) | [`MapTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTouchEvent/index.md>) | [`MapMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMouseEvent/index.md>) | [`MapMovementEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMovementEvent/index.md>) | [`MapWheelEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapWheelEvent/index.md>) | [`MapTerrainEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTerrainEvent/index.md>) | [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`TouchEvent` | `WheelEvent`\> &amp; `object` | [`MapProjectionEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapProjectionEvent/index.md>)): `this`
+> **fire**(`event`: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) | [`MapStyleImageMissingEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleImageMissingEvent/index.md>) | [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`unknown`\> | [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>) | [`MapMovementEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMovementEvent/index.md>) | [`MapContextEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapContextEvent/index.md>) | [`MapStyleDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleDataEvent/index.md>) | [`MapStyleLoadEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleLoadEvent/index.md>) | [`MapBoxZoomEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapBoxZoomEvent/index.md>) | [`MapTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTouchEvent/index.md>) | [`MapMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMouseEvent/index.md>) | [`MapWheelEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapWheelEvent/index.md>) | [`MapTerrainEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTerrainEvent/index.md>) | [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`TouchEvent` | `WheelEvent`\> &amp; `object` | [`MapProjectionEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapProjectionEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -1187,7 +1187,7 @@ Calls every listener registered for the event's type.
 
 | Parameter | Type |
 | --- | --- |
-| `event` | [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) \| [`MapStyleImageMissingEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleImageMissingEvent/index.md>) \| [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`unknown`\> \| [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>) \| [`MapContextEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapContextEvent/index.md>) \| [`MapStyleDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleDataEvent/index.md>) \| [`MapStyleLoadEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleLoadEvent/index.md>) \| [`MapBoxZoomEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapBoxZoomEvent/index.md>) \| [`MapTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTouchEvent/index.md>) \| [`MapMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMouseEvent/index.md>) \| [`MapMovementEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMovementEvent/index.md>) \| [`MapWheelEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapWheelEvent/index.md>) \| [`MapTerrainEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTerrainEvent/index.md>) \| [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`TouchEvent` \| `WheelEvent`\> &amp; `object` \| [`MapProjectionEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapProjectionEvent/index.md>) |
+| `event` | [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) \| [`MapStyleImageMissingEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleImageMissingEvent/index.md>) \| [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`unknown`\> \| [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>) \| [`MapMovementEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMovementEvent/index.md>) \| [`MapContextEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapContextEvent/index.md>) \| [`MapStyleDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleDataEvent/index.md>) \| [`MapStyleLoadEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleLoadEvent/index.md>) \| [`MapBoxZoomEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapBoxZoomEvent/index.md>) \| [`MapTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTouchEvent/index.md>) \| [`MapMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMouseEvent/index.md>) \| [`MapWheelEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapWheelEvent/index.md>) \| [`MapTerrainEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTerrainEvent/index.md>) \| [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`TouchEvent` \| `WheelEvent`\> &amp; `object` \| [`MapProjectionEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapProjectionEvent/index.md>) |
 
 ##### Returns
 
@@ -1201,7 +1201,7 @@ Calls every listener registered for the event's type.
 
 > **fire**(`type`: keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -1226,7 +1226,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **fitBounds**(`bounds`: [`LngLatBoundsLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatBoundsLike/index.md>), `options?`: [`FitBoundsOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FitBoundsOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1394](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1394>)
+Defined in: [ui/map.ts:1398](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1398>)
 
 Pans and zooms the map to contain its visible area within the specified geographical bounds. This function will also reset the map's bearing to 0 if bearing is nonzero.
 
@@ -1263,7 +1263,7 @@ map.fitBounds(bbox, {
 
 > **fitScreenCoordinates**(`p0`: [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>), `p1`: [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>), `bearing`: `number`, `options?`: [`FitBoundsOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FitBoundsOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1417](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1417>)
+Defined in: [ui/map.ts:1421](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1421>)
 
 Pans, rotates and zooms the map to to fit the box made by points p0 and p1 once the map is rotated to the specified bearing. To zoom without rotating, pass in the current map bearing.
 
@@ -1303,7 +1303,7 @@ Used by [BoxZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/B
 
 > **flyTo**(`options`: [`FlyToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FlyToOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1540](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1540>)
+Defined in: [ui/map.ts:1544](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1544>)
 
 Changes any combination of center, zoom, bearing, pitch, and roll, animating the transition along a curve that evokes flight. The animation seamlessly incorporates zooming and panning to help the user maintain her bearings even after traversing a great distance.
 
@@ -1355,7 +1355,7 @@ map.flyTo({
 
 > **getAnisotropicFilterPitch**(): `number`
 
-Defined in: [ui/map.ts:1983](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1983>)
+Defined in: [ui/map.ts:1986](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1986>)
 
 Returns the map's anisotropic filter pitch. If the map is pitched beyond this threshold, anisotropic filtering will be applied to all raster layers.
 
@@ -1377,7 +1377,7 @@ let anisotropicFilterPitch = map.getAnisotropicFilterPitch();
 
 > **getBearing**(): `number`
 
-Defined in: [ui/map.ts:1235](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1235>)
+Defined in: [ui/map.ts:1239](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1239>)
 
 Returns the map's current bearing. The bearing is the compass direction that is "up"; for example, a bearing of 90° orients the map so that east is up.
 
@@ -1397,7 +1397,7 @@ The map's current bearing.
 
 > **getBounds**(): [`LngLatBounds`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLatBounds/index.md>)
 
-Defined in: [ui/map.ts:1737](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1737>)
+Defined in: [ui/map.ts:1740](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1740>)
 
 Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
 
@@ -1419,7 +1419,7 @@ let bounds = map.getBounds();
 
 > **getCameraTargetElevation**(): `number`
 
-Defined in: [ui/map.ts:4769](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4769>)
+Defined in: [ui/map.ts:4764](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4764>)
 
 Returns the elevation for the point where the camera is looking. This value corresponds to: "meters above sea level" \* "exaggeration"
 
@@ -1435,7 +1435,7 @@ The elevation.
 
 > **getCanvas**(): `HTMLCanvasElement`
 
-Defined in: [ui/map.ts:4091](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4091>)
+Defined in: [ui/map.ts:4095](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4095>)
 
 Returns the map's `<canvas>` element.
 
@@ -1457,7 +1457,7 @@ The map's `<canvas>` element.
 
 > **getCanvasContainer**(): `HTMLElement`
 
-Defined in: [ui/map.ts:4079](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4079>)
+Defined in: [ui/map.ts:4083](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4083>)
 
 Returns the HTML element containing the map's `<canvas>` element.
 
@@ -1481,7 +1481,7 @@ The container of the map's `<canvas>`.
 
 > **getCenter**(): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [ui/map.ts:1064](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1064>)
+Defined in: [ui/map.ts:1068](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1068>)
 
 Returns the map's geographical centerpoint.
 
@@ -1507,7 +1507,7 @@ let {lng, lat} = map.getCenter();
 
 > **getCenterClampedToGround**(): `boolean`
 
-Defined in: [ui/map.ts:1567](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1567>)
+Defined in: [ui/map.ts:1571](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1571>)
 
 Returns the value of `centerClampedToGround`.
 
@@ -1523,7 +1523,7 @@ If true, the elevation of the center point will automatically be set to the terr
 
 > **getCenterElevation**(): `number`
 
-Defined in: [ui/map.ts:1083](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1083>)
+Defined in: [ui/map.ts:1087](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1087>)
 
 Returns the elevation of the map's center point.
 
@@ -1539,7 +1539,7 @@ The elevation of the map's center point, in meters above sea level.
 
 > **getContainer**(): `HTMLElement`
 
-Defined in: [ui/map.ts:4063](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4063>)
+Defined in: [ui/map.ts:4067](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4067>)
 
 Returns the map's containing HTML element.
 
@@ -1555,7 +1555,7 @@ The map's container.
 
 > **getFeatureState**(`feature`: [`FeatureIdentifier`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FeatureIdentifier/index.md>)): `any`
 
-Defined in: [ui/map.ts:4054](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4054>)
+Defined in: [ui/map.ts:4058](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4058>)
 
 Gets the `state` of a feature. A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime. Features are identified by their `feature.id` attribute, which can be any number or string.
 
@@ -1597,7 +1597,7 @@ map.on('mousemove', 'my-layer', (e) => {
 
 > **getFilter**(`layerId`: `string`): `void` | `FilterSpecification`
 
-Defined in: [ui/map.ts:3684](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3684>)
+Defined in: [ui/map.ts:3688](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3688>)
 
 Returns the filter applied to the specified style layer.
 
@@ -1619,7 +1619,7 @@ The layer's filter.
 
 > **getFontFaces**(): `FontFacesSpecification`
 
-Defined in: [ui/map.ts:3808](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3808>)
+Defined in: [ui/map.ts:3812](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3812>)
 
 Returns the value of the style's `font-faces` property.
 
@@ -1635,7 +1635,7 @@ The style's font faces, or `null` if it declares none.
 
 > **getGlobalState**(): `Record`\<`string`, `any`\>
 
-Defined in: [ui/map.ts:941](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L941>)
+Defined in: [ui/map.ts:945](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L945>)
 
 Returns the global map state
 
@@ -1651,7 +1651,7 @@ The map state object.
 
 > **getGlyphs**(): `string`
 
-Defined in: [ui/map.ts:3770](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3770>)
+Defined in: [ui/map.ts:3774](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3774>)
 
 Returns the value of the style's glyphs URL
 
@@ -1667,7 +1667,7 @@ glyphs Style's glyphs url, or `null` if glyphs are unset.
 
 > **getImage**(`id`: `string`): [`StyleImage`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImage/index.md>)
 
-Defined in: [ui/map.ts:3375](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3375>)
+Defined in: [ui/map.ts:3379](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3379>)
 
 Returns an image, specified by ID, currently available in the map. This includes both images from the style's original sprite and any images that have been added at runtime using [Map.addImage](<#addimage>).
 
@@ -1695,7 +1695,7 @@ let coffeeShopIcon = map.getImage("coffee_cup");
 
 > **getLayer**(`id`: `string`): [`StyleLayer`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/StyleLayer/index.md>)
 
-Defined in: [ui/map.ts:3596](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3596>)
+Defined in: [ui/map.ts:3600](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3600>)
 
 Returns the layer with the specified ID in the map's style.
 
@@ -1728,7 +1728,7 @@ let stateDataLayer = map.getLayer('state-data');
 
 > **getLayersOrder**(): `string`\[\]
 
-Defined in: [ui/map.ts:3610](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3610>)
+Defined in: [ui/map.ts:3614](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3614>)
 
 Return the ids of all layers currently in the style, including custom layers, in order.
 
@@ -1750,7 +1750,7 @@ const orderedLayerIds = map.getLayersOrder();
 
 > **getLayoutProperty**\<`K` *extends* keyof `AllLayoutProperties`\>(`layerId`: `string`, `name`: `K`): `AllLayoutProperties`\[`K`\]
 
-Defined in: [ui/map.ts:3744](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3744>)
+Defined in: [ui/map.ts:3748](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3748>)
 
 Returns the value of a layout property in the specified style layer.
 
@@ -1779,7 +1779,7 @@ The value of the specified layout property.
 
 > **getLight**(): `LightSpecification`
 
-Defined in: [ui/map.ts:3900](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3900>)
+Defined in: [ui/map.ts:3904](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3904>)
 
 Returns the value of the light object.
 
@@ -1795,7 +1795,7 @@ light Light properties of the style.
 
 > **getMaxBounds**(): [`LngLatBounds`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLatBounds/index.md>)
 
-Defined in: [ui/map.ts:1749](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1749>)
+Defined in: [ui/map.ts:1752](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1752>)
 
 Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
 
@@ -1817,7 +1817,7 @@ let maxBounds = map.getMaxBounds();
 
 > **getMaxPitch**(): `number`
 
-Defined in: [ui/map.ts:1971](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1971>)
+Defined in: [ui/map.ts:1974](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1974>)
 
 Returns the map's maximum allowable pitch.
 
@@ -1833,7 +1833,7 @@ The maxPitch
 
 > **getMaxZoom**(): `number`
 
-Defined in: [ui/map.ts:1883](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1883>)
+Defined in: [ui/map.ts:1886](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1886>)
 
 Returns the map's maximum allowable zoom level.
 
@@ -1855,7 +1855,7 @@ let maxZoom = map.getMaxZoom();
 
 > **getMinPitch**(): `number`
 
-Defined in: [ui/map.ts:1927](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1927>)
+Defined in: [ui/map.ts:1930](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1930>)
 
 Returns the map's minimum allowable pitch.
 
@@ -1871,7 +1871,7 @@ The minPitch
 
 > **getMinZoom**(`constrained?`: `boolean`): `number`
 
-Defined in: [ui/map.ts:1832](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1832>)
+Defined in: [ui/map.ts:1835](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1835>)
 
 Returns the map's minimum allowable zoom level.
 
@@ -1899,7 +1899,7 @@ let minZoom = map.getMinZoom();
 
 > **getPadding**(): [`PaddingOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PaddingOptions/index.md>)
 
-Defined in: [ui/map.ts:1270](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1270>)
+Defined in: [ui/map.ts:1274](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1274>)
 
 Returns the current padding applied around the map viewport.
 
@@ -1915,7 +1915,7 @@ The current padding around the map viewport.
 
 > **getPaintProperty**\<`K` *extends* keyof `AllPaintProperties`\>(`layerId`: `string`, `name`: `K`): `AllPaintProperties`\[`K`\]
 
-Defined in: [ui/map.ts:3716](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3716>)
+Defined in: [ui/map.ts:3720](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3720>)
 
 Returns the value of a paint property in the specified style layer.
 
@@ -1944,7 +1944,7 @@ The value of the specified paint property.
 
 > **getPitch**(): `number`
 
-Defined in: [ui/map.ts:1331](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1331>)
+Defined in: [ui/map.ts:1335](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1335>)
 
 Returns the map's current pitch (tilt).
 
@@ -1960,7 +1960,7 @@ The map's current pitch, measured in degrees away from the plane of the screen.
 
 > **getPixelRatio**(): `number`
 
-Defined in: [ui/map.ts:1711](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1711>)
+Defined in: [ui/map.ts:1714](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1714>)
 
 Returns the map's pixel ratio. Note that the pixel ratio actually applied may be lower to respect maxCanvasSize.
 
@@ -1976,7 +1976,7 @@ The pixel ratio.
 
 > **getProjection**(): [`ProjectionSpecification`](<https://maplibre.org/maplibre-style-spec/projection/>)
 
-Defined in: [ui/map.ts:4781](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4781>)
+Defined in: [ui/map.ts:4776](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4776>)
 
 Gets the [ProjectionSpecification](<https://maplibre.org/maplibre-style-spec/projection/>).
 
@@ -1998,7 +1998,7 @@ let projection = map.getProjection();
 
 > **getRenderWorldCopies**(): `boolean`
 
-Defined in: [ui/map.ts:2032](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2032>)
+Defined in: [ui/map.ts:2035](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2035>)
 
 Returns the state of `renderWorldCopies`. If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
 
@@ -2029,7 +2029,7 @@ let worldCopiesRendered = map.getRenderWorldCopies();
 
 > **getRoll**(): `number`
 
-Defined in: [ui/map.ts:1346](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1346>)
+Defined in: [ui/map.ts:1350](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1350>)
 
 Returns the map's current roll angle.
 
@@ -2045,7 +2045,7 @@ The map's current roll, measured in degrees about the camera boresight.
 
 > **getSky**(): `SkySpecification`
 
-Defined in: [ui/map.ts:3930](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3930>)
+Defined in: [ui/map.ts:3934](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3934>)
 
 Returns the value of the style's sky.
 
@@ -2067,7 +2067,7 @@ map.getSky();
 
 > **getSource**\<`TSource` *extends* [`Source`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Source/index.md>)\>(`id`: `string`): `TSource`
 
-Defined in: [ui/map.ts:3132](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3132>)
+Defined in: [ui/map.ts:3136](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3136>)
 
 Returns the source with the specified ID in the map's style.
 
@@ -2089,7 +2089,7 @@ This method is often used to update a source using the instance members for the 
 
 `TSource`
 
-The style source with the specified ID or `undefined` if the ID corresponds to no existing sources. The shape of the object varies by source type. A list of options for each source type is available on the MapLibre Style Specification's [Sources](<https://maplibre.org/maplibre-style-spec/sources/>) page.
+The style source with the specified ID or `undefined` if the ID corresponds to no existing sources. Also returns `undefined` after a WebGL context loss until the restored style fires `style.load`. The shape of the object varies by source type. A list of options for each source type is available on the MapLibre Style Specification's [Sources](<https://maplibre.org/maplibre-style-spec/sources/>) page.
 
 #### Example
 
@@ -2109,7 +2109,7 @@ let sourceObject = map.getSource('points');
 
 > **getSprite**(): `object`\[\]
 
-Defined in: [ui/map.ts:3854](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3854>)
+Defined in: [ui/map.ts:3858](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3858>)
 
 Returns the as-is value of the style's sprite.
 
@@ -2125,7 +2125,7 @@ style's sprite list of id-url pairs
 
 > **getStyle**(): `StyleSpecification`
 
-Defined in: [ui/map.ts:2862](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2862>)
+Defined in: [ui/map.ts:2865](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2865>)
 
 Returns the map's MapLibre style object, a JSON object which can be used to recreate the map's style.
 
@@ -2147,7 +2147,7 @@ let styleJson = map.getStyle();
 
 > **getStyleUrl**(): `string`
 
-Defined in: [ui/map.ts:2878](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2878>)
+Defined in: [ui/map.ts:2881](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2881>)
 
 Returns the URL the map's style was loaded from.
 
@@ -2169,7 +2169,7 @@ const styleUrl = map.getStyleUrl();
 
 > **getTerrain**(): `TerrainSpecification`
 
-Defined in: [ui/map.ts:3072](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3072>)
+Defined in: [ui/map.ts:3075](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3075>)
 
 Get the terrain-options if terrain is loaded
 
@@ -2191,7 +2191,7 @@ map.getTerrain(); // { source: 'terrain' };
 
 > **getVerticalFieldOfView**(): `number`
 
-Defined in: [ui/map.ts:1212](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1212>)
+Defined in: [ui/map.ts:1216](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1216>)
 
 Returns the map's current vertical field of view, in degrees.
 
@@ -2219,7 +2219,7 @@ const verticalFieldOfView = map.getVerticalFieldOfView();
 
 > **getZoom**(): `number`
 
-Defined in: [ui/map.ts:1139](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1139>)
+Defined in: [ui/map.ts:1143](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1143>)
 
 Returns the map's current zoom level.
 
@@ -2241,7 +2241,7 @@ map.getZoom();
 
 > **getZoomSnap**(): `number`
 
-Defined in: [ui/map.ts:1258](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1258>)
+Defined in: [ui/map.ts:1262](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1262>)
 
 Returns the map's current zoom snap level.
 
@@ -2257,7 +2257,7 @@ The map's current zoom snap level.
 
 > **hasControl**(`control`: [`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>)): `boolean`
 
-Defined in: [ui/map.ts:1026](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1026>)
+Defined in: [ui/map.ts:1030](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1030>)
 
 Checks if a control exists on the map.
 
@@ -2290,7 +2290,7 @@ map.hasControl(navigation);
 
 > **hasImage**(`id`: `string`): `boolean`
 
-Defined in: [ui/map.ts:3395](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3395>)
+Defined in: [ui/map.ts:3399](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3399>)
 
 Check whether or not an image with a specific ID exists in the style. This checks both images in the style's original sprite and any images that have been added at runtime using [Map.addImage](<#addimage>).
 
@@ -2322,7 +2322,7 @@ let catIconExists = map.hasImage('cat');
 
 > **isMoving**(): `boolean`
 
-Defined in: [ui/map.ts:2122](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2122>)
+Defined in: [ui/map.ts:2125](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2125>)
 
 Returns true if the map is panning, zooming, rotating, or pitching due to a camera animation or user gesture.
 
@@ -2344,7 +2344,7 @@ let isMoving = map.isMoving();
 
 > **isRotating**(): `boolean`
 
-Defined in: [ui/map.ts:2146](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2146>)
+Defined in: [ui/map.ts:2149](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2149>)
 
 Returns true if the map is rotating due to a camera animation or user gesture.
 
@@ -2366,7 +2366,7 @@ map.isRotating();
 
 > **isSourceLoaded**(`id`: `string`): `boolean`
 
-Defined in: [ui/map.ts:2970](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2970>)
+Defined in: [ui/map.ts:2973](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2973>)
 
 Returns a Boolean indicating whether the source is loaded. Returns `true` if the source with the given ID in the map's style has no outstanding network requests, otherwise `false`.
 
@@ -2396,7 +2396,7 @@ let sourceLoaded = map.isSourceLoaded('bathymetry-data');
 
 > **isStyleLoaded**(): `boolean` | `void`
 
-Defined in: [ui/map.ts:2906](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2906>)
+Defined in: [ui/map.ts:2909](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2909>)
 
 Returns a Boolean indicating whether the map's style is fully loaded.
 
@@ -2418,7 +2418,7 @@ let styleLoadStatus = map.isStyleLoaded();
 
 > **isZooming**(): `boolean`
 
-Defined in: [ui/map.ts:2134](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2134>)
+Defined in: [ui/map.ts:2137](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2137>)
 
 Returns true if the map is zooming due to a camera animation or user gesture.
 
@@ -2440,7 +2440,7 @@ let isZooming = map.isZooming();
 
 > **jumpTo**(`options`: [`JumpToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/JumpToOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1443](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1443>)
+Defined in: [ui/map.ts:1447](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1447>)
 
 Changes any combination of center, zoom, bearing, pitch, and roll, without an animated transition. The map will retain its current values for any details not specified in `options`.
 
@@ -2482,7 +2482,7 @@ map.jumpTo({
 
 > **listens**(`type`: keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -2508,7 +2508,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **listImages**(): `string`\[\]
 
-Defined in: [ui/map.ts:3458](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3458>)
+Defined in: [ui/map.ts:3462](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3462>)
 
 Returns an Array of strings containing the IDs of all images currently available in the map. This includes both images from the style's original sprite and any images that have been added at runtime using [Map.addImage](<#addimage>).
 
@@ -2530,7 +2530,7 @@ let allImages = map.listImages();
 
 > **loaded**(): `boolean`
 
-Defined in: [ui/map.ts:4389](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4389>)
+Defined in: [ui/map.ts:4393](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4393>)
 
 Returns a Boolean indicating whether the map is fully loaded.
 
@@ -2548,7 +2548,7 @@ A Boolean indicating whether the map is fully loaded.
 
 > **loadImage**(`url`: `string`): `Promise`\<[`GetResourceResponse`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GetResourceResponse/index.md>)\<`ImageBitmap` | `HTMLImageElement`\>\>
 
-Defined in: [ui/map.ts:3438](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3438>)
+Defined in: [ui/map.ts:3442](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3442>)
 
 Load an image from an external URL to be used with [Map.addImage](<#addimage>). External domains must support [CORS](<https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS>).
 
@@ -2584,7 +2584,7 @@ map.addImage('photo', response.data);
 
 > **moveLayer**(`id`: `string`, `beforeId?`: `string`): `this`
 
-Defined in: [ui/map.ts:3559](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3559>)
+Defined in: [ui/map.ts:3563](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3563>)
 
 Moves a layer to a different z-position.
 
@@ -2613,7 +2613,7 @@ map.moveLayer('polygon', 'country-label');
 
 > **panBy**(`offset`: [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>), `options?`: [`EaseToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EaseToOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1112](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1112>)
+Defined in: [ui/map.ts:1116](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1116>)
 
 Pans the map by the specified offset.
 
@@ -2641,7 +2641,7 @@ Triggers the following events: `movestart` and `moveend`.
 
 > **panTo**(`lnglat`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>), `options?`: [`EaseToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EaseToOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1129](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1129>)
+Defined in: [ui/map.ts:1133](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1133>)
 
 Pans the map to the specified location with an animated transition.
 
@@ -2677,7 +2677,7 @@ map.panTo([-74, 38], {duration: 5000});
 
 > **project**(`lnglat`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `Point`
 
-Defined in: [ui/map.ts:2092](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2092>)
+Defined in: [ui/map.ts:2095](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2095>)
 
 Returns a [Point](<https://github.com/mapbox/point-geometry>) representing pixel coordinates, relative to the map's `container`, that correspond to the specified geographical location.
 
@@ -2708,7 +2708,7 @@ let point = map.project(coordinate);
 
 > **queryRenderedFeatures**(`geometryOrOptions?`: [`QueryRenderedFeaturesOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/QueryRenderedFeaturesOptions/index.md>) | [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>) | \[[`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>), [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>)\], `options?`: [`QueryRenderedFeaturesOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/QueryRenderedFeaturesOptions/index.md>)): [`MapGeoJSONFeature`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapGeoJSONFeature/index.md>)\[\]
 
-Defined in: [ui/map.ts:2608](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2608>)
+Defined in: [ui/map.ts:2611](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2611>)
 
 Returns an array of MapGeoJSONFeature objects representing visible features that satisfy the query parameters.
 
@@ -2788,7 +2788,7 @@ let features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
 
 > **querySourceFeatures**(`sourceId`: `string`, `parameters?`: [`QuerySourceFeatureOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/QuerySourceFeatureOptions/index.md>)): [`GeoJSONFeature`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/GeoJSONFeature/index.md>)\[\]
 
-Defined in: [ui/map.ts:2658](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2658>)
+Defined in: [ui/map.ts:2661](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2661>)
 
 Returns an array of MapGeoJSONFeature objects representing features within the specified vector tile or GeoJSON source that satisfy the query parameters.
 
@@ -2825,7 +2825,7 @@ let features = map.querySourceFeatures('your-source-id', {
 
 > **queryTerrainElevation**(`lngLatLike`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)): `number`
 
-Defined in: [ui/map.ts:1553](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1553>)
+Defined in: [ui/map.ts:1557](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1557>)
 
 Gets the elevation at a given location, in meters above sea level. Returns null if terrain is not enabled. If terrain is enabled with some exaggeration value, the value returned here will be reflective of (multiplied by) that exaggeration value. This method should be used for proper positioning of custom 3d objects. If using maplibre-gl-three, see the example [here](<https://maplibre-gl-three.readthedocs.io/latest/getting-started/#programmatically-calculating-terrain-height>)
 
@@ -2847,7 +2847,7 @@ elevation in meters
 
 > **redraw**(): `this`
 
-Defined in: [ui/map.ts:4578](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4578>)
+Defined in: [ui/map.ts:4573](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4573>)
 
 Force a synchronous redraw of the map.
 
@@ -2867,7 +2867,7 @@ map.redraw();
 
 > **refreshTiles**(`sourceId`: `string`, `tileIds?`: `object`\[\]): `void`
 
-Defined in: [ui/map.ts:3182](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3182>)
+Defined in: [ui/map.ts:3186](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3186>)
 
 Triggers a reload of the selected tiles
 
@@ -2894,7 +2894,7 @@ map.refreshTiles('satellite', [{x:1024, y: 1023, z: 11}, {x:1023, y: 1023, z: 11
 
 > **remove**(): `void`
 
-Defined in: [ui/map.ts:4599](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4599>)
+Defined in: [ui/map.ts:4594](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4594>)
 
 Clean up and release all internal resources associated with this map.
 
@@ -2912,7 +2912,7 @@ Use this method when you are done using the map and wish to ensure that it no lo
 
 > **removeControl**(`control`: [`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>)): `this`
 
-Defined in: [ui/map.ts:1000](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1000>)
+Defined in: [ui/map.ts:1004](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1004>)
 
 Removes the control from the map.
 
@@ -2945,7 +2945,7 @@ map.removeControl(navigation);
 
 > **removeFeatureState**(`target`: [`FeatureIdentifier`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FeatureIdentifier/index.md>), `key?`: `string`): `this`
 
-Defined in: [ui/map.ts:4022](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4022>)
+Defined in: [ui/map.ts:4026](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4026>)
 
 Removes the `state` of a feature, setting it back to the default behavior. If only a `target.source` is specified, it will remove the state for all features from that source. If `target.id` is also specified, it will remove all keys for that feature's state. If `key` is also specified, it removes only that key from that feature's state. Features are identified by their `feature.id` attribute, which can be any number or string.
 
@@ -3000,7 +3000,7 @@ map.on('mouseleave', 'my-layer', (e) => {
 
 > **removeImage**(`id`: `string`): `void`
 
-Defined in: [ui/map.ts:3418](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3418>)
+Defined in: [ui/map.ts:3422](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3422>)
 
 Remove an image from a style. This can be an image from the style's original sprite or any images that have been added at runtime using [Map.addImage](<#addimage>).
 
@@ -3028,7 +3028,7 @@ if (map.hasImage('cat')) map.removeImage('cat');
 
 > **removeLayer**(`id`: `string`): `this`
 
-Defined in: [ui/map.ts:3577](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3577>)
+Defined in: [ui/map.ts:3581](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3581>)
 
 Removes the layer with the given ID from the map's style.
 
@@ -3058,7 +3058,7 @@ if (map.getLayer('state-data')) map.removeLayer('state-data');
 
 > **removeSource**(`id`: `string`): `this`
 
-Defined in: [ui/map.ts:3105](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3105>)
+Defined in: [ui/map.ts:3108](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3108>)
 
 Removes a source from the map's style.
 
@@ -3084,7 +3084,7 @@ map.removeSource('bathymetry-data');
 
 > **removeSprite**(`id`: `string`): `this`
 
-Defined in: [ui/map.ts:3843](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3843>)
+Defined in: [ui/map.ts:3847](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3847>)
 
 Removes the sprite from the map's style. Fires the `style` event.
 
@@ -3111,7 +3111,7 @@ map.removeSprite('default');
 
 > **resetNorth**(`options?`: [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1306](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1306>)
+Defined in: [ui/map.ts:1310](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1310>)
 
 Rotates the map so that north is up (0° bearing), with an animated transition.
 
@@ -3134,7 +3134,7 @@ Triggers the following events: `movestart`, `moveend`, and `rotate`.
 
 > **resetNorthPitch**(`options?`: [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1315](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1315>)
+Defined in: [ui/map.ts:1319](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1319>)
 
 Rotates and pitches the map so that north is up (0° bearing) and pitch and roll are 0°, with an animated transition.
 
@@ -3157,7 +3157,7 @@ Triggers the following events: `movestart`, `move`, `moveend`, `pitchstart`, `pi
 
 > **resize**(`eventData?`: `any`, `constrainTransform?`: `boolean`): `this`
 
-Defined in: [ui/map.ts:1618](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1618>)
+Defined in: [ui/map.ts:1622](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1622>)
 
 Resizes the map according to the dimensions of its `container` element.
 
@@ -3191,7 +3191,7 @@ if (mapDiv.style.visibility === 'visible') map.resize();
 
 > **rotateTo**(`bearing`: `number`, `options?`: [`EaseToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EaseToOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1297](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1297>)
+Defined in: [ui/map.ts:1301](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1301>)
 
 Rotates the map to the specified bearing, with an animated transition. The bearing is the compass direction that is "up"; for example, a bearing of 90° orients the map so that east is up.
 
@@ -3215,7 +3215,7 @@ Triggers the following events: `movestart`, `moveend`, and `rotate`.
 
 > **setAnisotropicFilterPitch**(`anisotropicFilterPitch?`: `number`): `this`
 
-Defined in: [ui/map.ts:1999](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1999>)
+Defined in: [ui/map.ts:2002](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2002>)
 
 Sets the map's anisotropic filter pitch or reverts it to its default.
 
@@ -3243,7 +3243,7 @@ map.setAnisotropicFilterPitch(85);
 
 > **setBearing**(`bearing`: `number`, `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1252](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1252>)
+Defined in: [ui/map.ts:1256](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1256>)
 
 Sets the map's bearing (rotation). The bearing is the compass direction that is "up"; for example, a bearing of 90° orients the map so that east is up.
 
@@ -3276,7 +3276,7 @@ map.setBearing(90);
 
 > **setCenter**(`center`: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>), `eventData?`: `Record`\<`string`, `unknown`\>): `this`
 
-Defined in: [ui/map.ts:1077](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1077>)
+Defined in: [ui/map.ts:1081](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1081>)
 
 Sets the map's geographical centerpoint. Equivalent to `jumpTo({center: center})`.
 
@@ -3305,7 +3305,7 @@ map.setCenter([-74, 38]);
 
 > **setCenterClampedToGround**(`centerClampedToGround`: `boolean`): `void`
 
-Defined in: [ui/map.ts:1101](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1101>)
+Defined in: [ui/map.ts:1105](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1105>)
 
 Sets the value of `centerClampedToGround`.
 
@@ -3327,7 +3327,7 @@ If true, the elevation of the center point will automatically be set to the terr
 
 > **setCenterElevation**(`elevation`: `number`, `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1092](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1092>)
+Defined in: [ui/map.ts:1096](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1096>)
 
 Sets the elevation of the map's center point, in meters above sea level. Equivalent to `jumpTo({elevation: elevation})`.
 
@@ -3350,7 +3350,7 @@ Triggers the following events: `movestart` and `moveend`.
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -3375,7 +3375,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **setFeatureState**(`feature`: [`FeatureIdentifier`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FeatureIdentifier/index.md>), `state`: `any`): `this`
 
-Defined in: [ui/map.ts:3971](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3971>)
+Defined in: [ui/map.ts:3975](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3975>)
 
 Sets the `state` of a feature. A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime. When using this method, the `state` object is merged with any existing key-value pairs in the feature's state. Features are identified by their `feature.id` attribute, which can be any number or string.
 
@@ -3428,7 +3428,7 @@ map.on('mousemove', 'my-layer', (e) => {
 
 > **setFilter**(`layerId`: `string`, `filter?`: `FilterSpecification`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:3673](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3673>)
+Defined in: [ui/map.ts:3677](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3677>)
 
 Sets the filter for the specified style layer.
 
@@ -3480,7 +3480,7 @@ map.setFilter('bike-docks', null);
 
 > **setFontFaces**(`fontFaces`: `FontFacesSpecification`): `this`
 
-Defined in: [ui/map.ts:3797](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3797>)
+Defined in: [ui/map.ts:3801](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3801>)
 
 Sets the value of the style's `font-faces` property, which points at the font files used to draw text that the style's `glyphs` URL does not cover. Pass a falsy value (null or undefined) to unset it.
 
@@ -3512,7 +3512,7 @@ map.setFontFaces({
 
 > **setGlobalStateProperty**(`propertyName`: `string`, `value`: `any`): `this`
 
-Defined in: [ui/map.ts:931](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L931>)
+Defined in: [ui/map.ts:935](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L935>)
 
 Sets a global state property that can be retrieved with the [`global-state` expression](<https://maplibre.org/maplibre-style-spec/expressions/#global-state>). If the value is null, it resets the property to its default value defined in the [`state` style property](<https://maplibre.org/maplibre-style-spec/root/#state>).
 
@@ -3533,7 +3533,7 @@ Sets a global state property that can be retrieved with the [`global-state` expr
 
 > **setGlyphs**(`glyphsUrl`: `string`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:3759](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3759>)
+Defined in: [ui/map.ts:3763](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3763>)
 
 Sets the value of the style's glyphs property. Pass a falsy value (null or undefined) to unset glyphs. \* \*
 
@@ -3560,7 +3560,7 @@ Sets the value of the style's glyphs property. Pass a falsy value (null or undef
 
 > **setLayerZoomRange**(`layerId`: `string`, `minzoom`: `number`, `maxzoom`: `number`): `this`
 
-Defined in: [ui/map.ts:3635](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3635>)
+Defined in: [ui/map.ts:3639](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3639>)
 
 Sets the zoom extent for the specified style layer. The zoom extent includes the [minimum zoom level](<https://maplibre.org/maplibre-style-spec/layers/#minzoom>) and [maximum zoom level](<https://maplibre.org/maplibre-style-spec/layers/#maxzoom>)) at which the layer will be rendered.
 
@@ -3592,7 +3592,7 @@ map.setLayerZoomRange('my-layer', 2, 5);
 
 > **setLayoutProperty**\<`K` *extends* keyof `AllLayoutProperties`\>(`layerId`: `string`, `name`: `K`, `value`: `AllLayoutProperties`\[`K`\], `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:3732](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3732>)
+Defined in: [ui/map.ts:3736](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3736>)
 
 Sets the value of a layout property in the specified style layer.
 
@@ -3627,7 +3627,7 @@ map.setLayoutProperty('my-layer', 'visibility', 'none');
 
 > **setLight**(`light`: `LightSpecification`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:3889](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3889>)
+Defined in: [ui/map.ts:3893](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3893>)
 
 Sets the any combination of light values.
 
@@ -3654,7 +3654,7 @@ let layerVisibility = map.getLayoutProperty('my-layer', 'visibility');
 
 > **setMaxBounds**(`bounds?`: [`LngLatBoundsLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatBoundsLike/index.md>)): `this`
 
-Defined in: [ui/map.ts:1774](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1774>)
+Defined in: [ui/map.ts:1777](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1777>)
 
 Sets or clears the map's geographical bounds.
 
@@ -3688,7 +3688,7 @@ map.setMaxBounds(bounds);
 
 > **setMaxPitch**(`maxPitch?`: `number`): `this`
 
-Defined in: [ui/map.ts:1940](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1940>)
+Defined in: [ui/map.ts:1943](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1943>)
 
 Sets or clears the map's maximum pitch. If the map's current pitch is higher than the new maximum, the map will pitch to the new maximum and trigger the following events: `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, and `pitchend`.
 
@@ -3710,7 +3710,7 @@ A [ErrorEvent](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/
 
 > **setMaxZoom**(`maxZoom?`: `number`): `this`
 
-Defined in: [ui/map.ts:1852](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1852>)
+Defined in: [ui/map.ts:1855](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1855>)
 
 Sets or clears the map's maximum zoom level. If the map's current zoom level is higher than the new maximum, the map will zoom to the new maximum and trigger the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
 
@@ -3738,7 +3738,7 @@ map.setMaxZoom(18.75);
 
 > **setMinPitch**(`minPitch?`: `number`): `this`
 
-Defined in: [ui/map.ts:1896](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1896>)
+Defined in: [ui/map.ts:1899](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1899>)
 
 Sets or clears the map's minimum pitch. If the map's current pitch is lower than the new minimum, the map will pitch to the new minimum and trigger the following events: `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, and `pitchend`.
 
@@ -3760,7 +3760,7 @@ A [ErrorEvent](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/
 
 > **setMinZoom**(`minZoom?`: `number`): `this`
 
-Defined in: [ui/map.ts:1799](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1799>)
+Defined in: [ui/map.ts:1802](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1802>)
 
 Sets or clears the map's minimum zoom level. If the map's current zoom level is lower than the new minimum, the map will zoom to the new minimum and trigger the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
 
@@ -3790,7 +3790,7 @@ map.setMinZoom(12.25);
 
 > **setMissingStyleImageResolver**(`resolver`: [`MissingStyleImageResolver`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MissingStyleImageResolver/index.md>)): `this`
 
-Defined in: [ui/map.ts:3259](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3259>)
+Defined in: [ui/map.ts:3263](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3263>)
 
 Sets a callback that is invoked when an icon or pattern needed by the style is missing.
 
@@ -3822,7 +3822,7 @@ map.setMissingStyleImageResolver(async (id) => {
 
 > **setPadding**(`padding`: [`PaddingOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PaddingOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1286](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1286>)
+Defined in: [ui/map.ts:1290](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1290>)
 
 Sets the padding in pixels around the viewport.
 
@@ -3855,7 +3855,7 @@ map.setPadding({ left: 300, top: 50 });
 
 > **setPaintProperty**\<`K` *extends* keyof `AllPaintProperties`\>(`layerId`: `string`, `name`: `K`, `value`: `AllPaintProperties`\[`K`\], `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:3704](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3704>)
+Defined in: [ui/map.ts:3708](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3708>)
 
 Sets the value of a paint property in the specified style layer.
 
@@ -3895,7 +3895,7 @@ map.setPaintProperty('my-layer', 'fill-color', '#faafee');
 
 > **setPitch**(`pitch`: `number`, `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1340](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1340>)
+Defined in: [ui/map.ts:1344](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1344>)
 
 Sets the map's pitch (tilt). Equivalent to `jumpTo({pitch: pitch})`.
 
@@ -3918,7 +3918,7 @@ Triggers the following events: `movestart`, `moveend`, `pitchstart`, and `pitche
 
 > **setPixelRatio**(`pixelRatio`: `number`): `void`
 
-Defined in: [ui/map.ts:1723](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1723>)
+Defined in: [ui/map.ts:1726](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1726>)
 
 Sets the map's pixel ratio. This allows to override `devicePixelRatio`. After this call, the canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its height attribute will be `container.clientHeight * pixelRatio`. Set this to null to disable `devicePixelRatio` override. Note that the pixel ratio actually applied may be lower to respect maxCanvasSize.
 
@@ -3938,7 +3938,7 @@ Sets the map's pixel ratio. This allows to override `devicePixelRatio`. After th
 
 > **setProjection**(`projection`: [`ProjectionSpecification`](<https://maplibre.org/maplibre-style-spec/projection/>)): `this`
 
-Defined in: [ui/map.ts:4788](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4788>)
+Defined in: [ui/map.ts:4783](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4783>)
 
 Sets the [ProjectionSpecification](<https://maplibre.org/maplibre-style-spec/projection/>).
 
@@ -3958,7 +3958,7 @@ Sets the [ProjectionSpecification](<https://maplibre.org/maplibre-style-spec/pro
 
 > **setRenderWorldCopies**(`renderWorldCopies?`: `boolean`): `this`
 
-Defined in: [ui/map.ts:2052](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2052>)
+Defined in: [ui/map.ts:2055](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2055>)
 
 Sets the state of `renderWorldCopies`.
 
@@ -3988,7 +3988,7 @@ map.setRenderWorldCopies(true);
 
 > **setRoll**(`roll`: `number`, `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1355](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1355>)
+Defined in: [ui/map.ts:1359](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1359>)
 
 Sets the map's roll angle. Equivalent to `jumpTo({roll: roll})`.
 
@@ -4011,7 +4011,7 @@ Triggers the following events: `movestart`, `moveend`, `rollstart`, and `rollend
 
 > **setSky**(`sky`: `SkySpecification`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:3915](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3915>)
+Defined in: [ui/map.ts:3919](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3919>)
 
 Sets the value of style's sky properties.
 
@@ -4038,7 +4038,7 @@ map.setSky({'atmosphere-blend': 1.0});
 
 > **setSourceTileLodParams**(`maxZoomLevelsOnScreen`: `number`, `tileCountMaxMinRatio`: `number`, `sourceId?`: `string`): `this`
 
-Defined in: [ui/map.ts:3156](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3156>)
+Defined in: [ui/map.ts:3160](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3160>)
 
 Change the tile Level of Detail behavior of the specified source. These parameters have no effect when pitch == 0, and the largest effect when the horizon is visible on screen.
 
@@ -4070,7 +4070,7 @@ map.setSourceTileLodParams(4.0, 3.0, 'terrain');
 
 > **setSprite**(`spriteUrl`: `string`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:3868](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3868>)
+Defined in: [ui/map.ts:3872](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3872>)
 
 Sets the value of the style's sprite property.
 
@@ -4097,7 +4097,7 @@ map.setSprite('YOUR_SPRITE_URL');
 
 > **setStyle**(`style`: `string` | `StyleSpecification`, `options?`: [`StyleSwapOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSwapOptions/index.md>) &amp; [`StyleOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:2715](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2715>)
+Defined in: [ui/map.ts:2718](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2718>)
 
 Updates the map's MapLibre style object with a new value.
 
@@ -4160,7 +4160,7 @@ map.setStyle('https://demotiles.maplibre.org/style.json', {
 
 > **setTerrain**(`options`: `TerrainSpecification`, `styleOptions?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [ui/map.ts:2990](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2990>)
+Defined in: [ui/map.ts:2993](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2993>)
 
 Loads a 3D terrain mesh, based on a "raster-dem" source.
 
@@ -4189,7 +4189,7 @@ map.setTerrain({ source: 'terrain' });
 
 > **setTransformCameraUpdate**(`value`: [`CameraUpdateTransformFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraUpdateTransformFunction/index.md>)): `void`
 
-Defined in: [ui/map.ts:1050](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1050>)
+Defined in: [ui/map.ts:1054](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1054>)
 
 Sets the callback used to defer camera updates or apply arbitrary constraints. If specified, this Camera instance can be used as a stateless component in React etc.
 
@@ -4209,7 +4209,7 @@ Sets the callback used to defer camera updates or apply arbitrary constraints. I
 
 > **setTransformConstrain**(`constrain?`: [`TransformConstrainFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TransformConstrainFunction/index.md>)): `this`
 
-Defined in: [ui/map.ts:2071](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2071>)
+Defined in: [ui/map.ts:2074](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2074>)
 
 Sets or clears the callback overriding how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
 
@@ -4242,7 +4242,7 @@ map.setTransformConstrain(customTransformConstrain);
 
 > **setTransformRequest**(`transformRequest`: [`RequestTransformFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequestTransformFunction/index.md>)): `this`
 
-Defined in: [ui/map.ts:2745](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2745>)
+Defined in: [ui/map.ts:2748](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2748>)
 
 Updates the requestManager's transform request with a new function
 
@@ -4268,7 +4268,7 @@ map.setTransformRequest((url: string, resourceType: string) => {});
 
 > **setVerticalFieldOfView**(`fov`: `number`, `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1227](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1227>)
+Defined in: [ui/map.ts:1231](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1231>)
 
 Sets the map's vertical field of view, in degrees.
 
@@ -4305,7 +4305,7 @@ map.setVerticalFieldOfView(30);
 
 > **setZoom**(`zoom`: `number`, `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1153](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1153>)
+Defined in: [ui/map.ts:1157](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1157>)
 
 Sets the map's zoom level. Equivalent to `jumpTo({zoom: zoom})`.
 
@@ -4336,7 +4336,7 @@ map.setZoom(5);
 
 > **setZoomSnap**(`snap`: `number`): `this`
 
-Defined in: [ui/map.ts:1264](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1264>)
+Defined in: [ui/map.ts:1268](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1268>)
 
 Sets the map's zoom snap level.
 
@@ -4356,7 +4356,7 @@ Sets the map's zoom snap level.
 
 > **snapToNorth**(`options?`: [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1325](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1325>)
+Defined in: [ui/map.ts:1329](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1329>)
 
 Snaps the map so that north is up (0° bearing), if the current bearing is close enough to it (i.e. within the `bearingSnap` threshold).
 
@@ -4379,7 +4379,7 @@ Triggers the following events: `movestart`, `moveend`, and `rotate`.
 
 > **stop**(): `this`
 
-Defined in: [ui/map.ts:1544](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1544>)
+Defined in: [ui/map.ts:1548](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1548>)
 
 Stops any animated transition underway.
 
@@ -4393,7 +4393,7 @@ Stops any animated transition underway.
 
 > **triggerRepaint**(): `void`
 
-Defined in: [ui/map.ts:4641](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L4641>)
+Defined in: [ui/map.ts:4636](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L4636>)
 
 Trigger the rendering of a single frame. Use this method with custom layers to repaint the map when the layer changes. Calling this multiple times before the next frame is rendered will still result in only a single frame being rendered.
 
@@ -4418,7 +4418,7 @@ map.triggerRepaint();
 
 > **unproject**(`point`: [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>)): [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [ui/map.ts:2110](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L2110>)
+Defined in: [ui/map.ts:2113](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L2113>)
 
 Returns a [LngLat](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>) representing geographical coordinates that correspond to the specified pixel coordinates.
 
@@ -4449,7 +4449,7 @@ map.on('click', (e) => {
 
 > **updateImage**(`id`: `string`, `image`: [`StyleImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageSource/index.md>)): `this`
 
-Defined in: [ui/map.ts:3327](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L3327>)
+Defined in: [ui/map.ts:3331](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L3331>)
 
 Update an existing image in a style. This image can be displayed on the map like any other icon in the style's sprite using the image's ID with [`icon-image`](<https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-image>), [`background-pattern`](<https://maplibre.org/maplibre-style-spec/layers/#paint-background-background-pattern>), [`fill-pattern`](<https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern>), or [`line-pattern`](<https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern>).
 
@@ -4480,7 +4480,7 @@ if (map.hasImage('cat')) map.updateImage('cat', './other-cat-icon.png');
 
 > **zoomIn**(`options?`: [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1187](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1187>)
+Defined in: [ui/map.ts:1191](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1191>)
 
 Incrementally increases the map's zoom level by 1, first snapping to the nearest `zoomSnap` increment.
 
@@ -4511,7 +4511,7 @@ map.zoomIn({duration: 1000});
 
 > **zoomOut**(`options?`: [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1201](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1201>)
+Defined in: [ui/map.ts:1205](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1205>)
 
 Decreases the map's zoom level by 1, first snapping to the nearest `zoomSnap` increment.
 
@@ -4542,7 +4542,7 @@ map.zoomOut({offset: [80, 60]});
 
 > **zoomTo**(`zoom`: `number`, `options?`: [`EaseToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EaseToOptions/index.md>), `eventData?`: `any`): `this`
 
-Defined in: [ui/map.ts:1173](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L1173>)
+Defined in: [ui/map.ts:1177](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L1177>)
 
 Zooms the map to the specified zoom level, with an animated transition.
 
@@ -4578,7 +4578,7 @@ map.zoomTo(8, {
 
 > **boxZoom**: [`BoxZoomHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/BoxZoomHandler/index.md>)
 
-Defined in: [ui/map.ts:704](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L704>)
+Defined in: [ui/map.ts:708](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L708>)
 
 The map's [BoxZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/BoxZoomHandler/index.md>), which implements zooming using a drag gesture with the Shift key pressed. Find more details and examples using `boxZoom` in the [BoxZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/BoxZoomHandler/index.md>) section.
 
@@ -4588,7 +4588,7 @@ The map's [BoxZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes
 
 > **cancelPendingTileRequestsWhileZooming**: `boolean`
 
-Defined in: [ui/map.ts:755](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L755>)
+Defined in: [ui/map.ts:759](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L759>)
 
 The map's property which determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one. \* If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom. \* If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
 
@@ -4604,7 +4604,7 @@ true
 
 > **cooperativeGestures**: [`CooperativeGesturesHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/CooperativeGesturesHandler/index.md>)
 
-Defined in: [ui/map.ts:747](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L747>)
+Defined in: [ui/map.ts:751](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L751>)
 
 The map's [CooperativeGesturesHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/CooperativeGesturesHandler/index.md>), which allows the user to see cooperative gesture info when user tries to zoom in/out. Find more details and examples using `cooperativeGestures` in the [CooperativeGesturesHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/CooperativeGesturesHandler/index.md>) section.
 
@@ -4614,7 +4614,7 @@ The map's [CooperativeGesturesHandler](<https://maplibre.org/maplibre-gl-js/docs
 
 > **doubleClickZoom**: [`DoubleClickZoomHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DoubleClickZoomHandler/index.md>)
 
-Defined in: [ui/map.ts:729](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L729>)
+Defined in: [ui/map.ts:733](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L733>)
 
 The map's [DoubleClickZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DoubleClickZoomHandler/index.md>), which allows the user to zoom by double clicking. Find more details and examples using `doubleClickZoom` in the [DoubleClickZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DoubleClickZoomHandler/index.md>) section.
 
@@ -4624,7 +4624,7 @@ The map's [DoubleClickZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API
 
 > **dragPan**: [`DragPanHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragPanHandler/index.md>)
 
-Defined in: [ui/map.ts:717](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L717>)
+Defined in: [ui/map.ts:721](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L721>)
 
 The map's [DragPanHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragPanHandler/index.md>), which implements dragging the map with a mouse or touch gesture. Find more details and examples using `dragPan` in the [DragPanHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragPanHandler/index.md>) section.
 
@@ -4634,7 +4634,7 @@ The map's [DragPanHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes
 
 > **dragRotate**: [`DragRotateHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/index.md>)
 
-Defined in: [ui/map.ts:711](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L711>)
+Defined in: [ui/map.ts:715](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L715>)
 
 The map's [DragRotateHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/index.md>), which implements rotating the map while dragging with the right mouse button or with the Control key pressed. Find more details and examples using `dragRotate` in the [DragRotateHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/index.md>) section.
 
@@ -4644,7 +4644,7 @@ The map's [DragRotateHandler](<https://maplibre.org/maplibre-gl-js/docs/API/clas
 
 > **keyboard**: [`KeyboardHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/KeyboardHandler/index.md>)
 
-Defined in: [ui/map.ts:723](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L723>)
+Defined in: [ui/map.ts:727](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L727>)
 
 The map's [KeyboardHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/KeyboardHandler/index.md>), which allows the user to zoom, rotate, and pan the map using keyboard shortcuts. Find more details and examples using `keyboard` in the [KeyboardHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/KeyboardHandler/index.md>) section.
 
@@ -4654,7 +4654,7 @@ The map's [KeyboardHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classe
 
 > **scrollZoom**: [`ScrollZoomHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ScrollZoomHandler/index.md>)
 
-Defined in: [ui/map.ts:698](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L698>)
+Defined in: [ui/map.ts:702](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L702>)
 
 The map's [ScrollZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ScrollZoomHandler/index.md>), which implements zooming in and out with a scroll wheel or trackpad. Find more details and examples using `scrollZoom` in the [ScrollZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ScrollZoomHandler/index.md>) section.
 
@@ -4664,7 +4664,7 @@ The map's [ScrollZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/clas
 
 > **touchPitch**: [`TwoFingersTouchPitchHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchPitchHandler/index.md>)
 
-Defined in: [ui/map.ts:741](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L741>)
+Defined in: [ui/map.ts:745](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L745>)
 
 The map's [TwoFingersTouchPitchHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchPitchHandler/index.md>), which allows the user to pitch the map with touch gestures. Find more details and examples using `touchPitch` in the [TwoFingersTouchPitchHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchPitchHandler/index.md>) section.
 
@@ -4674,6 +4674,6 @@ The map's [TwoFingersTouchPitchHandler](<https://maplibre.org/maplibre-gl-js/doc
 
 > **touchZoomRotate**: [`TwoFingersTouchZoomRotateHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchZoomRotateHandler/index.md>)
 
-Defined in: [ui/map.ts:735](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/map.ts#L735>)
+Defined in: [ui/map.ts:739](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/map.ts#L739>)
 
 The map's [TwoFingersTouchZoomRotateHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchZoomRotateHandler/index.md>), which allows the user to zoom or rotate the map with touch gestures. Find more details and examples using `touchZoomRotate` in the [TwoFingersTouchZoomRotateHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchZoomRotateHandler/index.md>) section.

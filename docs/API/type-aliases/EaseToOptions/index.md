@@ -2,7 +2,7 @@
 
 > **EaseToOptions** = [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>) &amp; [`CameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>) &amp; `object`
 
-Defined in: [ui/camera.ts:236](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/camera.ts#L236>)
+Defined in: [ui/camera.ts:236](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/camera.ts#L236>)
 
 The [Map.easeTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#easeto>) options object
 
@@ -14,18 +14,16 @@ The [Map.easeTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#ease
 
 If `zoom` is specified, `around` determines the point around which the zoom is centered.
 
-### delayEndEvents?
+### \~\~delayEndEvents?\~\~
 
 > `optional` **delayEndEvents?**: `number`
 
-### easeId?
+#### Deprecated
 
-> `optional` **easeId?**: `string`
-
-### noMoveStart?
-
-> `optional` **noMoveStart?**: `boolean`
+Has no effect, and will be removed in the next major version.
 
 ### padding?
 
 > `optional` **padding?**: `number` | [`PaddingOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PaddingOptions/index.md>)
+
+Dimensions in pixels applied on each side of the viewport for shifting the vanishing point, which the transition animates to. The map keeps this padding once the transition ends.

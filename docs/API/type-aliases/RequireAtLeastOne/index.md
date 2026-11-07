@@ -2,7 +2,7 @@
 
 > **RequireAtLeastOne**\<`T`\> = `{ [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>> }`\[keyof `T`\]
 
-Defined in: [util/util.ts:1107](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/util/util.ts#L1107>)
+Defined in: [util/util.ts:1107](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/util.ts#L1107>)
 
 A helper to allow require of at least one property
 

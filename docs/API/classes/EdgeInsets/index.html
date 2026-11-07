@@ -29,7 +29,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.71">
+      <meta name="generator" content="zensical-0.0.74">
     
     
       
@@ -40,7 +40,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.e442bf79.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.4ab2de0c.min.css">
       
         
           
@@ -121,9 +121,10 @@
   <img src="../../../assets/logo.svg" alt="MapLibre GL JS">
 
     </a>
-    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+    <label class="md-header__button md-icon" for="__drawer">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -185,9 +186,10 @@
     
       
       
-        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+        <label class="md-header__button md-icon" for="__search">
           
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
         </label>
         <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
   <button type="button" class="md-search__button">
@@ -11347,7 +11349,7 @@
 
 
 <h1 id="edgeinsets">EdgeInsets</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L12">geo/edge_insets.ts:12</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/edge_insets.ts#L12">geo/edge_insets.ts:12</a></p>
 <p>An <code>EdgeInset</code> object represents screen space padding applied to the edges of the viewport.
 This shifts the apparent center or the vanishing point of the map. This is useful for adding floating UI elements
 on top of the map and having the vanishing point shift as UI elements resize.</p>
@@ -11356,7 +11358,7 @@ on top of the map and having the vanishing point shift as UI elements resize.</p
 <blockquote>
 <p><strong>getCenter</strong>(<code>width</code>: <code>number</code>, <code>height</code>: <code>number</code>): <code>Point</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L70">geo/edge_insets.ts:70</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/edge_insets.ts#L70">geo/edge_insets.ts:70</a></p>
 <p>Utility method that computes the new apparent center or vanishing point after applying insets.
 This is in pixels and with the top left being (0.0) and +y being downwards.</p>
 <h4 id="parameters">Parameters</h4>
@@ -11389,7 +11391,7 @@ This is in pixels and with the top left being (0.0) and +y being downwards.</p>
 <blockquote>
 <p><strong>interpolate</strong>(<code>start</code>: <code>EdgeInsets</code> | <a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a>, <code>target</code>: <a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a>, <code>t</code>: <code>number</code>): <code>this</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L53">geo/edge_insets.ts:53</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/edge_insets.ts#L53">geo/edge_insets.ts:53</a></p>
 <p>Interpolates the inset in-place.
 This maintains the current inset value for any inset not present in <code>target</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
@@ -11427,7 +11429,7 @@ This maintains the current inset value for any inset not present in <code>target
 <blockquote>
 <p><strong>toJSON</strong>(): <a href="../../type-aliases/Complete/"><code>Complete</code></a>&lt;<a href="../../type-aliases/PaddingOptions/"><code>PaddingOptions</code></a>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L95">geo/edge_insets.ts:95</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/edge_insets.ts#L95">geo/edge_insets.ts:95</a></p>
 <p>Returns the current state as json, useful when you want to have a
 read-only representation of the inset.</p>
 <h4 id="returns_2">Returns</h4>
@@ -11438,7 +11440,7 @@ read-only representation of the inset.</p>
 <blockquote>
 <p><strong>bottom</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L20">geo/edge_insets.ts:20</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/edge_insets.ts#L20">geo/edge_insets.ts:20</a></p>
 <h4 id="default-value">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="mf">0</span>
 </span></code></pre></div>
@@ -11447,7 +11449,7 @@ read-only representation of the inset.</p>
 <blockquote>
 <p><strong>left</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L24">geo/edge_insets.ts:24</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/edge_insets.ts#L24">geo/edge_insets.ts:24</a></p>
 <h4 id="default-value_1">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="mf">0</span>
 </span></code></pre></div>
@@ -11456,7 +11458,7 @@ read-only representation of the inset.</p>
 <blockquote>
 <p><strong>right</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L28">geo/edge_insets.ts:28</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/edge_insets.ts#L28">geo/edge_insets.ts:28</a></p>
 <h4 id="default-value_2">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="mf">0</span>
 </span></code></pre></div>
@@ -11465,7 +11467,7 @@ read-only representation of the inset.</p>
 <blockquote>
 <p><strong>top</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/geo/edge_insets.ts#L16">geo/edge_insets.ts:16</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/edge_insets.ts#L16">geo/edge_insets.ts:16</a></p>
 <h4 id="default-value_3">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="mf">0</span>
 </span></code></pre></div>
@@ -11603,10 +11605,10 @@ read-only representation of the inset.</p>
       
         
         
-      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.a2388154.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
       
     
   </body>

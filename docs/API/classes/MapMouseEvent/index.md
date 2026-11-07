@@ -1,6 +1,6 @@
 # MapMouseEvent
 
-Defined in: [ui/events.ts:611](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/events.ts#L611>)
+Defined in: [ui/events.ts:618](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L618>)
 
 `MapMouseEvent` is the event type for mouse-related map events.
 
@@ -28,7 +28,7 @@ map.on('click', (e) => {
 
 > **get** **defaultPrevented**(): `boolean`
 
-Defined in: [ui/events.ts:655](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/events.ts#L655>)
+Defined in: [ui/events.ts:662](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L662>)
 
 `true` if `preventDefault` has been called.
 
@@ -42,7 +42,7 @@ Defined in: [ui/events.ts:655](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **preventDefault**(): `void`
 
-Defined in: [ui/events.ts:648](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/events.ts#L648>)
+Defined in: [ui/events.ts:655](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L655>)
 
 Prevents subsequent default processing of the event by the map.
 
@@ -63,7 +63,7 @@ Calling this method will prevent the following default map behaviors:
 
 > **lngLat**: [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [ui/events.ts:635](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/events.ts#L635>)
+Defined in: [ui/events.ts:642](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L642>)
 
 The geographic location on the map of the mouse cursor.
 
@@ -73,7 +73,7 @@ The geographic location on the map of the mouse cursor.
 
 > **originalEvent**: `MouseEvent`
 
-Defined in: [ui/events.ts:625](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/events.ts#L625>)
+Defined in: [ui/events.ts:632](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L632>)
 
 The DOM event which caused the map event.
 
@@ -87,7 +87,7 @@ The DOM event which caused the map event.
 
 > **point**: `Point`
 
-Defined in: [ui/events.ts:630](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/events.ts#L630>)
+Defined in: [ui/events.ts:637](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L637>)
 
 The pixel coordinates of the mouse cursor, relative to the map and measured from the top left corner.
 
@@ -97,7 +97,7 @@ The pixel coordinates of the mouse cursor, relative to the map and measured from
 
 > **target**: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)
 
-Defined in: [ui/events.ts:620](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/events.ts#L620>)
+Defined in: [ui/events.ts:627](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L627>)
 
 The `Map` object that fired the event.
 
@@ -111,7 +111,7 @@ The `Map` object that fired the event.
 
 > **type**: `"click"` | `"contextmenu"` | `"dblclick"` | `"mousedown"` | `"mouseenter"` | `"mouseleave"` | `"mousemove"` | `"mouseout"` | `"mouseover"` | `"mouseup"`
 
-Defined in: [ui/events.ts:615](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/events.ts#L615>)
+Defined in: [ui/events.ts:622](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L622>)
 
 The event type
 

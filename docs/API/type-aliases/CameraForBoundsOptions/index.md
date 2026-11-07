@@ -2,7 +2,7 @@
 
 > **CameraForBoundsOptions** = [`CameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>) &amp; `object`
 
-Defined in: [ui/camera.ts:165](<https://github.com/maplibre/maplibre-gl-js/blob/538a7680ab16d5cf5a6564ee0ce72a11be14d142/src/ui/camera.ts#L165>)
+Defined in: [ui/camera.ts:165](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/camera.ts#L165>)
 
 A options object for the [Map.cameraForBounds](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#cameraforbounds>) method
 

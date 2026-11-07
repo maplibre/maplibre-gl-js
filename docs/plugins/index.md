@@ -33,6 +33,7 @@
 - [maplibre-gl-layers-control](<https://github.com/mvt-proj/maplibre-gl-layers-control>) - It allows to show/hide layers, opacity control and integration with legends.
 - [maplibre-label-callout](<https://github.com/leoneljdias/maplibre-label-callout>) - Labels with connector lines for MapLibre GL JS. [demo](<https://leoneljdias.github.io/maplibre-label-callout/demo/>) · [npm](<https://www.npmjs.com/package/@leoneljdias/maplibre-label-callout>)
 - [maplibre-ui-translations](<https://github.com/spwoodcock/maplibre-ui-translations>) - Community translations for the default MapLibre UI.
+- [location-picker](<https://github.com/cyphercodes/location-picker>) - A form field for picking one point: the user pans the map under a fixed pin and the form submits its latitude/longitude. Web component and class with a MapLibre GL JS provider (bring your own `maplibre-gl`). [docs](<https://github.com/cyphercodes/location-picker/blob/master/docs/providers.md#maplibre>)
 
 ## Geocoding &amp; Search Plugins
 
