@@ -17,6 +17,7 @@ import type {Terrain} from '../../render/terrain.ts';
 import type {CustomLayerInterface} from '../../style/style_layer/custom_style_layer.ts';
 import type {RasterDEMTileSource} from '../../source/raster_dem_tile_source.ts';
 import type {Tile} from '../../tile/tile.ts';
+import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 
 /** A raster-dem source whose tiles load only when a test lands them, see {@link landDemTiles}. */
 type WaitingDem = {
@@ -315,6 +316,39 @@ describe('terrainTileRevision', () => {
         expect(terrainTiles).toBeGreaterThan(0);
         expect(renderAboveToTerrainTile).toHaveBeenCalledTimes(terrainTiles);
         expect(renderBelowToTerrainTile).not.toHaveBeenCalled();
+    });
+});
+
+describe('paint transitions on terrain', () => {
+    afterEach(() => {
+        map.remove();
+        vi.restoreAllMocks();
+    });
+
+    test('draws a draped layer into the terrain tiles with the paint value it transitions to', async () => {
+        vi.spyOn(ImageRequest, 'getImage').mockResolvedValue({data: null});
+        map = createMap({zoom: 14, style: {
+            version: 8,
+            sources: {
+                dem: {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png'], tileSize: 256},
+                land: {type: 'geojson', data: {type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]]]}}}
+            },
+            layers: [{id: 'land', type: 'fill', source: 'land', paint: {'fill-opacity': 1}}],
+            terrain: {source: 'dem'}
+        }});
+        await map.once('idle');
+        const drawnOpacities: number[] = [];
+        const renderLayer = map.painter.renderLayer;
+        vi.spyOn(map.painter, 'renderLayer').mockImplementation(function (painter, tileManager, layer, coords, frameRenderContext) {
+            if (layer.id === 'land') drawnOpacities.push((layer as FillStyleLayer).paint.get('fill-opacity').constantOr(NaN));
+            renderLayer.call(this, painter, tileManager, layer, coords, frameRenderContext);
+        });
+
+        map.setPaintProperty('land', 'fill-opacity', 0.25);
+        await map.once('idle');
+
+        expect(drawnOpacities.length).toBeGreaterThan(0);
+        expect(drawnOpacities.at(-1)).toBe(0.25);
     });
 });
 
