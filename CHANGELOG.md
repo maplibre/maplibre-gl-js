@@ -3,8 +3,27 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 - _...Add new stuff here..._
+
+- feat: Add experimental `sparse` vector source option so a missing tile is sliced from an ancestor ([#8335](https://github.com/maplibre/maplibre-gl-js/pull/8335)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- fix: refactor camera task scheduling to solve movement bugs ([#8961](https://github.com/maplibre/maplibre-gl-js/pull/8961)) (by [@HarelM](https://github.com/HarelM))
+- chore: refactor vector source tests to use the public API ([#8950](https://github.com/maplibre/maplibre-gl-js/pull/8950)) (by [@HarelM](https://github.com/HarelM))
+- docs: document the actual default and range of the minZoom map option ([#8941](https://github.com/maplibre/maplibre-gl-js/pull/8941)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- fix: a layer added with addLayer drawing nothing beyond its source's m… ([#8919](https://github.com/maplibre/maplibre-gl-js/pull/8919)) (by [@igor-suhorukov](https://github.com/igor-suhorukov))
+- fix: Keep offset line labels in order where the line doubles back ([#8892](https://github.com/maplibre/maplibre-gl-js/pull/8892)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- fix: map not loading from a file or in a sandboxed iframe ([#8912](https://github.com/maplibre/maplibre-gl-js/pull/8912)) (by [@birkskyum](https://github.com/birkskyum))
+- refactor: CSC-2.3 make the camera's transform read-only outside Camera ([#8906](https://github.com/maplibre/maplibre-gl-js/pull/8906)) (by [@birkskyum](https://github.com/birkskyum))
+- ci: report bundle size changes on PRs and check only Dependabot updates ([#8905](https://github.com/maplibre/maplibre-gl-js/pull/8905)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- refactor: CSC-2.2 let Map change the camera only through Camera ([#8902](https://github.com/maplibre/maplibre-gl-js/pull/8902)) (by [@birkskyum](https://github.com/birkskyum))
+- refactor: CSC-2.1 Deduplicate terrain elevation clamp rule ([#8891](https://github.com/maplibre/maplibre-gl-js/pull/8891)) (by [@birkskyum](https://github.com/birkskyum))
+- ci: lint PR titles with the shared workflow ([#8890](https://github.com/maplibre/maplibre-gl-js/pull/8890)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- docs: write the changelog entry as the PR title instead of editing CHANGELOG.md ([#8884](https://github.com/maplibre/maplibre-gl-js/pull/8884)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- CSC-1.9 Move getMercatorTileCoordinates from TransformHelper to mercator_utils ([#8888](https://github.com/maplibre/maplibre-gl-js/pull/8888)) (by [@birkskyum](https://github.com/birkskyum))
+## 6.17.0
+### ✨ Features and improvements
+
+### 🐞 Bug fixes
+- Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 
 ## 6.16.0
 
