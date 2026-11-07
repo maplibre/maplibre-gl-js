@@ -89,11 +89,18 @@ function getNumericId(value: unknown) {
     return murmur3(String(value));
 }
 
-// custom quicksort that sorts ids, indices and offsets together (by ids)
-// uses Hoare partitioning & manual tail call optimization to avoid worst case scenarios
+/**
+ * Sorts ids, indices and offsets together by id, with a Hoare partitioning quicksort.
+ *
+ * The pivot is the middle id, or a random one after a partition that left less than an eighth of
+ * the range on one side. On ids listed in ascending order and then again, the middle id is the
+ * largest of every range, so the middle pivot alone would split off one id at a time.
+ */
 function sort(ids, positions, left, right) {
+    let unbalanced = false;
     while (left < right) {
-        const pivot = ids[(left + right) >> 1];
+        const pivotIndex = unbalanced ? left + Math.floor(Math.random() * (right - left)) : (left + right) >> 1;
+        const pivot = ids[pivotIndex];
         let i = left - 1;
         let j = right + 1;
 
@@ -106,6 +113,8 @@ function sort(ids, positions, left, right) {
             swap(positions, 3 * i + 1, 3 * j + 1);
             swap(positions, 3 * i + 2, 3 * j + 2);
         }
+
+        unbalanced = Math.min(j - left, right - j) < (right - left) >> 3;
 
         if (j - left < right - j) {
             sort(ids, positions, left, j);

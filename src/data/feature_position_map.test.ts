@@ -23,6 +23,20 @@ describe('FeaturePositionMap', () => {
         ].sort(compareIndex));
     });
 
+    test('Can be queried after serializing ids listed twice in ascending order', () => {
+        const featureMap = new FeaturePositionMap();
+        for (let i = 0; i < 2000; i++) {
+            featureMap.add(i % 1000, i, i, i + 1);
+        }
+
+        const featureMap2 = deserialize(serialize(featureMap, [])) as FeaturePositionMap;
+
+        for (let id = 0; id < 1000; id++) {
+            const indices = featureMap2.getPositions(id).map(position => position.index);
+            expect(indices.sort((a, b) => a - b)).toEqual([id, id + 1000]);
+        }
+    });
+
     test('Can not be queried before serialization/deserialization', () => {
         const featureMap = new FeaturePositionMap();
         featureMap.add(0, 1, 2, 3);
