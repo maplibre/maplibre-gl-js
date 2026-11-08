@@ -317,7 +317,7 @@ export class TileManager extends Evented<SourceEventType> {
         }
 
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
-        this._setTileReloadTimer(id, tile);
+        if (this._inViewTiles.getTileById(id) === tile) this._setTileReloadTimer(id, tile);
 
         if (result?.unmodified) return;
 
