@@ -1,17 +1,17 @@
-import type {Painter} from '../../render/painter.ts';
-import type {TileManager} from '../../tile/tile_manager.ts';
-import type {StyleLayer} from '../../style/style_layer.ts';
-import type {OverscaledTileID} from '../../tile/tile_id.ts';
-import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {CullFaceMode} from '../cull_face_mode.ts';
-import {collisionUniformValues, collisionCircleUniformValues} from '../program/collision_program.ts';
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../../data/array_types.g.ts';
 import {collisionCircleLayout} from '../../data/bucket/symbol_attributes.ts';
 import {SegmentVector} from '../../data/segment.ts';
-import {type VertexBuffer} from '../vertex_buffer.ts';
-import {type IndexBuffer} from '../index_buffer.ts';
+
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
+import type {VertexBuffer} from '../vertex_buffer.ts';
+import type {IndexBuffer} from '../index_buffer.ts';
+import type {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {TileManager} from '../../tile/tile_manager.ts';
 
 type TileBatch = {
     circleArray: number[];
@@ -21,11 +21,10 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean): void {
-    const context = painter.context;
-    const transform = painter.transform;
+export function drawCollisionDebug(tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], isText: boolean, frameRenderContext: FrameRenderContext): void {
+    const context = frameRenderContext.context;
     const gl = context.gl;
-    const program = painter.useProgram('collisionBox');
+    const program = frameRenderContext.useProgram('collisionBox');
     const tileBatches: TileBatch[] = [];
     let circleCount = 0;
     let circleOffset = 0;
@@ -57,13 +56,13 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
 
         program.draw(context, gl.LINES,
             DepthMode.disabled, StencilMode.disabled,
-            painter.colorModeForRenderPass(),
+            frameRenderContext.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            collisionUniformValues(painter.transform),
-            painter.style.map.terrain?.getTerrainData(coord),
-            transform.getProjectionData({overscaledTileID: coord, applyGlobeMatrix: true, applyTerrainMatrix: true}),
+            null,
+            frameRenderContext.getTerrainDataForTile(coord),
+            frameRenderContext.getProjectionDataForTile(coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
-            buffers.segments, null, painter.transform.zoom, null, null,
+            buffers.segments, null, frameRenderContext.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
     }
 
@@ -72,7 +71,7 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
     }
 
     // Render collision circles
-    const circleProgram = painter.useProgram('collisionCircle');
+    const circleProgram = frameRenderContext.useProgram('collisionCircle');
 
     // Construct vertex data
     const vertexData = new CollisionCircleLayoutArray();
@@ -105,24 +104,23 @@ export function drawCollisionDebug(painter: Painter, tileManager: TileManager, l
 
     // Render batches
     for (const batch of tileBatches) {
-        const uniforms = collisionCircleUniformValues(painter.transform);
 
         circleProgram.draw(
             context,
             gl.TRIANGLES,
             DepthMode.disabled,
             StencilMode.disabled,
-            painter.colorModeForRenderPass(),
+            frameRenderContext.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            uniforms,
-            painter.style.map.terrain?.getTerrainData(batch.coord),
+            null,
+            frameRenderContext.getTerrainDataForTile(batch.coord),
             null,
             layer.id,
             vertexBuffer,
             indexBuffer,
             SegmentVector.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2),
             null,
-            painter.transform.zoom,
+            frameRenderContext.transform.zoom,
             null,
             null,
             null);

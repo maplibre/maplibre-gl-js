@@ -1,7 +1,8 @@
 import {describe, test, expect} from 'vitest';
+import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
+import {TaggedString, type TextSectionOptions} from './tagged_string.ts';
 
 import type {StyleGlyph} from '../style/style_glyph.ts';
-import {TaggedString, type TextSectionOptions} from './tagged_string.ts';
 
 describe('TaggedString', () => {
     const textSection = {
@@ -10,10 +11,45 @@ describe('TaggedString', () => {
         fontStack: 'Test',
     } as TextSectionOptions;
 
+    describe('sectionIndex', () => {
+        test('keeps the following section aligned when a letter and its accent are in different sections', () => {
+            const formatted = new Formatted([
+                new FormattedSection('a', null, 1, null, null, null),
+                new FormattedSection('\u0301', null, 0.5, null, null, null),
+                new FormattedSection('b', null, 2, null, null, null),
+            ]);
+
+            const tagged = TaggedString.fromFeature(formatted, 'Test', false);
+
+            expect(tagged.graphemes()).toEqual(['a\u0301', 'b']);
+            expect(tagged.sectionIndex).toEqual([0, 2]);
+        });
+    });
+
     describe('length', () => {
         test('counts a surrogate pair as a single character', () => {
             const tagged = new TaggedString('茹𦨭');
             expect(tagged.length()).toBe(2);
+        });
+    });
+
+    describe('verticalizePunctuation', () => {
+        test('preserves spacing marks and section ownership when later sections need segmentation', () => {
+            const formatted = new Formatted([
+                new FormattedSection('လား', null, 1, 'Burmese', null, null),
+                new FormattedSection('、a\u0301', null, 2, 'Other', null, null)
+            ]);
+            const tagged = TaggedString.fromFeature(formatted, 'Test', false);
+            const glyphMap = {
+                Burmese: {default: {}, vertical: {'လ': {id: 0x101C} as StyleGlyph}},
+                Other: {default: {}, vertical: {'、': {id: 0x3001} as StyleGlyph}}
+            };
+
+            tagged.verticalizePunctuation(glyphMap);
+
+            expect(tagged.text).toBe('လား、a\u0301');
+            expect(tagged.graphemes()).toEqual(['လ', 'ာ', 'း', '、', 'a\u0301']);
+            expect(tagged.sectionIndex).toEqual([0, 0, 0, 1, 1]);
         });
     });
 
@@ -37,6 +73,13 @@ describe('TaggedString', () => {
             tagged.trim();
             expect(tagged.text).toBe('茹𦨭');
             expect(tagged.sectionIndex).toHaveLength(2);
+        });
+
+        test('counts a CRLF as the single grapheme cluster it is, so the sections stay level with the text', () => {
+            const tagged = new TaggedString('\r\nabc\r\n', [textSection], Array(5).fill(0));
+            tagged.trim();
+            expect(tagged.text).toBe('abc');
+            expect(tagged.sectionIndex).toHaveLength(tagged.length());
         });
     });
 
@@ -84,12 +127,15 @@ describe('TaggedString', () => {
         };
         const glyphs = {
             'Test': {
-                '97': {id: 0x61, metrics, rect},
-                '98': {id: 0x62, metrics, rect},
-                '99': {id: 0x63, metrics, rect},
-                '40629': {id: 0x9EB5, metrics, rect},
-                '200414': {id: 0x30EDE, metrics, rect},
-            } as any as StyleGlyph,
+                default: {
+                    'a': {id: 0x61, metrics, rect},
+                    'b': {id: 0x62, metrics, rect},
+                    'c': {id: 0x63, metrics, rect},
+                    ' ': {id: 0x20, metrics: {...metrics, advance: 7}, rect},
+                    '\u9EB5': {id: 0x9EB5, metrics, rect},
+                    '\u{30EDE}': {id: 0x30EDE, metrics, rect},
+                } as unknown as Record<string, StyleGlyph>
+            },
         };
         const textSection = {
             scale: 1,
@@ -105,6 +151,12 @@ describe('TaggedString', () => {
         test('keeps ideographic characters together', () => {
             const tagged = new TaggedString('𰻞𰻞麵', [textSection], Array(3).fill(0));
             expect(tagged.determineLineBreaks(0, 300, glyphs, {}, 30)).toEqual([3]);
+        });
+
+        test('breaks lines even when negative spacing shrinks the text below the max width', () => {
+            const spacingNarrowerThanGlyphs = -14;
+            const tagged = new TaggedString('a b', [textSection], Array(3).fill(0));
+            expect(tagged.determineLineBreaks(spacingNarrowerThanGlyphs, 300, glyphs, {}, 30)).toEqual([2, 3]);
         });
     });
 });

@@ -5,8 +5,9 @@ import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions} from '../sourc
 import {VideoSource} from '../source/video_source.ts';
 import {ImageSource} from '../source/image_source.ts';
 import {CanvasSource} from '../source/canvas_source.ts';
-import {type Dispatcher} from '../util/dispatcher.ts';
 
+import type {CalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Event, Evented} from '../util/evented.ts';
 import type {Map} from '../ui/map.ts';
@@ -14,7 +15,6 @@ import type {Tile} from '../tile/tile.ts';
 import type {OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
-import {type CalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 
 const registeredSources = {} as {[key:string]: SourceClass};
 

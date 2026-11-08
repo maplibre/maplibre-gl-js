@@ -1,7 +1,6 @@
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {ResourceType} from '../util/request_manager.ts';
-
 import {browser} from '../util/browser.ts';
 import {coerceSpriteToArray} from '../util/style.ts';
 
@@ -62,7 +61,11 @@ async function doOnceCompleted(
     for (const spriteName in jsonsMap) {
         result[spriteName] = {};
 
-        const context = browser.getImageCanvasContext((await imagesMap[spriteName]).data);
+        const image = (await imagesMap[spriteName]).data;
+        if (!image) {
+            throw new Error(`Could not load sprite image for ${spriteName}: the response is empty`);
+        }
+        const context = browser.getImageCanvasContext(image);
         const json = (await jsonsMap[spriteName]).data;
 
         for (const id in json) {

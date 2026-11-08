@@ -1,9 +1,10 @@
 import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util.ts';
 import {extend} from '../../util/util.ts';
-import {type EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {MessageType} from '../../util/actor_messages.ts';
+
+import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
 let server: FakeServer;
 
@@ -98,7 +99,8 @@ test('removeLayer restores Map.loaded() to true', async () => {
 
     await map.once('render');
     map.removeLayer('layerId');
-    await waitForEvent(map, 'render', () => map.loaded());
+    await expect(waitForEvent(map, 'render', () => map.loaded())).resolves.toBeDefined();
+
     map.remove();
 });
 

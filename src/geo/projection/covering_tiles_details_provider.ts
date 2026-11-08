@@ -1,9 +1,15 @@
-import {type IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
-import {type MercatorCoordinate} from '../mercator_coordinate.ts';
-import {type IReadonlyTransform} from '../transform_interface.ts';
-import {type CoveringTilesOptionsInternal} from './covering_tiles.ts';
+import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
+import type {LngLat} from '../lng_lat.ts';
+import type {MercatorCoordinate} from '../mercator_coordinate.ts';
+import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
 
 export interface CoveringTilesDetailsProvider {
+    /**
+     * Returns the center that the tiles are selected around.
+     */
+    getCenter: (transform: IReadonlyTransform) => LngLat;
+
     /**
      * Returns the distance from the point to the tile
      * @param pointX - point x.

@@ -1,5 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import * as timeControl from '../../util/time_control.ts';
 import {beforeMapTest, sleep} from '../../util/test/util.ts';
 import {Map, type MapOptions} from '../map.ts';
 
@@ -42,6 +43,23 @@ describe('dbclick_zoom', () => {
         map.remove();
     });
 
+    test('DoubleClickZoomHandler zooms around the center when double-clicking above the horizon', () => {
+        const timeControlNow = vi.spyOn(timeControl, 'now');
+        timeControlNow.mockReturnValue(0);
+        const map = createMap({maxPitch: 85, pitch: 80});
+
+        map.getCanvas().dispatchEvent(new MouseEvent('dblclick', {bubbles: true, clientX: 100, clientY: 10}));
+        map._renderTaskQueue.run();
+        timeControlNow.mockReturnValue(400);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lng).toBeCloseTo(0, 10);
+        expect(map.getCenter().lat).toBeCloseTo(0, 10);
+        expect(map.getZoom()).toBeCloseTo(1, 10);
+
+        map.remove();
+    });
+
     test('DoubleClickZoomHandler does not zoom if preventDefault is called on the dblclick event', () => {
         const map = createMap();
 
@@ -64,7 +82,7 @@ describe('dbclick_zoom', () => {
             zoomSnap: 1.0,
             zoom: 9.7
         });
-        const spy = vi.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map._camera, 'easeTo');
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();
@@ -80,7 +98,7 @@ describe('dbclick_zoom', () => {
             zoomSnap: 1.0,
             zoom: 9.7
         });
-        const spy = vi.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map._camera, 'easeTo');
 
         const canvas = map.getCanvas();
         simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
@@ -104,6 +122,23 @@ describe('dbclick_zoom', () => {
 
         await simulateDoubleTap(map, 100);
         expect(zoom).toHaveBeenCalled();
+
+        map.remove();
+    });
+
+    test('DoubleClickZoomHandler zooms around the center on a double tap above the horizon', async () => {
+        const timeControlNow = vi.spyOn(timeControl, 'now');
+        timeControlNow.mockReturnValue(0);
+        const map = createMap({maxPitch: 85, pitch: 80});
+
+        await simulateDoubleTap(map, 100);
+        map._renderTaskQueue.run();
+        timeControlNow.mockReturnValue(400);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lng).toBeCloseTo(0, 10);
+        expect(map.getCenter().lat).toBeCloseTo(0, 10);
+        expect(map.getZoom()).toBeCloseTo(1, 10);
 
         map.remove();
     });
@@ -191,9 +226,9 @@ describe('dbclick_zoom', () => {
         expect(zoom).not.toHaveBeenCalled();
     });
 
-    test('DoubleClickZoomHandler snaps to nearest zoomSnap', () => {
+    test('DoubleClickZoomHandler snaps to nearest zoomSnap on a non-interactive map', () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
-        const spy = vi.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map._camera, 'easeTo');
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();
@@ -203,9 +238,9 @@ describe('dbclick_zoom', () => {
         map.remove();
     });
 
-    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap', async () => {
+    test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap on a non-interactive map', async () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
-        const spy = vi.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map._camera, 'easeTo');
 
         await simulateDoubleTap(map, 100);
 

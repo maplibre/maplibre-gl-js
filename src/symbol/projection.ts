@@ -1,11 +1,14 @@
 import Point from '@mapbox/point-geometry';
-
 import {mat2, mat4, vec2, vec4} from 'gl-matrix';
+import {getSymbolElevation} from './symbol_elevation.ts';
 import * as symbolSize from './symbol_size.ts';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
+import {fastInvertSkewMat4} from '../util/fast_maths.ts';
+import {WritingMode} from '../symbol/shaping.ts';
+import {findLineIntersection} from '../util/util.ts';
 
 import type {Painter} from '../render/painter.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
@@ -13,11 +16,8 @@ import type {
     SymbolDynamicLayoutArray,
     PlacedSymbol,
 } from '../data/array_types.g.ts';
-import {WritingMode} from '../symbol/shaping.ts';
-import {findLineIntersection} from '../util/util.ts';
-import {type UnwrappedTileID} from '../tile/tile_id.ts';
-import {type StructArray} from '../util/struct_array.ts';
-import {fastInvertSkewMat4} from '../util/fast_maths.ts';
+import type {UnwrappedTileID} from '../tile/tile_id.ts';
+import type {StructArray} from '../util/struct_array.ts';
 
 /**
  * Pre-allocate objects to avoid online allocation
@@ -175,13 +175,20 @@ export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec
 }
 
 /**
- * Projects a point using a specified matrix, including the perspective divide.
- * Uses a fast path if `getElevation` is undefined.
+ * Resolves the elevation of the symbol described by `projectionContext` at a tile coordinate.
  */
-export function projectWithMatrix(x: number, y: number, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
+export function elevationAt(projectionContext: SymbolProjectionContext, x: number, y: number): number | undefined {
+    return getSymbolElevation(projectionContext.getElevation, x, y, projectionContext.heightOffset ?? 0, projectionContext.heightAnchorGround ?? true);
+}
+
+/**
+ * Projects a point using a specified matrix, including the perspective divide.
+ * Uses a fast path if `elevation` is undefined.
+ */
+export function projectWithMatrix(x: number, y: number, matrix: mat4, elevation?: number): PointProjection {
     let pos;
-    if (getElevation) { // slow because of handle z-index
-        pos = [x, y, getElevation(x, y), 1] as vec4;
+    if (elevation != null) { // slow because of handle z-index
+        pos = [x, y, elevation, 1] as vec4;
         vec4.transformMat4(pos, pos, matrix);
     } else { // fast because of ignore z-index
         pos = [x, y, 0, 1] as vec4;
@@ -215,6 +222,7 @@ function isVisible(p: Point,
  */
 export function updateLineLabels(bucket: SymbolBucket,
     painter: Painter,
+    transform: IReadonlyTransform,
     isText: boolean,
     pitchedLabelPlaneMatrix: mat4,
     pitchedLabelPlaneMatrixInverse: mat4,
@@ -222,13 +230,11 @@ export function updateLineLabels(bucket: SymbolBucket,
     keepUpright: boolean,
     rotateToLine: boolean,
     unwrappedTileID: UnwrappedTileID,
-    viewportWidth: number,
-    viewportHeight: number,
     translation: [number, number],
-    getElevation: (x: number, y: number) => number): void {
+    getElevation: GetElevation | undefined): void {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
-    const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, painter.transform.zoom);
+    const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, transform.zoom);
 
     const clippingBuffer: [number, number] = [256 / painter.width * 2 + 1, 256 / painter.height * 2 + 1];
 
@@ -240,7 +246,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     const lineVertexArray = bucket.lineVertexArray;
     const placedSymbols = isText ? bucket.text.placedSymbolArray : bucket.icon.placedSymbolArray;
 
-    const aspectRatio = painter.transform.width / painter.transform.height;
+    const aspectRatio = transform.width / transform.height;
 
     let useVertical = false;
 
@@ -266,11 +272,11 @@ export function updateLineLabels(bucket: SymbolBucket,
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            transform: painter.transform,
+            transform,
             tileAnchorPoint,
             unwrappedTileID,
-            width: viewportWidth,
-            height: viewportHeight,
+            width: transform.width,
+            height: transform.height,
             translation
         };
 
@@ -283,10 +289,10 @@ export function updateLineLabels(bucket: SymbolBucket,
         }
 
         const cameraToAnchorDistance = anchorPos.signedDistanceFromCamera;
-        const perspectiveRatio = getPerspectiveRatio(painter.transform.cameraToCenterDistance, cameraToAnchorDistance);
+        const perspectiveRatio = getPerspectiveRatio(transform.cameraToCenterDistance, cameraToAnchorDistance);
 
         const fontSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
-        const pitchScaledFontSize = pitchWithMap ? (fontSize * painter.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
+        const pitchScaledFontSize = pitchWithMap ? (fontSize * transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
 
         const placeUnflipped = placeGlyphsAlongLine({
             projectionContext,
@@ -588,11 +594,20 @@ export type SymbolProjectionContext = {
      */
     pitchedLabelPlaneMatrix: mat4;
     /**
-     * Function to get elevation at a point
+     * Function to get elevation at a point, absent when the map has no terrain
      * @param x - the x coordinate
      * @param y - the y coordinate
     */
-    getElevation: (x: number, y: number) => number;
+    getElevation: GetElevation | undefined;
+    /**
+     * The evaluated `symbol-height-offset` of the symbol being projected, in meters. Defaults to 0.
+     */
+    heightOffset?: number;
+    /**
+     * Whether `symbol-height-anchor` is `ground`, so that `heightOffset` is measured from the
+     * terrain surface rather than from the zero elevation datum. Defaults to true.
+     */
+    heightAnchorGround?: boolean;
     /**
      * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera,
      * but still convenient to pass it inside this type.
@@ -674,10 +689,10 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
     const translatedY = y + projectionContext.translation[1];
     let projection;
     if (projectionContext.pitchWithMap) {
-        projection = projectWithMatrix(translatedX, translatedY, projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation);
+        projection = projectWithMatrix(translatedX, translatedY, projectionContext.pitchedLabelPlaneMatrix, elevationAt(projectionContext, translatedX, translatedY));
         projection.isOccluded = false;
     } else {
-        projection = projectionContext.transform.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, projectionContext.getElevation);
+        projection = projectionContext.transform.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, elevationAt(projectionContext, translatedX, translatedY));
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
     }
@@ -688,7 +703,9 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
     if (projectionContext.pitchWithMap) {
         const pos = [x, y, 0, 1] as vec4;
         vec4.transformMat4(pos, pos, pitchedLabelPlaneMatrixInverse);
-        return projectionContext.transform.projectTileCoordinates(pos[0] / pos[3], pos[1] / pos[3], projectionContext.unwrappedTileID, projectionContext.getElevation).point;
+        const tileX = pos[0] / pos[3];
+        const tileY = pos[1] / pos[3];
+        return projectionContext.transform.projectTileCoordinates(tileX, tileY, projectionContext.unwrappedTileID, elevationAt(projectionContext, tileX, tileY)).point;
     } else {
         return {
             x: (x / projectionContext.width) * 2.0 - 1.0,
@@ -701,7 +718,7 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
  * Projects the given point in tile coordinates to the GL clip space (-1..1).
  */
 export function projectTileCoordinatesToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
-    const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, projectionContext.getElevation);
+    const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, elevationAt(projectionContext, x, y));
     return projection;
 }
 
@@ -719,6 +736,11 @@ export function transformToOffsetNormal(segmentVector: Point, offset: number, di
 /**
  * Construct offset line segments for the current segment and the next segment, then extend/shrink
  * the segments until they intersect. If the segments are parallel, then they will touch with no modification.
+ *
+ * Where the line doubles back on itself, the two offset segments are parallel but for rounding error, so their
+ * intersection lands arbitrarily far away, possibly behind the start of the current segment, which would lay the
+ * glyphs out backwards; they are joined at the offset current vertex instead. Features with the same label are merged
+ * end to end, so two features running in opposite directions form such a line.
  *
  * @param index - Index of the current vertex
  * @param prevToCurrentOffsetNormal - Normal vector of the line segment from the previous vertex to the current vertex
@@ -759,9 +781,32 @@ export function findOffsetIntersectionPoint(
 
     // find the intersection of these two lines
     // if the lines are parallel, offsetCurrent/offsetNextBegin will touch
-    projectionContext.projectionCache.offsets[index] = findLineIntersection(offsetPreviousVertex, offsetCurrentVertex, offsetNextSegmentBegin, offsetNextSegmentEnd) || offsetCurrentVertex;
+    const doublesBack = isLineDoublingBack(index, syntheticVertexArgs.direction, lineStartIndex, lineEndIndex, projectionContext.lineVertexArray);
+    projectionContext.projectionCache.offsets[index] = doublesBack ? offsetCurrentVertex :
+        findLineIntersection(offsetPreviousVertex, offsetCurrentVertex, offsetNextSegmentBegin, offsetNextSegmentEnd) || offsetCurrentVertex;
 
     return projectionContext.projectionCache.offsets[index];
+}
+
+/**
+ * Whether the line turns straight back on itself at the vertex `index`, reached by walking it in `direction`: the
+ * segment after the vertex runs along the segment before it, the other way. Tile coordinates are integers, so the test
+ * is exact.
+ *
+ * A vertex without a neighbour on both sides within `[lineStartIndex, lineEndIndex)` is not a turn at all, so a line
+ * end, or a line of a single point, never doubles back. A zero-length segment from a repeated vertex has no direction
+ * and does not count either.
+ */
+function isLineDoublingBack(index: number, direction: number, lineStartIndex: number, lineEndIndex: number, lineVertexArray: SymbolLineVertexArray): boolean {
+    const previous = index - direction;
+    const next = index + direction;
+    if (Math.min(previous, next) < lineStartIndex || Math.max(previous, next) >= lineEndIndex) return false;
+
+    const inX = lineVertexArray.getx(index) - lineVertexArray.getx(previous);
+    const inY = lineVertexArray.gety(index) - lineVertexArray.gety(previous);
+    const outX = lineVertexArray.getx(next) - lineVertexArray.getx(index);
+    const outY = lineVertexArray.gety(next) - lineVertexArray.gety(index);
+    return inX * outY - inY * outX === 0 && inX * outX + inY * outY < 0;
 }
 
 /**
@@ -939,12 +984,12 @@ export function projectPathSpecialProjection(projectedPath: Point[], projectionC
     const inverseLabelPlaneMatrix = tmpMat4;
     fastInvertSkewMat4(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
-        const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, projectionContext.getElevation);
+        const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, elevationAt(projectionContext, p.x, p.y));
         const projected = projectionContext.transform.projectTileCoordinates(
             backProjected.point.x,
             backProjected.point.y,
             projectionContext.unwrappedTileID,
-            projectionContext.getElevation
+            elevationAt(projectionContext, backProjected.point.x, backProjected.point.y)
         );
         projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionContext.width;
         projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionContext.height;

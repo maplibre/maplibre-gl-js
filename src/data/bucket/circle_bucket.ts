@@ -1,20 +1,21 @@
 import {CircleLayoutArray} from '../array_types.g.ts';
-
 import {members as layoutAttributes} from './circle_attributes.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray} from '../index_array_type.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
-import {EXTENT} from '../extent.ts';
+import {isOutsideTile} from '../extent_bounds.ts';
 import {register} from '../../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
+import type {CircleGranularity} from '../../render/subdivision_granularity_settings.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -26,7 +27,6 @@ import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
-import {type CircleGranularity} from '../../render/subdivision_granularity_settings.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const VERTEX_MIN_VALUE = -32768; // -(2^15)
@@ -148,6 +148,8 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         });
     }
 
+    addFeatures(_parameters: BucketDependencyParameters): void {}
+
     isEmpty(): boolean {
         return this.layoutVertexArray.length === 0;
     }
@@ -205,8 +207,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
                 const vx = point.x;
                 const vy = point.y;
 
-                // Do not include points that are outside the tile boundaries.
-                if (vx < 0 || vx >= EXTENT || vy < 0 || vy >= EXTENT) {
+                if (isOutsideTile(point)) {
                     continue;
                 }
 

@@ -4,7 +4,7 @@ uniform float u_opacity;
 uniform float u_intensity;
 uniform highp float u_globe_extrude_scale;
 
-layout(location = 0) in vec2 a_pos;
+layout(location = 0) in ivec2 a_pos;
 
 out vec2 v_extrude;
 
@@ -24,8 +24,8 @@ void main(void) {
     #pragma maplibre: initialize mediump float radius
 
     // decode the extrusion vector that we snuck into the a_pos vector
-    vec2 pos_raw = a_pos + 32768.0;
-    vec2 unscaled_extrude = vec2(mod(pos_raw, 8.0) / 7.0 * 2.0 - 1.0);
+    ivec2 pos_raw = a_pos + 32768;
+    vec2 unscaled_extrude = vec2(pos_raw & 7) / 7.0 * 2.0 - 1.0;
 
     // This 'extrude' comes in ranging from [-1, -1], to [1, 1].  We'll use
     // it to produce the vertices of a square mesh framing the point feature
@@ -49,7 +49,7 @@ void main(void) {
 
     // Divide a_pos by 8, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(pos_raw / 8.0);
+    vec2 circle_center = vec2(pos_raw >> 3);
 
 #ifdef GLOBE
     vec2 angles = v_extrude * radius * u_globe_extrude_scale;

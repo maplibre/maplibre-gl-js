@@ -21,10 +21,6 @@
 <script type="module">
     import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
 
-    maplibregl.setRTLTextPlugin(
-        'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js'
-    );
-
     const map = new maplibregl.Map({
         container: 'map', // container id
         style: 'https://tiles.openfreemap.org/styles/bright', // style URL

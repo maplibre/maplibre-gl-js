@@ -5,12 +5,14 @@ import {Evented} from '../../util/evented.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
-import {type Projection, type TileMeshUsage} from './projection.ts';
-import {type PreparedShader} from '../../shaders/shaders.ts';
-import {type SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {type Context} from '../../webgl/context.ts';
-import {type CanonicalTileID} from '../../tile/tile_id.ts';
-import {type Mesh} from '../../render/mesh.ts';
+
+import type {Projection, TileMeshUsage} from './projection.ts';
+import type {PreparedShader} from '../../shaders/shaders.ts';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
+import type {Context} from '../../webgl/context.ts';
+import type {CanonicalTileID} from '../../tile/tile_id.ts';
+import type {Mesh} from '../../render/mesh.ts';
+import type {WorldCoordinateHelper} from '../transform_interface.ts';
 
 export class GlobeProjection extends Evented implements Projection {
     properties: PossiblyEvaluated<ProjectionProps, ProjectionPropsPossiblyEvaluated>;
@@ -62,6 +64,10 @@ export class GlobeProjection extends Evented implements Projection {
 
     get name(): ProjectionSpecification['type'] {
         return 'globe';
+    }
+
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return this.currentProjection.worldCoordinateHelper;
     }
 
     get useSubdivision(): boolean {

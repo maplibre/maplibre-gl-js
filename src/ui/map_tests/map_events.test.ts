@@ -1,12 +1,13 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
-import {type StyleLayer} from '../../style/style_layer.ts';
-import {createMap, beforeMapTest, createStyle, sleep, createTerrain} from '../../util/test/util.ts';
-import {type MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
-import {type MapLibreEvent} from '../events.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource, sleep, createTerrain} from '../../util/test/util.ts';
+import {type MapLibreEvent, MapSourceDataEvent} from '../events.ts';
 import {Map} from '../map.ts';
-import {Event as EventedEvent, ErrorEvent} from '../../util/evented.ts';
-import {type StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {ErrorEvent} from '../../util/evented.ts';
+
+import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -247,7 +248,7 @@ describe('map events', () => {
         expect(handler.onMove).toHaveBeenCalledTimes(1);
     });
 
-    test('Map.on allows a listener to infer the event type ', () => {
+    test('Map.on allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -411,7 +412,7 @@ describe('map events', () => {
         expect(handler.onMove).toHaveBeenCalledTimes(0);
     });
 
-    test('Map.off allows a listener to infer the event type ', () => {
+    test('Map.off allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -440,7 +441,7 @@ describe('map events', () => {
         expect(handler.onMoveOnce).toHaveBeenCalledTimes(1);
     });
 
-    test('Map.once allows a listener to infer the event type ', () => {
+    test('Map.once allows a listener to infer the event type', () => {
         const map = createMap();
 
         const spy = vi.fn();
@@ -467,6 +468,25 @@ describe('map events', () => {
         simulate.click(map.getCanvas());
 
         expect(spy).not.toHaveBeenCalled();
+    });
+
+    test('Map.once with layerId fires on the first hit, not the first event', async () => {
+        const map = createMap();
+        await map.once('load');
+        map.addSource('source', createStyleSource());
+        map.addLayer({id: 'layer', type: 'circle', source: 'source'});
+        const queryRenderedFeatures = vi.spyOn(map.style, 'queryRenderedFeatures');
+        const spy = vi.fn();
+
+        map.once('click', 'layer', spy);
+        queryRenderedFeatures.mockReturnValue([]);
+        simulate.click(map.getCanvas());
+        expect(spy).not.toHaveBeenCalled();
+
+        queryRenderedFeatures.mockReturnValue([{} as MapGeoJSONFeature]);
+        simulate.click(map.getCanvas());
+        simulate.click(map.getCanvas());
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     const mouseInteractionEvents = ['mouseenter', 'mouseover'] as const;
@@ -964,7 +984,7 @@ describe('map events', () => {
         map.on('load', loadHandler);
         await sleep(1);
 
-        expect(loadHandler).toThrowError();
+        expect(loadHandler).toThrow('Error in load handler');
     });
 
     test('no idle event during move', async () => {
@@ -980,8 +1000,8 @@ describe('map events', () => {
     test('fires sourcedataabort event on dataabort event', async () => {
         const map = createMap();
         const sourcePromise = map.once('sourcedataabort');
-        map.fire(new EventedEvent('dataabort'));
-        await sourcePromise;
+        map.fire(new MapSourceDataEvent('dataabort'));
+        await expect(sourcePromise).resolves.toBeDefined();
     });
 
     test('getZoom on moveend is the same as after the map end moving, with terrain on', async () => {
@@ -1119,6 +1139,18 @@ describe('map events', () => {
     });
 
     describe('projectiontransition event', () => {
+        test('projectiontransition on the first style load fires once the style\'s layers exist', async () => {
+            const map = createMap({style: {version: 8, sources: {}, layers: [{id: 'background', type: 'background'}]}});
+            let layerIdAtTransition: string | undefined;
+            map.on('projectiontransition', () => {
+                layerIdAtTransition = map.getLayer('background')?.id;
+            });
+
+            await map.once('style.load');
+
+            expect(layerIdAtTransition).toBe('background');
+        });
+
         test('projectiontransition events is fired when setProjection is called', async () => {
             const map = createMap();
 

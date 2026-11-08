@@ -1,44 +1,52 @@
 import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
 import {TransformHelper} from '../transform_helper.ts';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, type Mat4f32} from '../../util/util.ts';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRadians, radiansToDegrees, scaleZoom, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, remapSaturate, warnOnce, zoomScale, type Mat4f32} from '../../util/util.ts';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
-import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, projectTileCoordinatesToSphere, sphereSurfacePointToCoordinates} from './globe_utils.ts';
+import {getMercatorTileCoordinates, tileCoordinatesToMercatorCoordinates} from './mercator_utils.ts';
+import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, getZoomAdjustment, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, planetScaleAtLatitude, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
+import {getBearing, getCenterOffset, getWorldSize} from '../camera_state.ts';
 
-import type {Terrain} from '../../render/terrain.ts';
+import type {CameraState} from '../camera_state.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {Terrain} from '../../render/terrain.ts';
+import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, NearFarZ, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {TransformOptions} from '../transform_helper.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
+const GLOBE_SAMPLES = 256;
+const GLOBE_BISECT_EPSILON_T = 1e-12;
+/** Latitudes outside the mercator range project past the world edge; the globe mesh still covers them. */
+const MAX_MERCATOR_Y = 1 - 1e-9;
+/** Two points on the unit globe closer than this, a micrometre, are the same point. */
+const SAME_POINT_DISTANCE = 1e-12;
+/** A camera whose horizontal offset is this small relative to its distance is straight above the center. */
+const STRAIGHT_ABOVE_RATIO = 1e-9;
 /**
- * Describes the intersection of ray and sphere.
- * When null, no intersection occurred.
- * When both "t" values are the same, the ray just touched the sphere's surface.
- * When both value are different, a full intersection occurred.
+ * How many times larger than the viewport the area past the mercator edge has grown when the center is back on that edge.
+ * While the area fits in the viewport the center can be on the pole.
  */
-type RaySphereIntersection = {
-    /**
-     * The ray parameter for intersection that is "less" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
-     * The intersection point can be computed as `origin + direction * tMin`.
-     */
-    tMin: number;
-    /**
-     * The ray parameter for intersection that is "more" along the ray direction.
-     * Note that this value can be negative, meaning that this intersection occurred before the ray's origin.
-     * The intersection point can be computed as `origin + direction * tMax`.
-     */
-    tMax: number;
-} | null;
+const POLE_AREA_FADE_SCALE = 4;
+
+/**
+ * @internal
+ * A ray to intersect with the terrain surface, in globe coordinates:
+ * `origin` and the unit-length `direction` are on the unit sphere, and terrain elevations are in meters above sea level.
+ */
+type GlobeRay = {
+    index: TerrainCoverageIndex;
+    exaggeration: number;
+    origin: vec3;
+    direction: vec3;
+};
 
 export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
@@ -55,9 +63,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
     get pixelsToGLUnits(): [number, number] {
         return this._helper.pixelsToGLUnits;
-    }
-    get centerOffset(): Point {
-        return this._helper.centerOffset;
     }
     get size(): Point {
         return this._helper.size;
@@ -119,8 +124,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._helper.isPaddingEqual(padding);
     }
-    resize(width: number, height: number): void {
-        this._helper.resize(width, height);
+    resize(width: number, height: number, constrain: boolean = true): void {
+        this._helper.resize(width, height, constrain);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
@@ -138,7 +143,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         this._helper.clearNearFarZOverride();
     }
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
+        return this._helper.getCameraQueryGeometry(queryGeometry);
     }
 
     get tileSize(): number {
@@ -226,10 +231,13 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.constrainOverride;
     }
     public get nearZ(): number {
-        return this._helper.nearZ;
+        return this._nearZ;
     }
     public get farZ(): number {
-        return this._helper.farZ;
+        return this._farZ;
+    }
+    public get nearFarZOverride(): NearFarZ | null {
+        return this._helper.nearFarZOverride;
     }
     public get autoCalculateNearFarZ(): boolean {
         return this._helper.autoCalculateNearFarZ;
@@ -250,6 +258,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     private _globeProjMatrixInverted: mat4 = createIdentityMat4f64();
 
     private _cameraPosition: vec3 = createVec3f64();
+    private _nearZ: number;
+    private _farZ: number;
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
      * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
@@ -257,12 +267,22 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
-    public constructor(options?: TransformOptions) {
-        this._helper = new TransformHelper({
+    /**
+     * @param options - Initial state. Ignored when `sharedHelper` is given, which already carries it.
+     * @param sharedHelper - Camera to use instead of owning one, so that a composing transform such as
+     * {@link GlobeTransform} keeps a single copy of the state rather than one per child. Its owner then drives
+     * {@link _calcMatrices}, because a helper has only one `calcMatrices` callback.
+     */
+    public constructor(options?: TransformOptions, sharedHelper?: TransformHelper) {
+        this._helper = sharedHelper ?? new TransformHelper({
             calcMatrices: () => this._calcMatrices(),
             defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
         }, options);
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
+    }
+
+    private get _cameraState(): Readonly<CameraState> {
+        return this._helper.cameraState;
     }
 
     clone(): ITransform {
@@ -297,7 +317,7 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
-        const mercatorTileCoordinates = this._helper.getMercatorTileCoordinates(overscaledTileID);
+        const mercatorTileCoordinates = getMercatorTileCoordinates(overscaledTileID);
         return {
             mainMatrix: this._globeViewProjMatrix32f,
             tileMercatorCoords: mercatorTileCoordinates,
@@ -339,9 +359,9 @@ export class VerticalPerspectiveTransform implements ITransform {
         // - "T" is any point where a tangent line from "cam" touches the globe surface
         // - elevation is assumed to be zero - globe rendering must be separate from terrain rendering anyway
 
-        const pitch = this.pitchInRadians;
+        const pitch = this._cameraState.pitchInRadians;
         // scale things so that the globe radius is 1
-        const distanceCameraToB = this.cameraToCenterDistance / globeRadiusPixels;
+        const distanceCameraToB = this._cameraState.cameraToCenterDistance / globeRadiusPixels;
         const radius = 1;
 
         // Distance from camera to "A" - the point at the same elevation as camera, right above center point on globe
@@ -365,22 +385,36 @@ export class VerticalPerspectiveTransform implements ITransform {
         // Note the swizzled components
         const planeVector: vec3 = [0, vectorCtoCamX, vectorCtoCamY];
         // Apply transforms - lat, lng and angle (NOT pitch - already accounted for, as it affects the tangent plane)
-        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], -this.bearingInRadians);
-        vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * this.center.lat * Math.PI / 180.0);
-        vec3.rotateY(planeVector, planeVector, [0, 0, 0], this.center.lng * Math.PI / 180.0);
+        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], -this._cameraState.bearingInRadians);
+        vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * this._cameraState.center.lat * Math.PI / 180.0);
+        vec3.rotateY(planeVector, planeVector, [0, 0, 0], this._cameraState.center.lng * Math.PI / 180.0);
         // Normalize the plane vector
         const scale = 1 / vec3.length(planeVector);
         vec3.scale(planeVector, planeVector, scale);
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    public isLocationOccluded(location: LngLat): boolean {
-        return !this.isSurfacePointVisible(angularCoordinatesToSurfaceVector(location));
+    /** {@inheritDoc ITransform.isLocationOccluded} */
+    public isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+        const coverage = terrain?.getCoverageIndex();
+        elevation ??= coverage ? terrain.getElevationForLngLat(lngLat, this._cameraState.tileZoom) : 0;
+        const location = raisedSurfaceVector(lngLat, elevation);
+        if (!this.isSurfacePointVisible(location)) return true;
+        if (!coverage) return false;
+
+        const p = this._projectSurfacePointToScreen(location);
+        const origin = this.cameraPosition;
+        const direction = this.getRayDirectionFromPixel(p);
+        const tLocation = rayParameter(origin, direction, location);
+        if (tLocation <= 0) return true;
+
+        const hit = this.screenTerrainPointToMercatorCoordinate(p, terrain);
+        return hit != null && rayParameter(origin, direction, raisedSurfaceVector(hit.toLngLat(), hit.z)) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
-        const sphereX = this._helper._center.lng * Math.PI / 180.0;
-        const sphereY = this._helper._center.lat * Math.PI / 180.0;
+        const sphereX = this._cameraState.center.lng * Math.PI / 180.0;
+        const sphereY = this._cameraState.center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
         const spherePos: vec3 = [
@@ -407,11 +441,11 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     public getPixelScale(): number {
-        return 1.0 / Math.cos(this._helper._center.lat * Math.PI / 180);
+        return 1.0 / planetScaleAtLatitude(this._cameraState.center.lat);
     }
 
     public getCircleRadiusCorrection(): number {
-        return Math.cos(this._helper._center.lat * Math.PI / 180);
+        return planetScaleAtLatitude(this._cameraState.center.lat);
     }
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
@@ -420,19 +454,23 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this.getCircleRadiusCorrection() / Math.cos(angular[1]);
     }
 
-    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
+    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
         const canonical = unwrappedTileID.canonical;
         const spherePos = projectTileCoordinatesToSphere(x, y, canonical.x, canonical.y, canonical.z);
-        const elevation = getElevation ? getElevation(x, y) : 0.0;
-        const vectorMultiplier = 1.0 + elevation / earthRadius;
-        const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
+        const vectorMultiplier = 1.0 + (elevation ?? 0.0) / earthRadius;
+        const elevatedX = spherePos[0] * vectorMultiplier;
+        const elevatedY = spherePos[1] * vectorMultiplier;
+        const elevatedZ = spherePos[2] * vectorMultiplier;
+        const pos: vec4 = [elevatedX, elevatedY, elevatedZ, 1];
         vec4.transformMat4(pos, pos, this._globeViewProjMatrixF64);
 
-        // Also check whether the point projects to the backfacing side of the sphere.
-        const plane = this._cachedClippingPlane;
-        // dot(position on sphere, occlusion plane equation)
-        const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
-        const isOccluded = dotResult < 0.0;
+        let isOccluded: boolean;
+        if (vectorMultiplier <= 1.0) {
+            const plane = this._cachedClippingPlane;
+            isOccluded = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3] < 0.0;
+        } else {
+            isOccluded = this._isLineOfSightBlocked(elevatedX, elevatedY, elevatedZ);
+        }
 
         return {
             point: new Point(pos[0] / pos[3], pos[1] / pos[3]),
@@ -441,33 +479,50 @@ export class VerticalPerspectiveTransform implements ITransform {
         };
     }
 
-    private _calcMatrices(): void {
-        if (!this._helper._width || !this._helper._height) {
-            return;
-        }
+    /**
+     * True when the segment from the camera to the given point, both in unit-globe coordinates, passes through the planet.
+     */
+    private _isLineOfSightBlocked(x: number, y: number, z: number): boolean {
+        const cam = this._cameraPosition;
+        const dx = x - cam[0];
+        const dy = y - cam[1];
+        const dz = z - cam[2];
+        const lengthSq = dx * dx + dy * dy + dz * dz;
+        if (lengthSq === 0) return false;
+        const t = clamp(-(cam[0] * dx + cam[1] * dy + cam[2] * dz) / lengthSq, 0, 1);
+        const cx = cam[0] + t * dx;
+        const cy = cam[1] + t * dy;
+        const cz = cam[2] + t * dz;
+        return cx * cx + cy * cy + cz * cz < 1.0;
+    }
 
-        const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
+    /**
+     * The computed far plane only has to be far enough to take in the globe, since the vertex shader computes its own
+     * depth.
+     * @param nearFarZ - The depth range to use instead of computing one, by default the camera state's override.
+     */
+    _calcMatrices(nearFarZ: NearFarZ | null = this._cameraState.nearFarZOverride): void {
+        const globeRadiusPixels = getGlobeRadiusPixels(getWorldSize(this._cameraState), this._cameraState.center.lat);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4f64();
-        if (this._helper.autoCalculateNearFarZ) {
-            this._helper._nearZ = 0.5;
-            this._helper._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
-        }
-        mat4.perspective(globeMatrix, this.fovInRadians, this.width / this.height, this._helper._nearZ, this._helper._farZ);
+        const {nearZ, farZ} = nearFarZ ?? {nearZ: 0.5, farZ: this._cameraState.cameraToCenterDistance + globeRadiusPixels * 2.0};
+        this._nearZ = nearZ;
+        this._farZ = farZ;
+        mat4.perspective(globeMatrix, this._cameraState.fovInRadians, this._cameraState.width / this._cameraState.height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
-        const offset = this.centerOffset;
-        globeMatrix[8] = -offset.x * 2 / this._helper._width;
-        globeMatrix[9] = offset.y * 2 / this._helper._height;
+        const offset = getCenterOffset(this._cameraState);
+        globeMatrix[8] = -offset.x * 2 / this._cameraState.width;
+        globeMatrix[9] = offset.y * 2 / this._cameraState.height;
         this._projectionMatrix = mat4.clone(globeMatrix);
 
         this._globeProjMatrixInverted = createMat4f64();
         mat4.invert(this._globeProjMatrixInverted, globeMatrix);
-        mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
-        mat4.rotateZ(globeMatrix, globeMatrix, this.rollInRadians);
-        mat4.rotateX(globeMatrix, globeMatrix, -this.pitchInRadians);
-        mat4.rotateZ(globeMatrix, globeMatrix, this.bearingInRadians);
+        mat4.translate(globeMatrix, globeMatrix, [0, 0, -this._cameraState.cameraToCenterDistance]);
+        mat4.rotateZ(globeMatrix, globeMatrix, this._cameraState.rollInRadians);
+        mat4.rotateX(globeMatrix, globeMatrix, -this._cameraState.pitchInRadians);
+        mat4.rotateZ(globeMatrix, globeMatrix, this._cameraState.bearingInRadians);
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
@@ -476,8 +531,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         scaleVec[1] = globeRadiusPixels;
         scaleVec[2] = globeRadiusPixels;
 
-        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0);
-        mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
+        mat4.rotateX(globeMatrix, globeMatrix, this._cameraState.center.lat * Math.PI / 180.0);
+        mat4.rotateY(globeMatrix, globeMatrix, -this._cameraState.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrixF64 = globeMatrix;
         this._globeViewProjMatrix32f = new Float32Array(globeMatrix);
@@ -487,13 +542,13 @@ export class VerticalPerspectiveTransform implements ITransform {
 
         const zero = createVec3f64();
         this._cameraPosition = createVec3f64();
-        this._cameraPosition[2] = this.cameraToCenterDistance / globeRadiusPixels;
-        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.rollInRadians);
-        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitchInRadians);
-        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this.bearingInRadians);
+        this._cameraPosition[2] = this._cameraState.cameraToCenterDistance / globeRadiusPixels;
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this._cameraState.rollInRadians);
+        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this._cameraState.pitchInRadians);
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this._cameraState.bearingInRadians);
         vec3.add(this._cameraPosition, this._cameraPosition, [0, 0, 1]);
-        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, -this.center.lat * Math.PI / 180.0);
-        vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180.0);
+        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, -this._cameraState.center.lat * Math.PI / 180.0);
+        vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this._cameraState.center.lng * Math.PI / 180.0);
 
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
 
@@ -541,43 +596,40 @@ export class VerticalPerspectiveTransform implements ITransform {
         return this._helper.getCameraPoint();
     }
 
+    /**
+     * The altitude of the rendered camera above sea level. The sphere keeps the center point at sea level whatever its
+     * elevation (`_calcMatrices` does not apply it), so unlike on mercator the center elevation does not lift the camera.
+     * {@link calculateCameraOptionsFromTo} is the inverse.
+     */
     getCameraAltitude(): number {
-        return this._helper.getCameraAltitude();
+        // The camera position is in unit-globe coordinates, with the sea-level surface at radius 1.
+        return (vec3.length(this._cameraPosition) - 1) * earthRadius;
     }
 
     getCameraLngLat(): LngLat {
-        return this._helper.getCameraLngLat();
+        const surface = createVec3f64();
+        vec3.normalize(surface, this._cameraPosition);
+        return sphereSurfacePointToCoordinates(surface);
     }
 
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        if (!this._globeViewProjMatrixF64) {
-            return 1.0; // _calcMatrices hasn't run yet
-        }
-        const vec = angularCoordinatesToSurfaceVector(lngLat);
-        vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
-        const result = createVec4f64();
-        vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeViewProjMatrixF64);
-        return result[2] / result[3];
-    }
-
-    populateCache(_coords: OverscaledTileID[]): void {
-        // Do nothing
+    get worldCoordinateHelper(): WorldCoordinateHelper {
+        return this._helper.worldCoordinateHelper;
     }
 
     getBounds(): LngLatBounds {
-        const xMid = this.width * 0.5;
-        const yMid = this.height * 0.5;
+        const xMid = this._cameraState.width * 0.5;
+        const yMid = this._cameraState.height * 0.5;
 
         // LngLat extremes will probably tend to be in screen corners or in middle of screen edges.
         // These test points should result in a pretty good approximation.
         const testPoints = [
             new Point(0, 0),
             new Point(xMid, 0),
-            new Point(this.width, 0),
-            new Point(this.width, yMid),
-            new Point(this.width, this.height),
-            new Point(xMid, this.height),
-            new Point(0, this.height),
+            new Point(this._cameraState.width, 0),
+            new Point(this._cameraState.width, yMid),
+            new Point(this._cameraState.width, this._cameraState.height),
+            new Point(xMid, this._cameraState.height),
+            new Point(0, this._cameraState.height),
             new Point(0, yMid),
         ];
 
@@ -591,7 +643,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         // We also take advantage of the fact that `unprojectScreenPoint` will snap pixels
         // outside the planet to the closest point on the planet's horizon.
         let mostEast = 0, mostWest = 0, mostNorth = 0, mostSouth = 0; // We will store these values signed.
-        const center = this.center;
+        const center = this._cameraState.center;
         for (const p of projectedPoints) {
             const dLng = differenceOfAnglesDegrees(center.lng, p.lng);
             const dLat = differenceOfAnglesDegrees(center.lat, p.lat);
@@ -639,16 +691,28 @@ export class VerticalPerspectiveTransform implements ITransform {
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
-        const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        const constrainedZoom = clamp(+zoom, this._cameraState.minZoom + getZoomAdjustment(0, lngLat.lat), this._cameraState.maxZoom);
+        const maxLatitude = this._getMaxLatitude(constrainedZoom);
         return {
             center: new LngLat(
                 lngLat.lng,
-                constrainedLat
+                clamp(lngLat.lat, -maxLatitude, maxLatitude)
             ),
             zoom: constrainedZoom
         };
     };
+
+    /**
+     * Returns how close to a pole the center can be at the given zoom. Past the mercator edge there is no data,
+     * so the center reaches the pole only while that area fits in the viewport, and eases back to the edge as it outgrows it.
+     */
+    private _getMaxLatitude(zoom: number): number {
+        const areaRadians = degreesToRadians(90 - MAX_VALID_LATITUDE);
+        const areaPixels = getGlobeRadiusPixels(this._cameraState.tileSize * zoomScale(zoom), MAX_VALID_LATITUDE) * areaRadians;
+        const reachPixels = Math.min(this._cameraState.width, this._cameraState.height) / 2;
+        const centerPixels = Math.min(areaPixels, reachPixels) * remapSaturate(areaPixels, reachPixels, reachPixels * POLE_AREA_FADE_SCALE, 1, 0);
+        return MAX_VALID_LATITUDE + radiansToDegrees(areaRadians * centerPixels / areaPixels);
+    }
 
     applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         return this._helper.applyConstrain(lngLat, zoom);
@@ -659,10 +723,51 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
+     * Inverts the camera placement of `_calcMatrices` in unit-globe coordinates: the camera sits at radius
+     * `1 + altitudeFrom / earthRadius` and looks at the center on the sea-level sphere, the target altitude only becoming
+     * the center elevation (the inverse of {@link getCameraAltitude}). Pitch and bearing are read in the center's local
+     * frame, +z up, +y north, +x east. A camera straight above the center keeps the transform's bearing.
+     */
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
+        const center = LngLat.convert(to);
+        const camera = angularCoordinatesToSurfaceVector(LngLat.convert(from));
+        vec3.scale(camera, camera, 1 + altitudeFrom / earthRadius);
+        const target = angularCoordinatesToSurfaceVector(center);
+        const targetAtAltitude = vec3.scale(createVec3f64(), target, 1 + altitudeTo / earthRadius);
+        const toCamera = vec3.subtract(createVec3f64(), camera, target);
+        const distance = vec3.length(toCamera);
+        if (distance < SAME_POINT_DISTANCE || vec3.distance(camera, targetAtAltitude) < SAME_POINT_DISTANCE) {
+            throw new Error('Can\'t calculate camera options with same From and To');
+        }
+
+        const zero = createVec3f64();
+        vec3.rotateY(toCamera, toCamera, zero, -degreesToRadians(center.lng));
+        vec3.rotateX(toCamera, toCamera, zero, degreesToRadians(center.lat));
+        const pitch = radiansToDegrees(Math.acos(clamp(toCamera[2] / distance, -1, 1)));
+        const straightAbove = Math.hypot(toCamera[0], toCamera[1]) < distance * STRAIGHT_ABOVE_RATIO;
+        const bearing = straightAbove ? getBearing(this._cameraState) : radiansToDegrees(Math.atan2(-toCamera[0], -toCamera[1]));
+
+        // The camera sits cameraToCenterDistance / getGlobeRadiusPixels(worldSize, lat) from the center, and the radius doubles per zoom level.
+        const zoom = scaleZoom(this._cameraState.cameraToCenterDistance / distance / getGlobeRadiusPixels(this._cameraState.tileSize, center.lat));
+
+        return {center, elevation: altitudeTo, zoom, pitch, bearing};
+    }
+
+    /**
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void {
+    setLocationAtPoint(lnglat: LngLat, point: Point, _elevation?: number): void {
+        const camera = this.getCameraForLocationAtPoint(lnglat, point);
+        if (camera) this._helper.setCenterAndZoom(camera.center, camera.zoom);
+    }
+
+    /**
+     * The center and zoom that {@link setLocationAtPoint} moves the camera to, or null where the camera stays where it
+     * is. The zoom keeps the planet at the size it has now, from the latitude the constrain lets the center reach.
+     */
+    getCameraForLocationAtPoint(lnglat: LngLat, point: Point): {center: LngLat; zoom: number} | null {
+        // The elevation is ignored: this transform solves on the planet's surface.
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);
@@ -673,8 +778,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         vec3.zero(zero);
 
         const rotatedPixelVector = createVec3f64();
-        vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this.center.lng * Math.PI / 180.0);
-        vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this.center.lat * Math.PI / 180.0);
+        vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this._cameraState.center.lng * Math.PI / 180.0);
+        vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this._cameraState.center.lat * Math.PI / 180.0);
 
         // We are looking for the lng,lat that will rotate `vecToTarget`
         // so that it is equal to `rotatedPixelVector`.
@@ -700,7 +805,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
         if (vecToTargetXZLengthSquared < targetXSquared) {
             // Zero solutions - setLocationAtPoint is impossible.
-            return;
+            return null;
         }
 
         // The intersection's Z coordinates
@@ -727,8 +832,8 @@ export class VerticalPerspectiveTransform implements ITransform {
         let validLat: number;
         if (isValidA && isValidB) {
             // Pick the solution that is closer to current map center.
-            const centerLngRadians = this.center.lng * Math.PI / 180.0;
-            const centerLatRadians = this.center.lat * Math.PI / 180.0;
+            const centerLngRadians = this._cameraState.center.lng * Math.PI / 180.0;
+            const centerLatRadians = this._cameraState.center.lat * Math.PI / 180.0;
             const lngDistA = distanceOfAnglesRadians(lngA, centerLngRadians);
             const latDistA = distanceOfAnglesRadians(latA, centerLatRadians);
             const lngDistB = distanceOfAnglesRadians(lngB, centerLngRadians);
@@ -749,21 +854,25 @@ export class VerticalPerspectiveTransform implements ITransform {
             validLat = latB;
         } else {
             // No solution.
-            return;
+            return null;
         }
 
         const newLng = validLng / Math.PI * 180;
-        const newLat = validLat / Math.PI * 180;
-        const oldLat = this.center.lat;
-        this.setCenter(new LngLat(newLng, clamp(newLat, -90, 90)));
-        this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
+        const newLat = clamp(validLat / Math.PI * 180, -90, 90);
+        const moved = newLng !== this._cameraState.center.lng || newLat !== this._cameraState.center.lat;
+        const {center, zoom} = moved ?
+            this._helper.getConstrainedCamera(new LngLat(newLng, newLat), this._cameraState.zoom) :
+            {center: this._cameraState.center, zoom: this._cameraState.zoom};
+        const adjustedZoom = this.applyConstrain(center, zoom + getZoomAdjustment(this._cameraState.center.lat, center.lat)).zoom;
+        if (adjustedZoom !== zoom) return this._helper.getConstrainedCamera(center, adjustedZoom);
+        return moved ? {center, zoom} : null;
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
         const pos = angularCoordinatesToSurfaceVector(lnglat);
 
         if (terrain) {
-            const elevation = terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom);
+            const elevation = terrain.getElevationForLngLat(lnglat, this._cameraState.tileZoom);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
 
@@ -780,16 +889,14 @@ export class VerticalPerspectiveTransform implements ITransform {
         projected[0] /= projected[3];
         projected[1] /= projected[3];
         return new Point(
-            (projected[0] * 0.5 + 0.5) * this.width,
-            (-projected[1] * 0.5 + 0.5) * this.height
+            (projected[0] * 0.5 + 0.5) * this._cameraState.width,
+            (-projected[1] * 0.5 + 0.5) * this._cameraState.height
         );
     }
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         if (terrain) {
-            // Mercator has terrain handling implemented properly and since terrain
-            // simply draws tile coordinates into a special framebuffer, this works well even for globe.
-            const coordinate = terrain.pointCoordinate(p);
+            const coordinate = this.screenTerrainPointToMercatorCoordinate(p, terrain);
             if (coordinate) {
                 return coordinate;
             }
@@ -797,15 +904,51 @@ export class VerticalPerspectiveTransform implements ITransform {
         return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
     }
 
+    /** {@inheritDoc ITransform.screenTerrainPointToMercatorCoordinate} */
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
+        const index = terrain.getCoverageIndex();
+        if (!index) return null;
+
+        const origin = this.cameraPosition;
+        const direction = this.getRayDirectionFromPixel(p);
+        const outer = raySphereIntersection(origin, direction, 1 + index.maxElevation / earthRadius);
+        if (!outer) return null;
+        const inner = raySphereIntersection(origin, direction, 1 + index.minElevation / earthRadius);
+
+        const tStart = Math.max(outer.tMin, 0);
+        const tEnd = inner ? inner.tMin : outer.tMax;
+        if (tEnd <= tStart) return null;
+
+        const ray: GlobeRay = {index, exaggeration: terrain.exaggeration, origin, direction};
+
+        let previousT = 0;
+        for (let i = 0; i <= GLOBE_SAMPLES; i++) {
+            const t = tStart + (tEnd - tStart) * i / GLOBE_SAMPLES;
+            if (globeIsBelowTerrain(ray, t)) {
+                const {hi} = bisect(ray, globeIsBelowTerrain, previousT, t, GLOBE_BISECT_EPSILON_T);
+                const {sample, mercator} = globeSampleAt(ray, hi);
+                return new MercatorCoordinate(mercator.x, mercator.y, sample.elevation);
+            }
+            previousT = t;
+        }
+
+        return null;
+    }
+
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
         return this.screenPointToMercatorCoordinate(p, terrain)?.toLngLat();
+    }
+
+    screenPointToLocationAtElevation(p: Point, _elevation: number): LngLat {
+        // No flat ground plane to intersect at an elevation: use the planet surface.
+        return this.screenPointToLocation(p);
     }
 
     isPointOnMapSurface(p: Point, _terrain?: Terrain): boolean {
         const rayOrigin = this._cameraPosition;
         const rayDirection = this.getRayDirectionFromPixel(p);
 
-        const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
+        const intersection = raySphereIntersection(rayOrigin, rayDirection);
 
         return !!intersection;
     }
@@ -815,8 +958,8 @@ export class VerticalPerspectiveTransform implements ITransform {
      */
     getRayDirectionFromPixel(p: Point): vec3 {
         const pos = createVec4f64();
-        pos[0] = (p.x / this.width) * 2.0 - 1.0;
-        pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;
+        pos[0] = (p.x / this._cameraState.width) * 2.0 - 1.0;
+        pos[1] = ((p.y / this._cameraState.height) * 2.0 - 1.0) * -1.0;
         pos[2] = 1;
         pos[3] = 1;
         vec4.transformMat4(pos, pos, this._globeViewProjMatrixF64Inverted);
@@ -833,8 +976,8 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * For a given point on the unit sphere of the planet, returns whether it is visible from
-     * camera's position (not taking into account camera rotation at all).
+     * For a given point on the unit sphere of the planet, or raised above it, returns whether it lies on the camera's
+     * side of the horizon plane, the plane the globe shaders clip with (not taking into account camera rotation at all).
      */
     private isSurfacePointVisible(p: vec3): boolean {
         const plane = this._cachedClippingPlane;
@@ -863,46 +1006,6 @@ export class VerticalPerspectiveTransform implements ITransform {
     }
 
     /**
-     * Returns the two intersection points of the ray and the planet's sphere,
-     * or null if no intersection occurs.
-     * The intersections are encoded as the parameter for parametric ray equation,
-     * with `tMin` being the first intersection and `tMax` being the second.
-     * Eg. the nearer intersection point can then be computed as `origin + direction * tMin`.
-     * @param origin - The ray origin.
-     * @param direction - The normalized ray direction.
-     */
-    private rayPlanetIntersection(origin: vec3, direction: vec3): RaySphereIntersection {
-        const originDotDirection = vec3.dot(origin, direction);
-        const planetRadiusSquared = 1.0; // planet is a unit sphere, so its radius squared is 1
-
-        // Ray-sphere intersection involves a quadratic equation.
-        // However solving it in the traditional schoolbook way leads to floating point precision issues.
-        // Here we instead use the approach suggested in the book Ray Tracing Gems, chapter 7.
-        // https://www.realtimerendering.com/raytracinggems/rtg/index.html
-        const inner = createVec3f64();
-        const scaledDir = createVec3f64();
-        vec3.scale(scaledDir, direction, originDotDirection);
-        vec3.sub(inner, origin, scaledDir);
-        const discriminant = planetRadiusSquared - vec3.dot(inner, inner);
-
-        if (discriminant < 0) {
-            return null;
-        }
-
-        const c = vec3.dot(origin, origin) - planetRadiusSquared;
-        const q = -originDotDirection + (originDotDirection < 0 ? 1 : -1) * Math.sqrt(discriminant);
-        const t0 = c / q;
-        const t1 = q;
-        // Assume the ray origin is never inside the sphere
-        const tMin = Math.min(t0, t1);
-        const tMax = Math.max(t0, t1);
-        return {
-            tMin,
-            tMax
-        };
-    }
-
-    /**
      * @internal
      * Returns a {@link LngLat} representing geographical coordinates that correspond to the specified pixel coordinates.
      * Note: if the point does not lie on the globe, returns a location on the visible globe horizon (edge) that is
@@ -916,7 +1019,7 @@ export class VerticalPerspectiveTransform implements ITransform {
         // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
         const rayOrigin = this._cameraPosition;
         const rayDirection = this.getRayDirectionFromPixel(p);
-        const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
+        const intersection = raySphereIntersection(rayOrigin, rayDirection);
 
         if (intersection) {
             // Ray intersects the sphere -> compute intersection LngLat.
@@ -980,4 +1083,47 @@ export class VerticalPerspectiveTransform implements ITransform {
     getFastPathSimpleProjectionMatrix(_tileID: OverscaledTileID): mat4 {
         return undefined;
     }
+}
+
+/**
+ * Creates a transform for the vertical perspective projection.
+ */
+export function createVerticalPerspectiveTransform(options?: TransformOptions): VerticalPerspectiveTransform {
+    return new VerticalPerspectiveTransform(options);
+}
+
+function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {
+    const position = createVec3f64();
+    vec3.scaleAndAdd(position, ray.origin, ray.direction, t);
+    const radius = vec3.length(position);
+    const surface = createVec3f64();
+    vec3.scale(surface, position, 1 / radius);
+    const lngLat = sphereSurfacePointToCoordinates(surface);
+    const projected = MercatorCoordinate.fromLngLat(lngLat);
+    const mercator = new MercatorCoordinate(projected.x, clamp(projected.y, 0, MAX_MERCATOR_Y));
+    const sample = sampleAt(ray.index, ray.exaggeration, mercator.x, mercator.y, false);
+    // The globe mesh caps the poles at elevation zero, matching the GLOBE branch of get_elevation.
+    const elevation = Math.abs(lngLat.lat) > MAX_VALID_LATITUDE ? 0 : sample.elevation;
+    return {sample: {...sample, elevation}, radius, mercator};
+}
+
+function globeIsBelowTerrain(ray: GlobeRay, t: number): boolean {
+    const {sample, radius} = globeSampleAt(ray, t);
+    return isBelowTerrainSample(sample, (radius - 1) * earthRadius);
+}
+
+/**
+ * The location as a vector from the globe's center in globe radii, raised `elevation` meters above the surface.
+ */
+function raisedSurfaceVector(lngLat: LngLat, elevation: number): vec3 {
+    const vector = angularCoordinatesToSurfaceVector(lngLat);
+    return vec3.scale(vector, vector, 1 + elevation / earthRadius);
+}
+
+/**
+ * Where the point of the ray closest to `point` lies along it, in units of `direction` from `origin`.
+ */
+function rayParameter(origin: vec3, direction: vec3, point: vec3): number {
+    const offset = vec3.subtract(createVec3f64(), point, origin);
+    return vec3.dot(offset, direction);
 }

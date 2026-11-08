@@ -1,16 +1,17 @@
-import {type OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
 import {EXTENT} from '../data/extent.ts';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented.ts';
-import type {ITransform} from '../geo/transform_interface.ts';
-import type {TileManager} from './tile_manager.ts';
-import type {Source} from '../source/source.ts';
-import {type Terrain} from '../render/terrain.ts';
 import {now} from '../util/time_control.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {createMat4f64} from '../util/util.ts';
-import {type CanonicalTileRange} from '../source/image_source.ts';
+
+import type {Terrain} from '../render/terrain.ts';
+import type {CanonicalTileRange} from '../source/image_source.ts';
+import type {Source} from '../source/source.ts';
+import type {TileManager} from './tile_manager.ts';
+import type {OverscaledTileID} from './tile_id.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 /**
  * @internal
@@ -36,9 +37,10 @@ export class TerrainTileManager extends Evented {
      */
     _renderableTilesKeys: string[];
     /**
-     * raster-dem-tile for a TileID cache.
+     * For each tile, the key of its raster-dem tile and the source zoom that key was scaled to, which changes once the
+     * source has loaded its zoom range.
      */
-    _sourceTileCache: {[_: string]: string};
+    _sourceTileCache: {[_: string]: {zoom: number; key: string}};
     /**
      * minimum zoomlevel to render the terrain.
      */
@@ -56,7 +58,7 @@ export class TerrainTileManager extends Evented {
      */
     deltaZoom: number;
     /**
-     * used to determine whether depth & coord framebuffers need updating
+     * used to determine whether the depth framebuffer needs updating
      */
     _lastTilesetChange: number = now();
 
@@ -88,20 +90,21 @@ export class TerrainTileManager extends Evented {
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
      * @param transform - the operation to do
      * @param terrain - the terrain
+     * @returns true when the set of renderable tiles changed
      */
-    update(transform: ITransform, terrain: Terrain): void {
+    update(transform: IReadonlyTransform, terrain: Terrain): boolean {
         // load raster-dem tiles for the current scene.
         this.tileManager.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
+        let changed = false;
         for (const tileID of coveringTiles(transform, {
             tileSize: this.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,
             reparseOverscaled: false,
-            terrain,
-            calculateTileZoom: this.tileManager._source.calculateTileZoom
+            terrain
         })) {
             keys[tileID.key] = true;
             this._renderableTilesKeys.push(tileID.key);
@@ -110,6 +113,7 @@ export class TerrainTileManager extends Evented {
                 mat4.ortho(tileID.terrainRttPosMatrix32f, 0, EXTENT, EXTENT, 0, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
                 this._lastTilesetChange = now();
+                changed = true;
             }
         }
         // free unused tiles
@@ -117,8 +121,10 @@ export class TerrainTileManager extends Evented {
             if (!keys[key]) {
                 this._tiles[key].releaseRTT(this.tileManager.map.painter);
                 delete this._tiles[key];
+                changed = true;
             }
         }
+        return changed;
     }
 
     /**
@@ -282,18 +288,45 @@ export class TerrainTileManager extends Evented {
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile | undefined {
         const source = this.tileManager._source;
-        let z = tileID.overscaledZ - this.deltaZoom;
-        if (z > source.maxzoom) z = source.maxzoom;
-        if (z < source.minzoom) return undefined;
+        let z = this._getSourceZoom(tileID, source);
+        if (z === undefined) return undefined;
         // cache for tileID to terrain-tileID
-        this._sourceTileCache[tileID.key] ||= tileID.scaledTo(z).key;
-        let tile = this.findTileInCaches(this._sourceTileCache[tileID.key]);
+        if (this._sourceTileCache[tileID.key]?.zoom !== z) this._sourceTileCache[tileID.key] = {zoom: z, key: tileID.scaledTo(z).key};
+        let tile = this.findTileInCaches(this._sourceTileCache[tileID.key].key);
         // during tile-loading phase look if parent tiles (with loaded dem) are available.
         if (!tile?.dem && searchForDEM) {
             while (z >= source.minzoom && !tile?.dem)
                 tile = this.findTileInCaches(tileID.scaledTo(z--).key);
         }
         return tile;
+    }
+
+    /**
+     * Whether the terrain is still waiting for DEM data for a terrain tile that has none: the source tile covering it
+     * lies within the source's zoom range and bounds, and has not failed to load.
+     * @param tileID - the terrain tile
+     * @returns false where the source will not serve DEM data for the tile
+     */
+    isStillWaitingForDEM(tileID: OverscaledTileID): boolean {
+        const source = this.tileManager._source;
+        const z = this._getSourceZoom(tileID, source);
+        if (z === undefined) return false;
+        const sourceTileID = tileID.scaledTo(z);
+        if (source.hasTile && !source.hasTile(sourceTileID)) return false;
+        return this.findTileInCaches(sourceTileID.key)?.state !== 'errored';
+    }
+
+    /**
+     * The zoom of the raster-dem tile that covers a terrain tile: `deltaZoom` below the terrain tile, kept within the
+     * source's zoom range, so a terrain tile at the source's minzoom uses the source tile at that zoom.
+     * @param tileID - the terrain tile
+     * @param source - the raster-dem source
+     * @returns the zoom, or undefined where the source has no tiles at or below the terrain tile's zoom
+     */
+    private _getSourceZoom(tileID: OverscaledTileID, source: Source): number | undefined {
+        let z = Math.min(tileID.overscaledZ - this.deltaZoom, source.maxzoom);
+        if (z < source.minzoom) z = source.minzoom;
+        return z <= tileID.overscaledZ ? z : undefined;
     }
 
     findTileInCaches(key: string): Tile | undefined {
@@ -306,7 +339,7 @@ export class TerrainTileManager extends Evented {
     }
 
     /**
-     * gets whether any tiles were loaded after a specific time. This is used to update depth & coords framebuffers.
+     * gets whether any tiles were loaded after a specific time. This is used to update the depth framebuffer.
      * @param time - the time
      * @returns true if any tiles came into view at or after the specified time
      */

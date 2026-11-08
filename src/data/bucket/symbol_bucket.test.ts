@@ -1,32 +1,29 @@
-import {describe, test, expect, vi, beforeAll} from 'vitest';
-import {SymbolBucket} from './symbol_bucket.ts';
+import {describe, test, expect, vi, beforeAll, beforeEach} from 'vitest';
+import Point from '@mapbox/point-geometry';
 import {CollisionBoxArray} from '../../data/array_types.g.ts';
 import {performSymbolLayout} from '../../symbol/symbol_layout.ts';
 import {Placement} from '../../symbol/placement.ts';
-import {OverscaledTileID} from '../../tile/tile_id.ts';
+import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {Tile} from '../../tile/tile.ts';
 import {CrossTileSymbolIndex} from '../../symbol/cross_tile_symbol_index.ts';
 import {FeatureIndex} from '../../data/feature_index.ts';
-import {createSymbolBucket, createSymbolIconBucket} from '../../../test/unit/lib/create_symbol_layer.ts';
+import {createGlyphMap, createSymbolBucket, createSymbolIconBucket, createSymbolStyleLayer} from '../../../test/unit/lib/create_symbol_layer.ts';
 import {RGBAImage} from '../../util/image.ts';
 import {ImagePosition} from '../../render/image_atlas.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
-import type {IndexedFeature, PopulateParameters} from '../bucket.ts';
+import {SymbolBucket} from './symbol_bucket.ts';
+
+import type {BucketParameters, IndexedFeature, PopulateParameters} from '../bucket.ts';
+import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
 import type {StyleImage} from '../../style/style_image.ts';
-import type {StyleGlyph} from '../../style/style_glyph.ts';
-import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 
 const collisionBoxArray = new CollisionBoxArray();
-const transform = new MercatorTransform();
+const transform = createMercatorTransform();
 transform.resize(100, 100);
 
-const stacks = {'Test': glyphs} as any as {
-    [_: string]: {
-        [x: number]: StyleGlyph;
-    };
-};
+const glyphsByCluster = createGlyphMap();
 
 function bucketSetup(text = 'abcde') {
     return createSymbolBucket('test', 'Test', text, collisionBoxArray);
@@ -51,6 +48,26 @@ function createIndexedFeature(id: number, index: number, iconId: string): Indexe
     } as any as IndexedFeature;
 }
 
+function glyphsRequestedFor(text: string, point: {x: number; y: number} = {x: 0, y: 0}): string[] {
+    const bucket = createSymbolBucket('test', 'Test', text, collisionBoxArray);
+    const options = createPopulateOptions([]);
+    const feature = {
+        extent: 8192,
+        type: 1,
+        id: 1,
+        properties: {},
+        loadGeometry: () => [[point]],
+    };
+
+    bucket.populate(
+        [{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature],
+        options,
+        new CanonicalTileID(0, 0, 0),
+    );
+
+    return Object.keys(options.glyphDependencies.Test?.default ?? {});
+}
+
 describe('SymbolBucket', () => {
     let features: IndexedFeature[];
     beforeAll(() => {
@@ -71,7 +88,7 @@ describe('SymbolBucket', () => {
         performSymbolLayout(
             {
                 bucket: bucketA,
-                glyphMap: stacks,
+                glyphMap: glyphsByCluster,
                 glyphPositions: {},
                 subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
             } as any);
@@ -83,7 +100,7 @@ describe('SymbolBucket', () => {
         // add same feature from bucket B
         bucketB.populate(features, options, undefined);
         performSymbolLayout({
-            bucket: bucketB, glyphMap: stacks, glyphPositions: {}, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+            bucket: bucketB, glyphMap: glyphsByCluster, glyphPositions: {}, subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
         const tileB = new Tile(tileID, 512);
         tileB.buckets = {test: bucketB};
@@ -111,17 +128,17 @@ describe('SymbolBucket', () => {
 
     test('SymbolBucket integer overflow', () => {
         const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-        SymbolBucket.MAX_GLYPHS = 5;
-
         const bucket = bucketSetup();
+        bucket.maxGlyphs = 5;
+
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
 
         bucket.populate(features, options, undefined);
         const fakeGlyph = {rect: {w: 10, h: 10}, metrics: {left: 10, top: 10, advance: 10}};
         performSymbolLayout({
             bucket,
-            glyphMap: stacks,
-            glyphPositions: {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph} as any},
+            glyphMap: glyphsByCluster,
+            glyphPositions: {'Test': {default: {a: fakeGlyph, b: fakeGlyph, c: fakeGlyph, d: fakeGlyph, e: fakeGlyph, f: fakeGlyph}} as any},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         } as any);
 
@@ -158,7 +175,7 @@ describe('SymbolBucket', () => {
             options, undefined
         );
 
-        const icons = options.iconDependencies as any;
+        const icons = options.iconDependencies;
         expect(icons.a).toBe(true);
         expect(icons.b).toBe(true);
 
@@ -201,7 +218,7 @@ describe('SymbolBucket', () => {
             options, undefined
         );
 
-        const icons = options.iconDependencies as any;
+        const icons = options.iconDependencies;
         expect(icons.a).toBe(true);
         expect(icons.b).toBe(true);
 
@@ -223,15 +240,8 @@ describe('SymbolBucket', () => {
         expect(ltrBucket.hasRTLText).toBeFalsy();
     });
 
-    // Test to prevent symbol bucket with rtl from text being culled by worker serialization.
-    test('SymbolBucket with rtl text is NOT empty even though no symbol instances are created', () => {
-        const rtlBucket = bucketSetup('مرحبا');
-        const options = createPopulateOptions([]);
-        rtlBucket.createArrays();
-        rtlBucket.populate(features, options, undefined);
-
-        expect(rtlBucket.isEmpty()).toBeFalsy();
-        expect(rtlBucket.symbolInstances).toHaveLength(0);
+    test('SymbolBucket shapes rtl text', () => {
+        expect(glyphsRequestedFor('مرحبا')).toEqual(['ﻣ', 'ﺮ', 'ﺣ', 'ﺒ', 'ﺎ']);
     });
 
     test('SymbolBucket detects rtl text mixed with ltr text', () => {
@@ -240,5 +250,214 @@ describe('SymbolBucket', () => {
         mixedBucket.populate(features, options, undefined);
 
         expect(mixedBucket.hasRTLText).toBeTruthy();
+    });
+
+    test('SymbolBucket asks for one glyph per character of plain text and nothing besides', () => {
+        expect(glyphsRequestedFor('abc').sort()).toEqual(['a', 'b', 'c']);
+        expect(glyphsRequestedFor('東京ー').sort()).toEqual(['東', '京', 'ー'].sort());
+    });
+
+    describe('vertical glyph requests', () => {
+        let options: PopulateParameters;
+        const canonical = new CanonicalTileID(0, 0, 0);
+        const lineFeature = {
+            feature: {
+                type: 2,
+                properties: {},
+                loadGeometry() { return [[{x: 0, y: 0}, {x: 0, y: 1000}]]; }
+            },
+            id: 1, index: 0, sourceLayerIndex: 0
+        } as unknown as IndexedFeature;
+
+        beforeEach(() => {
+            options = createPopulateOptions([]);
+        });
+
+        test('requests upright point glyphs even when keep-upright is false', () => {
+            const bucket = createSymbolBucket('vertical', 'Test', 'か\u3099（ aAب', collisionBoxArray, {
+                'symbol-placement': 'point',
+                'text-keep-upright': false,
+                'text-writing-mode': ['horizontal', 'vertical']
+            });
+
+            bucket.populate([createIndexedFeature(1, 0, '')], options, canonical);
+
+            expect(options.glyphDependencies.Test.vertical).toEqual({
+                'か\u3099': true,
+                'か': true,
+                '\u3099': true,
+                '（': true,
+                a: true,
+                A: true
+            });
+        });
+
+        test('omits sideways letters and complex scripts from vertical line glyphs', () => {
+            const bucket = createSymbolBucket('vertical', 'Test', '小（ aAب', collisionBoxArray, {
+                'symbol-placement': 'line',
+                'text-keep-upright': true
+            });
+
+            bucket.populate([lineFeature], options, canonical);
+
+            expect(options.glyphDependencies.Test.vertical).toEqual({
+                '小': true,
+                '（': true,
+                A: true
+            });
+        });
+
+        test('does not request vertical line glyphs when keep-upright is false', () => {
+            const bucket = createSymbolBucket('vertical', 'Test', '東京ー', collisionBoxArray, {
+                'symbol-placement': 'line',
+                'text-keep-upright': false
+            });
+
+            bucket.populate([lineFeature], options, canonical);
+
+            expect(options.glyphDependencies.Test.vertical).toEqual({});
+        });
+    });
+
+    test('SymbolBucket asks for a cluster as a whole, and for its codepoints to fall back to', () => {
+        const hebrew = glyphsRequestedFor('שְׁ');
+        expect(hebrew).toContain('שְׁ');
+        expect(hebrew).toEqual(expect.arrayContaining(['ש', 'ְ', 'ׁ']));
+
+        const devanagari = glyphsRequestedFor('दि');
+        expect(devanagari).toContain('दि');
+        expect(devanagari).toEqual(expect.arrayContaining(['द', 'ि']));
+    });
+
+    test('SymbolBucket asks for no glyphs for a point outside the tile', () => {
+        expect(glyphsRequestedFor('abc', {x: -1, y: 100})).toEqual([]);
+        expect(glyphsRequestedFor('abc', {x: 100, y: 8192})).toEqual([]);
+    });
+
+    test('SymbolBucket asks for the icons of points on the tile edge but not beyond it', () => {
+        const bucket = createSymbolIconBucket('test', 'icon', collisionBoxArray);
+        const options = createPopulateOptions([]);
+        const inside = createIndexedFeature(0, 0, 'inside');
+        inside.feature.loadGeometry = () => [[new Point(8191, 8191)]];
+        const outside = createIndexedFeature(1, 1, 'outside');
+        outside.feature.loadGeometry = () => [[new Point(8192, 100)]];
+
+        bucket.populate([inside, outside], options, new CanonicalTileID(0, 0, 0));
+
+        expect(Object.keys(options.iconDependencies)).toEqual(['inside']);
+    });
+
+    test('SymbolBucket asks for the glyphs of a polygon that surrounds the tile', () => {
+        const bucket = createSymbolBucket('test', 'Test', 'abc', collisionBoxArray);
+        const options = createPopulateOptions([]);
+        const feature = {
+            extent: 8192,
+            type: 3,
+            id: 1,
+            properties: {},
+            loadGeometry: () => [[new Point(-100, -100), new Point(9000, -100), new Point(9000, 9000), new Point(-100, 9000), new Point(-100, -100)]],
+        };
+
+        bucket.populate(
+            [{feature, id: 1, index: 0, sourceLayerIndex: 0} as unknown as IndexedFeature],
+            options,
+            new CanonicalTileID(0, 0, 0),
+        );
+
+        expect(Object.keys(options.glyphDependencies.Test.default).sort()).toEqual(['a', 'b', 'c']);
+    });
+});
+
+describe('SymbolBucket.addFeatures cross-tile key', () => {
+    const symbolLayer = createSymbolStyleLayer('test', 'Test', 'abcde');
+    const promoteId = 'name';
+    const parentTileID = new OverscaledTileID(6, 0, 6, 8, 8);
+    const northWestChildTileID = new OverscaledTileID(7, 0, 7, 16, 16);
+    const anchorInParentTile = {x: 1000, y: 1000};
+    const sameSpotInNorthWestChildTile = {x: anchorInParentTile.x * 2, y: anchorInParentTile.y * 2};
+
+    type Label = {id: number | string; anchor: {x: number; y: number}; properties: Record<string, unknown>};
+
+    /**
+     * Lays out one point label per entry, in order, with the feature id the worker would have resolved through
+     * `featureIndex`.
+     */
+    function createTileWithLabels(featureIndex: FeatureIndex, labels: Label[]): Tile {
+        const features = labels.map(({id, anchor, properties}, index) => ({
+            feature: {extent: 8192, type: 1, id, properties, loadGeometry: () => [[anchor]]},
+            id,
+            index,
+            sourceLayerIndex: 0
+        }) as any as IndexedFeature);
+        const bucket = new SymbolBucket({overscaling: 1, zoom: 0, collisionBoxArray, layers: [symbolLayer]} as BucketParameters<SymbolStyleLayer>);
+        const options = {...createPopulateOptions([]), featureIndex};
+        bucket.populate(features, options, featureIndex.tileID.canonical);
+        bucket.addFeatures({
+            options,
+            canonical: featureIndex.tileID.canonical,
+            glyphMap: glyphsByCluster,
+            glyphPositions: {},
+            iconMap: {},
+            iconPositions: {},
+            patternMap: {},
+            patternPositions: {},
+            dashPositions: {},
+            showCollisionBoxes: false
+        });
+        const tile = new Tile(featureIndex.tileID, 512);
+        tile.buckets = {[symbolLayer.id]: bucket};
+        return tile;
+    }
+
+    function crossTileIDOfLabel(tile: Tile, featureId: number | string): number {
+        const bucket = tile.getBucket(symbolLayer) as SymbolBucket;
+        for (let i = 0; i < bucket.symbolInstances.length; i++) {
+            const symbolInstance = bucket.symbolInstances.get(i);
+            if (bucket.features[symbolInstance.featureIndex].id === featureId) {
+                return symbolInstance.crossTileID;
+            }
+        }
+        throw new Error(`No label for feature ${featureId}`);
+    }
+
+    test('with promoteId, a label matches the same feature\'s label in the parent tile, not another feature\'s label laid out first at the same spot', () => {
+        const parentTile = createTileWithLabels(new FeatureIndex(parentTileID, promoteId), [
+            {id: 'a', anchor: anchorInParentTile, properties: {}}
+        ]);
+        const childTile = createTileWithLabels(new FeatureIndex(northWestChildTileID, promoteId), [
+            {id: 'b', anchor: sameSpotInNorthWestChildTile, properties: {}},
+            {id: 'a', anchor: sameSpotInNorthWestChildTile, properties: {}}
+        ]);
+
+        new CrossTileSymbolIndex().addLayer(symbolLayer, [parentTile, childTile], 0);
+
+        expect(crossTileIDOfLabel(childTile, 'a')).toBe(crossTileIDOfLabel(parentTile, 'a'));
+        expect(crossTileIDOfLabel(childTile, 'b')).not.toBe(crossTileIDOfLabel(parentTile, 'a'));
+    });
+
+    test('without promoteId, a label matches the label at the same spot in the parent tile whatever the two feature ids are', () => {
+        const parentTile = createTileWithLabels(new FeatureIndex(parentTileID), [
+            {id: 1, anchor: anchorInParentTile, properties: {}}
+        ]);
+        const childTile = createTileWithLabels(new FeatureIndex(northWestChildTileID), [
+            {id: 2, anchor: sameSpotInNorthWestChildTile, properties: {}}
+        ]);
+
+        new CrossTileSymbolIndex().addLayer(symbolLayer, [parentTile, childTile], 0);
+
+        expect(crossTileIDOfLabel(childTile, 2)).toBe(crossTileIDOfLabel(parentTile, 1));
+    });
+
+    test('with promoteId, a cluster label matches the cluster label at the same spot in the parent tile although a cluster has a different id at every zoom', () => {
+        const parentTile = createTileWithLabels(new FeatureIndex(parentTileID, promoteId), [
+            {id: 100, anchor: anchorInParentTile, properties: {cluster: true, cluster_id: 100}}
+        ]);
+        const childTile = createTileWithLabels(new FeatureIndex(northWestChildTileID, promoteId), [
+            {id: 200, anchor: sameSpotInNorthWestChildTile, properties: {cluster: true, cluster_id: 200}}
+        ]);
+
+        new CrossTileSymbolIndex().addLayer(symbolLayer, [parentTile, childTile], 0);
+
+        expect(crossTileIDOfLabel(childTile, 200)).toBe(crossTileIDOfLabel(parentTile, 100));
     });
 });

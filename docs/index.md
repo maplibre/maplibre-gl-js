@@ -9,10 +9,10 @@ It is part of the MapLibre ecosystem, with a counterpart for Android, iOS and ot
 <iframe src="./examples/display-a-globe-with-a-vector-map.html" width="100%" height="400px" style="border:none"></iframe>
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.1.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.1.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map', // container id
@@ -72,7 +72,7 @@ See the [ESM](#esm) section below for setting up the worker URL with your bundle
 
 MapLibre GL JS v6 ships as ES modules only (`maplibre-gl.mjs`). The `"module"` field in `package.json` points at the ESM bundle, so bundlers pick it up automatically.
 
-For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
+For minimal runnable apps per bundler (Vite, webpack, esbuild, Rollup, Turbopack), see [`test/integration/bundler/`](https://github.com/maplibre/maplibre-gl-js/tree/main/test/integration/bundler).
 
 Upgrading from v5? See the [v5 to v6 migration guide](./guides/v5-to-v6-migration-guide.md).
 
@@ -94,21 +94,15 @@ Pick your setup:
     const map = new Map({/* … */});
     ```
 
-    Use `?worker&url` rather than plain `?url`: the dist worker imports its
-    sibling `maplibre-gl-shared.mjs`, and `?url` emits the worker file verbatim
-    in production builds without that sibling — the worker then fails on its
-    first import and no vector tiles load. `?worker&url` routes the file
-    through Vite's worker pipeline, emitting a self-contained chunk. Dev mode
-    works with either.
-
     If your build uses SSR (TanStack Start, Astro, etc.) and Vite resolves the CommonJS entry on the server, also add:
 
-    ```ts
-    // vite.config.ts
+    ```ts title="vite.config.ts"
     export default defineConfig({
         ssr: {noExternal: ['maplibre-gl']}
     });
     ```
+
+    Nuxt, SvelteKit, Astro and other Vite-based frameworks can use the same snippet; just create the map on the client only (in the browser).
 
 === "webpack 5+"
 
@@ -123,10 +117,11 @@ Pick your setup:
 
     rspack and rsbuild use the same pattern.
 
+    Next.js uses the same pattern too, including in its `next build --webpack` mode. See the Turbopack tab.
+
 === "esbuild"
 
-    ```js
-    // build.js
+    ```js title="build.js"
     import * as esbuild from 'esbuild';
     import {copyFileSync} from 'fs';
 
@@ -143,20 +138,20 @@ Pick your setup:
     );
     ```
 
-    ```ts
-    // src/main.ts
-    import {Map, setWorkerUrl} from 'maplibre-gl';
+    ```ts title="src/main.ts"
+    import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
-    setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+    setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
     const map = new Map({/* … */});
     ```
 
+    The copied worker keeps the same file name in every release, so the `v` query parameter keeps a browser from using a worker cached from an older release.
+
 === "Rollup"
 
-    ```ts
-    // rollup.config.js
+    ```ts title="rollup.config.js"
     import copy from 'rollup-plugin-copy';
 
     export default {
@@ -171,25 +166,45 @@ Pick your setup:
     };
     ```
 
-    ```ts
-    // src/main.ts
-    import {Map, setWorkerUrl} from 'maplibre-gl';
+    ```ts title="src/main.ts"
+    import {Map, getVersion, setWorkerUrl} from 'maplibre-gl';
     import 'maplibre-gl/dist/maplibre-gl.css';
 
-    setWorkerUrl(new URL('./maplibre-gl-worker.mjs', import.meta.url).toString());
+    setWorkerUrl(new URL(`./maplibre-gl-worker.mjs?v=${getVersion()}`, import.meta.url).toString());
 
     const map = new Map({/* … */});
     ```
+
+    The copied worker keeps the same file name in every release, so the `v` query parameter keeps a browser from using a worker cached from an older release.
+
+=== "Turbopack"
+
+    Turbopack ships as the default bundler in Next.js, which is where you are most likely to meet it, so the setup below is written for a Next.js app.
+
+    ```ts title="app/map.tsx"
+    'use client';
+
+    import {Map, setWorkerUrl} from 'maplibre-gl';
+    import 'maplibre-gl/dist/maplibre-gl.css';
+
+    setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
+
+    const map = new Map({/* … */});
+    ```
+
+    Next.js emits the worker as a hashed asset in both of its bundler modes, `next build` (Turbopack) and `next build --webpack`.
+
+    This needs Next.js 15 or later. In Next.js 14, `next build` fails to minify the worker, so copy `maplibre-gl-worker.mjs` to `public/` and pass that path to `setWorkerUrl` instead.
 
 === "CDN / No bundler"
 
     Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](https://unpkg.com) for instructions on selecting specific versions and semver ranges.
 
     ```html
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.1.0/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.css" />
     <div id="map" style="height: 400px"></div>
     <script type="module">
-        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.1.0/dist/maplibre-gl.mjs';
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.3.0/dist/maplibre-gl.mjs';
 
         const map = new maplibregl.Map({
             container: 'map',
@@ -218,6 +233,8 @@ As a mitigation for Cross-Site Scripting and other types of web security vulnera
 worker-src 'self' ;
 img-src data: blob: 'self' ;
 ```
+
+A page with an opaque origin, like one opened from a file or in a sandboxed iframe, downloads the worker and starts it from a `data:` URL, so it also needs `data:` in `worker-src` and the worker's host in `connect-src`, or `blob:` when `setWorkerUrl` is given a `blob:` URL.
 
 ## MapLibre CSS
 

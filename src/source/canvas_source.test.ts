@@ -4,8 +4,10 @@ import {Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {waitForEvent} from '../util/test/util.ts';
+
 import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
@@ -36,8 +38,8 @@ class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new MercatorTransform();
-        this.style = {};
+        this.transform = createMercatorTransform();
+        this.style = {projection: new MercatorProjection()};
         this.painter = {
             context: {
                 gl: {}
@@ -69,7 +71,7 @@ describe('CanvasSource', () => {
         source.onAdd(map);
         await promise;
 
-        expect(typeof source.play).toBe('function');
+        expect(source.play).toBeTypeOf('function');
     });
 
     describe('Validations', () => {
@@ -107,6 +109,23 @@ describe('CanvasSource', () => {
             createSource({canvas: canvasEl, eventedParent});
             expect(errorSpy).not.toHaveBeenCalled();
         });
+    });
+
+    test('load catches invalid coordinates from setCoordinates and fires error via _finishLoading', async () => {
+        const source = createSource({
+            coordinates: [[0, 0], [1, 0], [1, 91], [0, 1]],
+            eventedParent: map,
+        });
+        const errorHandler = vi.fn();
+        map.on('error', errorHandler);
+
+        source.map = map;
+        await expect(source.load()).resolves.toBeUndefined();
+
+        expect(errorHandler).toHaveBeenCalledTimes(1);
+        expect(errorHandler.mock.calls[0][0].error).toBeInstanceOf(Error);
+        expect(errorHandler.mock.calls[0][0].error.message).toMatch(/latitude/i);
+        expect(source.loaded()).toBe(true);
     });
 
     test('can be initialized with HTML element', async () => {
@@ -201,6 +220,37 @@ describe('CanvasSource', () => {
         expect(tile.state).toBe('loaded');
     });
 
+    test('deletes its texture when a static source is removed', () => {
+        const source = createSource({animate: false});
+        source.onAdd(map);
+
+        const texture = {update: vi.fn(), destroy: vi.fn()} as any;
+        source.texture = texture;
+
+        source.onRemove();
+
+        expect(texture.destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
+    });
+
+    test('deletes its texture when an animating source is removed, without uploading the canvas into it first', () => {
+        const source = createSource({animate: true});
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        source.onAdd(map);
+        source.tiles[String(tile.tileID.wrap)] = tile;
+
+        const texture = {update: vi.fn(), destroy: vi.fn()} as any;
+        source.texture = texture;
+
+        expect(source.hasTransition()).toBe(true);
+
+        source.onRemove();
+
+        expect(texture.update).not.toHaveBeenCalled();
+        expect(texture.destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
+        expect(source.hasTransition()).toBe(false);
+    });
 });
 
 test('CanvasSource.serialize', () => {

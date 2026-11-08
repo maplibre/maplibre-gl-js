@@ -36,8 +36,8 @@ describe('Map cross-window support', () => {
             expect(iframeDocument).not.toBe(window.document);
             expect(iframeWindow).not.toBe(window);
 
-            expect(container instanceof HTMLElement).toBe(false);
-            expect(container instanceof iframeDocument.defaultView.HTMLElement).toBe(true);
+            expect(container).not.toBeInstanceOf( HTMLElement);
+            expect(container).toBeInstanceOf(iframeDocument.defaultView.HTMLElement);
 
             const map = new Map({
                 container,

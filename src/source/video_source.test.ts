@@ -1,33 +1,14 @@
-import {describe, test, expect, vi} from 'vitest';
-import {VideoSource} from './video_source.ts';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {beforeMapTest, createMap, getMockDispatcher, waitForEvent} from '../util/test/util.ts';
 import {extend} from '../util/util.ts';
-import {getMockDispatcher, waitForEvent} from '../util/test/util.ts';
-
-import type {Coordinates} from './image_source.ts';
+import {VideoSource} from './video_source.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {Evented} from '../util/evented.ts';
-import {type IReadonlyTransform} from '../geo/transform_interface.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
 
-class StubMap extends Evented {
-    transform: IReadonlyTransform;
-    style: any;
-    painter: any;
+import type {Coordinates} from './image_source.ts';
+import type {Map} from '../ui/map.ts';
 
-    constructor() {
-        super();
-        this.transform = new MercatorTransform();
-        this.style = {};
-        this.painter = {
-            context: {
-                gl: {
-                    texSubImage2D: () => {}
-                }
-            }
-        };
-    }
-}
+let map: Map;
 
 function createSource(options) {
     const c = options?.video || window.document.createElement('video');
@@ -37,20 +18,32 @@ function createSource(options) {
     const source = new VideoSource('id', options, getMockDispatcher(), options.eventedParent);
 
     source.video = c;
+    source.map = map;
     return source;
 }
 
 describe('VideoSource', () => {
-    // Attribution File:Volcano Lava Sample.webm: U.S. Geological Survey (USGS), Public domain, via Wikimedia Commons
-    const source = createSource({
-        type: 'video',
-        urls: ['cropped.mp4', 'https://upload.wikimedia.org/wikipedia/commons/2/22/Volcano_Lava_Sample.webm'],
-        coordinates: [
-            [-76.54, 39.18],
-            [-76.52, 39.18],
-            [-76.52, 39.17],
-            [-76.54, 39.17]
-        ]
+    let source: VideoSource;
+
+    beforeEach(async () => {
+        beforeMapTest();
+        map = createMap();
+        await map.once('style.load');
+        // Attribution File:Volcano Lava Sample.webm: U.S. Geological Survey (USGS), Public domain, via Wikimedia Commons
+        source = createSource({
+            type: 'video',
+            urls: ['cropped.mp4', 'https://upload.wikimedia.org/wikipedia/commons/2/22/Volcano_Lava_Sample.webm'],
+            coordinates: [
+                [-76.54, 39.18],
+                [-76.52, 39.18],
+                [-76.52, 39.17],
+                [-76.54, 39.17]
+            ]
+        });
+    });
+
+    afterEach(() => {
+        map.remove();
     });
 
     test('constructor', () => {
@@ -88,13 +81,12 @@ describe('VideoSource', () => {
     });
 
     test('fires idle event on prepare call when there is at least one not loaded tile', async () => {
+        const video = window.document.createElement('video');
+        Object.defineProperty(video, 'readyState', {value: HTMLMediaElement.HAVE_CURRENT_DATA});
         const source = createSource({
             type: 'video',
             urls: [],
-            video: {
-                readyState: 2,
-                play: () => {}
-            },
+            video,
             coordinates: [
                 [-76.54, 39.18],
                 [-76.52, 39.18],
@@ -104,20 +96,15 @@ describe('VideoSource', () => {
         });
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
         const dataEvent = waitForEvent(source, 'data', (e) => e.dataType === 'source' && e.sourceDataType === 'idle');
-        source.onAdd(new StubMap() as any);
+        source.onAdd(map);
 
         source.tiles[String(tile.tileID.wrap)] = tile;
-        // assign dummies directly so we don't need to stub the gl things
-        source.texture = {
-            update: () => {},
-            bind: () => {}
-        } as any;
         source.prepare();
         await dataEvent;
         expect(tile.state).toBe('loaded');
     });
 
-    test('onRemove removes playing listener and pauses video', () => {
+    test('onRemove removes playing listener, pauses video and deletes the texture', () => {
         const video = window.document.createElement('video');
         const removeListenerSpy = vi.spyOn(video, 'removeEventListener');
         const pauseSpy = vi.spyOn(video, 'pause').mockImplementation(() => {});
@@ -129,9 +116,14 @@ describe('VideoSource', () => {
         });
         source.video = video;
 
+        const texture = {destroy: vi.fn()} as any;
+        source.texture = texture;
+
         source.onRemove();
 
         expect(removeListenerSpy).toHaveBeenCalledWith('playing', expect.any(Function));
         expect(pauseSpy).toHaveBeenCalled();
+        expect(texture.destroy).toHaveBeenCalledTimes(1);
+        expect(source.texture).toBeNull();
     });
 });

@@ -1,9 +1,10 @@
 import {mat4} from 'gl-matrix';
+
 import type Point from '@mapbox/point-geometry';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CollisionIndex} from '../symbol/collision_index.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform, WorldCoordinateHelper} from '../geo/transform_interface.ts';
 import type {RetainedQueryData} from '../symbol/placement.ts';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
@@ -73,6 +74,10 @@ export type QuerySourceFeatureOptions = {
  */
 export type QuerySourceFeatureOptionsStrict = QuerySourceFeatureOptions & {
     globalState?: Record<string, any>;
+    /**
+     * The map projection's world-to-lng/lat mapping for the returned geometry.
+     */
+    worldCoordinateHelper: WorldCoordinateHelper;
 };
 
 export type QueryRenderedFeaturesResults = {
@@ -83,16 +88,14 @@ export type QueryRenderedFeaturesResultsItem = QueryResultsItem & { feature: Map
 
 /*
  * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
+ * While the globe renders as a sphere there is no such matrix, so extrusions are hit-tested by their footprint only.
  */
-function getPixelPosMatrix(transform, tileID: OverscaledTileID) {
+function getPixelPosMatrix(transform: IReadonlyTransform, tileID: OverscaledTileID): mat4 {
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    if (transform.calculatePosMatrix) { // Globe: TODO: remove this hack once queryRendererFeatures supports globe properly
-        return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
-    } else {
-        return t;
-    }
+    const posMatrix = transform.getFastPathSimpleProjectionMatrix(tileID);
+    return posMatrix ? mat4.multiply(t, t, posMatrix) : t;
 }
 
 function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
@@ -179,7 +182,8 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
             queryData.sourceLayerIndex,
             {
                 filterSpec: params.filter,
-                globalState: params.globalState
+                globalState: params.globalState,
+                worldCoordinateHelper: collisionIndex.transform.worldCoordinateHelper
             },
             params.layers,
             params.availableImages,
@@ -215,7 +219,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     return convertFeaturesToMapFeaturesMultiple(result, styleLayers, tileManagers);
 }
 
-export function querySourceFeatures(tileManager: TileManager, params: QuerySourceFeatureOptionsStrict | undefined): GeoJSONFeature[] {
+export function querySourceFeatures(tileManager: TileManager, params: QuerySourceFeatureOptionsStrict): GeoJSONFeature[] {
     const tiles = tileManager.getRenderableIds().map((id) => {
         return tileManager.getTileByID(id);
     });

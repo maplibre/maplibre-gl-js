@@ -1,11 +1,10 @@
-uniform lowp float u_device_pixel_ratio;
 uniform sampler2D u_image;
 uniform sampler2D u_image_dash;
 uniform float u_mix;
 uniform lowp float u_lineatlas_width;
 
 in vec2 v_normal;
-flat in vec2 v_width2;
+in vec2 v_width2;
 in vec2 v_tex_a;
 in vec2 v_tex_b;
 in float v_gamma_scale;

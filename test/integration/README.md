@@ -34,6 +34,12 @@ To run the render tests:
 npm run test-render
 ```
 
+By default the render tests run one at a time, but if you have multiple cores you can add concurrency with:
+
+```sh
+RENDER_TEST_CONCURRENCY=4 npm run test-render
+```
+
 To run the integration tests (except the render tests):
 
 ```sh

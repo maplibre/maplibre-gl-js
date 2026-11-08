@@ -1,6 +1,4 @@
-uniform lowp float u_device_pixel_ratio;
-
-flat in vec2 v_width2;
+in vec2 v_width2;
 in vec2 v_normal;
 in float v_gamma_scale;
 #ifdef GLOBE

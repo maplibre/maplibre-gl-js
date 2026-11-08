@@ -1,0 +1,97 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 512
+    }
+  },
+  "center": [
+    -122.435,
+    37.76
+  ],
+  "zoom": 11,
+  "sources": {
+    "image": {
+      "type": "image",
+      "coordinates": [
+        [
+          -122.52,
+          37.815
+        ],
+        [
+          -122.355,
+          37.8
+        ],
+        [
+          -122.325,
+          37.7
+        ],
+        [
+          -122.545,
+          37.735
+        ]
+      ],
+      "url": "local://image/projective-grid.png"
+    },
+    "projective-outline": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -122.52,
+              37.815
+            ],
+            [
+              -122.355,
+              37.8
+            ],
+            [
+              -122.325,
+              37.7
+            ],
+            [
+              -122.545,
+              37.735
+            ],
+            [
+              -122.52,
+              37.815
+            ]
+          ]
+        },
+        "properties": {}
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffffff"
+      }
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    },
+    {
+      "id": "projective-outline",
+      "type": "line",
+      "source": "projective-outline",
+      "paint": {
+        "line-color": "#111827",
+        "line-width": 3,
+        "line-opacity": 0.65
+      }
+    }
+  ]
+}

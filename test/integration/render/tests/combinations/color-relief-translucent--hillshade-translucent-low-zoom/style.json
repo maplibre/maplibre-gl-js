@@ -1,0 +1,81 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256,
+      "description": "Translucent color-relief under a translucent hillshade at zoom 1, where the exaggeration scaling applied at low zoom affects both."
+    }
+  },
+  "center": [
+    0,
+    45
+  ],
+  "zoom": 1,
+  "sources": {
+    "dem-hillshade": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/jaxa/{z}-{x}-{y}.terrain.webp"
+      ],
+      "maxzoom": 12,
+      "tileSize": 512,
+      "encoding": "mapbox"
+    },
+    "dem-color-relief": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/jaxa/{z}-{x}-{y}.terrain.webp"
+      ],
+      "maxzoom": 12,
+      "tileSize": 512,
+      "encoding": "mapbox"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "color-relief",
+      "type": "color-relief",
+      "source": "dem-color-relief",
+      "paint": {
+        "color-relief-opacity": 1,
+        "color-relief-color": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "elevation"
+          ],
+          0,
+          "#006600",
+          500,
+          "#00FF00",
+          1000,
+          "#FFFF00",
+          2000,
+          "#FF8800",
+          3000,
+          "#FF0000",
+          5000,
+          "#FFFFFF"
+        ]
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "dem-hillshade",
+      "paint": {
+        "hillshade-method": "standard"
+      }
+    }
+  ]
+}

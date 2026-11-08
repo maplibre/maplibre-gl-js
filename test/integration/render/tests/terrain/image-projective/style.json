@@ -1,0 +1,118 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests projective image source texture mapping on terrain.",
+      "height": 512,
+      "width": 512
+    }
+  },
+  "center": [
+    35.33178,
+    31.59598
+  ],
+  "zoom": 12.5,
+  "pitch": 55,
+  "bearing": 20,
+  "sources": {
+    "repeat": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/white-with-x.png"
+      ],
+      "tileSize": 256
+    },
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+      ],
+      "minzoom": 7,
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "image": {
+      "type": "image",
+      "coordinates": [
+        [
+          35.292066,
+          31.610437
+        ],
+        [
+          35.369066,
+          31.606437
+        ],
+        [
+          35.362066,
+          31.583437
+        ],
+        [
+          35.290066,
+          31.588437
+        ]
+      ],
+      "url": "local://image/projective-grid.png"
+    },
+    "projective-outline": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              35.292066,
+              31.610437
+            ],
+            [
+              35.369066,
+              31.606437
+            ],
+            [
+              35.362066,
+              31.583437
+            ],
+            [
+              35.290066,
+              31.588437
+            ],
+            [
+              35.292066,
+              31.610437
+            ]
+          ]
+        },
+        "properties": {}
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "osm",
+      "type": "raster",
+      "source": "repeat"
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    },
+    {
+      "id": "projective-outline",
+      "type": "line",
+      "source": "projective-outline",
+      "paint": {
+        "line-color": "#111827",
+        "line-width": 3,
+        "line-opacity": 0.65
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 1
+  }
+}

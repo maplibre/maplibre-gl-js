@@ -5,15 +5,38 @@ import {PbfReader} from 'pbf';
 import {VectorTileWorkerSource} from '../source/vector_tile_worker_source.ts';
 import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {type IActor} from '../util/actor.ts';
-import {type TileParameters, type WorkerTileParameters, type WorkerTileResult, type WorkerTileWithData} from './worker_source.ts';
 import {WorkerTile} from './worker_tile.ts';
-import {setPerformance, sleep} from '../util/test/util.ts';
+import {createFakeActor, setPerformance, sleep} from '../util/test/util.ts';
 import {ABORT_ERROR} from '../util/abort_error.ts';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
 import {VectorTile} from '@mapbox/vector-tile';
-import Point from '@mapbox/point-geometry';
+
+import type {TileParameters, WorkerTileParameters, WorkerTileResult, WorkerTileWithData} from './worker_source.ts';
+import type {IActor} from '../util/actor.ts';
+
+/** Reads a tile fixture into an `ArrayBuffer` of the test's realm, which the fake server accepts as a response body. */
+function readTileFixture(file: string): ArrayBuffer {
+    const data = fs.readFileSync(path.join(__dirname, '../../test/unit/assets', file));
+    const body = new ArrayBuffer(data.byteLength);
+    new Uint8Array(body).set(data);
+    return body;
+}
+
+/** A symbol layer on the fixture's `place_label` features, whose icons and glyphs make parsing wait on the actor. */
+function createPlaceLabelLayerIndex(): StyleLayerIndex {
+    return new StyleLayerIndex([{
+        id: 'place_label',
+        source: 'source',
+        'source-layer': 'place_label',
+        type: 'symbol',
+        layout: {
+            'icon-image': 'hello',
+            'text-font': ['StandardFont-Bold'],
+            'text-field': '{name}'
+        }
+    }]);
+}
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;
@@ -28,6 +51,7 @@ describe('vector tile worker source', () => {
     afterEach(() => {
         server.restore();
         vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
     test('VectorTileWorkerSource.abortTile aborts pending request', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
@@ -35,368 +59,291 @@ describe('vector tile worker source', () => {
         const loadPromise = source.loadTile({
             source: 'source',
             uid: 0,
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
             request: {url: 'http://localhost:2900/abort'}
-        } as any as WorkerTileParameters);
+        } as WorkerTileParameters);
 
         const abortPromise = source.abortTile({
             source: 'source',
             uid: 0
-        } as any as TileParameters);
+        } as TileParameters);
 
-        expect(source.tileState.loading).toEqual({});
         await expect(abortPromise).resolves.toBeFalsy();
         await expect(loadPromise).rejects.toThrow(expect.objectContaining({name: ABORT_ERROR}));
     });
 
     test('VectorTileWorkerSource.removeTile removes loaded tile', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-
-        source.tileState.loaded = {
-            '0': {} as WorkerTile
-        };
-
-        await source.removeTile({
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
+        });
+        server.autoRespond = true;
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
+        const params = {
             source: 'source',
-            uid: 0
-        } as any as TileParameters);
+            uid: 0,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as WorkerTileParameters;
+        await source.loadTile(params);
 
-        expect(source.tileState.loaded).toEqual({});
+        await source.removeTile({source: 'source', uid: 0} as TileParameters);
+
+        await expect(source.reloadTile(params)).rejects.toThrow(/never loaded or has been removed/);
     });
 
-    test('VectorTileWorkerSource.reloadTile reloads a previously-loaded tile', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = vi.fn().mockReturnValue(Promise.resolve({} as WorkerTileResult));
+    test('VectorTileWorkerSource.reloadTile parses the tile for the world copy it is reloaded in', async () => {
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, '');
+        });
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
+        const params = {
+            source: 'source',
+            uid: 0,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as WorkerTileParameters;
+        const loadPromise = source.loadTile(params);
+        server.respond();
+        await loadPromise;
+        const tileID = new OverscaledTileID(0, 1, 0, 0, 0);
 
-        source.tileState.loaded = {
-            '0': {
-                status: 'done',
-                vectorTile: {},
-                parse
-            } as any as WorkerTile
-        };
+        const result = await source.reloadTile({...params, tileID}) as WorkerTileWithData;
 
-        const reloadPromise = source.reloadTile({uid: 0} as any as WorkerTileParameters);
-        expect(parse).toHaveBeenCalledTimes(1);
-        await expect(reloadPromise).resolves.toBeTruthy();
+        expect(result.featureIndex.tileID).toEqual(tileID);
     });
 
-    test('VectorTileWorkerSource.loadTile reparses tile if the reloadTile has been called during parsing', async () => {
-        const rawTileData = new ArrayBuffer(0);
-
+    test('VectorTileWorkerSource keeps the etag across reloadTile so the next expiry refresh can return unmodified', async () => {
         const layerIndex = new StyleLayerIndex([{
-            id: 'test',
+            id: 'water',
             source: 'source',
-            'source-layer': 'test',
-            type: 'symbol',
-            layout: {
-                'icon-image': 'hello',
-                'text-font': ['StandardFont-Bold'],
-                'text-field': '{name}'
-            }
+            'source-layer': 'water',
+            type: 'fill'
         }]);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
 
-        const actor = {
-            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
-                return new Promise((resolve, _reject) => {
-                    const res = setTimeout(() => {
-                        const response = message.type === 'getImages' ?
-                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
-                        resolve(response);
-                    }, 100);
-                    abortController.signal.addEventListener('abort', () => {
-                        clearTimeout(res);
-                    });
-                });
-            }
-        };
+        server.respondWith(request => {
+            request.respond(200, {
+                'Content-Type': 'application/pbf',
+                'ETag': '"v1"',
+                'Cache-Control': 'max-age=300'
+            }, readTileFixture('mbsv5-6-18-23.vector.pbf') as any);
+        });
 
-        const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
-        source.loadVectorTile = (_params, _rawData) => {
-            return {
-                vectorTile: {
-                    layers: {
-                        test: {
-                            version: 2,
-                            name: 'test',
-                            extent: 8192,
-                            length: 1,
-                            feature: (featureIndex: number) => ({
-                                extent: 8192,
-                                type: 1,
-                                id: featureIndex,
-                                properties: {
-                                    name: 'test'
-                                },
-                                loadGeometry () {
-                                    return [[new Point(0, 0)]];
-                                }
-                            })
-                        }
-                    }
-                },
-                rawData: rawTileData
-            };
-        };
+        const params = {
+            source: 'source',
+            uid: 0,
+            tileID: new OverscaledTileID(6, 0, 6, 18, 23),
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+        } as WorkerTileParameters;
 
+        const loadPromise = source.loadTile(params);
+        server.respond();
+        const loadResult = await loadPromise;
+        const reloadResult = await source.reloadTile(params);
+        const paramsWithEtagKeptFromReload = {...params, etag: reloadResult.etag};
+        const expiryRefreshPromise = source.loadTile(paramsWithEtagKeptFromReload);
+        server.respond();
+        const expiryRefreshResult = await expiryRefreshPromise;
+
+        expect(loadResult.etag).toBe('"v1"');
+        expect(loadResult.cacheControl).toBe('max-age=300');
+        expect(reloadResult.etag).toBe('"v1"');
+        expect(reloadResult.cacheControl).toBeUndefined();
+        expect(expiryRefreshResult.etagUnmodified).toBe(true);
+    });
+
+    test('VectorTileWorkerSource.reloadTile during parsing waits for the reparse and returns the raw tile data', async () => {
+        const rawTileData = readTileFixture('mbsv5-6-18-23.vector.pbf');
+        const source = new VectorTileWorkerSource(createFakeActor(), createPlaceLabelLayerIndex(), ['hello']);
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
         });
-
-        source.loadTile({
+        const params = {
             source: 'source',
             uid: 0,
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            tileID: new OverscaledTileID(6, 0, 6, 18, 23),
             request: {url: 'http://localhost:2900/faketile.pbf'},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
+        } as WorkerTileParameters;
 
+        const onSettled = vi.fn();
+        source.loadTile(params).then(onSettled, onSettled);
         server.respond();
-
-        // allow promise to run
         await sleep(0);
 
-        const res = await source.reloadTile({
+        const res = await source.reloadTile(params) as WorkerTileWithData;
+
+        expect(onSettled).not.toHaveBeenCalled();
+        expect(res.rawTileData).toStrictEqual(rawTileData);
+    });
+
+    test('VectorTileWorkerSource.reloadTile includes rawTileData in response if loadTile was aborted', async () => {
+        const rawTileData = readTileFixture('mbsv5-6-18-23.vector.pbf');
+        let sendAsyncShouldAbort = false;
+        const source = new VectorTileWorkerSource(createFakeActor(() => sendAsyncShouldAbort), createPlaceLabelLayerIndex(), ['hello']);
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
+        });
+        const params = {
             source: 'source',
             uid: 0,
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            tileID: new OverscaledTileID(6, 0, 6, 18, 23),
+            request: {url: 'http://localhost:2900/faketile.pbf'},
             subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
-        } as any as WorkerTileParameters) as WorkerTileWithData;
-        expect(res).toBeDefined();
-        expect(res.rawTileData).toBeDefined();
+        } as WorkerTileParameters;
+
+        sendAsyncShouldAbort = true;
+        const loadTilePromise = source.loadTile(params);
+        server.respond();
+        await expect(loadTilePromise).rejects.toThrow(/aborted/);
+
+        sendAsyncShouldAbort = false;
+        const res = await source.reloadTile(params) as WorkerTileWithData;
+
         expect(res.rawTileData).toStrictEqual(rawTileData);
     });
 
     test('VectorTileWorkerSource.loadTile reparses tile if reloadTile is called during reparsing', async () => {
-        const rawTileData = new ArrayBuffer(0);
-        const loadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: new VectorTile(new PbfReader(rawTileData)),
-                rawData: rawTileData,
-                encoding: 'mvt'
-            };
-        };
-
-        const layerIndex = new StyleLayerIndex([{
-            id: 'test',
-            source: 'source',
-            'source-layer': 'test',
-            type: 'fill'
-        }]);
-
-        const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = loadVectorData;
-
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
         const parseWorkerTileMock = vi
             .spyOn(WorkerTile.prototype, 'parse')
-            .mockImplementation(function(this: WorkerTile, _data, _layerIndex, _availableImages, _actor) {
-                this.status = 'parsing';
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({} as WorkerTileResult), 20);
-                });
+            .mockImplementation(async () => {
+                await sleep(20);
+                return {} as WorkerTileResult;
             });
-
         server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
+            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
         });
-
-        const loadPromise = source.loadTile({
+        const params = {
             source: 'source',
             uid: 0,
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
             request: {url: 'http://localhost:2900/faketile.pbf'}
-        } as any as WorkerTileParameters);
+        } as WorkerTileParameters;
 
+        const loadPromise = source.loadTile(params);
         server.respond();
-
-        // let the promise start
         await sleep(0);
 
-        const res = await source.reloadTile({
-            source: 'source',
-            uid: '0',
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
-        } as any as WorkerTileParameters);
+        const res = await source.reloadTile(params);
+
         expect(res).toBeDefined();
         expect(parseWorkerTileMock).toHaveBeenCalledTimes(2);
         await expect(loadPromise).resolves.toBeTruthy();
     });
 
     test('VectorTileWorkerSource.reloadTile during loadTile returns data even if interrupted by another reloadTile', async () => {
-        const rawTileData = new ArrayBuffer(0);
-        const loadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: new VectorTile(new PbfReader(rawTileData)),
-                rawData: rawTileData,
-                encoding: 'mvt'
-            };
-        };
-
-        const layerIndex = new StyleLayerIndex([{
-            id: 'test',
-            source: 'source',
-            'source-layer': 'test',
-            type: 'fill'
-        }]);
-
-        const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = loadVectorData;
-
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
         const parseWorkerTileMock = vi
             .spyOn(WorkerTile.prototype, 'parse')
-            .mockImplementation(function(this: WorkerTile, _data, _layerIndex, _availableImages, _actor) {
-                this.status = 'parsing';
-                return new Promise((resolve) => {
-                    setTimeout(() => resolve({} as WorkerTileResult), 20);
-                });
+            .mockImplementation(async () => {
+                await sleep(20);
+                return {} as WorkerTileResult;
             });
-
         server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
+            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
         });
-
-        const loadPromise = source.loadTile({
+        const params = {
             source: 'source',
             uid: 0,
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
             request: {url: 'http://localhost:2900/faketile.pbf'}
-        } as any as WorkerTileParameters);
+        } as WorkerTileParameters;
 
+        const loadPromise = source.loadTile(params);
         server.respond();
-
-        // Let the load start
         await sleep(0);
 
-        // This reload will be interrupted by the next one
-        source.reloadTile({
-            source: 'source',
-            uid: '0',
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
-        } as any as WorkerTileParameters);
+        source.reloadTile(params);
+        const res = await source.reloadTile(params) as WorkerTileWithData;
 
-        const res = await source.reloadTile({
-            source: 'source',
-            uid: '0',
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
-        } as any as WorkerTileParameters);
-        expect(res).toBeDefined();
-        expect((res as WorkerTileWithData).rawTileData).toBeDefined();
+        expect(res.rawTileData).toBeDefined();
         expect(parseWorkerTileMock).toHaveBeenCalledTimes(3);
         await expect(loadPromise).resolves.toBeTruthy();
     });
 
-    test('VectorTileWorkerSource loadTile uses _getOverzoomTile when overzoomParameters is provided', async () => {
-        const source = new VectorTileWorkerSource({} as any, new StyleLayerIndex(), []);
-        const mockVectorTile = {layers: {}} as any;
-
-        source.loadVectorTile = vi.fn().mockReturnValue({
-            vectorTile: mockVectorTile,
-            rawData: new ArrayBuffer(0)
+    test('VectorTileWorkerSource slices an overzoomed tile from the source maxzoom tile and encodes it as MVT', async () => {
+        const rawTileData = readTileFixture('../../integration/assets/tiles/mlt/5/17/10.mlt');
+        server.respondWith('http://localhost:2900/5/17/10.mlt', request => {
+            request.respond(200, {'Content-Type': 'application/vnd.maplibre-tile'}, rawTileData as any);
         });
+        server.autoRespond = true;
+        const layerIndex = new StyleLayerIndex([{
+            id: 'boundary',
+            source: 'source',
+            'source-layer': 'boundary',
+            type: 'line'
+        }]);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
 
-        const getOverzoomTileSpy = vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
-            vectorTile: mockVectorTile,
-            rawData: new ArrayBuffer(0)
-        });
-
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
-        });
-
-        const params = {
-            uid: '1',
-            tileID: new OverscaledTileID(16, 0, 16, 100, 100),
-            source: 'test',
-            overzoomParameters: {
-                maxZoomTileID: new CanonicalTileID(14, 25, 25),
-                overzoomRequest: {url: ''}
-            }
-        } as WorkerTileParameters;
-
-        const promise = source.loadTile(params);
-        server.respond();
-        await promise;
-
-        expect(getOverzoomTileSpy).toHaveBeenCalledWith(params, mockVectorTile);
-    });
-
-    test('VectorTileWorkerSource uses mvt encoding for overzoomed mlt tiles', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const mockVectorTile = {layers: {}} as any;
-
-        source.loadVectorTile = vi.fn().mockReturnValue({
-            vectorTile: mockVectorTile,
-            rawData: new ArrayBuffer(0)
-        });
-
-        vi.spyOn(source as any, '_getOverzoomTile').mockReturnValue({
-            vectorTile: mockVectorTile,
-            rawData: new ArrayBuffer(0)
-        });
-
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
-        });
-
-        const params = {
-            uid: '1',
-            tileID: new OverscaledTileID(16, 0, 16, 100, 100),
-            source: 'test',
-            encoding: 'mlt',
-            overzoomParameters: {
-                maxZoomTileID: new CanonicalTileID(14, 25, 25),
-                overzoomRequest: {url: ''}
-            }
-        } as WorkerTileParameters;
-
-        const promise = source.loadTile(params);
-        server.respond();
-        const res = await promise as WorkerTileWithData;
-
-        expect(res.encoding).toBe('mvt');
-    });
-
-    test('VectorTileWorkerSource.reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = vi.fn();
-
-        source.tileState.loaded = {
-            '0': {
-                status: 'done',
-                parse
-            } as any as WorkerTile
-        };
-
-        await source.reloadTile({uid: 0} as any as WorkerTileParameters);
-        expect(parse).not.toHaveBeenCalled();
-    });
-
-    test('VectorTileWorkerSource.loadTile returns null for an empty tile', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        source.loadVectorTile = (_params, _rawData) => null;
-        const parse = vi.fn();
-
-        server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/pbf'}, 'something...');
-        });
-
-        const promise = source.loadTile({
+        const result = await source.loadTile({
             source: 'source',
             uid: 0,
-            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
-            request: {url: 'http://localhost:2900/faketile.pbf'}
-        } as any as WorkerTileParameters);
+            tileID: new OverscaledTileID(7, 0, 7, 69, 41),
+            request: {url: 'http://localhost:2900/7/69/41.mlt'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+            encoding: 'mlt',
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(5, 17, 10),
+                overzoomRequest: {url: 'http://localhost:2900/5/17/10.mlt'}
+            }
+        } as WorkerTileParameters) as WorkerTileWithData;
 
+        expect(server.requests.map(request => request.url)).toEqual(['http://localhost:2900/5/17/10.mlt']);
+        expect(result.encoding).toBe('mvt');
+        expect(new VectorTile(new PbfReader(result.rawTileData)).layers.boundary.length).toBeGreaterThan(0);
+    });
+
+    test('VectorTileWorkerSource.reloadTile of an overzoomed tile draws a source layer added after it loaded, without a new request', async () => {
+        const rawTileData = new Uint8Array(fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))).buffer;
+        const layerIndex = new StyleLayerIndex([{id: 'borders', type: 'line', source: 'source', 'source-layer': 'admin'}]);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, rawTileData as any);
+        });
+        const params = {
+            source: 'source',
+            uid: '1',
+            tileID: new OverscaledTileID(7, 0, 7, 36, 46),
+            request: {url: 'http://localhost:2900/7/36/46.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
+            overzoomParameters: {
+                maxZoomTileID: new CanonicalTileID(6, 18, 23),
+                overzoomRequest: {url: 'http://localhost:2900/6/18/23.pbf'}
+            }
+        } as any as WorkerTileParameters;
+
+        const loadPromise = source.loadTile(params);
         server.respond();
+        const loaded = await loadPromise as WorkerTileWithData;
+        layerIndex.update([{id: 'water', type: 'fill', source: 'source', 'source-layer': 'water'}], []);
+        const reloaded = await source.reloadTile(params) as WorkerTileWithData;
 
-        expect(parse).not.toHaveBeenCalled();
-        expect(await promise).toBeNull();
+        expect(server.requests).toHaveLength(1);
+        expect(reloaded.buckets.some(bucket => bucket.layerIds.includes('water'))).toBe(true);
+        expect(new VectorTile(new PbfReader(loaded.rawTileData)).layers.water).toBeDefined();
+    });
+
+    test('VectorTileWorkerSource.reloadTile does not parse a tile whose load failed', async () => {
+        server.respondWith([404, {}, '']);
+        server.autoRespond = true;
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
+        const params = {
+            source: 'source',
+            uid: 0,
+            tileID: new OverscaledTileID(0, 0, 0, 0, 0),
+            request: {url: 'http://localhost:2900/faketile.pbf'}
+        } as WorkerTileParameters;
+        await expect(source.loadTile(params)).rejects.toThrow(expect.objectContaining({status: 404}));
+
+        await expect(source.reloadTile(params)).resolves.toBeUndefined();
     });
 
     test('VectorTileWorkerSource.returns a good error message when failing to parse a tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = vi.fn();
 
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, 'something...');
@@ -411,13 +358,11 @@ describe('vector tile worker source', () => {
 
         server.respond();
 
-        expect(parse).not.toHaveBeenCalled();
-        await expect(loadTilePromise).rejects.toThrowError(/Unable to parse the tile at/);
+        await expect(loadTilePromise).rejects.toThrow(/Unable to parse the tile at/);
     });
 
     test('VectorTileWorkerSource.returns a good error message when failing to parse a gzipped tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = vi.fn();
 
         server.respondWith(new Uint8Array([0x1f, 0x8b]).buffer);
 
@@ -430,23 +375,10 @@ describe('vector tile worker source', () => {
 
         server.respond();
 
-        expect(parse).not.toHaveBeenCalled();
-        await expect(loadTilePromise).rejects.toThrowError(/gzipped/);
+        await expect(loadTilePromise).rejects.toThrow(/gzipped/);
     });
 
     test('VectorTileWorkerSource provides resource timing information', async () => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0);
-
-        const loadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: new VectorTile(new PbfReader(rawTileData)),
-                rawData: rawTileData,
-                cacheControl: null,
-                expires: null,
-                encoding: 'mvt'
-            };
-        };
-
         const exampleResourceTiming = {
             connectEnd: 473,
             connectStart: 473,
@@ -468,20 +400,12 @@ describe('vector tile worker source', () => {
             secureConnectionStart: 0
         };
 
-        const layerIndex = new StyleLayerIndex([{
-            id: 'test',
-            source: 'source',
-            'source-layer': 'test',
-            type: 'fill'
-        }]);
-
-        const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = loadVectorData;
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
 
         window.performance.getEntriesByName = vi.fn().mockReturnValue([exampleResourceTiming]);
 
         server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/pbf'}, 'ok');
+            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
         });
 
         const promise = source.loadTile({
@@ -499,27 +423,7 @@ describe('vector tile worker source', () => {
     });
 
     test('VectorTileWorkerSource provides resource timing information (fallback method)', async () => {
-        const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf')).buffer.slice(0);
-
-        const loadVectorData = (_params, _rawData) => {
-            return {
-                vectorTile: new VectorTile(new PbfReader(rawTileData)),
-                rawData: rawTileData,
-                cacheControl: null,
-                expires: null,
-                encoding: 'mvt'
-            };
-        };
-
-        const layerIndex = new StyleLayerIndex([{
-            id: 'test',
-            source: 'source',
-            'source-layer': 'test',
-            type: 'fill'
-        }]);
-
-        const source = new VectorTileWorkerSource(actor, layerIndex, []);
-        source.loadVectorTile = loadVectorData;
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
 
         const sampleMarks = [100, 350];
         const marks = {};
@@ -541,7 +445,7 @@ describe('vector tile worker source', () => {
         });
 
         server.respondWith(request => {
-            request.respond(200, {'Content-Type': 'application/pbf'}, 'ok');
+            request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
         });
 
         const promise = source.loadTile({
@@ -560,12 +464,8 @@ describe('vector tile worker source', () => {
         );
     });
 
-    test('VectorTileWorkerSource.loadTile skips parsing and returns unmodified when e-tags match', async () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-
-        source.loadVectorTile = () => {
-            throw new Error('loadVectorTile should not be called when etag matches');
-        };
+    test('VectorTileWorkerSource.loadTile parses a tile with an unchanged e-tag that this worker has not loaded', async () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex([]), []);
 
         const rawTileData = new ArrayBuffer(0);
         server.respondWith(request => {
@@ -588,6 +488,6 @@ describe('vector tile worker source', () => {
         const res = await promise;
 
         expect(res).toBeDefined();
-        expect(res.etagUnmodified).toBe(true);
+        expect(res.etagUnmodified).toBeUndefined();
     });
 });

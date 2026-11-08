@@ -1,20 +1,22 @@
 import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
+import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {type Source} from './source.ts';
 import {VectorTileSource} from './vector_tile_source.ts';
-import {type Tile} from '../tile/tile.ts';
 import {AJAXError} from '../util/ajax.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {Tile} from '../tile/tile.ts';
 import {Evented} from '../util/evented.ts';
 import {RequestManager} from '../util/request_manager.ts';
 import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
-import {type Map} from '../ui/map.ts';
-import {type WorkerTileParameters} from './worker_source.ts';
-import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 import {type ActorMessage, MessageType} from '../util/actor_messages.ts';
-import {type MapSourceDataEvent} from '../ui/events.ts';
+
+import type {Map} from '../ui/map.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
+import type {Source} from './source.ts';
+import type {MapSourceDataEvent} from '../ui/events.ts';
 
 class StubbedEvented extends Evented {}
 
@@ -26,11 +28,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         _requestManager: new RequestManager(transformCallback),
         style: {
             tileManagers: {id: {clearTiles}},
-            projection: {
-                get subdivisionGranularity() {
-                    return SubdivisionGranularitySetting.noSubdivision;
-                }
-            }
+            projection: new MercatorProjection()
         },
         getGlobalState: () => ({}),
         getPixelRatio() { return 1; },
@@ -39,6 +37,24 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
     source.on('error', () => { }); // to prevent console log of errors
 
     return source;
+}
+
+/**
+ * Stands in for the worker of a source whose server has only the tiles given: a loadTile message for one of their URLs
+ * resolves with that tile's result, and any other rejects with a 404, as the worker does when the server answers with one.
+ * `requestedUrls` lists the URL of each tile asked for, in order.
+ */
+function createSparseServerActor(tiles: {[url: string]: object}) {
+    const requestedUrls: string[] = [];
+    const sendAsync = vi.fn().mockImplementation(async (message: ActorMessage<MessageType.loadTile>) => {
+        const url = message.data.overzoomParameters?.overzoomRequest.url ?? message.data.request.url;
+        requestedUrls.push(url);
+        if (url in tiles) {
+            return tiles[url];
+        }
+        throw new AJAXError(404, 'Not Found', url, new Blob());
+    });
+    return {sendAsync, requestedUrls};
 }
 
 describe('VectorTileSource', () => {
@@ -321,6 +337,71 @@ describe('VectorTileSource', () => {
         expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
 
+    test('a sparse source loads a missing tile from the nearest ancestor that exists', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], sparse: true});
+        const nearestAncestor = {};
+        const {sendAsync} = createSparseServerActor({
+            'http://example.com/8/1/1.pbf': nearestAncestor,
+            'http://example.com/7/0/0.pbf': {}
+        });
+        source.dispatcher = getWrapDispatcher()({sendAsync});
+        await waitForMetadataEvent(source);
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const loadVectorData = vi.spyOn(tile, 'loadVectorData').mockImplementation(() => {});
+
+        await source.loadTile(tile);
+
+        expect(loadVectorData.mock.lastCall[0]).toBe(nearestAncestor);
+    });
+
+    test('a sparse source loads a missing tile empty when every ancestor down to its minzoom is missing', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 8, sparse: true});
+        const {sendAsync, requestedUrls} = createSparseServerActor({});
+        source.dispatcher = getWrapDispatcher()({sendAsync});
+        await waitForMetadataEvent(source);
+        const tile = new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512);
+        const loadVectorData = vi.spyOn(tile, 'loadVectorData').mockImplementation(() => {});
+
+        await source.loadTile(tile);
+
+        expect(requestedUrls).toEqual(['http://example.com/10/5/5.pbf', 'http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf']);
+        expect(loadVectorData).toHaveBeenCalledWith(null, source.map.style);
+    });
+
+    test('a sparse source searches no more than 10 zoom levels above a missing tile', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], sparse: true});
+        const {sendAsync, requestedUrls} = createSparseServerActor({});
+        source.dispatcher = getWrapDispatcher()({sendAsync});
+        await waitForMetadataEvent(source);
+
+        await source.loadTile(new Tile(new OverscaledTileID(14, 0, 14, 1024, 1024), 512));
+
+        expect(requestedUrls.at(-1)).toBe('http://example.com/4/1/1.pbf');
+    });
+
+    test('a sparse source searches from below its maxzoom for an overzoomed tile whose maxzoom tile is missing', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf'], minzoom: 8, maxzoom: 9, sparse: true});
+        const {sendAsync, requestedUrls} = createSparseServerActor({});
+        source.dispatcher = getWrapDispatcher()({sendAsync});
+        await waitForMetadataEvent(source);
+        source.map._zoomLevelsToOverscale = 1;
+
+        await source.loadTile(new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512));
+
+        expect(requestedUrls).toEqual(['http://example.com/9/2/2.pbf', 'http://example.com/8/1/1.pbf']);
+    });
+
+    test('a source that is not sparse does not search for a missing tile', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+        const {sendAsync, requestedUrls} = createSparseServerActor({});
+        source.dispatcher = getWrapDispatcher()({sendAsync});
+        await waitForMetadataEvent(source);
+
+        await source.loadTile(new Tile(new OverscaledTileID(10, 0, 10, 5, 5), 512));
+
+        expect(requestedUrls).toEqual(['http://example.com/10/5/5.pbf']);
+    });
+
     test('reloads a loading tile properly', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
@@ -376,6 +457,64 @@ describe('VectorTileSource', () => {
 
         await waitForMetadataEvent(source);
         expect(source.tileBounds.bounds).toEqual({_sw: {lng: -47, lat: -7}, _ne: {lng: -45, lat: 90}});
+    });
+
+    test('builds tile bounds with the map projection', async () => {
+        const source = new VectorTileSource('id', {
+            type: 'vector',
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/{z}/{x}/{y}.png'],
+            bounds: [0, 45, 45, 80]
+        }, getMockDispatcher(), undefined);
+        source.onAdd({
+            _getMapId: () => 1,
+            _requestManager: new RequestManager(),
+            style: {projection: new MercatorProjection(new CRSWorldCoordinateHelper(identityCrs))}
+        } as any as Map);
+
+        await waitForMetadataEvent(source);
+        const lastRowInsideLat45To80InTheIdentityCrs = 1;
+        const firstRowOnlyMercatorWouldInclude = 2;
+
+        expect(source.hasTile(new OverscaledTileID(3, 0, 3, 4, lastRowInsideLat45To80InTheIdentityCrs))).toBeTruthy();
+        expect(source.hasTile(new OverscaledTileID(3, 0, 3, 4, firstRowOnlyMercatorWouldInclude))).toBeFalsy();
+    });
+
+    test('expands {bbox} in the map projection\'s tile grid', async () => {
+        const source = new VectorTileSource('id', {
+            type: 'vector',
+            minzoom: 0,
+            maxzoom: 22,
+            tiles: ['http://example.com/?bbox={bbox}']
+        }, getMockDispatcher(), undefined);
+        source.onAdd({
+            transform: {showCollisionBoxes: false},
+            _getMapId: () => 1,
+            _requestManager: new RequestManager(),
+            style: {projection: new MercatorProjection(new CRSWorldCoordinateHelper(identityCrs))},
+            getGlobalState: () => ({}),
+            getPixelRatio() { return 1; },
+        } as any as Map);
+        let receivedMessage: ActorMessage<MessageType> = null;
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                receivedMessage = message;
+                return Promise.resolve({});
+            }
+        });
+        await waitForMetadataEvent(source);
+
+        const tile = {
+            tileID: new OverscaledTileID(1, 0, 1, 1, 0),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        const northEastQuarterOfTheIdentityGrid = 'http://example.com/?bbox=0,0,90,90';
+        expect((receivedMessage.data as WorkerTileParameters).request.url).toBe(northEastQuarterOfTheIdentityGrid);
     });
 
     test('respects TileJSON.bounds when loaded from TileJSON', async () => {
@@ -454,7 +593,7 @@ describe('VectorTileSource', () => {
 
         await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'metadata');
 
-        expect(server.requests.length).toBe(2);
+        expect(server.requests).toHaveLength(2);
         expect(server.requests[0].aborted).toBe(true);
         expect(source.serialize()).toEqual({
             type: 'vector',
@@ -480,6 +619,31 @@ describe('VectorTileSource', () => {
         });
     });
 
+    test('loadTile requests the new URLs right after setTiles, before the source reloads', async () => {
+        const source = createSource({
+            tiles: ['http://example.com/{z}/{x}/{y}.png']
+        });
+
+        let receivedMessage: ActorMessage<MessageType> = null;
+
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(message) {
+                receivedMessage = message;
+                return Promise.resolve({});
+            }
+        });
+
+        source.setTiles(['http://example2.com/{z}/{x}/{y}.png']);
+
+        await source.loadTile({
+            loadVectorData() {},
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5)
+        } as any as Tile);
+
+        expect((receivedMessage.data as WorkerTileParameters).request.url)
+            .toBe('http://example2.com/10/5/5.png');
+    });
+
     test('setTiles updates tiles without clearing the cache', async () => {
         const clearTiles = vi.fn();
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
@@ -487,6 +651,31 @@ describe('VectorTileSource', () => {
         const e: MapSourceDataEvent = await waitForEvent(source, 'data', (e: MapSourceDataEvent) => e.sourceDataType === 'content');
         expect(e.sourceDataChanged).toBe(true);
         expect(clearTiles).not.toHaveBeenCalled();
+    });
+
+    test('does not send loadTile to the worker if the tile was aborted before getting an actor', async () => {
+        let releaseTransform: () => void;
+        const transformPending = new Promise<void>((resolve) => { releaseTransform = resolve; });
+        const source = createSource(
+            {tiles: ['http://example.com/{z}/{x}/{y}.png']},
+            (url: string) => transformPending.then(() => ({url}))
+        );
+
+        const sendAsync = vi.fn().mockResolvedValue({});
+        source.dispatcher = getWrapDispatcher()({sendAsync});
+        await waitForMetadataEvent(source);
+
+        const tile = {tileID: new OverscaledTileID(10, 0, 10, 5, 5), unloadVectorData() {}} as any as Tile;
+        const loadPromise = source.loadTile(tile);
+
+        tile.aborted = true;
+        await source.abortTile(tile);
+        await source.unloadTile(tile);
+
+        releaseTransform();
+        await loadPromise;
+
+        expect(sendAsync).not.toHaveBeenCalled();
     });
 
     test('returns early after worker response if tile was aborted', async () => {
@@ -517,6 +706,83 @@ describe('VectorTileSource', () => {
         expect(tile.etag).toBeUndefined();
     });
 
+    describe('Accept header', () => {
+        test('requests for MVT tiles do not include an accept header', async () => {
+            const source = createSource({
+                tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+            });
+            const sendAsync = vi.fn().mockResolvedValue({});
+            source.dispatcher = getWrapDispatcher()({sendAsync});
+            await waitForMetadataEvent(source);
+
+            await source.loadTile({
+                tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                loadVectorData() {},
+            } as any as Tile);
+
+            const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+            expect(params.request.headers).toBeUndefined();
+        });
+
+        test('requests for MLT tiles with application/vnd.maplibre-tile', async () => {
+            const source = createSource({
+                tiles: ['http://example.com/{z}/{x}/{y}.mlt'],
+                encoding: 'mlt'
+            });
+            const sendAsync = vi.fn().mockResolvedValue({});
+            source.dispatcher = getWrapDispatcher()({sendAsync});
+            await waitForMetadataEvent(source);
+
+            await source.loadTile({
+                tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                loadVectorData() {},
+            } as any as Tile);
+
+            const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+            expect(params.request.headers.Accept).toBe('application/vnd.maplibre-tile');
+        });
+
+        test('respects Accept header set by transformRequest', async () => {
+            const source = createSource({
+                tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+            }, async (url) => ({
+                url,
+                headers: {Accept: 'application/x-custom'}
+            }));
+            const sendAsync = vi.fn().mockResolvedValue({});
+            source.dispatcher = getWrapDispatcher()({sendAsync});
+            await waitForMetadataEvent(source);
+
+            await source.loadTile({
+                tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                loadVectorData() {},
+            } as any as Tile);
+
+            const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+            expect(params.request.headers.Accept).toBe('application/x-custom');
+        });
+
+        test('sets Accept header on overzoom requests', async () => {
+            const source = createSource({
+                tiles: ['http://example.com/{z}/{x}/{y}.pbf'],
+                maxzoom: 10,
+                encoding: 'mlt'
+            });
+            const sendAsync = vi.fn().mockResolvedValue({});
+            source.dispatcher = getWrapDispatcher()({sendAsync});
+            await waitForMetadataEvent(source);
+            source.map._zoomLevelsToOverscale = 2;
+
+            await source.loadTile({
+                tileID: new OverscaledTileID(12, 0, 12, 5, 5),
+                loadVectorData() {},
+            } as any as Tile);
+
+            const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+            expect(params.request.headers.Accept).toBe('application/vnd.maplibre-tile');
+        });
+    });
+ 
     test('swallows an AbortError from the worker request', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
@@ -540,6 +806,17 @@ describe('VectorTileSource', () => {
 
         await expect(source.loadTile(tile)).resolves.toBeUndefined();
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+    });
+
+    test('removes an unloaded tile from every worker', async () => {
+        const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']});
+        const broadcast = vi.fn().mockResolvedValue([]);
+        source.dispatcher = {broadcast} as any;
+        const tile = {uid: 1, actor: {}, unloadVectorData() {}} as any as Tile;
+
+        await source.unloadTile(tile);
+
+        expect(broadcast).toHaveBeenCalledWith(MessageType.removeTile, {uid: tile.uid, type: source.type, source: source.id});
     });
 
     test('stores worker etag on tile when present', async () => {

@@ -45,14 +45,24 @@ export class TaskQueue {
         // on the next run, not the current run.
         this._queue = [];
 
+        let failed = false;
+        let firstError: unknown;
         for (const task of queue) {
             if (task.cancelled) continue;
-            task.callback(timeStamp);
+            try {
+                task.callback(timeStamp);
+            } catch (error) {
+                if (!failed) {
+                    failed = true;
+                    firstError = error;
+                }
+            }
             if (this._cleared) break;
         }
 
         this._cleared = false;
         this._currentlyRunning = false;
+        if (failed) throw firstError;
     }
 
     clear(): void {

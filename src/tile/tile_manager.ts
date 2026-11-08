@@ -16,7 +16,7 @@ import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manager_raster.ts';
 import {backfillDEM} from './tile_manager_raster_dem.ts';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
-import {MapSourceDataEvent} from '../ui/events.ts';
+import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {Context} from '../webgl/context.ts';
@@ -24,12 +24,14 @@ import type {Source} from '../source/source.ts';
 import type {Map} from '../ui/map.ts';
 import type {Style} from '../style/style.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {TileState} from './tile.ts';
 import type {FeatureState, ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Terrain} from '../render/terrain.ts';
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 
 type TileResult = {
     tile: Tile;
@@ -55,7 +57,7 @@ type TileResult = {
  *  - unloading cached tiles not needed to render a given viewport
  *  - managing tile state and feature state
  */
-export class TileManager extends Evented {
+export class TileManager extends Evented<SourceEventType> {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
@@ -70,7 +72,13 @@ export class TileManager extends Evented {
      * source data has loaded (i.e geojson has been tiled on the worker and is ready)
      */
     _sourceLoaded: boolean;
+    _maxContentElevationSeen: number = 0;
 
+    /**
+     * @internal
+     * signifies that the source itself failed to load and had no pending loads, so `loaded()` stops waiting for it
+     * until it starts loading again. A tile that fails does not set it, since `loaded()` already counts a failed tile as done.
+     */
     _sourceErrored: boolean;
     _inViewTiles: InViewTiles;
     _prevLng: number;
@@ -80,7 +88,7 @@ export class TileManager extends Evented {
     _maxTileCacheZoomLevels: number;
     _paused: boolean;
     _shouldReloadOnResume: boolean;
-    transform: ITransform;
+    transform: IReadonlyTransform;
     terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
@@ -105,9 +113,8 @@ export class TileManager extends Evented {
             this._sourceErrored = false;
         });
 
-        this.on('error', () => {
-            // Only set _sourceErrored if the source does not have pending loads.
-            this._sourceErrored = this._source.loaded();
+        this.on('error', (e: ErrorEvent & {tile?: Tile}) => {
+            if (!e.tile) this._sourceErrored = this._source.loaded();
         });
 
         this._source = createSource(id, options, dispatcher, this);
@@ -185,10 +192,10 @@ export class TileManager extends Evented {
         if (this.transform) this.update(this.transform, this.terrain);
     }
 
-    async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
+    async _loadTile(tile: Tile, id: string, state: TileState, hadData: boolean): Promise<void> {
         try {
             const result = await this._source.loadTile(tile) as LoadTileResult;
-            this._tileLoaded(tile, id, state, result);
+            this._tileLoaded(tile, id, state, hadData, result);
         } catch (err) {
             tile.state = 'errored';
 
@@ -222,7 +229,7 @@ export class TileManager extends Evented {
             this._source.prepare();
         }
 
-        this._state.coalesceChanges(this._inViewTiles, this.map ? this.map.painter : null);
+        this._state.coalesceChanges(this._inViewTiles, this.style);
         for (const tile of this._inViewTiles.getAllTiles()) {
             tile.upload(context);
             tile.prepare(this.map.style.imageManager);
@@ -287,6 +294,8 @@ export class TileManager extends Evented {
         // - hard to tell without repro steps
         if (!tile) return;
 
+        const hadData = tile.hasData();
+
         // The difference between "loading" tiles and "reloading" or "expired"
         // tiles is that "reloading"/"expired" tiles are "renderable".
         // Therefore, a "loading" tile cannot become a "reloading" tile without
@@ -294,14 +303,17 @@ export class TileManager extends Evented {
         if (tile.state !== 'loading') {
             tile.state = state;
         }
-        await this._loadTile(tile, id, state);
+        await this._loadTile(tile, id, state, hadData);
     }
 
-    _tileLoaded(tile: Tile, id: string, previousState: TileState, result: LoadTileResult): void {
-        tile.timeAdded = now();
-        // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
-        if (tile.selfFading) {
-            tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+    _tileLoaded(tile: Tile, id: string, previousState: TileState, hadData: boolean, result: LoadTileResult): void {
+        // If the tile was already showing do not restart its fade-in animation
+        if (!hadData) {
+            tile.timeAdded = now();
+            // Since self-fading applies to unloaded tiles, fadeEndTime must be updated upon load
+            if (tile.selfFading) {
+                tile.fadeEndTime = tile.timeAdded + this._rasterFadeDuration;
+            }
         }
 
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
@@ -315,7 +327,7 @@ export class TileManager extends Evented {
         // Reset feature state revision so initializeTileState re-applies
         // feature state to the tile's new bucket data after a reload.
         tile.featureStateRevision = -1;
-        this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+        this._state.initializeTileState(tile, this.style);
 
         if (!tile.aborted) {
             this._source.fire(new MapSourceDataEvent('data', {tile, coord: tile.tileID}));
@@ -489,10 +501,43 @@ export class TileManager extends Evented {
     }
 
     /**
+     * The highest elevation this source's symbols may reach, in meters: `symbol-height-offset`
+     * constants read from the visible symbol layers, data-driven maxima tracked by the loaded
+     * buckets at layout time. Only data-driven layers scan the loaded tiles, so styles without
+     * them pay nothing beyond the layer loop. The value is a high-water mark: a maximum seen once is kept even
+     * after its tile unloads, otherwise dropping the tile would also drop the reason to keep it,
+     * and the tile could not come back while its content is still visible. The mark resets with
+     * the tiles in `clearTiles`.
+     */
+    _updateMaxContentElevation(): number {
+        let maxElevation = this._maxContentElevationSeen;
+        const layers = this.map?.style?._layers;
+        if (!layers) return maxElevation;
+        const tiles = this._inViewTiles.getAllTiles();
+        for (const layerId in layers) {
+            const layer = layers[layerId];
+            if (layer.type !== 'symbol' || layer.source !== this.id || layer.isHidden(this.transform.zoom)) continue;
+            const symbolLayer = layer as SymbolStyleLayer;
+            if (!symbolLayer.layout) continue;
+            const heightOffset = symbolLayer.layout.get('symbol-height-offset');
+            maxElevation = Math.max(maxElevation, heightOffset.constantOr(0));
+            if (heightOffset.isConstant()) continue;
+            for (const tile of tiles) {
+                const bucket = tile.getBucket(layer) as SymbolBucket;
+                if (bucket && bucket.maxHeightOffset > maxElevation) {
+                    maxElevation = bucket.maxHeightOffset;
+                }
+            }
+        }
+        this._maxContentElevationSeen = maxElevation;
+        return maxElevation;
+    }
+
+    /**
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(transform: ITransform, terrain?: Terrain): void {
+    update(transform: IReadonlyTransform, terrain?: Terrain): void {
         if (!this._sourceLoaded || this._paused) {
             return;
         }
@@ -500,7 +545,9 @@ export class TileManager extends Evented {
         this.terrain = terrain;
 
         this.updateCacheSize(transform);
-        this.handleWrapJump(this.transform.center.lng);
+        if (this.transform.worldCoordinateHelper.wraps) {
+            this.handleWrapJump(this.transform.center.lng);
+        }
 
         let idealTileIDs: OverscaledTileID[];
 
@@ -520,6 +567,7 @@ export class TileManager extends Evented {
                 reparseOverscaled: this._source.reparseOverscaled,
                 terrain,
                 calculateTileZoom: this._source.calculateTileZoom,
+                maxContentElevation: this._updateMaxContentElevation(),
             });
 
             if (this._source.hasTile) { // tile should be in bounds
@@ -701,14 +749,14 @@ export class TileManager extends Evented {
 
             // set the tileID because the cached tile could have had a different wrap value
             tile.tileID = tileID;
-            this._state.initializeTileState(tile, this.map ? this.map.painter : null);
+            this._state.initializeTileState(tile, this.style);
         }
 
         const cached = tile;
 
         if (!tile) {
             tile = new Tile(tileID, this._source.tileSize * tileID.overscaleFactor());
-            this._loadTile(tile, tileID.key, tile.state);
+            this._loadTile(tile, tileID.key, tile.state, false);
         }
 
         tile.uses++;
@@ -819,11 +867,21 @@ export class TileManager extends Evented {
     }
 
     /**
+     * Forgets the recorded maximum content elevation, so the next update recomputes it from the
+     * current layers and loaded tiles. Called when a symbol layer is removed, since the removed
+     * layer's heights would otherwise keep expanding tile coverage.
+     */
+    resetMaxContentElevation(): void {
+        this._maxContentElevationSeen = 0;
+    }
+
+    /**
      * Remove all tiles from this pyramid
      */
     clearTiles(): void {
         this._shouldReloadOnResume = false;
         this._paused = false;
+        this.resetMaxContentElevation();
 
         for (const id of this._inViewTiles.getAllIds()) {
             this._removeTile(id);
@@ -915,11 +973,7 @@ export class TileManager extends Evented {
     }
 
     getVisibleCoordinates(symbolLayer?: boolean): OverscaledTileID[] {
-        const coords = this.getRenderableIds(symbolLayer).map((id) => this._inViewTiles.getTileById(id).tileID);
-        if (this.transform) {
-            this.transform.populateCache(coords);
-        }
-        return coords;
+        return this.getRenderableIds(symbolLayer).map((id) => this._inViewTiles.getTileById(id).tileID);
     }
 
     hasTransition(): boolean {

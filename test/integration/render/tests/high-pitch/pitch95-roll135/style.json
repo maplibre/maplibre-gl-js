@@ -4,7 +4,6 @@
     "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
     "metadata": {
         "test": {
-            "timeout": 60000,
             "height": 512,
             "width": 512,
             "maxPitch": 95,

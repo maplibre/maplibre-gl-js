@@ -1,6 +1,8 @@
 import {describe, beforeEach,  afterEach,  test, expect} from 'vitest';
 import {Hash} from './hash.ts';
-import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util.ts';
+import {createMap as globalCreateMap, beforeMapTest, createPolarStereographicCrs} from '../util/test/util.ts';
+import {addProjection, removeProjection} from '../geo/projection/projection_crud.ts';
+
 import type {Map} from './map.ts';
 
 describe('hash', () => {
@@ -218,6 +220,19 @@ describe('hash', () => {
 
             const hashStringWithRotationAndWithoutFeedback = hash.getHashString(false);
             expect(hashStringWithRotationAndWithoutFeedback).toBe('#10/3.75/2.5/45/30');
+        });
+
+        test('keeps the decimals a registered projection needs', async () => {
+            const crs = createPolarStereographicCrs();
+            addProjection(crs);
+            await map.once('style.load');
+            map.setProjection({type: crs.name});
+            map.setZoom(4);
+            map.setCenter([45.1234, 70.5678]);
+
+            expect(hash.getHashString()).toBe('#4/70.568/45.123');
+
+            removeProjection(crs.name);
         });
     });
 
@@ -522,6 +537,7 @@ describe('hash', () => {
 
         map.remove();
 
+        expect(map._removed).toBe(true);
     });
 
     test('hash with URL in other parameter does not change except normalization', () => {

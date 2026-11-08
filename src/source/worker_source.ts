@@ -7,7 +7,7 @@ import type {Bucket} from '../data/bucket.ts';
 import type {FeatureIndex} from '../data/feature_index.ts';
 import type {CollisionBoxArray} from '../data/array_types.g.ts';
 import type {DEMEncoding} from '../data/dem_data.ts';
-import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 import type {StyleImage} from '../style/style_image.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {RemoveSourceParams} from '../util/actor_messages.ts';
@@ -46,6 +46,7 @@ export type WorkerTileParameters = TileParameters & {
     /**
      * Provide this property when the requested tile has a higher canonical Z than source maxzoom.
      * This allows the worker to know that it needs to overzoom from a source tile.
+     * A tile the server answered with a 404 is loaded the same way from an ancestor that exists when the source is sparse.
      */
     overzoomParameters?: OverzoomParameters;
     etag?: string;
@@ -85,11 +86,7 @@ export type WorkerTileWithData = ExpiryData & {
     encoding?: TileEncoding;
     resourceTiming?: PerformanceResourceTiming[];
     // Only used for benchmarking:
-    glyphMap?: {
-        [_: string]: {
-            [_: number]: StyleGlyph;
-        };
-    } | null;
+    glyphMap?: GlyphMap | null;
     iconMap?: {
         [_: string]: StyleImage;
     } | null;

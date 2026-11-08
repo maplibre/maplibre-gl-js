@@ -1,16 +1,15 @@
 import Point from '@mapbox/point-geometry';
-
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.ts';
+import {SHAPING_DEFAULT_OFFSET, applyTextFit} from './shaping.ts';
+import {IMAGE_PADDING} from '../render/image_atlas.ts';
+import ONE_EM from './one_em.ts';
 
 import type {Anchor} from './anchor.ts';
 import type {Box, PositionedIcon, Shaping} from './shaping.ts';
-import {SHAPING_DEFAULT_OFFSET, applyTextFit} from './shaping.ts';
-import {IMAGE_PADDING} from '../render/image_atlas.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleImage} from '../style/style_image.ts';
-import ONE_EM from './one_em.ts';
-import {type Rect} from '../render/glyph_atlas.ts';
+import type {Rect} from '../render/glyph_atlas.ts';
 
 /**
  * A textured quad for rendering a single icon or glyph.

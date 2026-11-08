@@ -11,6 +11,9 @@ import type {SubdivisionGranularitySetting} from '../render/subdivision_granular
 import type {DashEntry} from '../render/line_atlas.ts';
 import type {Feature as StyleFeature} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {GetImagesResponse} from '../util/actor_messages.ts';
+import type {GlyphPositions} from '../render/glyph_atlas.ts';
+import type {GlyphMap} from '../style/style_glyph.ts';
 
 export type BucketParameters<Layer extends TypedStyleLayer> = {
     index: number;
@@ -25,12 +28,41 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
 
 export type PopulateParameters = {
     featureIndex: FeatureIndex;
-    iconDependencies: {};
-    patternDependencies: {};
-    glyphDependencies: {};
+    iconDependencies: Record<string, boolean>;
+    patternDependencies: Record<string, boolean>;
+    /**
+     * The glyphs each fontstack is asked for, keyed by grapheme cluster: usually a single character,
+     * but sometimes a letter with the marks written on it, which no single codepoint stands for.
+     * Glyphs are requested separately for each variant.
+     * @example
+     * ```json
+     * {"SomeFontName": {"default": {"a": true, "b": true}}}
+     * ```
+     */
+    glyphDependencies: Record<string, Record<string, Record<string, boolean>>>;
     dashDependencies: Record<string, {round: boolean; dasharray: number[]}>;
     availableImages: string[];
     subdivisionGranularity: SubdivisionGranularitySetting;
+};
+
+/**
+ * The asynchronously loaded tile content a bucket may need to finalize its
+ * features. Every image, glyph, and dash entry referenced by the bucket's
+ * layers arrives here after the worker has fetched it; pattern maps belong to
+ * fill, fill-extrusion, and line buckets, icon maps and glyph maps to symbol
+ * buckets.
+ */
+export type BucketDependencyParameters = {
+    options: PopulateParameters;
+    canonical: CanonicalTileID;
+    glyphMap: GlyphMap;
+    glyphPositions: GlyphPositions;
+    iconMap: GetImagesResponse;
+    iconPositions: Record<string, ImagePosition>;
+    patternMap: GetImagesResponse;
+    patternPositions: Record<string, ImagePosition>;
+    dashPositions: Record<string, DashEntry>;
+    showCollisionBoxes: boolean;
 };
 
 export type IndexedFeature = {
@@ -87,6 +119,7 @@ export interface Bucket {
     readonly stateDependentLayers: any[];
     readonly stateDependentLayerIds: string[];
     populate(features: IndexedFeature[], options: PopulateParameters, canonical: CanonicalTileID): void;
+    addFeatures(parameters: BucketDependencyParameters): void;
     update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: Record<string, DashEntry>): void;
     isEmpty(): boolean;
     upload(context: Context): void;

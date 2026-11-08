@@ -1,14 +1,17 @@
 import {IndexBuffer} from './index_buffer.ts';
-
 import {VertexBuffer} from './vertex_buffer.ts';
 import {Framebuffer} from './framebuffer.ts';
-import {type DepthMode} from './depth_mode.ts';
-import {type StencilMode} from './stencil_mode.ts';
+import {createProjectionUniformBuffer, destroyProjectionUniformBuffers} from './projection_uniform_buffer.ts';
+import {createFrameUniformBuffer} from './frame_uniform_buffer.ts';
+import {createTerrainUniformBuffer} from './terrain_uniform_buffer.ts';
 import {ColorMode} from './color_mode.ts';
-import {type CullFaceMode} from './cull_face_mode.ts';
 import {deepEqual} from '../util/util.ts';
 import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value.ts';
 
+import type {DepthMode} from './depth_mode.ts';
+import type {StencilMode} from './stencil_mode.ts';
+import type {CullFaceMode} from './cull_face_mode.ts';
+import type {UniformBuffer} from './uniform_buffer.ts';
 import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type.ts';
 import type {
     StructArray,
@@ -63,6 +66,12 @@ export class Context {
     pixelStoreUnpack: PixelStoreUnpack;
     pixelStoreUnpackPremultiplyAlpha: PixelStoreUnpackPremultiplyAlpha;
     pixelStoreUnpackFlipY: PixelStoreUnpackFlipY;
+    boundUniformBuffers: WebGLBuffer[];
+    projectionUniformBuffer: UniformBuffer;
+    keyedProjectionUniformBuffers: Map<string, UniformBuffer>;
+    freeProjectionUniformBuffers: UniformBuffer[];
+    terrainUniformBuffer: UniformBuffer;
+    frameUniformBuffer: UniformBuffer;
 
     extTextureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
     extTextureFilterAnisotropicMax?: GLfloat;
@@ -111,6 +120,20 @@ export class Context {
 
         gl.getExtension('EXT_color_buffer_half_float');
         gl.getExtension('EXT_color_buffer_float');
+
+        this.boundUniformBuffers = [];
+        this.projectionUniformBuffer = createProjectionUniformBuffer(this);
+        this.keyedProjectionUniformBuffers = new Map();
+        this.freeProjectionUniformBuffers = [];
+        this.terrainUniformBuffer = createTerrainUniformBuffer(this);
+        this.frameUniformBuffer = createFrameUniformBuffer(this);
+    }
+
+    /** Destroys the uniform buffers the context created. */
+    destroy(): void {
+        destroyProjectionUniformBuffers(this);
+        this.terrainUniformBuffer.destroy();
+        this.frameUniformBuffer.destroy();
     }
 
     setDefault(): void {
@@ -175,6 +198,27 @@ export class Context {
         this.pixelStoreUnpack.dirty = true;
         this.pixelStoreUnpackPremultiplyAlpha.dirty = true;
         this.pixelStoreUnpackFlipY.dirty = true;
+        this.boundUniformBuffers = [];
+    }
+
+    /**
+     * Reset some GL state to default values before handing users the raw context, as we do for
+     * custom layers and WebGL style images, to avoid hard-to-debug bugs in their code.
+     *
+     * MapLibre restores all of its own state afterwards, so the only state worth resetting first
+     * is state users would be surprised to find dirty: `CULL_FACE`, `TEXTURE0` and the three
+     * `UNPACK_` settings, whose defaults are meaningful enough that most code assumes them.
+     * The vertex array is unbound rather than reset, so that MapLibre never has to track it and
+     * a user's `vertexAttribPointer` calls cannot land on one of ours.
+     */
+    setCustomLayerDefaults(): void {
+        this.unbindVAO();
+
+        this.cullFace.setDefault();
+        this.activeTexture.setDefault();
+        this.pixelStoreUnpack.setDefault();
+        this.pixelStoreUnpackPremultiplyAlpha.setDefault();
+        this.pixelStoreUnpackFlipY.setDefault();
     }
 
     createIndexBuffer(array: TriangleIndexArray | LineIndexArray | LineStripIndexArray, dynamicDraw?: boolean): IndexBuffer {

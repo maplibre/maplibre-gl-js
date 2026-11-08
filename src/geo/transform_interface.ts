@@ -9,7 +9,71 @@ import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
+import type {TileMatrixSet} from './projection/tile_matrix_set.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
+
+/**
+ * @internal
+ * Maps between geographic coordinates and the 0..1 world square that the tile
+ * quad-tree subdivides. Transform and camera code goes through this seam instead of
+ * calling the mercator functions directly, so a projection with a different planar
+ * mapping only has to supply this.
+ *
+ * The mapping does not have to be separable: `x` may depend on both `lng` and `lat`
+ * and vice versa.
+ */
+export interface WorldCoordinateHelper {
+    /**
+     * The name of the flat projection whose plane this is: `mercator`, or the `name` of a CRS registered
+     * with `addProjection`.
+     */
+    name: string;
+    /**
+     * lng/lat in degrees and an altitude in meters to a world square position. `z` is
+     * `worldZFromAltitude` of the altitude, and stays `0` when no altitude is given.
+     */
+    worldFromLngLat(lng: number, lat: number, altitude?: number): MercatorCoordinate;
+    /**
+     * World square coordinates to lng/lat.
+     */
+    lngLatFromWorld(x: number, y: number): LngLat;
+    /**
+     * Whether a world square position has a lng/lat of its own: everywhere for mercator, and for a planar CRS
+     * wherever its inverse answers, which past the edge of a world projection it does not.
+     */
+    hasLngLat(x: number, y: number): boolean;
+    /**
+     * Meters per world unit at a world position (mercator: the circumference at that latitude; planar: constant, arguments ignored).
+     * Takes the world position because the camera-to-center iteration only has one; it avoids a lng/lat object per step.
+     */
+    metersPerWorldUnit(x: number, y: number): number;
+    /**
+     * Altitude in meters to world z at a location (mercator: `mercatorZfromAltitude(altitude, lat)`; planar: constant scale, argument ignored).
+     */
+    worldZFromAltitude(altitude: number, lngLat: LngLat): number;
+    /**
+     * True for mercator only: the world wraps in longitude, gets world copies, and clamps latitude to the valid
+     * mercator range. A planar CRS is a bounded square that does none of that.
+     */
+    wraps: boolean;
+    /**
+     * The quad tile matrix set whose tile 0/0/0 is the world square, in CRS units: EPSG:3857 meters for mercator, the
+     * registered definition's `tileMatrixSet` for a planar CRS. The `{bbox}` tile URL token is expressed in it.
+     */
+    tileMatrixSet: TileMatrixSet;
+}
+
+/**
+ * Samples the terrain elevation, in meters, at a point given in tile coordinates.
+ *
+ * Implementations are bound to a specific tile, so `x` and `y` are interpreted within that tile.
+ * A missing function means the map has no terrain, in which case callers treat the elevation as 0.
+ *
+ * @param x - the x coordinate within the tile
+ * @param y - the y coordinate within the tile
+ * @returns the terrain elevation in meters
+ */
+export type GetElevation = (x: number, y: number) => number;
 
 /**
  * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
@@ -21,6 +85,15 @@ export type TransformConstrainFunction =  (
 ) => {
     center: LngLat;
     zoom: number;
+};
+
+/**
+ * @internal
+ * The depth range of a projection matrix, from the near to the far clipping plane.
+ */
+export type NearFarZ = {
+    readonly nearZ: number;
+    readonly farZ: number;
 };
 
 export interface ITransformGetters {
@@ -88,12 +161,20 @@ export interface ITransformGetters {
 
     get renderWorldCopies(): boolean;
     /**
+     * @internal
+     * The lng/lat to world-coordinate mapping this transform positions the camera in.
+     * Mercator for the mercator, globe, and vertical-perspective transforms.
+     */
+    get worldCoordinateHelper(): WorldCoordinateHelper;
+    /**
      * The distance from the camera to the center of the map in pixels space.
      */
     get cameraToCenterDistance(): number;
 
-    get nearZ(): number;
-    get farZ(): number;
+    /**
+     * The depth range set with {@link ITransform.overrideNearFarZ}, or null while each projection computes its own.
+     */
+    get nearFarZOverride(): NearFarZ | null;
     get autoCalculateNearFarZ(): boolean;
 
     get constrainOverride(): TransformConstrainFunction;
@@ -104,8 +185,6 @@ export interface ITransformGetters {
  * All the functions that may mutate a transform.
  */
 interface ITransformMutators {
-    clone(): ITransform;
-
     /**
      * Applies a transform to the current transform.
      * @param that - The transform to apply to the current transform.
@@ -204,8 +283,10 @@ interface ITransformMutators {
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
      * @param lnglat - Desired world coordinates of the point.
      * @param point - The screen point that should lie at the given coordinates.
+     * @param elevation - Optional ground elevation in meters above sea level at `lnglat`,
+     * defaults to the elevation at the map's center. Ignored when rendering the globe.
      */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void;
+    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void;
 
     /**
      * Sets or clears the map's geographical constraints.
@@ -221,20 +302,16 @@ interface ITransformMutators {
 
     /**
      * @internal
-     * Called before rendering to allow the transform implementation
-     * to precompute data needed to render the given tiles.
-     * Used in mercator transform to precompute tile matrices (posMatrix).
-     * @param coords - Array of tile IDs that will be rendered.
-     */
-    populateCache(coords: OverscaledTileID[]): void;
-
-    /**
-     * @internal
      * Sets the transform's transition state from one projection to another.
      * @param value - The transition state value.
      */
     setTransitionState(value: number): void;
 }
+
+/**
+ * The camera placement {@link IReadonlyTransform.calculateCameraOptionsFromTo} solves for.
+ */
+export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};
 
 /**
  * @internal
@@ -243,6 +320,16 @@ interface ITransformMutators {
  * by code that has a reference to in under the {@link ITransform} type.
  */
 export interface IReadonlyTransform extends ITransformGetters {
+    clone(): ITransform;
+
+    /**
+     * The near clipping plane of the projection matrix, computed by the projection unless overridden.
+     */
+    get nearZ(): number;
+    /**
+     * The far clipping plane of the projection matrix, computed by the projection unless overridden.
+     */
+    get farZ(): number;
     /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.
@@ -258,7 +345,6 @@ export interface IReadonlyTransform extends ITransformGetters {
     get pixelsToClipSpaceMatrix(): mat4;
     get clipSpaceToPixelsMatrix(): mat4;
     get pixelsToGLUnits(): [number, number];
-    get centerOffset(): Point;
     /**
      * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
      */
@@ -333,12 +419,31 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
+     * Given a point on screen, return its LngLat location assuming the ground there
+     * lies at the given elevation. When rendering the globe the elevation is ignored.
+     * @param p - screen point
+     * @param elevation - ground elevation in meters above sea level
+     * @returns lnglat location
+     */
+    screenPointToLocationAtElevation(p: Point, elevation: number): LngLat;
+
+    /**
+     * @internal
      * Given a point on screen, return its mercator coordinate.
      * @param p - the point
      * @param terrain - optional terrain
      * @returns lnglat
      */
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
+
+    /**
+     * @internal
+     * Given a point on screen, return the mercator coordinate where its ray hits the rendered terrain surface.
+     * @param p - the point
+     * @param terrain - the terrain
+     * @returns the hit with z in meters, or null when the terrain has no renderable tiles or the ray never crosses the terrain surface
+     */
+    screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null;
 
     /**
      * @internal
@@ -357,7 +462,8 @@ export interface IReadonlyTransform extends ITransformGetters {
     /**
      * @internal
      * Returns whether the specified screen point lies on the map.
-     * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled.
+     * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled,
+     * or if it lies where a projection registered with {@link addProjection} has no lng/lat, such as past the edge of a world projection.
      * @param p - The point's coordinates.
      * @param terrain - Optional terrain.
      */
@@ -408,6 +514,17 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
+    /**
+     * Given the camera position and the point it looks at, both as lng, lat and altitude above sea level in meters,
+     * calculate the center, elevation, zoom, pitch and bearing that place the camera there.
+     * @param from - lng, lat of the camera
+     * @param altitudeFrom - altitude of the camera above sea level, in meters
+     * @param to - lng, lat of the point the camera looks at, which becomes the center
+     * @param altitudeTo - altitude of that point above sea level, in meters
+     * @throws when the camera and the point coincide
+     */
+    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo;
+
     getRayDirectionFromPixel(p: Point): vec3;
 
     /**
@@ -421,16 +538,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      *
      */
     getCameraQueryGeometry(queryGeometry: Point[]): Point[];
-
-    /**
-     * Return the distance to the camera in clip space from a LngLat.
-     * This can be compared to the value from the depth buffer (terrain.depthAtPoint)
-     * to determine whether a point is occluded.
-     * @param lngLat - the point
-     * @param elevation - the point's elevation
-     * @returns depth value in clip space (between 0 and 1)
-     */
-    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
 
     /**
      * @internal
@@ -449,10 +556,18 @@ export interface IReadonlyTransform extends ITransformGetters {
 
     /**
      * @internal
-     * Returns whether the supplied location is occluded in this projection.
-     * For example during globe rendering a location on the backfacing side of the globe is occluded.
+     * Whether the camera cannot see a location. The planet hides it when the location, at its elevation, lies beyond
+     * the globe's horizon plane, the plane the globe shaders clip an elevated vertex with. With `terrain`, the terrain
+     * hides it when the ray from the camera to the location meets the rendered terrain surface
+     * (see {@link screenTerrainPointToMercatorCoordinate}) before it reaches the location, and a location behind the
+     * camera or beyond the far plane is hidden too.
+     * @param lngLat - the location
+     * @param terrain - the terrain that can hide the location; without it only the planet can
+     * @param elevation - the location's elevation in meters; the terrain's elevation there when omitted, zero without terrain. `Marker` raises its center with it
+     * @returns true when the planet or the terrain lies between the camera and the location, false when the location is
+     * in view. Terrain with no renderable tiles hides nothing.
      */
-    isLocationOccluded(lngLat: LngLat): boolean;
+    isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean;
 
     /**
      * @internal
@@ -490,7 +605,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @internal
      * Projects a point in tile coordinates to clip space. Used in symbol rendering.
      */
-    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection;
 
     /**
      * Return projection data such that coordinates in mercator projection in range 0..1 will get projected to the map correctly.

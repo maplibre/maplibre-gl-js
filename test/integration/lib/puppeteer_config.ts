@@ -28,9 +28,10 @@ export async function startCoverage(page: Page): Promise<WebWorker[]> {
     return workers;
 }
 
-/** Harvest page + worker coverage, close the page, and write a monocart report to `coverage/<outputDir>`. */
-export async function stopCoverageAndReport(page: Page, workers: WebWorker[], outputDir: string): Promise<void> {
-    const coverage = await page.coverage.stopJSCoverage();
+/** Harvest page + worker coverage, close the page(s), and write a monocart report to `coverage/<outputDir>`. */
+export async function stopCoverageAndReport(pageOrPages: Page | Page[], workers: WebWorker[], outputDir: string): Promise<void> {
+    const pages = Array.isArray(pageOrPages) ? pageOrPages : [pageOrPages];
+    const coverage = (await Promise.all(pages.map((page) => page.coverage.stopJSCoverage()))).flat();
 
     const workerCoverageEntries: any[] = [];
     for (const worker of workers) {
@@ -40,26 +41,28 @@ export async function stopCoverageAndReport(page: Page, workers: WebWorker[], ou
         } catch {}
     }
 
-    await page.close();
+    await Promise.all(pages.map((page) => page.close()));
+
+    /** The bundles a script URL can belong to. */
+    const bundles = ['maplibre-gl-dev.mjs', 'maplibre-gl-worker-dev.mjs'];
+    const sourceMaps = new Map<string, any>(bundles.map((bundle) =>
+        [bundle, JSON.parse(fs.readFileSync(`dist/${bundle}.map`, 'utf-8'))]));
 
     const rawV8CoverageData: any[] = coverage.map((it) => {
         const entry: any = {source: it.text, ...it.rawScriptCoverage};
-        if (entry.url.endsWith('maplibre-gl-dev.mjs')) {
-            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.mjs.map', 'utf-8'));
-        }
+        entry.sourceMap = sourceMaps.get(bundles.find((name) => entry.url.endsWith(name)));
         return entry;
     });
 
-    const workerSource = fs.readFileSync('dist/maplibre-gl-worker-dev.mjs', 'utf-8');
-    const workerSourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-worker-dev.mjs.map', 'utf-8'));
     for (const entry of workerCoverageEntries) {
-        if (entry.url.endsWith('maplibre-gl-worker-dev.mjs')) {
+        const bundle = bundles.find((name) => entry.url.endsWith(name));
+        if (bundle) {
             rawV8CoverageData.push({
-                source: workerSource,
+                source: fs.readFileSync(`dist/${bundle}`, 'utf-8'),
                 url: entry.url,
                 scriptId: entry.scriptId,
                 functions: entry.functions,
-                sourceMap: workerSourceMap
+                sourceMap: sourceMaps.get(bundle)
             });
         }
     }

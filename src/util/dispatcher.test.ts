@@ -1,5 +1,5 @@
 import {describe, test, expect, vi} from 'vitest';
-import {Actor} from './actor.ts';
+import {Actor, type ActorTarget} from './actor.ts';
 import {Dispatcher} from './dispatcher.ts';
 import {workerFactory} from './web_worker.ts';
 import {WorkerPool} from './worker_pool.ts';
@@ -19,7 +19,7 @@ describe('Dispatcher', () => {
         } as any as WorkerPool;
 
         const dispatcher = new Dispatcher(workerPool, mapId);
-        await dispatcher.actorsPromise;
+        await dispatcher.waitForInitComplete();
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
         dispatcher.remove();
         expect(dispatcher.actors).toHaveLength(0);
@@ -42,7 +42,7 @@ describe('Dispatcher', () => {
         } as any as WorkerPool;
 
         let dispatcher = new Dispatcher(workerPool, mapId);
-        await dispatcher.actorsPromise;
+        await dispatcher.waitForInitComplete();
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
 
         dispatcher.remove(false);
@@ -50,7 +50,7 @@ describe('Dispatcher', () => {
         expect(releaseCalled).toHaveLength(0);
 
         dispatcher = new Dispatcher(workerPool, mapId);
-        await dispatcher.actorsPromise;
+        await dispatcher.waitForInitComplete();
         expect(dispatcher.actors.map((actor) => actor.target)).toEqual(workers);
         dispatcher.remove(true);
         expect(dispatcher.actors).toHaveLength(0);
@@ -60,15 +60,39 @@ describe('Dispatcher', () => {
     test('remove destroys actors', async () => {
         const actorsRemoved = [];
         const mapId = 1;
-        Actor.prototype.remove = vi.fn().mockImplementation(() => {
+        vi.spyOn(Actor.prototype, 'remove').mockImplementation(() => {
             actorsRemoved.push(this);
         });
         WorkerPool.workerCount = 4;
 
         const workerPool = new WorkerPool();
         const dispatcher = new Dispatcher(workerPool, mapId);
-        await dispatcher.actorsPromise;
+        await dispatcher.waitForInitComplete();
         dispatcher.remove();
         expect(actorsRemoved).toHaveLength(4);
+    });
+
+    test('fires worker errors through Evented', async () => {
+        const worker = new EventTarget() as ActorTarget & EventTarget;
+        worker.postMessage = vi.fn();
+        const workerPool = {
+            acquire() {
+                return Promise.resolve([worker]);
+            },
+            release() {}
+        } as any as WorkerPool;
+        const dispatcher = new Dispatcher(workerPool, 1);
+        const listener = vi.fn();
+        dispatcher.on('error', listener);
+        await dispatcher.waitForInitComplete();
+
+        worker.dispatchEvent(new ErrorEvent('error'));
+
+        expect(listener).toHaveBeenCalledWith(expect.objectContaining({
+            error: new Error('Worker failed to load. Check that the worker URL is correct.')
+        }));
+        dispatcher.remove();
+        worker.dispatchEvent(new ErrorEvent('error'));
+        expect(listener).toHaveBeenCalledTimes(1);
     });
 });

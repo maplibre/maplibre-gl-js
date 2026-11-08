@@ -1,10 +1,9 @@
-import {Event} from '../util/evented.ts';
-
+import {Event, type ErrorEvent} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import Point from '@mapbox/point-geometry';
 import {extend} from '../util/util.ts';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {Map} from './map.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -195,10 +194,17 @@ export type MapEventType = {
     resize: MapLibreEvent;
     /**
      * Fired when the WebGL context is lost.
+     *
+     * The map rebuilds its style once the context is restored. Until the rebuilt style fires `style.load`,
+     * {@link Map.getSource} may return `undefined` and changes to sources or layers are not kept, so apply them
+     * again on that `style.load` event.
      */
     webglcontextlost: MapContextEvent;
     /**
      * Fired when the WebGL context is restored.
+     *
+     * The style is rebuilt asynchronously, so its sources and layers are not available yet when this fires.
+     * Wait for the next `style.load` event before using them.
      */
     webglcontextrestored: MapContextEvent;
     /**

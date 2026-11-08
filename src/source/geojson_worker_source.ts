@@ -6,8 +6,10 @@ import {GeoJSONVT, type GeoJSONVTOptions} from '@maplibre/geojson-vt';
 import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isAbortError} from '../util/abort_error.ts';
 import {WorkerTile} from './worker_tile.ts';
-import {WorkerTileState, type ParsingState} from './worker_tile_state.ts';
+import {WorkerTileState} from './worker_tile_state.ts';
 import {extend, JSON_PREFIX} from '../util/util.ts';
+import {createWorkerCRSHelper} from './projection_handler_worker.ts';
+import {reprojectGeoJSONFromWorld, reprojectGeoJSONSourceDiffToWorld, reprojectGeoJSONToWorld} from '../util/geojson_reproject.ts';
 
 import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
 import type {WorkerSource, WorkerTileParameters, TileParameters, WorkerTileResult} from './worker_source.ts';
@@ -16,6 +18,7 @@ import type {RequestParameters} from '../util/ajax.ts';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages.ts';
 import type {IActor} from '../util/actor.ts';
 import type {StyleLayerIndex} from '../style/style_layer_index.ts';
+import type {CRS, CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -48,9 +51,14 @@ export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
      */
     dataDiff?: GeoJSONSourceDiff;
     /**
-     * Update the supercluster using the latest worker cluster options.
+     * Update the supercluster using the latest worker cluster options, after applying {@link dataDiff} if there is one.
      */
     updateCluster?: boolean;
+    /**
+     * The map's registered projection, if it has one: the data is moved into that projection's world square before it
+     * is tiled, the way tiles of the projection's own grid sit in it.
+     */
+    crs?: Pick<CRS, 'name' | 'definition' | 'tileMatrixSet'>;
 };
 
 /**
@@ -70,6 +78,11 @@ export class GeoJSONWorkerSource implements WorkerSource {
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONVT;
     _createGeoJSONIndex: typeof createGeoJSONIndex;
+    /**
+     * The world coordinate helper of the registered projection the index holds its data in, see
+     * {@link LoadGeoJSONParameters.crs}: `undefined` without one, or without a projection handler to build it with.
+     */
+    _crsHelper: CRSWorldCoordinateHelper | undefined;
 
     constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: string[], createGeoJSONIndexFunc: typeof createGeoJSONIndex = createGeoJSONIndex) {
         this.actor = actor;
@@ -113,52 +126,29 @@ export class GeoJSONWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = vectorTile;
             this.tileState.markLoaded(uid, workerTile);
+            const parsingState = {rawData};
+            this.tileState.setParsing(uid, parsingState);
 
-            const parseState = {rawData};
-            this.tileState.setParsing(uid, parseState);  // Keep data so reloadTile can access if parse is canceled.
-            try {
-                return await this._parseWorkerTile(workerTile, params, parseState);
-            } finally {
-                this.tileState.removeParsing(uid);
-            }
+            return await this._parseWorkerTile(workerTile, params);
         } catch (err) {
-            workerTile.status = 'done';
             this.tileState.markLoaded(uid, workerTile);
             throw err;
         }
     }
 
-    private async _reloadLoadedTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const uid = params.uid;
+    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
+        const parseState = this.tileState.getParsing(workerTile.uid);
 
-        const workerTile = this.tileState.getLoaded(uid);
-        if (!workerTile) throw new Error('Should not be trying to reload a tile that was never loaded or has been removed');
-
-        workerTile.showCollisionBoxes = params.showCollisionBoxes;
-
-        if (workerTile.status === 'parsing') {
-            // If we are cancelling the original parse, make sure to pass the rawData from the original parse.
-            const parseState = this.tileState.getParsing(uid);
-            try {
-                return await this._parseWorkerTile(workerTile, params, parseState);
-            } finally {
-                this.tileState.removeParsing(uid);
-            }
-        }
-
-        // If there was no vector tile data on the initial load, don't try and reparse the tile.
-        if (workerTile.status === 'done' && workerTile.vectorTile) {
-            return await this._parseWorkerTile(workerTile, params);
-        }
-    }
-
-    async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters, parseState?: ParsingState): Promise<WorkerTileResult> {
         let result = await workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, params.subdivisionGranularity);
 
+        // We need to pass rawTileData back to the main thread so that it can be stored in the Tile and FeatureIndex.
+        // After the main thread has successfully received and stored rawTileData,
+        // we no longer need to store it in the worker or transfer additional copies of it.
         if (parseState) {
             const {rawData} = parseState;
-            // Transferring a copy of rawTileData because the worker needs to retain its copy.
+            // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
             result = extend({rawTileData: rawData.slice(0), encoding: 'mvt'}, result);
+            this.tileState.removeParsing(workerTile.uid);
         }
 
         return result;
@@ -241,14 +231,21 @@ export class GeoJSONWorkerSource implements WorkerSource {
      * @param params - the parameters
      * @returns A promise that resolves when the tile is reloaded
      */
-    reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
-        const tile = this.tileState.getLoaded(params.uid);
-
-        if (tile) {
-            return this._reloadLoadedTile(params);
+    async reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
+        const uid = params.uid;
+        const workerTile = this.tileState.getLoaded(uid);
+        if (!workerTile) {
+            return await this.loadTile(params);
         }
 
-        return this.loadTile(params);
+        // If there was no vector tile data on the initial load, don't try to reparse the tile.
+        if (!workerTile.vectorTile) {
+            return;
+        }
+
+        workerTile.showCollisionBoxes = params.showCollisionBoxes;
+        workerTile.tileID = workerTile.tileID.unwrapTo(params.tileID.wrap);
+        return await this._parseWorkerTile(workerTile, params);
     }
 
     /**
@@ -264,16 +261,19 @@ export class GeoJSONWorkerSource implements WorkerSource {
             params.data = (await getJSON<GeoJSON.GeoJSON>(params.request, abortController)).data;
         }
 
+        this._crsHelper = params.crs ? createWorkerCRSHelper(params.crs) : undefined;
+
         if (params.data) {
             params.data = this._filterGeoJSON(params.data, params.filter, params.source);
-            this._geoJSONIndex = this._createGeoJSONIndex(params.data, params);
+            const indexData = this._crsHelper ? reprojectGeoJSONToWorld(params.data, this._crsHelper) : params.data;
+            this._geoJSONIndex = this._createGeoJSONIndex(indexData, params, this._crsHelper !== undefined);
             return;
         }
 
         if (params.dataDiff) {
-            this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params);
-            this._geoJSONIndex.updateData(params.dataDiff, this._getFilterPredicate(params.filter, params.source));
-            return;
+            this._geoJSONIndex ??= this._createGeoJSONIndex({type: 'FeatureCollection', features: []}, params, this._crsHelper !== undefined);
+            const indexDiff = this._crsHelper ? reprojectGeoJSONSourceDiffToWorld(params.dataDiff, this._crsHelper) : params.dataDiff;
+            this._geoJSONIndex.updateData(indexDiff, this._getFilterPredicate(params.filter, params.source));
         }
 
         if (params.updateCluster) {
@@ -320,7 +320,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
     }
 
     getClusterChildren(params: ClusterIDAndSource): GeoJSON.Feature[] {
-        return this._geoJSONIndex.getClusterChildren(params.clusterId);
+        return this._toLngLat(this._geoJSONIndex.getClusterChildren(params.clusterId));
     }
 
     getClusterLeaves(params: {
@@ -328,14 +328,27 @@ export class GeoJSONWorkerSource implements WorkerSource {
         limit: number;
         offset: number;
     }): GeoJSON.Feature[] {
-        return this._geoJSONIndex.getClusterLeaves(params.clusterId, params.limit, params.offset);
+        return this._toLngLat(this._geoJSONIndex.getClusterLeaves(params.clusterId, params.limit, params.offset));
+    }
+
+    /**
+     * Moves features the index returns back from the registered projection's world square to lng/lat.
+     */
+    _toLngLat(features: GeoJSON.Feature[]): GeoJSON.Feature[] {
+        return this._crsHelper ? features.map(feature => reprojectGeoJSONFromWorld(feature, this._crsHelper)) : features;
     }
 }
 
-export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters): GeoJSONVT {
+/**
+ * Builds the geojson-vt index of a GeoJSON source's data.
+ * @param worldCoordinates - whether the data is in the registered projection's world coordinates instead of lng/lat
+ */
+export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters, worldCoordinates: boolean): GeoJSONVT {
     const options = extend(params.geojsonVtOptions || {}, {
         updateable: true,
         clusterOptions: getSuperclusterOptions(params),
+        coordinates: worldCoordinates ? 'unitSquare' : 'lngLat',
+        wrap: !worldCoordinates,
     });
 
     return new GeoJSONVT(data, options);

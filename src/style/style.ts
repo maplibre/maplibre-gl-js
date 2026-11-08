@@ -1,3 +1,4 @@
+import {mat4} from 'gl-matrix';
 import {throwIfAborted} from '../util/abort_error.ts';
 import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, MapStyleDataEvent, MapStyleLoadEvent, type MapEventType} from '../ui/events.ts';
@@ -5,6 +6,7 @@ import {isRasterStyleLayer} from './style_layer/raster_style_layer.ts';
 import {createStyleLayer} from './create_style_layer.ts';
 import {loadSprite} from './load_sprite.ts';
 import {ImageManager, type MissingImageRequestHandler} from '../render/image_manager.ts';
+import {PatternAtlas} from '../render/pattern_atlas.ts';
 import {GlyphManager} from '../render/glyph_manager.ts';
 import {Light} from './light.ts';
 import {Sky} from './sky.ts';
@@ -27,26 +29,35 @@ import {PauseablePlacement} from './pauseable_placement.ts';
 import {ZoomHistory} from './zoom_history.ts';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer.ts';
+import {
+    type GetDashesParameters,
+    type GetDashesResponse,
+    MessageType,
+    type GetGlyphsParameters,
+    type GetImagesParameters,
+    type GetImagesResponse
+} from '../util/actor_messages.ts';
+import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
 
 import type {Source} from '../source/source.ts';
 import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
-
 import type {Map} from '../ui/map.ts';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {StyleImage} from './style_image.ts';
+import type {GlyphMap} from './style_glyph.ts';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {Placement} from '../symbol/placement.ts';
 import type {
     LayerSpecification,
     FilterSpecification,
     StyleSpecification,
+    FontFacesSpecification,
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
-    DiffOperations,
     ProjectionSpecification,
     SkySpecification,
     StateSpecification,
@@ -58,17 +69,7 @@ import type {
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Validator} from './validate_style.ts';
-import {
-    type GetDashesParameters,
-    type GetDashesResponse,
-    MessageType,
-    type GetGlyphsParameters,
-    type GetGlyphsResponse,
-    type GetImagesParameters,
-    type GetImagesResponse
-} from '../util/actor_messages.ts';
-import {type Projection} from '../geo/projection/projection.ts';
-import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import type {Projection} from '../geo/projection/projection.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 const empty = emptyStyle();
@@ -106,6 +107,10 @@ export type StyleOptions = {
      * Forces a full update.
      */
     localIdeographFontFamily?: string | false;
+    /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the style.
+     */
+    globalState?: Record<string, any>;
 };
 
 /**
@@ -116,10 +121,14 @@ export type StyleSetterOptions = {
      * Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      */
     validate?: boolean;
+    /**
+     * Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if {@link Map.setGlobalStateProperty} was called after loading the style.
+     */
+    globalState?: Record<string, any>;
 };
 
 /**
- * Part of {@link Map.setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
+ * Part of {@link MapOptions.transformStyle} and {@link Map.setStyle} options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state.
  *
  * This function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
  *
@@ -205,6 +214,7 @@ export class Style extends Evented<MapEventType> {
     stylesheet: StyleSpecification;
     dispatcher: Dispatcher;
     imageManager: ImageManager;
+    patternAtlas: PatternAtlas;
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
@@ -229,10 +239,9 @@ export class Style extends Evented<MapEventType> {
     _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
-    // image ids of images loaded from style's sprite
-    _spritesImagesIds: {[spriteId: string]: string[]};
-    // image ids of all images loaded (sprite + user)
-    _availableImages: string[];
+    _symbolPlacementTriggered: boolean;
+    _placedProjectionTransition: number;
+    _initialGlobalState: Record<string, any>;
     _globalState: Record<string, any>;
     crossTileSymbolIndex: CrossTileSymbolIndex;
     pauseablePlacement: PauseablePlacement;
@@ -243,7 +252,7 @@ export class Style extends Evented<MapEventType> {
         super();
 
         this.map = map;
-        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
+        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId()).setEventedParent(this);
         this.dispatcher.registerMessageHandler(MessageType.getGlyphs, (mapId, params) => {
             return this.getGlyphs(mapId, params);
         });
@@ -256,12 +265,14 @@ export class Style extends Evented<MapEventType> {
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         this.imageManager.setMissingImageResolver(map._missingStyleImageResolver);
+        this.patternAtlas = new PatternAtlas(this.imageManager);
         const glyphLang = map._container?.lang || (typeof document !== 'undefined' && document.documentElement?.lang) || undefined;
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily, glyphLang);
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
         this._setInitialValues();
+        this._initialGlobalState = options.globalState ?? {};
 
         this._resetUpdates();
 
@@ -293,13 +304,12 @@ export class Style extends Evented<MapEventType> {
     }
 
     private _setInitialValues() {
-        this._spritesImagesIds = {};
         this._layers = {};
         this._order = [];
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
-        this._availableImages = [];
         this._imagesListDirty = false;
+        this._initialGlobalState = {};
         this._globalState = {};
         this._serializedLayers = {};
         this.stylesheet = null;
@@ -317,6 +327,8 @@ export class Style extends Evented<MapEventType> {
         this._glyphsDidChange = false;
         this._updatedPaintProps = {};
         this._layerOrderChanged = false;
+        this._symbolPlacementTriggered = false;
+        this._placedProjectionTransition = undefined;
         this.crossTileSymbolIndex = new (this.crossTileSymbolIndex?.constructor || Object)();
         this.pauseablePlacement = undefined;
         this.placement = undefined;
@@ -342,13 +354,8 @@ export class Style extends Evented<MapEventType> {
             this.stylesheet.state?.[name]?.default ?? null :
             value;
 
-        if (deepEqual(newValue, this._globalState[name])) {
-            return this;
-        }
-
-        this._globalState[name] = newValue;
-
-        this._applyGlobalStateChanges([name]);
+        this._setGlobalStateValues({[name]: newValue});
+        return this;
     }
 
     getGlobalState(): Record<string, any> {
@@ -358,49 +365,65 @@ export class Style extends Evented<MapEventType> {
     setGlobalState(newStylesheetState: StateSpecification): void {
         this._checkLoaded();
 
-        const changedGlobalStateRefs = [];
-
-        for (const propertyName in newStylesheetState) {
-            const didChange = !deepEqual(this._globalState[propertyName], newStylesheetState[propertyName].default);
-
-            if (didChange) {
-                changedGlobalStateRefs.push(propertyName);
-                this._globalState[propertyName] = newStylesheetState[propertyName].default;
-            }
+        const values: Record<string, any> = {};
+        const propertyNames = new Set([...Object.keys(newStylesheetState ?? {}), ...Object.keys(this._initialGlobalState)]);
+        for (const propertyName of propertyNames) {
+            // Initial global state has priority over global state defaults defined in the map style
+            values[propertyName] = this._initialGlobalState[propertyName] ?? newStylesheetState[propertyName]?.default ?? null;
         }
 
-        this._applyGlobalStateChanges(changedGlobalStateRefs);
+        this._setGlobalStateValues(values);
+    }
+
+    /** Sets the keys in `values` that differ, keeping a copy of the state from before so readers transition from it. */
+    _setGlobalStateValues(values: Record<string, any>): void {
+        const changedGlobalStateRefs: string[] = [];
+        for (const ref in values) {
+            if (!deepEqual(values[ref], this._globalState[ref])) {
+                changedGlobalStateRefs.push(ref);
+            }
+        }
+        if (changedGlobalStateRefs.length === 0) {
+            return;
+        }
+
+        const priorGlobalState = {...this._globalState};
+        for (const ref of changedGlobalStateRefs) {
+            this._globalState[ref] = values[ref];
+        }
+
+        this._applyGlobalStateChanges(changedGlobalStateRefs, priorGlobalState);
     }
 
     /**
      * @internal
      * Find all sources that are affected by the global state changes and reload them.
-     * Find all paint properties that are affected by the global state changes and update them.
+     * Find all paint, light and sky properties that are affected and transition them from `priorGlobalState`, the state before the change.
      * For example, if a layer filter uses global-state expression, this function will find the source id of that layer.
      */
-    _applyGlobalStateChanges(globalStateRefs: string[]): void {
-        if (globalStateRefs.length === 0) {
-            return;
-        }
-
+    _applyGlobalStateChanges(globalStateRefs: string[], priorGlobalState: Record<string, any>): void {
         const sourceIdsToReload = new Set<string>();
         const globalStateChange = {};
 
         for (const ref of globalStateRefs) {
             globalStateChange[ref] = this._globalState[ref];
+        }
 
-            for (const layerId in this._layers) {
-                const layer = this._layers[layerId];
-                const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
-                const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
-                const visibilityAffectingGlobalStateRefs = layer.getVisibilityAffectingGlobalStateRefs();
+        for (const layerId in this._layers) {
+            const layer = this._layers[layerId];
+            layer.retainPriorGlobalState(globalStateRefs, priorGlobalState);
 
+            const layoutAffectingGlobalStateRefs = layer.getLayoutAffectingGlobalStateRefs();
+            const paintAffectingGlobalStateRefs = layer.getPaintAffectingGlobalStateRefs();
+            const visibilityAffectingGlobalStateRefs = layer.getVisibilityAffectingGlobalStateRefs();
+
+            for (const ref of globalStateRefs) {
                 if (layoutAffectingGlobalStateRefs.has(ref)) {
                     sourceIdsToReload.add(layer.source);
                 }
                 if (paintAffectingGlobalStateRefs.has(ref)) {
                     for (const {name, value} of paintAffectingGlobalStateRefs.get(ref)) {
-                        this._updatePaintProperty(layer, name, value);
+                        this._updatePaintProperty(layer, name, value, {validate: false});
                     }
                 }
                 if (visibilityAffectingGlobalStateRefs?.has(ref)) {
@@ -409,6 +432,11 @@ export class Style extends Evented<MapEventType> {
                 }
             }
         }
+
+        const parameters = {now: now(), transition: this.getTransition()};
+        // Loading applies the stylesheet's state before the light and the sky exist.
+        this.light?.applyGlobalStateChange(globalStateRefs, priorGlobalState, parameters);
+        this.sky?.applyGlobalStateChange(globalStateRefs, priorGlobalState, parameters);
 
         // Propagate global state changes to workers
         this.dispatcher.broadcast(MessageType.updateGlobalState, globalStateChange);
@@ -467,6 +495,11 @@ export class Style extends Evented<MapEventType> {
         this._load(empty, {validate: false});
     }
 
+    /**
+     * Loads a style. The global state is set first, since the projection and the layers read it. The projection is
+     * created before the sources, which read it as they are added, and the map migrates to it once the layers and the
+     * light exist, so `projectiontransition` handlers can read them.
+     */
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification): void {
         let nextState = options.transformStyle ? options.transformStyle(previousStyle, json) : json;
         if (options.validate && validateStyleAndEmit(this, nextState)) {
@@ -477,6 +510,10 @@ export class Style extends Evented<MapEventType> {
 
         this._loaded = true;
         this.stylesheet = nextState;
+
+        this.setGlobalState(this.stylesheet.state ?? null);
+        const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', this.map._camera?.transform.constrainOverride, this._globalState);
+        this.projection = projectionObjects.projection;
 
         for (const id in nextState.sources) {
             this.addSource(id, nextState.sources[id], {validate: false});
@@ -489,12 +526,14 @@ export class Style extends Evented<MapEventType> {
         }
 
         this.glyphManager.setURL(nextState.glyphs);
+        this.glyphManager.setFontFaces(nextState['font-faces']);
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light ?? {}, this._globalState);
-        this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
+        this._applyProjection(projectionObjects);
 
         this.sky = new Sky(this.stylesheet.sky, this._globalState);
+        this.sky.setEventedParent(this);
 
         // The stylesheet's terrain was already validated as part of the style itself.
         this.map.setTerrain(this.stylesheet.terrain ?? null, {validate: false});
@@ -505,8 +544,6 @@ export class Style extends Evented<MapEventType> {
 
     private _createLayers() {
         const dereferencedLayers = derefLayers(this.stylesheet.layers);
-
-        this.setGlobalState(this.stylesheet.state ?? null);
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
@@ -529,73 +566,46 @@ export class Style extends Evented<MapEventType> {
         }
     }
 
-    _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined): void {
+    async _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined): Promise<void> {
         this.imageManager.setLoaded(false);
 
         const abortController = new AbortController();
         this._spriteRequest = abortController;
         let err: Error;
-        loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
-            this._spriteRequest = null;
-            if (images) {
-                for (const spriteId in images) {
-                    this._spritesImagesIds[spriteId] = [];
+        try {
+            const images = await loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), abortController);
+            if (!images) return;
 
-                    // remove old sprite's loaded images (for the same sprite id) that are not in new sprite
-                    const imagesToRemove = this._spritesImagesIds[spriteId] ? this._spritesImagesIds[spriteId].filter(id => !(id in images)) : [];
-                    for (const id of imagesToRemove) {
-                        this.imageManager.removeImage(id);
-                        this._changedImages[id] = true;
-                    }
-
-                    for (const id in images[spriteId]) {
-                        // don't prefix images of the "default" sprite
-                        const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
-                        // save all the sprite's images' ids to be able to delete them in `removeSprite`
-                        this._spritesImagesIds[spriteId].push(imageId);
-                        if (imageId in this.imageManager.images) {
-                            this.imageManager.updateImage(imageId, images[spriteId][id], false);
-                        } else {
-                            this.imageManager.addImage(imageId, images[spriteId][id]);
-                        }
-
-                        if (isUpdate) {
-                            this._changedImages[imageId] = true;
-                        }
-                    }
+            for (const spriteId in images) {
+                const {loaded, removed} = this.imageManager.setSpriteImages(spriteId, images[spriteId]);
+                this._markImagesChanged(removed);
+                if (isUpdate) {
+                    this._markImagesChanged(loaded);
                 }
             }
-        }).catch((error) => {
-            this._spriteRequest = null;
+        } catch (error) {
             err = error;
             if (!abortController.signal.aborted) { // ignore abort
                 this.fire(new ErrorEvent(err));
             }
-        }).finally(() => {
+        } finally {
+            this._spriteRequest = null;
             this.imageManager.setLoaded(true);
-            this._availableImages = this.imageManager.listImages();
 
             if (isUpdate) {
                 this._changed = true;
             }
 
-            this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
+            this.dispatcher.broadcast(MessageType.setImages, this.imageManager.listImages());
             this.fire(new MapStyleDataEvent('data'));
 
-            if (completion) {
-                completion(err);
-            }
-        });
+            completion?.(err);
+        }
     }
 
     _unloadSprite(): void {
-        for (const id of Object.values(this._spritesImagesIds).flat()) {
-            this.imageManager.removeImage(id);
-            this._changedImages[id] = true;
-        }
+        this._markImagesChanged(this.imageManager.removeAllSpriteImages());
 
-        this._spritesImagesIds = {};
-        this._availableImages = this.imageManager.listImages();
         this._imagesListDirty = true;
         this._changed = true;
         this.fire(new MapStyleDataEvent('data'));
@@ -731,7 +741,7 @@ export class Style extends Evented<MapEventType> {
         const changed = this._changed;
         if (changed) {
             if (this._imagesListDirty) {
-                this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
+                this.dispatcher.broadcast(MessageType.setImages, this.imageManager.listImages());
                 this._imagesListDirty = false;
             }
 
@@ -760,9 +770,6 @@ export class Style extends Evented<MapEventType> {
                 this._layers[id].updateTransitions(parameters);
             }
 
-            this.light.updateTransitions(parameters);
-            this.sky.updateTransitions(parameters);
-
             this._resetUpdates();
         }
 
@@ -779,10 +786,11 @@ export class Style extends Evented<MapEventType> {
 
         // loop all layers and find layers that are not hidden at parameters.zoom
         // and set used to true in tileManagers dictionary for the sources of these layers
+        const availableImages = this.imageManager.listImages();
         for (const layerId of this._order) {
             const layer = this._layers[layerId];
 
-            layer.recalculate(parameters, this._availableImages);
+            layer.recalculate(parameters, availableImages);
             if (!layer.isHidden(parameters.zoom) && layer.source) {
                 this.tileManagers[layer.source].used = true;
             }
@@ -843,6 +851,13 @@ export class Style extends Evented<MapEventType> {
         });
     }
 
+    /** Tells the layers that the canvas was resized. */
+    resize(): void {
+        for (const layerId of this._order) {
+            this._layers[layerId].resize();
+        }
+    }
+
     _resetUpdates(): void {
         this._changed = false;
 
@@ -887,6 +902,7 @@ export class Style extends Evented<MapEventType> {
             return false;
         }
 
+        this._initialGlobalState = options.globalState ?? {};
         for (const styleChangeOperation of operations.operations) {
             styleChangeOperation();
         }
@@ -901,8 +917,13 @@ export class Style extends Evented<MapEventType> {
         return true;
     }
 
-    _getOperationsToPerform(diff: Array<DiffCommand<DiffOperations>>): {operations: Function[]; unimplemented: string[]} {
-        const operations: Function[] = [];
+    /**
+     * Translates a style diff into the calls that apply it to this style.
+     * @param diff - the operations produced by the style-spec diff algorithm
+     * @returns the operations to run, and the names of the commands that are not supported
+     */
+    _getOperationsToPerform(diff: DiffCommand[]): {operations: Array<() => void>; unimplemented: string[]} {
+        const operations: Array<() => void> = [];
         const unimplemented: string[] = [];
         for (const op of diff) {
             switch (op.command) {
@@ -912,54 +933,91 @@ export class Style extends Evented<MapEventType> {
                 case 'setPitch':
                 case 'setRoll':
                     continue;
-                case 'addLayer':
-                    operations.push(() => this.addLayer.apply(this, op.args));
+                case 'addLayer': {
+                    const [layer, before] = op.args;
+                    operations.push(() => this.addLayer(layer, before));
                     break;
-                case 'removeLayer':
-                    operations.push(() => this.removeLayer.apply(this, op.args));
+                }
+                case 'removeLayer': {
+                    const [layerId] = op.args;
+                    operations.push(() => this.removeLayer(layerId));
                     break;
-                case 'setPaintProperty':
-                    operations.push(() => this.setPaintProperty.apply(this, op.args));
+                }
+                case 'setPaintProperty': {
+                    const [layerId, name, value] = op.args;
+                    operations.push(() => this.setPaintProperty(layerId, name, value));
                     break;
-                case 'setLayoutProperty':
-                    operations.push(() => this.setLayoutProperty.apply(this, op.args));
+                }
+                case 'setLayoutProperty': {
+                    const [layerId, name, value] = op.args;
+                    operations.push(() => this.setLayoutProperty(layerId, name, value));
                     break;
-                case 'setFilter':
-                    operations.push(() => this.setFilter.apply(this, op.args));
+                }
+                case 'setFilter': {
+                    const [layerId, filter] = op.args;
+                    operations.push(() => this.setFilter(layerId, filter));
                     break;
-                case 'addSource':
-                    operations.push(() => this.addSource.apply(this, op.args));
+                }
+                case 'addSource': {
+                    const [id, source] = op.args;
+                    operations.push(() => this.addSource(id, source));
                     break;
-                case 'removeSource':
-                    operations.push(() => this.removeSource.apply(this, op.args));
+                }
+                case 'removeSource': {
+                    const [id] = op.args;
+                    operations.push(() => this.removeSource(id));
                     break;
-                case 'setLayerZoomRange':
-                    operations.push(() => this.setLayerZoomRange.apply(this, op.args));
+                }
+                case 'setLayerZoomRange': {
+                    const [layerId, minzoom, maxzoom] = op.args;
+                    operations.push(() => this.setLayerZoomRange(layerId, minzoom, maxzoom));
                     break;
-                case 'setLight':
-                    operations.push(() => this.setLight.apply(this, op.args));
+                }
+                case 'setLight': {
+                    const [light] = op.args;
+                    operations.push(() => this.setLight(light));
                     break;
-                case 'setGeoJSONSourceData':
-                    operations.push(() => this.setGeoJSONSourceData.apply(this, op.args));
+                }
+                case 'setGeoJSONSourceData': {
+                    const [id, data] = op.args;
+                    operations.push(() => this.setGeoJSONSourceData(id, data));
                     break;
-                case 'setGlyphs':
-                    operations.push(() => this.setGlyphs.apply(this, op.args));
+                }
+                case 'setGlyphs': {
+                    const [glyphsUrl] = op.args;
+                    operations.push(() => this.setGlyphs(glyphsUrl));
                     break;
-                case 'setSprite':
-                    operations.push(() => this.setSprite.apply(this, op.args));
+                }
+                case 'setFontFaces': {
+                    const [fontFaces] = op.args;
+                    operations.push(() => this.setFontFaces(fontFaces));
                     break;
-                case 'setTerrain':
-                    operations.push(() => this.map.setTerrain.apply(this, op.args));
+                }
+                case 'setSprite': {
+                    const [sprite] = op.args;
+                    operations.push(() => this.setSprite(sprite));
                     break;
-                case 'setSky':
-                    operations.push(() => this.setSky.apply(this, op.args));
+                }
+                case 'setTerrain': {
+                    const [terrain] = op.args;
+                    operations.push(() => this.map.setTerrain(terrain));
                     break;
-                case 'setProjection':
-                    this.setProjection.apply(this, op.args);
+                }
+                case 'setSky': {
+                    const [sky] = op.args;
+                    operations.push(() => this.setSky(sky));
                     break;
-                case 'setGlobalState':
-                    operations.push(() => this.setGlobalState.apply(this, op.args));
+                }
+                case 'setProjection': {
+                    const [projection] = op.args;
+                    operations.push(() => this.setProjection(projection));
                     break;
+                }
+                case 'setGlobalState': {
+                    const [state] = op.args;
+                    operations.push(() => this.setGlobalState(state));
+                    break;
+                }
                 case 'setTransition':
                     operations.push(() => {});
                     break;
@@ -968,11 +1026,7 @@ export class Style extends Evented<MapEventType> {
                     break;
             }
         }
-        const result: {operations: Function[]; unimplemented: string[]} = {
-            operations,
-            unimplemented
-        };
-        return result;
+        return {operations, unimplemented};
     }
 
     addImage(id: string, image: StyleImage): void {
@@ -1005,8 +1059,17 @@ export class Style extends Evented<MapEventType> {
         this._afterImageUpdated(id);
     }
 
+    /**
+     * Queues the tiles that depend on these images to be reloaded on the next update, which is
+     * needed whenever an image appears, disappears or changes size.
+     */
+    _markImagesChanged(ids: string[]): void {
+        for (const id of ids) {
+            this._changedImages[id] = true;
+        }
+    }
+
     _afterImageUpdated(id: string): void {
-        this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
         this._imagesListDirty = true;
         this._changed = true;
@@ -1192,14 +1255,15 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
+        if (before && !this._order.includes(before)) {
+            this.fire(new ErrorEvent(new Error(`Cannot move layer "${id}" before non-existing layer "${before}".`)));
+            return;
+        }
+
         const index = this._order.indexOf(id);
         this._order.splice(index, 1);
 
         const newIndex = before ? this._order.indexOf(before) : this._order.length;
-        if (before && newIndex === -1) {
-            this.fire(new ErrorEvent(new Error(`Cannot move layer "${id}" before non-existing layer "${before}".`)));
-            return;
-        }
         this._order.splice(newIndex, 0, id);
 
         this._layerOrderChanged = true;
@@ -1235,6 +1299,10 @@ export class Style extends Evented<MapEventType> {
         }
         delete this._updatedLayers[id];
         delete this._updatedPaintProps[id];
+
+        if (layer.type === 'symbol' && layer.source) {
+            this.tileManagers[layer.source]?.resetMaxContentElevation();
+        }
 
         if (layer.onRemove) {
             layer.onRemove(this.map);
@@ -1383,6 +1451,7 @@ export class Style extends Evented<MapEventType> {
 
         this._changed = true;
         this._updatedPaintProps[layer.id] = true;
+        if (layer.type === 'symbol') this.triggerSymbolPlacement();
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
     }
@@ -1499,11 +1568,13 @@ export class Style extends Evented<MapEventType> {
             pitch: myStyleSheet.pitch,
             sprite: myStyleSheet.sprite,
             glyphs: myStyleSheet.glyphs,
+            'font-faces': myStyleSheet['font-faces'],
             transition: myStyleSheet.transition,
             projection: myStyleSheet.projection,
+            state: myStyleSheet.state,
             sources,
             layers,
-            terrain
+            terrain,
         },
         (value) => value !== undefined);
     }
@@ -1616,7 +1687,7 @@ export class Style extends Evented<MapEventType> {
 
         const sourceResults: QueryRenderedFeaturesResults[] = [];
 
-        params.availableImages = this._availableImages;
+        params.availableImages = this.imageManager.listImages();
 
         // LayerSpecification is serialized StyleLayer, and this casting is safe.
         const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
@@ -1671,7 +1742,9 @@ export class Style extends Evented<MapEventType> {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
         }
         const tileManager = this.tileManagers[sourceID];
-        return tileManager ? querySourceFeatures(tileManager, params ? {...params, globalState: this._globalState} : {globalState: this._globalState}) : [];
+        if (!tileManager) return [];
+        const paramsStrict = {...params, globalState: this._globalState, worldCoordinateHelper: this.projection.worldCoordinateHelper};
+        return querySourceFeatures(tileManager, paramsStrict);
     }
 
     getLight(): LightSpecification {
@@ -1727,6 +1800,7 @@ export class Style extends Evented<MapEventType> {
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}): void {
         this._checkLoaded();
+
         const sky = this.getSky();
 
         let update = false;
@@ -1754,13 +1828,20 @@ export class Style extends Evented<MapEventType> {
             }, this.stylesheet.transition)
         };
 
+        if (!this.sky.setSky(skyOptions, options)) return;
         this.stylesheet.sky = skyOptions;
-        this.sky.setSky(skyOptions, options);
         this.sky.updateTransitions(parameters);
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        const projectionObjects = createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState);
+        this._applyProjection(createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState));
+    }
+
+    /**
+     * Puts a projection in place and migrates the map to its transform, which fires `projectiontransition`, then
+     * reloads the tiles in it.
+     */
+    private _applyProjection(projectionObjects: ReturnType<typeof createProjectionFromName>): void {
         this.projection = projectionObjects.projection;
         this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
         for (const key in this.tileManagers) {
@@ -1769,6 +1850,8 @@ export class Style extends Evented<MapEventType> {
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: StyleSetterOptions = {}): boolean {
+        if (options.validate === false) return false;
+
         return validateAndEmit(this, validate, {
             key,
             style: this.serialize(),
@@ -1817,7 +1900,7 @@ export class Style extends Evented<MapEventType> {
         this.tileManagers[id].reload();
     }
 
-    _updateSources(transform: ITransform): void {
+    _updateSources(transform: IReadonlyTransform): void {
         for (const id in this.tileManagers) {
             this.tileManagers[id].update(transform, this.map.terrain);
         }
@@ -1829,7 +1912,35 @@ export class Style extends Evented<MapEventType> {
         }
     }
 
-    _updatePlacement(transform: ITransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
+    /**
+     * Re-places symbols on the next frame.
+     * Placement is skipped while its inputs look unchanged, so call this when something
+     * the map cannot see for itself has moved symbols.
+     */
+    triggerSymbolPlacement(): void {
+        this._symbolPlacementTriggered = true;
+    }
+
+    /**
+     * Whether re-running symbol placement could produce a different result than the last run.
+     * Every camera and viewport parameter placement can observe perturbs the model-view-projection
+     * matrix, so comparing the matrix covers them all. Inputs the matrix cannot see arrive as
+     * {@link triggerSymbolPlacement} calls.
+     *
+     * @internal
+     */
+    _placementInputsChanged(transform: IReadonlyTransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): boolean {
+        const lastPlacement = this.pauseablePlacement;
+        return !lastPlacement ||
+            this._symbolPlacementTriggered ||
+            this._placedProjectionTransition !== this.projection?.transitionState ||
+            lastPlacement._showCollisionBoxes !== showCollisionBoxes ||
+            lastPlacement.placement.collisionGroups.crossSourceCollisions !== crossSourceCollisions ||
+            lastPlacement.placement.transform.renderWorldCopies !== transform.renderWorldCopies ||
+            !mat4.exactEquals(lastPlacement.placement.transform.modelViewProjectionMatrix, transform.modelViewProjectionMatrix);
+    }
+
+    _updatePlacement(transform: IReadonlyTransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
         let symbolBucketsChanged = false;
         let placementCommitted = false;
 
@@ -1846,7 +1957,7 @@ export class Style extends Evented<MapEventType> {
                     .sort((a, b) => (b.tileID.overscaledZ - a.tileID.overscaledZ) || (a.tileID.isLessThan(b.tileID) ? -1 : 1));
             }
 
-            const layerBucketsChanged = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.center.lng);
+            const layerBucketsChanged = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.worldCoordinateHelper.wraps ? transform.center.lng : 0);
             symbolBucketsChanged ||= layerBucketsChanged;
         }
         this.crossTileSymbolIndex.pruneUnusedLayers(this._order);
@@ -1859,7 +1970,13 @@ export class Style extends Evented<MapEventType> {
         // tiles will fully display symbols in their first frame
         forceFullPlacement ||= this._layerOrderChanged || fadeDuration === 0;
 
-        if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(now(), transform.zoom))) {
+        const placementInputsChanged = symbolBucketsChanged || this._placementInputsChanged(transform, showCollisionBoxes, crossSourceCollisions);
+
+        const placementSettled = this.pauseablePlacement?.isDone() && !this.placement.stillRecent(now(), transform.zoom);
+
+        if (forceFullPlacement || !this.pauseablePlacement || (placementSettled && (placementInputsChanged || this.placement.stale))) {
+            this._symbolPlacementTriggered = false;
+            this._placedProjectionTransition = this.projection?.transitionState;
             this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
@@ -1869,7 +1986,8 @@ export class Style extends Evented<MapEventType> {
             // started yet because of the `stillRecent` check immediately
             // above, so mark it stale to ensure that we request another
             // render frame
-            this.placement.setStale();
+            // if nothing changed, skip this so the map can go idle
+            if (placementInputsChanged) this.placement.setStale();
         } else {
             this.pauseablePlacement.continuePlacement(this._order, this._layers, layerTiles);
 
@@ -1925,7 +2043,7 @@ export class Style extends Evented<MapEventType> {
         return images;
     }
 
-    async getGlyphs(mapId: string | number, params: GetGlyphsParameters): Promise<GetGlyphsResponse> {
+    async getGlyphs(mapId: string | number, params: GetGlyphsParameters): Promise<GlyphMap> {
         const glyphs = await this.glyphManager.getGlyphs(params.stacks);
         const tileManager = this.tileManagers[params.source];
         if (tileManager) {
@@ -1947,10 +2065,24 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
+        this._changed = true;
         this._glyphsDidChange = true;
         this.stylesheet.glyphs = glyphsUrl;
         this.glyphManager.entries = {};
         this.glyphManager.setURL(glyphsUrl);
+    }
+
+    getFontFaces(): FontFacesSpecification | null {
+        return this.stylesheet['font-faces'] || null;
+    }
+
+    setFontFaces(fontFaces: FontFacesSpecification | null | undefined): void {
+        this._checkLoaded();
+
+        this._changed = true;
+        this._glyphsDidChange = true;
+        this.stylesheet['font-faces'] = fontFaces;
+        this.glyphManager.setFontFaces(fontFaces);
     }
 
     async getDashes(mapId: string | number, params: GetDashesParameters): Promise<GetDashesResponse> {
@@ -2000,18 +2132,12 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
-        if (this._spritesImagesIds[id]) {
-            for (const imageId of this._spritesImagesIds[id]) {
-                this.imageManager.removeImage(imageId);
-                this._changedImages[imageId] = true;
-            }
-        }
+        const changedImages = this.imageManager.removeSpriteImages(id);
+        this._markImagesChanged(changedImages);
 
         internalSpriteRepresentation.splice(internalSpriteRepresentation.findIndex(sprite => sprite.id === id), 1);
         this.stylesheet.sprite = internalSpriteRepresentation.length > 0 ? internalSpriteRepresentation : undefined;
 
-        delete this._spritesImagesIds[id];
-        this._availableImages = this.imageManager.listImages();
         this._imagesListDirty = true;
         this._changed = true;
         this.fire(new MapStyleDataEvent('data'));
@@ -2082,8 +2208,7 @@ export class Style extends Evented<MapEventType> {
         if (this.imageManager) {
             this.imageManager.setEventedParent(null);
             this.imageManager.destroy();
-            this._availableImages = [];
-            this._spritesImagesIds = {};
+            this.patternAtlas.destroy();
         }
 
         // Destroy glyphManager

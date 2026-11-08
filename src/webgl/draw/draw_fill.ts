@@ -11,14 +11,15 @@ import {updatePatternPositionsInProgram} from '../../render/update_pattern_posit
 import {translatePosition} from '../../util/util.ts';
 import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
 
+import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {ColorMode} from '../color_mode.ts';
-import type {Painter, RenderOptions} from '../../render/painter.ts';
+import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
-export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], renderOptions: RenderOptions): void {
+export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
     const layerOpacity = layer.paint.get('fill-layer-opacity');
@@ -26,37 +27,34 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
 
     const layerBlend = layer.paint.get('fill-layer-blend');
     if (layerOpacity < 1 || layerBlend !== 'normal') {
-        if (painter.renderPass !== 'translucent') return;
-        const useTerrain = !!painter.style.map.terrain;
-
-        const results = prepareDrawLayerComposite(painter, tileManager, layer, coords, useTerrain);
-        drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
-        drawLayerComposite(painter, layerOpacity, layerBlend, results, layer);
+        if (frameRenderContext.currentPass !== 'translucent') return;
+        const results = prepareDrawLayerComposite(painter, tileManager, layer, coords, frameRenderContext);
+        drawFillAndOutline(tileManager, layer, coords, frameRenderContext);
+        drawLayerComposite(painter, layerOpacity, layerBlend, results, layer, frameRenderContext);
         return;
     }
 
     const pattern = layer.paint.get('fill-pattern');
-    const fillEligibleForOpaque = painter.opaquePassEnabledForLayer() &&
+    const fillEligibleForOpaque = frameRenderContext.opaquePassEnabledForLayer() &&
         !pattern.constantOr(1 as any) &&
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1;
 
-    if (fillEligibleForOpaque && painter.renderPass === 'opaque') {
+    if (fillEligibleForOpaque && frameRenderContext.currentPass === 'opaque') {
         // Opaque-eligible fill draws standalone in the opaque pass with ReadWrite depth;
         // its outline (always translucent) runs in the translucent pass below.
-        const {isRenderingToTexture} = renderOptions;
-        const colorMode = painter.colorModeForRenderPass();
-        const depthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadWrite);
-        drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
+        const colorMode = frameRenderContext.colorModeForRenderPass();
+        const depthMode = frameRenderContext.getDepthModeForSublayer(1, DepthMode.ReadWrite);
+        drawFillTiles(tileManager, layer, coords, depthMode, colorMode, false, frameRenderContext);
         return;
     }
-    if (fillEligibleForOpaque && painter.renderPass === 'translucent') {
+    if (fillEligibleForOpaque && frameRenderContext.currentPass === 'translucent') {
         // Fill already drew in the opaque pass; just draw the outline here.
-        drawOutline(painter, tileManager, layer, coords, renderOptions);
+        drawOutline(tileManager, layer, coords, frameRenderContext);
         return;
     }
-    if (painter.renderPass === 'translucent') {
-        drawFillAndOutline(painter, tileManager, layer, coords, renderOptions);
+    if (frameRenderContext.currentPass === 'translucent') {
+        drawFillAndOutline(tileManager, layer, coords, frameRenderContext);
     }
 }
 
@@ -66,27 +64,24 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
  * (when the fill is not opaque-pass-eligible).
  */
 function drawFillAndOutline(
-    painter: Painter,
     tileManager: TileManager,
     layer: FillStyleLayer,
     coords: OverscaledTileID[],
-    renderOptions: RenderOptions
+    frameRenderContext: FrameRenderContext
 ) {
-    const {isRenderingToTexture} = renderOptions;
-    const colorMode = painter.colorModeForRenderPass();
+    const colorMode = frameRenderContext.colorModeForRenderPass();
 
-    const fillDepthMode = painter.getDepthModeForSublayer(1, DepthMode.ReadOnly);
-    drawFillTiles(painter, tileManager, layer, coords, fillDepthMode, colorMode, false, isRenderingToTexture);
+    const fillDepthMode = frameRenderContext.getDepthModeForSublayer(1, DepthMode.ReadOnly);
+    drawFillTiles(tileManager, layer, coords, fillDepthMode, colorMode, false, frameRenderContext);
 
-    drawOutline(painter, tileManager, layer, coords, renderOptions);
+    drawOutline(tileManager, layer, coords, frameRenderContext);
 }
 
 function drawOutline(
-    painter: Painter,
     tileManager: TileManager,
     layer: FillStyleLayer,
     coords: OverscaledTileID[],
-    renderOptions: RenderOptions
+    frameRenderContext: FrameRenderContext
 ) {
     if (!layer.paint.get('fill-antialias')) return;
 
@@ -98,30 +93,29 @@ function drawOutline(
     // or stroke color is translucent. If we wouldn't clip to outside
     // the current shape, some pixels from the outline stroke overlapped
     // the (non-antialiased) fill.
-    const {isRenderingToTexture} = renderOptions;
-    const colorMode = painter.colorModeForRenderPass();
-    const depthMode = painter.getDepthModeForSublayer(
+    const colorMode = frameRenderContext.colorModeForRenderPass();
+    const depthMode = frameRenderContext.getDepthModeForSublayer(
         layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-    drawFillTiles(painter, tileManager, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
+    drawFillTiles(tileManager, layer, coords, depthMode, colorMode, true, frameRenderContext);
 }
 
 function drawFillTiles(
-    painter: Painter,
     tileManager: TileManager,
     layer: FillStyleLayer,
     coords: OverscaledTileID[],
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
     isOutline: boolean,
-    isRenderingToTexture: boolean) {
-    const gl = painter.context.gl;
+    frameRenderContext: FrameRenderContext) {
+    const context = frameRenderContext.context;
+    const gl = context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
     const image = patternProperty?.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
-    const transform = painter.transform;
+    const transform = frameRenderContext.transform;
 
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
@@ -143,44 +137,40 @@ function drawFillTiles(
         const bucket: FillBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
+        const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram(programName, programConfiguration);
-        const terrainData = painter.getTerrainDataForTile(coord, isRenderingToTexture);
+        const program = frameRenderContext.useProgram(programName, programConfiguration);
+        const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
         if (image) {
-            painter.context.activeTexture.set(gl.TEXTURE0);
+            context.activeTexture.set(gl.TEXTURE0);
             tile.imageAtlasTexture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = transform.getProjectionData({
-            overscaledTileID: coord,
-            applyGlobeMatrix: !isRenderingToTexture,
-            applyTerrainMatrix: true
-        });
+        const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
         const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) : fillUniformValues(translateForUniforms);
+            uniformValues = image ? fillPatternUniformValues(transform, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
-            const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
-                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
+                fillOutlinePatternUniformValues(transform, crossfade, tile, translateForUniforms, isSdfPattern) :
+                fillOutlineUniformValues(translateForUniforms);
         }
 
-        const stencil = painter.stencilModeForClipping(coord);
+        const stencil = frameRenderContext.stencilModeForClipping(coord);
 
-        program.draw(painter.context, drawMode, depthMode,
+        program.draw(context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, painter.transform.zoom, programConfiguration);
+            layer.paint, frameRenderContext.transform.zoom, programConfiguration);
     }
 }

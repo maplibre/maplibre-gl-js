@@ -3,8 +3,8 @@ uniform float u_opacity;
 uniform sampler2D u_image0;
 uniform sampler2D u_image1;
 
-in vec2 v_pos0;
-in vec2 v_pos1;
+in vec3 v_pos0;
+in vec3 v_pos1;
 
 uniform float u_brightness_low;
 uniform float u_brightness_high;
@@ -16,8 +16,8 @@ uniform vec3 u_spin_weights;
 void main() {
 
     // read and cross-fade colors from the main and parent tiles
-    vec4 color0 = texture(u_image0, v_pos0);
-    vec4 color1 = texture(u_image1, v_pos1);
+    vec4 color0 = texture(u_image0, v_pos0.xy / v_pos0.z);
+    vec4 color1 = texture(u_image1, v_pos1.xy / v_pos1.z);
     if (color0.a > 0.0) {
         color0.rgb = color0.rgb / color0.a;
     }

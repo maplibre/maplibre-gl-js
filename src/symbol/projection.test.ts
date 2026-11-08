@@ -1,11 +1,45 @@
 import {describe, test, expect} from 'vitest';
-import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors} from './projection.ts';
-
 import Point from '@mapbox/point-geometry';
+import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane} from './projection.ts';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import {expectToBeCloseToArray} from '../util/test/util.ts';
+
+const TERRAIN_ELEVATION = 100;
+const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0));
+
+/**
+ * Builds a {@link SymbolProjectionContext} backed by a real, sized mercator transform, so that
+ * projections through it produce meaningful values. Pass `overrides` for whatever the test cares
+ * about; everything else falls back to a pitched viewport over flat terrain at `TERRAIN_ELEVATION`.
+ */
+function createDefaultTransform(): MercatorTransform {
+    const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
+    transform.resize(500, 500);
+    transform.setCenter(new LngLat(10.0, 50.0));
+    transform.setPitch(60);
+    return transform;
+}
+
+function createProjectionContext(overrides: Partial<SymbolProjectionContext> = {}): SymbolProjectionContext {
+    return {
+        projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
+        lineVertexArray: null,
+        pitchedLabelPlaneMatrix: mat4.create(),
+        getElevation: (_x, _y) => TERRAIN_ELEVATION,
+        tileAnchorPoint: new Point(0, 0),
+        pitchWithMap: false,
+        unwrappedTileID,
+        transform: overrides.transform ?? createDefaultTransform(),
+        width: 100,
+        height: 100,
+        translation: [0, 0],
+        ...overrides
+    };
+}
 
 describe('Projection', () => {
     test('matrix float precision', () => {
@@ -21,13 +55,11 @@ describe('Vertex to viewport projection', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
-    const transform = new MercatorTransform();
+    const transform = createMercatorTransform();
 
     test('projecting with null matrix', () => {
-        const projectionContext: SymbolProjectionContext = {
-            projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
+        const projectionContext = createProjectionContext({
             lineVertexArray,
-            pitchedLabelPlaneMatrix: mat4.create(),
             getElevation: (_x, _y) => 0,
             // Only relevant in "behind the camera" case, can't happen with null projection matrix
             tileAnchorPoint: new Point(0, 0),
@@ -35,9 +67,8 @@ describe('Vertex to viewport projection', () => {
             unwrappedTileID: null,
             transform,
             width: 1,
-            height: 1,
-            translation: [0, 0]
-        };
+            height: 1
+        });
 
         const syntheticVertexArgs: ProjectionSyntheticVertexArgs = {
             distanceFromAnchor: 0,
@@ -66,21 +97,17 @@ describe('Find offset line intersections', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
-    const transform = new MercatorTransform();
+    const transform = createMercatorTransform();
 
-    const projectionContext: SymbolProjectionContext = {
-        projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
+    const projectionContext = createProjectionContext({
         lineVertexArray,
-        pitchedLabelPlaneMatrix: mat4.create(),
         getElevation: (_x, _y) => 0,
-        tileAnchorPoint: new Point(0, 0),
         transform,
         pitchWithMap: true,
         unwrappedTileID: null,
         width: 1,
-        height: 1,
-        translation: [0, 0]
-    };
+        height: 1
+    });
 
     // Only relevant in "behind the camera" case, can't happen with null projection matrix
     const syntheticVertexArgs: ProjectionSyntheticVertexArgs = {
@@ -174,7 +201,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(0);
         transform.setPitch(45);
         transform.setRoll(45);
@@ -186,7 +213,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(45);
         transform.setPitch(45);
         transform.setRoll(0);
@@ -198,7 +225,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing, pitch, and roll', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(45);
         transform.setPitch(45);
         transform.setRoll(45);
@@ -210,7 +237,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getGlCoordMatrix: bearing, pitch, and roll', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.resize(128, 128);
         transform.setBearing(45);
         transform.setPitch(45);
@@ -227,7 +254,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: bearing', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(45);
         transform.setPitch(0);
         transform.setRoll(0);
@@ -239,7 +266,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: roll', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(0);
         transform.setPitch(0);
         transform.setRoll(45);
@@ -251,7 +278,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: pitch', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(0);
         transform.setPitch(45);
         transform.setRoll(0);
@@ -263,7 +290,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: roll pitch bearing', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setBearing(45);
         transform.setPitch(45);
         transform.setRoll(45);
@@ -275,7 +302,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: pitch 90 degrees', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setMaxPitch(180);
         transform.setBearing(0);
         transform.setPitch(89);
@@ -300,7 +327,7 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: pitch 90 degrees with roll and bearing', () => {
-        const transform = new MercatorTransform();
+        const transform = createMercatorTransform();
         transform.setMaxPitch(180);
         transform.setBearing(45);
         transform.setPitch(89);
@@ -318,4 +345,41 @@ describe('Find offset line intersections', () => {
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
+});
+
+describe('symbol height offset projection', () => {
+    const HEIGHT_OFFSET = 250;
+
+    test('projectTileCoordinatesToClipSpace measures the height offset from the terrain when the anchor is ground', () => {
+        const projectionContext = createProjectionContext({heightOffset: HEIGHT_OFFSET, heightAnchorGround: true});
+        const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
+        const expected = projectionContext.transform.projectTileCoordinates(1024, 1024, unwrappedTileID, TERRAIN_ELEVATION + HEIGHT_OFFSET);
+        expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
+        expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
+    });
+
+    test('projectTileCoordinatesToClipSpace ignores the terrain when the anchor is absolute', () => {
+        const projectionContext = createProjectionContext({heightOffset: HEIGHT_OFFSET, heightAnchorGround: false});
+        const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
+        const expected = projectionContext.transform.projectTileCoordinates(1024, 1024, unwrappedTileID, HEIGHT_OFFSET);
+        expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
+        expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
+    });
+
+    test('projectTileCoordinatesToClipSpace defaults to the plain terrain elevation without height properties', () => {
+        const projectionContext = createProjectionContext();
+        const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
+        const expected = projectionContext.transform.projectTileCoordinates(1024, 1024, unwrappedTileID, TERRAIN_ELEVATION);
+        expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
+        expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
+    });
+
+    test('projectTileCoordinatesToLabelPlane raises a viewport-aligned symbol by the height offset', () => {
+        const grounded = projectTileCoordinatesToLabelPlane(1024, 1024, createProjectionContext());
+        const raised = projectTileCoordinatesToLabelPlane(1024, 1024, createProjectionContext({heightOffset: HEIGHT_OFFSET, heightAnchorGround: true}));
+        // The label plane y axis points down the screen, so a raised symbol sits at a smaller y.
+        expect(raised.point.y).toBeLessThan(grounded.point.y);
+        // Raising the symbol only shifts it along y; x moves by no more than the perspective change.
+        expect(raised.point.x).toBeCloseTo(grounded.point.x, 4);
+    });
 });

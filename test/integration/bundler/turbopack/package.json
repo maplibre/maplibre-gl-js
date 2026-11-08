@@ -1,0 +1,22 @@
+{
+  "name": "maplibre-gl-turbopack-example",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Next.js app exercising maplibre-gl's ESM build, package subpaths, and worker setup under Turbopack.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build"
+  },
+  "dependencies": {
+    "maplibre-gl": "file:../../../..",
+    "next": "^16.4.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.6.0"
+  }
+}

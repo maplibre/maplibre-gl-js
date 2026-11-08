@@ -15,7 +15,7 @@ const config: ViteUserConfig = defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['json', 'html'],
-            exclude: ['**/*.test.ts'],
+            exclude: ['**/*.test.ts', '**/*.bench.ts'],
             include: ['src/**/*.{ts,js}'],
             reportsDirectory: './coverage/vitest/integration',
         },

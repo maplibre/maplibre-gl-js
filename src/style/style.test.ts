@@ -3,26 +3,30 @@ import {Style} from './style.ts';
 import {TileManager} from '../tile/tile_manager.ts';
 import {StyleLayer} from './style_layer.ts';
 import {extend} from '../util/util.ts';
-import {Event} from '../util/evented.ts';
-import {type AJAXError} from '../util/ajax.ts';
+import {ErrorEvent, Event} from '../util/evented.ts';
+import {MapSourceDataEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
 import {browser} from '../util/browser.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
-
-import {type EvaluationParameters} from './evaluation_parameters.ts';
+import {ImageRequest} from '../util/image_request.ts';
+import {EvaluationParameters} from './evaluation_parameters.ts';
 import {Color, type Feature, type LayerSpecification, type GeoJSONSourceSpecification, type FilterSpecification, type SourceSpecification, type StyleSpecification, type SymbolLayerSpecification, type SkySpecification, type CameraFunctionSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type GeoJSONSource} from '../source/geojson_source.ts';
 import {StubMap, sleep, waitForEvent} from '../util/test/util.ts';
+import {setNow, restoreNow} from '../util/time_control.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
-import {MercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {type Tile} from '../tile/tile.ts';
+import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+
+import type {PossiblyEvaluated} from './properties.ts';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
+import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {GeoJSONSource} from '../source/geojson_source.ts';
+import type {AJAXError} from '../util/ajax.ts';
 import type Point from '@mapbox/point-geometry';
-import {type PossiblyEvaluated} from './properties.ts';
-import {type SymbolLayoutProps, type SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
-import {type CirclePaintProps, type CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
+import type {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -72,6 +76,7 @@ let mockConsoleError: MockInstance;
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
+    ImageRequest.resetRequestQueue();
     mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
@@ -374,7 +379,7 @@ describe('Style.loadJSON', () => {
         }));
 
         await style.once('style.load');
-        expect(style.tileManagers['mapLibre'] instanceof TileManager).toBeTruthy();
+        expect(style.tileManagers['mapLibre']).toBeInstanceOf(TileManager);
     });
 
     test('creates layers', async () => {
@@ -396,7 +401,7 @@ describe('Style.loadJSON', () => {
         });
 
         await style.once('style.load');
-        expect(style.getLayer('fill') instanceof StyleLayer).toBeTruthy();
+        expect(style.getLayer('fill')).toBeInstanceOf(StyleLayer);
     });
 
     test('transforms sprite json and image URLs before request', async () => {
@@ -460,7 +465,7 @@ describe('Style.loadJSON', () => {
         const errorPromise = style.once('error');
 
         await style.once('style.load');
-        style._layers.background.fire(new Event('error', {mapLibre: true}));
+        style._layers.background.fire(new ErrorEvent(new Error('test'), {mapLibre: true}));
 
         const e = await errorPromise;
         expect((e as any).layer).toEqual({id: 'background'});
@@ -594,11 +599,10 @@ describe('Style.loadJSON', () => {
         // was used when evaluating the layer
         const globalState = {color: {default: 'red'}, radius: {default: 12}};
         style.setGlobalState(globalState);
-        const layer = style.getLayer('layer-id');
-        layer.recalculate({} as EvaluationParameters, []);
-        const paint = layer.paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
+        style.update({} as EvaluationParameters);
+        const paint = style.getLayer('layer-id').paint as PossiblyEvaluated<CirclePaintProps, CirclePaintPropsPossiblyEvaluated>;
         expect(paint.get('circle-color').evaluate({} as Feature, {})).toEqual(new Color(1, 0, 0, 1));
-        expect(paint.get('circle-radius').evaluate({} as Feature, {})).toEqual(12);
+        expect(paint.get('circle-radius').evaluate({} as Feature, {})).toBe(12);
     });
 
     test('does not throw if request is pending when removed', async () => {
@@ -657,7 +661,7 @@ describe('Style._load', () => {
 
     test('layers are broadcasted to worker', () => {
         const style = new Style(getStubMap());
-        let dispatchType: MessageType;
+        let dispatchType: string;
         let dispatchData;
         const styleSpec = createStyleJSON({
             layers: [{
@@ -737,6 +741,18 @@ describe('Style._load', () => {
         expect(style.projection.name).toBe('mercator');
         expect(style.serialize().projection).toBeUndefined();
     });
+
+    test('evaluates a projection from the global state without a warning', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            state: {projectionType: {default: 'vertical-perspective'}},
+            projection: {type: ['global-state', 'projectionType']}
+        });
+
+        style._load(styleSpec, {validate: false});
+        expect(warn).not.toHaveBeenCalled();
+    });
 });
 
 describe('Style._remove', () => {
@@ -778,7 +794,7 @@ describe('Style.update', () => {
 
         await style.once('style.load');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         // Add multiple images — should NOT broadcast setImages immediately
@@ -806,7 +822,7 @@ describe('Style.update', () => {
 
         await style.once('style.load');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         // Trigger an update that changes layers but not images
@@ -826,7 +842,7 @@ describe('Style.update', () => {
 
         await style.once('style.load');
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         // Trigger both image and layer changes in the same frame
@@ -853,7 +869,7 @@ describe('Style.update', () => {
         style.addImage('img2', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
         style.update({} as EvaluationParameters);
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         style.removeImage('img1');
@@ -877,7 +893,7 @@ describe('Style.update', () => {
         style.addImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
         style.update({} as EvaluationParameters);
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         style.updateImage('img1', {data: new RGBAImage({width: 1, height: 1}, new Uint8Array(4)), pixelRatio: 1, sdf: false});
@@ -1300,7 +1316,7 @@ describe('Style.addSource', () => {
             style.addSource('source-id', source);
             style.update({} as EvaluationParameters);
         });
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('throws on duplicates', async () => {
@@ -1347,8 +1363,8 @@ describe('Style.addSource', () => {
         });
 
         style.addSource('source-id', source); // fires data twice
-        style.tileManagers['source-id'].fire(new Event('error'));
-        style.tileManagers['source-id'].fire(new Event('data'));
+        style.tileManagers['source-id'].fire(new ErrorEvent(new Error('test')));
+        style.tileManagers['source-id'].fire(new MapSourceDataEvent('data'));
 
         await expect(Promise.all(promises)).resolves.toBeDefined();
     });
@@ -1370,7 +1386,7 @@ describe('Style.removeSource', () => {
             style.removeSource('source-id');
             style.update({} as EvaluationParameters);
         });
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('clears tiles', async () => {
@@ -1446,8 +1462,8 @@ describe('Style.removeSource', () => {
 
         style.on('data', () => expect(false).toBeTruthy());
         style.on('error', () => expect(false).toBeTruthy());
-        tileManager.fire(new Event('data'));
-        tileManager.fire(new Event('error'));
+        tileManager.fire(new MapSourceDataEvent('data'));
+        tileManager.fire(new ErrorEvent(new Error('test')));
     });
 });
 
@@ -1480,6 +1496,28 @@ describe('Style.setSky', () => {
 
         expect(inputJson.sky).toBe(inputSky);
         expect(inputJsonString).toEqual(JSON.stringify(inputJson));
+    });
+
+    test('fires an error on the style when given an invalid property', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sky: {'sky-color': 'red'}}));
+        await style.once('style.load');
+
+        const promise = style.once('error');
+        style.setSky({'sky-color': 'blue', 'not-a-sky-property': 1} as any);
+        const event = await promise;
+        expect(event.error.message).toContain('not-a-sky-property');
+    });
+
+    test('keeps the previous value from getSky() after a rejected setSky', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sky: {'sky-color': 'red'}}));
+        await style.once('style.load');
+
+        style.on('error', () => {});
+        style.setSky({'sky-color': 'blue', 'not-a-sky-property': 1} as any);
+
+        expect(style.getSky()).toEqual({'sky-color': 'red'});
     });
 });
 
@@ -1521,6 +1559,72 @@ describe('Style.setGlyphs', () => {
         // Unset via undefined
         style.setGlyphs(undefined);
         expect(style.getGlyphsUrl()).toBeNull();
+    });
+});
+
+describe('Style.setFontFaces', () => {
+    const fontFaces = {
+        'Noto Sans Regular': [{url: 'https://example.com/khmer.ttf', 'unicode-range': ['U+1780-17FF']}]
+    };
+
+    test('applies the font faces a loading style declares', async () => {
+        const style = new Style(getStubMap());
+        const setFontFaces = vi.spyOn(style.glyphManager, 'setFontFaces');
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+    });
+
+    test('reports no font faces when the style declares none', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('hands the new font faces to the glyph manager', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        const setFontFaces = vi.spyOn(style.glyphManager, 'setFontFaces');
+
+        style.setFontFaces(fontFaces);
+
+        expect(setFontFaces).toHaveBeenCalledWith(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+    });
+
+    test('allows font faces to be unset via null and undefined', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        style.setFontFaces(null);
+        expect(style.getFontFaces()).toBeNull();
+
+        style.setFontFaces(fontFaces);
+        expect(style.getFontFaces()).toEqual(fontFaces);
+
+        style.setFontFaces(undefined);
+        expect(style.getFontFaces()).toBeNull();
+    });
+
+    test('round-trips through serialize, so setState can diff them', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({'font-faces': fontFaces} as any));
+        await style.once('style.load');
+
+        expect(style.serialize()['font-faces']).toEqual(fontFaces);
+
+        const nextFontFaces = {'Noto Sans Regular': 'https://example.com/noto.ttf'};
+        expect(style.setState(createStyleJSON({'font-faces': nextFontFaces} as any))).toBe(true);
+        expect(style.getFontFaces()).toEqual(nextFontFaces);
+
+        expect(style.setState(createStyleJSON())).toBe(true);
+        expect(style.getFontFaces()).toBeNull();
     });
 });
 
@@ -1704,6 +1808,68 @@ describe('Style.setSprite', () => {
     });
 });
 
+describe('Style._loadSprite', () => {
+    const FIRST_SPRITE_URL = 'http://example.com/sprite1';
+    const SECOND_SPRITE_URL = 'http://example.com/sprite2';
+
+    const spriteJSON = (...imageIds: string[]) => JSON.stringify(
+        Object.fromEntries(imageIds.map(id => [id, {width: 1, height: 1, x: 0, y: 0, pixelRatio: 1}]))
+    );
+
+    /** Loads a sprite through `setSprite` and resolves once it has been applied to the image manager */
+    function loadSprite(style: Style, url: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            style.setSprite(url, {}, (err) => err ? reject(err) : resolve());
+            sleep(0).then(() => server.respond());
+        });
+    }
+
+    async function createLoadedStyle(): Promise<Style> {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        return style;
+    }
+
+    beforeEach(() => {
+        vi.spyOn(browser, 'getImageData');
+        server.respondWith('GET', /sprite\d\.png$/, new ArrayBuffer(8) as any);
+        server.respondWith('GET', `${FIRST_SPRITE_URL}.json`, spriteJSON('sharedImage', 'firstSpriteOnlyImage'));
+        server.respondWith('GET', `${SECOND_SPRITE_URL}.json`, spriteJSON('sharedImage', 'secondSpriteOnlyImage'));
+    });
+
+    test('removes the images of the previous sprite that are absent from the new one', async () => {
+        const style = await createLoadedStyle();
+
+        await loadSprite(style, FIRST_SPRITE_URL);
+        expect(style.imageManager.listImages().sort()).toEqual(['firstSpriteOnlyImage', 'sharedImage']);
+
+        await loadSprite(style, SECOND_SPRITE_URL);
+        expect(style.imageManager.listImages().sort()).toEqual(['secondSpriteOnlyImage', 'sharedImage']);
+    });
+
+    test('leaves no image behind when the sprite is unset after having been replaced', async () => {
+        const style = await createLoadedStyle();
+        await loadSprite(style, FIRST_SPRITE_URL);
+        await loadSprite(style, SECOND_SPRITE_URL);
+
+        style.setSprite(undefined);
+
+        expect(style.imageManager.listImages()).toEqual([]);
+    });
+
+    test('only marks the images shared with the previous sprite as updated, so that returning to a sprite does not accumulate per-frame patching work', async () => {
+        const style = await createLoadedStyle();
+        await loadSprite(style, FIRST_SPRITE_URL);
+        const updateVersionAfterFirstLoad = style.imageManager.updateVersion;
+
+        await loadSprite(style, SECOND_SPRITE_URL);
+        await loadSprite(style, FIRST_SPRITE_URL);
+
+        expect(style.imageManager.updateVersion - updateVersionAfterFirstLoad).toBe(2);
+    });
+});
+
 describe('Style.setGeoJSONSourceData', () => {
     const geoJSON = {type: 'FeatureCollection', features: []} as GeoJSON.GeoJSON;
 
@@ -1725,6 +1891,7 @@ describe('Style.setGlobalState', () => {
         const style = new Style(getStubMap());
         expect(() => style.setGlobalState({})).toThrow(/load/i);
     });
+
     test('sets global state', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
@@ -1941,6 +2108,99 @@ describe('Style.setGlobalState', () => {
 
         expect(style.tileManagers['line-source-id'].resume).not.toHaveBeenCalled();
         expect(style.tileManagers['line-source-id'].reload).not.toHaveBeenCalled();
+    });
+});
+
+describe('a global state change transitions what reads it, issue #8395', () => {
+    test('a paint property runs from the value the state had to the new one', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            state: {opacity: {default: 0.2}},
+            layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
+        }));
+        await style.once('style.load');
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+
+        style.setGlobalStateProperty('opacity', 1);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(0.2);
+
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
+        expect(style.hasTransitions()).toBe(true);
+
+        style.update(new EvaluationParameters(0, {now: 301, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(1);
+        expect(style.hasTransitions()).toBe(false);
+    });
+
+    test('a state change mid-transition continues exactly as setting the value would', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            state: {opacity: {default: 0.2}},
+            layers: [
+                {id: 'state', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}},
+                {id: 'plain', type: 'background', paint: {'background-opacity': 0.2}}
+            ]
+        }));
+        await style.once('style.load');
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+
+        style.setGlobalStateProperty('opacity', 1);
+        style.setPaintProperty('plain', 'background-opacity', 1);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        style.setGlobalStateProperty('opacity', 0.4);
+        style.setPaintProperty('plain', 'background-opacity', 0.4);
+
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity'))
+            .toBe((style.getLayer('plain') as BackgroundStyleLayer).paint.get('background-opacity'));
+        style.update(new EvaluationParameters(0, {now: 300, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity'))
+            .toBe((style.getLayer('plain') as BackgroundStyleLayer).paint.get('background-opacity'));
+
+        style.update(new EvaluationParameters(0, {now: 451, transition}));
+        expect((style.getLayer('state') as BackgroundStyleLayer).paint.get('background-opacity')).toBe(0.4);
+        expect(style.hasTransitions()).toBe(false);
+    });
+
+    test('changes made before a frame run from the value on screen', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            state: {opacity: {default: 0.2}},
+            layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
+        }));
+        await style.once('style.load');
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+
+        style.setGlobalStateProperty('opacity', 0.5);
+        style.setGlobalStateProperty('opacity', 1);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
+    });
+
+    test('a running transition keeps its start when the state its prior value reads changes', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            state: {opacity: {default: 0.2}},
+            layers: [{id: 'background', type: 'background', paint: {'background-opacity': ['global-state', 'opacity']}}]
+        }));
+        await style.once('style.load');
+        const transition = {duration: 300, delay: 0};
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+
+        style.setPaintProperty('background', 'background-opacity', 1);
+        style.update(new EvaluationParameters(0, {now: 0, transition}));
+        style.setGlobalStateProperty('opacity', 0);
+
+        style.update(new EvaluationParameters(0, {now: 150, transition}));
+        expect((style.getLayer('background') as BackgroundStyleLayer).paint.get('background-opacity')).toBeCloseTo(0.6);
     });
 });
 
@@ -2297,7 +2557,7 @@ describe('Style.addLayer', () => {
             type: 'background'
         });
 
-        style._layers.background.fire(new Event('error', {mapLibre: true}));
+        style._layers.background.fire(new ErrorEvent(new Error('test'), {mapLibre: true}));
 
         const e = await errorPromise;
         expect((e as any).layer).toEqual({id: 'background'});
@@ -2474,7 +2734,7 @@ describe('Style.addLayer', () => {
             style.addLayer(layer);
             style.update({} as EvaluationParameters);
         });
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('emits error on duplicates', async () => {
@@ -2592,7 +2852,7 @@ describe('Style.removeLayer', () => {
             style.update({} as EvaluationParameters);
         });
 
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('tears down layer event forwarding', async () => {
@@ -2604,9 +2864,8 @@ describe('Style.removeLayer', () => {
             }]
         }));
 
-        style.on('error', () => {
-            throw new Error('test failed');
-        });
+        const styleErrorListener = vi.fn();
+        style.on('error', styleErrorListener);
 
         await style.once('style.load');
         const layer = style._layers.background;
@@ -2615,7 +2874,9 @@ describe('Style.removeLayer', () => {
         // Bind a listener to prevent fallback Evented error reporting.
         layer.on('error', () => {});
 
-        layer.fire(new Event('error', {mapLibre: true}));
+        layer.fire(new ErrorEvent(new Error('test'), {mapLibre: true}));
+
+        expect(styleErrorListener).not.toHaveBeenCalled();
     });
 
     test('fires an error on non-existence', async () => {
@@ -2682,7 +2943,7 @@ describe('Style.moveLayer', () => {
             style.moveLayer('background');
             style.update({} as EvaluationParameters);
         });
-        await dataPromise;
+        await expect(dataPromise).resolves.toBeDefined();
     });
 
     test('fires an error on non-existence', async () => {
@@ -2725,6 +2986,26 @@ describe('Style.moveLayer', () => {
         style.moveLayer('b', 'b');
         expect(style._order).toEqual(['a', 'b', 'c']);
     });
+
+    test('keeps the order when the before layer does not exist', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            layers: [
+                {id: 'a', type: 'background'},
+                {id: 'b', type: 'background'}
+            ]
+        }));
+
+        await style.once('style.load');
+        const promise = style.once('error');
+        style.moveLayer('a', 'c');
+        const {error} = await promise;
+        expect(error.message).toMatch(/Cannot move layer "a" before non-existing layer "c"/);
+        expect(style.getLayersOrder()).toEqual(['a', 'b']);
+
+        style.removeLayer('a');
+        expect(style.getLayersOrder()).toEqual(['b']);
+    });
 });
 
 describe('Style.setPaintProperty', () => {
@@ -2746,7 +3027,7 @@ describe('Style.setPaintProperty', () => {
             ]
         }));
 
-        const tr = new MercatorTransform();
+        const tr = createMercatorTransform();
         tr.resize(512, 512);
 
         await style.once('style.load');
@@ -2984,7 +3265,7 @@ describe('Style.setFilter', () => {
         const style = createStyle();
 
         await style.once('style.load');
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         style.setFilter('symbol', ['==', 'id', 1]);
@@ -3018,7 +3299,7 @@ describe('Style.setFilter', () => {
         style.setFilter('symbol', filter);
         style.update({} as EvaluationParameters); // flush pending operations
 
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
         filter[2] = 2;
         style.setFilter('symbol', filter);
@@ -3067,7 +3348,7 @@ describe('Style.setFilter', () => {
         const style = createStyle();
 
         await style.once('style.load');
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
 
         style.setFilter('symbol', 'notafilter' as any as FilterSpecification, {validate: false});
@@ -3119,7 +3400,7 @@ describe('Style.setLayerZoomRange', () => {
         const style = createStyle();
 
         await style.once('style.load');
-        const spy = vi.fn().mockReturnValue(Promise.resolve({}));
+        const spy = vi.fn().mockResolvedValue({});
         style.dispatcher.broadcast = spy;
         style.setLayerZoomRange('symbol', 5, 12);
         expect(style.getLayer('symbol').minzoom).toBe(5);
@@ -3199,7 +3480,7 @@ describe('Style.queryRenderedFeatures', () => {
 
     beforeEach(() => new Promise<void>(callback => {
         style = new Style(getStubMap());
-        transform = new MercatorTransform();
+        transform = createMercatorTransform();
         transform.resize(512, 512);
         function queryMapLibreFeatures(layers, serializedLayers, getFeatureState, queryGeom, cameraQueryGeom, scale, params) {
             const features = {
@@ -3441,7 +3722,7 @@ describe('Style.query*Features', () => {
     let transform;
 
     beforeEach(() => new Promise<void>(callback => {
-        transform = new MercatorTransform();
+        transform = createMercatorTransform();
         transform.resize(100, 100);
         style = new Style(getStubMap());
         style.loadJSON({
@@ -3474,7 +3755,7 @@ describe('Style.query*Features', () => {
         expect(onError.mock.calls[0][0].error.message).toMatch(/queryRenderedFeatures\.filter/);
     });
 
-    test('querySourceFeatures not raise validation errors if validation was disabled', () => {
+    test('queryRenderedFeatures not raise validation errors if validation was disabled', () => {
         let errors = 0;
         vi.spyOn(style, 'fire').mockImplementation((event) => {
             if (event['error']) {
@@ -3592,6 +3873,56 @@ describe('Style.hasTransitions', () => {
         style.setPaintProperty('background', 'background-color', 'blue');
         style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
         expect(style.hasTransitions()).toBe(false);
+    });
+
+    test('does not transition a sky or a light that has not changed', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            sky: {'sky-color': 'red'},
+            light: {color: '#ff0000'},
+            layers: [{id: 'background', type: 'background'}]
+        }));
+
+        await style.once('style.load');
+        style.setPaintProperty('background', 'background-color', 'blue');
+        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
+
+        expect(style.sky.hasTransition()).toBe(false);
+        expect(style.light.hasTransition()).toBe(false);
+    });
+
+    test('transitions the sky and the light when they are set', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setSky({'sky-color': 'magenta'});
+        style.setLight({color: '#ff0000'});
+        style.update({transition: {duration: 300, delay: 0}} as EvaluationParameters);
+
+        expect(style.sky.hasTransition()).toBe(true);
+        expect(style.light.hasTransition()).toBe(true);
+    });
+
+    test('transitions the sky and the light from the value they had when the global state they read changes', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            state: {c: {default: '#ff0000'}},
+            sky: {'sky-color': ['global-state', 'c']},
+            light: {color: ['global-state', 'c']}
+        }));
+
+        await style.once('style.load');
+        setNow(0);
+        style.setGlobalStateProperty('c', '#0000ff');
+        restoreNow();
+        style.sky.recalculate(new EvaluationParameters(0, {now: 150}));
+        style.light.recalculate(new EvaluationParameters(0, {now: 150}));
+
+        expect(style.sky.hasTransition()).toBe(true);
+        expect(style.light.hasTransition()).toBe(true);
+        expect(style.sky.properties.get('sky-color')).toEqual(new Color(0.5, 0, 0.5, 1));
+        expect(style.light.properties.get('color')).toEqual(new Color(0.5, 0, 0.5, 1));
     });
 });
 
@@ -3744,6 +4075,32 @@ describe('Style.serialize', () => {
         expect(style.serialize().sky).toBeDefined();
     });
 
+    test('does not include state property when style has no state defaults', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.serialize().state).toBeUndefined();
+    });
+
+    test('include state property for style with state defaults', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            state: {
+                showCircles: {
+                    default: true,
+                }
+            }
+        }));
+
+        await style.once('style.load');
+        expect(style.serialize().state).toEqual({
+            showCircles: {
+                default: true,
+            },
+        });
+    });
+
     test('update sky properties after setting the sky on initial load', async () => {
         const sky: SkySpecification = {
             'fog-color': '#FF0000'
@@ -3781,12 +4138,12 @@ describe('Style.serialize', () => {
         expect(result['4,2,true']).toBeDefined();
 
         // Verify the entries have the expected atlas properties
-        expect(typeof result['2,1,false'].width).toBe('number');
-        expect(typeof result['2,1,false'].height).toBe('number');
-        expect(typeof result['2,1,false'].y).toBe('number');
-        expect(typeof result['4,2,true'].width).toBe('number');
-        expect(typeof result['4,2,true'].height).toBe('number');
-        expect(typeof result['4,2,true'].y).toBe('number');
+        expect(result['2,1,false'].width).toBeTypeOf('number');
+        expect(result['2,1,false'].height).toBeTypeOf('number');
+        expect(result['2,1,false'].y).toBeTypeOf('number');
+        expect(result['4,2,true'].width).toBeTypeOf('number');
+        expect(result['4,2,true'].height).toBeTypeOf('number');
+        expect(result['4,2,true'].y).toBeTypeOf('number');
     });
 });
 

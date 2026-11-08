@@ -9,17 +9,18 @@ in vec2 v_pos;
 uniform vec2 u_dimension;
 uniform float u_zoom;
 uniform vec4 u_unpack;
+uniform float u_log2_world_width;
 
-float getElevation(vec2 coord, float bias) {
+float getElevation(ivec2 texel) {
     // Convert encoded elevation value to meters
-    vec4 data = texture(u_image, coord) * 255.0;
+    vec4 data = texelFetch(u_image, texel, 0) * 255.0;
     data.a = -1.0;
     return dot(data, u_unpack);
 }
 
 void main() {
-    vec2 epsilon = 1.0 / u_dimension;
-    float tileSize = u_dimension.x - 2.0;
+    ivec2 pos = ivec2(gl_FragCoord.xy) + ivec2(1);
+    float tileSize = u_dimension.x - 4.0;
 
     // queried pixels:
     // +-----------+
@@ -36,21 +37,22 @@ void main() {
     // |   |   |   |
     // +-----------+
 
-    float a = getElevation(v_pos + vec2(-epsilon.x, -epsilon.y), 0.0);
-    float b = getElevation(v_pos + vec2(0, -epsilon.y), 0.0);
-    float c = getElevation(v_pos + vec2(epsilon.x, -epsilon.y), 0.0);
-    float d = getElevation(v_pos + vec2(-epsilon.x, 0), 0.0);
-    float e = getElevation(v_pos, 0.0);
-    float f = getElevation(v_pos + vec2(epsilon.x, 0), 0.0);
-    float g = getElevation(v_pos + vec2(-epsilon.x, epsilon.y), 0.0);
-    float h = getElevation(v_pos + vec2(0, epsilon.y), 0.0);
-    float i = getElevation(v_pos + vec2(epsilon.x, epsilon.y), 0.0);
+    float a = getElevation(pos + ivec2(-1, -1));
+    float b = getElevation(pos + ivec2(0, -1));
+    float c = getElevation(pos + ivec2(1, -1));
+    float d = getElevation(pos + ivec2(-1, 0));
+    float e = getElevation(pos);
+    float f = getElevation(pos + ivec2(1, 0));
+    float g = getElevation(pos + ivec2(-1, 1));
+    float h = getElevation(pos + ivec2(0, 1));
+    float i = getElevation(pos + ivec2(1, 1));
 
     // Here we divide the x and y slopes by 8 * pixel size
     // where pixel size (aka meters/pixel) is:
-    // circumference of the world / (pixels per tile * number of tiles)
-    // which is equivalent to: 8 * 40075016.6855785 / (tileSize * pow(2, u_zoom))
-    // which can be reduced to: pow(2, 28.25619978527 - u_zoom) / tileSize.
+    // width of the zoom 0 world / (pixels per tile * number of tiles)
+    // which is equivalent to: 8 * worldWidth / (tileSize * pow(2, u_zoom))
+    // which can be reduced to: pow(2, 3 + log2(worldWidth) - u_zoom) / tileSize.
+    // The mercator world is 40075016.6855785 m wide, a registered CRS's is its zoom 0 extent.
     // We want to vertically exaggerate the hillshading because otherwise
     // it is barely noticeable at low zooms. To do this, we multiply this by
     // a scale factor that is a function of zooms below 15, which is an arbitrary
@@ -64,11 +66,12 @@ void main() {
     vec2 deriv = vec2(
         (c + f + f + i) - (a + d + d + g),
         (g + h + h + i) - (a + b + b + c)
-    ) * tileSize / pow(2.0, exaggeration + (28.2562 - u_zoom));
+    ) * tileSize / pow(2.0, exaggeration + (3.0 + u_log2_world_width - u_zoom));
 
+    // Flat ground is stored as 128/255, which 8 bits hold exactly, so that it reads back as no slope at all.
     fragColor = clamp(vec4(
-        deriv.x / 8.0 + 0.5,
-        deriv.y / 8.0 + 0.5,
+        deriv.x / 8.0 + 128.0 / 255.0,
+        deriv.y / 8.0 + 128.0 / 255.0,
         1.0,
         1.0), 0.0, 1.0);
 

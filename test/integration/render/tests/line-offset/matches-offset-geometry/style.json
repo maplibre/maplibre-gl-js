@@ -1,0 +1,156 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 420,
+      "height": 200,
+      "allowed": 0.0005
+    }
+  },
+  "zoom": 5,
+  "center": [
+    0,
+    0
+  ],
+  "sources": {
+    "line": {
+      "type": "geojson",
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -4.174805,
+            1.318243
+          ],
+          [
+            -2.636719,
+            -1.318243
+          ],
+          [
+            -0.878906,
+            1.318243
+          ],
+          [
+            0.878906,
+            -1.318243
+          ],
+          [
+            2.636719,
+            1.318243
+          ],
+          [
+            4.174805,
+            -1.318243
+          ]
+        ]
+      }
+    },
+    "reference": {
+      "type": "geojson",
+      "data": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              -4.402559,
+              1.185418
+            ],
+            [
+              -2.651637,
+              -1.815774
+            ],
+            [
+              -0.878906,
+              0.842988
+            ],
+            [
+              0.878906,
+              -1.793408
+            ],
+            [
+              2.621801,
+              0.820613
+            ],
+            [
+              3.94705,
+              -1.451061
+            ]
+          ],
+          [
+            [
+              -3.94705,
+              1.451061
+            ],
+            [
+              -2.621801,
+              -0.820613
+            ],
+            [
+              -0.878906,
+              1.793408
+            ],
+            [
+              0.878906,
+              -0.842988
+            ],
+            [
+              2.651637,
+              1.815774
+            ],
+            [
+              4.402559,
+              -1.185418
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "reference",
+      "type": "line",
+      "source": "reference",
+      "layout": {
+        "line-join": "bevel"
+      },
+      "paint": {
+        "line-width": 6,
+        "line-color": "#00c000"
+      }
+    },
+    {
+      "id": "offset-positive",
+      "type": "line",
+      "source": "line",
+      "layout": {
+        "line-join": "bevel"
+      },
+      "paint": {
+        "line-width": 10,
+        "line-color": "#222222",
+        "line-offset": 12
+      }
+    },
+    {
+      "id": "offset-negative",
+      "type": "line",
+      "source": "line",
+      "layout": {
+        "line-join": "bevel"
+      },
+      "paint": {
+        "line-width": 10,
+        "line-color": "#222222",
+        "line-offset": -12
+      }
+    }
+  ]
+}

@@ -1,5 +1,4 @@
 import {FillLayoutArray} from '../array_types.g.ts';
-
 import {members as layoutAttributes} from './fill_attributes.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
@@ -11,12 +10,16 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {subdividePolygon} from '../../render/subdivision.ts';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
+import {warnOnce} from '../../util/util.ts';
 
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     BucketFeature,
+    BucketDependencyParameters,
     IndexedFeature,
     PopulateParameters
 } from '../bucket.ts';
@@ -27,10 +30,10 @@ import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
-import {subdividePolygon} from '../../render/subdivision.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {GetImagesResponse} from '../../util/actor_messages.ts';
+import type {StyleImage} from '../../style/style_image.ts';
 
 export class FillBucket implements Bucket {
     index: number;
@@ -52,6 +55,7 @@ export class FillBucket implements Bucket {
     indexBuffer2: IndexBuffer;
 
     hasDependencies: boolean;
+    sdfPatterns: Record<string, boolean>;
     programConfigurations: ProgramConfigurationSet<FillStyleLayer>;
     segments: SegmentVector;
     segments2: SegmentVector;
@@ -64,6 +68,7 @@ export class FillBucket implements Bucket {
         this.layerIds = this.layers.map(layer => layer.id);
         this.index = options.index;
         this.hasDependencies = false;
+        this.sdfPatterns = {};
         this.patternFeatures = [];
 
         this.layoutVertexArray = new FillLayoutArray();
@@ -136,11 +141,41 @@ export class FillBucket implements Bucket {
         });
     }
 
-    addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {
-        [_: string]: ImagePosition;
-    }): void {
+    addFeatures({options, canonical, patternPositions, patternMap}: BucketDependencyParameters): void {
+        this.detectSdfPatterns(patternMap);
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, patternPositions, options.subdivisionGranularity);
+        }
+    }
+
+    private detectSdfPatterns(imageMap: GetImagesResponse): void {
+        for (const feature of this.patternFeatures) {
+            for (const layerId in feature.patterns) {
+                const pattern = feature.patterns[layerId];
+                this.recordSdfPattern(layerId, imageMap[pattern.min]);
+                this.recordSdfPattern(layerId, imageMap[pattern.mid]);
+                this.recordSdfPattern(layerId, imageMap[pattern.max]);
+            }
+        }
+
+        for (const layer of this.layers) {
+            const pattern = layer.paint.get('fill-pattern').constantOr(null);
+            if (pattern) {
+                this.recordSdfPattern(layer.id, imageMap[pattern.from.toString()]);
+                this.recordSdfPattern(layer.id, imageMap[pattern.to.toString()]);
+            }
+        }
+    }
+
+    private recordSdfPattern(layerId: string, image: StyleImage | undefined): void {
+        if (!image) return;
+
+        const isSdf = image.sdf === true;
+        const existing = this.sdfPatterns[layerId];
+        if (existing === undefined) {
+            this.sdfPatterns[layerId] = isSdf;
+        } else if (existing !== isSdf) {
+            warnOnce(`Style sheet warning: Cannot mix SDF and non-SDF fill patterns in layer "${layerId}"`);
         }
     }
 

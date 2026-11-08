@@ -60,11 +60,11 @@ import symbolSDFVert from './glsl/symbol_sdf.vertex.glsl.g.ts';
 import symbolTextAndIconFrag from './glsl/symbol_text_and_icon.fragment.glsl.g.ts';
 import symbolTextAndIconVert from './glsl/symbol_text_and_icon.vertex.glsl.g.ts';
 import terrainDepthFrag from './glsl/terrain_depth.fragment.glsl.g.ts';
-import terrainCoordsFrag from './glsl/terrain_coords.fragment.glsl.g.ts';
 import terrainFrag from './glsl/terrain.fragment.glsl.g.ts';
 import terrainVert from './glsl/terrain.vertex.glsl.g.ts';
 import terrainVertDepth from './glsl/terrain_depth.vertex.glsl.g.ts';
-import terrainVertCoords from './glsl/terrain_coords.vertex.glsl.g.ts';
+import terrainHeightFrag from './glsl/terrain_height.fragment.glsl.g.ts';
+import terrainHeightVert from './glsl/terrain_height.vertex.glsl.g.ts';
 import projectionMercatorVert from './glsl/_projection_mercator.vertex.glsl.g.ts';
 import projectionMercatorFrag from './glsl/_projection_mercator.fragment.glsl.g.ts';
 import projectionGlobeVert from './glsl/_projection_globe.vertex.glsl.g.ts';
@@ -116,7 +116,7 @@ export const shaders: {
     symbolTextAndIcon: PreparedShader;
     terrain: PreparedShader;
     terrainDepth: PreparedShader;
-    terrainCoords: PreparedShader;
+    terrainHeight: PreparedShader;
     atmosphere: PreparedShader;
     sky: PreparedShader;
 } = {
@@ -154,7 +154,7 @@ export const shaders: {
     symbolTextAndIcon: prepare(symbolTextAndIconFrag, symbolTextAndIconVert),
     terrain: prepare(terrainFrag, terrainVert),
     terrainDepth: prepare(terrainDepthFrag, terrainVertDepth),
-    terrainCoords: prepare(terrainCoordsFrag, terrainVertCoords),
+    terrainHeight: prepare(terrainHeightFrag, terrainHeightVert),
     atmosphere: prepare(atmosphereFrag, atmosphereVert),
     sky: prepare(skyFrag, skyVert),
 };

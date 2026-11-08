@@ -1,27 +1,28 @@
 import {CollisionIndex, viewportPadding} from './collision_index.ts';
-import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
 import {EXTENT} from '../data/extent.ts';
 import * as symbolSize from './symbol_size.ts';
 import * as projection from './projection.ts';
 import {getAnchorJustification} from './symbol_layout.ts';
 import {getAnchorAlignment, WritingMode} from './shaping.ts';
-import {type mat4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
 import Point from '@mapbox/point-geometry';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
-import type {StyleLayer} from '../style/style_layer.ts';
-import {type PossiblyEvaluated} from '../style/properties.ts';
-import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
 import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mode.ts';
+import {TextAnchorEnum, type TextAnchor} from '../style/style_layer/variable_text_anchor.ts';
+import {translatePosition, warnOnce} from '../util/util.ts';
+import {symbolInstance as symbolInstanceLayout} from '../data/bucket/symbol_attributes.ts';
 
+import type {mat4} from 'gl-matrix';
+import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
+import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {PossiblyEvaluated} from '../style/properties.ts';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {SymbolBucket, CollisionArrays, SingleCollisionBox, SymbolBuffers} from '../data/bucket/symbol_bucket.ts';
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g.ts';
 import type {FeatureIndex} from '../data/feature_index.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
-import {type Terrain} from '../render/terrain.ts';
-import {translatePosition, warnOnce} from '../util/util.ts';
-import {type TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 class OpacityState {
     opacity: number;
@@ -175,6 +176,17 @@ export type BucketPart = {
 
 export type CrossTileID = string | number;
 
+/** Where `crossTileID` sits within one `SymbolInstanceArray` element, counted in uint32s. */
+const CROSS_TILE_ID_UINT32_OFFSET: number =
+    symbolInstanceLayout.members.find(member => member.name === 'crossTileID').offset / 4;
+
+/** What the last rewrite of a bucket's opacity buffers read, one entry per symbol. */
+type OpacityInputs = {
+    crossTileIDs: number[];
+    /** True for every symbol whose label another bucket is drawing. */
+    duplicates: boolean[];
+};
+
 export class Placement {
     transform: IReadonlyTransform;
     terrain: Terrain;
@@ -209,8 +221,9 @@ export class Placement {
         text: number[];
         icon: number[];
     }>>;
+    lastOpacityInputs: WeakMap<SymbolBucket, OpacityInputs>;
 
-    constructor(transform: ITransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+    constructor(transform: IReadonlyTransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
         this.terrain = terrain;
         this.collisionIndex = new CollisionIndex(this.transform);
@@ -227,6 +240,7 @@ export class Placement {
             text: number[];
             icon: number[];
         }>>();
+        this.lastOpacityInputs = new WeakMap();
 
         this.prevPlacement = prevPlacement;
         if (prevPlacement) {
@@ -236,9 +250,9 @@ export class Placement {
         this.placedOrientations = {};
     }
 
-    private _getTerrainElevationFunc(tileID: OverscaledTileID) {
+    private _getTerrainElevationFunc(tileID: OverscaledTileID): GetElevation | undefined {
         const terrain = this.terrain;
-        if (!terrain) return null;
+        if (!terrain) return undefined;
         return (x: number, y: number) => terrain.getElevation(tileID, x, y);
     }
 
@@ -333,8 +347,10 @@ export class Placement {
         translationText: [number, number],
         translationIcon: [number, number],
         iconBox?: SingleCollisionBox | null,
-        getElevation?: (x: number, y: number) => number,
+        getElevation?: GetElevation,
         simpleProjectionMatrix?: mat4,
+        heightOffset?: number,
+        heightAnchorGround?: boolean,
     ): {
         shift: Point;
         placedGlyphBoxes: PlacedBox;
@@ -357,6 +373,8 @@ export class Placement {
             getElevation,
             shift,
             simpleProjectionMatrix,
+            heightOffset,
+            heightAnchorGround,
         );
 
         if (iconBox) {
@@ -373,6 +391,8 @@ export class Placement {
                 getElevation,
                 shift,
                 simpleProjectionMatrix,
+                heightOffset,
+                heightAnchorGround,
             );
             if (!placedIconBoxes.placeable) return;
         }
@@ -433,6 +453,7 @@ export class Placement {
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
         const zOrderByViewportY = layout.get('symbol-z-order') === 'viewport-y';
+        const heightAnchorGround = layout.get('symbol-height-anchor') === 'ground';
 
         // This logic is similar to the "defaultOpacityState" logic below in updateBucketOpacities
         // If we know a symbol is always supposed to show, force it to be marked visible even if
@@ -467,6 +488,8 @@ export class Placement {
                 this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
                 return;
             }
+
+            const symbolHeightOffset = symbolInstance.heightOffset;
 
             let placeText = false;
             let placeIcon = false;
@@ -543,6 +566,8 @@ export class Placement {
                             getElevation,
                             undefined,
                             simpleProjectionMatrix,
+                            symbolHeightOffset,
+                            heightAnchorGround,
                         );
                         if (placedFeature?.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
@@ -595,7 +620,7 @@ export class Placement {
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
                                     textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, simpleProjectionMatrix, symbolHeightOffset, heightAnchorGround);
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
@@ -630,6 +655,8 @@ export class Placement {
                                 getElevation,
                                 undefined,
                                 simpleProjectionMatrix,
+                                symbolHeightOffset,
+                                heightAnchorGround,
                             );
                             placedBox = {
                                 box: placedFakeGlyphBox.box,
@@ -736,6 +763,8 @@ export class Placement {
                         getElevation,
                         (hasIconTextFit && shift) ? shift : undefined,
                         simpleProjectionMatrix,
+                        symbolHeightOffset,
+                        heightAnchorGround,
                     );
                 };
 
@@ -1011,19 +1040,59 @@ export class Placement {
         }
     }
 
+    /** Writes the opacity buffers of `styleLayer`, skipping buckets a rewrite would leave as they are. */
     updateLayerOpacities(styleLayer: StyleLayer, tiles: Tile[]): void {
         const seenCrossTileIDs = {};
         for (const tile of tiles) {
             const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
-            if (symbolBucket && tile.latestFeatureIndex && styleLayer.id === symbolBucket.layerIds[0]) {
-                this.updateBucketOpacities(symbolBucket, tile.tileID, seenCrossTileIDs, tile.collisionBoxArray);
+            if (!symbolBucket || !tile.latestFeatureIndex || styleLayer.id !== symbolBucket.layerIds[0]) continue;
+
+            const {duplicates, changed} = this._markDuplicates(symbolBucket, seenCrossTileIDs);
+            // Debug geometry and pending collision circles reach the bucket only through a rewrite.
+            const hasDebugOutput = Boolean(symbolBucket.hasDebugData()) || symbolBucket.bucketInstanceId in this.collisionCircleArrays;
+            if (changed || hasDebugOutput) {
+                this.updateBucketOpacities(symbolBucket, tile.tileID, duplicates, tile.collisionBoxArray);
+            }
+
+            symbolBucket.sortFeatures(-this.transform.bearingInRadians);
+            if (this.retainedQueryData[symbolBucket.bucketInstanceId]) {
+                this.retainedQueryData[symbolBucket.bucketInstanceId].featureSortOrder = symbolBucket.featureSortOrder;
             }
         }
     }
 
-    updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, seenCrossTileIDs: {
-        [k in string | number]: boolean;
-    }, collisionBoxArray?: CollisionBoxArray | null): void {
+    /**
+     * Marks the bucket's symbols whose label an earlier bucket already draws, and claims the rest in `seenCrossTileIDs`.
+     * `changed` is false when the marks match the last call, which means the buffers are already up to date.
+     */
+    _markDuplicates(bucket: SymbolBucket, seenCrossTileIDs: {[k in string | number]: boolean}): {duplicates: boolean[]; changed: boolean} {
+        const length = bucket.symbolInstances.length;
+        let inputs = this.lastOpacityInputs.get(bucket);
+        let changed = false;
+        if (!inputs) {
+            inputs = {crossTileIDs: new Array<number>(length).fill(0), duplicates: new Array<boolean>(length).fill(false)};
+            this.lastOpacityInputs.set(bucket, inputs);
+            changed = true;
+        }
+
+        const {crossTileIDs, duplicates} = inputs;
+        // Straight out of the buffer: `get` builds a struct per symbol.
+        const uint32 = bucket.symbolInstances.uint32;
+        const stride = bucket.symbolInstances.bytesPerElement / 4;
+        for (let s = 0; s < length; s++) {
+            const crossTileID = uint32[s * stride + CROSS_TILE_ID_UINT32_OFFSET];
+            const duplicate = Boolean(seenCrossTileIDs[crossTileID]);
+            seenCrossTileIDs[crossTileID] = true;
+            if (crossTileIDs[s] !== crossTileID || duplicates[s] !== duplicate) {
+                crossTileIDs[s] = crossTileID;
+                duplicates[s] = duplicate;
+                changed = true;
+            }
+        }
+        return {duplicates, changed};
+    }
+
+    updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, duplicates: boolean[], collisionBoxArray?: CollisionBoxArray | null): void {
         if (bucket.hasTextData()) {
             bucket.text.opacityVertexArray.clear();
             bucket.text.hasVisibleVertices = false;
@@ -1074,7 +1143,7 @@ export class Placement {
                 crossTileID
             } = symbolInstance;
 
-            const isDuplicate = seenCrossTileIDs[crossTileID];
+            const isDuplicate = duplicates[s];
 
             let opacityState = this.opacities[crossTileID];
             if (isDuplicate) {
@@ -1084,8 +1153,6 @@ export class Placement {
                 // store the state so that future placements use it as a starting point
                 this.opacities[crossTileID] = opacityState;
             }
-
-            seenCrossTileIDs[crossTileID] = true;
 
             const hasText = numHorizontalGlyphVertices > 0 || numVerticalGlyphVertices > 0;
             const hasIcon = symbolInstance.numIconVertices > 0;
@@ -1218,11 +1285,6 @@ export class Placement {
             }
         }
 
-        bucket.sortFeatures(-this.transform.bearingInRadians);
-        if (this.retainedQueryData[bucket.bucketInstanceId]) {
-            this.retainedQueryData[bucket.bucketInstanceId].featureSortOrder = bucket.featureSortOrder;
-        }
-
         if (bucket.hasTextData() && bucket.text.opacityVertexBuffer) {
             bucket.text.opacityVertexBuffer.updateData(bucket.text.opacityVertexArray);
         }
@@ -1311,9 +1373,9 @@ const shift8 = Math.pow(2, 8);
 const shift1 = Math.pow(2, 1);
 function packOpacity(opacityState: OpacityState): number {
     if (opacityState.opacity === 0 && !opacityState.placed) {
-        return 0;
+        return PACKED_HIDDEN_OPACITY;
     } else if (opacityState.opacity === 1 && opacityState.placed) {
-        return 4294967295;
+        return PACKED_VISIBLE_OPACITY;
     }
     const targetBit = opacityState.placed ? 1 : 0;
     const opacityBits = Math.floor(opacityState.opacity * 127);
@@ -1323,4 +1385,5 @@ function packOpacity(opacityState: OpacityState): number {
         opacityBits * shift1 + targetBit;
 }
 
-const PACKED_HIDDEN_OPACITY = 0;
+export const PACKED_HIDDEN_OPACITY = 0;
+export const PACKED_VISIBLE_OPACITY = 4294967295;

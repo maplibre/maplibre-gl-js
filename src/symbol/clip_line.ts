@@ -152,12 +152,12 @@ function clipLineInternal(line: Point[], start: number, end: number, axis: AxisT
 
         if (pos1 < start) {
             // ---|-->  | (line enters the clip region from the left)
-            if (pos2 > start) {
+            if (pos2 >= start) {
                 slice.push(intersectionPoint(p1, p2, start));
             }
         } else if (pos1 > end) {
             // |  <--|--- (line enters the clip region from the right)
-            if (pos2 < end) {
+            if (pos2 <= end) {
                 slice.push(intersectionPoint(p1, p2, end));
             }
         } else {

@@ -1,13 +1,14 @@
-import {describe, beforeEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {fakeServer} from 'nise';
 import Worker from './worker.ts';
-import {type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {type WorkerGlobalScopeInterface} from '../util/web_worker.ts';
-import {type CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
-import {type WorkerSource, type WorkerTileParameters, type WorkerTileResult} from './worker_source.ts';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker.ts';
-import {type ActorTarget, type IActor} from '../util/actor.ts';
 import {MessageType} from '../util/actor_messages.ts';
+
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {WorkerGlobalScopeInterface} from '../util/web_worker.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
+import type {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source.ts';
+import type {ActorTarget, IActor} from '../util/actor.ts';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];
@@ -67,6 +68,10 @@ describe('Worker generic testing', () => {
         global.fetch = null;
     });
 
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
     test('should validate handlers execution in worker for load tile', async () => {
         const server = fakeServer.create();
         const messagePromise = worker.actor.messageHandlers[MessageType.loadTile]('0', {
@@ -97,7 +102,7 @@ describe('Worker generic testing', () => {
     test('worker source messages dispatched to the correct map instance', () => {
         const externalSourceName = 'test';
 
-        const sendAsyncSpy = vi.fn().mockReturnValue(Promise.resolve({} as any));
+        const sendAsyncSpy = vi.fn().mockResolvedValue({} as any);
         worker.actor.sendAsync = sendAsyncSpy;
 
         _self.registerWorkerSource(externalSourceName, WorkerSourceMock);
@@ -125,6 +130,20 @@ describe('Worker generic testing', () => {
         server.respond();
         await expect(messagePromise).rejects.toBeDefined();
         server.restore();
+    });
+
+    test('imports a script only once when requested twice, and retries it after a failure', async () => {
+        const fetchSpy = vi.fn().mockResolvedValue(new Response(null, {status: 404}));
+        vi.stubGlobal('fetch', fetchSpy);
+
+        const first = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
+        const second = worker.actor.messageHandlers[MessageType.importScript]('0', '/error');
+        await expect(first).rejects.toThrow('Failed to load /error: 404');
+        await expect(second).rejects.toThrow('Failed to load /error: 404');
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+        await expect(worker.actor.messageHandlers[MessageType.importScript]('0', '/error')).rejects.toThrow('Failed to load /error: 404');
+        expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
 
     test('set images', () => {

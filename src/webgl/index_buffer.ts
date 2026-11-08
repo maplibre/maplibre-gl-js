@@ -38,8 +38,8 @@ export class IndexBuffer {
     updateData(array: StructArray): void {
         const gl = this.context.gl;
         if (!this.dynamicDraw) throw new Error('Attempted to update data while not in dynamic mode.');
-        // The right VAO will get this buffer re-bound later in VertexArrayObject.bind
-        // See https://github.com/mapbox/mapbox-gl-js/issues/5620
+        // As in the constructor, leave the bound vertex array's element array binding alone; vertex arrays
+        // using this buffer read the new data through their own binding. See https://github.com/mapbox/mapbox-gl-js/issues/5620
         this.context.unbindVAO();
         this.bind();
         gl.bufferSubData(gl.ELEMENT_ARRAY_BUFFER, 0, array.arrayBuffer);

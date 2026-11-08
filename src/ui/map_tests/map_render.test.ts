@@ -1,6 +1,13 @@
-import {beforeEach, afterEach, test, expect, vi} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import {createMap, beforeMapTest, createStyle, sleep} from '../../util/test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
+import {PauseablePlacement} from '../../style/pauseable_placement.ts';
+import {FrameRenderContext} from '../../render/frame_render_context.ts';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {now, setNow, restoreNow} from '../../util/time_control.ts';
+
+import type {Map} from '../map.ts';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
 
@@ -57,6 +64,82 @@ test('no render after idle event', async () => {
     expect(spy).not.toHaveBeenCalled();
 });
 
+describe('when every tile request fails with a server error', () => {
+    let style: StyleSpecification;
+
+    beforeEach(() => {
+        server.respondWith(/example\.com/, [500, {}, '']);
+        server.respondImmediately = true;
+        style = createStyle();
+        style.sources.maplibre = {
+            type: 'vector',
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        };
+        style.layers.push({
+            id: 'layerId',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        });
+    });
+
+    test('load fires', async () => {
+        const map = createMap({style});
+        await expect(map.once('load')).resolves.toBeDefined();
+    });
+
+    test('idle fires', async () => {
+        const map = createMap({style});
+        await expect(map.once('idle')).resolves.toBeDefined();
+    });
+});
+
+describe('when one tile request fails with a server error while the others are loading', () => {
+    let style: StyleSpecification;
+
+    beforeEach(() => {
+        style = createStyle();
+        style.sources.maplibre = {
+            type: 'vector',
+            tiles: ['http://example.com/{z}/{x}/{y}.pbf']
+        };
+        style.layers.push({
+            id: 'layerId',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        });
+    });
+
+    test('load waits for the tiles still loading', async () => {
+        const map = createMap({style});
+        const load = vi.fn();
+        map.on('load', load);
+        await vi.waitFor(() => expect(server.requests.length).toBeGreaterThan(1));
+        const tileError = map.once('error');
+
+        server.requests[0].respond(500, {}, '');
+        await tileError;
+        await map.once('render');
+
+        expect(load).not.toHaveBeenCalled();
+    });
+
+    test('idle waits for the tiles still loading', async () => {
+        const map = createMap({style});
+        const idle = vi.fn();
+        map.on('idle', idle);
+        await vi.waitFor(() => expect(server.requests.length).toBeGreaterThan(1));
+        const tileError = map.once('error');
+
+        server.requests[0].respond(500, {}, '');
+        await tileError;
+        await map.once('render');
+
+        expect(idle).not.toHaveBeenCalled();
+    });
+});
+
 test('no render before style loaded', async () => {
     server.respondWith('/styleUrl', JSON.stringify(createStyle()));
     const map = createMap({style: '/styleUrl'});
@@ -87,5 +170,218 @@ test('redraw', async () => {
     const renderPromise = map.once('render');
 
     map.redraw();
-    await renderPromise;
+    await expect(renderPromise).resolves.toBeDefined();
+});
+
+describe('symbol placement re-runs', () => {
+    let map: Map;
+    let time: number;
+    let placementRun: MockInstance<PauseablePlacement['continuePlacement']>;
+
+    /** Leaves placement committed and past its recency window, so the next run is free to be skipped. */
+    function settle() {
+        map.redraw();
+        setNow(time += 1000);
+        placementRun.mockClear();
+    }
+
+    beforeEach(async () => {
+        placementRun = vi.spyOn(PauseablePlacement.prototype, 'continuePlacement');
+        map = createMap({style: {
+            version: 8,
+            sources: {geojson: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+            layers: [{id: 'symbol', type: 'symbol', source: 'geojson'}]
+        }});
+        await map.once('idle');
+        time = now();
+        setNow(time);
+    });
+
+    afterEach(() => {
+        placementRun.mockRestore();
+        restoreNow();
+    });
+
+    test('placement is not re-run while its inputs are unchanged', () => {
+        settle();
+
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a zoom change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.setZoom(3);
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a paint property change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.setPaintProperty('symbol', 'icon-translate', [5, 5]);
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a renderWorldCopies change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.setRenderWorldCopies(false);
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a showCollisionBoxes change re-places, and then settles again instead of looping', () => {
+        settle();
+
+        map.showCollisionBoxes = true;
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        settle();
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+
+    test('a stale placement gets its final re-run even after its inputs settled', () => {
+        settle();
+
+        map.style.placement.setStale();
+        map.redraw();
+        expect(placementRun).toHaveBeenCalled();
+
+        placementRun.mockClear();
+        setNow(time += 1000);
+        map.redraw();
+        expect(placementRun).not.toHaveBeenCalled();
+    });
+});
+
+describe('symbol fade after the placement guard', () => {
+    afterEach(() => {
+        restoreNow();
+    });
+
+    test('a placement change keeps the map rendering through fadeDuration, then it goes idle', async () => {
+        const map = createMap({style: {
+            version: 8,
+            sources: {geojson: {type: 'geojson', data: {type: 'FeatureCollection', features: [
+                {type: 'Feature', geometry: {type: 'Point', coordinates: [-20, 0]}, properties: {}},
+                {type: 'Feature', geometry: {type: 'Point', coordinates: [20, 0]}, properties: {}}
+            ]}}},
+            layers: []
+        }});
+        await map.once('load');
+        map.addImage('dot', {width: 80, height: 80, data: new Uint8Array(80 * 80 * 4)});
+        map.addLayer({id: 'symbol', type: 'symbol', source: 'geojson', layout: {'icon-image': 'dot'}});
+        await map.once('idle');
+        const idle = vi.fn();
+        map.on('idle', idle);
+        let time = now();
+        setNow(time);
+
+        // Zooming in separates the icons, so the one that lost the collision fades in.
+        map.setZoom(0.9);
+        map.redraw();
+
+        setNow(time += 100);
+        map.redraw();
+        expect(idle).not.toHaveBeenCalled();
+
+        setNow(time += 1000);
+        map.redraw();
+        expect(idle).toHaveBeenCalled();
+    });
+});
+
+describe('frame render data', () => {
+    test('passes the projection transition and shader variant to the painter', async () => {
+        const map = createMap();
+        await map.once('idle');
+        map.setProjection({type: 'vertical-perspective'});
+        const render = vi.spyOn(map.painter, 'render');
+
+        map.redraw();
+
+        const data = render.mock.lastCall[2];
+        expect(data.projectionTransition).toBe(1);
+        expect(data.isRenderingGlobe).toBe(true);
+        expect(data.projectionShaderVariant.name).toBe('globe');
+        map.remove();
+    });
+
+    test('passes the pixel ratio and the evaluated light and sky to the painter', async () => {
+        const map = createMap({pixelRatio: 2, style: {version: 8, sources: {}, layers: [], light: {intensity: 0.2}, sky: {'fog-color': 'red'}}});
+        await map.once('idle');
+        const render = vi.spyOn(map.painter, 'render');
+
+        map.redraw();
+
+        const data = render.mock.lastCall[2];
+        expect(data.pixelRatio).toBe(2);
+        expect(data.light.intensity).toBe(0.2);
+        expect(data.sky['fog-color']).toEqual(Color.red);
+        map.remove();
+    });
+});
+
+describe('render-to-texture follow-up frame', () => {
+    test('keeps rendering, deferring idle, until the follow-up frame is no longer needed', async () => {
+        const map = createMap();
+        await map.once('idle');
+        const rtt = {needsFollowUpFrame: true, prepareForRender: () => {}, renderLayer: () => false, getTexture: () => null};
+        map.painter.renderToTexture = rtt;
+        const idle = vi.fn();
+        map.on('idle', idle);
+        const repaint = vi.spyOn(map, 'triggerRepaint');
+
+        map.redraw();
+        expect(repaint).toHaveBeenCalled();
+        expect(idle).not.toHaveBeenCalled();
+
+        rtt.needsFollowUpFrame = false;
+        map.redraw();
+        expect(idle).toHaveBeenCalled();
+        map.remove();
+    });
+});
+
+describe('hidden layers', () => {
+    test('a layer hidden at the current zoom does not render tile clipping masks for its source', async () => {
+        const square: GeoJSON.Feature = {type: 'Feature', geometry: {type: 'Polygon', coordinates: [[[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]]]}, properties: {}};
+        const map = createMap({style: {
+            version: 8,
+            sources: {shared: {type: 'geojson', data: square}, other: {type: 'geojson', data: square}},
+            layers: [
+                {id: 'shared-fill', type: 'fill', source: 'shared'},
+                {id: 'other-fill', type: 'fill', source: 'other'},
+                {id: 'shared-fill-hidden-below-zoom-10', type: 'fill', source: 'shared', minzoom: 10}
+            ]
+        }});
+        const renderTileClippingMasks = vi.spyOn(FrameRenderContext.prototype, 'renderTileClippingMasks');
+        const hiddenLayer = expect.objectContaining({id: 'shared-fill-hidden-below-zoom-10'});
+
+        await map.once('idle');
+        expect(renderTileClippingMasks).not.toHaveBeenCalledWith(hiddenLayer, expect.anything());
+
+        map.setLayerZoomRange('shared-fill-hidden-below-zoom-10', 0, 24);
+        await map.once('idle');
+        expect(renderTileClippingMasks).toHaveBeenCalledWith(hiddenLayer, expect.anything());
+        renderTileClippingMasks.mockRestore();
+        map.remove();
+    });
 });

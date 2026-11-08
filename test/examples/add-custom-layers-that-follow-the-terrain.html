@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add custom layers that follow the terrain</title>
+    <meta property="og:description" content="Drape a grid over the terrain with one custom layer, and stand points on the terrain with another." />
+    <meta property="og:category" content="Terrain & Hillshade" />
+    <meta property="og:created" content="2026-09-30" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: [7.99, 46.56],
+        zoom: 11.8,
+        pitch: 65,
+        bearing: 170,
+        maxPitch: 85
+    });
+
+    // The area of the points, [west, north, east, south] in Mercator coordinates
+    const northWest = maplibregl.MercatorCoordinate.fromLngLat([7.9, 46.65]);
+    const southEast = maplibregl.MercatorCoordinate.fromLngLat([8.1, 46.5]);
+    const bounds = [northWest.x, northWest.y, southEast.x, southEast.y];
+    const meterInMercator = maplibregl.MercatorCoordinate.fromLngLat([8, 46.575]).meterInMercatorCoordinateUnits();
+
+    function createProgram(gl, vertexSource, fragmentSource) {
+        const program = gl.createProgram();
+        for (const [type, source] of [[gl.VERTEX_SHADER, vertexSource], [gl.FRAGMENT_SHADER, fragmentSource]]) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, `#version 300 es\nprecision highp float;\n${source}`);
+            gl.compileShader(shader);
+            gl.attachShader(program, shader);
+        }
+        gl.linkProgram(program);
+        return program;
+    }
+
+    // Lines every 0.01 degrees, which MapLibre drapes over the terrain together with its own layers
+    const gridLayer = {
+        id: 'grid',
+        type: 'custom',
+        onAdd(map, gl) {
+            this.program = createProgram(gl, `
+                uniform vec4 u_tile;
+                out vec2 v_mercator;
+                void main() {
+                    vec2 corner = vec2(gl_VertexID & 1, gl_VertexID >> 1);
+                    v_mercator = mix(u_tile.xw, u_tile.zy, corner);
+                    gl_Position = vec4(corner * 2.0 - 1.0, 0.0, 1.0);
+                }`, `
+                in vec2 v_mercator;
+                out vec4 fragColor;
+                void main() {
+                    vec2 lngLat = vec2(v_mercator.x * 360.0 - 180.0, degrees(atan(sinh(3.14159265 * (1.0 - 2.0 * v_mercator.y)))));
+                    vec2 pixels = abs(fract(lngLat / 0.01 - 0.5) - 0.5) / fwidth(lngLat / 0.01);
+                    float line = 1.0 - clamp(min(pixels.x, pixels.y) - 1.0, 0.0, 1.0);
+                    if (line == 0.0) discard;
+                    fragColor = vec4(0.85, 0.1, 0.1, 1.0) * line;
+                }`);
+        },
+        render() {},
+        // Draws into one terrain tile, whose south-west corner is (-1, -1) in clip space and north-east corner (1, 1)
+        renderToTerrainTile(gl, {tileID}) {
+            const tiles = 2 ** tileID.canonical.z;
+            const x = tileID.canonical.x + tileID.wrap * tiles;
+            gl.useProgram(this.program);
+            gl.uniform4f(gl.getUniformLocation(this.program, 'u_tile'), x / tiles, tileID.canonical.y / tiles, (x + 1) / tiles, (tileID.canonical.y + 1) / tiles);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        }
+    };
+
+    // A point on each grid crossing, which the vertex shader raises onto the terrain with the height map
+    const pointsLayer = {
+        id: 'points',
+        type: 'custom',
+        renderingMode: '3d',
+        onAdd(map, gl) {
+            this.program = createProgram(gl, `
+                uniform mat4 u_matrix;
+                uniform vec4 u_bounds;
+                uniform float u_meterInMercator;
+                uniform float u_pixelHeight;
+                uniform sampler2D u_heightMap;
+                in vec2 a_position;
+                void main() {
+                    vec2 uv = (a_position - u_bounds.xy) / (u_bounds.zw - u_bounds.xy);
+                    float elevation = texture(u_heightMap, vec2(uv.x, 1.0 - uv.y)).r;
+                    gl_Position = u_matrix * vec4(a_position, elevation * u_meterInMercator, 1.0);
+                    // Lift the point by its radius, so that it stands on the ground instead of half in it
+                    gl_Position.y += 6.0 * u_pixelHeight * gl_Position.w;
+                    gl_PointSize = 12.0;
+                }`, `
+                out vec4 fragColor;
+                void main() {
+                    if (length(gl_PointCoord - 0.5) > 0.5) discard;
+                    fragColor = vec4(0.1, 0.3, 0.9, 1.0);
+                }`);
+            const positions = [];
+            for (let i = 0; i <= 20; i++) {
+                for (let j = 0; j <= 15; j++) {
+                    const {x, y} = maplibregl.MercatorCoordinate.fromLngLat([7.9 + i * 0.01, 46.5 + j * 0.01]);
+                    positions.push(x, y);
+                }
+            }
+            this.count = positions.length / 2;
+            this.buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+            // The height map holds the elevation in meters in red, and needs a float texture
+            gl.getExtension('EXT_color_buffer_float');
+            this.heightMap = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, this.heightMap);
+            gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32F, 512, 512);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        },
+        prerender(gl, options) {
+            options.renderTerrainHeightMap?.({texture: this.heightMap, width: 512, height: 512, bounds});
+        },
+        render(gl, options) {
+            gl.useProgram(this.program);
+            gl.uniformMatrix4fv(gl.getUniformLocation(this.program, 'u_matrix'), false, options.defaultProjectionData.mainMatrix);
+            gl.uniform4fv(gl.getUniformLocation(this.program, 'u_bounds'), bounds);
+            gl.uniform1f(gl.getUniformLocation(this.program, 'u_meterInMercator'), meterInMercator);
+            gl.uniform1f(gl.getUniformLocation(this.program, 'u_pixelHeight'), 2 / gl.drawingBufferHeight);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.heightMap);
+            gl.uniform1i(gl.getUniformLocation(this.program, 'u_heightMap'), 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.enableVertexAttribArray(gl.getAttribLocation(this.program, 'a_position'));
+            gl.vertexAttribPointer(gl.getAttribLocation(this.program, 'a_position'), 2, gl.FLOAT, false, 0, 0);
+            gl.drawArrays(gl.POINTS, 0, this.count);
+        }
+    };
+
+    await map.once('load');
+    map.addSource('terrain', {type: 'raster-dem', url: 'https://tiles.mapterhorn.com/tilejson.json'});
+    map.addSource('hillshade', {type: 'raster-dem', url: 'https://tiles.mapterhorn.com/tilejson.json'});
+    map.setTerrain({source: 'terrain'});
+    const firstSymbolLayer = map.getStyle().layers.find(layer => layer.type === 'symbol');
+    map.addLayer({id: 'hillshade', type: 'hillshade', source: 'hillshade', paint: {'hillshade-exaggeration': 0.3}}, firstSymbolLayer.id);
+    map.addLayer(gridLayer, firstSymbolLayer.id);
+    map.addLayer(pointsLayer);
+</script>
+</body>
+</html>

@@ -1,3 +1,5 @@
 */node_modules/
 */dist/
-*/package-lock.json
+*/out/
+*/.next/
+*/next-env.d.ts
