@@ -16,12 +16,9 @@ import type {FillPaintPropsPossiblyEvaluated} from '../../style/style_layer/fill
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 /** The `{line,fill}-layer-blend` values, which the style spec keeps identical for both layer types. */
-export type LayerBlend = FillPaintPropsPossiblyEvaluated['fill-layer-blend'];
+type LayerBlend = FillPaintPropsPossiblyEvaluated['fill-layer-blend'];
 
-/**
- * Blend modes evaluated in the shader. Only these need a copy of the backdrop.
- * `color` and `luminosity` share their helpers under `LAYER_BLEND_NONSEPARABLE`.
- */
+/** Blend modes evaluated in the shader. Only these need a copy of the backdrop. */
 const shaderBlendDefines = {
     multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'],
     overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'],
@@ -31,14 +28,18 @@ const shaderBlendDefines = {
 
 type ShaderBlend = keyof typeof shaderBlendDefines;
 
+function isShaderBlend(blend: LayerBlend): blend is ShaderBlend {
+    return blend in shaderBlendDefines;
+}
+
 /**
  * Whether the layer blends in the shader, with a copy of the backdrop.
  * The copy resolves multisampled pixels, so it takes in every layer already drawn into an antialiased edge.
  * The opaque pass draws the layers above first, so it ends below the first layer that blends in the shader.
  */
 export function layerBlendsInShader(layer: StyleLayer): boolean {
-    if (isFillStyleLayer(layer)) return layer.paint.get('fill-layer-blend') in shaderBlendDefines;
-    if (isLineStyleLayer(layer)) return layer.paint.get('line-layer-blend') in shaderBlendDefines;
+    if (isFillStyleLayer(layer)) return isShaderBlend(layer.paint.get('fill-layer-blend'));
+    if (isLineStyleLayer(layer)) return isShaderBlend(layer.paint.get('line-layer-blend'));
     return false;
 }
 
@@ -48,7 +49,7 @@ const fixedFunctionBlends: Record<Exclude<LayerBlend, ShaderBlend | 'normal'>, R
     screen: ColorMode.screen
 };
 
-export type PrepareDrawLayerCompositeResult = {
+type PrepareDrawLayerCompositeResult = {
     compositeTarget: WebGLFramebuffer | null;
     compositeViewport: [number, number, number, number];
     bounds: [number, number, number, number];
@@ -180,8 +181,8 @@ function createCompositeTexture(painter: Painter, width: number, height: number)
 }
 
 /**
- * Copies the target's scissor box into a texture, since a blend mode cannot sample the framebuffer it draws into.
- * The texture is sized to the box and only ever grown, to keep reallocations out of the frame loop.
+ * Copies the target's scissor box into a reusable texture, since a blend mode cannot sample the framebuffer it draws into.
+ * The texture only ever grows, so it can be larger than the box.
  */
 function copyBackdrop(painter: Painter, x: number, y: number, width: number, height: number): void {
     const gl = painter.context.gl;
@@ -220,7 +221,7 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
     gl.scissor(bx, by, bw, bh);
 
     const overdrawInspector = frameRenderContext.data.showOverdrawInspector;
-    const shaderBlend: ShaderBlend | null = !overdrawInspector && blend in shaderBlendDefines ? blend as ShaderBlend : null;
+    const shaderBlend = !overdrawInspector && isShaderBlend(blend) ? blend : null;
 
     if (shaderBlend) {
         context.activeTexture.set(gl.TEXTURE1);
