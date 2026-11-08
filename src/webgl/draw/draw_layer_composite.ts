@@ -17,12 +17,13 @@ import type {OverscaledTileID} from '../../tile/tile_id.ts';
 /** The `{line,fill}-layer-blend` values, which the style spec keeps identical for both layer types. */
 export type LayerBlend = FillPaintPropsPossiblyEvaluated['fill-layer-blend'];
 
-/** Blend modes evaluated in the shader. Only these need a copy of the backdrop. */
+/**
+ * Blend modes evaluated in the shader. Only these need a copy of the backdrop.
+ * `color` and `luminosity` share their helpers under `LAYER_BLEND_NONSEPARABLE`.
+ */
 const shaderBlendDefines = {
     multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'],
     overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'],
-    // Both W3C non-separable modes share their helpers, gated on the extra `NONSEPARABLE` define:
-    // the defines carry a trailing `;`, so a `#if defined(A) || defined(B)` expression fails to parse.
     color: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_COLOR;'],
     luminosity: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;']
 } satisfies Partial<Record<LayerBlend, string[]>>;
@@ -101,6 +102,7 @@ function getCoordsViewportBounds(coords: OverscaledTileID[], frameRenderContext:
 /**
  * Partial `{line,fill}-layer-opacity` / `{line,fill}-layer-blend`:
  * render the whole layer to a scratch FBO so it composites as one surface instead of per feature.
+ * The bounds only cover tiles with a bucket for the layer, since the tile draw loops skip the others.
  */
 export function prepareDrawLayerComposite(painter: Painter, tileManager: TileManager, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): PrepareDrawLayerCompositeResult {
     const context = frameRenderContext.context;
@@ -116,7 +118,6 @@ export function prepareDrawLayerComposite(painter: Painter, tileManager: TileMan
     frameRenderContext.invalidateTileClippingMasks();
     frameRenderContext.renderTileClippingMasks(layer, coords);
 
-    // Tiles without a bucket are skipped by the tile draw loops, so they must not widen the box either.
     const drawnCoords = coords.filter((coord) => tileManager.getTile(coord)?.getBucket(layer));
     const bounds = getCoordsViewportBounds(drawnCoords, frameRenderContext);
 
@@ -187,6 +188,10 @@ function copyBackdrop(painter: Painter, x: number, y: number, width: number, hei
     gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, x, y, width, height);
 }
 
+/**
+ * Composites the layer from the scratch FBO into the target, with the layer's opacity and blend mode.
+ * A blend mode evaluated in the shader has already mixed in the backdrop, so its result replaces the target.
+ */
 export function drawLayerComposite(painter: Painter, opacity: number, blend: LayerBlend, prepareResult: PrepareDrawLayerCompositeResult, layer: LineStyleLayer | FillStyleLayer, frameRenderContext: FrameRenderContext): void {
     const context = frameRenderContext.context;
     const gl = context.gl;
@@ -213,7 +218,6 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
 
     let colorMode: Readonly<ColorMode>;
     if (shaderBlend) {
-        // The shader already blended against the backdrop, so its result replaces the target.
         colorMode = frameRenderContext.data.showOverdrawInspector ? frameRenderContext.colorModeForRenderPass() : ColorMode.unblended;
     } else if (blend === 'normal') {
         colorMode = frameRenderContext.colorModeForRenderPass();

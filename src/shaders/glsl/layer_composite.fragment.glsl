@@ -12,7 +12,7 @@ float lum(vec3 c) {
     return dot(c, vec3(0.3, 0.59, 0.11));
 }
 
-// Pulls a colour back into gamut around its luminosity, leaving that luminosity unchanged.
+// Pulls a color back into gamut around its luminosity, leaving that luminosity unchanged.
 vec3 clipColor(vec3 c) {
     float l = lum(c);
     float n = min(min(c.r, c.g), c.b);
@@ -23,7 +23,7 @@ vec3 clipColor(vec3 c) {
     return c;
 }
 
-// Re-lights a colour to the given luminosity, keeping its hue and saturation.
+// Re-lights a color to the given luminosity, keeping its hue and saturation.
 vec3 setLum(vec3 c, float l) {
     return clipColor(c + (l - lum(c)));
 }
@@ -42,7 +42,7 @@ vec4 composite(vec4 src, vec4 dst) {
     co = mix(case1, case2, cond);
 #endif
 #ifdef LAYER_BLEND_NONSEPARABLE
-    // The W3C non-separable blend functions are defined on unpremultiplied colours.
+    // The W3C non-separable blend functions are defined on unpremultiplied colors.
     vec3 cs = src.rgb / src.a;
     vec3 cb = dst.a > 0.0 ? dst.rgb / dst.a : vec3(0.0);
 #ifdef LAYER_BLEND_COLOR
@@ -61,7 +61,6 @@ void main() {
     ivec2 texel = ivec2(gl_FragCoord.xy);
     vec4 src = texelFetch(u_image, texel, 0) * u_opacity;
 
-    // Discard empty fragments to optimize fill rate and avoid reading the backdrop
     if (src.a == 0.0) {
         discard;
     }
