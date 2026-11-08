@@ -215,9 +215,19 @@ export class FrameRenderContext {
         this.currentStencilSource = undefined;
     }
 
-    /** Draws the clipping masks of a layer's tiles into the stencil buffer, unless its source's masks are already there. */
-    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[]): void {
+    /**
+     * Draws the clipping masks of a layer's tiles into the stencil buffer, unless its source's masks are already there.
+     *
+     * Given the layer's tile manager, it also leaves them out when none of the tiles holds a bucket for the layer, as for
+     * a source without data yet: the layer draws nothing, and the masks would only replace those of the source drawn
+     * before it, which the next layer of that source would then have to draw again.
+     */
+    renderTileClippingMasks(layer: StyleLayer, tileIDs: OverscaledTileID[], tileManager?: TileManager): void {
         if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs?.length) {
+            return;
+        }
+
+        if (tileManager && !tileIDs.some(tileID => tileManager.getTile(tileID)?.getBucket(layer))) {
             return;
         }
 

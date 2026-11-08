@@ -376,12 +376,37 @@ describe('hidden layers', () => {
         const hiddenLayer = expect.objectContaining({id: 'shared-fill-hidden-below-zoom-10'});
 
         await map.once('idle');
-        expect(renderTileClippingMasks).not.toHaveBeenCalledWith(hiddenLayer, expect.anything());
+        expect(renderTileClippingMasks).not.toHaveBeenCalledWith(hiddenLayer, expect.anything(), expect.anything());
 
         map.setLayerZoomRange('shared-fill-hidden-below-zoom-10', 0, 24);
         await map.once('idle');
-        expect(renderTileClippingMasks).toHaveBeenCalledWith(hiddenLayer, expect.anything());
+        expect(renderTileClippingMasks).toHaveBeenCalledWith(hiddenLayer, expect.anything(), expect.anything());
         renderTileClippingMasks.mockRestore();
+        map.remove();
+    });
+});
+
+describe('tile clipping masks', () => {
+    test('a layer with nothing to draw on its tiles leaves the masks of the source drawn before it in place', async () => {
+        const square: GeoJSON.Feature = {type: 'Feature', geometry: {type: 'Polygon', coordinates: [[[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]]]}, properties: {}};
+        const map = createMap({style: {
+            version: 8,
+            sources: {shared: {type: 'geojson', data: square}, empty: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+            layers: [
+                {id: 'shared-fill', type: 'fill', source: 'shared'},
+                {id: 'empty-fill', type: 'fill', source: 'empty'},
+                {id: 'empty-line', type: 'line', source: 'empty'},
+                {id: 'shared-line', type: 'line', source: 'shared'}
+            ]
+        }});
+        await map.once('idle');
+        const renderTileMasks = vi.spyOn(FrameRenderContext.prototype as any, 'renderTileMasks');
+
+        map.redraw();
+
+        // The masks of `shared`, drawn once for both of its layers, and none for `empty`.
+        expect(renderTileMasks.mock.calls.map(([, tileIDs]) => (tileIDs as unknown[]).length)).toEqual([map.style.tileManagers.shared.getVisibleCoordinates().length]);
+        renderTileMasks.mockRestore();
         map.remove();
     });
 });

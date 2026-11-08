@@ -327,7 +327,7 @@ export class Painter {
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
-                frameRenderContext.renderTileClippingMasks(layer, coords);
+                frameRenderContext.renderTileClippingMasks(layer, coords, tileManager);
                 this.renderLayer(this, tileManager, layer, coords, frameRenderContext);
             }
         }
@@ -359,7 +359,7 @@ export class Painter {
             // separate clipping masks
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
-            frameRenderContext.renderTileClippingMasks(layer, coordsAscending[layer.source]);
+            frameRenderContext.renderTileClippingMasks(layer, coordsAscending[layer.source], tileManager);
             this.renderLayer(this, tileManager, layer, coords, frameRenderContext);
         }
 
