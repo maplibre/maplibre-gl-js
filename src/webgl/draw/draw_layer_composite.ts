@@ -5,12 +5,13 @@ import {ColorMode} from '../color_mode.ts';
 import {layerCompositeUniformValues} from '../program/layer_composite_program.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent.ts';
+import {isLineStyleLayer, type LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
+import {isFillStyleLayer, type FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
-import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
-import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
+import type {StyleLayer} from '../../style/style_layer.ts';
 import type {FillPaintPropsPossiblyEvaluated} from '../../style/style_layer/fill_style_layer_properties.g.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
@@ -29,6 +30,17 @@ const shaderBlendDefines = {
 } satisfies Partial<Record<LayerBlend, string[]>>;
 
 type ShaderBlend = keyof typeof shaderBlendDefines;
+
+/**
+ * Whether the layer blends in the shader, with a copy of the backdrop.
+ * The copy resolves multisampled pixels, so it takes in every layer already drawn into an antialiased edge.
+ * The opaque pass draws the layers above first, so it ends below the first layer that blends in the shader.
+ */
+export function layerBlendsInShader(layer: StyleLayer): boolean {
+    if (isFillStyleLayer(layer)) return layer.paint.get('fill-layer-blend') in shaderBlendDefines;
+    if (isLineStyleLayer(layer)) return layer.paint.get('line-layer-blend') in shaderBlendDefines;
+    return false;
+}
 
 /** Blend modes a fixed-function blend function reproduces exactly, so the GPU's own destination suffices. */
 const fixedFunctionBlends: Record<Exclude<LayerBlend, ShaderBlend | 'normal'>, Readonly<ColorMode>> = {

@@ -13,6 +13,7 @@ import {CullFaceMode} from '../webgl/cull_face_mode.ts';
 import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
+import {layerBlendsInShader} from '../webgl/draw/draw_layer_composite.ts';
 import {Mesh} from './mesh.ts';
 import {FrameRenderContext, type FrameRenderData} from './frame_render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
@@ -275,8 +276,8 @@ export class Painter {
 
         frameRenderContext.opaquePassCutoff = Infinity;
         for (let i = 0; i < layerIds.length; i++) {
-            const layerId = layerIds[i];
-            if (style._layers[layerId].is3D()) {
+            const layer = style._layers[layerIds[i]];
+            if (layer.is3D() || layerBlendsInShader(layer)) {
                 frameRenderContext.opaquePassCutoff = i;
                 break;
             }
