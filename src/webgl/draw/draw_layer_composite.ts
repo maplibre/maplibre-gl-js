@@ -227,7 +227,7 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
     const defines = shaderBlend ? shaderBlendDefines[shaderBlend] : [];
 
     frameRenderContext.useProgram('layerComposite', null, false, defines).draw(context, gl.TRIANGLES,
-        DepthMode.disabled, StencilMode.disabled, colorMode, CullFaceMode.disabled,
+        frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly), StencilMode.disabled, colorMode, CullFaceMode.disabled,
         layerCompositeUniformValues(opacity, 0, 1, [bx, by]), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
         painter.viewportSegments, layer.paint, frameRenderContext.transform.zoom);
