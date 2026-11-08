@@ -7,14 +7,14 @@ uniform sampler2D u_backdrop;
 uniform vec2 u_backdrop_offset;
 
 #ifdef LAYER_BLEND_NONSEPARABLE
-// Perceptual luminosity, per the non-separable blend modes of the W3C compositing spec.
-float perceptualLuminosity(vec3 c) {
+// Luminosity, per the non-separable blend modes of the W3C compositing spec.
+float lum(vec3 c) {
     return dot(c, vec3(0.3, 0.59, 0.11));
 }
 
 // Pulls a color back into gamut around its luminosity, leaving that luminosity unchanged.
 vec3 clipColor(vec3 c) {
-    float l = perceptualLuminosity(c);
+    float l = lum(c);
     float n = min(min(c.r, c.g), c.b);
     float x = max(max(c.r, c.g), c.b);
     // Shifting to a luminosity in [0, 1] leaves l > n whenever n < 0, and l < x whenever x > 1.
@@ -26,7 +26,7 @@ vec3 clipColor(vec3 c) {
 
 // Re-lights a color to the given luminosity, keeping its hue and saturation.
 vec3 setLum(vec3 c, float l) {
-    return clipColor(c + (l - perceptualLuminosity(c)));
+    return clipColor(c + (l - lum(c)));
 }
 #endif
 
@@ -52,9 +52,9 @@ vec4 composite(vec4 src, vec4 dst) {
     vec3 cb = dst.a > 0.0 ? dst.rgb / dst.a : vec3(0.0);
 
 #ifdef LAYER_BLEND_COLOR
-    vec3 blended = setLum(cs, perceptualLuminosity(cb));
+    vec3 blended = setLum(cs, lum(cb));
 #else
-    vec3 blended = setLum(cb, perceptualLuminosity(cs));
+    vec3 blended = setLum(cb, lum(cs));
 #endif
 
     co = invDstA * src.rgb + invSrcA * dst.rgb + src.a * dst.a * blended;
