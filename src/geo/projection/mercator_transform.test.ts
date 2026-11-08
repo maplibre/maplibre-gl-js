@@ -692,6 +692,14 @@ describe('transform', () => {
         expect(transform.isPointOnMapSurface(new Point(400, 250))).toBe(false);
     });
 
+    test('isPointOnMapSurface is false past the poles of the identity projection', () => {
+        const transform = createIdentityCrsTransform(500, 500);
+        transform.setZoom(-1);
+
+        expect(transform.isPointOnMapSurface(new Point(250, 200))).toBe(true);
+        expect(transform.isPointOnMapSurface(new Point(250, 100))).toBe(false);
+    });
+
     test('projectTileCoordinates', () => {
         const precisionDigits = 10;
         const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
