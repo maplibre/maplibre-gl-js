@@ -22,11 +22,6 @@ const defaultZoomInertiaOptions = extend({
     maxSpeed: 1400
 }, defaultInertiaOptions);
 
-const defaultBearingInertiaOptions = extend({
-    deceleration: 1000,
-    maxSpeed: 360
-}, defaultInertiaOptions);
-
 const defaultPitchInertiaOptions = extend({
     deceleration: 1000,
     maxSpeed: 90
@@ -42,6 +37,30 @@ export type InertiaOptions = {
     easing: (t: number) => number;
     deceleration: number;
     maxSpeed: number;
+};
+
+/**
+ * Inertia that glides on under friction: the speed halves every `halfLife` milliseconds until it
+ * falls below `stopSpeed`, and a gesture released slower than `minSpeed` does not glide at all.
+ * A gesture released faster than `maxSpeed` glides as if released at `maxSpeed`, which also bounds
+ * the glide of a gesture whose measured interval is too short to hold a meaningful speed.
+ * Speeds are in units of the animated property per second.
+ */
+type FrictionOptions = {
+    halfLife: number;
+    minSpeed: number;
+    maxSpeed: number;
+    stopSpeed: number;
+};
+
+/**
+ * The friction the bearing turns on with, the same as MapLibre Native's rotation momentum.
+ */
+const bearingFrictionOptions: FrictionOptions = {
+    halfLife: 140,
+    minSpeed: 60,
+    maxSpeed: 1200,
+    stopSpeed: 1
 };
 
 /**
@@ -113,7 +132,8 @@ export class HandlerInertia {
      *
      * @param panInertiaOptions - overrides for the pan inertia defaults
      * @returns the ease options, or `undefined` when the measured interval holds no
-     * movement, which terrain gestures produce by recording updates without any delta
+     * movement, which terrain gestures produce by recording updates without any delta,
+     * or only a turn too slow to glide on
      */
     _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): EaseToOptions {
         this._drainInertiaBuffer();
@@ -170,10 +190,10 @@ export class HandlerInertia {
             extendDuration(easeOptions, result);
         }
 
-        if (deltas.bearing) {
-            const result = calculateEasing(deltas.bearing, duration, defaultBearingInertiaOptions);
-            easeOptions.bearing = this._map.getBearing() + clamp(result.amount, -179, 179);
-            extendDuration(easeOptions, result);
+        const bearingResult = deltas.bearing ? calculateFriction(deltas.bearing, duration, bearingFrictionOptions) : undefined;
+        if (bearingResult) {
+            easeOptions.bearing = this._map.getBearing() + clamp(bearingResult.amount, -179, 179);
+            extendDuration(easeOptions, bearingResult);
         }
 
         if (deltas.pitch) {
@@ -186,6 +206,11 @@ export class HandlerInertia {
             const result = calculateEasing(deltas.roll, duration, defaultRollInertiaOptions);
             easeOptions.roll = this._map.getRoll() + clamp(result.amount, -179, 179);
             extendDuration(easeOptions, result);
+        }
+
+        if (easeOptions.duration === undefined) {
+            this.clear();
+            return;
         }
 
         if (easeOptions.zoom || easeOptions.bearing) {
@@ -221,5 +246,26 @@ function calculateEasing(amount, inertiaDuration: number, inertiaOptions) {
         easing: inertiaOptions.easing,
         duration: duration * 1000,
         amount: speed * (duration / 2)
+    };
+}
+
+/**
+ * Returns the glide that continues a movement of `amount` over `inertiaDuration` milliseconds under
+ * friction, or `undefined` when the movement is slower than the friction's `minSpeed`.
+ *
+ * The speed decays exponentially, so the easing is that exponential, scaled to end where the speed
+ * reaches `stopSpeed`.
+ */
+function calculateFriction(amount: number, inertiaDuration: number, {halfLife, minSpeed, maxSpeed, stopSpeed}: FrictionOptions) {
+    const speed = clamp(amount / (inertiaDuration / 1000), -maxSpeed, maxSpeed);
+    if (Math.abs(speed) < minSpeed) return undefined;
+
+    const duration = halfLife * Math.log2(Math.abs(speed) / stopSpeed);
+    const travelled = (t: number) => 1 - Math.pow(2, -t * duration / halfLife);
+    const total = travelled(1);
+    return {
+        easing: (t: number) => travelled(clamp(t, 0, 1)) / total,
+        duration,
+        amount: speed * (halfLife / 1000) / Math.LN2 * total
     };
 }
