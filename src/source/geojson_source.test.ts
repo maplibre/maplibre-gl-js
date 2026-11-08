@@ -349,6 +349,69 @@ describe('GeoJSONSource.loadTile', () => {
         expect(spy.mock.calls).toEqual([[MessageType.loadTile], [MessageType.reloadTile]]);
     });
 
+    describe('of an empty source', () => {
+        const emptyCollection: GeoJSON.FeatureCollection = {type: 'FeatureCollection', features: []};
+
+        function createEmptySource(options: Partial<GeoJSONSourceOptions> = {}) {
+            const messages: MessageType[] = [];
+            const source = new GeoJSONSource('id', {type: 'geojson', data: emptyCollection, ...options}, wrapDispatcher({
+                sendAsync(message: ActorMessage<MessageType>) {
+                    messages.push(message.type);
+                    return Promise.resolve({});
+                }
+            }), undefined);
+            source.map = mapStub;
+            return {source, messages};
+        }
+
+        test('loads the tile empty without asking the worker', async () => {
+            const {source, messages} = createEmptySource();
+            await source.load();
+            const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+            tile.loadVectorData({buckets: []} as any, mapStub.style);
+
+            await source.loadTile(tile);
+
+            expect(messages).toEqual([MessageType.loadData]);
+            expect(tile.state).toBe('loaded');
+            expect(tile.buckets).toEqual({});
+            expect(tile.latestFeatureIndex).toBeNull();
+        });
+
+        test('asks the worker again once data is set', async () => {
+            const {source, messages} = createEmptySource();
+            await source.load();
+            const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+            vi.spyOn(tile, 'loadVectorData').mockImplementation(() => {});
+
+            await source.setData(hawkHill);
+            await source.loadTile(tile);
+
+            expect(messages).toEqual([MessageType.loadData, MessageType.loadData, MessageType.loadTile]);
+        });
+
+        test('loads the tile empty once a diff removed every feature', async () => {
+            const {source, messages} = createEmptySource({data: {type: 'FeatureCollection', features: [{type: 'Feature', id: 1, properties: {}, geometry: {type: 'Point', coordinates: [0, 0]}}]}});
+            await source.load();
+
+            await source.updateData({removeAll: true});
+            await source.loadTile(new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize));
+
+            expect(messages).toEqual([MessageType.loadData, MessageType.loadData]);
+        });
+
+        test('still asks the worker for a source type built on top of GeoJSONSource', async () => {
+            const {source, messages} = createEmptySource({type: 'custom-geojson'} as any);
+            await source.load();
+            const tile = new Tile(new OverscaledTileID(0, 0, 0, 0, 0), source.tileSize);
+            vi.spyOn(tile, 'loadVectorData').mockImplementation(() => {});
+
+            await source.loadTile(tile);
+
+            expect(messages).toEqual([MessageType.loadData, MessageType.loadTile]);
+        });
+    });
+
     test('is cancelled by abortTile while the worker is loading it', async () => {
         let signal: AbortSignal;
         const answers: Array<() => void> = [];

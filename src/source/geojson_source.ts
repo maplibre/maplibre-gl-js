@@ -655,7 +655,35 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         return this._workerUpdates.isIdle();
     }
 
+    /**
+     * Whether this source's data is known to hold no feature at all, so that every tile of it is empty.
+     *
+     * Only the plain cases are recognized, an empty `FeatureCollection` or an `updateData` that removed every
+     * feature, and only for the built-in `geojson` type: a source type built on top of this one may tile its data
+     * in its own worker source, which could make features out of what looks empty here.
+     */
+    private _isKnownEmpty(): boolean {
+        if (this.type !== 'geojson') return false;
+        const {geojson, updateable} = this._data;
+        if (updateable) return updateable.size === 0;
+        return geojson?.type === 'FeatureCollection' && geojson.features?.length === 0;
+    }
+
+    /**
+     * Loads a tile from the worker. A tile of a source known to be empty is loaded empty at once instead, as the
+     * worker would answer, without a round trip to it: a map can keep empty sources around, waiting for data,
+     * and would otherwise send one per covered tile on every zoom step.
+     *
+     * When data comes in later, the `content` event that follows it reloads the tiles from the worker. The worker
+     * has no state to keep for an empty tile, since loading data clears the tiles it holds.
+     */
     async loadTile(tile: Tile): Promise<void> {
+        if (this._isKnownEmpty()) {
+            tile.unloadVectorData();
+            tile.loadVectorData(null, this.map.style, false);
+            return;
+        }
+
         const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = await this.actorPromise;
         const params: WorkerTileParameters = {
