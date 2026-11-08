@@ -67,18 +67,22 @@ vec4 composite(vec4 src, vec4 dst) {
 void main() {
     // The quad covers the target 1:1 from the viewport origin, so the pixel coordinate is also the texel coordinate.
     ivec2 texel = ivec2(gl_FragCoord.xy);
+
+#ifdef OVERDRAW_INSPECTOR
+    // The overdraw count is in the color channels, with alpha left at zero.
+    fragColor = texelFetch(u_image, texel, 0);
+#else
     vec4 src = texelFetch(u_image, texel, 0) * u_opacity;
 
     if (src.a == 0.0) {
         discard;
     }
 
-#ifdef OVERDRAW_INSPECTOR
-    fragColor = vec4(0.0);
-#elif defined LAYER_BLEND
+#ifdef LAYER_BLEND
     vec4 dst = texelFetch(u_backdrop, texel - ivec2(u_backdrop_offset), 0);
     fragColor = composite(src, dst);
 #else
     fragColor = src;
+#endif
 #endif
 }

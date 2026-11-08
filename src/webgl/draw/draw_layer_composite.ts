@@ -191,6 +191,7 @@ function copyBackdrop(painter: Painter, x: number, y: number, width: number, hei
 /**
  * Composites the layer from the scratch FBO into the target, with the layer's opacity and blend mode.
  * A blend mode evaluated in the shader has already mixed in the backdrop, so its result replaces the target.
+ * With the overdraw inspector on, the scratch FBO holds the layer's overdraw count, which is added to the target's.
  */
 export function drawLayerComposite(painter: Painter, opacity: number, blend: LayerBlend, prepareResult: PrepareDrawLayerCompositeResult, layer: LineStyleLayer | FillStyleLayer, frameRenderContext: FrameRenderContext): void {
     const context = frameRenderContext.context;
@@ -206,7 +207,8 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(bx, by, bw, bh);
 
-    const shaderBlend: ShaderBlend | null = blend in shaderBlendDefines ? blend as ShaderBlend : null;
+    const overdrawInspector = frameRenderContext.data.showOverdrawInspector;
+    const shaderBlend: ShaderBlend | null = !overdrawInspector && blend in shaderBlendDefines ? blend as ShaderBlend : null;
 
     if (shaderBlend) {
         context.activeTexture.set(gl.TEXTURE1);
@@ -217,8 +219,10 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
     gl.bindTexture(gl.TEXTURE_2D, painter.layerCompositeFbo.colorAttachment.get());
 
     let colorMode: Readonly<ColorMode>;
-    if (shaderBlend) {
-        colorMode = frameRenderContext.data.showOverdrawInspector ? frameRenderContext.colorModeForRenderPass() : ColorMode.unblended;
+    if (overdrawInspector) {
+        colorMode = ColorMode.plusLighter;
+    } else if (shaderBlend) {
+        colorMode = ColorMode.unblended;
     } else if (blend === 'normal') {
         colorMode = frameRenderContext.colorModeForRenderPass();
     } else {
