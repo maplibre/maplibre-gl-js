@@ -68,6 +68,8 @@
                 <option value="screen" selected>screen</option>
                 <option value="overlay">overlay</option>
                 <option value="plus-lighter">plus-lighter</option>
+                <option value="color">color</option>
+                <option value="luminosity">luminosity</option>
             </select>
         </fieldset>
     </div>
@@ -97,7 +99,6 @@
             }
         });
 
-        // Add fill layer with dynamic blending
         map.addLayer({
             id: 'polygon-fill',
             type: 'fill',
