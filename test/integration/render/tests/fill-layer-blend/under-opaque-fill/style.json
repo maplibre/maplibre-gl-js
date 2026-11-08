@@ -36,13 +36,13 @@
     {
       "id": "background",
       "type": "background",
-      "paint": {"background-color": "#ffffff"}
+      "paint": {"background-color": "#808080"}
     },
     {
       "id": "blended-fill-below",
       "type": "fill",
       "source": "under",
-      "paint": {"fill-color": "#ff0000", "fill-antialias": false, "fill-layer-blend": "multiply"}
+      "paint": {"fill-color": "#ff0000", "fill-antialias": false, "fill-layer-blend": "screen"}
     },
     {
       "id": "opaque-fill-above",

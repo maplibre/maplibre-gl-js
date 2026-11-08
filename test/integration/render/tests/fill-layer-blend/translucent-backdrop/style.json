@@ -50,11 +50,19 @@
   },
   "layers": [
     {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "rgba(0, 0, 255, 0.5)"
+      }
+    },
+    {
       "id": "fill",
       "type": "fill",
       "source": "geojson",
       "paint": {
         "fill-color": "#90ee90",
+        "fill-opacity": 0.6,
         "fill-layer-blend": "multiply"
       }
     }
