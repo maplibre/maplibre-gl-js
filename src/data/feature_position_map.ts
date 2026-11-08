@@ -46,7 +46,7 @@ export class FeaturePositionMap {
                 i = m + 1;
             }
         }
-        const positions = [];
+        const positions: FeaturePosition[] = [];
         while (this.ids[i] === intId) {
             const index = this.positions[3 * i];
             const start = this.positions[3 * i + 1];
@@ -81,7 +81,7 @@ export class FeaturePositionMap {
     }
 }
 
-function getNumericId(value: unknown) {
+function getNumericId(value: unknown): number {
     const numValue = +value;
     if (!isNaN(numValue) && numValue <= Number.MAX_SAFE_INTEGER) {
         return numValue;
@@ -98,7 +98,7 @@ function getNumericId(value: unknown) {
  * listed in ascending order and then again, the middle id is the largest of every range, so the
  * middle pivot alone would split off one id at a time.
  */
-function sort(ids, positions, left, right) {
+function sort(ids: Float64Array, positions: Uint32Array, left: number, right: number): void {
     let unbalanced = false;
     while (left < right) {
         const pivotIndex = unbalanced ? left + Math.floor(Math.random() * (right - left)) : (left + right) >> 1;
@@ -128,7 +128,7 @@ function sort(ids, positions, left, right) {
     }
 }
 
-function swap(arr, i, j) {
+function swap(arr: Float64Array | Uint32Array, i: number, j: number): void {
     const tmp = arr[i];
     arr[i] = arr[j];
     arr[j] = tmp;
