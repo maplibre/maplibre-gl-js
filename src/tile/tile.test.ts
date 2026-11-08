@@ -11,6 +11,10 @@ import {extend} from '../util/util.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
+import {ImageAtlas} from '../render/image_atlas.ts';
+import {RGBAImage} from '../util/image.ts';
+import {Context} from '../webgl/context.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 import type {Style} from '../style/style.ts';
 
@@ -198,6 +202,21 @@ describe('querySourceFeatures', () => {
 
     });
 
+});
+
+describe('Tile.upload', () => {
+    test('uploads the image atlas as the worker premultiplied it', () => {
+        const gl = createNullGL();
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 1, 1), undefined);
+        const icon = {data: new RGBAImage({width: 1, height: 1}, new Uint8Array([200, 100, 50, 128])), version: 0, pixelRatio: 1, sdf: false};
+        tile.imageAtlas = new ImageAtlas({icon}, {});
+
+        tile.upload(new Context(gl));
+
+        // The atlas' own pixels, not a copy premultiplied once more on the main thread.
+        expect(gl.texSubImage2D).toHaveBeenCalledWith(gl.TEXTURE_2D, 0, 0, 0, tile.imageAtlas.image.width, tile.imageAtlas.image.height, gl.RGBA, gl.UNSIGNED_BYTE, tile.imageAtlas.image.data);
+        expect(gl.pixelStorei).not.toHaveBeenCalledWith(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    });
 });
 
 describe('Tile.isLessThan', () => {

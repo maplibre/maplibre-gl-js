@@ -1,5 +1,5 @@
 /* eslint-disable key-spacing */
-import {RGBAImage} from '../util/image.ts';
+import {premultiplyAlpha, RGBAImage} from '../util/image.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {isStyleImageWebGLData} from '../style/style_image.ts';
 import potpack from 'potpack';
@@ -77,6 +77,10 @@ export class ImagePosition {
  * worker so that the symbol layout can bake the positions within it straight into the vertex
  * buffers. Each tile owns one, along with the texture it is uploaded to - as opposed to
  * {@link ImageManager}, which owns the images of the whole style.
+ *
+ * Its {@link ImageAtlas.image} holds premultiplied alpha, ready to upload as is: the worker that
+ * packs it premultiplies it too, rather than the main thread at every tile's upload, which
+ * would go over the same icons again for each tile that shows them.
  * @internal
  */
 export class ImageAtlas {
@@ -127,6 +131,8 @@ export class ImageAtlas {
             RGBAImage.copy(src.data, image, {x: w - 1, y: 0}, {x: x - 1, y}, {width: 1, height: h}); // L
             RGBAImage.copy(src.data, image, {x: 0,     y: 0}, {x: x + w, y}, {width: 1, height: h}); // R
         }
+
+        premultiplyAlpha(image.data, image.data);
 
         this.image = image;
         this.iconPositions = iconPositions;

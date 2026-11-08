@@ -138,4 +138,31 @@ describe('Texture', () => {
         expect(result[2]).toBe(Math.round(50 * 128 / 255));  // 25
         expect(result[3]).toBe(128);
     });
+
+    test('premultiplyAlpha matches the rounded product for every channel and alpha value', () => {
+        const data = new Uint8Array(256 * 256 * 4);
+        for (let a = 0; a < 256; a++) {
+            for (let c = 0; c < 256; c++) {
+                data.set([c, 255 - c, c, a], (a * 256 + c) * 4);
+            }
+        }
+
+        const result = premultiplyAlpha(data);
+
+        const expected = new Uint8Array(data.length);
+        for (let i = 0; i < data.length; i += 4) {
+            const a = data[i + 3];
+            expected.set([Math.round(data[i] * a / 255), Math.round(data[i + 1] * a / 255), Math.round(data[i + 2] * a / 255), a], i);
+        }
+        expect(result).toEqual(expected);
+    });
+
+    test('premultiplyAlpha writes into the data it is given as out', () => {
+        const data = new Uint8Array([200, 100, 50, 128, 10, 20, 30, 255, 10, 20, 30, 0]);
+
+        const result = premultiplyAlpha(data, data);
+
+        expect(result).toBe(data);
+        expect(Array.from(data)).toEqual([100, 50, 25, 128, 10, 20, 30, 255, 0, 0, 0, 0]);
+    });
 });

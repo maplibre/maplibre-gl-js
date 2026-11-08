@@ -156,14 +156,27 @@ export class RGBAImage {
     }
 }
 
-/** Returns a copy of RGBA data with premultiplied alpha. */
-export function premultiplyAlpha(data: Uint8Array): Uint8Array {
-    const out = new Uint8Array(data.length);
+/**
+ * Returns RGBA data with premultiplied alpha: a copy by default, or the data itself when it is passed as `out`.
+ *
+ * Opaque and fully transparent pixels, the bulk of most icons, skip the arithmetic, which leaves them unchanged.
+ */
+export function premultiplyAlpha(data: Uint8Array, out: Uint8Array = new Uint8Array(data.length)): Uint8Array {
     for (let i = 0; i < data.length; i += 4) {
         const a = data[i + 3];
-        out[i + 0] = Math.round(data[i + 0] * a / 255);
-        out[i + 1] = Math.round(data[i + 1] * a / 255);
-        out[i + 2] = Math.round(data[i + 2] * a / 255);
+        if (a === 255) {
+            out[i + 0] = data[i + 0];
+            out[i + 1] = data[i + 1];
+            out[i + 2] = data[i + 2];
+        } else if (a === 0) {
+            out[i + 0] = 0;
+            out[i + 1] = 0;
+            out[i + 2] = 0;
+        } else {
+            out[i + 0] = Math.round(data[i + 0] * a / 255);
+            out[i + 1] = Math.round(data[i + 1] * a / 255);
+            out[i + 2] = Math.round(data[i + 2] * a / 255);
+        }
         out[i + 3] = a;
     }
     return out;

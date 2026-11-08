@@ -385,7 +385,8 @@ export class Tile {
 
         const gl = context.gl;
         if (this.imageAtlas && !this.imageAtlas.uploaded) {
-            this.imageAtlasTexture = new Texture(context, this.imageAtlas.image, gl.RGBA);
+            // The worker premultiplied the atlas already, see ImageAtlas.
+            this.imageAtlasTexture = new Texture(context, this.imageAtlas.image, gl.RGBA, {premultiply: false});
             this.imageAtlas.uploaded = true;
         }
 

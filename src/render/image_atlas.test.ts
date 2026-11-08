@@ -57,6 +57,16 @@ function createImagesSnapshot(imageManager: ImageManager, ids: string[]): GetIma
     return snapshot;
 }
 
+test('the atlas holds the premultiplied pixels of its icons and patterns', () => {
+    const image = () => ({data: new RGBAImage({width: 1, height: 1}, new Uint8Array([200, 100, 50, 128])), version: 0, pixelRatio: 1, sdf: false});
+    const pixelAt = (atlas: ImageAtlas, [x, y]: [number, number]) => Array.from(atlas.image.data.subarray((y * atlas.image.width + x) * 4, (y * atlas.image.width + x + 1) * 4));
+
+    const atlas = new ImageAtlas({icon: image()}, {pattern: image()});
+
+    expect(pixelAt(atlas, atlas.iconPositions.icon.tl)).toEqual([100, 50, 25, 128]);
+    expect(pixelAt(atlas, atlas.patternPositions.pattern.tl)).toEqual([100, 50, 25, 128]);
+});
+
 test('a WebGL image is packed into the atlas without copying its blank pixels', () => {
     const copy = vi.spyOn(RGBAImage, 'copy');
     const icon = (isWebGLImage?: boolean) => ({data: new RGBAImage({width: 2, height: 2}), version: 0, pixelRatio: 1, sdf: false, isWebGLImage});
