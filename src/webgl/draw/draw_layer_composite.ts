@@ -192,10 +192,11 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
     const gl = context.gl;
     const [bx, by, bw, bh] = prepareResult.bounds;
 
-    if (bw === 0 || bh === 0) return;
-
     context.bindFramebuffer.set(prepareResult.compositeTarget);
     context.viewport.set(prepareResult.compositeViewport);
+    frameRenderContext.invalidateTileClippingMasks();
+
+    if (bw === 0 || bh === 0) return;
 
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(bx, by, bw, bh);
@@ -228,6 +229,4 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
         painter.viewportSegments, layer.paint, frameRenderContext.transform.zoom);
 
     gl.disable(gl.SCISSOR_TEST);
-
-    frameRenderContext.invalidateTileClippingMasks();
 }
