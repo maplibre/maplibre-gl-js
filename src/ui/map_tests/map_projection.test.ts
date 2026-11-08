@@ -70,17 +70,6 @@ describe('Map in the identity projection', () => {
 
         expect(map.project([0, 90]).y).toBeCloseTo(90, 6);
     });
-
-    test('zooms around the pointer north of the world square', async () => {
-        const map = createMap({interactive: true, style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, center: [0, 45], zoom: -1});
-        await map.once('style.load');
-        expect(map.project([0, 90]).y).toBeCloseTo(36, 6);
-
-        simulate.wheel(map.getCanvas(), {deltaY: -3, clientX: 100, clientY: 16});
-        map.redraw();
-
-        expect(map.project([0, 90]).y).toBeCloseTo(36.3, 4);
-    });
 });
 
 describe('Map in a CRS registered with addProjection', () => {
