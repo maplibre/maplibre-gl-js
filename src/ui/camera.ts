@@ -747,6 +747,9 @@ export class Camera extends Evented<MapEventType> {
     }
 
     jumpTo(options: JumpToOptions, eventData?: any): this {
+        options = this._leaveGesturePropertiesAlone(options);
+        if (!options) return this;
+
         const jumpedProperties = JUMP_PROPERTIES.filter(property => options[property] != null);
         if (this._scheduler.isWritingAny(jumpedProperties)) this._scheduler.interrupt();
         const joinsMovement = this._scheduler.isMoving();
@@ -868,6 +871,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     easeTo(options: EaseToOptions, eventData?: any): this {
+        if (this._isMovedByGesture()) return this;
         if (!this._scheduler.isContinuedBy(options.easeId)) this._scheduler.interrupt();
 
         options = extend({
@@ -1375,6 +1379,7 @@ export class Camera extends Evented<MapEventType> {
      * function in van Wijk (2003).
      */
     flyTo(options: FlyToOptions, eventData?: any): this {
+        if (this._isMovedByGesture()) return this;
         if (!options.essential && browser.prefersReducedMotion) {
             return this.easeTo(options, eventData);
         }
@@ -1545,8 +1550,54 @@ export class Camera extends Evented<MapEventType> {
         return bearing;
     }
 
+    /**
+     * @internal
+     * Makes a gesture part of the camera's movement, see {@link CameraMovementScheduler.beginGestureMovement}.
+     */
+    beginGestureMovement(): boolean {
+        return this._scheduler.beginGestureMovement();
+    }
+
+    /**
+     * @internal
+     * Ends a gesture's part of the camera's movement, see {@link CameraMovementScheduler.endGestureMovement}.
+     */
+    endGestureMovement(): boolean {
+        return this._scheduler.endGestureMovement();
+    }
+
+    /**
+     * @internal
+     * Records the camera properties a gesture changes now, which `jumpTo`, `easeTo` and `flyTo` then leave to it.
+     */
+    setGestureProperties(properties: readonly CameraProperty[]): void {
+        this._scheduler.setGestureProperties(properties);
+    }
+
+    /**
+     * Whether a gesture moves the camera now. Every `easeTo` and `flyTo` moves the center, which every gesture changes,
+     * so neither starts while one does and the gesture keeps control of the camera.
+     */
+    private _isMovedByGesture(): boolean {
+        return this._scheduler.isGestureMoving('center');
+    }
+
+    /**
+     * Leaves out of a `jumpTo`'s options the properties a gesture changes now, which the gesture keeps control of.
+     * @returns the options without them, or null when the gesture changes every property they set
+     */
+    private _leaveGesturePropertiesAlone(options: JumpToOptions): JumpToOptions | null {
+        const held = JUMP_PROPERTIES.filter(property => options[property] != null && this._scheduler.isGestureMoving(property));
+        if (held.length === 0) return options;
+
+        const left = {...options};
+        for (const property of held) delete left[property];
+        return JUMP_PROPERTIES.some(property => left[property] != null) ? left : null;
+    }
+
+    /** Whether an animation moves the camera. A gesture's movement is the `HandlerManager`'s to report. */
     isMoving(): boolean {
-        return this._scheduler.isMoving();
+        return this._scheduler.isAnimating();
     }
 
     isZooming(): boolean {

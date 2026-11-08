@@ -2,6 +2,7 @@ import {describe, beforeEach, test, expect, vi} from 'vitest';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {beforeMapTest} from '../../util/test/util.ts';
+import * as timeControl from '../../util/time_control.ts';
 import {Map} from '../map.ts';
 
 import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
@@ -305,6 +306,108 @@ describe('drag_pan', () => {
         expect(drag).toHaveBeenCalledTimes(0);
         expect(dragend).toHaveBeenCalledTimes(0);
 
+        map.remove();
+    });
+
+    test('DragPanHandler and the inertia it ends in are one movement', () => {
+        const map = createMap();
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const movestart = vi.fn();
+        const moveend = vi.fn();
+        map.on('movestart', movestart);
+        map.on('moveend', moveend);
+
+        simulate.mousedown(map.getCanvas(), {buttons, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+        now.mockReturnValue(10);
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 50, clientY: 0});
+        map._renderTaskQueue.run();
+        now.mockReturnValue(20);
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY: 0});
+        map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas());
+        map._renderTaskQueue.run();
+
+        expect(map.isMoving()).toBe(true);
+        expect(moveend).not.toHaveBeenCalled();
+
+        now.mockReturnValue(5000);
+        map._renderTaskQueue.run();
+
+        expect(movestart).toHaveBeenCalledTimes(1);
+        expect(moveend).toHaveBeenCalledTimes(1);
+        map.remove();
+    });
+
+    test('DragPanHandler leaves padding set during the drag to apply, as part of the drag\'s movement', () => {
+        const map = createMap();
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const movestart = vi.fn();
+        const moveend = vi.fn();
+        map.on('movestart', movestart);
+        map.on('moveend', moveend);
+
+        simulate.mousedown(map.getCanvas(), {buttons, clientX: 0, clientY: 0});
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        map.setPadding({top: 100, bottom: 0, left: 0, right: 0});
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 20, clientY: 20});
+        map._renderTaskQueue.run();
+        simulate.mouseup(map.getCanvas());
+        map._renderTaskQueue.run();
+        now.mockReturnValue(5000);
+        map._renderTaskQueue.run();
+
+        expect(map.getPadding()).toEqual({top: 100, bottom: 0, left: 0, right: 0});
+        expect(movestart).toHaveBeenCalledTimes(1);
+        expect(moveend).toHaveBeenCalledTimes(1);
+        map.remove();
+    });
+
+    test('DragPanHandler keeps the camera to itself: an easeTo during the drag does not start', () => {
+        const map = createMap();
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
+
+        simulate.mousedown(map.getCanvas(), {buttons, clientX: 0, clientY: 0});
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        const center = map.getCenter();
+        map.easeTo({center: [50, 50], duration: 0});
+
+        expect(map.getCenter()).toEqual(center);
+        map.remove();
+    });
+
+    test('DragPanHandler keeps panning after an animation starts and ends while the mouse is held down', () => {
+        const map = createMap();
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
+
+        simulate.mousedown(map.getCanvas(), {buttons, clientX: 0, clientY: 0});
+        map._renderTaskQueue.run();
+        map.easeTo({center: [10, 0], duration: 0});
+        const center = map.getCenter();
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 50, clientY: 0});
+        map._renderTaskQueue.run();
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 100, clientY: 0});
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lng).not.toBeCloseTo(center.lng, 5);
+        map.remove();
+    });
+
+    test('DragPanHandler ends its movement with a moveend when map.stop() ends the drag', () => {
+        const map = createMap();
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const moveend = vi.fn();
+        map.on('moveend', moveend);
+
+        simulate.mousedown(map.getCanvas(), {buttons, clientX: 0, clientY: 0});
+        simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        map.stop();
+
+        expect(moveend).toHaveBeenCalledTimes(1);
+        expect(map.isMoving()).toBe(false);
         map.remove();
     });
 

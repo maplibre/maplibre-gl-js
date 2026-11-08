@@ -117,6 +117,10 @@ export class CameraMovementScheduler extends Evented<MapEventType> {
     private _movingAxes: MovementAxes = idleMovementAxes();
     private _pendingEvents: PendingEvent[] = [];
     private _deliveringEvents = false;
+    /** Whether a gesture moves the camera as part of the movement in progress, see {@link CameraMovementScheduler.beginGestureMovement}. */
+    private _gestureMoving = false;
+    /** The camera properties the gesture's handlers change now, see {@link CameraMovementScheduler.isGestureMoving}. */
+    private _gestureProperties: readonly CameraProperty[] = [];
 
     constructor(renderLoop: RenderLoop) {
         super();
@@ -124,15 +128,53 @@ export class CameraMovementScheduler extends Evented<MapEventType> {
     }
 
     /**
-     * Whether a movement is in progress. A movement lasts as long as a segment runs, and a segment that continues
-     * another's movement replaces it without a gap, see {@link MovementSegmentOptions.easeId}.
+     * Whether a movement is in progress. A movement lasts as long as a segment runs or a gesture moves the camera, so
+     * a gesture and the segments that overlap it, such as its inertia, are one movement with one `movestart` and one
+     * `moveend`. A segment that continues another's movement replaces it without a gap, see
+     * {@link MovementSegmentOptions.easeId}.
      */
     isMoving(): boolean {
+        return this._currentSegment !== null || this._gestureMoving;
+    }
+
+    /** Whether a segment runs, as opposed to a gesture alone moving the camera. */
+    isAnimating(): boolean {
         return this._currentSegment !== null;
     }
 
     isMovingAxis(axis: MovementAxis): boolean {
         return this._movingAxes[axis];
+    }
+
+    /**
+     * Makes a gesture part of the movement, which starts the movement unless a segment moves the camera already.
+     * @returns whether the movement starts, so that the gesture fires its `movestart`
+     */
+    beginGestureMovement(): boolean {
+        const starts = !this.isMoving();
+        this._gestureMoving = true;
+        return starts;
+    }
+
+    /**
+     * Ends the gesture's part of the movement, which ends the movement unless a segment runs on, such as the gesture's
+     * inertia, whose end then ends the movement.
+     * @returns whether the movement ends, so that the gesture fires its `moveend`
+     */
+    endGestureMovement(): boolean {
+        this._gestureMoving = false;
+        this._gestureProperties = [];
+        return !this.isMoving();
+    }
+
+    /** Records the camera properties the gesture's handlers change now, none once they ended. */
+    setGestureProperties(properties: readonly CameraProperty[]): void {
+        this._gestureProperties = properties;
+    }
+
+    /** Whether the gesture changes this property now, so that a programmatic change leaves it to the gesture. */
+    isGestureMoving(property: CameraProperty): boolean {
+        return this._gestureProperties.includes(property);
     }
 
     /**
@@ -247,7 +289,7 @@ export class CameraMovementScheduler extends Evented<MapEventType> {
      * `movestart` and the start events of the parts of the camera it changed
      */
     private _queueStartEvents(options: MovementSegmentOptions, continuing: boolean): void {
-        if (!continuing && !options.movestartFired) {
+        if (!continuing && !options.movestartFired && !this._gestureMoving) {
             this._pendingEvents.push({event: new MapMovementEvent('movestart', options.eventData)});
         }
 
@@ -273,7 +315,7 @@ export class CameraMovementScheduler extends Evented<MapEventType> {
         for (const axis of MOVEMENT_AXES) {
             if (axes[axis]) this._pendingEvents.push({event: new MapMovementEvent(`${axis}end`, eventData)});
         }
-        this._pendingEvents.push({event: new MapMovementEvent('moveend', eventData)});
+        if (!this._gestureMoving) this._pendingEvents.push({event: new MapMovementEvent('moveend', eventData)});
     }
 
     /**

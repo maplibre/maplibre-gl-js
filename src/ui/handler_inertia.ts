@@ -194,9 +194,7 @@ export class HandlerInertia {
         }
 
         this.clear();
-        return extend(easeOptions, {
-            noMoveStart: true
-        });
+        return easeOptions;
 
     }
 }

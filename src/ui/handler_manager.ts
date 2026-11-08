@@ -24,12 +24,31 @@ import Point from '@mapbox/point-geometry';
 
 import type {Map, CompleteMapOptions} from './map.ts';
 import type {Camera, EaseToOptions, RotationPivot} from './camera.ts';
+import type {CameraProperty} from './camera_movement_scheduler.ts';
 import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
 import type {Terrain} from '../render/terrain.ts';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.roll || p.pitch || p.rotate;
+
+/**
+ * The camera properties a gesture with these events in progress keeps to itself, which programmatic changes then leave
+ * alone. Every gesture can move the center, and the elevation of the center with it: a pan drags it, a zoom keeps the
+ * location under the pointer in place, and a rotation can turn around a pivot. A wheel zoom keeps none: it smooths on
+ * after the last wheel event, while the user holds nothing.
+ */
+function gestureProperties(eventsInProgress: EventsInProgress): CameraProperty[] {
+    const held = (event: keyof EventsInProgress) => eventsInProgress[event] && eventsInProgress[event].handlerName !== 'scrollZoom';
+    if (!held('drag') && !held('zoom') && !held('rotate') && !held('pitch') && !held('roll')) return [];
+
+    const properties: CameraProperty[] = ['center', 'elevation'];
+    if (held('zoom')) properties.push('zoom');
+    if (held('rotate')) properties.push('bearing');
+    if (held('pitch')) properties.push('pitch');
+    if (held('roll')) properties.push('roll');
+    return properties;
+}
 
 /**
  * A terrain gesture's anchor plane must stay below this fraction of the camera's
@@ -186,6 +205,11 @@ export class HandlerManager {
     _inertia: HandlerInertia;
     _bearingSnap: number;
     _handlersById: {[x: string]: Handler};
+    /**
+     * Whether the manager is handling an input event or ending a gesture. The events it fires meanwhile, such as the map's
+     * mouse events, reach listeners that can call `map.stop()`, and {@link HandlerManager.stop} then does nothing, so
+     * that it cannot reset the handlers halfway through.
+     */
     _updatingCamera: boolean;
     _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
     /**
@@ -769,9 +793,10 @@ export class HandlerManager {
             }
             this._eventsInProgress[eventName] = newEventsInProgress[eventName];
         }
+        this._camera.setGestureProperties(gestureProperties(this._eventsInProgress));
 
         // fire start events only after this._eventsInProgress has been updated
-        if (!wasMoving && nowMoving) {
+        if (!wasMoving && nowMoving && this._camera.beginGestureMovement()) {
             this._fireEvent('movestart', nowMoving.originalEvent);
         }
 
@@ -800,6 +825,7 @@ export class HandlerManager {
             }
         }
 
+        this._camera.setGestureProperties(gestureProperties(this._eventsInProgress));
         for (const name in endEvents) {
             this._fireEvent(name, endEvents[name]);
         }
@@ -824,19 +850,21 @@ export class HandlerManager {
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 
-            if (inertialEase && (inertialEase.essential || !browser.prefersReducedMotion)) {
+            const runsOn = inertialEase && (inertialEase.essential || !browser.prefersReducedMotion);
+            if (runsOn) {
                 if (shouldSnapToNorth(inertialEase.bearing || this._camera.getBearing())) {
                     inertialEase.bearing = 0;
                 }
                 inertialEase.freezeElevation = true;
                 this._camera.easeTo(inertialEase, {originalEvent: originalEndEvent});
-            } else {
-                this._fireEvent('moveend', originalEndEvent);
-                if (shouldSnapToNorth(this._camera.getBearing())) {
-                    this._camera.resetNorth();
-                }
+            }
+            if (this._camera.endGestureMovement()) this._fireEvent('moveend', originalEndEvent);
+            if (!runsOn && shouldSnapToNorth(this._camera.getBearing())) {
+                this._camera.resetNorth();
             }
             this._updatingCamera = false;
+        } else if (finishedMoving && this._camera.endGestureMovement()) {
+            this._fireEvent('moveend', originalEndEvent);
         }
         if (finishedMoving) this._rotationPivot = null;
 
