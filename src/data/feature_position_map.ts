@@ -90,11 +90,13 @@ function getNumericId(value: unknown) {
 }
 
 /**
- * Sorts ids, indices and offsets together by id, with a Hoare partitioning quicksort.
+ * Sorts ids, indices and offsets together by id, with a Hoare partitioning quicksort
+ * ([Hoare, 1962](https://doi.org/10.1093/comjnl/5.1.10)).
  *
  * The pivot is the middle id, or a random one after a partition that left less than an eighth of
- * the range on one side. On ids listed in ascending order and then again, the middle id is the
- * largest of every range, so the middle pivot alone would split off one id at a time.
+ * the range on one side, the threshold of [pdqsort](https://arxiv.org/abs/2106.05123). On ids
+ * listed in ascending order and then again, the middle id is the largest of every range, so the
+ * middle pivot alone would split off one id at a time.
  */
 function sort(ids, positions, left, right) {
     let unbalanced = false;
