@@ -3,16 +3,16 @@ uniform float u_opacity;
 
 #ifdef LAYER_BLEND
 uniform sampler2D u_backdrop;
-/** Pixel offset of the backdrop copy within the target, as the backdrop only covers the scissor box. */
+// Pixel offset of the backdrop copy within the target, as the backdrop only covers the scissor box.
 uniform vec2 u_backdrop_offset;
 
 #ifdef LAYER_BLEND_NONSEPARABLE
-/** Perceptual luminosity, per the non-separable blend modes of the W3C compositing spec. */
+// Perceptual luminosity, per the non-separable blend modes of the W3C compositing spec.
 float lum(vec3 c) {
     return dot(c, vec3(0.3, 0.59, 0.11));
 }
 
-/** Pulls a colour back into gamut around its luminosity, leaving that luminosity unchanged. */
+// Pulls a colour back into gamut around its luminosity, leaving that luminosity unchanged.
 vec3 clipColor(vec3 c) {
     float l = lum(c);
     float n = min(min(c.r, c.g), c.b);
@@ -23,13 +23,13 @@ vec3 clipColor(vec3 c) {
     return c;
 }
 
-/** Re-lights a colour to the given luminosity, keeping its hue and saturation. */
+// Re-lights a colour to the given luminosity, keeping its hue and saturation.
 vec3 setLum(vec3 c, float l) {
     return clipColor(c + (l - lum(c)));
 }
 #endif
 
-/** Blending in premultiplied space, for the modes no fixed-function blend function can express. */
+// Blending in premultiplied space, for the modes no fixed-function blend function can express.
 vec4 composite(vec4 src, vec4 dst) {
     vec3 co = vec3(0.0);
 #ifdef LAYER_BLEND_MULTIPLY
