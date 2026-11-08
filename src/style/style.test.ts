@@ -3473,6 +3473,59 @@ describe('Style.getLayersOrder', () => {
     });
 });
 
+describe('Style.getSymbolLayersForSource', () => {
+    const geojson = {type: 'geojson', data: {type: 'FeatureCollection', features: []}} as const;
+
+    async function createLoadedStyle() {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            sources: {a: geojson, b: geojson},
+            layers: [
+                {id: 'a-symbol', type: 'symbol', source: 'a'},
+                {id: 'a-fill', type: 'fill', source: 'a'},
+                {id: 'a-hidden', type: 'symbol', source: 'a', layout: {visibility: 'none'}},
+                {id: 'b-symbol', type: 'symbol', source: 'b'}
+            ]
+        }));
+        await style.once('style.load');
+        return style;
+    }
+
+    const ids = (layers: readonly StyleLayer[]) => layers.map(layer => layer.id).sort();
+
+    test('returns the symbol layers of a source, hidden ones included', async () => {
+        const style = await createLoadedStyle();
+
+        expect(ids(style.getSymbolLayersForSource('a'))).toEqual(['a-hidden', 'a-symbol']);
+        expect(ids(style.getSymbolLayersForSource('b'))).toEqual(['b-symbol']);
+        expect(style.getSymbolLayersForSource('c')).toEqual([]);
+    });
+
+    test('follows the layers added and removed', async () => {
+        const style = await createLoadedStyle();
+        expect(ids(style.getSymbolLayersForSource('b'))).toEqual(['b-symbol']);
+
+        style.addLayer({id: 'b-added', type: 'symbol', source: 'b'});
+        expect(ids(style.getSymbolLayersForSource('b'))).toEqual(['b-added', 'b-symbol']);
+
+        style.removeLayer('b-symbol');
+        expect(ids(style.getSymbolLayersForSource('b'))).toEqual(['b-added']);
+    });
+
+    test('follows the layers of a style set with a diff', async () => {
+        const style = await createLoadedStyle();
+        expect(ids(style.getSymbolLayersForSource('a'))).toEqual(['a-hidden', 'a-symbol']);
+
+        style.setState(createStyleJSON({
+            sources: {a: geojson, b: geojson},
+            layers: [{id: 'a-other', type: 'symbol', source: 'a'}]
+        }));
+
+        expect(ids(style.getSymbolLayersForSource('a'))).toEqual(['a-other']);
+        expect(style.getSymbolLayersForSource('b')).toEqual([]);
+    });
+});
+
 describe('Style.queryRenderedFeatures', () => {
 
     let style: Style;

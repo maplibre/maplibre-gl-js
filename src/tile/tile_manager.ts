@@ -30,7 +30,6 @@ import type {FeatureState, ICanonicalTileID, SourceSpecification} from '@maplibr
 import type {Terrain} from '../render/terrain.ts';
 import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
-import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 
 type TileResult = {
@@ -503,27 +502,25 @@ export class TileManager extends Evented<SourceEventType> {
     /**
      * The highest elevation this source's symbols may reach, in meters: `symbol-height-offset`
      * constants read from the visible symbol layers, data-driven maxima tracked by the loaded
-     * buckets at layout time. Only data-driven layers scan the loaded tiles, so styles without
-     * them pay nothing beyond the layer loop. The value is a high-water mark: a maximum seen once is kept even
-     * after its tile unloads, otherwise dropping the tile would also drop the reason to keep it,
-     * and the tile could not come back while its content is still visible. The mark resets with
-     * the tiles in `clearTiles`.
+     * buckets at layout time. Only this source's symbol layers are looked at, and only data-driven
+     * ones scan the loaded tiles, so styles without them pay nothing beyond a short layer loop.
+     * The value is a high-water mark: a maximum seen once is kept even after its tile unloads,
+     * otherwise dropping the tile would also drop the reason to keep it, and the tile could not
+     * come back while its content is still visible. The mark resets with the tiles in `clearTiles`.
      */
     _updateMaxContentElevation(): number {
         let maxElevation = this._maxContentElevationSeen;
-        const layers = this.map?.style?._layers;
-        if (!layers) return maxElevation;
-        const tiles = this._inViewTiles.getAllTiles();
-        for (const layerId in layers) {
-            const layer = layers[layerId];
-            if (layer.type !== 'symbol' || layer.source !== this.id || layer.isHidden(this.transform.zoom)) continue;
-            const symbolLayer = layer as SymbolStyleLayer;
-            if (!symbolLayer.layout) continue;
+        const symbolLayers = this.map?.style?.getSymbolLayersForSource(this.id);
+        if (!symbolLayers?.length) return maxElevation;
+        let tiles: Tile[] | undefined;
+        for (const symbolLayer of symbolLayers) {
+            if (symbolLayer.isHidden(this.transform.zoom) || !symbolLayer.layout) continue;
             const heightOffset = symbolLayer.layout.get('symbol-height-offset');
             maxElevation = Math.max(maxElevation, heightOffset.constantOr(0));
             if (heightOffset.isConstant()) continue;
+            tiles ??= this._inViewTiles.getAllTiles();
             for (const tile of tiles) {
-                const bucket = tile.getBucket(layer) as SymbolBucket;
+                const bucket = tile.getBucket(symbolLayer) as SymbolBucket;
                 if (bucket && bucket.maxHeightOffset > maxElevation) {
                     maxElevation = bucket.maxHeightOffset;
                 }

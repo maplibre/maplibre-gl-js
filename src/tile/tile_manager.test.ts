@@ -2827,6 +2827,67 @@ describe('TileManager content elevation', () => {
         expect(getBucket).not.toHaveBeenCalledWith(map.getLayer('constant'));
     });
 
+    test('does not read the loaded tiles when none of its symbol layers is data-driven', async () => {
+        map = globalCreateMap({
+            style: {
+                version: 8,
+                sources: {
+                    id: {type: 'geojson', data: {type: 'FeatureCollection', features: []}},
+                    other: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}
+                },
+                layers: [
+                    {id: 'constant', type: 'symbol', source: 'id', layout: {'symbol-height-offset': 100}},
+                    {id: 'fill', type: 'fill', source: 'id'},
+                    {id: 'otherDataDriven', type: 'symbol', source: 'other', layout: {'symbol-height-offset': ['get', 'height']}}
+                ]
+            }
+        });
+        await map.once('load');
+
+        tileManager = createTileManager({
+            async loadTile(tile: Tile) {
+                tile.state = 'loaded';
+            }
+        });
+        tileManager.onAdd(map);
+        const transform = createMercatorTransform();
+        transform.resize(512, 512);
+        tileManager.update(transform);
+        await vi.waitFor(() => expect(tileManager.loaded()).toBe(true));
+
+        const getAllTiles = vi.spyOn(tileManager._inViewTiles, 'getAllTiles');
+        expect(tileManager._updateMaxContentElevation()).toBe(100);
+        expect(getAllTiles).not.toHaveBeenCalled();
+    });
+
+    test('takes a symbol layer added after the first update into account', async () => {
+        map = globalCreateMap({
+            style: {
+                version: 8,
+                sources: {id: {type: 'geojson', data: {type: 'FeatureCollection', features: []}}},
+                layers: [{id: 'constant', type: 'symbol', source: 'id', layout: {'symbol-height-offset': 100}}]
+            }
+        });
+        await map.once('load');
+
+        tileManager = createTileManager({
+            async loadTile(tile: Tile) {
+                tile.state = 'loaded';
+            }
+        });
+        tileManager.onAdd(map);
+        const transform = createMercatorTransform();
+        transform.resize(512, 512);
+        tileManager.update(transform);
+        expect(tileManager._updateMaxContentElevation()).toBe(100);
+
+        map.addLayer({id: 'higher', type: 'symbol', source: 'id', layout: {'symbol-height-offset': 1000}});
+        // The layout of the new layer is evaluated on the next render.
+        await map.once('render');
+
+        expect(tileManager._updateMaxContentElevation()).toBe(1000);
+    });
+
     test.each(['resetMaxContentElevation', 'clearTiles'] as const)(
         'preserves expanded tile coverage after unloading until %s', async (reset) => {
             map = globalCreateMap({

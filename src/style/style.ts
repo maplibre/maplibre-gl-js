@@ -42,6 +42,7 @@ import {createProjectionFromName} from '../geo/projection/projection_factory.ts'
 import type {Source} from '../source/source.ts';
 import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {StyleLayer} from './style_layer.ts';
+import type {SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
 import type {Map} from '../ui/map.ts';
@@ -73,6 +74,7 @@ import type {Projection} from '../geo/projection/projection.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 const empty = emptyStyle();
+const NO_SYMBOL_LAYERS: readonly SymbolStyleLayer[] = [];
 /**
  * A feature identifier that is bound to a source
  */
@@ -227,6 +229,11 @@ export class Style extends Evented<MapEventType> {
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: string[];
+    /**
+     * The symbol layers of each source, see {@link Style.getSymbolLayersForSource}. Built on demand, and dropped
+     * whenever a layer is added or removed.
+     */
+    _symbolLayersBySource: globalThis.Map<string, SymbolStyleLayer[]> | null = null;
     tileManagers: {[_: string]: TileManager};
     zoomHistory: ZoomHistory;
     _loaded: boolean;
@@ -306,6 +313,7 @@ export class Style extends Evented<MapEventType> {
     private _setInitialValues() {
         this._layers = {};
         this._order = [];
+        this._symbolLayersBySource = null;
         this.tileManagers = {};
         this.zoomHistory = new ZoomHistory();
         this._imagesListDirty = false;
@@ -551,6 +559,7 @@ export class Style extends Evented<MapEventType> {
 
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
+        this._symbolLayersBySource = null;
 
         // reset serialization field, to be populated only when needed
         this._serializedLayers = null;
@@ -1210,6 +1219,7 @@ export class Style extends Evented<MapEventType> {
         this._layerOrderChanged = true;
 
         this._layers[id] = layer;
+        this._symbolLayersBySource = null;
 
         if (this._removedLayers[id] && layer.source && layer.type !== 'custom') {
             // If, in the current batch, we have already removed this layer
@@ -1293,6 +1303,7 @@ export class Style extends Evented<MapEventType> {
         this._changed = true;
         this._removedLayers[id] = layer;
         delete this._layers[id];
+        this._symbolLayersBySource = null;
 
         if (this._serializedLayers) {
             delete this._serializedLayers[id];
@@ -1317,6 +1328,31 @@ export class Style extends Evented<MapEventType> {
      */
     getLayer(id: string): StyleLayer | undefined {
         return this._layers[id];
+    }
+
+    /**
+     * @internal
+     * Returns the symbol layers that draw from the source with the given `id`, hidden ones included.
+     *
+     * Each source's {@link TileManager} asks for these on every update, so they are grouped by source once
+     * rather than looked for among all the layers of the style each time.
+     */
+    getSymbolLayersForSource(sourceId: string): readonly SymbolStyleLayer[] {
+        if (!this._symbolLayersBySource) {
+            const symbolLayersBySource = new globalThis.Map<string, SymbolStyleLayer[]>();
+            for (const layerId in this._layers) {
+                const layer = this._layers[layerId];
+                if (layer.type !== 'symbol') continue;
+                const symbolLayers = symbolLayersBySource.get(layer.source);
+                if (symbolLayers) {
+                    symbolLayers.push(layer as SymbolStyleLayer);
+                } else {
+                    symbolLayersBySource.set(layer.source, [layer as SymbolStyleLayer]);
+                }
+            }
+            this._symbolLayersBySource = symbolLayersBySource;
+        }
+        return this._symbolLayersBySource.get(sourceId) ?? NO_SYMBOL_LAYERS;
     }
 
     /**
