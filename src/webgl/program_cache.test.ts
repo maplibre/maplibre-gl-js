@@ -1,8 +1,21 @@
-import {describe, test, expect, beforeEach} from 'vitest';
+import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {Context} from './context.ts';
 import {ProgramCache} from './program_cache.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
+
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
+
+/** A configuration that binds no attribute or uniform, so it only tells programs apart by its `cacheKey`. */
+function createConfiguration(cacheKey: string): ProgramConfiguration {
+    return {
+        cacheKey,
+        getBinderAttributes: () => [],
+        getBinderUniforms: () => [],
+        getUniforms: () => [],
+        defines: () => []
+    } as Partial<ProgramConfiguration> as ProgramConfiguration;
+}
 
 describe('ProgramCache', () => {
     const clippingMaskVariant = {
@@ -36,6 +49,51 @@ describe('ProgramCache', () => {
         const terrainProgram = cache.getProgram({...clippingMaskVariant, useTerrain: true});
 
         expect(terrainProgram).not.toBe(program);
+        expect(gl.createProgram).toHaveBeenCalledTimes(2);
+    });
+
+    test('finds the program of an equal variant made of new objects', () => {
+        const program = cache.getProgram({...clippingMaskVariant, programConfiguration: createConfiguration('/u_fill-color')});
+
+        // The map builds a new projection variant every frame, and each bucket has its own configuration.
+        const cachedProgram = cache.getProgram({
+            ...clippingMaskVariant,
+            programConfiguration: createConfiguration(['/u_fill', 'color'].join('-')),
+            projectionShaderVariant: {...clippingMaskVariant.projectionShaderVariant},
+            defines: []
+        });
+
+        expect(cachedProgram).toBe(program);
+        expect(gl.createProgram).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not build a string key to find a cached program', () => {
+        // Every draw call looks its program up, so the lookup must not concatenate a key out of the variant.
+        const defines: string[] = [];
+        const join = vi.spyOn(defines, 'join');
+        const variant = {...clippingMaskVariant, defines};
+        cache.getProgram(variant);
+        join.mockClear();
+
+        cache.getProgram(variant);
+
+        expect(join).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        ['name', {name: 'depth'}],
+        ['configuration', {programConfiguration: createConfiguration('/u_fill-color')}],
+        ['projection', {projectionShaderVariant: {name: 'globe', define: '#define GLOBE', prelude: shaders.projectionGlobe}}],
+        ['overdraw inspector', {showOverdrawInspector: true}],
+        ['terrain', {useTerrain: true}],
+        ['defines', {defines: ['#define TERRAIN_FROM_DEM']}],
+    ])('compiles a new program for a variant with a different %s', (_, change) => {
+        const program = cache.getProgram(clippingMaskVariant);
+
+        const otherProgram = cache.getProgram({...clippingMaskVariant, ...change});
+
+        expect(otherProgram).not.toBe(program);
+        expect(cache.getProgram({...clippingMaskVariant, ...change})).toBe(otherProgram);
         expect(gl.createProgram).toHaveBeenCalledTimes(2);
     });
 
