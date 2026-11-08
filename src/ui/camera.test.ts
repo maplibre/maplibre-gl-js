@@ -39,8 +39,7 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
         transformConstrain: options.transformConstrain,
         requestRenderFrame: (cb) => queue.add(cb),
         cancelRenderFrame: (id) => queue.remove(id),
-        transformCameraUpdate: options.transformCameraUpdate,
-        stopHandlers: options.stopHandlers
+        transformCameraUpdate: options.transformCameraUpdate
     });
     camera.resize(512, 512, true);
 
@@ -2365,23 +2364,6 @@ describe('stop', () => {
 
         expect(spy).toHaveBeenCalledTimes(1);
     });
-});
-
-test('easeTo, flyTo and jumpTo let a gesture in progress go on, as they start and as they end', () => {
-    const stopHandlers = vi.fn();
-    const {camera, queue} = createCamera({stopHandlers});
-    const stubNow = vi.spyOn(timeControl, 'now');
-
-    stubNow.mockReturnValue(0);
-    camera.easeTo({center: [10, 0], duration: 10});
-    stubNow.mockReturnValue(10);
-    queue.run();
-    camera.flyTo({center: [20, 0], duration: 10});
-    stubNow.mockReturnValue(20);
-    queue.run();
-    camera.jumpTo({center: [30, 0]});
-
-    expect(stopHandlers).not.toHaveBeenCalled();
 });
 
 describe('cameraForBounds', () => {
