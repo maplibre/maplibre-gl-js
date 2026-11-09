@@ -230,7 +230,8 @@ export class Style extends Evented<MapEventType> {
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: string[];
     /**
-     * The symbol layers of each source, see {@link Style.getSymbolLayersForSource}. Built on demand, and dropped
+     * @internal
+     * The symbol layers of each source, see `getSymbolLayersForSource`. Built on demand, and dropped
      * whenever a layer is added or removed.
      */
     _symbolLayersBySource: globalThis.Map<string, SymbolStyleLayer[]> | null = null;
