@@ -4,7 +4,7 @@ uniform float u_opacity;
 #ifdef LAYER_BLEND
 uniform sampler2D u_backdrop;
 // Pixel offset of the backdrop copy within the target, as the backdrop only covers the scissor box.
-uniform vec2 u_backdrop_offset;
+uniform highp vec2 u_backdrop_offset;
 
 #ifdef LAYER_BLEND_NONSEPARABLE
 // Luminosity, per the non-separable blend modes of the W3C compositing spec.
