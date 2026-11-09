@@ -11,9 +11,11 @@ import {
 } from '../program/raster_program.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {FadingDirections} from '../../tile/tile.ts';
+import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
+import type {Painter} from '../../render/painter.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -40,11 +42,22 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
+export function drawRaster(painter: Painter, tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     if (frameRenderContext.currentPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
+    const layerBlend = layer.paint.get('raster-layer-blend');
+    if (layerBlend === 'normal') {
+        drawRasterTiles(tileManager, layer, tileIDs, frameRenderContext);
+        return;
+    }
+    const results = prepareDrawLayerComposite(painter, tileManager, layer, tileIDs, frameRenderContext);
+    drawRasterTiles(tileManager, layer, tileIDs, frameRenderContext);
+    drawLayerComposite(painter, 1, layerBlend, results, layer, frameRenderContext);
+}
+
+function drawRasterTiles(tileManager: TileManager, layer: RasterStyleLayer, tileIDs: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     const source = tileManager.getSource();
 
     const {useSubdivision} = frameRenderContext.data;
