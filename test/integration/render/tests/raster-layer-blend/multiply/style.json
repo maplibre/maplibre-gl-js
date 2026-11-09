@@ -7,26 +7,52 @@
     }
   },
   "center": [
-    -113.26903,
-    35.9654
+    13.418056,
+    52.499167
   ],
-  "zoom": 12,
+  "zoom": 16,
   "sources": {
-    "terrain": {
-      "type": "raster-dem",
-      "tiles": [
-        "local://tiles/{z}-{x}-{y}.terrain.png"
-      ],
-      "maxzoom": 12,
-      "tileSize": 256
-    },
     "satellite": {
       "type": "raster",
       "tiles": [
         "local://tiles/{z}-{x}-{y}.satellite.png"
       ],
-      "maxzoom": 12,
+      "maxzoom": 17,
       "tileSize": 256
+    },
+    "band": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                13.4176,
+                52.497
+              ],
+              [
+                13.4185,
+                52.497
+              ],
+              [
+                13.4185,
+                52.501
+              ],
+              [
+                13.4176,
+                52.501
+              ],
+              [
+                13.4176,
+                52.497
+              ]
+            ]
+          ]
+        }
+      }
     }
   },
   "layers": [
@@ -34,15 +60,15 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#cbb994"
+        "background-color": "#ffffff"
       }
     },
     {
-      "id": "hillshade",
-      "type": "hillshade",
-      "source": "terrain",
+      "id": "band",
+      "type": "fill",
+      "source": "band",
       "paint": {
-        "hillshade-shadow-color": "#473b24"
+        "fill-color": "#ff8800"
       }
     },
     {
