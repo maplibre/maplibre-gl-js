@@ -99,6 +99,52 @@ vec3 projectToSphere(vec2 posInTile) {
     return projectToSphere(posInTile, vec2(0.0, 0.0));
 }
 
+// Fill-extrusions need a longitude projection that agrees with the CPU
+// geometry query. In software WebGL, built-in sin/cos at angles above PI
+// can move the high-elevation walls several pixels at high zoom.
+// Keep this isolated to fill-extrusion shaders: the regular globe
+// projection continues using the original path for other layers.
+vec3 projectExtrusionToSphere(vec2 translatedPos, vec2 rawPos) {
+    vec2 mercatorPos = u_projection_tile_mercator_coords.xy +
+        u_projection_tile_mercator_coords.zw * translatedPos;
+    float longitude = mercatorPos.x * PI * 2.0 - PI;
+    if (longitude > PI) longitude -= 2.0 * PI;
+    if (longitude < -PI) longitude += 2.0 * PI;
+
+    float x = longitude;
+    float cosineSign = 1.0;
+    if (x > PI * 0.5) {
+        x = PI - x;
+        cosineSign = -1.0;
+    } else if (x < -PI * 0.5) {
+        x = -PI - x;
+        cosineSign = -1.0;
+    }
+
+    float x2 = x * x;
+    float sinLongitude = x * (1.0 + x2 * (-0.16666666666666667 +
+        x2 * (0.008333333333333333 + x2 * (-0.0001984126984126984 +
+        x2 * (0.0000027557319223985893 -
+        x2 * 0.00000002505210838544172)))));
+    float cosLongitude = cosineSign * (1.0 + x2 * (-0.5 +
+        x2 * (0.041666666666666664 + x2 * (-0.001388888888888889 +
+        x2 * (0.0000248015873015873 + x2 * (-0.0000002755731922398589 +
+        x2 * 0.00000000208767569878681))))));
+
+    float t = exp(PI - mercatorPos.y * PI * 2.0);
+    float t2 = t * t;
+    float denominator = t2 + 1.0;
+    vec3 pos = vec3(
+        sinLongitude * (2.0 * t / denominator),
+        (t2 - 1.0) / denominator,
+        cosLongitude * (2.0 * t / denominator)
+    );
+
+    if (rawPos.y < -32767.5) pos = vec3(0.0, 1.0, 0.0);
+    if (rawPos.y > 32766.5) pos = vec3(0.0, -1.0, 0.0);
+    return pos;
+}
+
 float globeComputeClippingZ(vec3 spherePos) {
     return (1.0 - (dot(spherePos, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w));
 }
