@@ -84,7 +84,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
      */
     handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
         const zoomPixel = deltas.around;
-        const zoomLoc = tr.screenPointToLocation(zoomPixel);
+        const zoomLoc = deltas.aroundLocation ?? tr.screenPointToLocation(zoomPixel);
 
         if (deltas.bearingDelta) tr.setBearing(tr.bearing + deltas.bearingDelta);
         if (deltas.pitchDelta) tr.setPitch(tr.pitch + deltas.pitchDelta);

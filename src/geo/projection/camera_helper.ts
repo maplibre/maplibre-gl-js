@@ -22,6 +22,12 @@ export type MapControlsDeltas = {
      * pan and zoom keep the terrain at this elevation under `around`.
      */
     aroundElevation?: number;
+    /**
+     * The location that was under `around` when the zoom began. A globe zoom that cannot keep a location under
+     * `around` turns the globe towards it a step at a time, which moves it out from under `around`: the steps
+     * head for this location, where reading what is under `around` on each of them would follow a moving one.
+     */
+    aroundLocation?: LngLat;
 };
 
 export type CameraForBoxAndBearingHandlerResult = {

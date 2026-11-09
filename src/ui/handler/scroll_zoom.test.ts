@@ -1,6 +1,7 @@
 import {describe, beforeEach, test, expect, vi, type MockInstance} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import * as timeControl from '../../util/time_control.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 import {Map, type MapOptions} from '../../ui/map.ts';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
@@ -723,6 +724,33 @@ describe('ScrollZoomHandler', () => {
             const {driftLat} = await zoomInAtOffset(nearTheHorizon);
             expect(Math.abs(driftLat)).toBeGreaterThan(0.5);
             expect(Math.abs(driftLat)).toBeLessThan(1.5);
+        });
+
+        test('ends on the location the wheel started over when it is across a pole, with pauses between notches', async () => {
+            const timeControlNow = vi.spyOn(timeControl, 'now');
+            let now = 1555555555555;
+            timeControlNow.mockReturnValue(now);
+            const map = createMap();
+            await map.once('load');
+            map.setProjection({type: 'globe'});
+            map.setCenter([-95, 60]);
+            map.setZoom(0);
+            map._renderTaskQueue.run();
+
+            const acrossThePole = new LngLat(85, 60);
+            const pointer = map.project(acrossThePole);
+            for (let notch = 0; notch < 200; notch++) {
+                simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta * 4, clientX: pointer.x, clientY: pointer.y});
+                for (let frame = 0; frame < 5; frame++) {
+                    now += 100;
+                    timeControlNow.mockReturnValue(now);
+                    map._renderTaskQueue.run();
+                }
+            }
+
+            expect(map.getZoom()).toBeGreaterThan(4);
+            expect(map.unproject(pointer).distanceTo(acrossThePole)).toBeLessThan(1000);
+            map.remove();
         });
 
         test('leaves zooming with the pointer off the planet unchanged', async () => {
