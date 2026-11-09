@@ -117,7 +117,8 @@ function getCoordsViewportBounds(coords: OverscaledTileID[], frameRenderContext:
 /**
  * Partial `{line,fill}-layer-opacity` / `{line,fill}-layer-blend`:
  * render the whole layer to a scratch FBO so it composites as one surface instead of per feature.
- * For fill and line, the bounds only cover tiles with a bucket for the layer, since the tile draw loops skip the others.
+ * The bounds only cover tiles with a bucket for the layer, since the tile draw loops skip the others.
+ * A raster layer takes the whole viewport, since an image source can draw beyond its tile.
  */
 export function prepareDrawLayerComposite(painter: Painter, tileManager: TileManager, layer: LineStyleLayer | FillStyleLayer | RasterStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): PrepareDrawLayerCompositeResult {
     const context = frameRenderContext.context;
@@ -133,8 +134,8 @@ export function prepareDrawLayerComposite(painter: Painter, tileManager: TileMan
     frameRenderContext.invalidateTileClippingMasks();
     frameRenderContext.renderTileClippingMasks(layer, coords);
 
-    const drawnCoords = isRasterStyleLayer(layer) ? coords : coords.filter((coord) => tileManager.getTile(coord)?.getBucket(layer));
-    const bounds = getCoordsViewportBounds(drawnCoords, frameRenderContext);
+    const drawnCoords = coords.filter((coord) => tileManager.getTile(coord)?.getBucket(layer));
+    const bounds: [number, number, number, number] = isRasterStyleLayer(layer) ? [0, 0, width, height] : getCoordsViewportBounds(drawnCoords, frameRenderContext);
 
     return {
         compositeTarget,
