@@ -64,6 +64,8 @@ type TestData = {
     fadeDuration: number;
     debug: boolean;
     showOverdrawInspector: boolean;
+    /** Turns on the canvas's multisample antialiasing. */
+    antialias: boolean;
     showPadding: boolean;
     collisionDebug: boolean;
     localIdeographFontFamily: string;
@@ -696,7 +698,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             attributionControl: false,
             maxPitch: options.maxPitch,
             pixelRatio: options.pixelRatio,
-            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default'},
+            canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default', antialias: options.antialias ?? false},
             fadeDuration: options.fadeDuration || 0,
             localIdeographFontFamily: options.localIdeographFontFamily || false as any,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,

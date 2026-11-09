@@ -1,0 +1,110 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [
+    11.52517,
+    47.34487
+  ],
+  "zoom": 12,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  11.51,
+                  47.336
+                ],
+                [
+                  11.533,
+                  47.336
+                ],
+                [
+                  11.5215,
+                  47.3555
+                ],
+                [
+                  11.51,
+                  47.336
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  11.5175,
+                  47.3545
+                ],
+                [
+                  11.5405,
+                  47.3545
+                ],
+                [
+                  11.529,
+                  47.335
+                ],
+                [
+                  11.5175,
+                  47.3545
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#cbb994"
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "terrain",
+      "paint": {
+        "hillshade-shadow-color": "#473b24"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "paint": {
+        "line-color": "#90ee90",
+        "line-width": 16,
+        "line-layer-blend": "multiply",
+        "line-opacity": 0.7
+      }
+    }
+  ]
+}
