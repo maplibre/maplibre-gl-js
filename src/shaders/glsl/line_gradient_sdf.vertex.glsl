@@ -15,6 +15,9 @@ layout(location = 1) in uvec4 a_data;
 layout(location = 2) in vec2 a_offset_normal;
 layout(location = 3) in float a_uv_x;
 layout(location = 4) in float a_split_index;
+#ifdef TAPER
+in float a_taper;
+#endif
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
@@ -39,6 +42,10 @@ out float v_depth;
 #pragma maplibre: define mediump float gapwidth
 #pragma maplibre: define lowp float offset
 #pragma maplibre: define mediump float width
+#ifdef TAPER
+#pragma maplibre: define mediump float width_start
+#pragma maplibre: define mediump float width_end
+#endif
 #pragma maplibre: define lowp float floorwidth
 #pragma maplibre: define mediump vec4 dasharray_from
 #pragma maplibre: define mediump vec4 dasharray_to
@@ -79,6 +86,34 @@ void main() {
     mediump vec2 normal = vec2(a_pos_normal & 1);
     normal.y = normal.y * 2.0 - 1.0;
     v_normal = normal;
+
+#ifdef TAPER
+#ifdef VARIABLE_WIDTH
+    // The per-vertex buffer already holds the absolute width at this vertex
+    // (`line-widths`), so it is used directly.
+    width = a_taper;
+#endif
+#ifdef VARIABLE_WIDTH_FACTOR
+    // The per-vertex buffer holds a multiplier of the zoom-composited `line-width`
+    // (`line-width-factors`). Plain nested #ifdef/#ifndef are used instead of
+    // `#elif defined(...)`: the shader generator's minifier strips newlines after
+    // closing parens in preprocessor directives.
+    width = width * a_taper;
+#endif
+#ifndef VARIABLE_WIDTH
+#ifndef VARIABLE_WIDTH_FACTOR
+
+    // The start/end widths are per-feature values (uniform or attribute, supplied by
+    // the `#pragma` mechanism below). An unset property (default -1) falls back to
+    // the regular `line-width`, so setting only one side tapers from/towards it.
+    #pragma maplibre: initialize mediump float width_start
+    #pragma maplibre: initialize mediump float width_end
+    float wStart = width_start >= 0.0 ? width_start : width;
+    float wEnd = width_end >= 0.0 ? width_end : width;
+    width = mix(wStart, wEnd, a_taper);
+#endif
+#endif
+#endif
 
     // these transformations used to be applied in the JS and native code bases.
     // moved them into the shader for clarity and simplicity.
