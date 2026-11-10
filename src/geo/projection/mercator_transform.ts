@@ -1,26 +1,25 @@
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorWorldCoordinateHelper, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp, createMat4f64, degreesToRadians, radiansToDegrees, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
-import {type mat2, mat4, vec3, vec4} from 'gl-matrix';
+import {mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {type PointProjection, xyTransformMat4} from '../../symbol/projection.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon, getMercatorTileCoordinates, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation, lngLatBoxToWorldBox} from './mercator_utils.ts';
 import {EXTENT} from '../../data/extent.ts';
-import {TransformHelper} from '../transform_helper.ts';
+import {Transform} from '../transform.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
-import {getBearing, getCenterOffset, getCenterPoint, getFov, getPitch, getRoll, getWorldSize} from '../camera_state.ts';
+import {getBearing, getCenterOffset, getCenterPoint, getConstrainedCamera, getFov, getPitch, getRoll, getWorldSize} from '../camera_state.ts';
 
-import type {CameraState} from '../camera_state.ts';
-import type {CameraOptionsFromTo, IReadonlyTransform, ITransform, NearFarZ, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {TransformOptions} from '../transform_helper.ts';
-import type {PaddingOptions} from '../edge_insets.ts';
+import type {CameraState} from '../camera_state.ts';
+import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
@@ -37,14 +36,6 @@ type RaySegment = {
 const TARGET_WORLD_STEP_PX = 4;
 const MAX_SAMPLES = 512;
 const MERCATOR_BISECT_EPSILON_WORLD_PX = 1e-3;
-/**
- * How many times {@link MercatorTransform.recalculateZoomAndCenter} picks the terrain under the center and moves the
- * center onto it, and how far above or below the terrain a center may stay. Each pass keeps the camera where it is,
- * so the center's latitude changes the mercator scale the next pass sees and the terrain pick moves with it; the
- * remainder shrinks by the scale difference each pass, from meters to under a millimeter on the second.
- */
-const CENTER_ON_TERRAIN_PASSES = 3;
-const CENTER_ON_TERRAIN_TOLERANCE_M = 0.0001;
 /**
  * The clip-space depth of the near clipping plane, where the ray segment through a screen pixel starts for a terrain
  * pick so that it holds all the view shows; see `getRaySegmentFromPixel`.
@@ -67,209 +58,14 @@ type MercatorRay = {
     wraps: boolean;
 };
 
-export class MercatorTransform implements ITransform {
-    private _helper: TransformHelper;
-
-    //
-    // Implementation of transform getters and setters
-    //
-
-    get pixelsToClipSpaceMatrix(): mat4 {
-        return this._helper.pixelsToClipSpaceMatrix;
-    }
-    get clipSpaceToPixelsMatrix(): mat4 {
-        return this._helper.clipSpaceToPixelsMatrix;
-    }
-    get pixelsToGLUnits(): [number, number] {
-        return this._helper.pixelsToGLUnits;
-    }
-    get size(): Point {
-        return this._helper.size;
-    }
-    get rotationMatrix(): mat2 {
-        return this._helper.rotationMatrix;
-    }
-    get centerPoint(): Point {
-        return this._helper.centerPoint;
-    }
-    get pixelsPerMeter(): number {
-        return this._helper.pixelsPerMeter;
-    }
-    setMinZoom(zoom: number): void {
-        this._helper.setMinZoom(zoom);
-    }
-    setMaxZoom(zoom: number): void {
-        this._helper.setMaxZoom(zoom);
-    }
-    setMinPitch(pitch: number): void {
-        this._helper.setMinPitch(pitch);
-    }
-    setMaxPitch(pitch: number): void {
-        this._helper.setMaxPitch(pitch);
-    }
-    setRenderWorldCopies(renderWorldCopies: boolean): void {
-        this._helper.setRenderWorldCopies(renderWorldCopies);
-    }
-    setBearing(bearing: number): void {
-        this._helper.setBearing(bearing);
-    }
-    setPitch(pitch: number): void {
-        this._helper.setPitch(pitch);
-    }
-    setRoll(roll: number): void {
-        this._helper.setRoll(roll);
-    }
-    setFov(fov: number): void {
-        this._helper.setFov(fov);
-    }
-    setZoom(zoom: number): void {
-        this._helper.setZoom(zoom);
-    }
-    setCenter(center: LngLat): void {
-        this._helper.setCenter(center);
-    }
-    setElevation(elevation: number): void {
-        this._helper.setElevation(elevation);
-    }
-    setMinElevationForCurrentTile(elevation: number): void {
-        this._helper.setMinElevationForCurrentTile(elevation);
-    }
-    setPadding(padding: PaddingOptions): void {
-        this._helper.setPadding(padding);
-    }
-    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
-        this._helper.interpolatePadding(start, target, t);
-    }
-    isPaddingEqual(padding: PaddingOptions): boolean {
-        return this._helper.isPaddingEqual(padding);
-    }
-    resize(width: number, height: number, constrain: boolean = true): void {
-        this._helper.resize(width, height, constrain);
-    }
-    getMaxBounds(): LngLatBounds {
-        return this._helper.getMaxBounds();
-    }
-    setMaxBounds(bounds?: LngLatBounds): void {
-        this._helper.setMaxBounds(bounds);
-    }
-    setConstrainOverride(constrain?: TransformConstrainFunction | null): void {
-        this._helper.setConstrainOverride(constrain);
-    }
-    overrideNearFarZ(nearZ: number, farZ: number): void {
-        this._helper.overrideNearFarZ(nearZ, farZ);
-    }
-    clearNearFarZOverride(): void {
-        this._helper.clearNearFarZOverride();
-    }
-    getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(queryGeometry);
-    }
-
-    get tileSize(): number {
-        return this._helper.tileSize;
-    }
-    get tileZoom(): number {
-        return this._helper.tileZoom;
-    }
-    get scale(): number {
-        return this._helper.scale;
-    }
-    get worldSize(): number {
-        return this._helper.worldSize;
-    }
-    get width(): number {
-        return this._helper.width;
-    }
-    get height(): number {
-        return this._helper.height;
-    }
-    get lngRange(): [number, number] {
-        return this._helper.lngRange;
-    }
-    get latRange(): [number, number] {
-        return this._helper.latRange;
-    }
-    get minZoom(): number {
-        return this._helper.minZoom;
-    }
-    get maxZoom(): number {
-        return this._helper.maxZoom;
-    }
-    get zoom(): number {
-        return this._helper.zoom;
-    }
-    get center(): LngLat {
-        return this._helper.center;
-    }
-    get minPitch(): number {
-        return this._helper.minPitch;
-    }
-    get maxPitch(): number {
-        return this._helper.maxPitch;
-    }
-    get pitch(): number {
-        return this._helper.pitch;
-    }
-    get pitchInRadians(): number {
-        return this._helper.pitchInRadians;
-    }
-    get roll(): number {
-        return this._helper.roll;
-    }
-    get rollInRadians(): number {
-        return this._helper.rollInRadians;
-    }
-    get bearing(): number {
-        return this._helper.bearing;
-    }
-    get bearingInRadians(): number {
-        return this._helper.bearingInRadians;
-    }
-    get fov(): number {
-        return this._helper.fov;
-    }
-    get fovInRadians(): number {
-        return this._helper.fovInRadians;
-    }
-    get elevation(): number {
-        return this._helper.elevation;
-    }
-    get minElevationForCurrentTile(): number {
-        return this._helper.minElevationForCurrentTile;
-    }
-    get padding(): PaddingOptions {
-        return this._helper.padding;
-    }
-    get unmodified(): boolean {
-        return this._helper.unmodified;
-    }
-    get renderWorldCopies(): boolean {
-        return this._helper.renderWorldCopies;
-    }
-    get cameraToCenterDistance(): number {
-        return this._helper.cameraToCenterDistance;
-    }
-    get constrainOverride(): TransformConstrainFunction {
-        return this._helper.constrainOverride;
-    }
-    public get nearZ(): number {
-        return this._nearZ;
-    }
-    public get farZ(): number {
-        return this._farZ;
-    }
-    public get nearFarZOverride(): NearFarZ | null {
-        return this._helper.nearFarZOverride;
-    }
-    public get autoCalculateNearFarZ(): boolean {
-        return this._helper.autoCalculateNearFarZ;
-    }
-    setTransitionState(_value: number): void {
-        // Do nothing
-    }
-    //
-    // Implementation of mercator transform
-    //
+/**
+ * @internal
+ * The mercator part of a {@link Transform}.
+ */
+export class MercatorTransform implements IProjectionTransform {
+    private readonly _cameraState: Readonly<CameraState>;
+    /** The lng/lat to world coordinate mapping, mercator's unless the part is built for a registered CRS. */
+    private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
     private _cameraPosition: vec3;
     private _nearZ: number;
@@ -295,21 +91,13 @@ export class MercatorTransform implements ITransform {
     private _maxBoundsWorldBox: {lngRange: [number, number]; latRange: [number, number]; box: {minX: number; minY: number; maxX: number; maxY: number}} | null = null;
 
     /**
-     * @param options - Initial state. Ignored when `sharedHelper` is given, which already carries it.
-     * @param sharedHelper - Camera to use instead of owning one, so that a composing transform such as
-     * {@link GlobeTransform} keeps a single copy of the state rather than one per child. Its owner then drives
-     * {@link _calcMatrices}, because a helper has only one `calcMatrices` callback.
+     * @param cameraState - The camera state this part derives its matrices from.
+     * @param worldCoordinateHelper - The lng/lat to world coordinate mapping, mercator's by default.
      */
-    constructor(options?: TransformOptions, sharedHelper?: TransformHelper) {
-        this._helper = sharedHelper ?? new TransformHelper({
-            calcMatrices: () => this._calcMatrices(),
-            defaultConstrain: (center, zoom) => { return this.defaultConstrain(center, zoom); }
-        }, options);
+    constructor(cameraState: Readonly<CameraState>, worldCoordinateHelper: WorldCoordinateHelper = mercatorWorldCoordinateHelper) {
+        this._cameraState = cameraState;
+        this._worldCoordinateHelper = worldCoordinateHelper;
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
-    }
-
-    private get _cameraState(): Readonly<CameraState> {
-        return this._helper.cameraState;
     }
 
     /** The {@link getMercatorHorizon} of this camera. */
@@ -317,21 +105,17 @@ export class MercatorTransform implements ITransform {
         return getMercatorHorizon({pitch: getPitch(this._cameraState), cameraToCenterDistance: this._cameraState.cameraToCenterDistance});
     }
 
-    public clone(): ITransform {
-        const clone = new MercatorTransform({worldCoordinateHelper: this.worldCoordinateHelper});
-        clone.apply(this, false);
-        return clone;
+    clone(cameraState: Readonly<CameraState>): MercatorTransform {
+        return new MercatorTransform(cameraState, this._worldCoordinateHelper);
     }
 
-    get worldCoordinateHelper(): WorldCoordinateHelper {
-        return this._helper.worldCoordinateHelper;
-    }
-
-    public apply(that: IReadonlyTransform, constrain: boolean): void {
-        this._helper.apply(that, constrain);
+    setTransitionState(_value: number): void {
+        // Do nothing
     }
 
     public get cameraPosition(): vec3 { return this._cameraPosition; }
+    public get nearZ(): number { return this._nearZ; }
+    public get farZ(): number { return this._farZ; }
     public get projectionMatrix(): mat4 { return this._projectionMatrix; }
     public get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
     public get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
@@ -339,7 +123,7 @@ export class MercatorTransform implements ITransform {
 
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
         const result = [new UnwrappedTileID(0, tileID)];
-        if (this._cameraState.renderWorldCopies && this.worldCoordinateHelper.wraps) {
+        if (this._cameraState.renderWorldCopies && this._worldCoordinateHelper.wraps) {
             const utl = this.screenPointToMercatorCoordinate(new Point(0, 0));
             const utr = this.screenPointToMercatorCoordinate(new Point(this._cameraState.width, 0));
             const ubl = this.screenPointToMercatorCoordinate(new Point(this._cameraState.width, this._cameraState.height));
@@ -370,18 +154,9 @@ export class MercatorTransform implements ITransform {
         return this._coveringTilesDetailsProvider;
     }
 
-    recalculateZoomAndCenter(terrain?: Terrain): void {
-        for (let pass = 0; pass < CENTER_ON_TERRAIN_PASSES; pass++) {
-            const elevation = this.getGroundElevationAtCenter(terrain);
-            if (elevation === null) return;
-            this._helper.recalculateZoomAndCenter(elevation);
-            if (!terrain || Math.abs(terrain.getElevationForLngLat(this._cameraState.center, this._cameraState.tileZoom) - this._cameraState.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return;
-        }
-    }
-
     /**
-     * The elevation of the ground the camera looks at, which {@link recalculateZoomAndCenter} moves the center to,
-     * or null where the camera would end up below that ground.
+     * The elevation of the ground the camera looks at, which {@link Transform.recalculateZoomAndCenter} moves the
+     * center to, or null where the camera would end up below that ground.
      */
     getGroundElevationAtCenter(terrain?: Terrain): number | null {
         const center = (terrain && this._terrainPointPastMaxZoom(terrain)) || this.screenPointToLocation(getCenterPoint(this._cameraState), terrain);
@@ -390,41 +165,36 @@ export class MercatorTransform implements ITransform {
         return elevation;
     }
 
-    setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void {
-        const camera = this.getCameraForLocationAtPoint(lnglat, point, elevation);
-        if (camera) this._helper.setCenterAndZoom(camera.center, camera.zoom);
-    }
-
     /**
-     * The center and zoom that {@link setLocationAtPoint} moves the camera to, so that `lnglat`, on the ground at
-     * `elevation` meters, renders at the screen `point`, or null where the camera stays where it is. Both rays are
-     * cast through the same inverse pixel matrix so its inversion error cancels out of their difference; the
+     * The center and zoom that {@link Transform.setLocationAtPoint} moves the camera to, so that `lnglat`, on the
+     * ground at `elevation` meters, renders at the screen `point`, or null where the camera stays where it is. Both rays
+     * are cast through the same inverse pixel matrix so its inversion error cancels out of their difference; the
      * current-center ray must be intersected at the center's own elevation (z=0), since intersecting it with the
      * elevated plane would land `(elevation - centerElevation)·tan(pitch)` away from the center and make repeated
      * calls drift. In a world that wraps, a center outside the main world is then wrapped into it and constrained
      * again.
      */
-    getCameraForLocationAtPoint(lnglat: LngLat, point: Point, elevation: number = this._cameraState.elevation): {center: LngLat; zoom: number} | null {
-        const z = elevation - this._cameraState.elevation;
+    getCameraForLocationAtPoint(lnglat: LngLat, point: Point, elevation: number | undefined, constrain: TransformConstrainFunction): {center: LngLat; zoom: number} | null {
+        const z = (elevation ?? this._cameraState.elevation) - this._cameraState.elevation;
         const a = this.screenPointToMercatorCoordinateAtZ(point, z);
         const b = this.screenPointToMercatorCoordinateAtZ(getCenterPoint(this._cameraState), 0);
-        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const worldCoordinateHelper = this._worldCoordinateHelper;
         const loc = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
         const center = worldCoordinateHelper.lngLatFromWorld(
             loc.x - (a.x - b.x),
             loc.y - (a.y - b.y));
         const moved = center.lng !== this._cameraState.center.lng || center.lat !== this._cameraState.center.lat;
-        let camera = moved ? this._helper.getConstrainedCamera(center, this._cameraState.zoom) : null;
+        let camera = moved ? getConstrainedCamera(this._cameraState, constrain, center, this._cameraState.zoom) : null;
         if (this._cameraState.renderWorldCopies && worldCoordinateHelper.wraps) {
             const unwrapped = camera ?? {center: this._cameraState.center, zoom: this._cameraState.zoom};
             const wrapped = unwrapped.center.wrap();
-            if (wrapped.lng !== unwrapped.center.lng) camera = this._helper.getConstrainedCamera(wrapped, unwrapped.zoom);
+            if (wrapped.lng !== unwrapped.center.lng) camera = getConstrainedCamera(this._cameraState, constrain, wrapped, unwrapped.zoom);
         }
         return camera;
     }
 
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
-        const coord = this.worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
+        const coord = this._worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
         return terrain ?
             this.coordinatePoint(coord, terrain.getElevationForLngLat(lnglat, this._cameraState.tileZoom), this._pixelMatrix3D) :
             this.coordinatePoint(coord);
@@ -443,7 +213,7 @@ export class MercatorTransform implements ITransform {
      * the world (a screen point above the horizon or off the terrain).
      */
     private _worldToLngLat(coord: MercatorCoordinate | null | undefined): LngLat | undefined {
-        return coord ? this.worldCoordinateHelper.lngLatFromWorld(coord.x, coord.y) : undefined;
+        return coord ? this._worldCoordinateHelper.lngLatFromWorld(coord.x, coord.y) : undefined;
     }
 
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
@@ -468,8 +238,8 @@ export class MercatorTransform implements ITransform {
         if (!index) return null;
         const {near, far} = this.getRaySegmentFromPixel(getCenterPoint(this._cameraState), NEAR_PLANE_CLIP_Z);
         const distanceAtMaxZoom = this._cameraState.cameraToCenterDistance * zoomScale(this._cameraState.zoom - this._cameraState.maxZoom);
-        const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - this.nearZ) / (this.farZ - this.nearZ)));
-        if (isBelowTerrainSample(sampleAt(index, terrain.exaggeration, start[0] / getWorldSize(this._cameraState), start[1] / getWorldSize(this._cameraState), this.worldCoordinateHelper.wraps), start[2])) return null;
+        const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - this._nearZ) / (this._farZ - this._nearZ)));
+        if (isBelowTerrainSample(sampleAt(index, terrain.exaggeration, start[0] / getWorldSize(this._cameraState), start[1] / getWorldSize(this._cameraState), this._worldCoordinateHelper.wraps), start[2])) return null;
         return this._worldToLngLat(this._raycastTerrain(start, far, terrain)) ?? null;
     }
 
@@ -488,7 +258,7 @@ export class MercatorTransform implements ITransform {
         const dx = far[0] - near[0];
         const dy = far[1] - near[1];
         const dz = far[2] - near[2];
-        const ray: MercatorRay = {index, exaggeration: terrain.exaggeration, near, dx, dy, dz, worldSize, wraps: this.worldCoordinateHelper.wraps};
+        const ray: MercatorRay = {index, exaggeration: terrain.exaggeration, near, dx, dy, dz, worldSize, wraps: this._worldCoordinateHelper.wraps};
 
         let tStart = 0;
         let tEnd = 1;
@@ -637,11 +407,11 @@ export class MercatorTransform implements ITransform {
             return this.screenTerrainPointToMercatorCoordinate(p, terrain) != null;
         }
         const belowHorizon = p.y > getCenterPoint(this._cameraState).y - this._getHorizon();
-        if (!belowHorizon || this.worldCoordinateHelper.wraps) {
+        if (!belowHorizon || this._worldCoordinateHelper.wraps) {
             return belowHorizon;
         }
         const coordinate = this.screenPointToMercatorCoordinate(p);
-        return this.worldCoordinateHelper.hasLngLat(coordinate.x, coordinate.y);
+        return this._worldCoordinateHelper.hasLngLat(coordinate.x, coordinate.y);
     }
 
     /**
@@ -698,7 +468,7 @@ export class MercatorTransform implements ITransform {
      */
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
         zoom = clamp(+zoom, this._cameraState.minZoom, this._cameraState.maxZoom);
-        if (!this.worldCoordinateHelper.wraps) return this._constrainToWorldSquare(lngLat, zoom);
+        if (!this._worldCoordinateHelper.wraps) return this._constrainToWorldSquare(lngLat, zoom);
         const result = {
             center: new LngLat(lngLat.lng, lngLat.lat),
             zoom
@@ -748,7 +518,7 @@ export class MercatorTransform implements ITransform {
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
-        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat, this.worldCoordinateHelper);
+        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat, this._worldCoordinateHelper);
         let modifiedX, modifiedY;
 
         const scale = Math.max(scaleX || 0, scaleY || 0);
@@ -758,7 +528,7 @@ export class MercatorTransform implements ITransform {
             const newPoint = new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this.worldCoordinateHelper).wrap();
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this._worldCoordinateHelper).wrap();
             result.zoom += scaleZoom(scale);
             return result;
         }
@@ -784,7 +554,7 @@ export class MercatorTransform implements ITransform {
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this.worldCoordinateHelper).wrap();
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this._worldCoordinateHelper).wrap();
         }
 
         return result;
@@ -798,7 +568,7 @@ export class MercatorTransform implements ITransform {
      * fill the screen.
      */
     private _constrainToWorldSquare(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
-        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const worldCoordinateHelper = this._worldCoordinateHelper;
         const lngRange = this._cameraState.lngRange;
         const worldSize = this._cameraState.tileSize * zoomScale(zoom);
         if (!lngRange) {
@@ -841,21 +611,13 @@ export class MercatorTransform implements ITransform {
     private _projectMaxBounds(lngRange: [number, number], latRange: [number, number]): {minX: number; minY: number; maxX: number; maxY: number} {
         const cached = this._maxBoundsWorldBox;
         if (cached?.lngRange === lngRange && cached.latRange === latRange) return cached.box;
-        const box = lngLatBoxToWorldBox(this.worldCoordinateHelper, lngRange[0], latRange[0], lngRange[1], latRange[1]);
+        const box = lngLatBoxToWorldBox(this._worldCoordinateHelper, lngRange[0], latRange[0], lngRange[1], latRange[1]);
         this._maxBoundsWorldBox = {lngRange, latRange, box};
         return box;
     }
 
-    applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        return this._helper.applyConstrain(lngLat, zoom);
-    };
-
-    calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
-        return this._helper.calculateCenterFromCameraLngLatAlt(lnglat, alt, bearing, pitch);
-    }
-
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
-        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const worldCoordinateHelper = this._worldCoordinateHelper;
         const fromLngLat = LngLat.convert(from);
         const toLngLat = LngLat.convert(to);
         const fromWorld = worldCoordinateHelper.worldFromLngLat(fromLngLat.lng, fromLngLat.lat, altitudeFrom);
@@ -919,12 +681,11 @@ export class MercatorTransform implements ITransform {
 
     /**
      * @param nearFarZ - The depth range to use instead of computing one, by default the camera state's override.
-     * {@link GlobeTransform} passes the range of its vertical perspective child, so both children share one range.
+     * {@link GlobeTransform} passes the range of its vertical perspective part, so both parts share one range.
      */
-    _calcMatrices(nearFarZ: NearFarZ | null = this._cameraState.nearFarZOverride): void {
+    calcMatrices(nearFarZ: NearFarZ | null = this._cameraState.nearFarZOverride): void {
         const offset = getCenterOffset(this._cameraState);
-        const worldCoordinateHelper = this.worldCoordinateHelper;
-        const point = projectToWorldCoordinates(getWorldSize(this._cameraState), this._cameraState.center, worldCoordinateHelper);
+        const point = projectToWorldCoordinates(getWorldSize(this._cameraState), this._cameraState.center, this._worldCoordinateHelper);
         const x = point.x, y = point.y;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
@@ -1033,16 +794,12 @@ export class MercatorTransform implements ITransform {
         return topPoint[3] / this._cameraState.cameraToCenterDistance;
     }
 
-    getCameraPoint(): Point {
-        return this._helper.getCameraPoint();
-    }
-
     getCameraAltitude(): number {
         return Math.cos(this._cameraState.pitchInRadians) * this._cameraState.cameraToCenterDistance / this._cameraState.pixelsPerMeter + this._cameraState.elevation;
     }
 
     getCameraLngLat(): LngLat {
-        const worldCoordinateHelper = this.worldCoordinateHelper;
+        const worldCoordinateHelper = this._worldCoordinateHelper;
         const center = this._cameraState.center;
         const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
         const pixelPerMeter = mercUnitsPerMeter * getWorldSize(this._cameraState);
@@ -1079,7 +836,7 @@ export class MercatorTransform implements ITransform {
     isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
         if (!terrain?.getCoverageIndex()) return false;
 
-        const location = this.worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
+        const location = this._worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
         elevation ??= terrain.getElevationForLngLat(lngLat, this._cameraState.tileZoom);
         const clip = this._coordinateClipPoint(location, elevation, this._pixelMatrix3D);
         const w = clip[3];
@@ -1163,10 +920,10 @@ export class MercatorTransform implements ITransform {
 }
 
 /**
- * Creates a transform for the mercator projection.
+ * Creates a transform for the mercator projection, or for a registered CRS with that CRS's world coordinate helper.
  */
-export function createMercatorTransform(options?: TransformOptions): MercatorTransform {
-    return new MercatorTransform(options);
+export function createMercatorTransform(options?: TransformOptions): Transform {
+    return new Transform((cameraState, worldCoordinateHelper) => new MercatorTransform(cameraState, worldCoordinateHelper), options);
 }
 
 function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {

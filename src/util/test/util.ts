@@ -4,7 +4,7 @@ import {NullWebGL2RenderingContext, createNullGL} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
-import {createMercatorTransform, type MercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {CRSWorldCoordinateHelper, identityCrs, type CRS} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
 import {getGlobalWorkerPool} from '../global_worker_pool.ts';
@@ -31,6 +31,7 @@ import type {Dispatcher} from '../../util/dispatcher.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {TerrainCoverageIndex, TerrainElevationSampler} from '../../render/terrain_coverage.ts';
+import type {Transform} from '../../geo/transform.ts';
 
 export class StubMap extends Evented {
     style: Style;
@@ -424,7 +425,7 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
  * A transform over the built-in identity CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
  * axes), sized to the given viewport.
  */
-export function createIdentityCrsTransform(width: number, height: number): MercatorTransform {
+export function createIdentityCrsTransform(width: number, height: number): Transform {
     const transform = createMercatorTransform({
         minZoom: -5,
         maxZoom: 22,

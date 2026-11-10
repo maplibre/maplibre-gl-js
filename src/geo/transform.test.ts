@@ -1,17 +1,12 @@
 import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
-import {normalizeCenter, TransformHelper} from './transform_helper.ts';
+import {normalizeCenter} from './transform.ts';
 import {createRotatedCrs} from '../util/test/util.ts';
 import {createMercatorTransform} from './projection/mercator_transform.ts';
 import {CRSWorldCoordinateHelper} from './projection/crs.ts';
 
-const emptyCallbacks = {
-    calcMatrices: () => {},
-    defaultConstrain: (center, zoom) => { return {center, zoom}; },
-};
-
-describe('TransformHelper', () => {
+describe('Transform', () => {
     describe('max bounds', () => {
         test('constrains latitude while leaving longitude unbounded', () => {
             const transform = createMercatorTransform({renderWorldCopies: true});
@@ -60,18 +55,17 @@ describe('TransformHelper', () => {
     });
 
     test('does not calculate the projection matrices while the width or height is zero', () => {
-        let calls = 0;
-        const helper = new TransformHelper({...emptyCallbacks, calcMatrices: () => { calls++; }});
-        helper.resize(0, 480, false);
-        helper.resize(640, 0, false);
-        helper.resize(0, 0, false);
-        expect(calls).toBe(0);
-        helper.resize(640, 480, false);
-        expect(calls).toBe(1);
+        const transform = createMercatorTransform();
+        transform.resize(0, 480, false);
+        transform.resize(640, 0, false);
+        transform.resize(0, 0, false);
+        expect(transform.modelViewProjectionMatrix).toBeUndefined();
+        transform.resize(640, 480, false);
+        expect(transform.modelViewProjectionMatrix).toBeDefined();
     });
 
     test('apply', () => {
-        const original = new TransformHelper(emptyCallbacks);
+        const original = createMercatorTransform();
         original.setConstrainOverride((lngLat, zoom) => {
             return {center: lngLat, zoom: zoom ?? 0};
         });
@@ -96,7 +90,7 @@ describe('TransformHelper', () => {
         original.setRenderWorldCopies(false);
         original.setZoom(2.3);
 
-        const cloned = new TransformHelper(emptyCallbacks);
+        const cloned = createMercatorTransform();
         cloned.apply(original, false);
 
         // Check all getters from the ITransformGetters interface
