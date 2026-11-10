@@ -154,6 +154,12 @@ only in an input value are one test — consolidate them and pick the input that
 you are guarding against is a suite where a single change reddens fifteen tests that were all making
 the same point.
 
+**Do not parametrise tests with `test.each` or `describe.each`.** A table of inputs fed to one body
+hides what each case is about behind a `%s` in its name, and a failure points at a row rather than at a
+test. If one case already runs the code being tested, keep that one case: a projection, a platform or
+an option that takes no path of its own through that code adds nothing. Where the cases do take
+different paths, write each as its own `test` whose name says what it covers.
+
 **Keep tests DAMP rather than DRY.** A test should read top to bottom without the reader having to go
 and find what a shared fixture contains. Repeating three lines of setup in each test is cheaper for
 the reader than one clever builder that every test calls with different arguments. Factor out only

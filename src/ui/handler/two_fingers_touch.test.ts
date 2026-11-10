@@ -13,7 +13,7 @@ function createMap() {
 function createPinchZoomMap() {
     const map = createMap();
     map.touchZoomRotate.disableRotation();
-    map._handlers._handlersById.tapZoom.disable();
+    map.doubleClickZoom.disable();
     map.touchPitch.disable();
 
     return {map, target: map.getCanvas()};
@@ -49,7 +49,7 @@ describe('touch zoom rotate', () => {
         const zoom      = vi.fn();
         const zoomend   = vi.fn();
 
-        map._handlers._handlersById.tapZoom.disable();
+        map.doubleClickZoom.disable();
         map.touchPitch.disable();
         map.on('zoomstart', zoomstart);
         map.on('zoom',      zoom);
@@ -280,7 +280,7 @@ describe('touch zoom rotate', () => {
         const map = createMap();
         const target = map.getCanvas();
         map.touchZoomRotate.disableRotation();
-        map._handlers._handlersById.tapZoom.disable();
+        map.doubleClickZoom.disable();
 
         const zoomstart = vi.fn();
         const zoom      = vi.fn();
@@ -346,7 +346,7 @@ describe('touch zoom rotate', () => {
         const zoom      = vi.fn();
         const zoomend   = vi.fn();
 
-        map._handlers._handlersById.tapZoom.disable();
+        map.doubleClickZoom.disable();
         map.touchPitch.disable();
         map.on('zoomstart', zoomstart);
         map.on('zoom',      zoom);
@@ -399,7 +399,7 @@ describe('touch zoom rotate', () => {
         const zoom      = vi.fn();
         const zoomend   = vi.fn();
 
-        map._handlers._handlersById.tapZoom.disable();
+        map.doubleClickZoom.disable();
         map.touchPitch.disable();
         map.dragPan.disable();
         map.on('zoomstart', zoomstart);

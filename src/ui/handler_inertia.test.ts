@@ -66,7 +66,7 @@ describe('HandlerInertia', () => {
     beforeEach(() => {
         beforeMapTest();
         map = new Map({container: DOM.create('div', '', window.document.body)});
-        inertia = new HandlerInertia(map);
+        inertia = new HandlerInertia(map._camera);
     });
 
     afterEach(() => {
