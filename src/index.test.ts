@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterAll, test, expect, vi} from 'vitest';
 import {config, type AddProtocolAction} from './util/config.ts';
-import {addProtocol, getWorkerCount, removeProtocol, getVersion, ResourceType} from './index.ts';
+import {addProtocol, getWorkerCount, removeProtocol, getVersion, ResourceType, TextFit} from './index.ts';
 import {getJSON, getArrayBuffer} from './util/ajax.ts';
 import {ImageRequest} from './util/image_request.ts';
 
@@ -125,5 +125,9 @@ describe('maplibre', () => {
 
     test('ResourceType', () => {
         expect(ResourceType.Tile).toBe('Tile');
+    });
+
+    test('TextFit', () => {
+        expect(TextFit.stretchOnly).toBe('stretchOnly');
     });
 });

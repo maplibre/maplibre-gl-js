@@ -49,6 +49,7 @@ import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileM
 import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
 import {type RequestTransformFunction, ResourceType} from './util/request_manager.ts';
+import {type StyleImage, type StyleImageData, type StyleImageInterface, type StyleImageMetadata, type StyleImageWebGLData, type StyleImageWebGLTarget, TextFit} from './style/style_image.ts';
 
 import type {Dispatcher} from './util/dispatcher.ts';
 import type {MessageType, ActorMessage, RequestResponseMessageMap} from './util/actor_messages.ts';
@@ -60,7 +61,6 @@ import type {Handler, HandlerResult} from './ui/handler_manager.ts';
 import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
 import type {TransformConstrainFunction} from './geo/transform_interface.ts';
-import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, StyleImageWebGLData, StyleImageWebGLTarget, TextFit} from './style/style_image.ts';
 import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
 import type {Tile} from './tile/tile.ts';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff.ts';
@@ -369,7 +369,7 @@ export {
     type TileMatrixSet,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,
-    type TextFit,
+    TextFit,
     type TransformStyleFunction,
     type DistributiveOmit,
     type DistributiveKeys,
