@@ -1014,6 +1014,25 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
+    test('a pan drag over terrain on a globe holds the center elevation until it ends', async () => {
+        const map = await createMapOverTerrain(0);
+        map.setProjection({type: 'globe'});
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 100});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 120, clientY: 110});
+        map.redraw();
+        terrainElevation.mockReturnValue(3000);
+        map.redraw();
+        const elevationDuringDrag = map.getCameraTargetElevation();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 120, clientY: 110});
+        map.redraw();
+
+        expect(elevationDuringDrag).toBe(0);
+        expect(map.getCameraTargetElevation()).toBe(3000);
+    });
+
     test('a drag around the pointer holds the center elevation until it ends', async () => {
         const map = await createMapOverTerrain(60);
         map.dragRotate.enable({around: 'pointer'});
