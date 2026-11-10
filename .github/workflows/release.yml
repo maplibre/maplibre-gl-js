@@ -6,35 +6,74 @@ permissions:
   attestations: write
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
   release:
-    uses: maplibre/reusable-workflows/.github/workflows/npm-publish.yml@main
-    with:
-      build-command: npm ci && npm run build-dist
-      docs-output-dir: site
-      docs-gh-pages-dir: docs
-
-  get_tag:
-    needs: release
+    name: Release
+    if: ${{ github.ref == 'refs/heads/5.x' }}
     runs-on: ubuntu-latest
-    outputs:
-      latest_tag: ${{ steps.set-tag.outputs.tag }}
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0 # Necessary to see all tags
-      - id: set-tag
-        run: |
-          # Get the most recent tag reachable from the current commit
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
-  upload_benchmarks:
-    needs: get_tag
-    uses: ./.github/workflows/upload-benchmarks.yml
-    with:
-      tag: ${{ needs.get_tag.outputs.latest_tag }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js from nvmrc
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Get version
+        id: package-version
+        run: echo "current-version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: npm ci && npm run build-dist
+
+      - name: Publish NPM package
+        run: npm publish --access=public --tag latest-5
+
+      - name: Tag commit and push
+        id: tag_version
+        uses: mathieudutour/github-tag-action@af99e60ce8132224b8e6ebab5023449fe256ed46 # v7
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.package-version.outputs.current-version }}
+          release_branches: 5.x
+
+      - name: Create Archive
+        run: |
+          zip -r dist dist
+
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist.zip
+
+      - name: Build Release Notes
+        id: release_notes
+        env:
+          VERSION: ${{ steps.package-version.outputs.current-version }}
+        run: |
+          RELEASE_NOTES_PATH="${PWD}/release_notes.txt"
+          sed -n "/^## $VERSION$/,/^## /p" CHANGELOG.md | sed '$d' | tail -n +2 > "${RELEASE_NOTES_PATH}"
+          echo "release_notes=${RELEASE_NOTES_PATH}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: ${{ steps.tag_version.outputs.new_tag }}
+          bodyFile: ${{ steps.release_notes.outputs.release_notes }}
+          artifacts: "dist.zip"
+          artifactContentType: "application/zip"
+          allowUpdates: false
+          immutableCreate: true
+          draft: false
+          makeLatest: false
