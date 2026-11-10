@@ -4454,10 +4454,14 @@ export class Map extends Evented<MapEventType> {
      * Request that the given callback be executed during the next render
      * frame.  Schedule a render frame if one is not already scheduled.
      *
+     * The frame runs while the style is still loading, so that a gesture or a camera movement moves the map, and fires
+     * the movement events that markers and popups follow, before there is anything to draw.
+     *
      * @returns An id that can be used to cancel the callback
      */
     _requestRenderFrame(callback: (timeStamp: number) => void): TaskID {
         this._update();
+        this.triggerRepaint();
         return this._renderTaskQueue.add(callback);
     }
 
