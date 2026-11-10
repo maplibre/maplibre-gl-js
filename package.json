@@ -81,7 +81,7 @@
     "autoprefixer": "^10.6.2",
     "canvas": "^3.2.3",
     "cross-env": "^10.1.0",
-    "cspell": "^10.4.0",
+    "cspell": "^10.4.1",
     "cssnano": "^9.9.0",
     "d3": "^7.9.2",
     "d3-queue": "^3.0.7",
