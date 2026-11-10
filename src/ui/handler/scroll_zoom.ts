@@ -40,39 +40,39 @@ type ScrollZoomWait = {reason: 'singleWheel'; event: WheelEvent} | {reason: 'fin
  * @group Handlers
  */
 export class ScrollZoomHandler implements Handler {
-    _canvas: HTMLElement;
-    _cooperativeGestures: CooperativeGesturesHandler;
-    _tr: TransformProvider;
-    _enabled: boolean;
-    _active: boolean;
-    _zooming: boolean;
-    _aroundCenter: boolean;
-    _aroundPoint: Point;
-    _type: 'wheel' | 'trackpad' | null;
-    _lastValue: number;
+    private _canvas: HTMLElement;
+    private _cooperativeGestures: CooperativeGesturesHandler;
+    private _tr: TransformProvider;
+    private _enabled: boolean;
+    private _active: boolean;
+    private _zooming: boolean;
+    private _aroundCenter: boolean;
+    private _aroundPoint: Point;
+    private _type: 'wheel' | 'trackpad' | null;
+    private _lastValue: number;
     /** The `singleWheel` wait in progress, if any; a wait that has been replaced or abandoned is ignored when it ends. */
-    _singleWheelWait: ScrollZoomWait | undefined;
+    private _singleWheelWait: ScrollZoomWait | undefined;
     /** The `finish` wait in progress, if any; a wait that has been replaced or abandoned is ignored when it ends. */
-    _finishWait: ScrollZoomWait | undefined;
+    private _finishWait: ScrollZoomWait | undefined;
 
-    _lastWheelEvent: WheelEvent;
-    _lastWheelEventTime: number;
+    private _lastWheelEvent: WheelEvent;
+    private _lastWheelEventTime: number;
 
-    _lastExpectedZoom: number;
-    _startZoom: number;
-    _targetZoom: number;
-    _delta: number;
-    _easing: ((a: number) => number);
-    _prevEase: {
+    private _lastExpectedZoom: number;
+    private _startZoom: number;
+    private _targetZoom: number;
+    private _delta: number;
+    private _easing: ((a: number) => number);
+    private _prevEase: {
         start: number;
         duration: number;
         easing: (_: number) => number;
     };
 
-    _needsRerender: boolean;
+    private _needsRerender: boolean;
 
-    _defaultZoomRate: number;
-    _wheelZoomRate: number;
+    private _defaultZoomRate: number;
+    private _wheelZoomRate: number;
 
     /** @internal */
     constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, transformProvider: TransformProvider) {
@@ -165,7 +165,7 @@ export class ScrollZoomHandler implements Handler {
     /**
      * Determines whether or not the gesture is blocked due to cooperativeGestures.
      */
-    _shouldBePrevented(e: WheelEvent): boolean {
+    private _shouldBePrevented(e: WheelEvent): boolean {
         if (!this._cooperativeGestures.isEnabled()) {
             return false;
         }
@@ -258,7 +258,7 @@ export class ScrollZoomHandler implements Handler {
         }
     }
 
-    _start(e: MouseEvent): HandlerResult | void {
+    private _start(e: MouseEvent): HandlerResult | void {
         if (!this._delta) return;
 
         this._needsRerender = false;
@@ -381,7 +381,7 @@ export class ScrollZoomHandler implements Handler {
         };
     }
 
-    _smoothOutEasing(duration: number): (t: number) => number {
+    private _smoothOutEasing(duration: number): (t: number) => number {
         let easing = defaultEasing;
 
         if (this._prevEase) {
