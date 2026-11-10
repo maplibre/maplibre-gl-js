@@ -860,8 +860,7 @@ export class Map extends Evented<MapEventType> {
             canvasContainer: this._canvasContainer,
             container: this._container,
             locale: this._locale,
-            boxZoomEnd: boxZoomEnd && ((startPos, endPos, originalEvent) => boxZoomEnd(this, startPos, endPos, originalEvent)),
-            triggerRenderFrame: () => this._handlerManager.triggerRenderFrame()
+            boxZoomEnd: boxZoomEnd && ((startPos, endPos, originalEvent) => boxZoomEnd(this, startPos, endPos, originalEvent))
         }, resolvedOptions);
         this.boxZoom = mapHandlers.boxZoom;
         this.cooperativeGestures = mapHandlers.cooperativeGestures;
@@ -2185,6 +2184,16 @@ export class Map extends Evented<MapEventType> {
         return this._camera.isRotating() || this._handlerManager?.isRotating() || false;
     }
 
+    /**
+     * Creates the event a layer's `mouseenter`, `mouseover`, `mouseleave` or `mouseout` listener receives. The listener
+     * is called directly rather than through {@link Map.fire}, so the event is given the map as its target here.
+     */
+    private _createLayerMouseEvent(type: string, originalEvent: MouseEvent, features?: MapGeoJSONFeature[]): MapMouseEvent {
+        const event = new MapMouseEvent(type, this._canvas, this._camera, originalEvent, features && {features});
+        event.target = this;
+        return event;
+    }
+
     _createDelegates(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener['delegates'] {
         if (type === 'mouseenter' || type === 'mouseover') {
             let mousein = false;
@@ -2195,7 +2204,7 @@ export class Map extends Evented<MapEventType> {
                     mousein = false;
                 } else if (!mousein) {
                     mousein = true;
-                    listener.call(this, new MapMouseEvent(type, this._canvas, this._camera, e.originalEvent, {features}));
+                    listener.call(this, this._createLayerMouseEvent(type, e.originalEvent, features));
                 }
             };
             const mouseout = () => {
@@ -2211,13 +2220,13 @@ export class Map extends Evented<MapEventType> {
                     mousein = true;
                 } else if (mousein) {
                     mousein = false;
-                    listener.call(this, new MapMouseEvent(type, this._canvas, this._camera, e.originalEvent));
+                    listener.call(this, this._createLayerMouseEvent(type, e.originalEvent));
                 }
             };
             const mouseout = (e) => {
                 if (mousein) {
                     mousein = false;
-                    listener.call(this, new MapMouseEvent(type, this._canvas, this._camera, e.originalEvent));
+                    listener.call(this, this._createLayerMouseEvent(type, e.originalEvent));
                 }
             };
             return {mousemove, mouseout};

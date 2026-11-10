@@ -97,6 +97,12 @@ export interface Handler {
      * wheel event and its first frame.
      */
     isZooming?(): boolean;
+    /**
+     * Called by the manager when a timeout the handler asked for runs out, see {@link HandlerResult.timeout}. The
+     * manager runs a render frame when the result asks for one. The token is opaque to the manager, so a handler
+     * declares the parameter as the type of the tokens it hands out.
+     */
+    onTimeout?(token: unknown): HandlerResult | void;
 }
 
 /**
@@ -122,6 +128,12 @@ export type HandlerResult = {
      * asked for it as `originalEvent`.
      */
     easeTo?: EaseToOptions;
+    /**
+     * Asks the manager to call the handler's `onTimeout` with `token` after `delay` milliseconds, for a handler that
+     * waits for input that may not come, such as a wheel zoom telling a mouse wheel from a trackpad. The handler
+     * ignores a timeout whose token it no longer waits for, so it never needs to cancel one.
+     */
+    timeout?: {delay: number; token: unknown};
     /**
      * The last three properties are needed by only one handler: scrollzoom.
      * The DOM event to be used as the `originalEvent` on any camera change events.
@@ -225,6 +237,8 @@ export class HandlerManager extends Evented<MapEventType> {
     private _rotationPivot: RotationPivot | null = null;
     private _zoom: {handlerName: string};
     private _previousActiveHandlers: {[x: string]: Handler};
+    /** The timeouts handlers asked for that have not run out yet, see {@link HandlerResult.timeout}. */
+    private _timeouts = new Set<ReturnType<typeof setTimeout>>();
     private _domListeners: Array<[Window | Document | HTMLElement, string, {
         passive?: boolean;
         capture?: boolean;
@@ -317,6 +331,7 @@ export class HandlerManager extends Evented<MapEventType> {
 
     destroy(): void {
         if (this._frameId !== undefined) this._renderLoop.cancelRenderFrame(this._frameId);
+        for (const timeout of this._timeouts) clearTimeout(timeout);
         for (const [target, type, listenerOptions] of this._domListeners) {
             target.removeEventListener(type, target === this._ownerDocument ? this.handleWindowEvent : this.handleEvent, listenerOptions);
         }
@@ -424,8 +439,9 @@ export class HandlerManager extends Evented<MapEventType> {
                     }
                     this.mergeHandlerResult(mergedHandlerResult, eventsInProgress, data, handlerName, inputEvent);
                     if (data?.needsRenderFrame) {
-                        this.triggerRenderFrame();
+                        this._triggerRenderFrame();
                     }
+                    if (data?.timeout) this._startTimeout(handler, data.timeout);
                 }
             }
 
@@ -444,7 +460,7 @@ export class HandlerManager extends Evented<MapEventType> {
 
         if (Object.keys(deactivatedHandlers).length || hasChange(mergedHandlerResult)) {
             this._changes.push([mergedHandlerResult, eventsInProgress, deactivatedHandlers]);
-            this.triggerRenderFrame();
+            this._triggerRenderFrame();
         }
 
         if (Object.keys(activeHandlers).length || hasChange(mergedHandlerResult)) {
@@ -808,9 +824,19 @@ export class HandlerManager extends Evented<MapEventType> {
     }
 
     /** Runs a render frame of the handlers, unless one is requested already. */
-    triggerRenderFrame(): void {
+    private _triggerRenderFrame(): void {
         if (this._frameId === undefined) {
             this._frameId = this._requestFrame();
         }
+    }
+
+    /** Calls the handler's `onTimeout` once the timeout it asked for runs out, see {@link HandlerResult.timeout}. */
+    private _startTimeout(handler: Handler, {delay, token}: {delay: number; token: unknown}): void {
+        const timeout = setTimeout(() => {
+            this._timeouts.delete(timeout);
+            const result = handler.onTimeout?.(token);
+            if (result && result.needsRenderFrame) this._triggerRenderFrame();
+        }, delay);
+        this._timeouts.add(timeout);
     }
 }

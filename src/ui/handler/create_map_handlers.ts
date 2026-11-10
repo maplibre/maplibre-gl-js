@@ -51,11 +51,6 @@ export type MapHandlersContext = {
     locale: Record<string, string>;
     /** The map's `boxZoomEnd` option, with the map already bound to it. */
     boxZoomEnd?: (startPos: Point, endPos: Point, originalEvent: MouseEvent) => void;
-    /**
-     * Has the handler manager run a render frame, for a handler whose own timer runs out outside the input it
-     * handles, see {@link HandlerManager.triggerRenderFrame}.
-     */
-    triggerRenderFrame: () => void;
 };
 
 /**
@@ -138,7 +133,7 @@ export function createMapHandlers(context: MapHandlersContext, options: Complete
 
     add('blockableMapEvent', new BlockableMapEventHandler(canvas, camera, options), ['touchPan']);
 
-    const scrollZoom = new ScrollZoomHandler(canvas, cooperativeGestures, context.triggerRenderFrame, transformProvider);
+    const scrollZoom = new ScrollZoomHandler(canvas, cooperativeGestures, transformProvider);
     add('scrollZoom', scrollZoom, ['mousePan']);
     if (options.interactive && options.scrollZoom) {
         scrollZoom.enable(options.scrollZoom);
