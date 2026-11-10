@@ -17,6 +17,7 @@ import {TransformProvider} from './transform-provider.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {Camera} from '../camera.ts';
+import type {MapEventFactory} from '../map_event_factory.ts';
 import type {CompleteMapOptions} from '../map.ts';
 import type {Handler, HandlerRegistration} from '../handler_manager.ts';
 
@@ -49,6 +50,8 @@ export type MapHandlersContext = {
     container: HTMLElement;
     /** The map's UI strings, for the cooperative gestures help message. */
     locale: Record<string, string>;
+    /** Creates the map's mouse, touch and wheel events for the handlers that fire them. */
+    eventFactory: MapEventFactory;
     /** The map's `boxZoomEnd` option, with the map already bound to it. */
     boxZoomEnd?: (startPos: Point, endPos: Point, originalEvent: MouseEvent) => void;
 };
@@ -67,7 +70,7 @@ export function createMapHandlers(context: MapHandlersContext, options: Complete
         registrations.push({handlerName, handler, allowed});
     }
 
-    add('mapEvent', new MapEventHandler(canvas, el, camera, options));
+    add('mapEvent', new MapEventHandler(context.eventFactory, options));
 
     const boxZoom = new BoxZoomHandler(el, context.container, options, transformProvider, context.boxZoomEnd);
     add('boxZoom', boxZoom);
@@ -131,7 +134,7 @@ export function createMapHandlers(context: MapHandlersContext, options: Complete
         touchZoomRotate.enable(options.touchZoomRotate);
     }
 
-    add('blockableMapEvent', new BlockableMapEventHandler(canvas, camera, options), ['touchPan']);
+    add('blockableMapEvent', new BlockableMapEventHandler(context.eventFactory, options), ['touchPan']);
 
     const scrollZoom = new ScrollZoomHandler(canvas, cooperativeGestures, transformProvider);
     add('scrollZoom', scrollZoom, ['mousePan']);
