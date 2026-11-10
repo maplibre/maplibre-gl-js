@@ -235,6 +235,7 @@ export class ScrollZoomHandler implements Handler {
     }
 
     /**
+     * @internal
      * Ends a wait the handler asked the manager for, see {@link HandlerResult.timeout}: a single wheel event that no
      * second one followed is a mouse wheel's, and a zoom that no further scroll continued ends. A wait the handler no
      * longer waits for, because a later scroll replaced it, is ignored.
