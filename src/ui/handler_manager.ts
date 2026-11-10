@@ -199,6 +199,11 @@ export class HandlerManager {
     _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
     /** The point a drag turns the camera around, picked on its first frame and kept until it ends or cannot be held. */
     _rotationPivot: RotationPivot | null = null;
+    /**
+     * Where a globe zoom is heading: the location that was under `around` when the zoom began, with the center
+     * and zoom its last frame left the camera at. See {@link HandlerManager._zoomTargetLocation}.
+     */
+    _zoomTarget: {around: Point; location: LngLat; center: LngLat; zoom: number} | null = null;
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
@@ -606,6 +611,7 @@ export class HandlerManager {
             bearingDelta,
             around,
             aroundElevation,
+            aroundLocation: this._zoomTargetLocation(tr, around, zoomDelta, panDelta),
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
@@ -624,6 +630,27 @@ export class HandlerManager {
         });
 
         this._commitFrame(tr, combinedResult, combinedEventsInProgress, deactivatedHandlers);
+        if (deltasForHelper.aroundLocation) {
+            this._zoomTarget.center = this._camera.transform.center;
+            this._zoomTarget.zoom = this._camera.transform.zoom;
+        }
+    }
+
+    /**
+     * The location a globe zoom around `around` heads for, see {@link MapControlsDeltas.aroundLocation}.
+     *
+     * It is picked when a zoom begins and kept for as long as `around` stays where it is and nothing but the
+     * zoom moves the camera, so wheel notches with pauses between them share one target.
+     */
+    _zoomTargetLocation(tr: ITransform, around: Point, zoomDelta: number, panDelta?: Point): LngLat | undefined {
+        if (!zoomDelta || !this._camera.cameraHelper.useGlobeControls) return undefined;
+        const target = this._zoomTarget;
+        const kept = target && !panDelta?.mag() && target.around.equals(around) && target.zoom === tr.zoom &&
+            target.center.lng === tr.center.lng && target.center.lat === tr.center.lat;
+        if (!kept) {
+            this._zoomTarget = {around, location: tr.screenPointToLocation(around), center: tr.center, zoom: tr.zoom};
+        }
+        return this._zoomTarget.location;
     }
 
     /** Applies the frame's camera to the map, records the frame for inertia and fires its events. */

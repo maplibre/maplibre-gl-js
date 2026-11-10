@@ -92,6 +92,26 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
     });
 });
 
+test('VerticalPerspectiveCameraHelper.handleMapControlsRollPitchBearingZoom ends a zoom on the location it is given, across a pole', () => {
+    const tr = createGlobeTransform();
+    tr.resize(512, 512);
+    tr.setZoom(1);
+    tr.setCenter(new LngLat(-95, 72));
+    tr.setTransitionState(1);
+    const helper = new VerticalPerspectiveCameraHelper();
+    const acrossThePole = new LngLat(67, 48);
+    const around = tr.locationToScreenPoint(acrossThePole);
+
+    for (let i = 0; i < 80; i++) {
+        helper.handleMapControlsRollPitchBearingZoom(
+            {zoomDelta: 0.125, around, aroundLocation: acrossThePole} as MapControlsDeltas,
+            tr);
+    }
+
+    expect(tr.zoom).toBeGreaterThan(9);
+    expect(tr.center.distanceTo(acrossThePole)).toBeLessThan(50_000);
+});
+
 describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
     test('returns undefined instead of throwing when the padding exceeds the viewport', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
