@@ -96,6 +96,8 @@ export class FrameRenderContext {
     opaquePassCutoff: number = Infinity;
     depthRangeFor3D: DepthRangeType = [0, 1];
     isRenderingToTexture: boolean = false;
+    /** Whether a layer composite has already sampled the shared scratch FBO in this frame. */
+    layerCompositeSampled: boolean = false;
     readonly transform: IReadonlyTransform;
     readonly terrain: Terrain | null;
     readonly data: FrameRenderData;
