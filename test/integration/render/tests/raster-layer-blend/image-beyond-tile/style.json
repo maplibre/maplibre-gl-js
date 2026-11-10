@@ -1,0 +1,41 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256
+    }
+  },
+  "center": [10, 0],
+  "zoom": 1.5,
+  "sources": {
+    "image": {
+      "type": "image",
+      "coordinates": [
+        [-10, 10],
+        [30, 10],
+        [30, -10],
+        [-10, -10]
+      ],
+      "url": "local://image/0.png"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ffcc66"
+      }
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {
+        "raster-fade-duration": 0,
+        "raster-layer-blend": "multiply"
+      }
+    }
+  ]
+}

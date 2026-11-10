@@ -447,7 +447,7 @@ export class Painter {
         } else if (isColorReliefStyleLayer(layer)) {
             draw.colorRelief(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isRasterStyleLayer(layer)) {
-            draw.raster(tileManager, layer, coords, frameRenderContext);
+            draw.raster(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isBackgroundStyleLayer(layer)) {
             draw.background(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isCustomStyleLayer(layer)) {

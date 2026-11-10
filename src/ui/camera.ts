@@ -19,10 +19,10 @@ import type {Terrain} from '../render/terrain.ts';
 import type {IReadonlyTransform, ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
-import type {TaskID} from '../util/task_queue.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {ElevationHolder} from './elevation_hold.ts';
+import type {RenderLoop} from './camera_movement_scheduler.ts';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -359,8 +359,8 @@ export type CameraInitOptions = {
     centerClampedToGround: boolean;
     terrain: Terrain;
     transformConstrain: TransformConstrainFunction;
-    requestRenderFrame: (a: () => void) => TaskID;
-    cancelRenderFrame: (_: TaskID) => void;
+    /** The map's render loop, on which the camera runs each frame of an animation. */
+    renderLoop: RenderLoop;
     transformCameraUpdate: CameraUpdateTransformFunction | null;
 };
 
@@ -448,10 +448,7 @@ export class Camera extends Evented<MapEventType> {
         this.terrain = options.terrain;
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
-        this._scheduler = new CameraMovementScheduler({
-            requestRenderFrame: options.requestRenderFrame,
-            cancelRenderFrame: options.cancelRenderFrame
-        });
+        this._scheduler = new CameraMovementScheduler(options.renderLoop);
         this._scheduler.setEventedParent(this);
 
         this.on('moveend', () => {
@@ -504,6 +501,11 @@ export class Camera extends Evented<MapEventType> {
     }
 
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
+
+    /** Returns the location drawn at a point on the screen, on the terrain's surface when the map has terrain. */
+    unproject(point: PointLike): LngLat {
+        return this.transform.screenPointToLocation(Point.convert(point), this.terrain);
+    }
 
     setCenter(center: LngLatLike, eventData?: Record<string, unknown>): this {
         return this.jumpTo({center}, eventData);
