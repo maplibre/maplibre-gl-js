@@ -48,6 +48,11 @@ type GlobeRay = {
 };
 
 /**
+ * The number of segments a point query's path to the camera is sampled with to follow the curve of the globe.
+ */
+const CAMERA_QUERY_ARC_SEGMENTS = 8;
+
+/**
  * @internal
  * The vertical perspective part of a {@link Transform}.
  */
@@ -82,6 +87,25 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
 
     clone(cameraState: Readonly<CameraState>): VerticalPerspectiveTransform {
         return new VerticalPerspectiveTransform(cameraState);
+    }
+
+    /**
+     * For a point query on the globe, returns the path from the query point to the point on the globe below the camera,
+     * sampled along the arc it follows on the sphere. An extrusion visible at the query point stands on that path.
+     * Box queries and points off the globe get the geometry of {@link Transform.getCameraQueryGeometry}.
+     */
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[] | null {
+        if (queryGeometry.length !== 1 || !this.isPointOnMapSurface(queryGeometry[0])) {
+            return null;
+        }
+        const query = angularCoordinatesToSurfaceVector(this.unprojectScreenPoint(queryGeometry[0]));
+        const nadir = vec3.normalize(createVec3f64(), this._cameraPosition);
+        const geometry = [queryGeometry[0]];
+        for (let i = 1; i <= CAMERA_QUERY_ARC_SEGMENTS; i++) {
+            const point = vec3.lerp(createVec3f64(), query, nadir, i / CAMERA_QUERY_ARC_SEGMENTS);
+            geometry.push(this._projectSurfacePointToScreen(vec3.normalize(point, point)));
+        }
+        return geometry;
     }
 
     setTransitionState(_value: number): void {

@@ -70,6 +70,10 @@ export class GlobeTransform implements IProjectionTransform {
         return clone;
     }
 
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[] | null {
+        return this.currentTransform.getCameraQueryGeometry(queryGeometry);
+    }
+
     public get projectionMatrix(): mat4 { return this.currentTransform.projectionMatrix; }
 
     public get modelViewProjectionMatrix(): mat4 { return this.currentTransform.modelViewProjectionMatrix; }

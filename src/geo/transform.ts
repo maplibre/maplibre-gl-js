@@ -80,6 +80,12 @@ export interface IProjectionTransform extends IReadonlyProjectionTransform, IPro
      * camera does not move. See {@link Transform.setLocationAtPoint} for the parameters.
      */
     getCameraForLocationAtPoint(lnglat: LngLat, point: Point, elevation: number | undefined, constrain: TransformConstrainFunction): {center: LngLat; zoom: number} | null;
+
+    /**
+     * Returns the geometry {@link Transform.getCameraQueryGeometry} gives for a query where the projection has its own,
+     * or null where the transform's applies.
+     */
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[] | null;
 }
 
 export type TransformOptions = {
@@ -541,6 +547,9 @@ export class Transform implements ITransform {
      *
      */
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
+        const projectionGeometry = this._projection.getCameraQueryGeometry(queryGeometry);
+        if (projectionGeometry) return projectionGeometry;
+
         const cameraPoint = this.getCameraPoint();
         if (queryGeometry.length === 1) {
             return [queryGeometry[0], cameraPoint];

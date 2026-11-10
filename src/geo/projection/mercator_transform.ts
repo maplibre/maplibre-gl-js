@@ -109,6 +109,10 @@ export class MercatorTransform implements IProjectionTransform {
         return new MercatorTransform(cameraState, this._worldCoordinateHelper);
     }
 
+    getCameraQueryGeometry(): Point[] | null {
+        return null;
+    }
+
     setTransitionState(_value: number): void {
         // Do nothing
     }

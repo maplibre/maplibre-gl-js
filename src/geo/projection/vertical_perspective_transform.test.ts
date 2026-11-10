@@ -337,3 +337,14 @@ describe('VerticalPerspectiveTransform resize', () => {
         expect(transform.center.lat).toBe(89);
     });
 });
+
+describe('VerticalPerspectiveTransform.getCameraQueryGeometry', () => {
+    test('uses the line to the camera point for a point off the globe', () => {
+        const transform = createVerticalPerspectiveTransform();
+        transform.resize(512, 512);
+        const corner = new Point(0, 0);
+
+        expect(transform.isPointOnMapSurface(corner)).toBe(false);
+        expect(transform.getCameraQueryGeometry([corner])).toEqual([corner, transform.getCameraPoint()]);
+    });
+});
