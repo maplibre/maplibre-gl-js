@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterAll, test, expect, vi} from 'vitest';
 import {config, type AddProtocolAction} from './util/config.ts';
-import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index.ts';
+import {addProtocol, getWorkerCount, removeProtocol, getVersion, ResourceType} from './index.ts';
 import {getJSON, getArrayBuffer} from './util/ajax.ts';
 import {ImageRequest} from './util/image_request.ts';
 
@@ -121,5 +121,9 @@ describe('maplibre', () => {
         // Backslashes are doubled to escape them
         const regexp = new RegExp('^([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+)?$');
         expect(regexp.test(getVersion())).toBeTruthy();
+    });
+
+    test('ResourceType', () => {
+        expect(ResourceType.Tile).toBe('Tile');
     });
 });

@@ -3,7 +3,7 @@ import type {RequestParameters} from './ajax.ts';
 /**
  * A type of MapLibre resource.
  */
-export const enum ResourceType {
+export enum ResourceType {
     Glyphs = 'Glyphs',
     Image = 'Image',
     Source = 'Source',

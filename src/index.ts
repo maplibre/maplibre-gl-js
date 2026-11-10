@@ -48,6 +48,7 @@ import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTou
 import {createTileMesh, type CreateTileMeshOptions, type IndicesType, type TileMesh} from './util/create_tile_mesh.ts';
 import {GPUInitializationError} from './util/gpu_initialization_error.ts';
 import {EXTENT} from './data/extent.ts';
+import {type RequestTransformFunction, ResourceType} from './util/request_manager.ts';
 
 import type {Dispatcher} from './util/dispatcher.ts';
 import type {MessageType, ActorMessage, RequestResponseMessageMap} from './util/actor_messages.ts';
@@ -64,7 +65,6 @@ import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
 import type {Tile} from './tile/tile.ts';
 import type {GeoJSONFeatureDiff, GeoJSONFeatureId, GeoJSONSourceDiff} from './source/geojson_source_diff.ts';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from './source/query_features.ts';
-import type {RequestTransformFunction, ResourceType} from './util/request_manager.ts';
 import type {OverscaledTileID} from './tile/tile_id.ts';
 import type {PositionAnchor} from './ui/anchor.ts';
 import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, ProjectionMatrix, RendererProjectionData} from './geo/projection/projection_data.ts';
@@ -376,7 +376,7 @@ export {
     type RequestParameters,
     type RequestResponseMessageMap,
     type WorkerTileResult,
-    type ResourceType,
+    ResourceType,
     type Dispatcher,
     type GlobalDispatcher,
     type GlobalDispatcherEventType,
