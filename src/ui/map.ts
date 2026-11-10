@@ -1700,7 +1700,7 @@ export class Map extends Camera {
      * map.on('click', 'countries', (e) => {
      *   new Popup()
      *     .setLngLat(e.lngLat)
-     *     .setHTML(`Country name: ${e.features[0].properties.name}`)
+     *     .setText(`Country name: ${e.features[0].properties.name}`)
      *     .addTo(map);
      * });
      * ```
