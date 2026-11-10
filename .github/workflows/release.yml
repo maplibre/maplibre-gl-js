@@ -32,6 +32,12 @@ jobs:
         id: package-version
         run: echo "current-version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
+      - name: Reject pre-release versions
+        if: ${{ contains(steps.package-version.outputs.current-version, '-') }}
+        run: |
+          echo "::error::5.x only releases stable versions"
+          exit 1
+
       - name: Build
         run: npm ci && npm run build-dist
 
