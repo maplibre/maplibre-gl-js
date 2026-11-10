@@ -215,7 +215,7 @@ export class HandlerInertia {
 
         if (easeOptions.zoom || easeOptions.bearing) {
             const last = deltas.pinchAround === undefined ? deltas.around : deltas.pinchAround;
-            easeOptions.around = last ? this._camera.transform.screenPointToLocation(last, this._camera.terrain) : this._camera.getCenter();
+            easeOptions.around = last ? this._camera.unproject(last) : this._camera.getCenter();
         }
 
         this.clear();

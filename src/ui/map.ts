@@ -2145,7 +2145,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     unproject(point: PointLike): LngLat {
-        return this._camera.transform.screenPointToLocation(Point.convert(point), this.terrain);
+        return this._camera.unproject(point);
     }
 
     /**

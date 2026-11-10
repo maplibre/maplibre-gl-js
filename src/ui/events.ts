@@ -674,7 +674,7 @@ export class MapMouseEvent extends MapLibreEvent<MouseEvent> {
     constructor(type: string, canvas: HTMLElement, camera: Camera, originalEvent: MouseEvent, data: any = {}) {
         originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
         const point = DOM.mousePos(canvas, originalEvent);
-        const lngLat = camera.transform.screenPointToLocation(point, camera.terrain);
+        const lngLat = camera.unproject(point);
         super(type, extend({point, lngLat, originalEvent}, data));
         this._defaultPrevented = false;
     }
@@ -754,11 +754,11 @@ export class MapTouchEvent extends MapLibreEvent<TouchEvent> {
     constructor(type: string, canvasContainer: HTMLElement, camera: Camera, originalEvent: TouchEvent) {
         const touches = type === 'touchend' ? originalEvent.changedTouches : originalEvent.touches;
         const points = DOM.touchPos(canvasContainer, touches);
-        const lngLats = points.map((t) => camera.transform.screenPointToLocation(t, camera.terrain));
+        const lngLats = points.map((t) => camera.unproject(t));
         const point = points.reduce((prev, curr, i, arr) => {
             return prev.add(curr.div(arr.length));
         }, new Point(0, 0));
-        const lngLat = camera.transform.screenPointToLocation(point, camera.terrain);
+        const lngLat = camera.unproject(point);
         super(type, {points, point, lngLats, lngLat, originalEvent});
         this._defaultPrevented = false;
     }

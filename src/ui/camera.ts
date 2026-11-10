@@ -502,6 +502,11 @@ export class Camera extends Evented<MapEventType> {
 
     getCenter(): LngLat { return new LngLat(this.transform.center.lng, this.transform.center.lat); }
 
+    /** Returns the location drawn at a point on the screen, on the terrain's surface when the map has terrain. */
+    unproject(point: PointLike): LngLat {
+        return this.transform.screenPointToLocation(Point.convert(point), this.terrain);
+    }
+
     setCenter(center: LngLatLike, eventData?: Record<string, unknown>): this {
         return this.jumpTo({center}, eventData);
     }
