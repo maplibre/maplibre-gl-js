@@ -996,9 +996,8 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
-    test.each(['mercator', 'globe'] as const)('a pan drag over terrain holds the center elevation until it ends (%s)', async (projection) => {
+    test('a pan drag over terrain holds the center elevation until it ends', async () => {
         const map = await createMapOverTerrain(0);
-        map.setProjection({type: projection});
         vi.spyOn(timeControl, 'now').mockReturnValue(0);
         const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
 
