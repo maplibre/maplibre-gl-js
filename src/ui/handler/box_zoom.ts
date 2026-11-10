@@ -1,7 +1,9 @@
 import {DOM} from '../../util/dom.ts';
+import {Evented} from '../../util/evented.ts';
 import {MapBoxZoomEvent} from '../events.ts';
 
 import type {Map} from '../map.ts';
+import type {MapEventType} from '../events.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
 import type {TransformProvider} from './transform-provider.ts';
 import type Point from '@mapbox/point-geometry';
@@ -28,8 +30,7 @@ export type BoxZoomHandlerOptions = {
  *
  * @group Handlers
  */
-export class BoxZoomHandler implements Handler {
-    _map: Map;
+export class BoxZoomHandler extends Evented<MapEventType> implements Handler {
     _tr: TransformProvider;
     _el: HTMLElement;
     _container: HTMLElement;
@@ -39,21 +40,19 @@ export class BoxZoomHandler implements Handler {
     _lastPos: Point;
     _box: HTMLElement;
     _clickTolerance: number;
-    _boxZoomEnd?: BoxZoomEndHandler;
+    /** The map's `boxZoomEnd` option, with the map already bound to it. */
+    _boxZoomEnd?: (startPos: Point, endPos: Point, originalEvent: MouseEvent) => void;
 
     /** @internal */
-    constructor(map: Map, options: {
+    constructor(canvasContainer: HTMLElement, container: HTMLElement, options: {
         clickTolerance: number;
-        boxZoom?: boolean | BoxZoomHandlerOptions;
-    }, transformProvider: TransformProvider) {
-        this._map = map;
+    }, transformProvider: TransformProvider, boxZoomEnd?: (startPos: Point, endPos: Point, originalEvent: MouseEvent) => void) {
+        super();
         this._tr = transformProvider;
-        this._el = map.getCanvasContainer();
-        this._container = map.getContainer();
+        this._el = canvasContainer;
+        this._container = container;
         this._clickTolerance = options.clickTolerance || 1;
-        if (options.boxZoom && typeof options.boxZoom === 'object') {
-            this._boxZoomEnd = options.boxZoom.boxZoomEnd;
-        }
+        this._boxZoomEnd = boxZoomEnd;
     }
 
     /**
@@ -153,9 +152,9 @@ export class BoxZoomHandler implements Handler {
         if (p0.x === p1.x && p0.y === p1.y) {
             this._fireEvent('boxzoomcancel', e);
         } else {
-            this._map.fire(new MapBoxZoomEvent('boxzoomend', {originalEvent: e}));
+            this.fire(new MapBoxZoomEvent('boxzoomend', {originalEvent: e}));
             if (this._boxZoomEnd) {
-                this._boxZoomEnd(this._map, p0, p1, e);
+                this._boxZoomEnd(p0, p1, e);
                 return;
             }
             const easeTo = this._tr.cameraForScreenBox(p0, p1, this._tr.bearing);
@@ -188,7 +187,7 @@ export class BoxZoomHandler implements Handler {
         delete this._lastPos;
     }
 
-    _fireEvent(type: string, e: MouseEvent | KeyboardEvent): Map {
-        return this._map.fire(new MapBoxZoomEvent(type, {originalEvent: e}));
+    _fireEvent(type: string, e: MouseEvent | KeyboardEvent): this {
+        return this.fire(new MapBoxZoomEvent(type, {originalEvent: e}));
     }
 }

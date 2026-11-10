@@ -5,6 +5,7 @@ import {extend} from '../util/util.ts';
 
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {Map} from './map.ts';
+import type {Camera} from './camera.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ProjectionSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceShouldReloadTileOptions} from '../source/geojson_source.ts';
@@ -665,13 +666,17 @@ export class MapMouseEvent extends MapLibreEvent<MouseEvent> {
 
     _defaultPrevented: boolean;
 
-    constructor(type: string, map: Map, originalEvent: MouseEvent, data: any = {}) {
+    /**
+     * @internal
+     * @param canvas - the map's canvas, which the event's point is relative to
+     * @param camera - the map's camera, which gives the location under that point
+     */
+    constructor(type: string, canvas: HTMLElement, camera: Camera, originalEvent: MouseEvent, data: any = {}) {
         originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
-        const point = DOM.mousePos(map.getCanvas(), originalEvent);
-        const lngLat = map.unproject(point);
+        const point = DOM.mousePos(canvas, originalEvent);
+        const lngLat = camera.transform.screenPointToLocation(point, camera.terrain);
         super(type, extend({point, lngLat, originalEvent}, data));
         this._defaultPrevented = false;
-        this.target = map;
     }
 }
 
@@ -741,14 +746,19 @@ export class MapTouchEvent extends MapLibreEvent<TouchEvent> {
 
     _defaultPrevented: boolean;
 
-    constructor(type: string, map: Map, originalEvent: TouchEvent) {
+    /**
+     * @internal
+     * @param canvasContainer - the element holding the map's canvas, which the event's points are relative to
+     * @param camera - the map's camera, which gives the locations under those points
+     */
+    constructor(type: string, canvasContainer: HTMLElement, camera: Camera, originalEvent: TouchEvent) {
         const touches = type === 'touchend' ? originalEvent.changedTouches : originalEvent.touches;
-        const points = DOM.touchPos(map.getCanvasContainer(), touches);
-        const lngLats = points.map((t) => map.unproject(t));
+        const points = DOM.touchPos(canvasContainer, touches);
+        const lngLats = points.map((t) => camera.transform.screenPointToLocation(t, camera.terrain));
         const point = points.reduce((prev, curr, i, arr) => {
             return prev.add(curr.div(arr.length));
         }, new Point(0, 0));
-        const lngLat = map.unproject(point);
+        const lngLat = camera.transform.screenPointToLocation(point, camera.terrain);
         super(type, {points, point, lngLats, lngLat, originalEvent});
         this._defaultPrevented = false;
     }
@@ -794,7 +804,7 @@ export class MapWheelEvent extends MapLibreEvent<WheelEvent> {
     _defaultPrevented: boolean;
 
     /** */
-    constructor(map: Map, originalEvent: WheelEvent) {
+    constructor(originalEvent: WheelEvent) {
         super('wheel', {originalEvent});
         this._defaultPrevented = false;
     }

@@ -5,7 +5,7 @@ import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan.ts';
 import type {HandlerResult} from './handler_manager.ts';
 import type {EaseToOptions} from './camera.ts';
-import type {Map} from './map.ts';
+import type {Camera} from './camera.ts';
 
 const defaultInertiaOptions = {
     linearity: 0.3,
@@ -79,11 +79,11 @@ type InertiaBufferEntry = {
 };
 
 export class HandlerInertia {
-    _map: Map;
+    _camera: Camera;
     _inertiaBuffer: InertiaBufferEntry[];
 
-    constructor(map: Map) {
-        this._map = map;
+    constructor(camera: Camera) {
+        this._camera = camera;
         this.clear();
     }
 
@@ -178,7 +178,7 @@ export class HandlerInertia {
         if (deltas.pan.mag()) {
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
             const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
-            const computedEaseOptions = this._map._camera.cameraHelper.handlePanInertia(finalPan, this._map._camera.transform);
+            const computedEaseOptions = this._camera.cameraHelper.handlePanInertia(finalPan, this._camera.transform);
             easeOptions.center = computedEaseOptions.easingCenter;
             easeOptions.offset = computedEaseOptions.easingOffset;
             extendDuration(easeOptions, result);
@@ -186,25 +186,25 @@ export class HandlerInertia {
 
         if (deltas.zoom) {
             const result = calculateEasing(deltas.zoom, duration, defaultZoomInertiaOptions);
-            easeOptions.zoom = evaluateZoomSnap(this._map.getZoom() + result.amount, this._map.getZoomSnap(), result.amount);
+            easeOptions.zoom = evaluateZoomSnap(this._camera.getZoom() + result.amount, this._camera.getZoomSnap(), result.amount);
             extendDuration(easeOptions, result);
         }
 
         const bearingResult = deltas.bearing ? calculateFriction(deltas.bearing, duration, bearingFrictionOptions) : undefined;
         if (bearingResult) {
-            easeOptions.bearing = this._map.getBearing() + clamp(bearingResult.amount, -179, 179);
+            easeOptions.bearing = this._camera.getBearing() + clamp(bearingResult.amount, -179, 179);
             extendDuration(easeOptions, bearingResult);
         }
 
         if (deltas.pitch) {
             const result = calculateEasing(deltas.pitch, duration, defaultPitchInertiaOptions);
-            easeOptions.pitch = this._map.getPitch() + result.amount;
+            easeOptions.pitch = this._camera.getPitch() + result.amount;
             extendDuration(easeOptions, result);
         }
 
         if (deltas.roll) {
             const result = calculateEasing(deltas.roll, duration, defaultRollInertiaOptions);
-            easeOptions.roll = this._map.getRoll() + clamp(result.amount, -179, 179);
+            easeOptions.roll = this._camera.getRoll() + clamp(result.amount, -179, 179);
             extendDuration(easeOptions, result);
         }
 
@@ -215,7 +215,7 @@ export class HandlerInertia {
 
         if (easeOptions.zoom || easeOptions.bearing) {
             const last = deltas.pinchAround === undefined ? deltas.around : deltas.pinchAround;
-            easeOptions.around = last ? this._map.unproject(last) : this._map.getCenter();
+            easeOptions.around = last ? this._camera.transform.screenPointToLocation(last, this._camera.terrain) : this._camera.getCenter();
         }
 
         this.clear();

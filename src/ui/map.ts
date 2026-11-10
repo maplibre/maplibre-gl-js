@@ -15,6 +15,7 @@ import {Painter} from '../render/painter.ts';
 import {GPUInitializationError} from '../util/gpu_initialization_error.ts';
 import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
+import {createMapHandlers} from './handler/create_map_handlers.ts';
 import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
@@ -45,6 +46,7 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
 import type {PointLike} from './camera.ts';
+import type {RenderLoop} from './camera_movement_scheduler.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
 import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom.ts';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch.ts';
@@ -614,7 +616,7 @@ export class Map extends Evented<MapEventType> {
     style: Style;
     painter: Painter;
     _camera: Camera;
-    _handlers: HandlerManager;
+    private _handlerManager: HandlerManager;
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
@@ -783,6 +785,10 @@ export class Map extends Evented<MapEventType> {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
+        const renderLoop: RenderLoop = {
+            requestRenderFrame: (callback) => this._requestRenderFrame(callback),
+            cancelRenderFrame: (id) => this._cancelRenderFrame(id)
+        };
         this._camera = new Camera({
             minZoom: resolvedOptions.minZoom,
             maxZoom: resolvedOptions.maxZoom,
@@ -794,8 +800,7 @@ export class Map extends Evented<MapEventType> {
             centerClampedToGround: resolvedOptions.centerClampedToGround,
             terrain: this.terrain,
             transformConstrain: resolvedOptions.transformConstrain,
-            requestRenderFrame: (callback) => this._requestRenderFrame(callback),
-            cancelRenderFrame: (id) => this._cancelRenderFrame(id),
+            renderLoop,
             transformCameraUpdate: resolvedOptions.transformCameraUpdate,
         });
         this._camera.setEventedParent(this);
@@ -848,7 +853,34 @@ export class Map extends Evented<MapEventType> {
         });
         this.once('idle', () => this._idleTriggered = true);
 
-        this._handlers = new HandlerManager(this, this._camera, resolvedOptions);
+        const boxZoomEnd = typeof resolvedOptions.boxZoom === 'object' ? resolvedOptions.boxZoom.boxZoomEnd : undefined;
+        const {registrations, mapHandlers} = createMapHandlers({
+            camera: this._camera,
+            canvas: this._canvas,
+            canvasContainer: this._canvasContainer,
+            container: this._container,
+            locale: this._locale,
+            boxZoomEnd: boxZoomEnd && ((startPos, endPos, originalEvent) => boxZoomEnd(this, startPos, endPos, originalEvent)),
+            triggerRenderFrame: () => this._handlerManager.triggerRenderFrame()
+        }, resolvedOptions);
+        this.boxZoom = mapHandlers.boxZoom;
+        this.cooperativeGestures = mapHandlers.cooperativeGestures;
+        this.doubleClickZoom = mapHandlers.doubleClickZoom;
+        this.touchPitch = mapHandlers.touchPitch;
+        this.dragRotate = mapHandlers.dragRotate;
+        this.dragPan = mapHandlers.dragPan;
+        this.touchZoomRotate = mapHandlers.touchZoomRotate;
+        this.scrollZoom = mapHandlers.scrollZoom;
+        this.keyboard = mapHandlers.keyboard;
+        this._handlerManager = new HandlerManager({
+            camera: this._camera,
+            renderLoop,
+            canvas: this._canvas,
+            canvasContainer: this._canvasContainer,
+            bearingSnap: resolvedOptions.bearingSnap,
+            dragPan: mapHandlers.dragPan,
+            registrations
+        }).setEventedParent(this);
 
         if (typeof window !== 'undefined') {
             this._ownerWindow.addEventListener('online', this._onWindowOnline, false);
@@ -1546,7 +1578,7 @@ export class Map extends Evented<MapEventType> {
      */
     stop(): this {
         this._camera.stop();
-        this._handlers?.stop(false);
+        this._handlerManager?.stop(false);
         return this;
     }
     /**
@@ -2126,7 +2158,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     isMoving(): boolean {
-        return this._camera.isMoving() || this._handlers?.isMoving() || false;
+        return this._camera.isMoving() || this._handlerManager?.isMoving() || false;
     }
 
     /**
@@ -2138,7 +2170,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     isZooming(): boolean {
-        return this._camera.isZooming() || this._handlers?.isZooming() || false;
+        return this._camera.isZooming() || this._handlerManager?.isZooming() || false;
     }
 
     /**
@@ -2150,7 +2182,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     isRotating(): boolean {
-        return this._camera.isRotating() || this._handlers?.isRotating() || false;
+        return this._camera.isRotating() || this._handlerManager?.isRotating() || false;
     }
 
     _createDelegates(type: keyof MapEventType | string, layerIds: string[], listener: Listener): DelegatedListener['delegates'] {
@@ -2163,7 +2195,7 @@ export class Map extends Evented<MapEventType> {
                     mousein = false;
                 } else if (!mousein) {
                     mousein = true;
-                    listener.call(this, new MapMouseEvent(type, this, e.originalEvent, {features}));
+                    listener.call(this, new MapMouseEvent(type, this._canvas, this._camera, e.originalEvent, {features}));
                 }
             };
             const mouseout = () => {
@@ -2179,13 +2211,13 @@ export class Map extends Evented<MapEventType> {
                     mousein = true;
                 } else if (mousein) {
                     mousein = false;
-                    listener.call(this, new MapMouseEvent(type, this, e.originalEvent));
+                    listener.call(this, new MapMouseEvent(type, this._canvas, this._camera, e.originalEvent));
                 }
             };
             const mouseout = (e) => {
                 if (mousein) {
                     mousein = false;
-                    listener.call(this, new MapMouseEvent(type, this, e.originalEvent));
+                    listener.call(this, new MapMouseEvent(type, this._canvas, this._camera, e.originalEvent));
                 }
             };
             return {mousemove, mouseout};
@@ -4421,7 +4453,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns An id that can be used to cancel the callback
      */
-    _requestRenderFrame(callback: () => void): TaskID {
+    _requestRenderFrame(callback: (timeStamp: number) => void): TaskID {
         this._update();
         return this._renderTaskQueue.add(callback);
     }
@@ -4607,7 +4639,7 @@ export class Map extends Evented<MapEventType> {
         this._renderTaskQueue.clear();
         this._diffStyleRequest?.abort();
         this.painter.destroy();
-        this._handlers.destroy();
+        this._handlerManager.destroy();
         getGlobalWorkerPool().off('restart', this._handleWorkersRestarted);
         this.setStyle(null);
         if (typeof window !== 'undefined') {

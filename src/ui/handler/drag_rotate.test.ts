@@ -562,7 +562,7 @@ describe('drag rotate', () => {
 
     test('DragRotateHandler requests a new render frame after each mousemove event', () => {
         const map = createMap();
-        const requestRenderFrame = vi.spyOn(map._handlers, '_requestFrame');
+        const requestRenderFrame = vi.spyOn(map, '_requestRenderFrame');
 
         // Prevent inertial rotation.
         vi.spyOn(timeControl, 'now').mockReturnValue(0);

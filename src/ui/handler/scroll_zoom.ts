@@ -5,7 +5,7 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat.ts';
 
 import type {TransformProvider} from './transform-provider.ts';
-import type {Map} from '../map.ts';
+import type {CooperativeGesturesHandler} from './cooperative_gestures.ts';
 import type {AroundCenterOptions} from './two_fingers_touch.ts';
 import type {Handler} from '../handler_manager.ts';
 import type Point from '@mapbox/point-geometry';
@@ -33,7 +33,8 @@ const wheelEventTimeDiffAdjustment = 5;
  * @group Handlers
  */
 export class ScrollZoomHandler implements Handler {
-    _map: Map;
+    _canvas: HTMLElement;
+    _cooperativeGestures: CooperativeGesturesHandler;
     _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;
@@ -60,16 +61,18 @@ export class ScrollZoomHandler implements Handler {
     };
 
     _needsRerender: boolean;
-    _triggerRenderFrame: () => void;
 
     _defaultZoomRate: number;
+    /** Has the handler manager run a render frame, when a timer of the handler's own runs out. */
+    _triggerRenderFrame: () => void;
     _wheelZoomRate: number;
 
     /** @internal */
-    constructor(map: Map, triggerRenderFrame: () => void, transformProvider: TransformProvider) {
-        this._map = map;
-        this._tr = transformProvider;
+    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, triggerRenderFrame: () => void, transformProvider: TransformProvider) {
+        this._canvas = canvas;
+        this._cooperativeGestures = cooperativeGestures;
         this._triggerRenderFrame = triggerRenderFrame;
+        this._tr = transformProvider;
 
         this._delta = 0;
 
@@ -157,12 +160,12 @@ export class ScrollZoomHandler implements Handler {
      * Determines whether or not the gesture is blocked due to cooperativeGestures.
      */
     _shouldBePrevented(e: WheelEvent): boolean {
-        if (!this._map.cooperativeGestures.isEnabled()) {
+        if (!this._cooperativeGestures.isEnabled()) {
             return false;
         }
 
         const isTrackpadPinch = e.ctrlKey;
-        const isBypassed = isTrackpadPinch || this._map.cooperativeGestures.isBypassed(e);
+        const isBypassed = isTrackpadPinch || this._cooperativeGestures.isBypassed(e);
 
         return !isBypassed;
     }
@@ -170,7 +173,7 @@ export class ScrollZoomHandler implements Handler {
     wheel(e: WheelEvent): void {
         if (!this.isEnabled()) return;
         if (this._shouldBePrevented(e)) {
-            this._map.cooperativeGestures.notifyGestureBlocked('wheel_zoom', e);
+            this._cooperativeGestures.notifyGestureBlocked('wheel_zoom', e);
             return;
         }
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
@@ -247,7 +250,7 @@ export class ScrollZoomHandler implements Handler {
             delete this._finishTimeout;
         }
 
-        const pos = DOM.mousePos(this._map.getCanvas(), e);
+        const pos = DOM.mousePos(this._canvas, e);
         const tr = this._tr;
 
         // Whether aroundPoint is actually unprojectable is not a problem to be solved here, but in handler_manager.ts instead.
@@ -301,7 +304,7 @@ export class ScrollZoomHandler implements Handler {
 
             const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
             const target = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
-            const zoomSnap = this._map.getZoomSnap();
+            const zoomSnap = this._tr.zoomSnap;
 
             if (this._type === 'wheel' && zoomSnap > 0) {
                 const currentSnapped = evaluateZoomSnap(tr.zoom, zoomSnap);
