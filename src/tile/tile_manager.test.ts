@@ -2127,6 +2127,32 @@ describe('TileManager.tilesIn', () => {
             ]);
     });
 
+    test('globe does not wrap a camera query line crossing the prime meridian', async () => {
+        const transform = createGlobeTransform();
+        transform.resize(600, 400);
+        transform.setZoom(10);
+        transform.setCenter(new LngLat(0.02, 0.02));
+        transform.setPitch(60);
+        transform.setBearing(30);
+
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loaded';
+        };
+
+        const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
+        tileManager.onAdd(undefined);
+        await dataPromise;
+
+        tileManager.update(transform);
+
+        const tile = tileManager.tilesIn([new Point(290, 170)], 1, true)
+            .find(({tileID}) => tileID.key === new OverscaledTileID(10, 0, 10, 512, 512).key);
+        expect(tile.queryGeometry.map(p => p.round())).toEqual([new Point(840, -1465)]);
+        expect([tile.cameraQueryGeometry[0].round(), tile.cameraQueryGeometry.at(-1).round()])
+            .toEqual([new Point(840, -1465), new Point(-3676, 6708)]);
+    });
+
     test('globe wrap bounding box spanning antimeridian from 179.9°W', async () => {
         const transform = createGlobeTransform();
         transform.resize(512, 512);

@@ -413,7 +413,6 @@ export class Tile {
         params: Pick<QueryRenderedFeaturesOptionsStrict, 'filter' | 'layers' | 'availableImages'> | undefined,
         transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
-        pixelPosMatrix: mat4,
         getElevation: GetElevation | undefined
     ): QueryResults {
         if (!this.latestFeatureIndex?.rawTileData)
@@ -424,7 +423,6 @@ export class Tile {
             cameraQueryGeometry,
             scale,
             tileSize: this.tileSize,
-            pixelPosMatrix,
             transform,
             params,
             queryPadding: this.queryPadding * maxPitchScaleFactor,
