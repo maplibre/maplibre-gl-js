@@ -1,0 +1,55 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "antialias": true
+    }
+  },
+  "center": [0, 0],
+  "zoom": 2,
+  "sources": {
+    "under": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[-10, -8], [10, -8], [10, 8], [-10, 8], [-10, -8]]]
+        }
+      }
+    },
+    "over": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[0.05, -5], [0.13, -5], [0.13, 5], [0.05, 5], [0.05, -5]]]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "#ffffff"}
+    },
+    {
+      "id": "blended-fill-below",
+      "type": "fill",
+      "source": "under",
+      "paint": {"fill-color": "#ffffff", "fill-antialias": false, "fill-layer-blend": "multiply"}
+    },
+    {
+      "id": "opaque-fill-above",
+      "type": "fill",
+      "source": "over",
+      "paint": {"fill-color": "#0000ff", "fill-antialias": false}
+    }
+  ]
+}

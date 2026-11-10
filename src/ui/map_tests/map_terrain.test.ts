@@ -395,7 +395,7 @@ describe('getCameraTargetElevation', () => {
         transform.setZoom(14);
         transform.resize(512, 512);
         transform.setElevation(2000);
-        map._camera.transform = transform;
+        map._camera.applyTransformChange(tr => tr.apply(transform, false));
 
         expect(map.getCameraTargetElevation()).toBe(2000);
     });
@@ -993,6 +993,43 @@ describe('Terrain changing under and around a gesture', () => {
         map._renderTaskQueue.run();
 
         expect(bearingAfterSecondMove - bearingAfterFirstMove).toBeCloseTo(bearingAfterFirstMove - bearingAtStart, 5);
+        expect(map.getCameraTargetElevation()).toBe(3000);
+    });
+
+    test('a pan drag over terrain holds the center elevation until it ends', async () => {
+        const map = await createMapOverTerrain(0);
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 100});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 120, clientY: 110});
+        map.redraw();
+        terrainElevation.mockReturnValue(3000);
+        map.redraw();
+        const elevationDuringDrag = map.getCameraTargetElevation();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 120, clientY: 110});
+        map.redraw();
+
+        expect(elevationDuringDrag).toBe(0);
+        expect(map.getCameraTargetElevation()).toBe(3000);
+    });
+
+    test('a pan drag over terrain on a globe holds the center elevation until it ends', async () => {
+        const map = await createMapOverTerrain(0);
+        map.setProjection({type: 'globe'});
+        vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        const terrainElevation = vi.spyOn(map.terrain, 'getElevationForLngLat').mockReturnValue(0);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 1, button: 0, clientX: 100, clientY: 100});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 120, clientY: 110});
+        map.redraw();
+        terrainElevation.mockReturnValue(3000);
+        map.redraw();
+        const elevationDuringDrag = map.getCameraTargetElevation();
+        simulate.mouseup(map.getCanvas(), {buttons: 0, button: 0, clientX: 120, clientY: 110});
+        map.redraw();
+
+        expect(elevationDuringDrag).toBe(0);
         expect(map.getCameraTargetElevation()).toBe(3000);
     });
 
@@ -1776,7 +1813,7 @@ describe('queryTerrainElevation', () => {
     test('calls getElevationForLngLat with the location and the transform', () => {
         const getElevationForLngLat = vi.fn();
         map.terrain = {getElevationForLngLat} as any as Terrain;
-        map._camera.transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        map._camera.applyTransformChange(tr => tr.apply(createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true}), false));
 
         map.queryTerrainElevation([1, 2]);
 

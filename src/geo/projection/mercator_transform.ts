@@ -1131,14 +1131,6 @@ export class MercatorTransform implements ITransform {
         };
     }
 
-    populateCache(coords: OverscaledTileID[]): void {
-        for (const coord of coords) {
-            // Return value is thrown away, but this function will still
-            // place the pos matrix into the transform's internal cache.
-            this.calculatePosMatrix(coord);
-        }
-    }
-
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const rendererProjectionData = this.getProjectionData({overscaledTileID: tileID, applyGlobeMatrix});

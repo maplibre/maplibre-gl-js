@@ -3,13 +3,14 @@ import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
 import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
-import {type mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
 import type {FillExtrusionLayoutProps, FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
+import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {UnwrappedTileID} from '../../tile/tile_id.ts';
 
 export class Point3D extends Point {
     z: number;
@@ -48,7 +49,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         geometry,
         transform,
         pixelsToTileUnits,
-        pixelPosMatrix}: QueryIntersectsFeatureParams
+        unwrappedTileID}: QueryIntersectsFeatureParams
     ): boolean | number {
 
         const translatedPolygon = translate(queryGeometry,
@@ -59,13 +60,21 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         const height = this.paint.get('fill-extrusion-height').evaluate(feature, featureState);
         const base = this.paint.get('fill-extrusion-base').evaluate(feature, featureState);
 
-        const projectedQueryGeometry = projectQueryGeometry(translatedPolygon, pixelPosMatrix, 0);
-
-        const projected = projectExtrusion(geometry, base, height, pixelPosMatrix);
-        const projectedBase = projected[0];
-        const projectedTop = projected[1];
+        const projectedQueryGeometry = translatedPolygon.map(p => projectPoint(p, 0, transform, unwrappedTileID));
+        const projectedBase = geometry.map(ring => ring.map(p => projectPoint(p, base, transform, unwrappedTileID)));
+        const projectedTop = geometry.map(ring => ring.map(p => projectPoint(p, height, transform, unwrappedTileID)));
         return checkIntersection(projectedBase, projectedTop, projectedQueryGeometry);
     }
+}
+
+/**
+ * Projects a point in tile coordinates at `elevation` to clip space, with the distance from the camera as its `z`.
+ */
+function projectPoint(point: Point, elevation: number, transform: IReadonlyTransform, tileID: UnwrappedTileID): Point3D {
+    const {point: projected, signedDistanceFromCamera} = transform.projectTileCoordinates(point.x, point.y, tileID, elevation);
+    const result = projected as Point3D;
+    result.z = signedDistanceFromCamera;
+    return result;
 }
 
 function dot(a, b) {
@@ -158,69 +167,4 @@ function checkIntersection(projectedBase: Point3D[][], projectedTop: Point3D[][]
     }
 
     return closestDistance === Infinity ? false : closestDistance;
-}
-
-/*
- * Project the geometry using matrix `m`. This is essentially doing
- * `vec4.transformMat4([], [p.x, p.y, z, 1], m)` but the multiplication
- * is inlined so that parts of the projection that are the same across
- * different points can only be done once. This produced a measurable
- * performance improvement.
- */
-function projectExtrusion(geometry: Point[][], zBase: number, zTop: number, m: mat4): [Point3D[][], Point3D[][]] {
-    const projectedBase = [] as Point3D[][];
-    const projectedTop = [] as Point3D[][];
-    const baseXZ = m[8] * zBase;
-    const baseYZ = m[9] * zBase;
-    const baseZZ = m[10] * zBase;
-    const baseWZ = m[11] * zBase;
-    const topXZ = m[8] * zTop;
-    const topYZ = m[9] * zTop;
-    const topZZ = m[10] * zTop;
-    const topWZ = m[11] * zTop;
-
-    for (const r of geometry) {
-        const ringBase = [] as Point3D[];
-        const ringTop = [] as Point3D[];
-        for (const p of r) {
-            const x = p.x;
-            const y = p.y;
-
-            const sX = m[0] * x + m[4] * y + m[12];
-            const sY = m[1] * x + m[5] * y + m[13];
-            const sZ = m[2] * x + m[6] * y + m[14];
-            const sW = m[3] * x + m[7] * y + m[15];
-
-            const baseX = sX + baseXZ;
-            const baseY = sY + baseYZ;
-            const baseZ = sZ + baseZZ;
-            const baseW = sW + baseWZ;
-
-            const topX = sX + topXZ;
-            const topY = sY + topYZ;
-            const topZ = sZ + topZZ;
-            const topW = sW + topWZ;
-
-            const b = new Point(baseX / baseW, baseY / baseW) as Point3D;
-            b.z = baseZ / baseW;
-            ringBase.push(b);
-
-            const t = new Point(topX / topW, topY / topW) as Point3D;
-            t.z = topZ / topW;
-            ringTop.push(t);
-        }
-        projectedBase.push(ringBase);
-        projectedTop.push(ringTop);
-    }
-    return [projectedBase, projectedTop];
-}
-
-function projectQueryGeometry(queryGeometry: Point[], pixelPosMatrix: mat4, z: number) {
-    const projectedQueryGeometry = [];
-    for (const p of queryGeometry) {
-        const v = [p.x, p.y, z, 1] as vec4;
-        vec4.transformMat4(v, v, pixelPosMatrix);
-        projectedQueryGeometry.push(new Point(v[0] / v[3], v[1] / v[3]));
-    }
-    return projectedQueryGeometry;
 }

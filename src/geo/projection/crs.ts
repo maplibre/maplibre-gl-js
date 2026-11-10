@@ -119,7 +119,8 @@ export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
         return new LngLat(position[0], clamp(position[1], -90, 90));
     }
     hasLngLat(x: number, y: number): boolean {
-        return this._inverse(x, y) !== null;
+        const position = this._inverse(x, y);
+        return position !== null && Math.abs(position[1]) <= 90;
     }
     /**
      * The CRS's inverse at a world position, or `null` where it has no answer: no finite answer, or one that

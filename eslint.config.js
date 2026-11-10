@@ -41,6 +41,7 @@ export default [
             parserOptions: {
                 projectService: {
                     allowDefaultProject: [
+                        'build/check-bundle-size.ts',
                         'build/generate-*.ts',
                         'build/eslint-rules/*.js',
                         'test/build/*.ts',

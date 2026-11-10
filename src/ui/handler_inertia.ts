@@ -5,7 +5,7 @@ import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan.ts';
 import type {HandlerResult} from './handler_manager.ts';
 import type {EaseToOptions} from './camera.ts';
-import type {Map} from './map.ts';
+import type {Camera} from './camera.ts';
 
 const defaultInertiaOptions = {
     linearity: 0.3,
@@ -20,11 +20,6 @@ const defaultPanInertiaOptions = extend({
 const defaultZoomInertiaOptions = extend({
     deceleration: 20,
     maxSpeed: 1400
-}, defaultInertiaOptions);
-
-const defaultBearingInertiaOptions = extend({
-    deceleration: 1000,
-    maxSpeed: 360
 }, defaultInertiaOptions);
 
 const defaultPitchInertiaOptions = extend({
@@ -45,6 +40,30 @@ export type InertiaOptions = {
 };
 
 /**
+ * Inertia that glides on under friction: the speed halves every `halfLife` milliseconds until it
+ * falls below `stopSpeed`, and a gesture released slower than `minSpeed` does not glide at all.
+ * A gesture released faster than `maxSpeed` glides as if released at `maxSpeed`, which also bounds
+ * the glide of a gesture whose measured interval is too short to hold a meaningful speed.
+ * Speeds are in units of the animated property per second.
+ */
+type FrictionOptions = {
+    halfLife: number;
+    minSpeed: number;
+    maxSpeed: number;
+    stopSpeed: number;
+};
+
+/**
+ * The friction the bearing turns on with, the same as MapLibre Native's rotation momentum.
+ */
+const bearingFrictionOptions: FrictionOptions = {
+    halfLife: 140,
+    minSpeed: 60,
+    maxSpeed: 1200,
+    stopSpeed: 1
+};
+
+/**
  * The maximum age of a recorded gesture update, in milliseconds.
  */
 const BUFFER_CUTOFF = 160;
@@ -60,11 +79,11 @@ type InertiaBufferEntry = {
 };
 
 export class HandlerInertia {
-    _map: Map;
+    _camera: Camera;
     _inertiaBuffer: InertiaBufferEntry[];
 
-    constructor(map: Map) {
-        this._map = map;
+    constructor(camera: Camera) {
+        this._camera = camera;
         this.clear();
     }
 
@@ -113,7 +132,8 @@ export class HandlerInertia {
      *
      * @param panInertiaOptions - overrides for the pan inertia defaults
      * @returns the ease options, or `undefined` when the measured interval holds no
-     * movement, which terrain gestures produce by recording updates without any delta
+     * movement, which terrain gestures produce by recording updates without any delta,
+     * or only a turn too slow to glide on
      */
     _onMoveEnd(panInertiaOptions?: DragPanOptions | boolean): EaseToOptions {
         this._drainInertiaBuffer();
@@ -158,7 +178,7 @@ export class HandlerInertia {
         if (deltas.pan.mag()) {
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
             const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
-            const computedEaseOptions = this._map._camera.cameraHelper.handlePanInertia(finalPan, this._map._camera.transform);
+            const computedEaseOptions = this._camera.cameraHelper.handlePanInertia(finalPan, this._camera.transform);
             easeOptions.center = computedEaseOptions.easingCenter;
             easeOptions.offset = computedEaseOptions.easingOffset;
             extendDuration(easeOptions, result);
@@ -166,31 +186,36 @@ export class HandlerInertia {
 
         if (deltas.zoom) {
             const result = calculateEasing(deltas.zoom, duration, defaultZoomInertiaOptions);
-            easeOptions.zoom = evaluateZoomSnap(this._map.getZoom() + result.amount, this._map.getZoomSnap(), result.amount);
+            easeOptions.zoom = evaluateZoomSnap(this._camera.getZoom() + result.amount, this._camera.getZoomSnap(), result.amount);
             extendDuration(easeOptions, result);
         }
 
-        if (deltas.bearing) {
-            const result = calculateEasing(deltas.bearing, duration, defaultBearingInertiaOptions);
-            easeOptions.bearing = this._map.getBearing() + clamp(result.amount, -179, 179);
-            extendDuration(easeOptions, result);
+        const bearingResult = deltas.bearing ? calculateFriction(deltas.bearing, duration, bearingFrictionOptions) : undefined;
+        if (bearingResult) {
+            easeOptions.bearing = this._camera.getBearing() + clamp(bearingResult.amount, -179, 179);
+            extendDuration(easeOptions, bearingResult);
         }
 
         if (deltas.pitch) {
             const result = calculateEasing(deltas.pitch, duration, defaultPitchInertiaOptions);
-            easeOptions.pitch = this._map.getPitch() + result.amount;
+            easeOptions.pitch = this._camera.getPitch() + result.amount;
             extendDuration(easeOptions, result);
         }
 
         if (deltas.roll) {
             const result = calculateEasing(deltas.roll, duration, defaultRollInertiaOptions);
-            easeOptions.roll = this._map.getRoll() + clamp(result.amount, -179, 179);
+            easeOptions.roll = this._camera.getRoll() + clamp(result.amount, -179, 179);
             extendDuration(easeOptions, result);
+        }
+
+        if (easeOptions.duration === undefined) {
+            this.clear();
+            return;
         }
 
         if (easeOptions.zoom || easeOptions.bearing) {
             const last = deltas.pinchAround === undefined ? deltas.around : deltas.pinchAround;
-            easeOptions.around = last ? this._map.unproject(last) : this._map.getCenter();
+            easeOptions.around = last ? this._camera.unproject(last) : this._camera.getCenter();
         }
 
         this.clear();
@@ -221,5 +246,26 @@ function calculateEasing(amount, inertiaDuration: number, inertiaOptions) {
         easing: inertiaOptions.easing,
         duration: duration * 1000,
         amount: speed * (duration / 2)
+    };
+}
+
+/**
+ * Returns the glide that continues a movement of `amount` over `inertiaDuration` milliseconds under
+ * friction, or `undefined` when the movement is slower than the friction's `minSpeed`.
+ *
+ * The speed decays exponentially, so the easing is that exponential, scaled to end where the speed
+ * reaches `stopSpeed`.
+ */
+function calculateFriction(amount: number, inertiaDuration: number, {halfLife, minSpeed, maxSpeed, stopSpeed}: FrictionOptions) {
+    const speed = clamp(amount / (inertiaDuration / 1000), -maxSpeed, maxSpeed);
+    if (Math.abs(speed) < minSpeed) return undefined;
+
+    const duration = halfLife * Math.log2(Math.abs(speed) / stopSpeed);
+    const travelled = (t: number) => 1 - Math.pow(2, -t * duration / halfLife);
+    const total = travelled(1);
+    return {
+        easing: (t: number) => travelled(clamp(t, 0, 1)) / total,
+        duration,
+        amount: speed * (halfLife / 1000) / Math.LN2 * total
     };
 }

@@ -24,7 +24,7 @@ import type {Source} from '../source/source.ts';
 import type {Map} from '../ui/map.ts';
 import type {Style} from '../style/style.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
-import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {TileState} from './tile.ts';
 import type {FeatureState, ICanonicalTileID, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Terrain} from '../render/terrain.ts';
@@ -32,6 +32,11 @@ import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+
+/**
+ * Half the width of the world in mercator coordinates, which span from 0 to 1.
+ */
+const HALF_WORLD = 0.5;
 
 type TileResult = {
     tile: Tile;
@@ -88,7 +93,7 @@ export class TileManager extends Evented<SourceEventType> {
     _maxTileCacheZoomLevels: number;
     _paused: boolean;
     _shouldReloadOnResume: boolean;
-    transform: ITransform;
+    transform: IReadonlyTransform;
     terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
@@ -537,7 +542,7 @@ export class TileManager extends Evented<SourceEventType> {
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(transform: ITransform, terrain?: Terrain): void {
+    update(transform: IReadonlyTransform, terrain?: Terrain): void {
         if (!this._sourceLoaded || this._paused) {
             return;
         }
@@ -950,6 +955,16 @@ export class TileManager extends Evented<SourceEventType> {
         return tileResults;
     }
 
+    /**
+     * Projects a screen geometry to mercator coordinates.
+     *
+     * A geometry that the projection wrapped around the antimeridian always spans more than half the world, which tells
+     * it apart from one that only fails the cover check by a rounding error, such as a query line near the prime meridian.
+     * @param geom - The geometry in screen pixels.
+     * @param project - Projects a screen point to mercator coordinates.
+     * @param checkWrap - Whether to move a geometry that the projection wrapped around the antimeridian back next to the
+     * rest of it, for projections that do not render world copies.
+     */
     private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
         let transformed = geom.map(project);
         if (checkWrap) {
@@ -962,8 +977,8 @@ export class TileManager extends Evented<SourceEventType> {
 
             const newBounds = Bounds.fromPoints(transformed);
 
-            if (!newBounds.covers(projected)) {
-                transformed = transformed.map((coord) => coord.x > 0.5 ?
+            if (newBounds.width() > HALF_WORLD && !newBounds.covers(projected)) {
+                transformed = transformed.map((coord) => coord.x > HALF_WORLD ?
                     new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
                     coord
                 );
@@ -973,11 +988,7 @@ export class TileManager extends Evented<SourceEventType> {
     }
 
     getVisibleCoordinates(symbolLayer?: boolean): OverscaledTileID[] {
-        const coords = this.getRenderableIds(symbolLayer).map((id) => this._inViewTiles.getTileById(id).tileID);
-        if (this.transform) {
-            this.transform.populateCache(coords);
-        }
-        return coords;
+        return this.getRenderableIds(symbolLayer).map((id) => this._inViewTiles.getTileById(id).tileID);
     }
 
     hasTransition(): boolean {
