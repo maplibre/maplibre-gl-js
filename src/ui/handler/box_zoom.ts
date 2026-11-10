@@ -2,7 +2,7 @@ import {DOM} from '../../util/dom.ts';
 import {MapBoxZoomEvent} from '../events.ts';
 
 import type {Map} from '../map.ts';
-import type {Handler} from '../handler_manager.ts';
+import type {Handler, HandlerResult} from '../handler_manager.ts';
 import type {TransformProvider} from './transform-provider.ts';
 import type Point from '@mapbox/point-geometry';
 
@@ -138,7 +138,7 @@ export class BoxZoomHandler implements Handler {
         this._box.style.height = `${maxY - minY}px`;
     }
 
-    mouseupWindow(e: MouseEvent, point: Point): {cameraAnimation: (map: Map) => Map} | void {
+    mouseupWindow(e: MouseEvent, point: Point): HandlerResult | void {
         if (!this._active) return;
 
         if (e.button !== 0) return;
@@ -158,9 +158,8 @@ export class BoxZoomHandler implements Handler {
                 this._boxZoomEnd(this._map, p0, p1, e);
                 return;
             }
-            return {
-                cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true})
-            };
+            const easeTo = this._tr.cameraForScreenBox(p0, p1, this._tr.bearing);
+            if (easeTo) return {easeTo};
         }
     }
 

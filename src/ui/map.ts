@@ -157,8 +157,12 @@ export type MapOptions = {
      */
     scrollZoom?: boolean | AroundCenterOptions;
     /**
-     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
-     * @defaultValue 0
+     * The minimum zoom level of the map. Users cannot zoom out beyond this level. (-2 – 24)
+     *
+     * With the mercator projection, the map may stop zooming out before it reaches this level, because the world
+     * has to cover the height of the map: a map 512px tall cannot zoom out below zoom 0. {@link Map.getMinZoom}
+     * with `constrained` set to `true` returns the level the map can actually reach.
+     * @defaultValue -2
      */
     minZoom?: number | null;
     /**
@@ -793,7 +797,6 @@ export class Map extends Evented<MapEventType> {
             requestRenderFrame: (callback) => this._requestRenderFrame(callback),
             cancelRenderFrame: (id) => this._cancelRenderFrame(id),
             transformCameraUpdate: resolvedOptions.transformCameraUpdate,
-            stopHandlers: () => this._handlers?.stop(false),
         });
         this._camera.setEventedParent(this);
 
@@ -1539,9 +1542,13 @@ export class Map extends Evented<MapEventType> {
      */
     flyTo(options: FlyToOptions, eventData?: any): this { this._camera.flyTo(options, eventData); return this; }
     /**
-     * Stops any animated transition underway.
+     * Stops any animated transition underway, and any gesture the user is making.
      */
-    stop(): this { this._camera.stop(); return this; }
+    stop(): this {
+        this._camera.stop();
+        this._handlers?.stop(false);
+        return this;
+    }
     /**
      * Gets the elevation at a given location, in meters above sea level.
      * Returns null if terrain is not enabled.
@@ -1622,7 +1629,7 @@ export class Map extends Evented<MapEventType> {
         if (isContextLost) return this;
         this._resizeInternal(constrainTransform);
 
-        const fireMoving = !this._camera._moving;
+        const fireMoving = !this._camera.isMoving();
         if (fireMoving) {
             this.stop();
             this.fire(new MapMovementEvent('movestart', eventData))

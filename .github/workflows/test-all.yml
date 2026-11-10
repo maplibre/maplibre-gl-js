@@ -122,9 +122,27 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v4
         with:
           node-version-file: '.nvmrc'
-      - name: install fonts for the render tests that draw text locally
+      - name: Restore fonts for the render tests that draw text locally
         if: runner.os == 'Linux'
-        run: sudo apt install fonts-noto-cjk fonts-noto-core
+        id: fonts-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/fonts-debs
+          key: fonts-noto-cjk-core-v1
+      - name: Download fonts for the render tests that draw text locally
+        if: runner.os == 'Linux' && steps.fonts-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 30
+        run: mkdir -p ~/fonts-debs && cd ~/fonts-debs && apt-get download fonts-noto-cjk fonts-noto-core fonts-noto-mono
+      - name: Cache fonts for the render tests that draw text locally
+        if: runner.os == 'Linux' && steps.fonts-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/fonts-debs
+          key: fonts-noto-cjk-core-v1
+      - name: Install fonts for the render tests that draw text locally
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        run: sudo dpkg -i ~/fonts-debs/*.deb
       - name: Disable AppArmor
         if: runner.os == 'Linux'
         run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns

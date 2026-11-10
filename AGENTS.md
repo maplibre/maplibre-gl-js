@@ -130,13 +130,24 @@ sentences to be understood, it is usually two entries, or one entry and a link.
 
 ## Tests
 
-**Declare test helpers with `function`, not with a lambda assigned to a `const`.** A hoisted,
-named function reads as part of the file's vocabulary and can be defined below the tests that use it;
-`const helper = () => {...}` has to come first and puts the name and the arguments further apart.
+**Declare test helpers with `function`, not with a lambda assigned to a `const`.** A named function
+reads as part of the file's vocabulary; `const helper = () => {...}` puts the name and the arguments
+further apart.
 
 ```ts
 function createGlyphManager(remoteEnabled: boolean, font?: string | false): GlyphManager {
 ```
+
+**Put helpers at the top of the test file, after the imports, or in a test util file.** A reader
+meets the vocabulary before the tests that use it, and does not have to search the file, or the
+bottom of a `describe`, to find out what a helper does. A helper that more than one test file needs
+belongs in `src/util/test/`.
+
+**Do not open a `describe` that the tests do not need.** A `describe` earns its place when its tests
+share a `beforeEach`, or when the name it gives them says something the test names cannot. A block
+that only groups a few tests about one feature adds a level of nesting and, more often than not, a
+second copy of a helper the file already has. Add the tests to the existing `describe`, or at the
+top level of it, and let their names carry the subject.
 
 **Cover the code, then stop.** Every branch worth a name deserves a test, but two tests that differ
 only in an input value are one test — consolidate them and pick the input that says the most. What
@@ -149,9 +160,13 @@ the reader than one clever builder that every test calls with different argument
 what is genuinely incidental — a stub of an unrelated collaborator, say — and leave the parts the
 test is actually about inline.
 
-**Test through the public API.** Do not reach for `_`-prefixed fields or methods. If a behaviour can
-only be observed through internals, that is a sign the class is missing an accessor or the test is
-asserting on the wrong thing — assert on what a caller can see.
+**Test through the public API of the unit under test.** Drive it through the methods its callers
+use, and assert on what they get back or can observe. Do not reach for `_`-prefixed fields or
+methods, spy on a private method through `as any`, or read and write state the class keeps for
+itself even when it is not marked private — setting `source.tileState.loaded` by hand tests a state
+the class may never reach. Put the unit in that state by calling it: load a tile, then reload it. If
+a behaviour can only be observed through internals, that is a sign the class is missing an accessor
+or the test is asserting on the wrong thing.
 
 **Fake the network with a fake server, not by mocking the request functions.** `nise`'s
 `fakeServer` is what the rest of the suite uses. Mocking `getArrayBuffer` or `getJSON` skips the
@@ -174,3 +189,20 @@ afterEach(() => {
 **Stub collaborators, never the unit under test.** Replacing a method on the class you are testing
 means the test no longer exercises the thing it names. Replace what that class *uses* — its
 dependencies, the network, the clock — and let the unit itself run.
+
+**Use what vitest already provides before writing your own.** A hand-rolled stub that saves its
+argument into a captured variable is a `vi.fn()` that keeps less: the mock already records every
+call, its arguments and its results, and the reader knows how to read it.
+
+```ts
+const sendAsync = vi.fn().mockResolvedValue({});
+source.dispatcher = getWrapDispatcher()({sendAsync});
+
+await source.loadTile(tile);
+
+const params: WorkerTileParameters = sendAsync.mock.lastCall[0].data;
+```
+
+The same goes for `mockResolvedValue` and `mockRejectedValue` over a function that returns a promise,
+`vi.useFakeTimers()` over a real wait, and asymmetric matchers such as `expect.objectContaining` over
+picking fields out one by one.

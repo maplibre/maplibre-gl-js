@@ -318,9 +318,9 @@ describe('jumpTo', () => {
 
     test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
-        expect(camera.isEasing()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
         camera.jumpTo({center: [1, 2]});
-        expect(!camera.isEasing()).toBeTruthy();
+        expect(!camera.isMoving()).toBeTruthy();
     });
 
     test('respects zoomSnap', () => {
@@ -367,9 +367,9 @@ describe('setCenter', () => {
 
     test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
-        expect(camera.isEasing()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
         camera.setCenter([1, 2]);
-        expect(!camera.isEasing()).toBeTruthy();
+        expect(!camera.isMoving()).toBeTruthy();
     });
 });
 
@@ -403,9 +403,9 @@ describe('setZoom', () => {
 
     test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
-        expect(camera.isEasing()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
         camera.setZoom(5);
-        expect(!camera.isEasing()).toBeTruthy();
+        expect(!camera.isMoving()).toBeTruthy();
     });
 
     test('respects zoomSnap', () => {
@@ -445,9 +445,9 @@ describe('setBearing', () => {
 
     test('cancels in-progress easing', () => {
         camera.panTo([4, 3]);
-        expect(camera.isEasing()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
         camera.setBearing(6);
-        expect(!camera.isEasing()).toBeTruthy();
+        expect(!camera.isMoving()).toBeTruthy();
     });
 });
 
@@ -481,9 +481,9 @@ describe('setRoll', () => {
 
     test('cancels in-progress easing', () => {
         camera.panTo([3, 4]);
-        expect(camera.isEasing()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
         camera.setRoll(6);
-        expect(!camera.isEasing()).toBeTruthy();
+        expect(!camera.isMoving()).toBeTruthy();
     });
 });
 
@@ -937,9 +937,9 @@ describe('easeTo', () => {
             eventData);
 
         const moveResults = await movePromise;
-        expect(camera._zooming).toBeFalsy();
-        expect(camera._rotating).toBeFalsy();
-        expect(camera._rolling).toBeFalsy();
+        expect(camera.isZooming()).toBeFalsy();
+        expect(camera.isRotating()).toBeFalsy();
+        expect(camera.isRolling()).toBeFalsy();
 
         expect(movestarted).toBe('ok');
         expect(moved).toBe('ok');
@@ -1231,6 +1231,96 @@ describe('easeTo', () => {
         expect(spy.mock.calls.find(c => 'done' in c[0])).toBeTruthy();
     });
 
+    test('eases the center elevation to a target that DEM data moves mid-ease without a jump', () => {
+        const terrain = createTerrain();
+        let demElevation = 0;
+        terrain.getElevationAndDEMStateForLngLat = () => ({elevation: demElevation, demState: 'loaded'});
+        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
+        const stubNow = vi.spyOn(timeControl, 'now');
+        camera.setCenter([-10, 0]);
+
+        demElevation = 100;
+        stubNow.mockReturnValue(0);
+        camera.easeTo({center: [10, 0], duration: 20, easing: t => t});
+        stubNow.mockReturnValue(10);
+        queue.run();
+        expect(camera.getCenterElevation()).toBe(50);
+
+        demElevation = 200;
+        queue.run();
+        expect(camera.getCenterElevation()).toBe(50);
+
+        stubNow.mockReturnValue(20);
+        queue.run();
+        expect(camera.getCenterElevation()).toBe(200);
+    });
+
+    test('easeTo on("move") in the last frame of an easeTo eases to its own target', () => {
+        const {camera, queue} = createCamera();
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        stubNow.mockReturnValue(0);
+        camera.easeTo({center: [10, 0], duration: 10});
+        stubNow.mockReturnValue(5);
+        queue.run();
+
+        camera.once('move', () => {
+            camera.easeTo({center: [50, 0], duration: 10});
+        });
+        stubNow.mockReturnValue(10);
+        queue.run();
+        stubNow.mockReturnValue(20);
+        queue.run();
+
+        expect(camera.getCenter().lng).toBeCloseTo(50);
+    });
+
+    test('easeTo on("move") during an easeTo runs one frame at a time and stops', () => {
+        const {camera, queue} = createCamera();
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        stubNow.mockReturnValue(0);
+        camera.easeTo({center: [10, 0], duration: 100});
+        camera.once('move', () => {
+            camera.easeTo({center: [50, 0], duration: 100});
+        });
+        stubNow.mockReturnValue(50);
+        queue.run();
+
+        const move = vi.fn();
+        camera.on('move', move);
+        stubNow.mockReturnValue(60);
+        queue.run();
+        expect(move).toHaveBeenCalledTimes(1);
+
+        camera.stop();
+        stubNow.mockReturnValue(70);
+        expect(() => queue.run()).not.toThrow();
+        expect(move).toHaveBeenCalledTimes(1);
+    });
+
+    test('easeTo on("zoomend") of an easeTo fires the first moveend before the second movestart', () => {
+        const {camera, queue} = createCamera();
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        stubNow.mockReturnValue(0);
+        camera.easeTo({zoom: 3, duration: 10});
+        camera.once('zoomend', () => {
+            camera.easeTo({center: [20, 0], duration: 10});
+        });
+        const events: string[] = [];
+        camera.on('movestart', () => events.push('movestart'));
+        camera.on('moveend', () => events.push('moveend'));
+
+        stubNow.mockReturnValue(10);
+        queue.run();
+        expect(events).toEqual(['moveend', 'movestart']);
+
+        stubNow.mockReturnValue(20);
+        queue.run();
+        expect(events).toEqual(['moveend', 'movestart', 'moveend']);
+    });
+
     test('terrain set during easeTo', () => {
         let terrain: Terrain = null;
         const {camera, queue} = createCamera({terrain});
@@ -1446,8 +1536,8 @@ describe('flyTo', () => {
             eventData);
 
         const moveResult = await movePromise;
-        expect(camera._zooming).toBeFalsy();
-        expect(camera._rotating).toBeFalsy();
+        expect(camera.isZooming()).toBeFalsy();
+        expect(camera.isRotating()).toBeFalsy();
 
         expect(movestarted).toBe('ok');
         expect(moved).toBe('ok');
@@ -1517,8 +1607,8 @@ describe('flyTo', () => {
         }, 0);
 
         const d = await promise;
-        expect(camera._zooming).toBeFalsy();
-        expect(camera._rotating).toBeFalsy();
+        expect(camera.isZooming()).toBeFalsy();
+        expect(camera.isRotating()).toBeFalsy();
 
         expect(movestarted).toBe('ok');
         expect(moved).toBe('ok');
@@ -2047,83 +2137,6 @@ describe('flyTo', () => {
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
     });
 
-    test('check elevation events freezeElevation=false', async () => {
-        const terrain = createTerrain();
-        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
-        const stub = vi.spyOn(timeControl, 'now');
-
-        const terrainCallbacks = {prepare: 0, update: 0} as any;
-        camera._prepareElevation = () => terrainCallbacks.prepare++;
-        camera._updateElevation = () => terrainCallbacks.update++;
-        camera.setCenter([-10, 0]);
-        terrain.getElevationForLngLat = () => 2000;
-        const moveEnded = camera.once('moveend');
-
-        stub.mockReturnValue(0);
-        camera.flyTo({center: [10, 0], duration: 20, freezeElevation: false});
-        stub.mockReturnValue(1);
-        queue.run();
-        stub.mockReturnValue(20);
-        queue.run();
-        await moveEnded;
-        expect(terrainCallbacks.prepare).toBe(1);
-        expect(terrainCallbacks.update).toBe(2);
-        expect(camera.transform.elevation).toBe(1000);
-    });
-
-    test('check elevation events freezeElevation=true', async() => {
-        const terrain = createTerrain();
-        const {camera, queue} = createCamera({terrain, centerClampedToGround: true});
-        const stub = vi.spyOn(timeControl, 'now');
-
-        const terrainCallbacks = {prepare: 0, update: 0} as any;
-        camera._prepareElevation = () => terrainCallbacks.prepare++;
-        camera._updateElevation = () => terrainCallbacks.update++;
-        camera.setCenter([-10, 0]);
-        terrain.getElevationForLngLat = () => 2000;
-        const moveEnded = camera.once('moveend');
-
-        stub.mockReturnValue(0);
-        camera.flyTo({center: [10, 0], duration: 20, freezeElevation: true});
-        stub.mockReturnValue(1);
-        queue.run();
-        stub.mockReturnValue(20);
-        queue.run();
-        await moveEnded;
-        expect(terrainCallbacks.prepare).toBe(1);
-        expect(terrainCallbacks.update).toBe(0);
-        expect(camera.transform.elevation).toBe(2000);
-    });
-
-    test('check elevation callbacks', () => {
-        const terrain = {
-            getElevationAndDEMStateForLngLat: () => ({elevation: 100, demState: 'loaded'}),
-            getMinTileElevationForLngLatZoom: () => 200
-        } as any;
-        const {camera} = createCamera({terrain});
-
-        const tr = {
-            elevation: 0,
-            recalculateZoomAndCenter: () => true,
-            setMinElevationForCurrentTile: (_a) => true,
-            setElevation: (e) => tr.elevation = e
-        } as any;
-
-        camera._prepareElevation(new LngLat(10, 0), tr);
-        // expect(camera._elevationCenter).toBe([10, 0]);
-        expect(camera._elevationStart).toBe(0);
-        expect(camera._elevationTarget).toBe(100);
-        expect(camera.elevationFreeze).toBeTruthy();
-
-        terrain.getElevationAndDEMStateForLngLat = () => ({elevation: 200, demState: 'loaded'});
-        camera._updateElevation(0.5, tr);
-        expect(camera._elevationStart).toBe(-100);
-        expect(camera._elevationTarget).toBe(200);
-
-        camera.releaseElevation();
-        expect(camera.elevationFreeze).toBeFalsy();
-    });
-
     test('respects zoomSnap', () => {
         const {camera} = createCamera({zoomSnap: 1});
         camera.flyTo({zoom: 2.7, animate: false});
@@ -2135,18 +2148,39 @@ describe('flyTo', () => {
         camera.flyTo({zoom: 2.7, animate: false});
         expect(camera.getZoom()).toBe(2.7);
     });
+
+    test('flyTo on("move") in the last frame of a flyTo flies to its own target', () => {
+        const {camera, queue} = createCamera();
+        const stubNow = vi.spyOn(timeControl, 'now');
+
+        stubNow.mockReturnValue(0);
+        camera.flyTo({center: [10, 0], bearing: 90, duration: 10});
+        stubNow.mockReturnValue(5);
+        queue.run();
+
+        camera.once('move', () => {
+            camera.flyTo({center: [50, 0], duration: 10});
+        });
+        stubNow.mockReturnValue(10);
+        queue.run();
+        stubNow.mockReturnValue(20);
+        queue.run();
+
+        expect(camera.getCenter().lng).toBeCloseTo(50);
+        expect(camera.getBearing()).toBe(90);
+    });
 });
 
-describe('isEasing', () => {
+describe('isMoving', () => {
     test('returns false when not easing', () => {
         const {camera} = createCamera();
-        expect(!camera.isEasing()).toBeTruthy();
+        expect(!camera.isMoving()).toBeTruthy();
     });
 
     test('returns true when panning', () => {
         const {camera} = createCamera();
         camera.panTo([100, 0], {duration: 1});
-        expect(camera.isEasing()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
     });
 
     test('returns false when done panning', async () => {
@@ -2161,14 +2195,14 @@ describe('isEasing', () => {
         }, 0);
 
         await promise;
-        expect(camera.isEasing()).toBeFalsy();
+        expect(camera.isMoving()).toBeFalsy();
     });
 
     test('returns true when zooming', () => {
         const {camera} = createCamera();
         camera.zoomTo(3.2, {duration: 1});
 
-        expect(camera.isEasing()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
     });
 
     test('returns false when done zooming', async () => {
@@ -2183,13 +2217,13 @@ describe('isEasing', () => {
         }, 0);
 
         await promise;
-        expect(camera.isEasing()).toBeFalsy();
+        expect(camera.isMoving()).toBeFalsy();
     });
 
     test('returns true when rotating', () => {
         const {camera} = createCamera();
         camera.rotateTo(90, {duration: 1});
-        expect(camera.isEasing()).toBeTruthy();
+        expect(camera.isMoving()).toBeTruthy();
     });
 
     test('returns false when done rotating', async () => {
@@ -2204,23 +2238,23 @@ describe('isEasing', () => {
         }, 0);
 
         await promise;
-        expect(camera.isEasing()).toBeFalsy();
+        expect(camera.isMoving()).toBeFalsy();
     });
 });
 
 describe('stop', () => {
-    test('resets camera._zooming', () => {
+    test('stops zooming', () => {
         const {camera} = createCamera();
         camera.zoomTo(3.2);
         camera.stop();
-        expect(!camera._zooming).toBeTruthy();
+        expect(!camera.isZooming()).toBeTruthy();
     });
 
-    test('resets camera._rotating', () => {
+    test('stops rotating', () => {
         const {camera} = createCamera();
         camera.rotateTo(90);
         camera.stop();
-        expect(!camera._rotating).toBeTruthy();
+        expect(!camera.isRotating()).toBeTruthy();
     });
 
     test('emits moveend if panning, preserving eventData', async () => {
@@ -2880,9 +2914,9 @@ describe('jumpTo globe projection', () => {
 
         test('cancels in-progress easing', () => {
             camera.panTo([3, 4]);
-            expect(camera.isEasing()).toBeTruthy();
+            expect(camera.isMoving()).toBeTruthy();
             camera.jumpTo({center: [1, 2]});
-            expect(!camera.isEasing()).toBeTruthy();
+            expect(!camera.isMoving()).toBeTruthy();
         });
     });
 });
@@ -3490,10 +3524,10 @@ describe('flyTo globe projection', () => {
                 eventData);
 
             const moveResult = await movePromise;
-            expect(camera._zooming).toBeFalsy();
-            expect(camera._rotating).toBeFalsy();
-            expect(camera._pitching).toBeFalsy();
-            expect(camera._rolling).toBeFalsy();
+            expect(camera.isZooming()).toBeFalsy();
+            expect(camera.isRotating()).toBeFalsy();
+            expect(camera.isPitching()).toBeFalsy();
+            expect(camera.isRolling()).toBeFalsy();
 
             expect(movestarted).toBe('ok');
             expect(moved).toBe('ok');
@@ -3563,8 +3597,8 @@ describe('flyTo globe projection', () => {
             }, 0);
 
             const d = await promise;
-            expect(camera._zooming).toBeFalsy();
-            expect(camera._rotating).toBeFalsy();
+            expect(camera.isZooming()).toBeFalsy();
+            expect(camera.isRotating()).toBeFalsy();
 
             expect(movestarted).toBe('ok');
             expect(moved).toBe('ok');

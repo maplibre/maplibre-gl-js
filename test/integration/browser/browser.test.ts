@@ -155,6 +155,7 @@ describe('Browser tests', () => {
         const finalZoom = await page.evaluate(() => {
             return new Promise<number>((resolve, _reject) => {
                 map.once('zoom', () => {
+                    map.stop();
                     map.flyTo({
                         zoom: 9
                     });

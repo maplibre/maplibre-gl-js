@@ -6,8 +6,9 @@ permissions: write-all
 
 jobs:
   bundle-size:
+    name: Bundle size quota
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: ${{ startsWith(github.head_ref, 'dependabot/') }}
     permissions:
       contents: read
     steps:

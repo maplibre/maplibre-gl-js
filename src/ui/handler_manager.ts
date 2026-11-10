@@ -23,7 +23,7 @@ import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Map, CompleteMapOptions} from './map.ts';
-import type {Camera, RotationPivot} from './camera.ts';
+import type {Camera, EaseToOptions, RotationPivot} from './camera.ts';
 import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
@@ -125,9 +125,11 @@ export type HandlerResult = {
      */
     pinchAround?: Point | null;
     /**
-     * A method that can fire a one-off easing by directly changing the map's camera.
+     * A one-off easing of the camera, such as a double click's zoom, that ends the gesture: every handler is reset
+     * before it starts, so that the next frame of a handler does not stop it, and its events carry the input event that
+     * asked for it as `originalEvent`.
      */
-    cameraAnimation?: (map: Map) => void;
+    easeTo?: EaseToOptions;
     /**
      * The last three properties are needed by only one handler: scrollzoom.
      * The DOM event to be used as the `originalEvent` on any camera change events.
@@ -307,8 +309,8 @@ export class HandlerManager {
             cooperativeGestures.enable();
         }
 
-        const tapZoom = new TapZoomHandler(map, this._transformProvider);
-        const clickZoom = new ClickZoomHandler(map, this._transformProvider);
+        const tapZoom = new TapZoomHandler(this._transformProvider);
+        const clickZoom = new ClickZoomHandler(this._transformProvider);
         map.doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
         this._add('tapZoom', tapZoom);
         this._add('clickZoom', clickZoom);
@@ -364,7 +366,7 @@ export class HandlerManager {
             map.scrollZoom.enable(options.scrollZoom);
         }
 
-        const keyboard = map.keyboard = new KeyboardHandler(map, this._transformProvider);
+        const keyboard = map.keyboard = new KeyboardHandler(this._transformProvider);
         this._add('keyboard', keyboard);
         if (options.interactive && options.keyboard) {
             map.keyboard.enable();
@@ -497,17 +499,15 @@ export class HandlerManager {
         }
 
         if (Object.keys(activeHandlers).length || hasChange(mergedHandlerResult)) {
-            this._camera.stop(true);
+            this._camera.stop();
         }
 
         this._updatingCamera = false;
 
-        const {cameraAnimation} = mergedHandlerResult;
-        if (cameraAnimation) {
-            this._inertia.clear();
-            this._fireEvents({}, {}, true);
-            this._changes = [];
-            cameraAnimation(this._map);
+        const {easeTo} = mergedHandlerResult;
+        if (easeTo) {
+            this.stop(true);
+            this._camera.easeTo(easeTo, {originalEvent: inputEvent});
         }
     };
 
@@ -573,8 +573,7 @@ export class HandlerManager {
     _updateMapTransform(combinedResult: HandlerResult,
         combinedEventsInProgress: EventsInProgress,
         deactivatedHandlers: {[handlerName: string]: Event}): void {
-        const map = this._map;
-        const terrain = map.terrain;
+        const terrain = this._camera.terrain;
 
         if (!hasChange(combinedResult)) {
             this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true); return;
@@ -583,7 +582,7 @@ export class HandlerManager {
         const tr = this._camera.getTransformForUpdate();
 
         // stop any ongoing camera animations (easeTo, flyTo)
-        this._camera.stop(true);
+        this._camera.stop();
 
         if (this._turnsAroundPivot(combinedResult, combinedEventsInProgress)) {
             this._orbitRotationPivot(tr, combinedResult, terrain);
@@ -811,9 +810,9 @@ export class HandlerManager {
             const tookDem = this._camera.releaseElevation();
             this._terrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
             this._camera.applyTransformChange(tr => {
-                if (!this._map.getCenterClampedToGround()) return;
-                if (this._map.terrain) {
-                    this._camera.putCenterBackOnTerrain(tr, this._map.terrain, tookDem);
+                if (!this._camera.getCenterClampedToGround()) return;
+                if (this._camera.terrain) {
+                    this._camera.putCenterBackOnTerrain(tr, this._camera.terrain, tookDem);
                 } else {
                     tr.setElevation(0);
                 }
@@ -826,15 +825,15 @@ export class HandlerManager {
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 
             if (inertialEase && (inertialEase.essential || !browser.prefersReducedMotion)) {
-                if (shouldSnapToNorth(inertialEase.bearing || this._map.getBearing())) {
+                if (shouldSnapToNorth(inertialEase.bearing || this._camera.getBearing())) {
                     inertialEase.bearing = 0;
                 }
                 inertialEase.freezeElevation = true;
-                this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
+                this._camera.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
                 this._fireEvent('moveend', originalEndEvent);
-                if (shouldSnapToNorth(this._map.getBearing())) {
-                    this._map.resetNorth();
+                if (shouldSnapToNorth(this._camera.getBearing())) {
+                    this._camera.resetNorth();
                 }
             }
             this._updatingCamera = false;

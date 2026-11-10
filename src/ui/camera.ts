@@ -3,7 +3,6 @@ import {vec3} from 'gl-matrix';
 import {extend, wrap, defaultEasing, evaluateZoomSnap, lerp, scaleZoom, zoomScale} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
-import {now} from '../util/time_control.ts';
 import {LngLat, earthRadius} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {Evented} from '../util/evented.ts';
@@ -13,6 +12,7 @@ import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts'
 import {angularCoordinatesToSurfaceVector} from '../geo/projection/globe_utils.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
 import {ElevationHold} from './elevation_hold.ts';
+import {CameraMovementScheduler} from './camera_movement_scheduler.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
@@ -234,13 +234,34 @@ export type FlyToOptions = AnimationOptions & CameraOptions & {
  * The {@link Map.easeTo} options object
  */
 export type EaseToOptions = AnimationOptions & CameraOptions & {
+    /**
+     * @deprecated Has no effect, and will be removed in the next major version.
+     */
     delayEndEvents?: number;
+    /**
+     * Dimensions in pixels applied on each side of the viewport for shifting the vanishing point, which the transition
+     * animates to. The map keeps this padding once the transition ends.
+     */
     padding?: number | PaddingOptions;
     /**
      * If `zoom` is specified, `around` determines the point around which the zoom is centered.
      */
     around?: LngLatLike;
+    /**
+     * @internal
+     * An animation started with the `easeId` of the one running continues its movement instead of interrupting it, so
+     * that no end and start events fire between the two, as for a key the keyboard handler sees held down.
+     * @deprecated Set by MapLibre's own handlers and not meant for applications; it will be removed from this type in
+     * the next major version.
+     */
     easeId?: string;
+    /**
+     * @internal
+     * Whether the animation continues a movement whose `movestart` someone else fired, such as the gesture whose
+     * inertia it is.
+     * @deprecated Set by MapLibre's own handlers and not meant for applications; it will be removed from this type in
+     * the next major version.
+     */
     noMoveStart?: boolean;
 };
 
@@ -341,13 +362,6 @@ export type CameraInitOptions = {
     requestRenderFrame: (a: () => void) => TaskID;
     cancelRenderFrame: (_: TaskID) => void;
     transformCameraUpdate: CameraUpdateTransformFunction | null;
-    /**
-     * @internal
-     * Callback invoked by {@link Camera.stop} to halt any in-progress user gestures.
-     * The `Camera` does not own the gesture handlers (the `Map` does), so it is injected
-     * with a way to stop them rather than holding a reference to the `HandlerManager`.
-     */
-    stopHandlers?: () => void;
 };
 
 export class Camera extends Evented<MapEventType> {
@@ -365,51 +379,13 @@ export class Camera extends Evented<MapEventType> {
      */
     terrain: Terrain;
     cameraHelper: ICameraHelper;
-    /**
-     * @internal
-     * Stops any in-progress user gestures. Injected by the owner so the camera does not need
-     * a reference to the `HandlerManager`. See {@link CameraInitOptions.stopHandlers}.
-     */
-    _stopHandlers: () => void;
 
-    _moving: boolean;
-    _zooming: boolean;
-    _rotating: boolean;
-    _pitching: boolean;
-    _rolling: boolean;
-    _padding: boolean;
+    /** Runs `easeTo`, `flyTo` and `jumpTo` and fires their movement events. */
+    private readonly _scheduler: CameraMovementScheduler;
 
     _bearingSnap: number;
     _zoomSnap: number;
-    _easeStart: number;
-    _easeOptions: {
-        duration?: number;
-        easing?: (_: number) => number;
-    };
-    _easeId: string | void;
 
-    _onEaseFrame: (_: number) => void;
-    _onEaseEnd: (easeId?: string) => void;
-    _easeFrameId: TaskID;
-
-    /**
-     * @internal
-     * The map center when the animation ends; the animation eases the center elevation to the terrain there.
-     */
-    _elevationCenter: LngLat;
-    /**
-     * @internal
-     * holds the targ altitude value, = center elevation of the target.
-     * This value may changes during flight, because new terrain-tiles loads during flight.
-     */
-    _elevationTarget: number;
-    /**
-     * @internal
-     * holds the start altitude value, = center elevation before animation begins
-     * this value will recalculated during flight in respect of changing _elevationTarget values,
-     * so the linear interpolation between start and target keeps smooth and without jumps.
-     */
-    _elevationStart: number;
     /**
      * @internal
      * Saves the current state of the elevation freeze - this is used during map movement to prevent "rocky" camera movement.
@@ -442,9 +418,6 @@ export class Camera extends Evented<MapEventType> {
      */
     _centerClampedToGround: boolean;
 
-    _requestRenderFrame: (a: () => void) => TaskID;
-    _cancelRenderFrame: (_: TaskID) => void;
-
     constructor(options: CameraInitOptions) {
         super();
         // For now we will use a temporary MercatorTransform instance.
@@ -470,19 +443,19 @@ export class Camera extends Evented<MapEventType> {
         if (options.transformConstrain !== null) {
             this._transform.setConstrainOverride(options.transformConstrain);
         }
-        this._moving = false;
-        this._zooming = false;
         this._bearingSnap = options.bearingSnap;
         this._zoomSnap = options.zoomSnap;
-        this._requestRenderFrame = options.requestRenderFrame;
-        this._cancelRenderFrame = options.cancelRenderFrame;
         this.terrain = options.terrain;
         this._centerClampedToGround = options.centerClampedToGround ?? true;
         this.transformCameraUpdate = options.transformCameraUpdate ?? null;
-        this._stopHandlers = options.stopHandlers ?? (() => {});
+        this._scheduler = new CameraMovementScheduler({
+            requestRenderFrame: options.requestRenderFrame,
+            cancelRenderFrame: options.cancelRenderFrame
+        });
+        this._scheduler.setEventedParent(this);
 
         this.on('moveend', () => {
-            delete this._requestedCameraState;
+            if (!this._scheduler.isMoving()) delete this._requestedCameraState;
         });
     }
 
@@ -770,7 +743,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     jumpTo(options: JumpToOptions, eventData?: any): this {
-        this.stop();
+        this._scheduler.interrupt();
 
         if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
@@ -814,34 +787,42 @@ export class Camera extends Evented<MapEventType> {
         }
         this.applyUpdatedTransform(tr);
 
-        this.fire(new MapMovementEvent('movestart', eventData))
-            .fire(new MapMovementEvent('move', eventData));
+        const events = [
+            new MapMovementEvent('movestart', eventData),
+            new MapMovementEvent('move', eventData)
+        ];
 
         if (zoomChanged) {
-            this.fire(new MapMovementEvent('zoomstart', eventData))
-                .fire(new MapMovementEvent('zoom', eventData))
-                .fire(new MapMovementEvent('zoomend', eventData));
+            events.push(
+                new MapMovementEvent('zoomstart', eventData),
+                new MapMovementEvent('zoom', eventData),
+                new MapMovementEvent('zoomend', eventData));
         }
 
         if (bearingChanged) {
-            this.fire(new MapMovementEvent('rotatestart', eventData))
-                .fire(new MapMovementEvent('rotate', eventData))
-                .fire(new MapMovementEvent('rotateend', eventData));
+            events.push(
+                new MapMovementEvent('rotatestart', eventData),
+                new MapMovementEvent('rotate', eventData),
+                new MapMovementEvent('rotateend', eventData));
         }
 
         if (pitchChanged) {
-            this.fire(new MapMovementEvent('pitchstart', eventData))
-                .fire(new MapMovementEvent('pitch', eventData))
-                .fire(new MapMovementEvent('pitchend', eventData));
+            events.push(
+                new MapMovementEvent('pitchstart', eventData),
+                new MapMovementEvent('pitch', eventData),
+                new MapMovementEvent('pitchend', eventData));
         }
 
         if (rollChanged) {
-            this.fire(new MapMovementEvent('rollstart', eventData))
-                .fire(new MapMovementEvent('roll', eventData))
-                .fire(new MapMovementEvent('rollend', eventData));
+            events.push(
+                new MapMovementEvent('rollstart', eventData),
+                new MapMovementEvent('roll', eventData),
+                new MapMovementEvent('rollend', eventData));
         }
 
-        return this.fire(new MapMovementEvent('moveend', eventData));
+        events.push(new MapMovementEvent('moveend', eventData));
+        this._scheduler.fireAfterQueued(events);
+        return this;
     }
 
     /**
@@ -883,7 +864,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     easeTo(options: EaseToOptions, eventData?: any): this {
-        this._stop(false, options.easeId);
+        if (!this._scheduler.isContinuedBy(options.easeId)) this._scheduler.interrupt();
 
         options = extend({
             offset: [0, 0],
@@ -916,14 +897,6 @@ export class Camera extends Evented<MapEventType> {
             aroundPoint = tr.locationToScreenPoint(around);
         }
 
-        const currently = {
-            moving: this._moving,
-            zooming: this._zooming,
-            rotating: this._rotating,
-            pitching: this._pitching,
-            rolling: this._rolling
-        };
-
         const easeHandler = this.cameraHelper.handleEaseTo(tr, {
             bearing,
             pitch,
@@ -937,100 +910,83 @@ export class Camera extends Evented<MapEventType> {
             center: options.center,
         });
 
-        this._rotating ||= (startBearing !== bearing);
-        this._pitching ||= (pitch !== startPitch);
-        this._rolling ||= (roll !== startRoll);
-        this._padding = !tr.isPaddingEqual(padding);
-        this._zooming ||= easeHandler.isZooming;
-        this._easeId = options.easeId;
-        this._prepareEase(eventData, options.noMoveStart, currently, {tr, center: easeHandler.elevationCenter, freeze: options.freezeElevation});
+        const elevationHandler = this._createElevationEase(tr, easeHandler.elevationCenter, options.freezeElevation);
 
-        this._ease((k) => {
-            easeHandler.easeFunc(k);
-
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
-            this.applyUpdatedTransform(tr);
-            this._fireMoveEvents(eventData);
-
-        }, (interruptingEaseId?: string) => {
-            this._afterEase(eventData, interruptingEaseId, options.freezeElevation);
-        }, options);
+        this._scheduler.scheduleSegment({
+            onFrame: (k) => {
+                easeHandler.easeFunc(k);
+                elevationHandler.easeFunc(k);
+                this.applyUpdatedTransform(tr);
+            },
+            onFinish: () => this._finishAnimationElevation(options.freezeElevation)
+        }, {
+            duration: options.duration,
+            easing: options.easing,
+            axes: {zoom: easeHandler.isZooming, rotate: startBearing !== bearing, pitch: pitch !== startPitch, roll: roll !== startRoll},
+            eventData,
+            easeId: options.easeId,
+            movestartFired: options.noMoveStart
+        });
 
         return this;
     }
 
     /**
-     * @param elevation - over terrain, the transform the animation edits, the map center it ends on, and whether
-     * it holds the center elevation (`freezeElevation`) instead of easing it
+     * Creates the handler of the center elevation for an animation, whose `easeFunc` each frame calls like the camera
+     * helper's, and starts the animation's hold on the elevation when it has one.
+     *
+     * Over terrain the animation either holds the center elevation, with `freezeElevation`, or eases it to the
+     * terrain under the center it ends on. Terrain that is added while an easing animation runs is eased to from the
+     * center the animation has reached by then.
+     * @param tr - the transform the animation edits
+     * @param center - the map center the animation ends on
+     * @param freeze - whether the animation holds the center elevation instead of easing it
      */
-    _prepareEase(eventData: any, noMoveStart: boolean,
-        currently: { moving?: boolean; zooming?: boolean; rotating?: boolean; pitching?: boolean; rolling?: boolean} = {},
-        elevation?: {tr: ITransform; center: LngLat; freeze: boolean}): void {
-        this._moving = true;
-        if (this.terrain && elevation) {
-            this._prepareElevation(elevation.center, elevation.tr);
-            if (elevation.freeze) this.holdElevation(elevation.tr, 'animation');
+    private _createElevationEase(tr: ITransform, center: LngLat, freeze: boolean): {easeFunc: (k: number) => void} {
+        if (freeze) {
+            if (this.terrain) this.holdElevation(tr, 'animation');
+            return {easeFunc: () => {}};
         }
-        if (!noMoveStart && !currently.moving) {
-            this.fire(new MapMovementEvent('movestart', eventData));
-        }
-        if (this._zooming && !currently.zooming) {
-            this.fire(new MapMovementEvent('zoomstart', eventData));
-        }
-        if (this._rotating && !currently.rotating) {
-            this.fire(new MapMovementEvent('rotatestart', eventData));
-        }
-        if (this._pitching && !currently.pitching) {
-            this.fire(new MapMovementEvent('pitchstart', eventData));
-        }
-        if (this._rolling && !currently.rolling) {
-            this.fire(new MapMovementEvent('rollstart', eventData));
-        }
+
+        let easing = this.terrain ? this._startElevationEasing(center, tr) : null;
+        return {
+            easeFunc: (k) => {
+                if (!this.terrain) return;
+                easing ??= this._startElevationEasing(tr.center, tr);
+                easing(k);
+            }
+        };
     }
 
     /**
-     * @internal
-     * Starts easing the center elevation: records where it stands on the transform the animation edits and
-     * samples the terrain under the map center the animation ends on. While the DEM data under that center is
-     * still loading, the target is the elevation the center starts at.
-     * @param center - the map center when the animation ends
+     * Starts easing the center elevation towards the terrain under `center` and returns what each frame of the
+     * animation does to it. Until the animation ends, this keeps the rendered frames from putting the center onto the
+     * terrain, see {@link Camera.clampCenterToGround}.
+     *
+     * The ease follows a straight line from the elevation it starts at to the terrain elevation under `center`. DEM
+     * tiles that land during the animation move that target, and the line is then turned about the elevation reached
+     * so far, so the camera carries on towards the new target without a jump. While the DEM data under `center` is
+     * still loading, the target stays where it is. A center that is not clamped to the ground keeps its elevation.
+     * @param center - the map center the animation ends on
      * @param tr - the transform the animation edits
      */
-    _prepareElevation(center: LngLat, tr: ITransform): void {
-        this._elevationCenter = center;
-        this._elevationStart = tr.elevation;
-        const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(center, tr.tileZoom);
-        this._elevationTarget = demState === 'loading' ? tr.elevation : elevation;
+    private _startElevationEasing(center: LngLat, tr: ITransform): (k: number) => void {
         this.elevationFreeze = true;
-    }
+        const atStart = this.terrain.getElevationAndDEMStateForLngLat(center, tr.tileZoom);
+        let start = tr.elevation;
+        let target = atStart.demState === 'loading' ? tr.elevation : atStart.elevation;
 
-    /**
-     * @internal
-     * Eases the center elevation towards the terrain under `_elevationCenter`, on the transform the
-     * animation edits, so that `applyUpdatedTransform` carries it to the rendered transform. A center
-     * that is not clamped to the ground keeps its elevation, and the target stays put while the DEM data under
-     * `_elevationCenter` is still loading.
-     * @param k - the animation's progress, 0 to 1
-     * @param tr - the transform the animation edits
-     */
-    _updateElevation(k: number, tr: ITransform): void {
-        if (this._elevationStart === undefined || this._elevationCenter === undefined) {
-            this._prepareElevation(tr.center, tr);
-        }
-
-        tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, tr.tileZoom));
-        const {elevation: terrainElevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(this._elevationCenter, tr.tileZoom);
-        const elevation = demState === 'loading' ? this._elevationTarget : terrainElevation;
-        // target terrain updated during flight, slowly move camera to new height
-        if (k < 1 && elevation !== this._elevationTarget) {
-            const pitch1 = this._elevationTarget - this._elevationStart;
-            const pitch2 = (elevation - (pitch1 * k + this._elevationStart)) / (1 - k);
-            this._elevationStart += k * (pitch1 - pitch2);
-            this._elevationTarget = elevation;
-        }
-        if (this.getCenterClampedToGround()) {
-            tr.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
-        }
+        return (k) => {
+            tr.setMinElevationForCurrentTile(this.terrain.getMinTileElevationForLngLatZoom(center, tr.tileZoom));
+            const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(center, tr.tileZoom);
+            if (k < 1 && demState !== 'loading' && elevation !== target) {
+                const reached = interpolates.number(start, target, k);
+                const slope = (elevation - reached) / (1 - k);
+                start = reached - k * slope;
+                target = elevation;
+            }
+            if (this.getCenterClampedToGround()) tr.setElevation(interpolates.number(start, target, k));
+        };
     }
 
     /**
@@ -1388,63 +1344,17 @@ export class Camera extends Evented<MapEventType> {
         }
     }
 
-    _fireMoveEvents(eventData?: Record<string, unknown>): void {
-        this.fire(new MapMovementEvent('move', eventData));
-        if (this._zooming) {
-            this.fire(new MapMovementEvent('zoom', eventData));
-        }
-        if (this._rotating) {
-            this.fire(new MapMovementEvent('rotate', eventData));
-        }
-        if (this._pitching) {
-            this.fire(new MapMovementEvent('pitch', eventData));
-        }
-        if (this._rolling) {
-            this.fire(new MapMovementEvent('roll', eventData));
-        }
-    }
-
     /**
+     * Ends an animation's work on the center elevation, whether it ran to the end or was interrupted.
      * @param freezeElevation - whether the animation held the center elevation; its end then takes DEM data that
      * landed since its last frame and puts the center back onto the terrain, see {@link Camera.putCenterBackOnTerrain}
      */
-    _afterEase(eventData?: Record<string, unknown>, easeId?: string, freezeElevation: boolean = false): void {
+    private _finishAnimationElevation(freezeElevation: boolean = false): void {
         this._takeLandedElevation(this._transform);
         const tookDem = this.releaseElevation();
         if (this.terrain && freezeElevation && this.getCenterClampedToGround()) {
             this.putCenterBackOnTerrain(this._transform, this.terrain, tookDem);
         }
-        // if this easing is being stopped to start another easing with
-        // the same id then don't fire any events to avoid extra start/stop events
-        if (this._easeId && easeId && this._easeId === easeId) {
-            return;
-        }
-        delete this._easeId;
-
-        const wasZooming = this._zooming;
-        const wasRotating = this._rotating;
-        const wasPitching = this._pitching;
-        const wasRolling = this._rolling;
-        this._moving = false;
-        this._zooming = false;
-        this._rotating = false;
-        this._pitching = false;
-        this._rolling = false;
-        this._padding = false;
-
-        if (wasZooming) {
-            this.fire(new MapMovementEvent('zoomend', eventData));
-        }
-        if (wasRotating) {
-            this.fire(new MapMovementEvent('rotateend', eventData));
-        }
-        if (wasPitching) {
-            this.fire(new MapMovementEvent('pitchend', eventData));
-        }
-        if (wasRolling) {
-            this.fire(new MapMovementEvent('rollend', eventData));
-        }
-        this.fire(new MapMovementEvent('moveend', eventData));
     }
 
     /*
@@ -1461,7 +1371,7 @@ export class Camera extends Evented<MapEventType> {
             return this.easeTo(options, eventData);
         }
 
-        this.stop();
+        this._scheduler.interrupt();
 
         options = extend({
             offset: [0, 0],
@@ -1576,107 +1486,50 @@ export class Camera extends Evented<MapEventType> {
             options.duration = 0;
         }
 
-        this._zooming = true;
-        this._rotating = (startBearing !== bearing);
-        this._pitching = (pitch !== startPitch);
-        this._rolling = (roll !== startRoll);
-        this._padding = !tr.isPaddingEqual(padding);
+        const rotating = startBearing !== bearing;
+        const pitching = pitch !== startPitch;
+        const rolling = roll !== startRoll;
+        const paddingChanging = !tr.isPaddingEqual(padding);
 
-        this._prepareEase(eventData, false, {}, {tr, center: flyToHandler.targetCenter, freeze: options.freezeElevation});
+        const elevationHandler = this._createElevationEase(tr, flyToHandler.targetCenter, options.freezeElevation);
 
-        this._ease((k) => {
-            // s: The distance traveled along the flight path, measured in ρ-screenfulls.
-            const s = k * S;
-            const scale = 1 / w(s);
-            const centerFactor = u(s);
-            if (this._rotating) {
-                tr.setBearing(interpolates.number(startBearing, bearing, k));
-            }
-            if (this._pitching) {
-                tr.setPitch(interpolates.number(startPitch, pitch, k));
-            }
-            if (this._rolling) {
-                tr.setRoll(interpolates.number(startRoll, roll, k));
-            }
-            if (this._padding) {
-                tr.interpolatePadding(startPadding, padding, k);
-                // When padding is being applied, Transform.centerPoint is changing continuously,
-                // thus we need to recalculate offsetPoint every frame
-                pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-            }
+        this._scheduler.scheduleSegment({
+            onFrame: (k) => {
+                // s: The distance traveled along the flight path, measured in ρ-screenfulls.
+                const s = k * S;
+                const scale = 1 / w(s);
+                const centerFactor = u(s);
+                if (rotating) tr.setBearing(interpolates.number(startBearing, bearing, k));
+                if (pitching) tr.setPitch(interpolates.number(startPitch, pitch, k));
+                if (rolling) tr.setRoll(interpolates.number(startRoll, roll, k));
+                if (paddingChanging) {
+                    tr.interpolatePadding(startPadding, padding, k);
+                    // When padding is being applied, Transform.centerPoint is changing continuously,
+                    // thus we need to recalculate offsetPoint every frame
+                    pointAtOffset = tr.centerPoint.add(offsetAsPoint);
+                }
 
-            flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
+                flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k, tr);
-            this.applyUpdatedTransform(tr);
-            this._fireMoveEvents(eventData);
-        }, () => {
-            this._afterEase(eventData, undefined, options.freezeElevation);
-        }, options);
+                elevationHandler.easeFunc(k);
+                this.applyUpdatedTransform(tr);
+            },
+            onFinish: () => this._finishAnimationElevation(options.freezeElevation)
+        }, {
+            duration: options.animate === false ? 0 : options.duration,
+            easing: options.easing,
+            axes: {zoom: true, rotate: rotating, pitch: pitching, roll: rolling},
+            eventData
+        });
 
         return this;
     }
 
-    isEasing(): boolean {
-        return !!this._easeFrameId;
-    }
-
-    stop(allowGestures?: boolean): this {
-        return this._stop(allowGestures);
-    }
-
-    _stop(allowGestures?: boolean, easeId?: string): this {
-        if (this._easeFrameId) {
-            this._cancelRenderFrame(this._easeFrameId);
-            delete this._easeFrameId;
-            delete this._onEaseFrame;
-        }
-
-        if (this._onEaseEnd) {
-            // The _onEaseEnd function might emit events which trigger new
-            // animation, which sets a new _onEaseEnd. Ensure we don't delete
-            // it unintentionally.
-            const onEaseEnd = this._onEaseEnd;
-            delete this._onEaseEnd;
-            onEaseEnd.call(this, easeId);
-        }
-        if (!allowGestures) {
-            this._stopHandlers();
-        }
+    /** Ends the running animation where it is, firing its end events. */
+    stop(): this {
+        this._scheduler.interrupt();
         return this;
     }
-
-    _ease(frame: (_: number) => void,
-        finish: () => void,
-        options: {
-            animate?: boolean;
-            duration?: number;
-            easing?: (_: number) => number;
-        }): void {
-        if (options.animate === false || options.duration === 0) {
-            frame(1);
-            finish();
-        } else {
-            this._easeStart = now();
-            this._easeOptions = options;
-            this._onEaseFrame = frame;
-            this._onEaseEnd = finish;
-            this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
-        }
-    }
-
-    // Callback for map._requestRenderFrame
-    _renderFrameCallback = (): void => {
-        const t = Math.min((now() - this._easeStart) / this._easeOptions.duration, 1);
-        this._onEaseFrame(this._easeOptions.easing(t));
-
-        // if _stop is called during _onEaseFrame from _fireMoveEvents we should avoid a new _requestRenderFrame, checking it by ensuring _easeFrameId was not deleted
-        if (t < 1 && this._easeFrameId) {
-            this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
-        } else {
-            this.stop();
-        }
-    };
 
     // convert bearing so that it's numerically close to the current one so that it interpolates properly
     _normalizeBearing(bearing: number, currentBearing: number): number {
@@ -1688,15 +1541,23 @@ export class Camera extends Evented<MapEventType> {
     }
 
     isMoving(): boolean {
-        return this._moving;
+        return this._scheduler.isMoving();
     }
 
     isZooming(): boolean {
-        return this._zooming;
+        return this._scheduler.isMovingAxis('zoom');
     }
 
     isRotating(): boolean {
-        return this._rotating;
+        return this._scheduler.isMovingAxis('rotate');
+    }
+
+    isPitching(): boolean {
+        return this._scheduler.isMovingAxis('pitch');
+    }
+
+    isRolling(): boolean {
+        return this._scheduler.isMovingAxis('roll');
     }
 }
 

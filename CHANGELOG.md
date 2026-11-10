@@ -3,8 +3,21 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 - _...Add new stuff here..._
+
+## 6.17.0
+
+### ✨ Features and improvements
+
+- feat: Add experimental `sparse` vector source option so a missing tile is sliced from an ancestor ([#8335](https://github.com/maplibre/maplibre-gl-js/pull/8335)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+
+### 🐞 Bug fixes
+
+- Fix a layer added with addLayer drawing nothing beyond its source's m… ([#8919](https://github.com/maplibre/maplibre-gl-js/pull/8919)) (by [@igor-suhorukov](https://github.com/igor-suhorukov))
+- Fix keep offset line labels in order where the line doubles back ([#8892](https://github.com/maplibre/maplibre-gl-js/pull/8892)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- Fix camera movement bugs by using task scheduling ([#8961](https://github.com/maplibre/maplibre-gl-js/pull/8961)) (by [@HarelM](https://github.com/HarelM))
+- Fix map not loading from a file or in a sandboxed iframe ([#8912](https://github.com/maplibre/maplibre-gl-js/pull/8912)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 
 ## 6.16.0
 
@@ -15,6 +28,7 @@
 - Add accept headers for MLT according to the current capabilities ([#7483](https://github.com/maplibre/maplibre-gl-js/pull/7483)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
+
 - Fix expired vector tiles erroring on their next reload, e.g. after `setFilter()`, when the server returns an unchanged ETag ([#8771](https://github.com/maplibre/maplibre-gl-js/pull/8771)) (by [@DoFabien](https://github.com/DoFabien))
 - Fix `GeoJSONSource.getBounds` throwing when a feature has a `null` geometry ([#8814](https://github.com/maplibre/maplibre-gl-js/pull/8814)) (by [@auraseb](https://github.com/auraseb))
 - Fix characters covered by `font-faces` switching to glyphs from the glyphs URL once their PBF range is downloaded ([#8490](https://github.com/maplibre/maplibre-gl-js/pull/8490)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))

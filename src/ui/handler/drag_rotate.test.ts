@@ -518,6 +518,22 @@ describe('drag rotate', () => {
         map.remove();
     });
 
+    test('DragRotateHandler keeps rotating after the bearing is set programmatically during the drag', () => {
+        const map = createMap({dragRotate: {around: 'center', movement: 'linear'}});
+
+        simulate.mousedown(map.getCanvas(), {buttons: 2, button: 2, clientX: 0, clientY: 50});
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 10, clientY: 50});
+        map._renderTaskQueue.run();
+
+        map.setBearing(40);
+        simulate.mousemove(map.getCanvas(), {buttons: 2, clientX: 20, clientY: 50});
+        map._renderTaskQueue.run();
+
+        expect(map.getBearing()).toBeCloseTo(48);
+
+        map.remove();
+    });
+
     test('DragRotateHandler ends rotation if the window blurs (#3389)', () => {
         const map = createMap();
 
