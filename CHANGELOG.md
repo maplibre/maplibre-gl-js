@@ -5,11 +5,30 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 6.18.0
+
+### ✨ Features and improvements
+
+- Add `raster-layer-blend` support ([#8986](https://github.com/maplibre/maplibre-gl-js/pull/8986)) (by [@birkskyum](https://github.com/birkskyum))
+- Add `{line,fill}-layer-blend` support ([#8073](https://github.com/maplibre/maplibre-gl-js/pull/8073)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Change rotation inertia to match maplibre-native ([#8970](https://github.com/maplibre/maplibre-gl-js/pull/8970)) (by [@HarelM](https://github.com/HarelM))
+- Speed up loading of tiles whose layers list the same feature ids twice in ascending order ([#8965](https://github.com/maplibre/maplibre-gl-js/pull/8965)) (by [@DoFabien](https://github.com/DoFabien))
+- Improve search descriptions for three map examples ([#9002](https://github.com/maplibre/maplibre-gl-js/pull/9002)) (by [@Harshinit01312](https://github.com/Harshinit01312))
+
+### 🐞 Bug fixes
+
+- Fix glitches between consecutive `-layer-opacity` or `-layer-blend` layers on Intel Gen12 with Mesa 24.3 to 25.3.1 ([#9006](https://github.com/maplibre/maplibre-gl-js/pull/9006)) (by [@gravitystorm](https://github.com/gravitystorm))
+- Fix fire move and zoom events from setMaxBounds when the new bounds change the camera ([#8998](https://github.com/maplibre/maplibre-gl-js/pull/8998)) (by [@kkokkojeong](https://github.com/kkokkojeong))
+- Fix scale an icon fitted to its text by icon-size without growing the padding ([#8952](https://github.com/maplibre/maplibre-gl-js/pull/8952)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- Fix queryRenderedFeatures missing fill-extrusion walls and roofs on the globe ([#8926](https://github.com/maplibre/maplibre-gl-js/pull/8926)) (by [@mfaeezshabbir](https://github.com/mfaeezshabbir))
+- Fix map jumping when dragging or zooming above or below the identity projection ([#8964](https://github.com/maplibre/maplibre-gl-js/pull/8964)) (by [@birkskyum](https://github.com/birkskyum))
+
+
 ## 6.17.0
 
 ### ✨ Features and improvements
 
-- feat: Add experimental `sparse` vector source option so a missing tile is sliced from an ancestor ([#8335](https://github.com/maplibre/maplibre-gl-js/pull/8335)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Add experimental `sparse` vector source option so a missing tile is sliced from an ancestor ([#8335](https://github.com/maplibre/maplibre-gl-js/pull/8335)) (by [@johncarmack1984](https://github.com/johncarmack1984))
 
 ### 🐞 Bug fixes
 
