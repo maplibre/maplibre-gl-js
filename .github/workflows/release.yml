@@ -38,14 +38,6 @@ jobs:
           echo "::error::5.x only releases stable versions"
           exit 1
 
-      - name: Get the latest release
-        id: latest_release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag=$(gh release view --json tagName --jq .tagName)
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-
       - name: Build
         run: npm ci && npm run build-dist
 
@@ -92,8 +84,9 @@ jobs:
           draft: false
           makeLatest: false
 
-      - name: Keep the latest release where it was
+      - name: Mark the highest version as the latest release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LATEST_TAG: ${{ steps.latest_release.outputs.tag }}
-        run: gh release edit "$LATEST_TAG" --latest
+        run: |
+          tag=$(gh release list --exclude-drafts --exclude-pre-releases --limit 100 --json tagName --jq '.[].tagName' | sort -V | tail -n 1)
+          gh release edit "$tag" --latest
