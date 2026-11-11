@@ -6,6 +6,10 @@ uniform vec3 u_lightambient;
 uniform float u_vertical_gradient;
 uniform vec2 u_fill_translate;
 
+#ifdef WALL_AMBIENT_OCCLUSION
+    uniform float u_ao_wall_radius;
+#endif
+
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in ivec4 a_normal_ed;
 
@@ -16,11 +20,25 @@ layout(location = 1) in ivec4 a_normal_ed;
 
 out vec4 v_color;
 
+#ifdef WALL_AMBIENT_OCCLUSION
+    // The lit colour with the ambient part of the lighting removed.
+    out vec3 v_color_without_ambient;
+    // Height above the ground divided by the radius; 1 on roofs.
+    out highp float v_ao_wall_height;
+#endif
+
 #pragma maplibre: define highp float base
 #pragma maplibre: define highp float height
 
 #pragma maplibre: define highp vec4 color
 #pragma maplibre: define highp float opacity
+
+// Assign final color based on surface + ambient light color, diffuse light directional, and light color
+// with lower bounds adjusted to hue of light
+// so that shading is tinted with the complementary (opposite) color to the light color
+vec3 shade(vec4 color, vec3 lighting) {
+    return clamp(color.rgb * lighting * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
+}
 
 void main() {
     #pragma maplibre: initialize highp float base
@@ -102,12 +120,17 @@ void main() {
             (1.0 - u_vertical_gradient) +
             (u_vertical_gradient * clamp((t + gradient_base) * sqrt(gradient_height * (1.0 / 150.0)), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0));
     }
-
-    vec3 lighting = (u_lightambient + direct) * gradient;
-
-    // Assign final color based on surface + ambient light color, diffuse light directional, and light color
-    // with lower bounds adjusted to hue of light
-    // so that shading is tinted with the complementary (opposite) color to the light color
-    v_color.rgb += clamp(color.rgb * lighting * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
+    vec3 directLighting = vec3(direct * gradient);
+    v_color.rgb += shade(color, u_lightambient * gradient + directLighting);
     v_color *= opacity;
+
+    #ifdef WALL_AMBIENT_OCCLUSION
+        #ifdef TERRAIN3D
+            float ground = get_elevation(a_pos);
+        #else
+            float ground = 0.0;
+        #endif
+        v_color_without_ambient = shade(color, directLighting) * opacity;
+        v_ao_wall_height = normal.z == 0.0 ? (elevation - ground) / u_ao_wall_radius : 1.0;
+    #endif
 }
