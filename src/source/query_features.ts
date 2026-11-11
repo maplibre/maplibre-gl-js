@@ -1,4 +1,3 @@
-import {mat4} from 'gl-matrix';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 
 import type Point from '@mapbox/point-geometry';
@@ -89,18 +88,6 @@ export type QueryRenderedFeaturesResults = {
 
 export type QueryRenderedFeaturesResultsItem = QueryResultsItem & { feature: MapGeoJSONFeature };
 
-/*
- * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
- * While the globe renders as a sphere there is no such matrix, so extrusions are hit-tested by their footprint only.
- */
-function getPixelPosMatrix(projectedCamera: ProjectedCamera, tileID: OverscaledTileID): mat4 {
-    const t = mat4.create();
-    mat4.translate(t, t, [1, 1, 0]);
-    mat4.scale(t, t, [projectedCamera.width * 0.5, projectedCamera.height * 0.5, 1]);
-    const posMatrix = cameraMath.getFastPathSimpleProjectionMatrix(projectedCamera, tileID);
-    return posMatrix ? mat4.multiply(t, t, posMatrix) : t;
-}
-
 function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
     if (layers) {
         for (const layerID of layers) {
@@ -151,7 +138,6 @@ export function queryRenderedFeatures(
                 projectedCamera,
                 cameraProjection.worldCoordinateHelper,
                 maxPitchScaleFactor,
-                getPixelPosMatrix(projectedCamera, tileIn.tileID),
                 getElevation ? (x: number, y: number) => getElevation(tileIn.tileID, x, y) : undefined,
             )
         });

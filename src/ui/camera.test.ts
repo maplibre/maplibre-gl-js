@@ -40,8 +40,10 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
         centerClampedToGround: options.centerClampedToGround || false,
         terrain: options.terrain || null,
         transformConstrain: options.transformConstrain,
-        requestRenderFrame: (cb) => queue.add(cb),
-        cancelRenderFrame: (id) => queue.remove(id),
+        renderLoop: {
+            requestRenderFrame: (callback) => queue.add(callback),
+            cancelRenderFrame: (id) => queue.remove(id)
+        },
         transformCameraUpdate: options.transformCameraUpdate
     });
     camera.resize(512, 512, true);

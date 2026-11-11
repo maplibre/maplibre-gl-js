@@ -322,11 +322,11 @@ function addFeature(bucket: SymbolBucket,
     if (shapedIcon && iconTextFit !== 'none') {
         if (bucket.allowVerticalPlacement && shapedTextOrientations.vertical) {
             verticallyShapedIcon = fitIconToText(shapedIcon, shapedTextOrientations.vertical, iconTextFit,
-                layout.get('icon-text-fit-padding'), iconOffset, fontScale);
+                layout.get('icon-text-fit-padding'), iconOffset, fontScale, layoutIconSize);
         }
         if (defaultHorizontalShaping) {
             shapedIcon = fitIconToText(shapedIcon, defaultHorizontalShaping, iconTextFit,
-                layout.get('icon-text-fit-padding'), iconOffset, fontScale);
+                layout.get('icon-text-fit-padding'), iconOffset, fontScale, layoutIconSize);
         }
     }
 
@@ -343,7 +343,7 @@ function addFeature(bucket: SymbolBucket,
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
             textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
             iconBoxScale, iconPadding, iconAlongLine, iconOffset,
-            feature, sizes, isSDFIcon, canonical, layoutTextSize, hasPromoteId);
+            feature, sizes, isSDFIcon, canonical, layoutTextSize, layoutIconSize, hasPromoteId);
     };
 
     if (symbolPlacement === 'line') {
@@ -528,6 +528,7 @@ function addSymbol(bucket: SymbolBucket,
     isSDFIcon: boolean,
     canonical: CanonicalTileID,
     layoutTextSize: number,
+    layoutIconSize: number,
     hasPromoteId: boolean) {
 
     const lineArray = bucket.addToLineVertexArray(anchor, line);
@@ -565,8 +566,8 @@ function addSymbol(bucket: SymbolBucket,
     if (shapedIcon) {
         const iconRotate = layer.layout.get('icon-rotate').evaluate(feature, {});
         const hasIconTextFit = layer.layout.get('icon-text-fit') !== 'none';
-        const iconQuads = getIconQuads(shapedIcon, iconRotate, isSDFIcon, hasIconTextFit);
-        const verticalIconQuads = verticallyShapedIcon ? getIconQuads(verticallyShapedIcon, iconRotate, isSDFIcon, hasIconTextFit) : undefined;
+        const iconQuads = getIconQuads(shapedIcon, iconRotate, isSDFIcon, hasIconTextFit, layoutIconSize);
+        const verticalIconQuads = verticallyShapedIcon ? getIconQuads(verticallyShapedIcon, iconRotate, isSDFIcon, hasIconTextFit, layoutIconSize) : undefined;
         iconCollisionFeature = new CollisionFeature(collisionBoxArray, anchor, featureIndex, sourceLayerIndex, bucketIndex, shapedIcon, iconBoxScale, iconPadding, /*align boxes to line*/false, iconRotate);
 
         numIconVertices = iconQuads.length * 4;

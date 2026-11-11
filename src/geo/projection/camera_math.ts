@@ -298,13 +298,17 @@ export function getCameraPoint(camera: ProjectedCamera): Point {
 
 /**
  * The geometry a query for features that may extrude up into the query area covers: the query geometry and the
- * camera point, see {@link getCameraPoint}.
+ * camera point, see {@link getCameraPoint}. A point query on the globe follows the arc to the point below the camera
+ * instead, see `getCameraQueryGeometry` in `vertical_perspective_camera_math.ts`.
  * @param queryGeometry - For point queries, the line from the query point to the "camera point",
  * for other geometries, the envelope of the query geometry and the "camera point"
  * @returns a geometry that includes all of the original query as well as all possible ares of the
  * screen where the *base* of a visible extrusion could be.
  */
 export function getCameraQueryGeometry(camera: ProjectedCamera, queryGeometry: Point[]): Point[] {
+    const rendered = renderedCamera(camera);
+    const projectionGeometry = rendered.projection === 'vertical-perspective' ? verticalPerspectiveMath.getCameraQueryGeometry(rendered, queryGeometry) : null;
+    if (projectionGeometry) return projectionGeometry;
     const cameraPoint = getCameraPoint(camera);
     if (queryGeometry.length === 1) {
         return [queryGeometry[0], cameraPoint];

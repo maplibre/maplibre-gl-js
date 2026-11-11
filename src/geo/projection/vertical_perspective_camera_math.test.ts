@@ -305,3 +305,26 @@ test('resize does not constrain the center when told not to', () => {
 
     expect(state.center.lat).toBe(89);
 });
+
+test('getCameraQueryGeometry uses the line to the camera point for a point off the globe', () => {
+    const projection = createVerticalPerspectiveCameraProjection();
+    const {camera} = createTestCamera({width: 512, height: 512}, projection);
+    const corner = new Point(0, 0);
+
+    expect(cameraMath.isPointOnMapSurface(camera, projection, corner)).toBe(false);
+    expect(cameraMath.getCameraQueryGeometry(camera, [corner])).toEqual([corner, cameraMath.getCameraPoint(camera)]);
+});
+
+test('getCameraQueryGeometry follows the arc on the globe from a point query to the point below the camera', () => {
+    const projection = createVerticalPerspectiveCameraProjection();
+    const {camera} = createTestCamera({width: 512, height: 512, zoom: 3, pitch: 50}, projection);
+    const query = new Point(256, 300);
+
+    const geometry = cameraMath.getCameraQueryGeometry(camera, [query]);
+
+    expect(geometry).toHaveLength(9);
+    expect(geometry[0]).toEqual(query);
+    const below = cameraMath.locationToScreenPoint(camera, projection, cameraMath.getCameraLngLat(camera, projection));
+    expect(geometry[8].x).toBeCloseTo(below.x, 3);
+    expect(geometry[8].y).toBeCloseTo(below.y, 3);
+});

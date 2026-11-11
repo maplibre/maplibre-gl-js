@@ -35,6 +35,11 @@ import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
 import type {CameraProjection} from '../geo/projection/camera_projection.ts';
 
+/**
+ * Half the width of the world in mercator coordinates, which span from 0 to 1.
+ */
+const HALF_WORLD = 0.5;
+
 type TileResult = {
     tile: Tile;
     tileID: OverscaledTileID;
@@ -956,6 +961,16 @@ export class TileManager extends Evented<SourceEventType> {
         return tileResults;
     }
 
+    /**
+     * Projects a screen geometry to mercator coordinates.
+     *
+     * A geometry that the projection wrapped around the antimeridian always spans more than half the world, which tells
+     * it apart from one that only fails the cover check by a rounding error, such as a query line near the prime meridian.
+     * @param geom - The geometry in screen pixels.
+     * @param project - Projects a screen point to mercator coordinates.
+     * @param checkWrap - Whether to move a geometry that the projection wrapped around the antimeridian back next to the
+     * rest of it, for projections that do not render world copies.
+     */
     private transformBbox(geom: Point[], project: (point: Point) => MercatorCoordinate, checkWrap: boolean): MercatorCoordinate[] {
         let transformed = geom.map(project);
         if (checkWrap) {
@@ -968,8 +983,8 @@ export class TileManager extends Evented<SourceEventType> {
 
             const newBounds = Bounds.fromPoints(transformed);
 
-            if (!newBounds.covers(projected)) {
-                transformed = transformed.map((coord) => coord.x > 0.5 ?
+            if (newBounds.width() > HALF_WORLD && !newBounds.covers(projected)) {
+                transformed = transformed.map((coord) => coord.x > HALF_WORLD ?
                     new MercatorCoordinate(coord.x - 1, coord.y, coord.z) :
                     coord
                 );

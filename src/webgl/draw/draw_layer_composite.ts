@@ -8,6 +8,7 @@ import {EXTENT} from '../../data/extent.ts';
 import {isLineStyleLayer, type LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import {isFillStyleLayer, type FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {isRasterStyleLayer, type RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -41,6 +42,7 @@ function isShaderBlend(blend: LayerBlend): blend is ShaderBlend {
 export function layerBlendsInShader(layer: StyleLayer): boolean {
     if (isFillStyleLayer(layer)) return isShaderBlend(layer.paint.get('fill-layer-blend'));
     if (isLineStyleLayer(layer)) return isShaderBlend(layer.paint.get('line-layer-blend'));
+    if (isRasterStyleLayer(layer)) return isShaderBlend(layer.paint.get('raster-layer-blend'));
     return false;
 }
 
@@ -117,12 +119,19 @@ function getCoordsViewportBounds(coords: OverscaledTileID[], frameRenderContext:
  * Partial `{line,fill}-layer-opacity` / `{line,fill}-layer-blend`:
  * render the whole layer to a scratch FBO so it composites as one surface instead of per feature.
  * The bounds only cover tiles with a bucket for the layer, since the tile draw loops skip the others.
+ * A raster layer takes the whole viewport, since an image source can draw beyond its tile.
  */
-export function prepareDrawLayerComposite(painter: Painter, tileManager: TileManager, layer: LineStyleLayer | FillStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): PrepareDrawLayerCompositeResult {
+export function prepareDrawLayerComposite(painter: Painter, tileManager: TileManager, layer: LineStyleLayer | FillStyleLayer | RasterStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): PrepareDrawLayerCompositeResult {
     const context = frameRenderContext.context;
     const compositeTarget = context.bindFramebuffer.get();
     const compositeViewport = context.viewport.get();
     const [, , width, height] = compositeViewport;
+
+    // Mesa 24.3 to 25.3.1 on Intel Gen12 leaves the previous layer's pixels in the framebuffer when its clear shares
+    // a batch with the composite draw that sampled it (#9003).
+    if (frameRenderContext.layerCompositeSampled) {
+        context.gl.flush();
+    }
 
     bindLayerComposite(painter, width, height);
 
@@ -133,7 +142,7 @@ export function prepareDrawLayerComposite(painter: Painter, tileManager: TileMan
     frameRenderContext.renderTileClippingMasks(layer, coords);
 
     const drawnCoords = coords.filter((coord) => tileManager.getTile(coord)?.getBucket(layer));
-    const bounds = getCoordsViewportBounds(drawnCoords, frameRenderContext);
+    const bounds: [number, number, number, number] = isRasterStyleLayer(layer) ? [0, 0, width, height] : getCoordsViewportBounds(drawnCoords, frameRenderContext);
 
     return {
         compositeTarget,
@@ -207,7 +216,7 @@ function copyBackdrop(painter: Painter, x: number, y: number, width: number, hei
  * A blend mode evaluated in the shader has already mixed in the backdrop, so its result replaces the target.
  * With the overdraw inspector on, the scratch FBO holds the layer's overdraw count, which is added to the target's.
  */
-export function drawLayerComposite(painter: Painter, opacity: number, blend: LayerBlend, prepareResult: PrepareDrawLayerCompositeResult, layer: LineStyleLayer | FillStyleLayer, frameRenderContext: FrameRenderContext): void {
+export function drawLayerComposite(painter: Painter, opacity: number, blend: LayerBlend, prepareResult: PrepareDrawLayerCompositeResult, layer: LineStyleLayer | FillStyleLayer | RasterStyleLayer, frameRenderContext: FrameRenderContext): void {
     const context = frameRenderContext.context;
     const gl = context.gl;
     const [bx, by, bw, bh] = prepareResult.bounds;
@@ -251,4 +260,6 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
         painter.viewportSegments, layer.paint, frameRenderContext.projectedCamera.zoom);
 
     gl.disable(gl.SCISSOR_TEST);
+
+    frameRenderContext.layerCompositeSampled = true;
 }

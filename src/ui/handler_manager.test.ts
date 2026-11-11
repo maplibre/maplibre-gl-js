@@ -1,22 +1,16 @@
 import {afterEach, beforeEach, describe, expect, vi, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
-import {Event as MapEvent} from '../util/evented.ts';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 import {beforeMapTest, createMap, createTerrain, createCoverageIndex} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
 import * as timeControl from '../util/time_control.ts';
-import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
-import {VerticalPerspectiveCameraHelper} from '../geo/projection/vertical_perspective_camera_helper.ts';
 
-import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager.ts';
 import type {Map} from './map.ts';
-import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {Terrain} from '../render/terrain.ts';
 
 let map: Map;
-let manager: HandlerManager;
 
 beforeEach(() => {
     beforeMapTest();
@@ -27,200 +21,11 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-describe('HandlerManager terrain scenarios', () => {
-    beforeEach(() => {
-        map = createMap();
-        manager = map._handlers;
-    });
-
-    test('_handleMapControls pans through the camera helper when terrain is not enabled and the pointer is on the map', () => {
-        const handleZoom = vi.spyOn(MercatorCameraHelper.prototype, 'handleMapControlsRollPitchBearingZoom');
-        const handlePan = vi.spyOn(MercatorCameraHelper.prototype, 'handleMapControlsPan').mockImplementation(state => ({...state}));
-        const deltas: MapControlsDeltas = {
-            panDelta: new Point(0, 0),
-            zoomDelta: 0,
-            rollDelta: 0,
-            pitchDelta: 0,
-            bearingDelta: 0,
-            around: new Point(0, 0),
-        };
-        const options: MapControlsScenarioOptions = {
-            terrain: null,
-            state: map._camera.cameraState,
-            deltasForHelper: deltas,
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {drag: createEventInProgress('drag')},
-            panDelta: deltas.panDelta,
-        };
-
-        manager._terrainGesture.inFlight = false;
-
-        const result = manager._handleMapControls(options);
-
-        expect(handleZoom).toHaveBeenCalledWith(options.state, map._camera.context, options.deltasForHelper);
-        expect(handlePan).toHaveBeenCalledWith(handleZoom.mock.results[0].value, map._camera.context, options.deltasForHelper, options.preZoomAroundLoc);
-        expect(result).toBe(handlePan.mock.results[0].value);
-        expect(map._camera.isHoldingElevation()).toBe(false);
-        expect(manager._terrainGesture.inFlight).toBe(false);
-    });
-
-    test('_handleMapControls enables terrain movement for globe terrain handling', async () => {
-        await map.once('load');
-        map.setProjection({type: 'globe'});
-        const handlePan = vi.spyOn(VerticalPerspectiveCameraHelper.prototype, 'handleMapControlsPan');
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            state: map._camera.cameraState,
-            deltasForHelper: {
-                panDelta: new Point(1, 1),
-                zoomDelta: 0,
-                rollDelta: 0,
-                pitchDelta: 0,
-                bearingDelta: 0,
-                around: new Point(0, 0),
-            },
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {drag: createEventInProgress('drag')},
-            panDelta: new Point(1, 1),
-        };
-
-        manager._terrainGesture.inFlight = false;
-
-        manager._handleMapControls(options);
-
-        expect(manager._terrainGesture.inFlight).toBe(true);
-        expect(map._camera.isHoldingElevation()).toBe(true);
-        expect(handlePan).toHaveBeenCalledWith(expect.anything(), map._camera.context, options.deltasForHelper, options.preZoomAroundLoc);
-    });
-
-    test('_handleMapControls keeps terrain movement state when globe terrain is already active', async () => {
-        await map.once('load');
-        map.setProjection({type: 'globe'});
-        const handlePan = vi.spyOn(VerticalPerspectiveCameraHelper.prototype, 'handleMapControlsPan');
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            state: map._camera.cameraState,
-            deltasForHelper: {
-                panDelta: new Point(0, 0),
-                zoomDelta: 0,
-                rollDelta: 0,
-                pitchDelta: 0,
-                bearingDelta: 0,
-                around: new Point(0, 0),
-            },
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {},
-            panDelta: undefined,
-        };
-
-        manager._terrainGesture.inFlight = true;
-        map._camera.holdElevation('gesture');
-
-        manager._handleMapControls(options);
-
-        expect(manager._terrainGesture.inFlight).toBe(true);
-        expect(map._camera.isHoldingElevation()).toBe(true);
-        expect(handlePan).toHaveBeenCalledWith(expect.anything(), map._camera.context, options.deltasForHelper, options.preZoomAroundLoc);
-    });
-
-    test('_handleMapControls activates terrain movement on first drag in mercator terrain', () => {
-        const handlePan = vi.spyOn(MercatorCameraHelper.prototype, 'handleMapControlsPan').mockImplementation(state => ({...state}));
-        const deltas: MapControlsDeltas = {
-            panDelta: new Point(2, 3),
-            zoomDelta: 0,
-            rollDelta: 0,
-            pitchDelta: 0,
-            bearingDelta: 0,
-            around: new Point(0, 0),
-        };
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            state: map._camera.cameraState,
-            deltasForHelper: deltas,
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {drag: createEventInProgress('drag')},
-            panDelta: deltas.panDelta,
-        };
-
-        manager._terrainGesture.inFlight = false;
-
-        const result = manager._handleMapControls(options);
-
-        expect(manager._terrainGesture.inFlight).toBe(true);
-        expect(map._camera.isHoldingElevation()).toBe(true);
-        expect(handlePan).toHaveBeenCalledTimes(1);
-        expect(result).toBe(handlePan.mock.results[0].value);
-    });
-
-    test('_handleMapControls drags by pixels on the center-elevation plane when already moving in mercator terrain', () => {
-        const handlePan = vi.spyOn(MercatorCameraHelper.prototype, 'handleMapControlsPan');
-        const panDelta = new Point(4, 6);
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            state: map._camera.cameraState,
-            deltasForHelper: {
-                panDelta,
-                zoomDelta: 0,
-                rollDelta: 0,
-                pitchDelta: 0,
-                bearingDelta: 0,
-                around: new Point(0, 0),
-            },
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {drag: createEventInProgress('drag')},
-            panDelta,
-        };
-        const draggedToTheCenter = map.unproject(map._camera.projectedCamera.centerPoint.sub(panDelta));
-
-        manager._terrainGesture.inFlight = true;
-        map._camera.holdElevation('gesture');
-
-        const result = manager._handleMapControls(options);
-
-        expect(result.center.lng).toBeCloseTo(draggedToTheCenter.lng, 9);
-        expect(result.center.lat).toBeCloseTo(draggedToTheCenter.lat, 9);
-        expect(handlePan).not.toHaveBeenCalled();
-    });
-
-    test('_handleMapControls falls back to helper panning when not dragging in mercator terrain', () => {
-        const handlePan = vi.spyOn(MercatorCameraHelper.prototype, 'handleMapControlsPan');
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            state: map._camera.cameraState,
-            deltasForHelper: {
-                panDelta: new Point(0, 0),
-                zoomDelta: 0,
-                rollDelta: 0,
-                pitchDelta: 0,
-                bearingDelta: 0,
-                around: new Point(0, 0),
-            },
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {},
-            panDelta: undefined,
-        };
-
-        manager._terrainGesture.inFlight = true;
-        map._camera.holdElevation('gesture');
-
-        manager._handleMapControls(options);
-
-        expect(handlePan).toHaveBeenCalledWith(expect.anything(), map._camera.context, options.deltasForHelper, options.preZoomAroundLoc);
-    });
-});
-
-function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
-    return {
-        handlerName: name,
-        originalEvent: new MapEvent(`${String(name)}start`),
-    };
-}
-
 describe('terrain gesture anchoring', () => {
     async function setupGestureMap(pitch: number = 0): Promise<HTMLElement> {
         map = createMap({interactive: true, zoom: 11, center: [7.5, 45.9], pitch, bearing: 0});
         map.touchZoomRotate.disableRotation();
-        map._handlers._handlersById.tapZoom.disable();
+        map.doubleClickZoom.disable();
         map.touchPitch.disable();
         await map.once('style.load');
         return map.getCanvas();
@@ -275,12 +80,10 @@ describe('terrain gesture anchoring', () => {
         }
 
         expect(map.getZoom()).toBeGreaterThan(11.5);
-        expect(map._handlers._terrainGesture.anchorElevation).toBe(1000);
 
         const slip = slipOf(anchor, mid);
         endGesture(target);
         expect(slip).toBeLessThan(0.5);
-        expect(map._handlers._terrainGesture.anchorElevation).toBeNull();
     });
 
     test('pitched moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {

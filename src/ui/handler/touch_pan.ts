@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {indexTouches} from './handler_util.ts';
 
 import type {Handler} from '../handler_manager.ts';
-import type {Map} from '../map.ts';
+import type {CooperativeGesturesHandler} from './cooperative_gestures.ts';
 
 /**
  * A `TouchPanHandler` allows the user to pan the map using touch gestures.
@@ -16,11 +16,11 @@ export class TouchPanHandler implements Handler {
     };
     _clickTolerance: number;
     _sum: Point;
-    _map: Map;
+    _cooperativeGestures: CooperativeGesturesHandler;
 
-    constructor(options: {clickTolerance: number}, map: Map) {
+    constructor(options: {clickTolerance: number}, cooperativeGestures: CooperativeGesturesHandler) {
         this._clickTolerance = options.clickTolerance || 1;
-        this._map = map;
+        this._cooperativeGestures = cooperativeGestures;
         this.reset();
     }
 
@@ -31,7 +31,7 @@ export class TouchPanHandler implements Handler {
     }
 
     _shouldBePrevented(touchesCount: number): boolean {
-        const minTouches = this._map.cooperativeGestures.isEnabled() ? 2 : 1;
+        const minTouches = this._cooperativeGestures.isEnabled() ? 2 : 1;
         return touchesCount < minTouches;
     }
 
@@ -42,7 +42,7 @@ export class TouchPanHandler implements Handler {
     touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
         if (!this._active) return;
         if (this._shouldBePrevented(mapTouches.length)) {
-            this._map.cooperativeGestures.notifyGestureBlocked('touch_pan', e);
+            this._cooperativeGestures.notifyGestureBlocked('touch_pan', e);
             return;
         }
         e.preventDefault();

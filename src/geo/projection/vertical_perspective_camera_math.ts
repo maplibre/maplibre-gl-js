@@ -421,6 +421,27 @@ export function locationToScreenPoint(camera: VerticalPerspectiveProjectedCamera
     return projectSurfacePointToScreen(camera, pos);
 }
 
+/** The number of segments a point query's path to the camera is sampled with to follow the curve of the globe. */
+const CAMERA_QUERY_ARC_SEGMENTS = 8;
+
+/**
+ * For a point query on the globe, the path from the query point to the point on the globe below the camera, sampled
+ * along the arc it follows on the sphere. An extrusion visible at the query point stands on that path. Box queries
+ * and points off the globe get null, and with it the geometry every projection uses, see `getCameraQueryGeometry` in
+ * `camera_math.ts`.
+ */
+export function getCameraQueryGeometry(camera: VerticalPerspectiveProjectedCamera, queryGeometry: Point[]): Point[] | null {
+    if (queryGeometry.length !== 1 || !isPointOnMapSurface(camera, queryGeometry[0])) return null;
+    const query = angularCoordinatesToSurfaceVector(unprojectScreenPoint(camera, queryGeometry[0]));
+    const nadir = vec3.normalize(createVec3f64(), camera.cameraPosition);
+    const geometry = [queryGeometry[0]];
+    for (let i = 1; i <= CAMERA_QUERY_ARC_SEGMENTS; i++) {
+        const point = vec3.lerp(createVec3f64(), query, nadir, i / CAMERA_QUERY_ARC_SEGMENTS);
+        geometry.push(projectSurfacePointToScreen(camera, vec3.normalize(point, point)));
+    }
+    return geometry;
+}
+
 /**
  * Projects a given vector on the surface of a unit sphere (or possible above the surface)
  * and returns its coordinates on screen in pixels.

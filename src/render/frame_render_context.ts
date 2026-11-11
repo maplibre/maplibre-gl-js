@@ -100,6 +100,8 @@ export class FrameRenderContext {
     opaquePassCutoff: number = Infinity;
     depthRangeFor3D: DepthRangeType = [0, 1];
     isRenderingToTexture: boolean = false;
+    /** Whether a layer composite has already sampled the shared scratch FBO in this frame. */
+    layerCompositeSampled: boolean = false;
     readonly projectedCamera: ProjectedCamera;
     /** The projection the camera was projected with, which gives the world mapping and the tile grid. */
     readonly cameraProjection: CameraProjection;

@@ -5,9 +5,9 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat.ts';
 
 import type {RequestedCameraProvider} from './requested-camera-provider.ts';
-import type {Map} from '../map.ts';
+import type {CooperativeGesturesHandler} from './cooperative_gestures.ts';
 import type {AroundCenterOptions} from './two_fingers_touch.ts';
-import type {Handler} from '../handler_manager.ts';
+import type {Handler, HandlerResult} from '../handler_manager.ts';
 import type Point from '@mapbox/point-geometry';
 
 // deltaY value for mouse scroll wheel identification
@@ -28,48 +28,57 @@ const maxScalePerFrame = 2;
 const wheelEventTimeDiffAdjustment = 5;
 
 /**
+ * A wait scroll zoom asks the handler manager for, see {@link HandlerResult.timeout}. A `singleWheel` wait is for a
+ * second wheel event, which tells a trackpad from a mouse wheel, whose ticks come further apart. A `finish` wait is
+ * between a zoom reaching its target and its end events, so that a scroll right after continues the same zoom.
+ */
+type ScrollZoomWait = {reason: 'singleWheel'; event: WheelEvent} | {reason: 'finish'};
+
+/**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
  *
  * @group Handlers
  */
 export class ScrollZoomHandler implements Handler {
-    _map: Map;
-    _tr: RequestedCameraProvider;
-    _enabled: boolean;
-    _active: boolean;
-    _zooming: boolean;
-    _aroundCenter: boolean;
-    _aroundPoint: Point;
-    _type: 'wheel' | 'trackpad' | null;
-    _lastValue: number;
-    _timeout: ReturnType<typeof setTimeout>; // used for delayed-handling of a single wheel movement
-    _finishTimeout: ReturnType<typeof setTimeout>; // used to delay final '{move,zoom}end' events
+    private _canvas: HTMLElement;
+    private _cooperativeGestures: CooperativeGesturesHandler;
+    private _tr: RequestedCameraProvider;
+    private _enabled: boolean;
+    private _active: boolean;
+    private _zooming: boolean;
+    private _aroundCenter: boolean;
+    private _aroundPoint: Point;
+    private _type: 'wheel' | 'trackpad' | null;
+    private _lastValue: number;
+    /** The `singleWheel` wait in progress, if any; a wait that has been replaced or abandoned is ignored when it ends. */
+    private _singleWheelWait: ScrollZoomWait | undefined;
+    /** The `finish` wait in progress, if any; a wait that has been replaced or abandoned is ignored when it ends. */
+    private _finishWait: ScrollZoomWait | undefined;
 
-    _lastWheelEvent: WheelEvent;
-    _lastWheelEventTime: number;
+    private _lastWheelEvent: WheelEvent;
+    private _lastWheelEventTime: number;
 
-    _lastExpectedZoom: number;
-    _startZoom: number;
-    _targetZoom: number;
-    _delta: number;
-    _easing: ((a: number) => number);
-    _prevEase: {
+    private _lastExpectedZoom: number;
+    private _startZoom: number;
+    private _targetZoom: number;
+    private _delta: number;
+    private _easing: ((a: number) => number);
+    private _prevEase: {
         start: number;
         duration: number;
         easing: (_: number) => number;
     };
 
-    _needsRerender: boolean;
-    _triggerRenderFrame: () => void;
+    private _needsRerender: boolean;
 
-    _defaultZoomRate: number;
-    _wheelZoomRate: number;
+    private _defaultZoomRate: number;
+    private _wheelZoomRate: number;
 
     /** @internal */
-    constructor(map: Map, triggerRenderFrame: () => void, transformProvider: RequestedCameraProvider) {
-        this._map = map;
+    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, transformProvider: RequestedCameraProvider) {
+        this._canvas = canvas;
+        this._cooperativeGestures = cooperativeGestures;
         this._tr = transformProvider;
-        this._triggerRenderFrame = triggerRenderFrame;
 
         this._delta = 0;
 
@@ -117,7 +126,7 @@ export class ScrollZoomHandler implements Handler {
     * progress.
     */
     isActive(): boolean {
-        return !!this._active || this._finishTimeout !== undefined;
+        return !!this._active || this._finishWait !== undefined;
     }
 
     isZooming(): boolean {
@@ -156,24 +165,25 @@ export class ScrollZoomHandler implements Handler {
     /**
      * Determines whether or not the gesture is blocked due to cooperativeGestures.
      */
-    _shouldBePrevented(e: WheelEvent): boolean {
-        if (!this._map.cooperativeGestures.isEnabled()) {
+    private _shouldBePrevented(e: WheelEvent): boolean {
+        if (!this._cooperativeGestures.isEnabled()) {
             return false;
         }
 
         const isTrackpadPinch = e.ctrlKey;
-        const isBypassed = isTrackpadPinch || this._map.cooperativeGestures.isBypassed(e);
+        const isBypassed = isTrackpadPinch || this._cooperativeGestures.isBypassed(e);
 
         return !isBypassed;
     }
 
-    wheel(e: WheelEvent): void {
+    wheel(e: WheelEvent): HandlerResult | void {
         if (!this.isEnabled()) return;
         if (this._shouldBePrevented(e)) {
-            this._map.cooperativeGestures.notifyGestureBlocked('wheel_zoom', e);
+            this._cooperativeGestures.notifyGestureBlocked('wheel_zoom', e);
             return;
         }
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
+        let result: HandlerResult | void;
         const currentTime = now(),
             timeDelta = currentTime - (this._lastWheelEventTime || 0);
 
@@ -192,19 +202,18 @@ export class ScrollZoomHandler implements Handler {
             this._type = null;
             this._lastValue = value;
 
-            // Start a timeout in case this was a singular event, and delay it by up to 40ms.
-            this._timeout = setTimeout(this._onTimeout, 40, e);
+            // Wait up to 40ms in case this was a singular event.
+            this._singleWheelWait = {reason: 'singleWheel', event: e};
+            result = {timeout: {delay: 40, token: this._singleWheelWait}};
 
         } else if (!this._type) {
             // This is a repeating event, but we don't know the type of event just yet.
             // If the delta per time is small, we assume it's a fast trackpad; otherwise we switch into wheel mode.
             this._type = (Math.abs(timeDelta * value) < 200) ? 'trackpad' : 'wheel';
 
-            // Make sure our delayed event isn't fired again, because we accumulate
-            // the previous event (which was less than 40ms ago) into this event.
-            if (this._timeout) {
-                clearTimeout(this._timeout);
-                this._timeout = null;
+            // Stop waiting on the previous event (which was less than 40ms ago), because we accumulate it into this event.
+            if (this._singleWheelWait) {
+                this._singleWheelWait = undefined;
                 value += this._lastValue;
             }
         }
@@ -217,22 +226,40 @@ export class ScrollZoomHandler implements Handler {
             this._lastWheelEvent = e;
             this._delta -= value;
             if (!this._active) {
-                this._start(e);
+                result = this._start(e);
             }
         }
 
         e.preventDefault();
+        return result;
     }
 
-    _onTimeout = (initialEvent: MouseEvent): void => {
-        this._type = 'wheel';
-        this._delta -= this._lastValue;
-        if (!this._active) {
-            this._start(initialEvent);
-        }
-    };
+    /**
+     * @internal
+     * Ends a wait the handler asked the manager for, see {@link HandlerResult.timeout}: a single wheel event that no
+     * second one followed is a mouse wheel's, and a zoom that no further scroll continued ends. A wait the handler no
+     * longer waits for, because a later scroll replaced it, is ignored.
+     */
+    onTimeout(wait: ScrollZoomWait): HandlerResult | void {
+        if (wait !== this._singleWheelWait && wait !== this._finishWait) return;
 
-    _start(e: MouseEvent): void {
+        switch (wait.reason) {
+            case 'singleWheel':
+                this._singleWheelWait = undefined;
+                this._type = 'wheel';
+                this._delta -= this._lastValue;
+                if (!this._active) return this._start(wait.event);
+                return;
+            case 'finish':
+                this._zooming = false;
+                delete this._targetZoom;
+                delete this._lastExpectedZoom;
+                delete this._finishWait;
+                return {needsRenderFrame: true};
+        }
+    }
+
+    private _start(e: MouseEvent): HandlerResult | void {
         if (!this._delta) return;
 
         this._needsRerender = false;
@@ -242,12 +269,9 @@ export class ScrollZoomHandler implements Handler {
             this._zooming = true;
         }
 
-        if (this._finishTimeout) {
-            clearTimeout(this._finishTimeout);
-            delete this._finishTimeout;
-        }
+        delete this._finishWait;
 
-        const pos = DOM.mousePos(this._map.getCanvas(), e);
+        const pos = DOM.mousePos(this._canvas, e);
         const tr = this._tr;
 
         // Whether aroundPoint is actually unprojectable is not a problem to be solved here, but in handler_manager.ts instead.
@@ -259,17 +283,11 @@ export class ScrollZoomHandler implements Handler {
 
         if (!this._needsRerender) {
             this._needsRerender = true;
-            this._triggerRenderFrame();
+            return {needsRenderFrame: true};
         }
     }
 
-    renderFrame(): {
-        noInertia: boolean;
-        needsRenderFrame: boolean;
-        zoomDelta: number;
-        around: Point;
-        originalEvent: WheelEvent;
-    } | void {
+    renderFrame(): HandlerResult | void {
         if (!this._needsRerender) return;
         this._needsRerender = false;
 
@@ -301,7 +319,7 @@ export class ScrollZoomHandler implements Handler {
 
             const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
             const target = this._tr.constrain(this._tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
-            const zoomSnap = this._map.getZoomSnap();
+            const zoomSnap = this._tr.zoomSnap;
 
             if (this._type === 'wheel' && zoomSnap > 0) {
                 const currentSnapped = evaluateZoomSnap(tr.zoom, zoomSnap);
@@ -349,13 +367,7 @@ export class ScrollZoomHandler implements Handler {
 
         if (finished) {
             this._active = false;
-            this._finishTimeout = setTimeout(() => {
-                this._zooming = false;
-                this._triggerRenderFrame();
-                delete this._targetZoom;
-                delete this._lastExpectedZoom;
-                delete this._finishTimeout;
-            }, 200);
+            this._finishWait = {reason: 'finish'};
         }
 
         this._lastExpectedZoom = zoom;
@@ -365,11 +377,12 @@ export class ScrollZoomHandler implements Handler {
             needsRenderFrame: !finished,
             zoomDelta: zoom - tr.zoom,
             around: this._aroundPoint,
-            originalEvent: this._lastWheelEvent
+            originalEvent: this._lastWheelEvent,
+            timeout: finished ? {delay: 200, token: this._finishWait} : undefined
         };
     }
 
-    _smoothOutEasing(duration: number): (t: number) => number {
+    private _smoothOutEasing(duration: number): (t: number) => number {
         let easing = defaultEasing;
 
         if (this._prevEase) {
@@ -398,9 +411,6 @@ export class ScrollZoomHandler implements Handler {
         this._zooming = false;
         delete this._targetZoom;
         delete this._lastExpectedZoom;
-        if (this._finishTimeout) {
-            clearTimeout(this._finishTimeout);
-            delete this._finishTimeout;
-        }
+        delete this._finishWait;
     }
 }

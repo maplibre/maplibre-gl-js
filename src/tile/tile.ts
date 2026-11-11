@@ -416,7 +416,6 @@ export class Tile {
         projectedCamera: ProjectedCamera,
         worldCoordinateHelper: WorldCoordinateHelper,
         maxPitchScaleFactor: number,
-        pixelPosMatrix: mat4,
         getElevation: GetElevation | undefined
     ): QueryResults {
         if (!this.latestFeatureIndex?.rawTileData)
@@ -427,7 +426,6 @@ export class Tile {
             cameraQueryGeometry,
             scale,
             tileSize: this.tileSize,
-            pixelPosMatrix,
             projectedCamera,
             worldCoordinateHelper,
             params,
