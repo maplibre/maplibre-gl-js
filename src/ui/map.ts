@@ -1817,14 +1817,14 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setMaxBounds(bounds?: LngLatBoundsLike | null): this {
-        const centerBefore = this._camera.transform.center;
-        const zoomBefore = this._camera.transform.zoom;
+        const centerBefore = this.getCenter();
+        const zoomBefore = this.getZoom();
 
         this._camera.applyTransformChange(tr => tr.setMaxBounds(LngLatBounds.convert(bounds)));
         this._update();
 
-        const {center, zoom} = this._camera.transform;
-        const zoomChanged = zoomBefore !== zoom;
+        const center = this.getCenter();
+        const zoomChanged = zoomBefore !== this.getZoom();
         const centerChanged = centerBefore.lat !== center.lat || centerBefore.lng !== center.lng;
 
         if (zoomChanged) {
