@@ -5,24 +5,24 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- fix: glitches between consecutive `-layer-opacity` or `-layer-blend` layers on Intel Gen12 with Mesa 24.3 to 25.3.1 ([#9006](https://github.com/maplibre/maplibre-gl-js/pull/9006)) (by [@gravitystorm](https://github.com/gravitystorm))
-- docs: guide authors on searchable example metadata ([#9005](https://github.com/maplibre/maplibre-gl-js/pull/9005)) (by [@Harshinit01312](https://github.com/Harshinit01312))
-- refactor: CSC-1.11 implement the transform once for all projections ([#8995](https://github.com/maplibre/maplibre-gl-js/pull/8995)) (by [@birkskyum](https://github.com/birkskyum))
+## 6.18.0
+
+### ✨ Features and improvements
+
+- feat: add `raster-layer-blend` support ([#8986](https://github.com/maplibre/maplibre-gl-js/pull/8986)) (by [@birkskyum](https://github.com/birkskyum))
+- feat: add `{line,fill}-layer-blend` support ([#8073](https://github.com/maplibre/maplibre-gl-js/pull/8073)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- feat: change rotation inertia to match maplibre-native ([#8970](https://github.com/maplibre/maplibre-gl-js/pull/8970)) (by [@HarelM](https://github.com/HarelM))
+- perf: speed up loading of tiles whose layers list the same feature ids twice in ascending order ([#8965](https://github.com/maplibre/maplibre-gl-js/pull/8965)) (by [@DoFabien](https://github.com/DoFabien))
 - docs: improve search descriptions for three map examples ([#9002](https://github.com/maplibre/maplibre-gl-js/pull/9002)) (by [@Harshinit01312](https://github.com/Harshinit01312))
+
+### 🐞 Bug fixes
+
+- fix: glitches between consecutive `-layer-opacity` or `-layer-blend` layers on Intel Gen12 with Mesa 24.3 to 25.3.1 ([#9006](https://github.com/maplibre/maplibre-gl-js/pull/9006)) (by [@gravitystorm](https://github.com/gravitystorm))
 - fix: fire move and zoom events from setMaxBounds when the new bounds change the camera ([#8998](https://github.com/maplibre/maplibre-gl-js/pull/8998)) (by [@kkokkojeong](https://github.com/kkokkojeong))
 - fix: scale an icon fitted to its text by icon-size without growing the padding ([#8952](https://github.com/maplibre/maplibre-gl-js/pull/8952)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
 - fix: queryRenderedFeatures missing fill-extrusion walls and roofs on the globe ([#8926](https://github.com/maplibre/maplibre-gl-js/pull/8926)) (by [@mfaeezshabbir](https://github.com/mfaeezshabbir))
-- chore: improve classes hierarchy between handler manger and map ([#8994](https://github.com/maplibre/maplibre-gl-js/pull/8994)) (by [@HarelM](https://github.com/HarelM))
-- feat: add `raster-layer-blend` support ([#8986](https://github.com/maplibre/maplibre-gl-js/pull/8986)) (by [@birkskyum](https://github.com/birkskyum))
-- feat: add `{line,fill}-layer-blend` support ([#8073](https://github.com/maplibre/maplibre-gl-js/pull/8073)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 - fix: map jumping when dragging or zooming above or below the identity projection ([#8964](https://github.com/maplibre/maplibre-gl-js/pull/8964)) (by [@birkskyum](https://github.com/birkskyum))
-- feat: change rotation inertia to match maplibre-native ([#8970](https://github.com/maplibre/maplibre-gl-js/pull/8970)) (by [@HarelM](https://github.com/HarelM))
-- chore: decouple camera and hanlder manager ([#8966](https://github.com/maplibre/maplibre-gl-js/pull/8966)) (by [@HarelM](https://github.com/HarelM))
-- perf: speed up loading of tiles whose layers list the same feature ids twice in ascending order ([#8965](https://github.com/maplibre/maplibre-gl-js/pull/8965)) (by [@DoFabien](https://github.com/DoFabien))
-## 6.18.0
-### ✨ Features and improvements
 
-### 🐞 Bug fixes
 
 ## 6.17.0
 
