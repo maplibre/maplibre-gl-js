@@ -11,6 +11,10 @@ uniform lowp vec3 u_lightpos;
 uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
 
+#ifdef WALL_AMBIENT_OCCLUSION
+    uniform float u_ao_wall_radius;
+#endif
+
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in ivec4 a_normal_ed;
 
@@ -26,12 +30,23 @@ out vec2 v_pos_a;
 out vec2 v_pos_b;
 out vec4 v_lighting;
 
+#ifdef WALL_AMBIENT_OCCLUSION
+    // The lighting with its ambient part removed.
+    out vec3 v_lighting_without_ambient;
+    // Height above the ground divided by the radius; 1 on roofs.
+    out highp float v_ao_wall_height;
+#endif
+
 #pragma maplibre: define lowp float base
 #pragma maplibre: define lowp float height
 #pragma maplibre: define lowp vec4 pattern_from
 #pragma maplibre: define lowp vec4 pattern_to
 #pragma maplibre: define lowp float pixel_ratio_from
 #pragma maplibre: define lowp float pixel_ratio_to
+
+vec3 shade(float directional) {
+    return clamp(directional * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
+}
 
 void main() {
     #pragma maplibre: initialize lowp float base
@@ -101,14 +116,27 @@ void main() {
     float directional = clamp(dot(normal / 16383.0, u_lightpos), 0.0, 1.0);
     directional = mix((1.0 - u_lightintensity), max((0.5 + u_lightintensity), 1.0), directional);
 
+    float gradient = 1.0;
     if (normal.z == 0.0) {
         // This avoids another branching statement, but multiplies by a constant of 0.84 if no vertical gradient,
         // and otherwise calculates the gradient based on base + height
-        directional *= (
+        gradient =
             (1.0 - u_vertical_gradient) +
-            (u_vertical_gradient * clamp((t + gradient_base) * pow(gradient_height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0)));
+            (u_vertical_gradient * clamp((t + gradient_base) * pow(gradient_height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0));
     }
+    directional *= gradient;
 
-    v_lighting.rgb += clamp(directional * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
+    v_lighting.rgb += shade(directional);
     v_lighting *= u_opacity;
+
+    #ifdef WALL_AMBIENT_OCCLUSION
+        #ifdef TERRAIN3D
+            float ground = get_elevation(a_pos);
+        #else
+            float ground = 0.0;
+        #endif
+        // 1 - u_lightintensity is the part of the lighting that reaches a surface whichever way it faces.
+        v_lighting_without_ambient = shade(directional - (1.0 - u_lightintensity) * gradient) * u_opacity;
+        v_ao_wall_height = normal.z == 0.0 ? (elevation - ground) / u_ao_wall_radius : 1.0;
+    #endif
 }
