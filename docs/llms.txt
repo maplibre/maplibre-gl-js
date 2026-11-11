@@ -342,6 +342,7 @@
 - [Get features under the mouse pointer](<https://maplibre.org/maplibre-gl-js/docs/examples/get-features-under-the-mouse-pointer/index.md>)
 - [Hash routing](<https://maplibre.org/maplibre-gl-js/docs/examples/hash-routing/index.md>)
 - [Overview](<https://maplibre.org/maplibre-gl-js/docs/examples/index.md>)
+- [Interactive layer blending](<https://maplibre.org/maplibre-gl-js/docs/examples/interactive-layer-blending/index.md>)
 - [Jump to a series of locations](<https://maplibre.org/maplibre-gl-js/docs/examples/jump-to-a-series-of-locations/index.md>)
 - [Level of Detail Control](<https://maplibre.org/maplibre-gl-js/docs/examples/level-of-detail-control/index.md>)
 - [Locale switching](<https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/index.md>)

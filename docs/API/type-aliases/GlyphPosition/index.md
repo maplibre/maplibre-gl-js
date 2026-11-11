@@ -2,6 +2,6 @@
 
 > **GlyphPosition** = `object`
 
-Defined in: [render/glyph\_atlas.ts:22](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/render/glyph_atlas.ts#L22>)
+Defined in: [render/glyph\_atlas.ts:22](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/render/glyph_atlas.ts#L22>)
 
 The glyph's position

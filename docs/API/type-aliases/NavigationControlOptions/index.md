@@ -2,7 +2,7 @@
 
 > **NavigationControlOptions** = `object`
 
-Defined in: [ui/control/navigation\_control.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/control/navigation_control.ts#L13>)
+Defined in: [ui/control/navigation\_control.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L13>)
 
 The [NavigationControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/NavigationControl/index.md>) options object
 
@@ -12,7 +12,7 @@ The [NavigationControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Na
 
 > `optional` **showCompass?**: `boolean`
 
-Defined in: [ui/control/navigation\_control.ts:17](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/control/navigation_control.ts#L17>)
+Defined in: [ui/control/navigation\_control.ts:17](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L17>)
 
 If `true` the compass button is included.
 
@@ -22,7 +22,7 @@ If `true` the compass button is included.
 
 > `optional` **showZoom?**: `boolean`
 
-Defined in: [ui/control/navigation\_control.ts:21](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/control/navigation_control.ts#L21>)
+Defined in: [ui/control/navigation\_control.ts:21](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L21>)
 
 If `true` the zoom-in and zoom-out buttons are included.
 
@@ -32,7 +32,7 @@ If `true` the zoom-in and zoom-out buttons are included.
 
 > `optional` **visualizePitch?**: `boolean`
 
-Defined in: [ui/control/navigation\_control.ts:25](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/control/navigation_control.ts#L25>)
+Defined in: [ui/control/navigation\_control.ts:25](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L25>)
 
 If `true` the pitch is visualized by rotating X-axis of compass.
 
@@ -42,6 +42,6 @@ If `true` the pitch is visualized by rotating X-axis of compass.
 
 > `optional` **visualizeRoll?**: `boolean`
 
-Defined in: [ui/control/navigation\_control.ts:29](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/control/navigation_control.ts#L29>)
+Defined in: [ui/control/navigation\_control.ts:29](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L29>)
 
 If `true` the roll is visualized by rotating the compass.

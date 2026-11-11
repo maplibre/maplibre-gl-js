@@ -2,7 +2,7 @@
 
 > **addProjection**(`crs`: [`CRS`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CRS/index.md>)): `void`
 
-Defined in: [geo/projection/projection\_crud.ts:50](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/projection/projection_crud.ts#L50>)
+Defined in: [geo/projection/projection\_crud.ts:50](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/geo/projection/projection_crud.ts#L50>)
 
 **`Experimental`**
 

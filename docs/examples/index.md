@@ -292,7 +292,11 @@ Use setPaintProperty to change a layer's fill color.](<https://maplibre.org/mapl
 
 ### Add a new layer below labels
 
-Use the second argument of addLayer to add a layer below labels.](<https://maplibre.org/maplibre-gl-js/docs/examples/add-a-new-layer-below-labels/index.md>) [![Use a custom style layer to render custom WebGL content.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/add-a-custom-style-layer.webp>)
+Use the second argument of addLayer to add a layer below labels.](<https://maplibre.org/maplibre-gl-js/docs/examples/add-a-new-layer-below-labels/index.md>) [![Toggle between different blending modes to see how a fill layer composites with the basemap.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/interactive-layer-blending.webp>) new
+
+### Interactive layer blending
+
+Toggle between different blending modes to see how a fill layer composites with the basemap.](<https://maplibre.org/maplibre-gl-js/docs/examples/interactive-layer-blending/index.md>) [![Use a custom style layer to render custom WebGL content.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/add-a-custom-style-layer.webp>)
 
 ### Add a custom style layer
 
@@ -302,11 +306,11 @@ Use a custom style layer to render custom WebGL content.](<https://maplibre.org/
 
 Use fill-pattern to draw a polygon from a repeating image pattern.](<https://maplibre.org/maplibre-gl-js/docs/examples/add-a-pattern-to-a-polygon/index.md>)
 
-[![Create a visualization with a data expression for line-color.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/style-lines-with-a-data-driven-property.webp>)
+[![Color each line by a data value stored in its GeoJSON feature properties.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/style-lines-with-a-data-driven-property.webp>)
 
 ### Style lines with a data-driven property
 
-Create a visualization with a data expression for line-color.](<https://maplibre.org/maplibre-gl-js/docs/examples/style-lines-with-a-data-driven-property/index.md>) [![Use the interpolate expression to ease-in the building layer and smoothly fade from one color to the next.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/change-building-color-based-on-zoom-level.webp>)
+Color each line by a data value stored in its GeoJSON feature properties.](<https://maplibre.org/maplibre-gl-js/docs/examples/style-lines-with-a-data-driven-property/index.md>) [![Use the interpolate expression to ease-in the building layer and smoothly fade from one color to the next.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/change-building-color-based-on-zoom-level.webp>)
 
 ### Change building color based on zoom level
 
@@ -338,11 +342,11 @@ Filter a layer symbols based on user input using setGlobalStateProperty().](<htt
 
 Filter a set of symbols based on a property value in the data.](<https://maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-by-toggling-a-list/index.md>)
 
-[![Visualize earthquake frequency by location using a heatmap layer.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/create-a-heatmap-layer.webp>)
+[![Show the density of earthquake locations on a map, weighted by magnitude.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/create-a-heatmap-layer.webp>)
 
 ### Create a heatmap layer
 
-Visualize earthquake frequency by location using a heatmap layer.](<https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer/index.md>) [![Use MapLibre GL JS' built-in functions to visualize points as clusters.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/create-and-style-clusters.webp>)
+Show the density of earthquake locations on a map, weighted by magnitude.](<https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer/index.md>) [![Use MapLibre GL JS' built-in functions to visualize points as clusters.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/create-and-style-clusters.webp>)
 
 ### Create and style clusters
 
@@ -408,11 +412,11 @@ Display a hybrid satellite map with terrain elevation.](<https://maplibre.org/ma
 
 Allows changing the sky, fog and horizon color and blends.](<https://maplibre.org/maplibre-gl-js/docs/examples/sky-fog-terrain/index.md>)
 
-[![Use extrusions to display buildings' height in 3D.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/display-buildings-in-3d.webp>)
+[![Show building heights in 3D and color the buildings by height.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/display-buildings-in-3d.webp>)
 
 ### Display buildings in 3D
 
-Use extrusions to display buildings' height in 3D.](<https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/index.md>) [![Add 3D Tiles, 3D objects, and a 3D model to a map. maplibre-gl-three glues MapLibre, Three.js, and 3d-tiles-renderer together.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/add-3d-tiles-3d-objects-and-models-using-threejs.webp>) new
+Show building heights in 3D and color the buildings by height.](<https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/index.md>) [![Add 3D Tiles, 3D objects, and a 3D model to a map. maplibre-gl-three glues MapLibre, Three.js, and 3d-tiles-renderer together.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/add-3d-tiles-3d-objects-and-models-using-threejs.webp>) new
 
 ### Add 3D Tiles, 3D objects and models using Three.js
 

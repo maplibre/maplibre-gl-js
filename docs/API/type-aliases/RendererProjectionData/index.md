@@ -2,7 +2,7 @@
 
 > **RendererProjectionData** = [`ProjectionData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ProjectionData/index.md>)\<[`Mat4f32`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Mat4f32/index.md>)\> &amp; `object`
 
-Defined in: [geo/projection/projection\_data.ts:11](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/projection/projection_data.ts#L11>)
+Defined in: [geo/projection/projection\_data.ts:11](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/geo/projection/projection_data.ts#L11>)
 
 Projection data used by renderer shader uniforms. Renderer matrices are stored as 32-bit floats so WebGL can consume them directly without per-upload copies.
 

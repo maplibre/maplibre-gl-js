@@ -1,6 +1,6 @@
 # MarkerClickEvent
 
-Defined in: [ui/marker.ts:200](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/marker.ts#L200>)
+Defined in: [ui/marker.ts:200](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L200>)
 
 The event class for the marker `click` event.
 
@@ -14,7 +14,7 @@ The event class for the marker `click` event.
 
 > **originalEvent**: `MouseEvent`
 
-Defined in: [ui/marker.ts:209](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/marker.ts#L209>)
+Defined in: [ui/marker.ts:209](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L209>)
 
 The DOM event which caused the marker click event.
 
@@ -24,7 +24,7 @@ The DOM event which caused the marker click event.
 
 > **target**: [`Marker`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Marker/index.md>)
 
-Defined in: [ui/marker.ts:205](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/marker.ts#L205>)
+Defined in: [ui/marker.ts:205](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L205>)
 
 The `Marker` object that fired the event.
 

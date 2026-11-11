@@ -29,7 +29,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.0.74">
+      <meta name="generator" content="zensical-0.1.0">
     
     
       
@@ -5155,10 +5155,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#cameraanimation" class="md-nav__link">
+  <a href="#easeto" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        cameraAnimation?
+        easeTo?
       </span>
     </span>
   </a>
@@ -5203,6 +5203,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         pinchAround?
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        timeout?
       </span>
     </span>
   </a>
@@ -9877,6 +9888,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/interactive-layer-blending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Interactive layer blending
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--new" title="Recently added">
+    </span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/jump-to-a-series-of-locations/" class="md-nav__link">
         
   
@@ -11213,10 +11259,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#cameraanimation" class="md-nav__link">
+  <a href="#easeto" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        cameraAnimation?
+        easeTo?
       </span>
     </span>
   </a>
@@ -11267,6 +11313,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        timeout?
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -11296,60 +11353,44 @@
 <blockquote>
 <p><strong>HandlerResult</strong> = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler_manager.ts#L113">ui/handler_manager.ts:113</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L111">ui/handler_manager.ts:111</a></p>
 <p>All handler methods that are called with events can optionally return a <code>HandlerResult</code>.</p>
 <h2 id="properties">Properties</h2>
 <h3 id="around">around?</h3>
 <blockquote>
 <p><code>optional</code> <strong>around?</strong>: <code>Point</code> | <code>null</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler_manager.ts#L122">ui/handler_manager.ts:122</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L120">ui/handler_manager.ts:120</a></p>
 <p>the point to not move when changing the camera</p>
 <hr />
-<h3 id="cameraanimation">cameraAnimation?</h3>
+<h3 id="easeto">easeTo?</h3>
 <blockquote>
-<p><code>optional</code> <strong>cameraAnimation?</strong>: (<code>map</code>: <a href="../../classes/Map/"><code>Map</code></a>) =&gt; <code>void</code></p>
+<p><code>optional</code> <strong>easeTo?</strong>: <a href="../EaseToOptions/"><code>EaseToOptions</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler_manager.ts#L131">ui/handler_manager.ts:131</a></p>
-<p>A method that can fire a one-off easing by directly changing the map's camera. The gesture ends with it: every
-handler is reset before it runs, so that the next frame of a handler does not stop the easing.</p>
-<h4 id="parameters">Parameters</h4>
-<table>
-<thead>
-<tr>
-<th>Parameter</th>
-<th>Type</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>map</code></td>
-<td><a href="../../classes/Map/"><code>Map</code></a></td>
-</tr>
-</tbody>
-</table>
-<h4 id="returns">Returns</h4>
-<p><code>void</code></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L130">ui/handler_manager.ts:130</a></p>
+<p>A one-off easing of the camera, such as a double click's zoom, that ends the gesture: every handler is reset
+before it starts, so that the next frame of a handler does not stop it, and its events carry the input event that
+asked for it as <code>originalEvent</code>.</p>
 <hr />
 <h3 id="needsrenderframe">needsRenderFrame?</h3>
 <blockquote>
 <p><code>optional</code> <strong>needsRenderFrame?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler_manager.ts#L140">ui/handler_manager.ts:140</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L145">ui/handler_manager.ts:145</a></p>
 <p>Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).</p>
 <hr />
 <h3 id="noinertia">noInertia?</h3>
 <blockquote>
 <p><code>optional</code> <strong>noInertia?</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler_manager.ts#L144">ui/handler_manager.ts:144</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L149">ui/handler_manager.ts:149</a></p>
 <p>The camera changes won't get recorded for inertial zooming.</p>
 <hr />
 <h3 id="originalevent">originalEvent?</h3>
 <blockquote>
 <p><code>optional</code> <strong>originalEvent?</strong>: <a href="../../classes/Event/"><code>Event</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler_manager.ts#L136">ui/handler_manager.ts:136</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L141">ui/handler_manager.ts:141</a></p>
 <p>The last three properties are needed by only one handler: scrollzoom.
 The DOM event to be used as the <code>originalEvent</code> on any camera change events.</p>
 <hr />
@@ -11357,8 +11398,25 @@ The DOM event to be used as the <code>originalEvent</code> on any camera change 
 <blockquote>
 <p><code>optional</code> <strong>pinchAround?</strong>: <code>Point</code> | <code>null</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler_manager.ts#L126">ui/handler_manager.ts:126</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L124">ui/handler_manager.ts:124</a></p>
 <p>same as above, except for pinch actions, which are given higher priority</p>
+<hr />
+<h3 id="timeout">timeout?</h3>
+<blockquote>
+<p><code>optional</code> <strong>timeout?</strong>: <code>object</code></p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L136">ui/handler_manager.ts:136</a></p>
+<p>Asks the manager to call the handler's <code>onTimeout</code> with <code>token</code> after <code>delay</code> milliseconds, for a handler that
+waits for input that may not come, such as a wheel zoom telling a mouse wheel from a trackpad. The handler
+ignores a timeout whose token it no longer waits for, so it never needs to cancel one.</p>
+<h4 id="delay">delay</h4>
+<blockquote>
+<p><strong>delay</strong>: <code>number</code></p>
+</blockquote>
+<h4 id="token">token</h4>
+<blockquote>
+<p><strong>token</strong>: <code>unknown</code></p>
+</blockquote>
 
 
 

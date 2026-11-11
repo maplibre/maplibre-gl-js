@@ -1,6 +1,6 @@
 # VectorTileSource
 
-Defined in: [source/vector\_tile\_source.ts:76](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L76>)
+Defined in: [source/vector\_tile\_source.ts:76](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L76>)
 
 A source containing vector tiles in [Maplibre Vector Tile format](<https://maplibre.org/maplibre-tile-spec/>) or [Mapbox Vector Tile format](<https://docs.mapbox.com/vector-tiles/reference/>). (See the [Style Specification](<https://maplibre.org/maplibre-style-spec/>) for detailed documentation of options.)
 
@@ -48,7 +48,7 @@ map.getSource('some id').setTiles(['https://d25uarhxywzl1j.cloudfront.net/v0.1/{
 
 > **abortTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/vector\_tile\_source.ts:376](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L376>)
+Defined in: [source/vector\_tile\_source.ts:376](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L376>)
 
 Allows to abort a tile loading.
 
@@ -74,7 +74,7 @@ Allows to abort a tile loading.
 
 > **fire**(`event`: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) | [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -100,7 +100,7 @@ Calls every listener registered for the event's type.
 
 > **fire**(`type`: keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -129,7 +129,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **hasTile**(`tileID`: [`OverscaledTileID`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/OverscaledTileID/index.md>)): `boolean`
 
-Defined in: [source/vector\_tile\_source.ts:160](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L160>)
+Defined in: [source/vector\_tile\_source.ts:160](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L160>)
 
 True is the tile is part of the source, false otherwise.
 
@@ -153,7 +153,7 @@ True is the tile is part of the source, false otherwise.
 
 > **hasTransition**(): `boolean`
 
-Defined in: [source/vector\_tile\_source.ts:399](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L399>)
+Defined in: [source/vector\_tile\_source.ts:399](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L399>)
 
 True if the source has transition, false otherwise.
 
@@ -171,7 +171,7 @@ True if the source has transition, false otherwise.
 
 > **listens**(`type`: keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -197,7 +197,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **loaded**(): `boolean`
 
-Defined in: [source/vector\_tile\_source.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L156>)
+Defined in: [source/vector\_tile\_source.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L156>)
 
 True if the source is loaded, false otherwise.
 
@@ -215,7 +215,7 @@ True if the source is loaded, false otherwise.
 
 > **loadTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void` | `LoadTileResult`\>
 
-Defined in: [source/vector\_tile\_source.ts:218](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L218>)
+Defined in: [source/vector\_tile\_source.ts:218](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L218>)
 
 This method does the heavy lifting of loading a tile. In most cases it will defer the work to the relevant worker source.
 
@@ -239,7 +239,7 @@ This method does the heavy lifting of loading a tile. In most cases it will defe
 
 > **off**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -270,7 +270,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -301,7 +301,7 @@ Adds a listener to a specified event type.
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `void`
 
-Defined in: [source/vector\_tile\_source.ts:164](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L164>)
+Defined in: [source/vector\_tile\_source.ts:164](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L164>)
 
 This method is called when the source is added to the map.
 
@@ -327,7 +327,7 @@ This method is called when the source is added to the map.
 
 > **once**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`): `Promise`\<[`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -359,7 +359,7 @@ a promise that resolves with the event
 
 > **once**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -394,7 +394,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **onRemove**(): `void`
 
-Defined in: [source/vector\_tile\_source.ts:207](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L207>)
+Defined in: [source/vector\_tile\_source.ts:207](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L207>)
 
 This method is called when the source is removed from the map.
 
@@ -412,7 +412,7 @@ This method is called when the source is removed from the map.
 
 > **serialize**(): `VectorSourceSpecification`
 
-Defined in: [source/vector\_tile\_source.ts:214](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L214>)
+Defined in: [source/vector\_tile\_source.ts:214](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L214>)
 
 #### Returns
 
@@ -430,7 +430,7 @@ A plain (stringifiable) JS object representing the current state of the source. 
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -455,7 +455,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **setTiles**(`tiles`: `string`\[\]): `this`
 
-Defined in: [source/vector\_tile\_source.ts:184](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L184>)
+Defined in: [source/vector\_tile\_source.ts:184](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L184>)
 
 Sets the source `tiles` property and re-renders the map.
 
@@ -475,7 +475,7 @@ Sets the source `tiles` property and re-renders the map.
 
 > **setUrl**(`url`: `string`): `this`
 
-Defined in: [source/vector\_tile\_source.ts:198](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L198>)
+Defined in: [source/vector\_tile\_source.ts:198](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L198>)
 
 Sets the source `url` property and re-renders the map.
 
@@ -495,7 +495,7 @@ Sets the source `url` property and re-renders the map.
 
 > **unloadTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/vector\_tile\_source.ts:392](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L392>)
+Defined in: [source/vector\_tile\_source.ts:392](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L392>)
 
 Removes the tile from every worker, since an expired tile may be reloaded on a different worker.
 
@@ -519,7 +519,7 @@ Removes the tile from every worker, since an expired tile may be reloaded on a d
 
 > **id**: `string`
 
-Defined in: [source/vector\_tile\_source.ts:78](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L78>)
+Defined in: [source/vector\_tile\_source.ts:78](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L78>)
 
 The id for the source. Must not be used by any existing source.
 
@@ -533,7 +533,7 @@ The id for the source. Must not be used by any existing source.
 
 > **isTileClipped**: `boolean`
 
-Defined in: [source/vector\_tile\_source.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L96>)
+Defined in: [source/vector\_tile\_source.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L96>)
 
 `false` if tiles can be drawn outside their boundaries, `true` if they cannot.
 
@@ -547,7 +547,7 @@ Defined in: [source/vector\_tile\_source.ts:96](<https://github.com/maplibre/map
 
 > **maxzoom**: `number`
 
-Defined in: [source/vector\_tile\_source.ts:80](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L80>)
+Defined in: [source/vector\_tile\_source.ts:80](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L80>)
 
 The maximum zoom level for the source.
 
@@ -561,7 +561,7 @@ The maximum zoom level for the source.
 
 > **minzoom**: `number`
 
-Defined in: [source/vector\_tile\_source.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L79>)
+Defined in: [source/vector\_tile\_source.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L79>)
 
 The minimum zoom level for the source.
 
@@ -575,7 +575,7 @@ The minimum zoom level for the source.
 
 > **reparseOverscaled**: `boolean`
 
-Defined in: [source/vector\_tile\_source.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L95>)
+Defined in: [source/vector\_tile\_source.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L95>)
 
 `true` if tiles should be sent back to the worker for each overzoomed zoom level, `false` if not.
 
@@ -589,7 +589,7 @@ Defined in: [source/vector\_tile\_source.ts:95](<https://github.com/maplibre/map
 
 > **tileSize**: `number`
 
-Defined in: [source/vector\_tile\_source.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/vector_tile_source.ts#L84>)
+Defined in: [source/vector\_tile\_source.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/vector_tile_source.ts#L84>)
 
 The tile size for the source.
 

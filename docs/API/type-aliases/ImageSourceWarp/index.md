@@ -2,7 +2,7 @@
 
 > **ImageSourceWarp** = `"auto"` | `"perspective"` | `"flat"`
 
-Defined in: [source/image\_source.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/image_source.ts#L84>)
+Defined in: [source/image\_source.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L84>)
 
 **`Experimental`**
 

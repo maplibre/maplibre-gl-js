@@ -1,6 +1,6 @@
 # ScrollZoomHandler
 
-Defined in: [ui/handler/scroll\_zoom.ts:35](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L35>)
+Defined in: [ui/handler/scroll\_zoom.ts:42](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L42>)
 
 The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
 
@@ -10,31 +10,11 @@ The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
 
 ## Methods
 
-### \_shouldBePrevented()
-
-> **\_shouldBePrevented**(`e`: `WheelEvent`): `boolean`
-
-Defined in: [ui/handler/scroll\_zoom.ts:159](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L159>)
-
-Determines whether or not the gesture is blocked due to cooperativeGestures.
-
-#### Parameters
-
-| Parameter | Type |
-| --- | --- |
-| `e` | `WheelEvent` |
-
-#### Returns
-
-`boolean`
-
----
-
 ### disable()
 
 > **disable**(): `void`
 
-Defined in: [ui/handler/scroll\_zoom.ts:151](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L151>)
+Defined in: [ui/handler/scroll\_zoom.ts:160](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L160>)
 
 Disables the "scroll to zoom" interaction.
 
@@ -58,7 +38,7 @@ map.scrollZoom.disable();
 
 > **enable**(`options?`: `boolean` | [`AroundCenterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>)): `void`
 
-Defined in: [ui/handler/scroll\_zoom.ts:137](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L137>)
+Defined in: [ui/handler/scroll\_zoom.ts:146](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L146>)
 
 Enables the "scroll to zoom" interaction.
 
@@ -89,7 +69,7 @@ map.scrollZoom.enable({ around: 'center' })
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler/scroll\_zoom.ts:119](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L119>)
+Defined in: [ui/handler/scroll\_zoom.ts:128](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L128>)
 
 This is used to indicate if the handler is currently active or not. In case a handler is active, it will block other handlers from getting the relevant events. There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.
 
@@ -107,7 +87,7 @@ This is used to indicate if the handler is currently active or not. In case a ha
 
 > **isEnabled**(): `boolean`
 
-Defined in: [ui/handler/scroll\_zoom.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L110>)
+Defined in: [ui/handler/scroll\_zoom.ts:119](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L119>)
 
 Returns a Boolean indicating whether the "scroll to zoom" interaction is enabled.
 
@@ -123,17 +103,35 @@ Returns a Boolean indicating whether the "scroll to zoom" interaction is enabled
 
 ---
 
+### isZooming()
+
+> **isZooming**(): `boolean`
+
+Defined in: [ui/handler/scroll\_zoom.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L132>)
+
+Whether the handler is zooming the map apart from the zoom deltas it returns, such as a wheel zoom between a wheel event and its first frame.
+
+#### Returns
+
+`boolean`
+
+#### Implementation of
+
+[`Handler`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/index.md>).[`isZooming`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/#iszooming>)
+
+---
+
 ### renderFrame()
 
-> **renderFrame**(): `void` | { `around`: `Point`; `needsRenderFrame`: `boolean`; `noInertia`: `boolean`; `originalEvent`: `WheelEvent`; `zoomDelta`: `number`; }
+> **renderFrame**(): `void` | [`HandlerResult`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/HandlerResult/index.md>)
 
-Defined in: [ui/handler/scroll\_zoom.ts:266](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L266>)
+Defined in: [ui/handler/scroll\_zoom.ts:290](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L290>)
 
 `renderFrame` is the only non-dom event. It is called during render frames and can be used to smooth camera changes (see scroll handler).
 
 #### Returns
 
-`void` | { `around`: `Point`; `needsRenderFrame`: `boolean`; `noInertia`: `boolean`; `originalEvent`: `WheelEvent`; `zoomDelta`: `number`; }
+`void` | [`HandlerResult`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/HandlerResult/index.md>)
 
 #### Implementation of
 
@@ -145,7 +143,7 @@ Defined in: [ui/handler/scroll\_zoom.ts:266](<https://github.com/maplibre/maplib
 
 > **reset**(): `void`
 
-Defined in: [ui/handler/scroll\_zoom.ts:396](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L396>)
+Defined in: [ui/handler/scroll\_zoom.ts:409](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L409>)
 
 `reset` can be called by the manager at any time and must reset everything to it's original state
 
@@ -163,7 +161,7 @@ Defined in: [ui/handler/scroll\_zoom.ts:396](<https://github.com/maplibre/maplib
 
 > **setWheelZoomRate**(`wheelZoomRate`: `number`): `void`
 
-Defined in: [ui/handler/scroll\_zoom.ts:102](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L102>)
+Defined in: [ui/handler/scroll\_zoom.ts:111](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L111>)
 
 Set the zoom rate of a mouse wheel
 
@@ -191,7 +189,7 @@ map.scrollZoom.setWheelZoomRate(1/600);
 
 > **setZoomRate**(`zoomRate`: `number`): `void`
 
-Defined in: [ui/handler/scroll\_zoom.ts:89](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/scroll_zoom.ts#L89>)
+Defined in: [ui/handler/scroll\_zoom.ts:98](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/scroll_zoom.ts#L98>)
 
 Set the zoom rate of a trackpad
 

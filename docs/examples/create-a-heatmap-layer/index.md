@@ -1,9 +1,9 @@
 # Create a heatmap layer
 
-Visualize earthquake frequency by location using a heatmap layer.
+Show the density of earthquake locations on a map, weighted by magnitude.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -151,13 +151,13 @@ map.on('load', () => {
 <html lang="en">
 <head>
     <title>Create a heatmap layer</title>
-    <meta property="og:description" content="Visualize earthquake frequency by location using a heatmap layer." />
+    <meta property="og:description" content="Show the density of earthquake locations on a map, weighted by magnitude." />
     <meta property="og:category" content="Heatmaps & Clusters" />
     <meta property="og:order" content="1" />
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -168,7 +168,7 @@ map.on('load', () => {
 <div id="map"></div>
 
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',

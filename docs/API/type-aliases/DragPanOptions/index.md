@@ -2,7 +2,7 @@
 
 > **DragPanOptions** = `object`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:7](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/shim/drag_pan.ts#L7>)
+Defined in: [ui/handler/shim/drag\_pan.ts:7](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/shim/drag_pan.ts#L7>)
 
 A [DragPanHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragPanHandler/index.md>) options object
 
@@ -12,7 +12,7 @@ A [DragPanHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragPan
 
 > `optional` **deceleration?**: `number`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:23](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/shim/drag_pan.ts#L23>)
+Defined in: [ui/handler/shim/drag\_pan.ts:23](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/shim/drag_pan.ts#L23>)
 
 the maximum value of the drag velocity.
 
@@ -28,7 +28,7 @@ the maximum value of the drag velocity.
 
 > `optional` **easing?**: (`t`: `number`) =\> `number`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:18](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/shim/drag_pan.ts#L18>)
+Defined in: [ui/handler/shim/drag\_pan.ts:18](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/shim/drag_pan.ts#L18>)
 
 easing function applied to `map.panTo` when applying the drag.
 
@@ -54,7 +54,7 @@ bezier(0, 0, 0.3, 1)
 
 > `optional` **linearity?**: `number`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:12](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/shim/drag_pan.ts#L12>)
+Defined in: [ui/handler/shim/drag\_pan.ts:12](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/shim/drag_pan.ts#L12>)
 
 factor used to scale the drag velocity
 
@@ -70,7 +70,7 @@ factor used to scale the drag velocity
 
 > `optional` **maxSpeed?**: `number`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:28](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/handler/shim/drag_pan.ts#L28>)
+Defined in: [ui/handler/shim/drag\_pan.ts:28](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/shim/drag_pan.ts#L28>)
 
 the rate at which the speed reduces after the pan ends.
 

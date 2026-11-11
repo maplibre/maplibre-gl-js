@@ -1,6 +1,6 @@
 # MarkerDragEvent
 
-Defined in: [ui/marker.ts:187](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/marker.ts#L187>)
+Defined in: [ui/marker.ts:187](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L187>)
 
 The event class for marker drag events (`dragstart`, `drag` and `dragend`).
 
@@ -14,7 +14,7 @@ The event class for marker drag events (`dragstart`, `drag` and `dragend`).
 
 > **target**: [`Marker`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Marker/index.md>)
 
-Defined in: [ui/marker.ts:192](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/marker.ts#L192>)
+Defined in: [ui/marker.ts:192](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L192>)
 
 The `Marker` object that fired the event.
 

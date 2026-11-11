@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <title>Style lines with a data-driven property</title>
-    <meta property="og:description" content="Create a visualization with a data expression for line-color." />
+    <meta property="og:description" content="Color each line by a data value stored in its GeoJSON feature properties." />
     <meta property="og:category" content="Expressions" />
     <meta property="og:order" content="1" />
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -18,7 +18,7 @@
 <body>
 <div id="map"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',

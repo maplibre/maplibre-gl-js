@@ -1,9 +1,9 @@
 # Display buildings in 3D
 
-Use extrusions to display buildings' height in 3D.
+Show building heights in 3D and color the buildings by height.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     style: `https://tiles.openfreemap.org/styles/bright`,
@@ -78,13 +78,13 @@ map.on('load', () => {
 <html lang="en">
 <head>
   <title>Display buildings in 3D</title>
-  <meta property="og:description" content="Use extrusions to display buildings' height in 3D." />
+  <meta property="og:description" content="Show building heights in 3D and color the buildings by height." />
   <meta property="og:category" content="3D Models & Buildings" />
   <meta property="og:order" content="1" />
   <meta property="og:created" content="2025-06-25" />
   <meta charset='utf-8'>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl.css' />
+  <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.css' />
 
   <style>
       body { margin: 0; padding: 0; }
@@ -94,7 +94,7 @@ map.on('load', () => {
 <body>
 <div id="map"></div>
 <script type="module">
-  import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.17.0/dist/maplibre-gl.mjs';
+  import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs';
 
   const map = new maplibregl.Map({
       style: `https://tiles.openfreemap.org/styles/bright`,

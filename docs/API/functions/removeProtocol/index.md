@@ -2,7 +2,7 @@
 
 > **removeProtocol**(`customProtocol`: `string`): `void`
 
-Defined in: [source/protocol\_crud.ts:58](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/protocol_crud.ts#L58>)
+Defined in: [source/protocol\_crud.ts:58](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/protocol_crud.ts#L58>)
 
 Removes a previously added protocol in the main thread.
 

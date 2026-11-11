@@ -1,6 +1,6 @@
 # MapStyleImageMissingEvent
 
-Defined in: [ui/events.ts:878](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L878>)
+Defined in: [ui/events.ts:878](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/events.ts#L878>)
 
 The style image missing event, fired when an image is still missing after the missing style image resolver has been given a chance to supply it. To load or generate images on demand, use [Map.setMissingStyleImageResolver](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setmissingstyleimageresolver>). Event listeners cannot resolve the missing image for the current request.
 
@@ -18,7 +18,7 @@ The style image missing event, fired when an image is still missing after the mi
 
 > **target**: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)
 
-Defined in: [ui/events.ts:492](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L492>)
+Defined in: [ui/events.ts:492](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/events.ts#L492>)
 
 The object that fired the event. Set when the event is fired, and narrowed to a more specific type (e.g. `Map`, `Marker`) by the event subclasses.
 

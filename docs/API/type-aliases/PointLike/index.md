@@ -2,7 +2,7 @@
 
 > **PointLike** = `Point` | \[`number`, `number`\]
 
-Defined in: [ui/camera.ts:38](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/camera.ts#L38>)
+Defined in: [ui/camera.ts:38](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L38>)
 
 A [Point](<https://github.com/mapbox/point-geometry>) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
 

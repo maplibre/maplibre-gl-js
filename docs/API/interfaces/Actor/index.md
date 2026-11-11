@@ -1,6 +1,6 @@
 # Actor
 
-Defined in: [util/actor.ts:59](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/actor.ts#L59>)
+Defined in: [util/actor.ts:59](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/actor.ts#L59>)
 
 An implementation of the [Actor design pattern](<https://en.wikipedia.org/wiki/Actor_model>) that maintains the relationship between asynchronous tasks and the objects that spin them off - in this case, tasks like parsing parts of styles, owned by the styles
 
@@ -14,7 +14,7 @@ An implementation of the [Actor design pattern](<https://en.wikipedia.org/wiki/A
 
 > **sendAsync**\<`T` *extends* [`MessageType`](<https://maplibre.org/maplibre-gl-js/docs/API/enumerations/MessageType/index.md>)\>(`message`: [`ActorMessage`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ActorMessage/index.md>)\<`T`\>, `abortController?`: `AbortController`): `Promise`\<[`RequestResponseMessageMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequestResponseMessageMap/index.md>)\[`T`\]\[`1`\]\>
 
-Defined in: [util/actor.ts:104](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/actor.ts#L104>)
+Defined in: [util/actor.ts:104](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/actor.ts#L104>)
 
 Sends a message from a main-thread map to a Worker or from a Worker back to a main-thread map instance.
 

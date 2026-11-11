@@ -2,7 +2,7 @@
 
 > **QuerySourceFeatureOptions** = `object`
 
-Defined in: [source/query\_features.ts:54](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/query_features.ts#L54>)
+Defined in: [source/query\_features.ts:53](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/query_features.ts#L53>)
 
 The options object related to the [Map.querySourceFeatures](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#querysourcefeatures>) method
 
@@ -12,7 +12,7 @@ The options object related to the [Map.querySourceFeatures](<https://maplibre.or
 
 > `optional` **filter?**: `FilterSpecification`
 
-Defined in: [source/query\_features.ts:63](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/query_features.ts#L63>)
+Defined in: [source/query\_features.ts:62](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/query_features.ts#L62>)
 
 A [filter](<https://maplibre.org/maplibre-style-spec/layers/#filter>) to limit query results.
 
@@ -22,7 +22,7 @@ A [filter](<https://maplibre.org/maplibre-style-spec/layers/#filter>) to limit q
 
 > `optional` **sourceLayer?**: `string`
 
-Defined in: [source/query\_features.ts:58](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/query_features.ts#L58>)
+Defined in: [source/query\_features.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/query_features.ts#L57>)
 
 The name of the source layer to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
 
@@ -32,7 +32,7 @@ The name of the source layer to query. *For vector tile sources, this parameter 
 
 > `optional` **validate?**: `boolean`
 
-Defined in: [source/query\_features.ts:68](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/query_features.ts#L68>)
+Defined in: [source/query\_features.ts:67](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/query_features.ts#L67>)
 
 Whether to check if the `parameters.filter` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
 

@@ -2,7 +2,7 @@
 
 > **StyleSwapOptions** = `object`
 
-Defined in: [style/style.ts:190](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/style/style.ts#L190>)
+Defined in: [style/style.ts:190](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L190>)
 
 The options object related to the [Map](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)'s style related methods
 
@@ -12,7 +12,7 @@ The options object related to the [Map](<https://maplibre.org/maplibre-gl-js/doc
 
 > `optional` **diff?**: `boolean`
 
-Defined in: [style/style.ts:195](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/style/style.ts#L195>)
+Defined in: [style/style.ts:195](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L195>)
 
 If false, force a 'full' update, removing the current style and building the given one instead of attempting a diff-based update.
 
@@ -22,6 +22,6 @@ If false, force a 'full' update, removing the current style and building the giv
 
 > `optional` **transformStyle?**: [`TransformStyleFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TransformStyleFunction/index.md>)
 
-Defined in: [style/style.ts:200](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/style/style.ts#L200>)
+Defined in: [style/style.ts:200](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L200>)
 
 TransformStyleFunction is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state. Refer to [TransformStyleFunction](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TransformStyleFunction/index.md>).

@@ -2,7 +2,7 @@
 
 > **getWorkerCount**(): `number`
 
-Defined in: [index.ts:140](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/index.ts#L140>)
+Defined in: [index.ts:140](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/index.ts#L140>)
 
 Gets the number of web workers instantiated on a page with GL JS maps. By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3). Make sure to set this property before creating any map instances for it to have effect.
 

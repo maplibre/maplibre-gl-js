@@ -2,6 +2,6 @@
 
 > **CustomLayerProjectionData** = [`ProjectionData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ProjectionData/index.md>)\<`ProjectionMatrix`, `ProjectionMatrix`\>
 
-Defined in: [geo/projection/projection\_data.ts:21](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/projection/projection_data.ts#L21>)
+Defined in: [geo/projection/projection\_data.ts:21](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/geo/projection/projection_data.ts#L21>)
 
 Projection data exposed to custom layers. Some matrices are stored as 64-bit floats so custom layer code can apply additional CPU-side transforms before converting to 32-bit floats for WebGL upload when necessary.

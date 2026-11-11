@@ -2,7 +2,7 @@
 
 > **MapLayerTouchEvent** = [`MapTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTouchEvent/index.md>) &amp; `object`
 
-Defined in: [ui/events.ts:25](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/events.ts#L25>)
+Defined in: [ui/events.ts:25](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/events.ts#L25>)
 
 An event from a touch device relevant to a specific layer.
 

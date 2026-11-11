@@ -1,6 +1,6 @@
 # FullscreenEvent
 
-Defined in: [ui/control/fullscreen\_control.ts:29](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/control/fullscreen_control.ts#L29>)
+Defined in: [ui/control/fullscreen\_control.ts:29](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/fullscreen_control.ts#L29>)
 
 The event class for fullscreen control events (`fullscreenstart` and `fullscreenend`).
 
@@ -14,7 +14,7 @@ The event class for fullscreen control events (`fullscreenstart` and `fullscreen
 
 > **target**: [`FullscreenControl`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/FullscreenControl/index.md>)
 
-Defined in: [ui/control/fullscreen\_control.ts:34](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/control/fullscreen_control.ts#L34>)
+Defined in: [ui/control/fullscreen\_control.ts:34](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/fullscreen_control.ts#L34>)
 
 The `FullscreenControl` object that fired the event.
 

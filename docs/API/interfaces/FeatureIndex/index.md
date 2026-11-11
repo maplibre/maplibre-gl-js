@@ -1,5 +1,5 @@
 # FeatureIndex
 
-Defined in: [data/feature\_index.ts:63](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/data/feature_index.ts#L63>)
+Defined in: [data/feature\_index.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/data/feature_index.ts#L61>)
 
 An in memory index class to allow fast interaction with features

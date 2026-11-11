@@ -2,7 +2,7 @@
 
 > **CenterZoomBearing** = `object`
 
-Defined in: [ui/camera.ts:126](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/camera.ts#L126>)
+Defined in: [ui/camera.ts:126](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L126>)
 
 Holds center, zoom and bearing properties
 
@@ -12,7 +12,7 @@ Holds center, zoom and bearing properties
 
 > `optional` **bearing?**: `number`
 
-Defined in: [ui/camera.ts:139](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/camera.ts#L139>)
+Defined in: [ui/camera.ts:139](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L139>)
 
 The desired bearing in degrees. The bearing is the compass direction that is "up". For example, `bearing: 90` orients the map so that east is up.
 
@@ -22,7 +22,7 @@ The desired bearing in degrees. The bearing is the compass direction that is "up
 
 > `optional` **center?**: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)
 
-Defined in: [ui/camera.ts:130](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/camera.ts#L130>)
+Defined in: [ui/camera.ts:130](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L130>)
 
 The desired center.
 
@@ -32,6 +32,6 @@ The desired center.
 
 > `optional` **zoom?**: `number`
 
-Defined in: [ui/camera.ts:134](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/ui/camera.ts#L134>)
+Defined in: [ui/camera.ts:134](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L134>)
 
 The desired mercator zoom level.

@@ -2,7 +2,7 @@
 
 > **SourceClass** = new (`id`: `string`, `specification`: [`SourceSpecification`](<https://maplibre.org/maplibre-style-spec/sources/>) | [`CanvasSourceSpecification`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CanvasSourceSpecification/index.md>), `dispatcher`: [`Dispatcher`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Dispatcher/index.md>), `eventedParent`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)) =\> [`Source`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Source/index.md>)
 
-Defined in: [source/source.ts:136](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/source/source.ts#L136>)
+Defined in: [source/source.ts:136](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/source.ts#L136>)
 
 A general definition of a [Source](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Source/index.md>) class for factory usage
 

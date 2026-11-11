@@ -2,7 +2,7 @@
 
 > **LngLatLike** = [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>) | { `lat`: `number`; `lng`: `number`; } | { `lat`: `number`; `lon`: `number`; } | \[`number`, `number`\]
 
-Defined in: [geo/lng\_lat.ts:23](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/geo/lng_lat.ts#L23>)
+Defined in: [geo/lng\_lat.ts:23](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/geo/lng_lat.ts#L23>)
 
 A [LngLat](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>) object, an array of two numbers representing longitude and latitude, or an object with `lng` and `lat` or `lon` and `lat` properties.
 

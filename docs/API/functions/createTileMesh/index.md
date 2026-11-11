@@ -2,7 +2,7 @@
 
 > **createTileMesh**(`options`: [`CreateTileMeshOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CreateTileMeshOptions/index.md>), `forceIndicesSize?`: [`IndicesType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/IndicesType/index.md>)): [`TileMesh`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TileMesh/index.md>)
 
-Defined in: [util/create\_tile\_mesh.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/create_tile_mesh.ts#L117>)
+Defined in: [util/create\_tile\_mesh.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/create_tile_mesh.ts#L117>)
 
 Creates a mesh of a quad that covers the entire tile (covering positions in range 0..EXTENT), is optionally subdivided into finer quads, optionally includes a border and optionally extends to the north and/or special pole vertices. Additionally the resulting mesh indices type can be specified using `forceIndicesSize`.
 

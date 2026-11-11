@@ -1,6 +1,6 @@
 # GlobalDispatcher
 
-Defined in: [util/global\_dispatcher.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L51>)
+Defined in: [util/global\_dispatcher.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L51>)
 
 The dispatcher shared across all map instances, see [getGlobalDispatcher](<https://maplibre.org/maplibre-gl-js/docs/API/functions/getGlobalDispatcher/index.md>). Unlike a map's dispatcher it never claims the workers: it builds actors for whichever workers the pool is running, and discards them when the pool terminates those workers.
 
@@ -16,7 +16,7 @@ The dispatcher shared across all map instances, see [getGlobalDispatcher](<https
 
 > **broadcast**\<`T` *extends* [`MessageType`](<https://maplibre.org/maplibre-gl-js/docs/API/enumerations/MessageType/index.md>)\>(`type`: `T`, `data`: [`RequestResponseMessageMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequestResponseMessageMap/index.md>)\[`T`\]\[`0`\]): `Promise`\<[`RequestResponseMessageMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequestResponseMessageMap/index.md>)\[`T`\]\[`1`\]\[\]\>
 
-Defined in: [util/global\_dispatcher.ts:143](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L143>)
+Defined in: [util/global\_dispatcher.ts:143](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L143>)
 
 Broadcast a message to all Workers. The type can be any string, to allow sending messages that are handled by a script that was imported using [importScriptInWorkers](<https://maplibre.org/maplibre-gl-js/docs/API/functions/importScriptInWorkers/index.md>).
 
@@ -41,7 +41,7 @@ Broadcast a message to all Workers. The type can be any string, to allow sending
 
 > **broadcast**\<`TData` = `any`, `TResult` = `any`\>(`type`: `string`, `data`: `TData`): `Promise`\<`TResult`\[\]\>
 
-Defined in: [util/global\_dispatcher.ts:144](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L144>)
+Defined in: [util/global\_dispatcher.ts:144](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L144>)
 
 Broadcast a message to all Workers. The type can be any string, to allow sending messages that are handled by a script that was imported using [importScriptInWorkers](<https://maplibre.org/maplibre-gl-js/docs/API/functions/importScriptInWorkers/index.md>).
 
@@ -69,7 +69,7 @@ Broadcast a message to all Workers. The type can be any string, to allow sending
 
 > **ensureWorkers**(): `Promise`\<`void`\>
 
-Defined in: [util/global\_dispatcher.ts:201](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L201>)
+Defined in: [util/global\_dispatcher.ts:201](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L201>)
 
 Restarts the workers if they don't answer a ping, for apps that learn of a return to the foreground some other way. Calls made while a check is running share that check.
 
@@ -85,7 +85,7 @@ Restarts the workers if they don't answer a ping, for apps that learn of a retur
 
 > **fire**(`event`: [`Event`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Event/index.md>)\<`string`\> | [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -107,7 +107,7 @@ Calls every listener registered for the event's type.
 
 > **fire**(`type`: keyof `GlobalDispatcherEventType`, `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -132,7 +132,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **importScript**(`workerUrl`: `string`): `Promise`\<`void`\>
 
-Defined in: [util/global\_dispatcher.ts:178](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L178>)
+Defined in: [util/global\_dispatcher.ts:178](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L178>)
 
 See [importScriptInWorkers](<https://maplibre.org/maplibre-gl-js/docs/API/functions/importScriptInWorkers/index.md>). A url may be broadcast more than once, e.g. when this call is what creates the workers; the worker runs each url only once.
 
@@ -152,7 +152,7 @@ See [importScriptInWorkers](<https://maplibre.org/maplibre-gl-js/docs/API/functi
 
 > **listens**(`type`: keyof `GlobalDispatcherEventType`): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -178,7 +178,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **off**\<`T` *extends* keyof `GlobalDispatcherEventType`\>(`type`: `T`, `listener`: (`event`: `GlobalDispatcherEventType`\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -209,7 +209,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof `GlobalDispatcherEventType`\>(`type`: `T`, `listener`: (`event`: `GlobalDispatcherEventType`\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -242,7 +242,7 @@ Adds a listener to a specified event type.
 
 > **once**\<`T` *extends* keyof `GlobalDispatcherEventType`\>(`type`: `T`): `Promise`\<`GlobalDispatcherEventType`\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -274,7 +274,7 @@ a promise that resolves with the event
 
 > **once**\<`T` *extends* keyof `GlobalDispatcherEventType`\>(`type`: `T`, `listener`: (`event`: `GlobalDispatcherEventType`\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -309,7 +309,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **ping**(`timeoutMs?`: `number`): `Promise`\<`boolean`\>
 
-Defined in: [util/global\_dispatcher.ts:218](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L218>)
+Defined in: [util/global\_dispatcher.ts:218](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L218>)
 
 Pings the workers, resolving false only on silence: any answer, even an error, proves they are alive. Resolves true when no workers exist, since there is nothing to restart.
 
@@ -331,7 +331,7 @@ Pings the workers, resolving false only on silence: any answer, even an error, p
 
 > **registerMessageHandler**\<`T` *extends* [`MessageType`](<https://maplibre.org/maplibre-gl-js/docs/API/enumerations/MessageType/index.md>)\>(`type`: `T`, `handler`: `MessageHandler`\<`T`\>): `Promise`\<`void`\>
 
-Defined in: [util/global\_dispatcher.ts:158](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L158>)
+Defined in: [util/global\_dispatcher.ts:158](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L158>)
 
 Registers a handler for messages that the workers send to this dispatcher. The type can be any string, to allow handling messages that are sent by a script that was imported using [importScriptInWorkers](<https://maplibre.org/maplibre-gl-js/docs/API/functions/importScriptInWorkers/index.md>).
 
@@ -356,7 +356,7 @@ Registers a handler for messages that the workers send to this dispatcher. The t
 
 > **registerMessageHandler**\<`TData` = `any`, `TResult` = `any`\>(`type`: `string`, `handler`: [`CustomMessageHandler`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomMessageHandler/index.md>)\<`TData`, `TResult`\>): `Promise`\<`void`\>
 
-Defined in: [util/global\_dispatcher.ts:159](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L159>)
+Defined in: [util/global\_dispatcher.ts:159](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L159>)
 
 Registers a handler for messages that the workers send to this dispatcher. The type can be any string, to allow handling messages that are sent by a script that was imported using [importScriptInWorkers](<https://maplibre.org/maplibre-gl-js/docs/API/functions/importScriptInWorkers/index.md>).
 
@@ -384,7 +384,7 @@ Registers a handler for messages that the workers send to this dispatcher. The t
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -409,7 +409,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **watchWorkers**(): `void`
 
-Defined in: [util/global\_dispatcher.ts:189](<https://github.com/maplibre/maplibre-gl-js/blob/839df0849182abd7558a6727df16d8bdc4e4d15e/src/util/global_dispatcher.ts#L189>)
+Defined in: [util/global\_dispatcher.ts:189](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/global_dispatcher.ts#L189>)
 
 Pings the workers on every return to the foreground, restarting them if the browser terminated them while the page was hidden, as iOS does under memory pressure. Browsers fire no event for the termination, so the ping is the only way to notice it. Each map then recovers through the same contract as a lost WebGL context, see `Map._handleWorkersRestarted`.
 
