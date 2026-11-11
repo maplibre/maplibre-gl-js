@@ -53,6 +53,7 @@ type SymbolTileRenderState = {
         atlasInterpolationIcon: TextureFilter;
         isSDF: boolean;
         hasHalo: boolean;
+        hasCursiveText: boolean;
     };
 };
 
@@ -433,7 +434,8 @@ function drawLayerSymbols(
             atlasInterpolation,
             atlasInterpolationIcon,
             isSDF,
-            hasHalo
+            hasHalo,
+            hasCursiveText: isText && bucket.hasCursiveText
         };
 
         if (hasSortKey && bucket.canOverlap) {
@@ -478,10 +480,11 @@ function drawLayerSymbols(
         }
 
         const isHalo = state.isSDF && state.hasHalo;
+        const twoPassHalo = isGlyphOverlap || state.hasCursiveText;
         if (isHalo) {
             const uniformValues = state.uniformValues;
             uniformValues['u_is_halo'] = 1;
-            if (isGlyphOverlap){
+            if (twoPassHalo){
                 // render halo in 2 pass (1 for the halo only, 1 for the text only)
                 uniformValues['u_is_plain'] = 0;
                 drawSymbolElements(state.buffers, segmentState.segments, layer, frameRenderContext, state.program, depthMode, stencilMode, colorMode, uniformValues, state.projectionData, segmentState.terrainData);
@@ -492,7 +495,7 @@ function drawLayerSymbols(
 
         drawSymbolElements(state.buffers, segmentState.segments, layer, frameRenderContext, state.program, depthMode, stencilMode, colorMode, state.uniformValues, state.projectionData, segmentState.terrainData);
 
-        if (isHalo && !isGlyphOverlap) {
+        if (isHalo && !twoPassHalo) {
             // for 1 pass halo rendering, restore the uniforms state
             state.uniformValues['u_is_halo'] = 0;
         }

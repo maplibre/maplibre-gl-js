@@ -1,0 +1,58 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 128
+    }
+  },
+  "center": [ 0, 0 ],
+  "zoom": 2,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "labels": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": { "name": "خیابان ولیعصر" },
+            "geometry": { "type": "Point", "coordinates": [ 0, 4 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "مرحبا بالعالم" },
+            "geometry": { "type": "Point", "coordinates": [ 0, -4 ] }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#bcd" }
+    },
+    {
+      "id": "labels",
+      "type": "symbol",
+      "source": "labels",
+      "layout": {
+        "text-allow-overlap": true,
+        "text-size": 24,
+        "text-field": ["get", "name"],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      },
+      "paint": {
+        "text-color": "black",
+        "text-halo-color": "white",
+        "text-halo-width": 1
+      }
+    }
+  ]
+}
