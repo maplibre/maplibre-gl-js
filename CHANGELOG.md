@@ -5,6 +5,16 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 5.24.1
+
+### 🐞 Bug fixes
+
+- Fix an unclosed disallowed tag in one attribution erasing the other attributions, by sanitizing each attribution before joining them ([#8571](https://github.com/maplibre/maplibre-gl-js/pull/8571)) (by [@sx4im](https://github.com/sx4im))
+- Sanitize attribution with an allow list of tags and attributes rather than a list of known-dangerous ones ([#8532](https://github.com/maplibre/maplibre-gl-js/pull/8532)) (by [@HarelM](https://github.com/HarelM))
+- Insert sanitized attribution HTML as DOM nodes instead of re-parsing a serialized string ([#8528](https://github.com/maplibre/maplibre-gl-js/pull/8528)) (by [@cherenkov](https://github.com/cherenkov))
+- Fix DOM sanitization for iframe and srcdoc ([#8396](https://github.com/maplibre/maplibre-gl-js/pull/8396)) (by [@HarelM](https://github.com/HarelM))
+- Fix `DOM.sanitize` leaving dangerous attributes behind when multiple consecutive attributes are present ([#8189](https://github.com/maplibre/maplibre-gl-js/pull/8189)) (by [@0xKirisame](https://github.com/0xKirisame))
+
 ## 5.24.0
 
 ### ✨ Features and improvements
