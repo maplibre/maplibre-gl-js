@@ -38,6 +38,14 @@ jobs:
           echo "::error::5.x only releases stable versions"
           exit 1
 
+      - name: Get the latest release
+        id: latest_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh release view --json tagName --jq .tagName)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
       - name: Build
         run: npm ci && npm run build-dist
 
@@ -68,12 +76,6 @@ jobs:
           RELEASE_NOTES_PATH="${PWD}/release_notes.txt"
           sed -n "/^## $VERSION$/,/^## /p" CHANGELOG.md | sed '$d' | tail -n +2 > "${RELEASE_NOTES_PATH}"
           echo "release_notes=${RELEASE_NOTES_PATH}" >> "$GITHUB_OUTPUT"
-
-      - name: Get the latest release
-        id: latest_release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "tag=$(gh release view --json tagName --jq .tagName)" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
