@@ -12,6 +12,7 @@ import {loadVectorTile} from '../../test/unit/lib/tile.ts';
 import type {IndexedFeature} from '../data/bucket.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const collisionBoxArray = new CollisionBoxArray();
 
@@ -126,5 +127,86 @@ describe('placement', () => {
         placement.updateLayerOpacities(layer, tiles.slice(1));
 
         expect(buckets[1].text.opacityVertexArray.uint32[0]).toBe(PACKED_VISIBLE_OPACITY);
+    });
+
+    test.each<[string, SymbolLayerSpecification['layout']['text-size'], number, number]>([
+        [
+            'shrinks with zoom and is drawn at 20 on a zoom 0 tile laid out at 10',
+            ['interpolate', ['linear'], ['zoom'], 0, ['*', ['get', 'size'], 2], 1, ['get', 'size']], 0, 4700
+        ],
+        [
+            'grows with zoom and is drawn at 20 at zoom 3 on a zoom 0 tile laid out at 10',
+            ['interpolate', ['linear'], ['zoom'], 0, ['/', ['get', 'size'], 2], 4, ['*', ['get', 'size'], 2.5]], 3, 4088
+        ]
+    ])('hides a label that overlaps its neighbour at the drawn text size when the size %s', (_, textSize, zoom, neighbourX) => {
+        const features = [{x: 4000, y: 4000}, {x: neighbourX, y: 4000}].map((anchor, index) => ({
+            feature: {extent: 8192, type: 1, id: index, properties: {size: 10}, loadGeometry: () => [[anchor]]},
+            id: index,
+            index,
+            sourceLayerIndex: 0
+        }) as any as IndexedFeature);
+        const tile = createSymbolTile(new OverscaledTileID(0, 0, 0, 0, 0), features, new CollisionBoxArray(), {'text-size': textSize});
+        const layer = (tile.buckets.test as SymbolBucket).layers[0];
+        new CrossTileSymbolIndex().addLayer(layer, [tile], 0);
+        transform.setZoom(zoom);
+        placement = new Placement(transform, undefined, 0, true);
+
+        const parts = [];
+        placement.getBucketParts(parts, layer, tile, false);
+        for (const part of parts) placement.placeLayerBucketPart(part, {}, false);
+
+        expect(Object.values(placement.placements).map(p => p.text)).toEqual([true, false]);
+    });
+
+    test('scales the stored variable anchor offset of a label drawn at 20 on a zoom 0 tile laid out at 10', () => {
+        const features = [{
+            feature: {extent: 8192, type: 1, id: 0, properties: {size: 10}, loadGeometry: () => [[{x: 4000, y: 4000}]]},
+            id: 0,
+            index: 0,
+            sourceLayerIndex: 0
+        } as any as IndexedFeature];
+        const tile = createSymbolTile(new OverscaledTileID(0, 0, 0, 0, 0), features, new CollisionBoxArray(), {
+            'text-size': ['interpolate', ['linear'], ['zoom'], 0, ['*', ['get', 'size'], 2], 1, ['get', 'size']],
+            'text-variable-anchor-offset': ['left', [1, 0]]
+        });
+        const bucket = tile.buckets.test as SymbolBucket;
+        const layer = bucket.layers[0];
+        new CrossTileSymbolIndex().addLayer(layer, [tile], 0);
+
+        const parts = [];
+        placement.getBucketParts(parts, layer, tile, false);
+        for (const part of parts) placement.placeLayerBucketPart(part, {}, false);
+
+        const {textBox} = bucket.collisionArrays[0];
+        const padding = layer.layout.get('text-padding') * bucket.tilePixelRatio;
+        const offset = Object.values(placement.variableOffsets)[0];
+        expect(offset.anchor).toBe('left');
+        expect(offset.textBoxScale).toBeCloseTo(bucket.symbolInstances.get(0).textBoxScale * 2, 5);
+        expect(offset.width).toBeCloseTo((textBox.x2 - textBox.x1 - 2 * padding) * 2 + 2 * padding, 3);
+        expect(offset.height).toBeCloseTo((textBox.y2 - textBox.y1 - 2 * padding) * 2 + 2 * padding, 3);
+    });
+
+    test('keeps the stored variable anchor offset of a label drawn at its layout size', () => {
+        const features = [{
+            feature: {extent: 8192, type: 1, id: 0, properties: {size: 10}, loadGeometry: () => [[{x: 4000, y: 4000}]]},
+            id: 0,
+            index: 0,
+            sourceLayerIndex: 0
+        } as any as IndexedFeature];
+        const tile = createSymbolTile(new OverscaledTileID(0, 0, 0, 0, 0), features, new CollisionBoxArray(), {
+            'text-size': ['interpolate', ['linear'], ['zoom'], 0, ['*', ['get', 'size'], 2], 1, ['get', 'size']],
+            'text-variable-anchor-offset': ['left', [1, 0]]
+        });
+        const bucket = tile.buckets.test as SymbolBucket;
+        const layer = bucket.layers[0];
+        new CrossTileSymbolIndex().addLayer(layer, [tile], 0);
+        transform.setZoom(1);
+        placement = new Placement(transform, undefined, 0, true);
+
+        const parts = [];
+        placement.getBucketParts(parts, layer, tile, false);
+        for (const part of parts) placement.placeLayerBucketPart(part, {}, false);
+
+        expect(Object.values(placement.variableOffsets)[0].textBoxScale).toBe(bucket.symbolInstances.get(0).textBoxScale);
     });
 });
