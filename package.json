@@ -95,7 +95,7 @@
     "glob": "^14.0.4",
     "globals": "^17.14.0",
     "is-builtin-module": "^5.0.0",
-    "jsdom": "^30.1.3",
+    "jsdom": "^31.0.0",
     "minimist": "^1.2.8",
     "mock-geolocation": "^1.0.11",
     "monocart-coverage-reports": "^3.2.1",
