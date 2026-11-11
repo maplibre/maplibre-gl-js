@@ -1,0 +1,91 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 256,
+      "description": "From left to right: base 0, base 2 inside the 4 m radius, base 5 above it. Only the ambient part of the lighting is occluded, so the wall facing the light keeps more of its brightness at the foot than the other."
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "base": 0
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-0.00038, 0.00018],
+                  [-0.00038, 0.00038],
+                  [-0.00018, 0.00038],
+                  [-0.00018, 0.00018],
+                  [-0.00038, 0.00018]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "base": 2
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-0.0001, -0.0001],
+                  [-0.0001, 0.0001],
+                  [0.0001, 0.0001],
+                  [0.0001, -0.0001],
+                  [-0.0001, -0.0001]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "base": 5
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0.00018, -0.00038],
+                  [0.00018, -0.00018],
+                  [0.00038, -0.00018],
+                  [0.00038, -0.00038],
+                  [0.00018, -0.00038]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "pitch": 60,
+  "bearing": 45,
+  "zoom": 18,
+  "layers": [
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-color": "#999",
+        "fill-extrusion-height": 20,
+        "fill-extrusion-base": ["get", "base"],
+        "fill-extrusion-ambient-occlusion-wall-intensity": 1,
+        "fill-extrusion-ambient-occlusion-wall-radius": 4
+      }
+    }
+  ]
+}
