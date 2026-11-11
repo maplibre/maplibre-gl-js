@@ -1802,7 +1802,8 @@ export class Map extends Evented<MapEventType> {
      * remaining within the bounds.
      *
      * If the new bounds change the map's center or zoom, the following events are triggered:
-     * `movestart`, `move`, `moveend`, and, when the zoom changed, `zoomstart`, `zoom`, and `zoomend`.
+     * `movestart`, `move`, and `moveend`. If the zoom changed, `zoomstart`, `zoom`, and `zoomend` are
+     * triggered as well.
      *
      * @param bounds - The maximum bounds to set. Use `-Infinity` and `Infinity` for an unconstrained longitude range, with finite latitude limits. Pass `null` or `undefined` to remove all bounds.
      * @example
