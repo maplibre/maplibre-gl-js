@@ -2196,12 +2196,14 @@ describe('TileManager.tilesIn', () => {
     });
 
     test('globe does not wrap a camera query line crossing the prime meridian', async () => {
-        const transform = createGlobeTransform();
-        transform.resize(600, 400);
-        transform.setZoom(10);
-        transform.setCenter(new LngLat(0.02, 0.02));
-        transform.setPitch(60);
-        transform.setBearing(30);
+        const projection = createGlobeCameraProjection();
+        const context: CameraContext = {projection, constrainOverride: null};
+        let state = createCameraState();
+        state = cameraUpdates.resize(state, context, 600, 400);
+        state = cameraUpdates.setZoom(state, context, 10);
+        state = cameraUpdates.setCenter(state, context, new LngLat(0.02, 0.02));
+        state = cameraUpdates.setPitch(state, 60);
+        state = cameraUpdates.setBearing(state, 30);
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2212,7 +2214,7 @@ describe('TileManager.tilesIn', () => {
         tileManager.onAdd(undefined);
         await dataPromise;
 
-        tileManager.update(transform);
+        tileManager.update(projectCamera(state, projection), projection);
 
         const tile = tileManager.tilesIn([new Point(290, 170)], 1, true)
             .find(({tileID}) => tileID.key === new OverscaledTileID(10, 0, 10, 512, 512).key);
