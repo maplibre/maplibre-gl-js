@@ -1801,6 +1801,10 @@ export class Map extends Evented<MapEventType> {
      * as close as possible to the operation's request while still
      * remaining within the bounds.
      *
+     * If the new bounds change the map's center or zoom, the following events are triggered:
+     * `movestart`, `move`, and `moveend`. If the zoom changed, `zoomstart`, `zoom`, and `zoomend` are
+     * triggered as well.
+     *
      * @param bounds - The maximum bounds to set. Use `-Infinity` and `Infinity` for an unconstrained longitude range, with finite latitude limits. Pass `null` or `undefined` to remove all bounds.
      * @example
      * Define bounds that conform to the `LngLatBoundsLike` object as set the max bounds.
@@ -1813,8 +1817,28 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setMaxBounds(bounds?: LngLatBoundsLike | null): this {
+        const centerBefore = this.getCenter();
+        const zoomBefore = this.getZoom();
+
         this._camera.applyTransformChange(tr => tr.setMaxBounds(LngLatBounds.convert(bounds)));
-        return this._update();
+        this._update();
+
+        const center = this.getCenter();
+        const zoomChanged = zoomBefore !== this.getZoom();
+        const centerChanged = centerBefore.lat !== center.lat || centerBefore.lng !== center.lng;
+
+        if (zoomChanged) {
+            this.fire(new MapMovementEvent('zoomstart'))
+                .fire(new MapMovementEvent('zoom'))
+                .fire(new MapMovementEvent('zoomend'));
+        }
+        if (zoomChanged || centerChanged) {
+            this.fire(new MapMovementEvent('movestart'))
+                .fire(new MapMovementEvent('move'))
+                .fire(new MapMovementEvent('moveend'));
+        }
+
+        return this;
     }
 
     /**
@@ -1841,11 +1865,11 @@ export class Map extends Evented<MapEventType> {
 
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
-        if (minZoom >= defaultMinZoom && minZoom <= this._camera.transform.maxZoom) {
-            const zoomBefore = this._camera.transform.zoom;
+        if (minZoom >= defaultMinZoom && minZoom <= this.getMaxZoom()) {
+            const zoomBefore = this.getZoom();
             this._camera.applyTransformChange(tr => tr.setMinZoom(minZoom));
             this._update();
-            if (zoomBefore !== this._camera.transform.zoom) {
+            if (zoomBefore !== this.getZoom()) {
                 this.fire(new MapMovementEvent('zoomstart'))
                     .fire(new MapMovementEvent('zoom'))
                     .fire(new MapMovementEvent('zoomend'))
@@ -1894,11 +1918,11 @@ export class Map extends Evented<MapEventType> {
 
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
-        if (maxZoom >= this._camera.transform.minZoom) {
-            const zoomBefore = this._camera.transform.zoom;
+        if (maxZoom >= this.getMinZoom()) {
+            const zoomBefore = this.getZoom();
             this._camera.applyTransformChange(tr => tr.setMaxZoom(maxZoom));
             this._update();
-            if (zoomBefore !== this._camera.transform.zoom) {
+            if (zoomBefore !== this.getZoom()) {
                 this.fire(new MapMovementEvent('zoomstart'))
                     .fire(new MapMovementEvent('zoom'))
                     .fire(new MapMovementEvent('zoomend'))
@@ -1942,11 +1966,11 @@ export class Map extends Evented<MapEventType> {
             throw new Error(`minPitch must be greater than or equal to ${defaultMinPitch}`);
         }
 
-        if (minPitch >= defaultMinPitch && minPitch <= this._camera.transform.maxPitch) {
-            const pitchBefore = this._camera.transform.pitch;
+        if (minPitch >= defaultMinPitch && minPitch <= this.getMaxPitch()) {
+            const pitchBefore = this.getPitch();
             this._camera.applyTransformChange(tr => tr.setMinPitch(minPitch));
             this._update();
-            if (pitchBefore !== this._camera.transform.pitch) {
+            if (pitchBefore !== this.getPitch()) {
                 this.fire(new MapMovementEvent('pitchstart'))
                     .fire(new MapMovementEvent('pitch'))
                     .fire(new MapMovementEvent('pitchend'))
@@ -1986,11 +2010,11 @@ export class Map extends Evented<MapEventType> {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        if (maxPitch >= this._camera.transform.minPitch) {
-            const pitchBefore = this._camera.transform.pitch;
+        if (maxPitch >= this.getMinPitch()) {
+            const pitchBefore = this.getPitch();
             this._camera.applyTransformChange(tr => tr.setMaxPitch(maxPitch));
             this._update();
-            if (pitchBefore !== this._camera.transform.pitch) {
+            if (pitchBefore !== this.getPitch()) {
                 this.fire(new MapMovementEvent('pitchstart'))
                     .fire(new MapMovementEvent('pitch'))
                     .fire(new MapMovementEvent('pitchend'))

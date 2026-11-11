@@ -1,0 +1,104 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 200,
+      "height": 150
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 0,
+  "sources": {
+    "p0": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [
+          0,
+          30
+        ]
+      }
+    },
+    "p1": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [
+          0,
+          0
+        ]
+      }
+    },
+    "p2": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [
+          0,
+          -30
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/stretch",
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "label-0",
+      "type": "symbol",
+      "source": "p0",
+      "layout": {
+        "text-field": "A",
+        "text-size": 12,
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "icon-image": "nine-part-content",
+        "icon-text-fit": "both",
+        "icon-size": 2,
+        "text-allow-overlap": true,
+        "icon-allow-overlap": true
+      }
+    },
+    {
+      "id": "label-1",
+      "type": "symbol",
+      "source": "p1",
+      "layout": {
+        "text-field": "ABCD",
+        "text-size": 12,
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "icon-image": "nine-part-content",
+        "icon-text-fit": "both",
+        "icon-size": 2,
+        "text-allow-overlap": true,
+        "icon-allow-overlap": true
+      }
+    },
+    {
+      "id": "label-2",
+      "type": "symbol",
+      "source": "p2",
+      "layout": {
+        "text-field": "ABCDEFGH",
+        "text-size": 12,
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "icon-image": "nine-part-content",
+        "icon-text-fit": "both",
+        "icon-size": 2,
+        "text-allow-overlap": true,
+        "icon-allow-overlap": true
+      }
+    }
+  ]
+}
