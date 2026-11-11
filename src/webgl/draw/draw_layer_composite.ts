@@ -126,6 +126,12 @@ export function prepareDrawLayerComposite(painter: Painter, tileManager: TileMan
     const compositeViewport = context.viewport.get();
     const [, , width, height] = compositeViewport;
 
+    // Mesa 24.3 to 25.3.1 on Intel Gen12 leaves the previous layer's pixels in the framebuffer when its clear shares
+    // a batch with the composite draw that sampled it (#9003).
+    if (frameRenderContext.layerCompositeSampled) {
+        context.gl.flush();
+    }
+
     bindLayerComposite(painter, width, height);
 
     context.viewport.set([0, 0, width, height]);
@@ -253,4 +259,6 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
         painter.viewportSegments, layer.paint, frameRenderContext.transform.zoom);
 
     gl.disable(gl.SCISSOR_TEST);
+
+    frameRenderContext.layerCompositeSampled = true;
 }
