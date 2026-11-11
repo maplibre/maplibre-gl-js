@@ -1801,6 +1801,10 @@ export class Map extends Evented<MapEventType> {
      * as close as possible to the operation's request while still
      * remaining within the bounds.
      *
+     * If the map's current view does not fit within the new bounds, the map will move into them, zooming in
+     * when the bounds are smaller than the viewport, and trigger the following events:
+     * `movestart`, `move`, `moveend`, and, when the zoom level changed, `zoomstart`, `zoom`, and `zoomend`.
+     *
      * @param bounds - The maximum bounds to set. Use `-Infinity` and `Infinity` for an unconstrained longitude range, with finite latitude limits. Pass `null` or `undefined` to remove all bounds.
      * @example
      * Define bounds that conform to the `LngLatBoundsLike` object as set the max bounds.
@@ -1813,8 +1817,28 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setMaxBounds(bounds?: LngLatBoundsLike | null): this {
+        const centerBefore = this._camera.transform.center;
+        const zoomBefore = this._camera.transform.zoom;
+
         this._camera.applyTransformChange(tr => tr.setMaxBounds(LngLatBounds.convert(bounds)));
-        return this._update();
+        this._update();
+
+        const {center, zoom} = this._camera.transform;
+        const zoomChanged = zoomBefore !== zoom;
+        const centerChanged = centerBefore.lat !== center.lat || centerBefore.lng !== center.lng;
+
+        if (zoomChanged) {
+            this.fire(new MapMovementEvent('zoomstart'))
+                .fire(new MapMovementEvent('zoom'))
+                .fire(new MapMovementEvent('zoomend'));
+        }
+        if (zoomChanged || centerChanged) {
+            this.fire(new MapMovementEvent('movestart'))
+                .fire(new MapMovementEvent('move'))
+                .fire(new MapMovementEvent('moveend'));
+        }
+
+        return this;
     }
 
     /**

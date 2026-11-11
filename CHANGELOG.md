@@ -3,6 +3,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `setMaxBounds` not firing `move` and `zoom` events when the new bounds move the camera ([#ISSUE](https://github.com/maplibre/maplibre-gl-js/issues/ISSUE)) (by [@kkokkojeong](https://github.com/kkokkojeong))
 - _...Add new stuff here..._
 
 ## 6.17.0

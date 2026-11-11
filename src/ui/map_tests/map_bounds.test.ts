@@ -1,4 +1,4 @@
-import {describe, beforeEach, afterEach, test, expect} from 'vitest';
+import {describe, beforeEach, afterEach, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest} from '../../util/test/util.ts';
 import {setNow, restoreNow} from '../../util/time_control.ts';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
@@ -102,6 +102,45 @@ describe('setMaxBounds', () => {
         const map = createMap();
         map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
         expect(map.setZoom(0).getZoom()).not.toBe(0);
+    });
+
+    test('fires move and zoom events when the new bounds constrain the camera', () => {
+        const map = createMap({zoom: 0});
+        const moveend = vi.fn();
+        const zoomend = vi.fn();
+        map.on('moveend', moveend);
+        map.on('zoomend', zoomend);
+
+        map.setMaxBounds([[-130.4297, 50.0642], [-61.52344, 24.20688]]);
+
+        expect(moveend).toHaveBeenCalledTimes(1);
+        expect(zoomend).toHaveBeenCalledTimes(1);
+    });
+
+    test('fires move events without zoom events when the new bounds only shift the center', () => {
+        const map = createMap({zoom: 6, center: [-96, 37]});
+        const moveend = vi.fn();
+        const zoomend = vi.fn();
+        map.on('moveend', moveend);
+        map.on('zoomend', zoomend);
+
+        map.setMaxBounds([[-95, 24.20688], [-61.52344, 50.0642]]);
+
+        expect(moveend).toHaveBeenCalledTimes(1);
+        expect(zoomend).not.toHaveBeenCalled();
+    });
+
+    test('does not fire events when the camera is unchanged', () => {
+        const map = createMap({zoom: 6, center: [-96, 37]});
+        const moveend = vi.fn();
+        const zoomend = vi.fn();
+        map.on('moveend', moveend);
+        map.on('zoomend', zoomend);
+
+        map.setMaxBounds([[-130.4297, 24.20688], [-61.52344, 50.0642]]);
+
+        expect(moveend).not.toHaveBeenCalled();
+        expect(zoomend).not.toHaveBeenCalled();
     });
 
     test('keeps the bounds set during easeTo when transformCameraUpdate is set', async () => {
