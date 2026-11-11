@@ -3,10 +3,12 @@ import Point from '@mapbox/point-geometry';
 import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane} from './projection.ts';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g.ts';
-import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {expectToBeCloseToArray} from '../util/test/util.ts';
+
+import type {Transform} from '../geo/transform.ts';
 
 const TERRAIN_ELEVATION = 100;
 const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0));
@@ -16,7 +18,7 @@ const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0));
  * projections through it produce meaningful values. Pass `overrides` for whatever the test cares
  * about; everything else falls back to a pitched viewport over flat terrain at `TERRAIN_ELEVATION`.
  */
-function createDefaultTransform(): MercatorTransform {
+function createDefaultTransform(): Transform {
     const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
     transform.resize(500, 500);
     transform.setCenter(new LngLat(10.0, 50.0));

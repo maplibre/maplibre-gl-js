@@ -4,7 +4,7 @@ import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, versorSetLocationAtPoint} from './globe_utils.ts';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
-import {normalizeCenter} from '../transform_helper.ts';
+import {normalizeCenter} from '../transform.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';

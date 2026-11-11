@@ -4,14 +4,14 @@ import {EdgeInsets} from './edge_insets.ts';
 import {MAX_VALID_LATITUDE, radiansToDegrees} from '../util/util.ts';
 
 import type {mat2, mat4} from 'gl-matrix';
-import type {TransformOptions} from './transform_helper.ts';
-import type {NearFarZ} from './transform_interface.ts';
+import type {TransformOptions} from './transform.ts';
+import type {NearFarZ, TransformConstrainFunction} from './transform_interface.ts';
 
 /**
  * @internal
- * The camera of a transform, which is its position, its size and limits, and the values that follow from them
- * in every projection. It is plain data. {@link TransformHelper} is the only one to change it, and the projection
- * classes read it.
+ * The camera of a {@link Transform}, which is its position, its size and limits, and the values that follow from
+ * them in every projection. It is plain data. The transform is the only one to change it, and its projection part
+ * reads it.
  */
 export type CameraState = {
     readonly tileSize: number;
@@ -154,4 +154,16 @@ export function getRoll(cameraState: Readonly<CameraState>): number {
  */
 export function getFov(cameraState: Readonly<CameraState>): number {
     return radiansToDegrees(cameraState.fovInRadians);
+}
+
+/**
+ * @internal
+ * Where `constrain` puts a camera moved to `center` and `zoom`, the way a {@link Transform} constrains its own camera,
+ * which is once and then the zoom again at the constrained center. A camera without a size is not constrained, so it
+ * keeps the two as they are.
+ */
+export function getConstrainedCamera(cameraState: Readonly<CameraState>, constrain: TransformConstrainFunction, center: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    if (!cameraState.width || !cameraState.height) return {center, zoom};
+    const constrained = constrain(center, zoom);
+    return {center: constrained.center, zoom: constrain(constrained.center, constrained.zoom).zoom};
 }

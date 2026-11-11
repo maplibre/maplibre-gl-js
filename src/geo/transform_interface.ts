@@ -184,7 +184,7 @@ export interface ITransformGetters {
  * @internal
  * All the functions that may mutate a transform.
  */
-interface ITransformMutators {
+interface ITransformMutators extends IProjectionTransformMutators {
     /**
      * Applies a transform to the current transform.
      * @param that - The transform to apply to the current transform.
@@ -299,7 +299,13 @@ interface ITransformMutators {
      * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
      */
     setConstrainOverride(constrain?: TransformConstrainFunction | null): void;
+}
 
+/**
+ * @internal
+ * The functions that may mutate a transform and that each projection implements.
+ */
+export interface IProjectionTransformMutators {
     /**
      * @internal
      * Sets the transform's transition state from one projection to another.
@@ -319,7 +325,7 @@ export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: numb
  * Note that an instance of {@link IReadonlyTransform} may still be mutated
  * by code that has a reference to in under the {@link ITransform} type.
  */
-export interface IReadonlyTransform extends ITransformGetters {
+export interface IReadonlyTransform extends ITransformGetters, IReadonlyProjectionTransform {
     clone(): ITransform;
 
     /**
@@ -336,12 +342,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * Center is considered to be in the middle of the viewport.
      */
     get cameraToCenterDistance(): number;
-    get modelViewProjectionMatrix(): mat4;
-    get projectionMatrix(): mat4;
-    /**
-     * Inverse of matrix from camera space to clip space.
-     */
-    get inverseProjectionMatrix(): mat4;
     get pixelsToClipSpaceMatrix(): mat4;
     get clipSpaceToPixelsMatrix(): mat4;
     get pixelsToGLUnits(): [number, number];
@@ -359,11 +359,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @internal
      */
     get pixelsPerMeter(): number;
-    /**
-     * @internal
-     * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
-     */
-    get cameraPosition(): vec3;
 
     /**
      * Returns if the padding params match
@@ -372,6 +367,69 @@ export interface IReadonlyTransform extends ITransformGetters {
      * @returns true if they are equal, false otherwise
      */
     isPaddingEqual(padding: PaddingOptions): boolean;
+
+    /**
+     * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
+     * @returns max bounds
+     */
+    getMaxBounds(): LngLatBounds | null;
+
+    /**
+     * Constrain the center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
+     */
+    applyConstrain: TransformConstrainFunction;
+
+    /**
+     * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
+     * as the name for the location under the camera and on the surface of the earth (lng, lat, 0).
+     * `cameraPoint` is the projected position of the `cameraLocation`.
+     *
+     * This point is useful to us because only fill-extrusions that are between `cameraPoint` and
+     * the query point on the surface of the earth can extend and intersect the query.
+     *
+     * When the map is not pitched the `cameraPoint` is equivalent to the center of the map because
+     * the camera is right above the center of the map.
+     */
+    getCameraPoint(): Point;
+
+    /**
+     * Given the camera position (lng, lat, alt), calculate the center point and zoom level
+     * @param lngLat - lng, lat of the camera
+     * @param alt - altitude of the camera above sea level, in meters
+     * @param bearing - bearing of the camera, in degrees
+     * @param pitch - pitch angle of the camera, in degrees
+     */
+    calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
+
+    /**
+     * When the map is pitched, some of the 3D features that intersect a query will not intersect
+     * the query at the surface of the earth. Instead the feature may be closer and only intersect
+     * the query because it extrudes into the air.
+     * @param queryGeometry - For point queries, the line from the query point to the "camera point",
+     * for other geometries, the envelope of the query geometry and the "camera point"
+     * @returns a geometry that includes all of the original query as well as all possible ares of the
+     * screen where the *base* of a visible extrusion could be.
+     *
+     */
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[];
+}
+
+/**
+ * @internal
+ * The members of {@link IReadonlyTransform} that each projection implements.
+ */
+export interface IReadonlyProjectionTransform {
+    get modelViewProjectionMatrix(): mat4;
+    get projectionMatrix(): mat4;
+    /**
+     * Inverse of matrix from camera space to clip space.
+     */
+    get inverseProjectionMatrix(): mat4;
+    /**
+     * @internal
+     * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
+     */
+    get cameraPosition(): vec3;
 
     /**
      * @internal
@@ -454,12 +512,6 @@ export interface IReadonlyTransform extends ITransformGetters {
     getBounds(): LngLatBounds;
 
     /**
-     * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
-     * @returns max bounds
-     */
-    getMaxBounds(): LngLatBounds | null;
-
-    /**
      * @internal
      * Returns whether the specified screen point lies on the map.
      * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled,
@@ -475,25 +527,7 @@ export interface IReadonlyTransform extends ITransformGetters {
      */
     defaultConstrain: TransformConstrainFunction;
 
-    /**
-     * Constrain the center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
-     */
-    applyConstrain: TransformConstrainFunction;
-
     maxPitchScaleFactor(): number;
-
-    /**
-     * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
-     * as the name for the location under the camera and on the surface of the earth (lng, lat, 0).
-     * `cameraPoint` is the projected position of the `cameraLocation`.
-     *
-     * This point is useful to us because only fill-extrusions that are between `cameraPoint` and
-     * the query point on the surface of the earth can extend and intersect the query.
-     *
-     * When the map is not pitched the `cameraPoint` is equivalent to the center of the map because
-     * the camera is right above the center of the map.
-     */
-    getCameraPoint(): Point;
 
     /**
      * The altitude of the camera above the sea level in meters.
@@ -504,15 +538,6 @@ export interface IReadonlyTransform extends ITransformGetters {
      * The longitude and latitude of the camera.
      */
     getCameraLngLat(): LngLat;
-
-    /**
-     * Given the camera position (lng, lat, alt), calculate the center point and zoom level
-     * @param lngLat - lng, lat of the camera
-     * @param alt - altitude of the camera above sea level, in meters
-     * @param bearing - bearing of the camera, in degrees
-     * @param pitch - pitch angle of the camera, in degrees
-     */
-    calculateCenterFromCameraLngLatAlt(lngLat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number};
 
     /**
      * Given the camera position and the point it looks at, both as lng, lat and altitude above sea level in meters,
@@ -526,18 +551,6 @@ export interface IReadonlyTransform extends ITransformGetters {
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo;
 
     getRayDirectionFromPixel(p: Point): vec3;
-
-    /**
-     * When the map is pitched, some of the 3D features that intersect a query will not intersect
-     * the query at the surface of the earth. Instead the feature may be closer and only intersect
-     * the query because it extrudes into the air.
-     * @param queryGeometry - For point queries, the line from the query point to the "camera point",
-     * for other geometries, the envelope of the query geometry and the "camera point"
-     * @returns a geometry that includes all of the original query as well as all possible ares of the
-     * screen where the *base* of a visible extrusion could be.
-     *
-     */
-    getCameraQueryGeometry(queryGeometry: Point[]): Point[];
 
     /**
      * @internal
