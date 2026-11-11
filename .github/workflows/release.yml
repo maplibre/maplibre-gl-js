@@ -83,3 +83,10 @@ jobs:
           immutableCreate: true
           draft: false
           makeLatest: false
+
+      - name: Mark the highest version as the latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh release list --exclude-drafts --exclude-pre-releases --limit 100 --json tagName --jq '.[].tagName' | sort -V | tail -n 1)
+          gh release edit "$tag" --latest
