@@ -46,7 +46,8 @@
     "pbf": "^5.1.2",
     "potpack": "^2.1.0",
     "quickselect": "^3.0.0",
-    "tinyqueue": "^3.0.0"
+    "tinyqueue": "^3.0.0",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@fontsource/noto-sans-devanagari": "^5.3.0",

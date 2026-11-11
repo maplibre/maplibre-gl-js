@@ -1,7 +1,10 @@
 import {describe, expect, test} from 'vitest';
 import {LngLat} from '../lng_lat.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeCircumferencePixels, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils.ts';
-import {createGlobeTransform} from './globe_transform.ts';
+import {createCameraState} from '../camera_state.ts';
+import {createGlobeCameraProjection} from './camera_projection.ts';
+import {projectCamera} from './camera_math.ts';
+import * as cameraUpdates from './camera_updates.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
 
 describe('globe utils', () => {
@@ -62,22 +65,23 @@ describe('globe utils', () => {
     });
 
     test('getGlobeCenterInViewSpace', () => {
-        const transform = createGlobeTransform();
-        transform.resize(256, 512);
-        transform.setMaxPitch(85);
-        transform.setCenter(new LngLat(11.64, 47.55));
-        transform.setZoom(11);
-        const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+        const projection = createGlobeCameraProjection();
+        const context = {projection, constrainOverride: null};
+        let state = createCameraState({maxPitch: 85});
+        state = cameraUpdates.resize(state, context, 256, 512);
+        state = cameraUpdates.setCenter(state, context, new LngLat(11.64, 47.55));
+        state = cameraUpdates.setZoom(state, context, 11);
+        const radius = getGlobeRadiusPixels(projectCamera(state, projection).worldSize, state.center.lat);
 
-        transform.setPitch(0);
-        const straightDown = getGlobeCenterInViewSpace(transform);
-        expect(straightDown[0]).toBeCloseTo(0, 6);
-        expect(straightDown[1]).toBeCloseTo(0, 6);
-        expect(straightDown[2]).toBeCloseTo(-(transform.cameraToCenterDistance + radius), 2);
+        const straightDown = projectCamera(cameraUpdates.setPitch(state, 0), projection);
+        const straightDownCenter = getGlobeCenterInViewSpace(straightDown);
+        expect(straightDownCenter[0]).toBeCloseTo(0, 6);
+        expect(straightDownCenter[1]).toBeCloseTo(0, 6);
+        expect(straightDownCenter[2]).toBeCloseTo(-(straightDown.cameraToCenterDistance + radius), 2);
 
-        transform.setPitch(85);
-        const pitched = getGlobeCenterInViewSpace(transform);
-        expect(Math.hypot(...pitched) / radius).toBeCloseTo(Math.hypot(...transform.cameraPosition), 8);
+        const pitched = projectCamera(cameraUpdates.setPitch(state, 85), projection);
+        const pitchedCenter = getGlobeCenterInViewSpace(pitched);
+        expect(Math.hypot(...pitchedCenter) / radius).toBeCloseTo(Math.hypot(...pitched.cameraPosition), 8);
     });
 });
 

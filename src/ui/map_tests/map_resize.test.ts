@@ -16,8 +16,8 @@ describe('resize', () => {
         Object.defineProperty(container, 'clientHeight', {value: 250});
         map.resize();
 
-        expect(map._camera.transform.width).toBe(250);
-        expect(map._camera.transform.height).toBe(250);
+        expect(map._camera.cameraState.width).toBe(250);
+        expect(map._camera.cameraState.height).toBe(250);
 
     });
 

@@ -1,7 +1,7 @@
 import {evaluateZoomSnap} from '../../util/util.ts';
 
 import type {Handler, HandlerResult} from '../handler_manager.ts';
-import type {TransformProvider} from './transform-provider.ts';
+import type {RequestedCameraProvider} from './requested-camera-provider.ts';
 
 const defaultOptions = {
     panStep: 100,
@@ -26,7 +26,7 @@ const defaultOptions = {
  * @group Handlers
  */
 export class KeyboardHandler implements Handler {
-    _tr: TransformProvider;
+    _tr: RequestedCameraProvider;
     _enabled: boolean;
     _active: boolean;
     _panStep: number;
@@ -35,7 +35,7 @@ export class KeyboardHandler implements Handler {
     _rotationDisabled: boolean;
 
     /** @internal */
-    constructor(transformProvider: TransformProvider) {
+    constructor(transformProvider: RequestedCameraProvider) {
         this._tr = transformProvider;
         const stepOptions = defaultOptions;
         this._panStep = stepOptions.panStep;

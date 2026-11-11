@@ -4,7 +4,7 @@ import {now} from '../../util/time_control.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat.ts';
 
-import type {TransformProvider} from './transform-provider.ts';
+import type {RequestedCameraProvider} from './requested-camera-provider.ts';
 import type {Map} from '../map.ts';
 import type {AroundCenterOptions} from './two_fingers_touch.ts';
 import type {Handler} from '../handler_manager.ts';
@@ -34,7 +34,7 @@ const wheelEventTimeDiffAdjustment = 5;
  */
 export class ScrollZoomHandler implements Handler {
     _map: Map;
-    _tr: TransformProvider;
+    _tr: RequestedCameraProvider;
     _enabled: boolean;
     _active: boolean;
     _zooming: boolean;
@@ -66,7 +66,7 @@ export class ScrollZoomHandler implements Handler {
     _wheelZoomRate: number;
 
     /** @internal */
-    constructor(map: Map, triggerRenderFrame: () => void, transformProvider: TransformProvider) {
+    constructor(map: Map, triggerRenderFrame: () => void, transformProvider: RequestedCameraProvider) {
         this._map = map;
         this._tr = transformProvider;
         this._triggerRenderFrame = triggerRenderFrame;
@@ -252,7 +252,7 @@ export class ScrollZoomHandler implements Handler {
 
         // Whether aroundPoint is actually unprojectable is not a problem to be solved here, but in handler_manager.ts instead.
         if (this._aroundCenter) {
-            this._aroundPoint = tr.transform.locationToScreenPoint(LngLat.convert(tr.center));
+            this._aroundPoint = tr.project(LngLat.convert(tr.center));
         } else {
             this._aroundPoint = pos;
         }
@@ -274,7 +274,7 @@ export class ScrollZoomHandler implements Handler {
         this._needsRerender = false;
 
         if (!this.isActive()) return;
-        const tr = this._tr.transform;
+        const tr = this._tr.camera;
 
         // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)
         if (typeof this._lastExpectedZoom === 'number') {
@@ -300,7 +300,7 @@ export class ScrollZoomHandler implements Handler {
             }
 
             const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
-            const target = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
+            const target = this._tr.constrain(this._tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
             const zoomSnap = this._map.getZoomSnap();
 
             if (this._type === 'wheel' && zoomSnap > 0) {

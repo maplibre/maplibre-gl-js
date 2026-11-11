@@ -4,24 +4,22 @@ import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {type MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
-import {createDEM, createDEMTerrain} from '../../util/test/util.ts';
+import {createDEM, createDEMTerrain, createTestCamera} from '../../util/test/util.ts';
+import * as cameraMath from './camera_math.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
+import type {ProjectedCamera} from '../projected_camera.ts';
+import type {CameraProjection} from './camera_projection.ts';
 
 const DEM_DIM = 256;
 
-function createScene(zoom: number, heightFn: (x: number, y: number) => number, pitch: number): {terrain: Terrain; transform: MercatorTransform} {
-    const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-    transform.resize(1024, 1024);
-    transform.setCenter(new LngLat(11.4, 47.3));
-    transform.setZoom(zoom);
-    transform.setPitch(pitch);
+function createScene(zoom: number, heightFn: (x: number, y: number) => number, pitch: number): {terrain: Terrain; camera: ProjectedCamera; projection: CameraProjection} {
+    const {camera, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 1024, height: 1024, center: new LngLat(11.4, 47.3), zoom, pitch});
 
     const tileZoom = Math.max(Math.floor(zoom) - 1, 0);
     const scale = 1 << tileZoom;
-    const center = MercatorCoordinate.fromLngLat(transform.center);
+    const center = MercatorCoordinate.fromLngLat(camera.center);
     const centerX = Math.floor(center.x * scale);
     const centerY = Math.floor(center.y * scale);
     const tileIDs: OverscaledTileID[] = [];
@@ -35,7 +33,7 @@ function createScene(zoom: number, heightFn: (x: number, y: number) => number, p
     }
 
     const terrain = createDEMTerrain(tileIDs, createDEM(heightFn, DEM_DIM));
-    return {terrain, transform};
+    return {terrain, camera, projection: context.projection};
 }
 
 const scenes = [2, 10, 16].flatMap(zoom => [
@@ -45,7 +43,7 @@ const scenes = [2, 10, 16].flatMap(zoom => [
 ]);
 
 test('terrain raycast', async ({bench}) => {
-    await bench.compare(...scenes.map(({name, point, transform, terrain}) => bench(name, () => {
-        transform.screenTerrainPointToMercatorCoordinate(point, terrain);
+    await bench.compare(...scenes.map(({name, point, camera, projection, terrain}) => bench(name, () => {
+        cameraMath.screenTerrainPointToMercatorCoordinate(camera, projection, point, terrain);
     })));
 });

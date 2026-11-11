@@ -21,8 +21,8 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
 
     const context = frameRenderContext.context;
     const gl = context.gl;
-    const transform = frameRenderContext.transform;
-    const tileSize = transform.tileSize;
+    const projectedCamera = frameRenderContext.projectedCamera;
+    const tileSize = projectedCamera.tileSize;
     const image = layer.paint.get('background-pattern');
 
     if (painter.patternAtlas.isPatternMissing(image)) return;
@@ -34,7 +34,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const depthMode = frameRenderContext.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = frameRenderContext.colorModeForRenderPass();
     const program = frameRenderContext.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : coveringTiles(transform, {tileSize, terrain: frameRenderContext.terrain});
+    const tileIDs = coords ? coords : coveringTiles(projectedCamera, frameRenderContext.cameraProjection, {tileSize, terrain: frameRenderContext.terrain});
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);
@@ -47,7 +47,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
         const projectionData = frameRenderContext.getProjectionDataForTile(tileID);
 
         const uniformValues = image ?
-            backgroundPatternUniformValues(opacity, painter.patternAtlas, transform, image, {tileID, tileSize}, crossfade) :
+            backgroundPatternUniformValues(opacity, painter.patternAtlas, projectedCamera, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
         const terrainData = frameRenderContext.getTerrainDataForTile(tileID);
 

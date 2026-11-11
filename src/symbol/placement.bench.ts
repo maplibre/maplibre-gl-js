@@ -1,11 +1,11 @@
 import {test} from 'vitest';
 import {Placement} from './placement.ts';
 import {CrossTileSymbolIndex} from './cross_tile_symbol_index.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createSymbolTile} from '../../test/unit/lib/create_symbol_layer.ts';
 import {getFeaturesFromLayer, loadVectorTile} from '../../test/unit/lib/tile.ts';
+import {createTestCamera} from '../util/test/util.ts';
 
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 
@@ -20,9 +20,7 @@ const tiles = Array.from({length: bucketCount}, (_, i) => createSymbolTile(
 const layer = (tiles[0].buckets.test as SymbolBucket).layers[0];
 new CrossTileSymbolIndex().addLayer(layer, tiles, 0);
 
-const transform = createMercatorTransform();
-transform.resize(1280, 900);
-const placement = new Placement(transform, undefined, 0, true);
+const placement = new Placement(createTestCamera({width: 1280, height: 900}).camera, undefined, 0, true);
 placement.updateLayerOpacities(layer, tiles);
 
 test('Placement.updateLayerOpacities', async ({bench}) => {

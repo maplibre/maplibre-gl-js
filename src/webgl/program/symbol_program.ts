@@ -3,8 +3,8 @@ import {extend} from '../../util/util.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {Context} from '../../webgl/context.ts';
-import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {ProjectedCamera} from '../../geo/projected_camera.ts';
 
 export type SymbolIconUniformsType = {
     'u_is_size_zoom_constant': Uniform1i;
@@ -190,7 +190,7 @@ const symbolSDFUniformValues = (
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
-    transform: IReadonlyTransform,
+    projectedCamera: ProjectedCamera,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     translation: [number, number],
@@ -204,7 +204,7 @@ const symbolSDFUniformValues = (
     return extend(symbolIconUniformValues(functionType, size,
         rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, labelPlaneMatrix,
         glCoordMatrix, translation, isText, texSize, pitchedScale, isOffset, heightAnchorGround), {
-        'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
+        'u_gamma_scale': (pitchWithMap ? Math.cos(projectedCamera.pitch * Math.PI / 180.0) * projectedCamera.cameraToCenterDistance : 1),
         'u_is_halo': isHalo ? 1 : 0,
         'u_is_plain': 1
     });
@@ -220,7 +220,7 @@ const symbolTextAndIconUniformValues = (
     pitchWithMap: boolean,
     isAlongLine: boolean,
     isVariableAnchor: boolean,
-    transform: IReadonlyTransform,
+    projectedCamera: ProjectedCamera,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     translation: [number, number],
@@ -231,7 +231,7 @@ const symbolTextAndIconUniformValues = (
     heightAnchorGround: boolean
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, transform, labelPlaneMatrix,
+        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, projectedCamera, labelPlaneMatrix,
         glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale, isOffset, heightAnchorGround), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1

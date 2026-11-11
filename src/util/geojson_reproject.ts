@@ -1,7 +1,7 @@
 import {clamp} from './util.ts';
 
 import type {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
-import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 import type {GeoJSONSourceDiff} from '../source/geojson_source_diff.ts';
 
 /**

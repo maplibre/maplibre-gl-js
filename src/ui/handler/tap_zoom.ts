@@ -2,20 +2,20 @@ import {TapRecognizer} from './tap_recognizer.ts';
 import {evaluateZoomSnap} from '../../util/util.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {TransformProvider} from './transform-provider.ts';
+import type {RequestedCameraProvider} from './requested-camera-provider.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
  * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping
  */
 export class TapZoomHandler implements Handler {
-    _tr: TransformProvider;
+    _tr: RequestedCameraProvider;
     _enabled: boolean;
     _active: boolean;
     _zoomIn: TapRecognizer;
     _zoomOut: TapRecognizer;
 
-    constructor(transformProvider: TransformProvider) {
+    constructor(transformProvider: RequestedCameraProvider) {
         this._tr = transformProvider;
         this._zoomIn = new TapRecognizer({
             numTouches: 1,
@@ -59,7 +59,7 @@ export class TapZoomHandler implements Handler {
                 easeTo: {
                     duration: 300,
                     zoom: evaluateZoomSnap(tr.zoom + 1, tr.zoomSnap),
-                    around: tr.transform.isPointOnMapSurface(zoomInPoint) ? tr.unproject(zoomInPoint) : undefined
+                    around: tr.isPointOnMapSurface(zoomInPoint) ? tr.unproject(zoomInPoint) : undefined
                 }
             };
         } else if (zoomOutPoint) {
@@ -70,7 +70,7 @@ export class TapZoomHandler implements Handler {
                 easeTo: {
                     duration: 300,
                     zoom: evaluateZoomSnap(tr.zoom - 1, tr.zoomSnap),
-                    around: tr.transform.isPointOnMapSurface(zoomOutPoint) ? tr.unproject(zoomOutPoint) : undefined
+                    around: tr.isPointOnMapSurface(zoomOutPoint) ? tr.unproject(zoomOutPoint) : undefined
                 }
             };
         }

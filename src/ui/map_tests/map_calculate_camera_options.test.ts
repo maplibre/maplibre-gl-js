@@ -96,7 +96,7 @@ describe('calculateCameraOptionsFromTo', () => {
         terrainStub.getElevationForLngLat = mockedGetElevation;
         map.terrain = terrainStub;
 
-        const expectedZoom = Math.log2(map._camera.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map._camera.transform.tileSize);
+        const expectedZoom = Math.log2(map._camera.projectedCamera.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map._camera.cameraState.tileSize);
         const cameraOptions = map.calculateCameraOptionsFromTo(new LngLat(0, 0), 0, new LngLat(0, 0));
 
         expect(cameraOptions).toBeDefined();

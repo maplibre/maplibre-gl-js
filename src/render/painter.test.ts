@@ -1,42 +1,45 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
 import {FrameRenderContext} from './frame_render_context.ts';
-import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorCameraProjection, type CameraProjection} from '../geo/projection/camera_projection.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
-import {StubMap, createFrameRenderData} from '../util/test/util.ts';
+import {StubMap, createFrameRenderData, createTestCamera} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
+
+import type {ProjectedCamera} from '../geo/projected_camera.ts';
 
 describe('render', () => {
     let painter: Painter;
     let map: any;
     let style: Style;
-    let transform: MercatorTransform;
+    let camera: ProjectedCamera;
+    let cameraProjection: CameraProjection;
     const renderOptions = createFrameRenderData();
 
     beforeEach(() => {
         const gl = createNullGL();
-        transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        transform.resize(512, 512);
+        cameraProjection = createMercatorCameraProjection();
+        camera = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 512, height: 512}, cameraProjection).camera;
         painter = new Painter(gl);
         map = new StubMap() as any;
         style = new Style(map);
         style._setProjectionInternal('mercator');
-        style._updatePlacement(transform, false, 0, false);
+        style._updatePlacement(camera, cameraProjection, false, 0, false);
     });
 
     test('must not fail with incompletely loaded style', () => {
-        expect(() => painter.render(style, transform, renderOptions)).not.toThrow();
+        expect(() => painter.render(style, camera, cameraProjection, renderOptions)).not.toThrow();
     });
 
     test('calls terrainDepth', () => {
         const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        painter.render(style, transform, renderOptions);
+        painter.render(style, camera, cameraProjection, renderOptions);
 
         expect(terrainDepth).toHaveBeenCalled();
     });
@@ -46,18 +49,18 @@ describe('render', () => {
         onTestFinished(() => terrainDepth.mockRestore());
         map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        painter.render(style, transform, renderOptions);
+        painter.render(style, camera, cameraProjection, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(1);
-        painter.render(style, transform, renderOptions);
+        painter.render(style, camera, cameraProjection, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(1);
 
         painter.markTerrainDepthDirty();
         painter.markTerrainDepthDirty();
         expect(terrainDepth).toHaveBeenCalledTimes(1);
 
-        painter.render(style, transform, renderOptions);
+        painter.render(style, camera, cameraProjection, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(2);
-        painter.render(style, transform, renderOptions);
+        painter.render(style, camera, cameraProjection, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(2);
     });
 
@@ -70,16 +73,17 @@ describe('render', () => {
 
         const data = {...renderOptions, projectionTransition: 1, isRenderingGlobe: true};
 
-        painter.render(style, transform, data);
+        painter.render(style, camera, cameraProjection, data);
 
         const frameRenderContext = terrainDepth.mock.calls[0][2];
-        expect(frameRenderContext.transform).toBe(transform);
+        expect(frameRenderContext.projectedCamera).toBe(camera);
+        expect(frameRenderContext.cameraProjection).toBe(cameraProjection);
         expect(frameRenderContext.terrain).toBe(terrain);
         expect(frameRenderContext.data).toBe(data);
     });
 
     test('uses frame render context for depth and blending when drawing a custom layer', () => {
-        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: renderOptions, context: painter.context, programCache: painter.programCache, currentPass: 'translucent', projection: style.projection});
+        const frameRenderContext = new FrameRenderContext({projectedCamera: camera, cameraProjection, terrain: null, data: renderOptions, context: painter.context, programCache: painter.programCache, currentPass: 'translucent', projection: style.projection});
         frameRenderContext.depthRangeFor3D = [0.1, 0.8];
         const render = vi.fn((gl: WebGL2RenderingContext) => {
             expect(painter.context.depthRange.get()).toEqual([0.1, 0.8]);
@@ -105,7 +109,7 @@ describe('render', () => {
 
         test('stores terrain render time using the controlled clock', () => {
             setNow(1234);
-            painter.render(style, transform, renderOptions);
+            painter.render(style, camera, cameraProjection, renderOptions);
 
             expect(painter.terrainFacilitator.renderTime).toBe(1234);
         });

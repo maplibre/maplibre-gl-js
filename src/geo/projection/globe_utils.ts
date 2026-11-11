@@ -1,22 +1,21 @@
 import {type mat4, quat, type ReadonlyVec4, vec3, vec4} from 'gl-matrix';
-import {clamp, createVec3f64, createVec4f64, differenceOfAnglesDegrees, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
+import {clamp, createVec3f64, createVec4f64, lerp, MAX_VALID_LATITUDE, mod, remapSaturate, scaleZoom, wrap} from '../../util/util.ts';
 import {LngLat} from '../lng_lat.ts';
 import {EXTENT} from '../../data/extent.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {ITransform} from '../transform_interface.ts';
 
-export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
-    const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+export function getGlobeCircumferencePixels(camera: {worldSize: number; center: {lat: number}}): number {
+    const radius = getGlobeRadiusPixels(camera.worldSize, camera.center.lat);
     return 2.0 * Math.PI * radius;
 }
 
-export function globeDistanceOfLocationsPixels(transform: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
+export function globeDistanceOfLocationsPixels(camera: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
     const vecA = angularCoordinatesToSurfaceVector(a);
     const vecB = angularCoordinatesToSurfaceVector(b);
     const dot = clamp(vec3.dot(vecA, vecB), -1, 1);
     const radians = Math.acos(dot);
-    const circumference = getGlobeCircumferencePixels(transform);
+    const circumference = getGlobeCircumferencePixels(camera);
     return radians / (2.0 * Math.PI) * circumference;
 }
 
@@ -92,9 +91,9 @@ export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number)
 /**
  * Returns the globe center in view space, in pixels: the camera is at the origin and looks down the negative Z axis.
  */
-export function getGlobeCenterInViewSpace(transform: {modelViewProjectionMatrix: mat4; inverseProjectionMatrix: mat4}): vec3 {
-    const position = vec4.transformMat4(createVec4f64(), [0, 0, 0, 1], transform.modelViewProjectionMatrix);
-    vec4.transformMat4(position, position, transform.inverseProjectionMatrix);
+export function getGlobeCenterInViewSpace(camera: {modelViewProjectionMatrix: mat4; inverseProjectionMatrix: mat4}): vec3 {
+    const position = vec4.transformMat4(createVec4f64(), [0, 0, 0, 1], camera.modelViewProjectionMatrix);
+    vec4.transformMat4(position, position, camera.inverseProjectionMatrix);
     return [position[0] / position[3], position[1] / position[3], position[2] / position[3]];
 }
 
@@ -136,184 +135,6 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
     const lat = -Math.asin(clamp(2 * (w * y - z * x), -1, 1)) * 180 / Math.PI;
     const bearing = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)) * 180 / Math.PI;
     return {lng, lat, bearing};
-}
-
-/**
- * How much of the angle between the view axis and the horizon is given over to easing off, measured
- * inward from the horizon. Only the outermost sliver of the globe is affected, where a pixel is
- * already worth degrees of arc.
- *
- * This is the one number here open to taste, and it sets two things at once: narrowing it keeps the
- * drag exact over more of the globe, and, since the exact curve steepens towards tangency, hands
- * over at a higher rate too. Bell has no such freedom, as a hyperbola of the fixed form `k/d` meets
- * a sphere in both value and slope at exactly one radius.
- */
-const PAN_FALLOFF_BAND = 0.1;
-
-/**
- * Radius around the pole's screen position, in pixels, within which the cursor's sweep around it
- * stops being trusted at face value: the angle a given drag subtends grows without bound as the
- * cursor closes on the pole, and at the pole itself there is no angle at all.
- */
-const DIAL_MIN_RADIUS_PIXELS = 20;
-
-/** Kept just below a half turn so the center cannot land exactly on the far side of the globe. */
-const PAN_MAX_ANGLE = Math.PI * 0.98;
-
-/**
- * Returns the point on the globe that a drag towards `point` should aim at.
- *
- * Exact tracking breaks down at the silhouette: the ray meets the globe at `asin(D sin a) - a`,
- * whose slope runs away to infinity as the ray goes tangent, and past it there is no intersection
- * at all. So the exact curve is left {@link PAN_FALLOFF_BAND} early and continued with a hyperbola
- * matching it in value and slope, easing off and saturating short of the far side. Bell's virtual
- * trackball takes the same idea of easing a sphere into a hyperbola before the rim, though it fits
- * the curve differently: SGI's `trackball.c`, described in Henriksen, Sporring and Hornbæk,
- * "Virtual Trackballs Revisited", IEEE TVCG 10(2):206-216, 2004.
- *
- * The angle comes from atan2, so a ray pointing away from the globe is a wide angle the falloff
- * saturates rather than a case to reject.
- * @param tr - The transform being dragged.
- * @param point - The cursor position.
- */
-function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
-    const origin = tr.cameraPosition;
-    const distance = vec3.length(origin);
-    if (distance <= 1) {
-        return tr.screenPointToLocation(point);
-    }
-
-    const u = createVec3f64();
-    vec3.normalize(u, origin);
-    const direction = tr.getRayDirectionFromPixel(point);
-    const c = -vec3.dot(direction, u);
-    const lateral = createVec3f64();
-    vec3.scaleAndAdd(lateral, direction, u, c);
-    const s = vec3.length(lateral);
-    if (s < 1e-9) {
-        return tr.screenPointToLocation(point);
-    }
-
-    const angle = Math.atan2(s, c);
-    const horizonAngle = Math.asin(1 / distance);
-    const handoverAngle = horizonAngle * (1 - PAN_FALLOFF_BAND);
-    if (angle < handoverAngle) {
-        return tr.screenPointToLocation(point);
-    }
-
-    const sinHandover = distance * Math.sin(handoverAngle);
-    const targetAtHandover = Math.asin(clamp(sinHandover, -1, 1)) - handoverAngle;
-    const slopeAtHandover = distance * Math.cos(handoverAngle) / Math.sqrt(Math.max(1 - sinHandover * sinHandover, 1e-12)) - 1;
-    const room = PAN_MAX_ANGLE - targetAtHandover;
-    const excess = angle - handoverAngle;
-    const target = targetAtHandover + room * (slopeAtHandover * excess) / (room + slopeAtHandover * excess);
-
-    const e = createVec3f64();
-    vec3.scale(e, lateral, 1 / s);
-    const surface = createVec3f64();
-    vec3.scale(surface, u, Math.cos(clamp(target, 0, PAN_MAX_ANGLE)));
-    vec3.scaleAndAdd(surface, surface, e, Math.sin(clamp(target, 0, PAN_MAX_ANGLE)));
-    vec3.normalize(surface, surface);
-    return sphereSurfacePointToCoordinates(surface);
-}
-
-/**
- * Rotates the globe so that the given location appears at the given screen point, by composing
- * versors, the unit quaternions that represent rotations. Unlike the bearing-preserving
- * {@link ITransform.setLocationAtPoint}, this stays smooth near and across the poles, and keeps
- * panning once the cursor leaves the globe.
- *
- * Note: the delta rotation's axis is in the surface-vector frame of
- * {@link angularCoordinatesToSurfaceVector}, while the orientation quaternion uses the Euler frame
- * of {@link orientationFromLngLatBearing}, hence the component swizzle where they combine. Zoom is
- * adjusted to keep the planet the same size, as `setLocationAtPoint` does.
- * @param tr - The transform to rotate.
- * @param lnglat - The location to bring under `point`.
- * @param point - The screen point that `lnglat` should appear at.
- * @param panDelta - The drag's pixel delta. Used to re-derive the previous cursor location through
- * {@link panSurfaceLocation}, since both ends of the rotation must come from the same mapping.
- * @param fixedBearing - Applies the swing only, keeping the bearing fixed, which is what dragging
- * the globe does. Pass `false` to apply the twist about the view axis as well, so that the grabbed
- * location tracks the cursor exactly and the bearing drifts with it.
- */
-export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, panDelta?: Point, fixedBearing = true): void {
-    const pointLngLat = panSurfaceLocation(tr, point);
-    let sourceLngLat = lnglat;
-    if (panDelta) {
-        sourceLngLat = panSurfaceLocation(tr, point.sub(panDelta));
-    } else if (!tr.isPointOnMapSurface(point)) {
-        return;
-    }
-
-    const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
-    const vecToTarget = angularCoordinatesToSurfaceVector(sourceLngLat);
-    const centerQuat = orientationFromLngLatBearing(tr.center, tr.bearing);
-    const w = vec3.cross(createVec3f64(), vecToTarget, vecToPixelCurrent);
-    const l = Math.sqrt(vec3.dot(w, w));
-    const t = Math.acos(clamp(vec3.dot(vecToTarget, vecToPixelCurrent), -1, 1)) / 2;
-    const s = Math.sin(t);
-    const delta = l ? quat.set(createVec4f64(), (w[1] / l) * s, (-w[0] / l) * s, (w[2] / l) * s, Math.cos(t)) : quat.identity(createVec4f64());
-    const newCenterQuat = quat.multiply(createVec4f64(), centerQuat, delta);
-    const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
-
-    const oldLat = tr.center.lat;
-    const oldZoom = tr.zoom;
-    const finalLat = fixedBearing ? fixedBearingLatitude(tr, newCenterLat, newBearing) : newCenterLat;
-    const finalLng = fixedBearing ? fixedBearingLongitude(tr, point, panDelta, newCenterLng) : newCenterLng;
-
-    tr.setCenter(new LngLat(wrap(finalLng, -180, 180), finalLat));
-    if (!fixedBearing) {
-        tr.setBearing(newBearing);
-    }
-    tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
-}
-
-/**
- * Returns the center latitude for a bearing-preserving drag. A swing over a pole turns the bearing around,
- * so with the bearing held the center stops on that pole.
- */
-function fixedBearingLatitude(tr: ITransform, newCenterLat: number, newBearing: number): number {
-    if (Math.abs(differenceOfAnglesDegrees(tr.bearing, newBearing)) <= 90) {
-        return newCenterLat;
-    }
-    return newCenterLat > 0 ? 90 : -90;
-}
-
-/**
- * Returns the center longitude for a bearing-preserving drag.
- *
- * The swing longitude becomes ill-conditioned near the pole and the grabbed location slips away
- * from the cursor, so within the last ~12 degrees of latitude the cursor is treated as turning a
- * dial around the pole, blended in with a smoothstep anchored on {@link MAX_VALID_LATITUDE} and in
- * full from there to the pole. The sweep comes from the raw pixel delta rather than a
- * round-tripped previous cursor position, which would lose its sign to cancellation at the pole,
- * and is damped within {@link DIAL_MIN_RADIUS_PIXELS} so it eases to nothing there instead of
- * being dropped, which would leave a spot where the drag could not move at all.
- * @param tr - The transform being dragged.
- * @param point - The cursor position.
- * @param panDelta - The drag's pixel delta, or undefined to use the swing longitude only.
- * @param newCenterLng - The swing target longitude.
- * @returns the center longitude to apply.
- */
-function fixedBearingLongitude(tr: ITransform, point: Point, panDelta: Point | undefined, newCenterLng: number): number {
-    const oldLng = tr.center.lng;
-    const oldLat = tr.center.lat;
-    const poleLat = oldLat >= 0 ? 90 : -90;
-    const polePoint = tr.locationToScreenPoint(new LngLat(0, poleLat));
-    const rx = point.x - polePoint.x, ry = point.y - polePoint.y;
-    const r2 = rx * rx + ry * ry;
-
-    const tRamp = clamp(1 - (MAX_VALID_LATITUDE - Math.abs(oldLat)) / 12, 0, 1);
-    const dial = tRamp * tRamp * (3 - 2 * tRamp);
-    const dLngSwing = mod(newCenterLng - oldLng + 180, 360) - 180;
-
-    let dLngDial = 0;
-    if (dial > 0 && panDelta) {
-        const dTheta = (rx * panDelta.y - ry * panDelta.x) / Math.max(r2, DIAL_MIN_RADIUS_PIXELS * DIAL_MIN_RADIUS_PIXELS);
-        dLngDial = (poleLat > 0 ? 1 : -1) * dTheta * 180 / Math.PI;
-    }
-
-    return oldLng + (1 - dial) * dLngSwing + dial * dLngDial;
 }
 
 /**
@@ -366,7 +187,6 @@ export function planetScaleAtLatitude(latitudeDegrees: number): number {
 
 /**
  * Computes how much to modify zoom to keep the globe size constant when changing latitude.
- * @param transform - An instance of any transform. Does not have any relation on the computed values.
  * @param oldLat - Latitude before change, in degrees.
  * @param newLat - Latitude after change, in degrees.
  * @returns A value to add to zoom level used for old latitude to keep same planet radius at new latitude.
@@ -382,10 +202,10 @@ export function getDegreesPerPixel(worldSize: number, lat: number): number {
 }
 
 /**
- * Returns transform's new center rotation after applying panning.
+ * Returns the camera's new center after applying panning.
  * @param panDelta - Panning delta, in same units as what is supplied to {@link HandlerManager}.
- * @param tr - Current transform. This object is not modified by the function.
- * @returns New center location to set to the map's transform to apply the specified panning.
+ * @param tr - Current camera. This object is not modified by the function.
+ * @returns New center location to set to the map's camera to apply the specified panning.
  */
 export function computeGlobePanCenter(panDelta: Point, tr: {
     readonly bearingInRadians: number;
@@ -395,7 +215,7 @@ export function computeGlobePanCenter(panDelta: Point, tr: {
 }): LngLat {
     // Apply map bearing to the panning vector
     const rotatedPanDelta = panDelta.rotate(tr.bearingInRadians);
-    // Compute what the current zoom would be if the transform center would be moved to latitude 0.
+    // Compute what the current zoom would be if the camera center would be moved to latitude 0.
     const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr.center.lat, 0);
     // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.
     const lngSpeed = lerp(

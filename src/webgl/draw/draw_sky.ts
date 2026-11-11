@@ -7,18 +7,19 @@ import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPix
 import {mat4, vec3} from 'gl-matrix';
 import {ColorMode} from '../color_mode.ts';
 import {sphericalToCartesian} from '../../util/util.ts';
+import * as cameraMath from '../../geo/projection/camera_math.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
-import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {Mesh} from '../../render/mesh.ts';
+import type {ProjectedCamera} from '../../geo/projected_camera.ts';
 
 export function drawSky(mesh: Mesh, frameRenderContext: FrameRenderContext): void {
     const context = frameRenderContext.context;
     const gl = context.gl;
     const {sky, pixelRatio} = frameRenderContext.data;
 
-    const skyUniforms = skyUniformValues(sky, frameRenderContext.transform, pixelRatio);
+    const skyUniforms = skyUniformValues(sky, frameRenderContext.projectedCamera, pixelRatio);
 
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const stencilMode = StencilMode.disabled;
@@ -30,18 +31,18 @@ export function drawSky(mesh: Mesh, frameRenderContext: FrameRenderContext): voi
         mesh.indexBuffer, mesh.segments);
 }
 
-function getSunPos(light: Readonly<LightPropsPossiblyEvaluated>, transform: IReadonlyTransform): vec3 {
+function getSunPos(light: Readonly<LightPropsPossiblyEvaluated>, projectedCamera: ProjectedCamera): vec3 {
     const lightPos = sphericalToCartesian(light.position);
     vec3.negate(lightPos, lightPos);
 
     const lightMat = mat4.identity(new Float64Array(16));
 
     if (light.anchor === 'map') {
-        mat4.rotateZ(lightMat, lightMat, transform.rollInRadians);
-        mat4.rotateX(lightMat, lightMat, -transform.pitchInRadians);
-        mat4.rotateZ(lightMat, lightMat, transform.bearingInRadians);
-        mat4.rotateX(lightMat, lightMat, transform.center.lat * Math.PI / 180.0);
-        mat4.rotateY(lightMat, lightMat, -transform.center.lng * Math.PI / 180.0);
+        mat4.rotateZ(lightMat, lightMat, projectedCamera.rollInRadians);
+        mat4.rotateX(lightMat, lightMat, -projectedCamera.pitchInRadians);
+        mat4.rotateZ(lightMat, lightMat, projectedCamera.bearingInRadians);
+        mat4.rotateX(lightMat, lightMat, projectedCamera.center.lat * Math.PI / 180.0);
+        mat4.rotateY(lightMat, lightMat, -projectedCamera.center.lng * Math.PI / 180.0);
     }
 
     vec3.transformMat4(lightPos, lightPos, lightMat);
@@ -55,13 +56,13 @@ export function drawAtmosphere(mesh: Mesh, frameRenderContext: FrameRenderContex
     const {sky, light} = frameRenderContext.data;
     const program = frameRenderContext.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
-    const sunPos = getSunPos(light, transform);
+    const sunPos = getSunPos(light, projectedCamera);
 
-    const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
-    const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
-    const globePosition = getGlobeCenterInViewSpace(transform);
+    const projectionData = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
+    const globeRadius = getGlobeRadiusPixels(projectedCamera.worldSize, projectedCamera.center.lat);
+    const globePosition = getGlobeCenterInViewSpace(projectedCamera);
     const altitudeBlend = getAtmosphereAltitudeBlend(vec3.length(globePosition) - globeRadius, globeRadius);
     const atmosphereBlend = sky['atmosphere-blend'] * projectionData.projectionTransition * altitudeBlend;
 
@@ -70,7 +71,7 @@ export function drawAtmosphere(mesh: Mesh, frameRenderContext: FrameRenderContex
         return;
     }
 
-    const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, transform.inverseProjectionMatrix);
+    const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, projectedCamera.inverseProjectionMatrix);
 
     program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }

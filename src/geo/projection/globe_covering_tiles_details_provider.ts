@@ -8,10 +8,10 @@ import {earthRadius, LngLat} from '../lng_lat.ts';
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
 import {clamp, MAX_VALID_LATITUDE, threePlaneIntersection} from '../../util/util.ts';
 
-import type {IReadonlyTransform} from '../transform_interface.ts';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
+import type {ProjectedCamera} from '../projected_camera.ts';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.
@@ -49,8 +49,8 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
     /**
      * The tiles end at the mercator edge, so a center past it selects the tiles from that edge.
      */
-    getCenter(transform: IReadonlyTransform): LngLat {
-        return new LngLat(transform.center.lng, clamp(transform.center.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE));
+    getCenter(projectedCamera: ProjectedCamera): LngLat {
+        return new LngLat(projectedCamera.center.lng, clamp(projectedCamera.center.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE));
     }
 
     /**
@@ -105,8 +105,8 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
         return 0;
     }
     
-    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
-        return coveringZoomLevel(transform, options) > 4;
+    allowVariableZoom(projectedCamera: ProjectedCamera, options: CoveringTilesOptionsInternal): boolean {
+        return coveringZoomLevel(projectedCamera, options) > 4;
     }
 
     allowWorldCopies(): boolean {

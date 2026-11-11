@@ -9,8 +9,9 @@ import {clamp, getAABB} from '../util/util.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
 import ONE_EM from '../symbol/one_em.ts';
+import * as cameraMath from '../geo/projection/camera_math.ts';
 
-import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
+import type {GetElevation} from '../geo/camera_types.ts';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
@@ -19,6 +20,7 @@ import type {
 } from '../data/array_types.g.ts';
 import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import type {ProjectedCamera} from '../geo/projected_camera.ts';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -70,7 +72,7 @@ type ProjectedBox = {
 export class CollisionIndex {
     grid: GridIndex<FeatureKey>;
     ignoredGrid: GridIndex<FeatureKey>;
-    transform: IReadonlyTransform;
+    projectedCamera: ProjectedCamera;
     pitchFactor: number;
     screenRightBoundary: number;
     screenBottomBoundary: number;
@@ -82,20 +84,20 @@ export class CollisionIndex {
     perspectiveRatioCutoff: number;
 
     constructor(
-        transform: IReadonlyTransform,
-        grid: GridIndex<FeatureKey> = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
-        ignoredGrid: GridIndex<FeatureKey> = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
+        projectedCamera: ProjectedCamera,
+        grid: GridIndex<FeatureKey> = new GridIndex<FeatureKey>(projectedCamera.width + 2 * viewportPadding, projectedCamera.height + 2 * viewportPadding, 25),
+        ignoredGrid: GridIndex<FeatureKey> = new GridIndex<FeatureKey>(projectedCamera.width + 2 * viewportPadding, projectedCamera.height + 2 * viewportPadding, 25)
     ) {
-        this.transform = transform;
+        this.projectedCamera = projectedCamera;
 
         this.grid = grid;
         this.ignoredGrid = ignoredGrid;
-        this.pitchFactor = Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance;
+        this.pitchFactor = Math.cos(projectedCamera.pitch * Math.PI / 180.0) * projectedCamera.cameraToCenterDistance;
 
-        this.screenRightBoundary = transform.width + viewportPadding;
-        this.screenBottomBoundary = transform.height + viewportPadding;
-        this.gridRightBoundary = transform.width + 2 * viewportPadding;
-        this.gridBottomBoundary = transform.height + 2 * viewportPadding;
+        this.screenRightBoundary = projectedCamera.width + viewportPadding;
+        this.screenBottomBoundary = projectedCamera.height + viewportPadding;
+        this.gridRightBoundary = projectedCamera.width + 2 * viewportPadding;
+        this.gridBottomBoundary = projectedCamera.height + 2 * viewportPadding;
 
         this.perspectiveRatioCutoff = 0.6;
     }
@@ -208,7 +210,7 @@ export class CollisionIndex {
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
         const perspectiveRatio = this.getPerspectiveRatio(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation?.(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y));
 
-        const labelPlaneFontSize = pitchWithMap ? (fontSize * this.transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
+        const labelPlaneFontSize = pitchWithMap ? (fontSize * cameraMath.getPitchedTextCorrection(this.projectedCamera, symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
 
         const projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
@@ -221,11 +223,11 @@ export class CollisionIndex {
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            transform: this.transform,
+            projectedCamera: this.projectedCamera,
             tileAnchorPoint: tileUnitAnchorPoint,
             unwrappedTileID,
-            width: this.transform.width,
-            height: this.transform.height,
+            width: this.projectedCamera.width,
+            height: this.projectedCamera.height,
             translation
         };
 
@@ -449,8 +451,8 @@ export class CollisionIndex {
         signedDistanceFromCamera: number;
     } {
         if (simpleProjectionMatrix) {
-            // This branch is a fast-path for mercator transform.
-            // The code here is a copy of MercatorTransform.projectTileCoordinates, slightly modified for extra performance.
+            // This branch is a fast-path for mercator.
+            // The code here is a copy of the mercator `projectTileCoordinates`, slightly modified for extra performance.
             // This has a huge impact for some reason.
             let pos;
             if (elevation != null) { // slow because of handle z-index
@@ -462,21 +464,21 @@ export class CollisionIndex {
             }
             const w = pos[3];
             return {
-                x: (((pos[0] / w + 1) / 2) * this.transform.width) + viewportPadding,
-                y: (((-pos[1] / w + 1) / 2) * this.transform.height) + viewportPadding,
-                perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / w),
+                x: (((pos[0] / w + 1) / 2) * this.projectedCamera.width) + viewportPadding,
+                y: (((-pos[1] / w + 1) / 2) * this.projectedCamera.height) + viewportPadding,
+                perspectiveRatio: 0.5 + 0.5 * (this.projectedCamera.cameraToCenterDistance / w),
                 isOccluded: false,
                 signedDistanceFromCamera: w
             };
         } else {
-            const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
+            const projected = cameraMath.projectTileCoordinates(this.projectedCamera, x, y, unwrappedTileID, elevation);
             return {
-                x: (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
-                y: (((-projected.point.y + 1) / 2) * this.transform.height) + viewportPadding,
+                x: (((projected.point.x + 1) / 2) * this.projectedCamera.width) + viewportPadding,
+                y: (((-projected.point.y + 1) / 2) * this.projectedCamera.height) + viewportPadding,
                 // See perspective ratio comment in symbol_sdf.vertex
                 // We're doing collision detection in viewport space so we need
                 // to scale down boxes in the distance
-                perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera),
+                perspectiveRatio: 0.5 + 0.5 * (this.projectedCamera.cameraToCenterDistance / projected.signedDistanceFromCamera),
                 isOccluded: projected.isOccluded,
                 signedDistanceFromCamera: projected.signedDistanceFromCamera
             };
@@ -485,8 +487,8 @@ export class CollisionIndex {
 
     getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): number {
         // We don't care about the actual projected point, just its W component.
-        const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, elevation);
-        return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
+        const projected = cameraMath.projectTileCoordinates(this.projectedCamera, x, y, unwrappedTileID, elevation);
+        return 0.5 + 0.5 * (this.projectedCamera.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
     isOffscreen(x1: number, y1: number, x2: number, y2: number): boolean {
@@ -555,7 +557,7 @@ export class CollisionIndex {
             vecSouthY = cos;
         } else if (!rotateWithMap && pitchWithMap) {
             // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
-            const skew = getTileSkewVectors(this.transform);
+            const skew = getTileSkewVectors(this.projectedCamera);
             vecEastX = skew.vecEast[0];
             vecEastY = skew.vecEast[1];
             vecSouthX = skew.vecSouth[0];
@@ -572,9 +574,9 @@ export class CollisionIndex {
             basePointX = translatedAnchorX;
             basePointY = translatedAnchorY;
 
-            const zoomFraction = this.transform.zoom - tileID.overscaledZ;
+            const zoomFraction = this.projectedCamera.zoom - tileID.overscaledZ;
             distanceMultiplier = Math.pow(2, -zoomFraction);
-            distanceMultiplier *= this.transform.getPitchedTextCorrection(translatedAnchorX, translatedAnchorY, unwrappedTileID);
+            distanceMultiplier *= cameraMath.getPitchedTextCorrection(this.projectedCamera, translatedAnchorX, translatedAnchorY, unwrappedTileID);
 
             // This next correction can't be applied when variable anchors are in use.
             if (!shift) {
@@ -583,7 +585,7 @@ export class CollisionIndex {
                 // which is equivalent to the non-pitchWithMap branch of the GLSL code.
                 // Here, we compute and apply the pitchWithMap branch.
                 // See the computation of `perspective_ratio` in the symbol vertex shaders for the GLSL code.
-                const distanceRatio = projectedPoint.signedDistanceFromCamera / this.transform.cameraToCenterDistance;
+                const distanceRatio = projectedPoint.signedDistanceFromCamera / this.projectedCamera.cameraToCenterDistance;
                 const perspectiveRatio = clamp(0.5 + 0.5 * distanceRatio, 0.0, 4.0); // Same clamp as what is used in the shader.
                 distanceMultiplier *= perspectiveRatio;
             }

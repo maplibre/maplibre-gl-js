@@ -2,6 +2,7 @@ import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {drawTerrainHeightMap} from './draw_terrain.ts';
+import * as cameraMath from '../../geo/projection/camera_math.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
@@ -19,16 +20,16 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
     const {terrain} = frameRenderContext;
     const context = frameRenderContext.context;
     const implementation = layer.implementation;
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
-    const projectionData = transform.getProjectionDataForCustomLayer(isRenderingGlobe);
+    const projectionData = cameraMath.getProjectionDataForCustomLayer(projectedCamera, isRenderingGlobe);
 
     const customLayerArgs: CustomRenderMethodInput = {
-        farZ: transform.farZ,
-        nearZ: transform.nearZ,
-        fov: transform.fov * Math.PI / 180, // fov converted to radians
-        modelViewProjectionMatrix: transform.modelViewProjectionMatrix,
-        projectionMatrix: transform.projectionMatrix,
+        farZ: projectedCamera.farZ,
+        nearZ: projectedCamera.nearZ,
+        fov: projectedCamera.fov * Math.PI / 180, // fov converted to radians
+        modelViewProjectionMatrix: projectedCamera.modelViewProjectionMatrix,
+        projectionMatrix: projectedCamera.projectionMatrix,
         shaderData: {
             variantName: projectionShaderVariant.name,
             vertexShaderPrelude: `const float PI = 3.141592653589793;\nuniform mat4 u_projection_matrix;\n${projectionShaderVariant.prelude.vertexSource}`,
@@ -36,7 +37,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         },
         defaultProjectionData: projectionData,
         getProjectionData: (params: CustomLayerProjectionDataParams) => {
-            return transform.getProjectionData({
+            return cameraMath.getProjectionData(projectedCamera, {
                 overscaledTileID: new OverscaledTileID(
                     params.tileID.canonical.z,
                     params.tileID.wrap ?? 0,

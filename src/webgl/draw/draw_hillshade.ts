@@ -76,7 +76,7 @@ function renderHillshade(
         const projectionData = frameRenderContext.getProjectionDataForTile(coord, {aligned: align});
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
-            hillshadeUniformValues(frameRenderContext.transform, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+            hillshadeUniformValues(frameRenderContext.projectedCamera, frameRenderContext.cameraProjection.worldCoordinateHelper, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
 
@@ -143,7 +143,7 @@ function prepareHillshade(
 
         frameRenderContext.useProgram('hillshadePrepare').draw(context, gl.TRIANGLES,
             depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            hillshadeUniformPrepareValues(frameRenderContext.transform, tile.tileID, dem),
+            hillshadeUniformPrepareValues(frameRenderContext.cameraProjection.worldCoordinateHelper, tile.tileID, dem),
             null, null, layer.id, painter.rasterBoundsBuffer,
             painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 

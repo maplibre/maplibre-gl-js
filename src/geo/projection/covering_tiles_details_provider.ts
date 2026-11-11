@@ -1,14 +1,14 @@
 import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 import type {LngLat} from '../lng_lat.ts';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
-import type {IReadonlyTransform} from '../transform_interface.ts';
 import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
+import type {ProjectedCamera} from '../projected_camera.ts';
 
 export interface CoveringTilesDetailsProvider {
     /**
      * Returns the center that the tiles are selected around.
      */
-    getCenter: (transform: IReadonlyTransform) => LngLat;
+    getCenter: (projectedCamera: ProjectedCamera) => LngLat;
 
     /**
      * Returns the distance from the point to the tile
@@ -36,7 +36,7 @@ export interface CoveringTilesDetailsProvider {
     /**
      * Whether to allow variable zoom, which is used at high pitch angle to avoid loading an excessive amount of tiles.
      */
-    allowVariableZoom: (transform: IReadonlyTransform, options: CoveringTilesOptionsInternal) => boolean;
+    allowVariableZoom: (projectedCamera: ProjectedCamera, options: CoveringTilesOptionsInternal) => boolean;
 
     /**
      * Whether to allow world copies to be rendered.

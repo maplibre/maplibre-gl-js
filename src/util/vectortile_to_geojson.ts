@@ -5,7 +5,7 @@ import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import type Point from '@mapbox/point-geometry';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
-import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 
 /**
  * A helper for type to omit a property from a type

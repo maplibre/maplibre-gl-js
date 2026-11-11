@@ -2,7 +2,7 @@ import {LngLat} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {clamp} from '../../util/util.ts';
 
-import type {WorldCoordinateHelper} from '../transform_interface.ts';
+import type {WorldCoordinateHelper} from '../camera_types.ts';
 import type {TileMatrixSet} from './tile_matrix_set.ts';
 
 /**

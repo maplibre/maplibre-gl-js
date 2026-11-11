@@ -24,8 +24,8 @@ function scrollOutAtLat(map: Map, lat: number, timeControlNow: MockInstance<() =
     for (let i = 0; i < 200; i++) {
         simulate.wheel(map.getCanvas(), {
             deltaY,
-            clientX: map._camera.transform.width / 2,
-            clientY: map._camera.transform.height / 2});
+            clientX: map._camera.cameraState.width / 2,
+            clientY: map._camera.cameraState.height / 2});
         timeControlNow.mockReturnValue(timeControl.now() + 10);
         map._renderTaskQueue.run();
     }
@@ -694,7 +694,7 @@ describe('ScrollZoomHandler', () => {
             map.setZoom(0);
             map._renderTaskQueue.run();
 
-            const pointer = map._camera.transform.centerPoint.add(offset);
+            const pointer = map._camera.projectedCamera.centerPoint.add(offset);
             const locationBefore = map.unproject(pointer);
 
             simulate.wheel(map.getCanvas(), {deltaY: -simulate.magicWheelZoomDelta * 4, clientX: pointer.x, clientY: pointer.y});

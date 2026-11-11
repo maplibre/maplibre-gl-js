@@ -3,7 +3,7 @@ import {MapBoxZoomEvent} from '../events.ts';
 
 import type {Map} from '../map.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
-import type {TransformProvider} from './transform-provider.ts';
+import type {RequestedCameraProvider} from './requested-camera-provider.ts';
 import type Point from '@mapbox/point-geometry';
 
 /**
@@ -30,7 +30,7 @@ export type BoxZoomHandlerOptions = {
  */
 export class BoxZoomHandler implements Handler {
     _map: Map;
-    _tr: TransformProvider;
+    _tr: RequestedCameraProvider;
     _el: HTMLElement;
     _container: HTMLElement;
     _enabled: boolean;
@@ -45,7 +45,7 @@ export class BoxZoomHandler implements Handler {
     constructor(map: Map, options: {
         clickTolerance: number;
         boxZoom?: boolean | BoxZoomHandlerOptions;
-    }, transformProvider: TransformProvider) {
+    }, transformProvider: RequestedCameraProvider) {
         this._map = map;
         this._tr = transformProvider;
         this._el = map.getCanvasContainer();

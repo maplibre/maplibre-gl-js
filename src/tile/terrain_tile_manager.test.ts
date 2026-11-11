@@ -6,7 +6,10 @@ import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from '../source/raster_dem_tile_source.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorCameraProjection} from '../geo/projection/camera_projection.ts';
+import {createCameraState} from '../geo/camera_state.ts';
+import {projectCamera} from '../geo/projection/camera_math.ts';
+import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {StubMap, beforeMapTest, createMap} from '../util/test/util.ts';
 import {TileManager} from './tile_manager.ts';
@@ -15,13 +18,11 @@ import type {DEMData} from '../data/dem_data.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Painter, RTTObject} from '../render/painter.ts';
 import type {Map} from '../ui/map.ts';
-
-const transform = createMercatorTransform();
+import type {CameraContext} from '../geo/projection/camera_constrain.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);
     source.onAdd({
-        transform,
         _requestManager: new RequestManager(transformCallback),
         getPixelRatio() { return 1; }
     } as any);
@@ -90,7 +91,7 @@ describe('TerrainTileManager', () => {
         const terrainTileID = new OverscaledTileID(15, 0, 15, 19575, 13242);
         terrainTileManager.getSourceTile(terrainTileID);
         const zoomRangeLoaded = tileManager.once('data');
-        tileManager.onAdd({transform, _requestManager: new RequestManager(), getPixelRatio() { return 1; }} as any as Map);
+        tileManager.onAdd({_requestManager: new RequestManager(), getPixelRatio() { return 1; }} as any as Map);
         await zoomRangeLoaded;
         const demTile = new Tile(terrainTileID.scaledTo(11), 512);
         demTile.dem = {} as DEMData;
@@ -151,21 +152,23 @@ describe('TerrainTileManager', () => {
     describe('update', () => {
         test('reports whether the renderable tiles changed', () => {
             const manager = new TerrainTileManager(style.tileManagers.terrain);
-            const transform = createMercatorTransform();
-            transform.resize(512, 512);
-            transform.setCenter(new LngLat(-46, -6));
-            transform.setZoom(8);
+            const projection = createMercatorCameraProjection();
+            const context: CameraContext = {projection, constrainOverride: null};
+            let state = createCameraState();
+            state = cameraUpdates.resize(state, context, 512, 512);
+            state = cameraUpdates.setCenter(state, context, new LngLat(-46, -6));
+            state = cameraUpdates.setZoom(state, context, 8);
             const renderableKeys = () => manager.getRenderableTiles().map(tile => tile.tileID.key);
 
-            expect(manager.update(transform, null)).toBe(true);
+            expect(manager.update(projectCamera(state, projection), projection, null)).toBe(true);
             const keys = renderableKeys();
             expect(keys.length).toBeGreaterThan(0);
 
-            expect(manager.update(transform, null)).toBe(false);
+            expect(manager.update(projectCamera(state, projection), projection, null)).toBe(false);
             expect(renderableKeys()).toEqual(keys);
 
-            transform.setZoom(9);
-            expect(manager.update(transform, null)).toBe(true);
+            state = cameraUpdates.setZoom(state, context, 9);
+            expect(manager.update(projectCamera(state, projection), projection, null)).toBe(true);
             expect(renderableKeys()).not.toEqual(keys);
         });
     });

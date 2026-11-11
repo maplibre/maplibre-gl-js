@@ -6,9 +6,10 @@ import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
 import {fastInvertSkewMat4} from '../util/fast_maths.ts';
 import {WritingMode} from '../symbol/shaping.ts';
 import {findLineIntersection} from '../util/util.ts';
+import * as cameraMath from '../geo/projection/camera_math.ts';
 
 import type {Painter} from '../render/painter.ts';
-import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
+import type {GetElevation} from '../geo/camera_types.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
@@ -18,6 +19,7 @@ import type {
 } from '../data/array_types.g.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {StructArray} from '../util/struct_array.ts';
+import type {ProjectedCamera} from '../geo/projected_camera.ts';
 
 /**
  * Pre-allocate objects to avoid online allocation
@@ -91,7 +93,7 @@ export type PointProjection = {
  *
  * # Custom projection handling
  * Note that since MapLibre now supports more than one projection, the transformation
- * to viewport pixel space and GL clip space now *must* go through the projection's (`transform`'s)
+ * to viewport pixel space and GL clip space now *must* go through the projection's (`camera_math.ts`)
  * `projectTileCoordinates` function, since it might do nontrivial transformations.
  *
  * Hence projecting anything to a symbol's label plane can no longer be handled by a simple matrix,
@@ -101,11 +103,11 @@ export type PointProjection = {
 
 export function getPitchedLabelPlaneMatrix(
     rotateWithMap: boolean,
-    transform: IReadonlyTransform,
+    projectedCamera: ProjectedCamera,
     pixelsToTileUnits: number): mat4 {
     const m = mat4.create();
     if (!rotateWithMap) {
-        const {vecSouth, vecEast} = getTileSkewVectors(transform);
+        const {vecSouth, vecEast} = getTileSkewVectors(projectedCamera);
         const skew = mat2.create();
         skew[0] = vecEast[0];
         skew[1] = vecEast[1];
@@ -128,12 +130,12 @@ export function getPitchedLabelPlaneMatrix(
 export function getGlCoordMatrix(
     pitchWithMap: boolean,
     rotateWithMap: boolean,
-    transform: IReadonlyTransform,
+    projectedCamera: ProjectedCamera,
     pixelsToTileUnits: number): mat4 {
     if (pitchWithMap) {
         const m = mat4.create();
         if (!rotateWithMap) {
-            const {vecSouth, vecEast} = getTileSkewVectors(transform);
+            const {vecSouth, vecEast} = getTileSkewVectors(projectedCamera);
             m[0] = vecEast[0];
             m[1] = vecEast[1];
             m[4] = vecSouth[0];
@@ -142,16 +144,16 @@ export function getGlCoordMatrix(
         mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         return m;
     } else {
-        return transform.pixelsToClipSpaceMatrix;
+        return projectedCamera.pixelsToClipSpaceMatrix;
     }
 }
 
-export function getTileSkewVectors(transform: IReadonlyTransform): {vecEast: vec2; vecSouth: vec2} {
-    const cosRoll = Math.cos(transform.rollInRadians);
-    const sinRoll = Math.sin(transform.rollInRadians);
-    const cosPitch = Math.cos(transform.pitchInRadians);
-    const cosBearing = Math.cos(transform.bearingInRadians);
-    const sinBearing = Math.sin(transform.bearingInRadians);
+export function getTileSkewVectors(projectedCamera: ProjectedCamera): {vecEast: vec2; vecSouth: vec2} {
+    const cosRoll = Math.cos(projectedCamera.rollInRadians);
+    const sinRoll = Math.sin(projectedCamera.rollInRadians);
+    const cosPitch = Math.cos(projectedCamera.pitchInRadians);
+    const cosBearing = Math.cos(projectedCamera.bearingInRadians);
+    const sinBearing = Math.sin(projectedCamera.bearingInRadians);
     const vecSouth = vec2.create();
     vecSouth[0] = -cosBearing * cosPitch * sinRoll - sinBearing * cosRoll;
     vecSouth[1] = -sinBearing * cosPitch * sinRoll + cosBearing * cosRoll;
@@ -222,7 +224,7 @@ function isVisible(p: Point,
  */
 export function updateLineLabels(bucket: SymbolBucket,
     painter: Painter,
-    transform: IReadonlyTransform,
+    projectedCamera: ProjectedCamera,
     isText: boolean,
     pitchedLabelPlaneMatrix: mat4,
     pitchedLabelPlaneMatrixInverse: mat4,
@@ -234,7 +236,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     getElevation: GetElevation | undefined): void {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
-    const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, transform.zoom);
+    const partiallyEvaluatedSize = symbolSize.evaluateSizeForZoom(sizeData, projectedCamera.zoom);
 
     const clippingBuffer: [number, number] = [256 / painter.width * 2 + 1, 256 / painter.height * 2 + 1];
 
@@ -246,7 +248,7 @@ export function updateLineLabels(bucket: SymbolBucket,
     const lineVertexArray = bucket.lineVertexArray;
     const placedSymbols = isText ? bucket.text.placedSymbolArray : bucket.icon.placedSymbolArray;
 
-    const aspectRatio = transform.width / transform.height;
+    const aspectRatio = projectedCamera.width / projectedCamera.height;
 
     let useVertical = false;
 
@@ -272,11 +274,11 @@ export function updateLineLabels(bucket: SymbolBucket,
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            transform,
+            projectedCamera,
             tileAnchorPoint,
             unwrappedTileID,
-            width: transform.width,
-            height: transform.height,
+            width: projectedCamera.width,
+            height: projectedCamera.height,
             translation
         };
 
@@ -289,10 +291,10 @@ export function updateLineLabels(bucket: SymbolBucket,
         }
 
         const cameraToAnchorDistance = anchorPos.signedDistanceFromCamera;
-        const perspectiveRatio = getPerspectiveRatio(transform.cameraToCenterDistance, cameraToAnchorDistance);
+        const perspectiveRatio = getPerspectiveRatio(projectedCamera.cameraToCenterDistance, cameraToAnchorDistance);
 
         const fontSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
-        const pitchScaledFontSize = pitchWithMap ? (fontSize * transform.getPitchedTextCorrection(symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
+        const pitchScaledFontSize = pitchWithMap ? (fontSize * cameraMath.getPitchedTextCorrection(projectedCamera, symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
 
         const placeUnflipped = placeGlyphsAlongLine({
             projectionContext,
@@ -617,7 +619,7 @@ export type SymbolProjectionContext = {
      * True when line glyphs are projected onto the map, instead of onto the viewport.
      */
     pitchWithMap: boolean;
-    transform: IReadonlyTransform;
+    projectedCamera: ProjectedCamera;
     unwrappedTileID: UnwrappedTileID;
     /**
      * Viewport width.
@@ -692,7 +694,7 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
         projection = projectWithMatrix(translatedX, translatedY, projectionContext.pitchedLabelPlaneMatrix, elevationAt(projectionContext, translatedX, translatedY));
         projection.isOccluded = false;
     } else {
-        projection = projectionContext.transform.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, elevationAt(projectionContext, translatedX, translatedY));
+        projection = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, translatedX, translatedY, projectionContext.unwrappedTileID, elevationAt(projectionContext, translatedX, translatedY));
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
     }
@@ -705,7 +707,7 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
         vec4.transformMat4(pos, pos, pitchedLabelPlaneMatrixInverse);
         const tileX = pos[0] / pos[3];
         const tileY = pos[1] / pos[3];
-        return projectionContext.transform.projectTileCoordinates(tileX, tileY, projectionContext.unwrappedTileID, elevationAt(projectionContext, tileX, tileY)).point;
+        return cameraMath.projectTileCoordinates(projectionContext.projectedCamera, tileX, tileY, projectionContext.unwrappedTileID, elevationAt(projectionContext, tileX, tileY)).point;
     } else {
         return {
             x: (x / projectionContext.width) * 2.0 - 1.0,
@@ -718,7 +720,7 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
  * Projects the given point in tile coordinates to the GL clip space (-1..1).
  */
 export function projectTileCoordinatesToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
-    const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, elevationAt(projectionContext, x, y));
+    const projection = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, x, y, projectionContext.unwrappedTileID, elevationAt(projectionContext, x, y));
     return projection;
 }
 
@@ -985,12 +987,7 @@ export function projectPathSpecialProjection(projectedPath: Point[], projectionC
     fastInvertSkewMat4(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
         const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, elevationAt(projectionContext, p.x, p.y));
-        const projected = projectionContext.transform.projectTileCoordinates(
-            backProjected.point.x,
-            backProjected.point.y,
-            projectionContext.unwrappedTileID,
-            elevationAt(projectionContext, backProjected.point.x, backProjected.point.y)
-        );
+        const projected = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, backProjected.point.x, backProjected.point.y, projectionContext.unwrappedTileID, elevationAt(projectionContext, backProjected.point.x, backProjected.point.y));
         projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionContext.width;
         projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionContext.height;
         return projected;

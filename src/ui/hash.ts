@@ -46,7 +46,7 @@ export class Hash {
     getHashString(mapFeedback?: boolean): string {
         const center = this._map.getCenter(),
             zoom = Math.round(this._map.getZoom() * 100) / 100,
-            degreesPerWorld = degreesPerWorldUnit(this._map._camera.transform.worldCoordinateHelper, center),
+            degreesPerWorld = degreesPerWorldUnit(this._map._camera.context.projection.worldCoordinateHelper, center),
             // derived from equation: 512px * 2^z / degreesPerWorld / 10^d < 0.5px
             precision = Math.ceil((zoom * Math.LN2 + Math.log(512 / degreesPerWorld / 0.5)) / Math.LN10),
             m = Math.pow(10, precision),

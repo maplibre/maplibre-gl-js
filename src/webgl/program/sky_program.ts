@@ -2,11 +2,12 @@ import {UniformColor, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '..
 import {getMercatorHorizon} from '../../geo/projection/mercator_utils.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
 import {vec3} from 'gl-matrix';
+import * as cameraMath from '../../geo/projection/camera_math.ts';
 
-import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {SkyPropsPossiblyEvaluated} from '../../style/sky_properties.g.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
+import type {ProjectedCamera} from '../../geo/projected_camera.ts';
 
 export type SkyUniformsType = {
     'u_sky_color': UniformColor;
@@ -34,23 +35,23 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
     'u_atmosphere_blend': new Uniform1f(context, locations.u_atmosphere_blend),
 });
 
-const skyUniformValues = (sky: Readonly<SkyPropsPossiblyEvaluated>, transform: IReadonlyTransform, pixelRatio: number): UniformValues<SkyUniformsType> => {
-    const cosRoll = Math.cos(transform.rollInRadians);
-    const sinRoll = Math.sin(transform.rollInRadians);
-    const mercatorHorizon  = getMercatorHorizon(transform);
-    const projectionData = transform.getProjectionData({overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
+const skyUniformValues = (sky: Readonly<SkyPropsPossiblyEvaluated>, projectedCamera: ProjectedCamera, pixelRatio: number): UniformValues<SkyUniformsType> => {
+    const cosRoll = Math.cos(projectedCamera.rollInRadians);
+    const sinRoll = Math.sin(projectedCamera.rollInRadians);
+    const mercatorHorizon  = getMercatorHorizon(projectedCamera);
+    const projectionData = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const skyBlend = projectionData.projectionTransition;
-    const globePosition = getGlobeCenterInViewSpace(transform);
-    const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+    const globePosition = getGlobeCenterInViewSpace(projectedCamera);
+    const globeRadius = getGlobeRadiusPixels(projectedCamera.worldSize, projectedCamera.center.lat);
     return {
         'u_sky_color': sky['sky-color'],
         'u_horizon_color': sky['horizon-color'],
-        'u_horizon': [(transform.width / 2 - mercatorHorizon * sinRoll)  * pixelRatio,
-            (transform.height / 2 + mercatorHorizon * cosRoll) * pixelRatio],
+        'u_horizon': [(projectedCamera.width / 2 - mercatorHorizon * sinRoll)  * pixelRatio,
+            (projectedCamera.height / 2 + mercatorHorizon * cosRoll) * pixelRatio],
         'u_horizon_normal': [-sinRoll, cosRoll],
-        'u_sky_horizon_blend': (sky['sky-horizon-blend'] * transform.height / 2) * pixelRatio,
+        'u_sky_horizon_blend': (sky['sky-horizon-blend'] * projectedCamera.height / 2) * pixelRatio,
         'u_sky_blend': skyBlend,
-        'u_inv_proj_matrix': transform.inverseProjectionMatrix,
+        'u_inv_proj_matrix': projectedCamera.inverseProjectionMatrix,
         'u_globe_position': globePosition,
         'u_globe_radius': globeRadius,
         'u_atmosphere_blend': sky['atmosphere-blend'] * getAtmosphereAltitudeBlend(vec3.length(globePosition) - globeRadius, globeRadius),

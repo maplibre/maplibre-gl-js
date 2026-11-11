@@ -1,7 +1,7 @@
 import {LngLatBounds, type LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import {lngLatBoxToWorldBox} from '../geo/projection/mercator_utils.ts';
 
-import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 import type {CanonicalTileID} from './tile_id.ts';
 
 export class TileBounds {

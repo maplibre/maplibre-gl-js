@@ -3,12 +3,16 @@ import {clamp, degreesToRadians, getRollPitchBearing, MAX_VALID_LATITUDE, type R
 import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {lngLatBoxToWorldSamples, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
+import {setBearing, setPitch, setRoll} from './camera_updates.ts';
 
-import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
 import type {CameraForBoundsOptions, PointLike} from '../../ui/camera.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
+import type {CameraState} from '../camera_state.ts';
+import type {CameraMetrics, ProjectedCamera} from '../projected_camera.ts';
+import type {CameraContext} from './camera_constrain.ts';
+import type {WorldCoordinateHelper} from '../camera_types.ts';
 
 export type MapControlsDeltas = {
     panDelta: Point;
@@ -44,7 +48,11 @@ export type EaseToHandlerOptions = {
 };
 
 export type EaseToHandlerResult = {
-    easeFunc: (k: number) => void;
+    /**
+     * The camera `k` of the way through the animation, from the camera the frame starts with and the context it is in
+     * then, which a globe's transition between its projections changes as it zooms.
+     */
+    easeFunc: (state: CameraState, context: CameraContext, k: number) => CameraState;
     /**
      * The map center when the animation ends.
      */
@@ -65,7 +73,8 @@ export type FlyToHandlerOptions = {
 };
 
 export type FlyToHandlerResult = {
-    easeFunc: (k: number, scale: number, centerFactor: number, pointAtOffset: Point) => void;
+    /** The camera `k` of the way along the flight, from the camera the frame starts with and its context, see {@link EaseToHandlerResult.easeFunc}. */
+    easeFunc: (state: CameraState, context: CameraContext, k: number, scale: number, centerFactor: number, pointAtOffset: Point) => CameraState;
     scaleOfZoom: number;
     scaleOfMinZoom: number;
     /**
@@ -73,33 +82,6 @@ export type FlyToHandlerResult = {
      */
     targetCenter: LngLat;
     pixelPathLength: number;
-};
-
-export type UpdateRotationArgs = {
-    /**
-     * The starting Euler angles.
-     */
-    startEulerAngles: RollPitchBearing;
-
-    /**
-     * The end Euler angles.
-     */
-    endEulerAngles: RollPitchBearing;
-
-    /**
-     * The transform to be updated
-     */
-    tr: ITransform;
-
-    /**
-     * The interpolation fraction, between 0 and 1.
-     */
-    k: number;
-
-    /**
-     * If true, use spherical linear interpolation. If false, use linear interpolation of Euler angles.
-     */
-    useSlerp: boolean;
 };
 
 /**
@@ -113,67 +95,63 @@ export function cameraBoundsWarning(): void {
 
 /**
  * @internal
- * Contains projection-specific functions related to camera controls, easeTo, flyTo, inertia, etc.
+ * The projection-specific camera controls, easeTo, flyTo, inertia, etc. Each takes the camera it starts from and
+ * returns the camera it ends on.
  */
 export interface ICameraHelper {
+    /** Whether the controls turn a globe rather than move a plane. */
     get useGlobeControls(): boolean;
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(pan: Point, data: ProjectedCamera): {
         easingCenter: LngLat;
         easingOffset: Point;
     };
 
-    handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void;
+    handleMapControlsRollPitchBearingZoom(state: CameraState, context: CameraContext, deltas: MapControlsDeltas): CameraState;
 
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void;
+    handleMapControlsPan(state: CameraState, context: CameraContext, deltas: MapControlsDeltas, preZoomAroundLoc: LngLat): CameraState;
 
     /**
      * @param fitPadding - The `padding` option of `cameraForBounds`: the space wanted around the bounds.
      * @param mapPadding - The map's own padding, as in `map.getPadding()`, which the bounds must also stay clear of.
      */
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult;
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, state: CameraState, context: CameraContext): CameraForBoxAndBearingHandlerResult;
 
-    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void;
+    handleJumpToCenterZoom(state: CameraState, context: CameraContext, options: { zoom?: number; center?: LngLatLike }): CameraState;
 
-    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult;
+    handleEaseTo(state: CameraState, context: CameraContext, options: EaseToHandlerOptions): EaseToHandlerResult;
 
-    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult;
+    handleFlyTo(state: CameraState, context: CameraContext, options: FlyToHandlerOptions): FlyToHandlerResult;
 }
 
 /**
  * @internal
- * Set a transform's rotation to a value interpolated between startEulerAngles and endEulerAngles
+ * Returns the camera with its rotation `k` of the way between two sets of Euler angles.
+ * @param useSlerp - whether to interpolate the rotation spherically rather than each angle linearly
  */
-export function updateRotation(args: UpdateRotationArgs): void {
-    if (args.useSlerp) {
-        // At pitch ==0, the Euler angle representation is ambiguous. In this case, set the Euler angles
-        // to the representation requested by the caller
-        if (args.k < 1) {
-            const startRotation = rollPitchBearingToQuat(args.startEulerAngles.roll, args.startEulerAngles.pitch, args.startEulerAngles.bearing);
-            const endRotation = rollPitchBearingToQuat(args.endEulerAngles.roll, args.endEulerAngles.pitch, args.endEulerAngles.bearing);
-            const rotation: quat = new Float64Array(4);
-            quat.slerp(rotation, startRotation, endRotation, args.k);
-            const eulerAngles = getRollPitchBearing(rotation);
-            args.tr.setRoll(eulerAngles.roll);
-            args.tr.setPitch(eulerAngles.pitch);
-            args.tr.setBearing(eulerAngles.bearing);
-        } else {
-            args.tr.setRoll(args.endEulerAngles.roll);
-            args.tr.setPitch(args.endEulerAngles.pitch);
-            args.tr.setBearing(args.endEulerAngles.bearing);
-        }
+export function interpolateRotation(state: CameraState, start: RollPitchBearing, end: RollPitchBearing, k: number, useSlerp: boolean): CameraState {
+    let angles: RollPitchBearing;
+    if (!useSlerp) {
+        angles = {
+            roll: interpolates.number(start.roll, end.roll, k),
+            pitch: interpolates.number(start.pitch, end.pitch, k),
+            bearing: interpolates.number(start.bearing, end.bearing, k),
+        };
+    } else if (k < 1) {
+        const rotation: quat = new Float64Array(4);
+        quat.slerp(rotation, rollPitchBearingToQuat(start.roll, start.pitch, start.bearing), rollPitchBearingToQuat(end.roll, end.pitch, end.bearing), k);
+        angles = getRollPitchBearing(rotation);
     } else {
-        args.tr.setRoll(interpolates.number(args.startEulerAngles.roll, args.endEulerAngles.roll, args.k));
-        args.tr.setPitch(interpolates.number(args.startEulerAngles.pitch, args.endEulerAngles.pitch, args.k));
-        args.tr.setBearing(interpolates.number(args.startEulerAngles.bearing, args.endEulerAngles.bearing, args.k));
+        // At pitch 0 the Euler angles are ambiguous, so the animation ends on the ones it was asked for.
+        angles = end;
     }
+    return setBearing(setPitch(setRoll(state, angles.roll), angles.pitch), angles.bearing);
 }
 
-export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: IReadonlyTransform): CameraForBoxAndBearingHandlerResult {
+export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: CameraMetrics, worldCoordinateHelper: WorldCoordinateHelper): CameraForBoxAndBearingHandlerResult {
     // Fit the whole box, not only its corners: rotate the points sampled over it by the bearing and take
     // the rectangle around them in the rotated frame, grown by how far the edges bulge past the points.
 
-    const worldCoordinateHelper = tr.worldCoordinateHelper;
     const nwWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthWest(), worldCoordinateHelper);
     const neWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthEast(), worldCoordinateHelper);
     const seWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthEast(), worldCoordinateHelper);

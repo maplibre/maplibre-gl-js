@@ -2,6 +2,7 @@ import {DOM} from '../util/dom.ts';
 import {throttle} from '../util/throttle.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
+import * as cameraMath from '../geo/projection/camera_math.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import {Event, Evented} from '../util/evented.ts';
 import Point from '@mapbox/point-geometry';
@@ -682,7 +683,7 @@ export class Marker extends Evented<MarkerEventType> {
         if (!this._isInViewport()) return;
 
         const terrain = this._map?.terrain;
-        const occluded = this._map._camera.transform.isLocationOccluded(this._lngLat);
+        const occluded = cameraMath.isLocationOccluded(this._map._camera.projectedCamera, this._map._camera.context.projection, this._lngLat);
         if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) {
@@ -699,7 +700,7 @@ export class Marker extends Evented<MarkerEventType> {
      * Whether the viewport shows the marker's position. There is nothing to compute for one it does not.
      */
     _isInViewport(): boolean {
-        const {width, height} = this._map._camera.transform;
+        const {width, height} = this._map._camera.cameraState;
         return !!this._pos && this._pos.x >= 0 && this._pos.y >= 0 && this._pos.x <= width && this._pos.y <= height;
     }
 
@@ -730,11 +731,11 @@ export class Marker extends Evented<MarkerEventType> {
      * above it on screen, or the location itself when the offset lowers the element.
      */
     _isCovered(terrain: Terrain): boolean {
-        const transform = this._map._camera.transform;
-        const elevation = terrain.getElevationForLngLat(this._lngLat, transform.tileZoom);
-        const metersToCenter = Math.max(0, -this._offset.y) / transform.pixelsPerMeter;
+        const camera = this._map._camera.projectedCamera;
+        const elevation = terrain.getElevationForLngLat(this._lngLat, camera.tileZoom);
+        const metersToCenter = Math.max(0, -this._offset.y) / camera.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
-        return transform.isLocationOccluded(this._lngLat, terrain, elevation + elevationToCenter);
+        return cameraMath.isLocationOccluded(camera, this._map._camera.context.projection, this._lngLat, terrain, elevation + elevationToCenter);
     }
 
     /**
@@ -746,12 +747,12 @@ export class Marker extends Evented<MarkerEventType> {
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' | 'idle' }): void => {
         if (!this._map) return;
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.projectedCamera, this._map._camera.context.projection);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._map._camera.transform.locationToScreenPoint(this._lngLat)._add(this._offset);
+            this._flatPos = cameraMath.locationToScreenPoint(this._map._camera.projectedCamera, this._map._camera.context.projection, this._lngLat)._add(this._offset);
         }
 
         let rotation = '';

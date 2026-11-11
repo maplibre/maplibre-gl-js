@@ -1,16 +1,22 @@
 import Point from '@mapbox/point-geometry';
-import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
+import {cameraBoundsWarning, cameraForBoxAndBearing, interpolateRotation, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, versorSetLocationAtPoint} from './globe_utils.ts';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
-import {normalizeCenter} from '../transform_helper.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import {getCenterPoint, isPaddingEqual} from '../camera_state.ts';
+import {applyConstrain} from './camera_constrain.ts';
+import * as cameraMath from './camera_math.ts';
+import {setLocationAtPoint, versorSetLocationAtPoint} from './camera_solvers.ts';
+import * as cameraUpdates from './camera_updates.ts';
 
-import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
 import type {CameraForBoundsOptions} from '../../ui/camera.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
+import type {CameraState} from '../camera_state.ts';
+import type {ProjectedCamera} from '../projected_camera.ts';
+import type {CameraContext} from './camera_constrain.ts';
 
 /**
  * Zoom movement slowing starts when the mouse ray passes further than this above the planet surface,
@@ -53,21 +59,22 @@ const SLOWING_RADIUS_SLOW_FACTOR = 0.25;
 
 /**
  * @internal
+ * The camera controls of the vertical perspective, which turn the globe.
  */
 export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
     get useGlobeControls(): boolean { return true; }
 
-    handlePanInertia(pan: Point, transform: IReadonlyTransform): {
+    handlePanInertia(pan: Point, camera: ProjectedCamera): {
         easingCenter: LngLat;
         easingOffset: Point;
     } {
-        const panCenter = computeGlobePanCenter(pan, transform);
-        if (Math.abs(panCenter.lng - transform.center.lng) > 180) {
+        const panCenter = computeGlobePanCenter(pan, camera);
+        if (Math.abs(panCenter.lng - camera.center.lng) > 180) {
             // If easeTo target would be over 180° distant, the animation would move
             // in the opposite direction that what the user intended.
             // Thus we clamp the movement to 179.5°.
-            panCenter.lng = transform.center.lng + 179.5 * Math.sign(panCenter.lng - transform.center.lng);
+            panCenter.lng = camera.center.lng + 179.5 * Math.sign(panCenter.lng - camera.center.lng);
         }
         return {
             easingCenter: panCenter,
@@ -82,28 +89,30 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
      * location whose longitude is far from the center's, or one near the horizon,
      * so those cases blend towards a heuristic.
      */
-    handleMapControlsRollPitchBearingZoom(deltas: MapControlsDeltas, tr: ITransform): void {
+    handleMapControlsRollPitchBearingZoom(state: CameraState, context: CameraContext, deltas: MapControlsDeltas): CameraState {
         const zoomPixel = deltas.around;
-        const zoomLoc = tr.screenPointToLocation(zoomPixel);
+        const start = cameraMath.projectCamera(state, context.projection);
+        const zoomLoc = cameraMath.screenPointToLocation(start, context.projection, zoomPixel);
 
-        if (deltas.bearingDelta) tr.setBearing(tr.bearing + deltas.bearingDelta);
-        if (deltas.pitchDelta) tr.setPitch(tr.pitch + deltas.pitchDelta);
-        if (deltas.rollDelta) tr.setRoll(tr.roll + deltas.rollDelta);
-        const oldZoomPreZoomDelta = tr.zoom;
-        if (deltas.zoomDelta) tr.setZoom(tr.zoom + deltas.zoomDelta);
-        const actualZoomDelta = tr.zoom - oldZoomPreZoomDelta;
+        if (deltas.bearingDelta) state = cameraUpdates.setBearing(state, start.bearing + deltas.bearingDelta);
+        if (deltas.pitchDelta) state = cameraUpdates.setPitch(state, start.pitch + deltas.pitchDelta);
+        if (deltas.rollDelta) state = cameraUpdates.setRoll(state, start.roll + deltas.rollDelta);
+        const oldZoomPreZoomDelta = state.zoom;
+        if (deltas.zoomDelta) state = cameraUpdates.setZoom(state, context, state.zoom + deltas.zoomDelta);
+        const actualZoomDelta = state.zoom - oldZoomPreZoomDelta;
 
         if (actualZoomDelta === 0) {
-            return;
+            return state;
         }
 
-        const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);
+        const dLngRaw = differenceOfAnglesDegrees(state.center.lng, zoomLoc.lng);
         const dLng = dLngRaw / (Math.abs(dLngRaw / 180) + 1.0); // This gradually reduces the amount of longitude change if the zoom location is very far, eg. on the other side of the pole (possible when looking at a pole).
-        const dLat = differenceOfAnglesDegrees(tr.center.lat, zoomLoc.lat);
+        const dLat = differenceOfAnglesDegrees(state.center.lat, zoomLoc.lat);
 
         // Slow zoom movement down if the mouse ray is far from the planet.
-        const rayDirection = tr.getRayDirectionFromPixel(zoomPixel);
-        const rayOrigin = tr.cameraPosition;
+        const zoomed = cameraMath.projectCamera(state, context.projection);
+        const rayDirection = cameraMath.getRayDirectionFromPixel(zoomed, zoomPixel);
+        const rayOrigin = zoomed.cameraPosition;
         const distanceToClosestPoint = vec3.dot(rayOrigin, rayDirection) * -1; // Globe center relative to ray origin is equal to -rayOrigin and rayDirection is normalized, thus we want to compute dot(-rayOrigin, rayDirection).
         const closestPoint = createVec3f64();
         vec3.add(closestPoint, rayOrigin, [
@@ -119,7 +128,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const interpolationFactorHorizon = remapSaturate(rayDistanceFromGlobeCenter, INTERPOLATE_TO_HEURISTIC_START_HORIZON, INTERPOLATE_TO_HEURISTIC_END_HORIZON, 0, 1);
 
         // Slow zoom movement down if the globe is too small on viewport
-        const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.min(tr.width, tr.height); // Radius relative to smaller viewport dimension
+        const radius = getGlobeRadiusPixels(zoomed.worldSize, state.center.lat) / Math.min(state.width, state.height); // Radius relative to smaller viewport dimension
         const radiusFactor = remapSaturate(radius, SLOWING_RADIUS_START, SLOWING_RADIUS_STOP, 1.0, SLOWING_RADIUS_SLOW_FACTOR);
         // Globe size only stands in for how close the zoom location is to the horizon, so apply the slowdown where that is actually the case.
         const slowingFactor = Math.min(distanceFactor, lerp(1.0, radiusFactor, interpolationFactorHorizon));
@@ -127,16 +136,16 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         // Compute how much to move towards the zoom location
         const factor = (1.0 - zoomScale(-actualZoomDelta)) * slowingFactor;
 
-        const oldCenterLat = tr.center.lat;
-        const oldZoom = tr.zoom;
+        const oldCenterLat = state.center.lat;
+        const oldZoom = state.zoom;
         const heuristicCenter = new LngLat(
-            tr.center.lng + dLng * factor,
-            clamp(tr.center.lat + dLat * factor, -90, 90)
+            state.center.lng + dLng * factor,
+            clamp(state.center.lat + dLat * factor, -90, 90)
         );
 
         // Now compute the map center exact zoom
-        tr.setLocationAtPoint(zoomLoc, zoomPixel);
-        const exactCenter = tr.center;
+        const exact = setLocationAtPoint(state, context, zoomLoc, zoomPixel);
+        const exactCenter = exact.center;
 
         // Interpolate between exact zooming and heuristic zooming depending on the longitude difference between current center and zoom location.
         const interpolationFactorLongitude = remapSaturate(Math.abs(dLngRaw), INTERPOLATE_TO_HEURISTIC_START_LNG, INTERPOLATE_TO_HEURISTIC_END_LNG, 0, 1);
@@ -145,42 +154,45 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const lngExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lng, heuristicCenter.lng);
         const latExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lat, heuristicCenter.lat);
 
-        tr.setCenter(new LngLat(
+        const blended = cameraUpdates.setCenter(exact, context, new LngLat(
             exactCenter.lng + lngExactToHeuristic * heuristicFactor,
             clamp(exactCenter.lat + latExactToHeuristic * heuristicFactor, -90, 90)
         ).wrap());
-        tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
+        return cameraUpdates.setZoom(blended, context, oldZoom + getZoomAdjustment(oldCenterLat, blended.center.lat));
     }
 
     /**
      * Pans the globe by rotating it with a single quaternion that brings the grabbed location back
-     * under the cursor. This stays consistent near and across the poles, where the previous
-     * bearing-preserving mapping inverted and stalled (#5296).
+     * under the cursor. This stays consistent near and across the poles, where a
+     * bearing-preserving mapping inverts and stalls (#5296).
+     * @param state - The camera to pan.
+     * @param context - The projection and the constrain the camera is moved with.
      * @param deltas - The deltas accumulated for this frame.
-     * @param tr - The transform to pan.
      * @param preZoomAroundLoc - The location that was under the cursor before this frame.
      */
-    handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat): void {
+    handleMapControlsPan(state: CameraState, context: CameraContext, deltas: MapControlsDeltas, preZoomAroundLoc: LngLat): CameraState {
         if (!deltas.panDelta) {
-            return;
+            return state;
         }
 
-        const anchor = tr.isPointOnMapSurface(deltas.around) ? deltas.around : tr.centerPoint;
-        versorSetLocationAtPoint(tr, preZoomAroundLoc, anchor, deltas.panDelta);
+        const camera = cameraMath.projectCamera(state, context.projection);
+        const anchor = cameraMath.isPointOnMapSurface(camera, context.projection, deltas.around) ? deltas.around : getCenterPoint(state);
+        return versorSetLocationAtPoint(state, context, preZoomAroundLoc, anchor, deltas.panDelta);
     }
 
-    cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, tr: ITransform): CameraForBoxAndBearingHandlerResult {
-        const result = cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, tr);
+    /** Takes the center and bearing mercator fits the bounds with, and finds the zoom that fits them on the globe. */
+    cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, state: CameraState, context: CameraContext): CameraForBoxAndBearingHandlerResult {
+        const result = cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, cameraMath.getCameraMetrics(state, context.projection.worldCoordinateHelper), context.projection.worldCoordinateHelper);
         if (!result) {
             return undefined;
         }
-        // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
 
         // Get clip space bounds including fitPadding
-        const xLeft = (fitPadding.left) / tr.width * 2.0 - 1.0;
-        const xRight = (tr.width - fitPadding.right) / tr.width * 2.0 - 1.0;
-        const yTop = (fitPadding.top) / tr.height * -2.0 + 1.0;
-        const yBottom = (tr.height - fitPadding.bottom) / tr.height * -2.0 + 1.0;
+        const {width, height} = state;
+        const xLeft = (fitPadding.left) / width * 2.0 - 1.0;
+        const xRight = (width - fitPadding.right) / width * 2.0 - 1.0;
+        const yTop = (fitPadding.top) / height * -2.0 + 1.0;
+        const yBottom = (height - fitPadding.bottom) / height * -2.0 + 1.0;
 
         // Get camera bounds
         const flipEastWest = differenceOfAnglesDegrees(bounds.getWest(), bounds.getEast()) < 0;
@@ -195,14 +207,13 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const latMid = latNorth + differenceOfAnglesDegrees(latNorth, latSouth) * 0.5;
 
         // Obtain a globe projection matrix that does not include pitch (unsupported)
-        const clonedTr = tr.clone();
-        clonedTr.setCenter(result.center);
-        clonedTr.setPadding(mapPadding);
-        clonedTr.setBearing(result.bearing);
-        clonedTr.setPitch(0);
-        clonedTr.setRoll(0);
-        clonedTr.setZoom(result.zoom);
-        const matrix = clonedTr.modelViewProjectionMatrix;
+        let fitted = cameraUpdates.setCenter(state, context, result.center);
+        fitted = cameraUpdates.setPadding(fitted, context, mapPadding);
+        fitted = cameraUpdates.setBearing(fitted, result.bearing);
+        fitted = cameraUpdates.setPitch(fitted, 0);
+        fitted = cameraUpdates.setRoll(fitted, 0);
+        fitted = cameraUpdates.setZoom(fitted, context, result.zoom);
+        const matrix = cameraMath.projectCamera(fitted, context.projection).modelViewProjectionMatrix;
 
         // Vectors to test - the bounds' corners and edge midpoints
         const testVectors = [
@@ -237,7 +248,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         }
 
         // Compute target zoom from the obtained scale.
-        result.zoom = Math.min(clonedTr.zoom + scaleZoom(smallestNeededScale), options.maxZoom);
+        result.zoom = Math.min(fitted.zoom + scaleZoom(smallestNeededScale), options.maxZoom);
         return result;
     }
 
@@ -245,37 +256,35 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
      * Handles the zoom and center change during camera jumpTo.
      * The zoom decides how close to a pole the center can be, so the center is set again once the zoom has changed.
      */
-    handleJumpToCenterZoom(tr: ITransform, options: { zoom?: number; center?: LngLatLike }): void {
-        const startingLat = tr.center.lat;
-        const center = options.center ? LngLat.convert(options.center) : tr.center;
-        tr.setCenter(tr.applyConstrain(center, tr.zoom).center.wrap());
+    handleJumpToCenterZoom(state: CameraState, context: CameraContext, options: { zoom?: number; center?: LngLatLike }): CameraState {
+        const startingLat = state.center.lat;
+        const center = options.center ? LngLat.convert(options.center) : state.center;
+        state = cameraUpdates.setCenter(state, context, applyConstrain(state, context, center, state.zoom).center.wrap());
 
         // Make sure to compute correct target zoom level if no zoom is specified
-        const targetZoom = (typeof options.zoom !== 'undefined') ? +options.zoom : (tr.zoom + getZoomAdjustment(startingLat, tr.center.lat));
-        if (tr.zoom !== targetZoom) {
-            tr.setZoom(targetZoom);
-            tr.setCenter(tr.applyConstrain(center, tr.zoom).center.wrap());
-        }
+        const targetZoom = options.zoom !== undefined ? +options.zoom : state.zoom + getZoomAdjustment(startingLat, state.center.lat);
+        if (state.zoom === targetZoom) return state;
+        state = cameraUpdates.setZoom(state, context, targetZoom);
+        return cameraUpdates.setCenter(state, context, applyConstrain(state, context, center, state.zoom).center.wrap());
     }
 
     /**
      * The zoom decides how close to a pole the center can be, so the last frame sets the center again after the zoom.
      */
-    handleEaseTo(tr: ITransform, options: EaseToHandlerOptions): EaseToHandlerResult {
-        const startZoom = tr.zoom;
-        const startCenter = tr.center;
-        const startPadding = tr.padding;
-        const startEulerAngles = {roll: tr.roll, pitch: tr.pitch, bearing: tr.bearing};
-        const endRoll = options.roll === undefined ? tr.roll : options.roll;
-        const endPitch = options.pitch === undefined ? tr.pitch : options.pitch;
-        const endBearing = options.bearing === undefined ? tr.bearing : options.bearing;
-        const endEulerAngles = {roll: endRoll, pitch: endPitch, bearing: endBearing};
-
-        const optionsZoom = typeof options.zoom !== 'undefined';
-
-        const doPadding = !tr.isPaddingEqual(options.padding);
-
-        let isZooming = false;
+    handleEaseTo(state: CameraState, context: CameraContext, options: EaseToHandlerOptions): EaseToHandlerResult {
+        const start = cameraMath.getCameraMetrics(state, context.projection.worldCoordinateHelper);
+        const startZoom = state.zoom;
+        const startCenter = state.center;
+        const startPadding = state.padding;
+        const startEulerAngles = {roll: start.roll, pitch: start.pitch, bearing: start.bearing};
+        const endEulerAngles = {
+            roll: options.roll ?? start.roll,
+            pitch: options.pitch ?? start.pitch,
+            bearing: options.bearing ?? start.bearing,
+        };
+        const rotating = !rollPitchBearingEqual(startEulerAngles, endEulerAngles);
+        const optionsZoom = options.zoom !== undefined;
+        const doPadding = !isPaddingEqual(state.padding, options.padding);
 
         // Globe needs special handling for how zoom should be animated.
         // 1) if zoom is set, ease to the given mercator zoom
@@ -283,26 +292,26 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const preConstrainCenter = options.center ?
             LngLat.convert(options.center) :
             startCenter;
-        const constrainedCenter = tr.applyConstrain(
+        const constrainedCenter = applyConstrain(
+            state,
+            context,
             preConstrainCenter,
             optionsZoom ? +options.zoom : startZoom
         ).center;
-        normalizeCenter(tr, constrainedCenter);
+        cameraUpdates.normalizeCenter(state, context.projection.worldCoordinateHelper, constrainedCenter);
 
-        const clonedTr = tr.clone();
-        clonedTr.setCenter(constrainedCenter);
-
-        clonedTr.setZoom(optionsZoom ?
+        let end = cameraUpdates.setCenter(state, context, constrainedCenter);
+        end = cameraUpdates.setZoom(end, context, optionsZoom ?
             +options.zoom :
             startZoom + getZoomAdjustment(startCenter.lat, preConstrainCenter.lat));
-        clonedTr.setBearing(options.bearing);
+        end = cameraUpdates.setBearing(end, options.bearing);
         const clampedPoint = new Point(
-            clamp(tr.centerPoint.x + options.offsetAsPoint.x, 0, tr.width),
-            clamp(tr.centerPoint.y + options.offsetAsPoint.y, 0, tr.height)
+            clamp(start.centerPoint.x + options.offsetAsPoint.x, 0, state.width),
+            clamp(start.centerPoint.y + options.offsetAsPoint.y, 0, state.height)
         );
-        clonedTr.setLocationAtPoint(constrainedCenter, clampedPoint);
+        end = setLocationAtPoint(end, context, constrainedCenter, clampedPoint);
         // Find final animation targets
-        const endCenterWithShift = (options.offset && options.offsetAsPoint.mag()) > 0 ? clonedTr.center : constrainedCenter;
+        const endCenterWithShift = (options.offset && options.offsetAsPoint.mag()) > 0 ? end.center : constrainedCenter;
         const endZoomWithShift = optionsZoom ?
             +options.zoom :
             startZoom + getZoomAdjustment(startCenter.lat, endCenterWithShift.lat);
@@ -315,25 +324,15 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         const deltaLat = differenceOfAnglesDegrees(startCenter.lat, endCenterWithShift.lat);
 
         const finalScale = zoomScale(normalizedEndZoom - normalizedStartZoom);
-        isZooming = (endZoomWithShift !== startZoom);
+        const isZooming = endZoomWithShift !== startZoom;
 
-        const easeFunc = (k: number) => {
-            if (!rollPitchBearingEqual(startEulerAngles, endEulerAngles)) {
-                updateRotation({
-                    startEulerAngles,
-                    endEulerAngles,
-                    tr,
-                    k,
-                    useSlerp: startEulerAngles.roll != endEulerAngles.roll});
-            }
-
-            if (doPadding) {
-                tr.interpolatePadding(startPadding, options.padding,k);
-            }
+        const easeFunc = (frame: CameraState, frameContext: CameraContext, k: number): CameraState => {
+            if (rotating) frame = interpolateRotation(frame, startEulerAngles, endEulerAngles, k, startEulerAngles.roll !== endEulerAngles.roll);
+            if (doPadding) frame = cameraUpdates.interpolatePadding(frame, frameContext, startPadding, options.padding, k);
 
             if (options.around) {
                 warnOnce('Easing around a point is not supported under globe projection.');
-                tr.setLocationAtPoint(options.around, options.aroundPoint);
+                frame = setLocationAtPoint(frame, frameContext, options.around, options.aroundPoint);
             } else {
                 const base = normalizedEndZoom > normalizedStartZoom ?
                     Math.min(2, finalScale) :
@@ -345,18 +344,18 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
                 // Instead we interpolate LngLat almost directly, but taking into account that
                 // one degree of longitude gets progressively smaller relative to latitude towards the poles.
                 const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
-                tr.setCenter(newCenter.wrap());
+                frame = cameraUpdates.setCenter(frame, frameContext, newCenter.wrap());
             }
 
             if (isZooming) {
                 const normalizedInterpolatedZoom = interpolates.number(normalizedStartZoom, normalizedEndZoom, k);
-                const interpolatedZoom = normalizedInterpolatedZoom + getZoomAdjustment(0, tr.center.lat);
-                tr.setZoom(interpolatedZoom);
+                frame = cameraUpdates.setZoom(frame, frameContext, normalizedInterpolatedZoom + getZoomAdjustment(0, frame.center.lat));
             }
 
             if (k === 1 && !options.around) {
-                tr.setCenter(endCenterWithShift.wrap());
+                frame = cameraUpdates.setCenter(frame, frameContext, endCenterWithShift.wrap());
             }
+            return frame;
         };
 
         return {
@@ -369,70 +368,67 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
     /**
      * The zoom decides how close to a pole the center can be, so the last frame sets the center again after the zoom.
      */
-    handleFlyTo(tr: ITransform, options: FlyToHandlerOptions): FlyToHandlerResult {
-        const optionsZoom = typeof options.zoom !== 'undefined';
+    handleFlyTo(state: CameraState, context: CameraContext, options: FlyToHandlerOptions): FlyToHandlerResult {
+        const start = cameraMath.getCameraMetrics(state, context.projection.worldCoordinateHelper);
+        const optionsZoom = options.zoom !== undefined;
 
-        const startCenter = tr.center;
-        const startZoom = tr.zoom;
-        const startPadding = tr.padding;
+        const startCenter = state.center;
+        const startZoom = state.zoom;
+        const startPadding = state.padding;
 
-        const doPadding = !tr.isPaddingEqual(options.padding);
+        const doPadding = !isPaddingEqual(state.padding, options.padding);
 
         // Obtain target center and zoom
-        const constrainedCenter = tr.applyConstrain(
+        const constrainedCenter = applyConstrain(
+            state,
+            context,
             LngLat.convert(options.center || options.locationAtOffset),
             optionsZoom ? +options.zoom : startZoom
         ).center;
-        const targetZoom = optionsZoom ? +options.zoom : tr.zoom + getZoomAdjustment(tr.center.lat, constrainedCenter.lat);
+        const targetZoom = optionsZoom ? +options.zoom : startZoom + getZoomAdjustment(startCenter.lat, constrainedCenter.lat);
 
-        // Compute target center that respects offset by creating a temporary transform and calling its `setLocationAtPoint`.
-        const clonedTr = tr.clone();
-        clonedTr.setCenter(constrainedCenter);
-
-        clonedTr.setZoom(targetZoom);
-        clonedTr.setBearing(options.bearing);
+        // Compute the target center that respects the offset by placing the center at the offset point on the target camera.
+        let end = cameraUpdates.setCenter(state, context, constrainedCenter);
+        end = cameraUpdates.setZoom(end, context, targetZoom);
+        end = cameraUpdates.setBearing(end, options.bearing);
         const clampedPoint = new Point(
-            clamp(tr.centerPoint.x + options.offsetAsPoint.x, 0, tr.width),
-            clamp(tr.centerPoint.y + options.offsetAsPoint.y, 0, tr.height)
+            clamp(start.centerPoint.x + options.offsetAsPoint.x, 0, state.width),
+            clamp(start.centerPoint.y + options.offsetAsPoint.y, 0, state.height)
         );
-        clonedTr.setLocationAtPoint(constrainedCenter, clampedPoint);
-        const targetCenter = clonedTr.center;
+        const targetCenter = setLocationAtPoint(end, context, constrainedCenter, clampedPoint).center;
 
-        normalizeCenter(tr, targetCenter);
+        cameraUpdates.normalizeCenter(state, context.projection.worldCoordinateHelper, targetCenter);
 
-        const pixelPathLength = globeDistanceOfLocationsPixels(tr, startCenter, targetCenter);
+        const pixelPathLength = globeDistanceOfLocationsPixels(start, startCenter, targetCenter);
 
         const normalizedStartZoom = startZoom + getZoomAdjustment(startCenter.lat, 0);
         const normalizedTargetZoom = targetZoom + getZoomAdjustment(targetCenter.lat, 0);
         const scaleOfZoom = zoomScale(normalizedTargetZoom - normalizedStartZoom);
 
-        const requestedMinZoom = typeof options.minZoom === 'number' ? +options.minZoom : tr.minZoom;
-        const effectiveMinZoom = Math.max(requestedMinZoom, tr.minZoom);
+        const requestedMinZoom = typeof options.minZoom === 'number' ? +options.minZoom : state.minZoom;
+        const effectiveMinZoom = Math.max(requestedMinZoom, state.minZoom);
         const normalizedEffectiveMinZoom = effectiveMinZoom + getZoomAdjustment(targetCenter.lat, 0);
         const normalizedMinZoomPreConstrain = Math.min(normalizedEffectiveMinZoom, normalizedStartZoom, normalizedTargetZoom);
         const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(0, targetCenter.lat);
-        const minZoom = tr.applyConstrain(targetCenter, minZoomPreConstrain).zoom;
+        const minZoom = applyConstrain(state, context, targetCenter, minZoomPreConstrain).zoom;
         const normalizedMinZoom = minZoom + getZoomAdjustment(targetCenter.lat, 0);
         const scaleOfMinZoom = zoomScale(normalizedMinZoom - normalizedStartZoom);
 
         const deltaLng = differenceOfAnglesDegrees(startCenter.lng, targetCenter.lng);
         const deltaLat = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);
 
-        const easeFunc = (k: number, scale: number, centerFactor: number, _pointAtOffset: Point) => {
+        const easeFunc = (frame: CameraState, frameContext: CameraContext, k: number, scale: number, centerFactor: number, _pointAtOffset: Point): CameraState => {
             const interpolatedCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, centerFactor);
 
-            if (doPadding) {
-                tr.interpolatePadding(startPadding, options.padding,k);
-            }
+            if (doPadding) frame = cameraUpdates.interpolatePadding(frame, frameContext, startPadding, options.padding, k);
 
             const newCenter = k === 1 ? targetCenter : interpolatedCenter;
-            tr.setCenter(newCenter.wrap());
+            frame = cameraUpdates.setCenter(frame, frameContext, newCenter.wrap());
 
             const interpolatedZoom = normalizedStartZoom + scaleZoom(scale);
-            tr.setZoom(k === 1 ? targetZoom : (interpolatedZoom + getZoomAdjustment(0, newCenter.lat)));
-            if (k === 1) {
-                tr.setCenter(targetCenter.wrap());
-            }
+            frame = cameraUpdates.setZoom(frame, frameContext, k === 1 ? targetZoom : (interpolatedZoom + getZoomAdjustment(0, newCenter.lat)));
+            if (k === 1) frame = cameraUpdates.setCenter(frame, frameContext, targetCenter.wrap());
+            return frame;
         };
 
         return {
@@ -447,7 +443,7 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
     /**
      * Computes how much to scale the globe in order for a given point on its surface (a location) to project to a given clip space coordinate in either the X or the Y axis.
      * @param vector - Position of the queried location on the surface of the unit sphere globe.
-     * @param toCenter - Position of current transform center on the surface of the unit sphere globe.
+     * @param toCenter - Position of current camera center on the surface of the unit sphere globe.
      * This is needed because zooming the globe not only changes its scale,
      * but also moves the camera closer or further away along this vector (pitch is disregarded).
      * @param projection - The globe projection matrix.

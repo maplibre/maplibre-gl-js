@@ -32,6 +32,11 @@ import {config} from '../util/config.ts';
 import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
+import * as cameraMath from '../geo/projection/camera_math.ts';
+import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {calculateCameraOptionsFromTo} from '../geo/projection/camera_solvers.ts';
+import {applyConstrain} from '../geo/projection/camera_constrain.ts';
+import {getMaxBounds} from '../geo/camera_state.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
 import {isStyleImageWebGLData} from '../style/style_image.ts';
 import {getRegisteredProjection} from '../geo/projection/projection_crud.ts';
@@ -71,8 +76,8 @@ import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {ControlPosition, IControl} from './control/control.ts';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features.ts';
-import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
-import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
+import type {TransformConstrainFunction} from '../geo/camera_types.ts';
+import type {CameraProjection} from '../geo/projection/camera_projection.ts';
 
 const version = packageJSON.version;
 
@@ -876,10 +881,10 @@ export class Map extends Evented<MapEventType> {
 
         // When no style is set or it's using something other than the globe projection or a registered planar CRS, we can constrain the camera.
         // When a style is set with those projections though, we can't constrain the camera until the style is loaded
-        // and the correct transform is used. Otherwise, valid points in the desired projection could be rejected
+        // and the correct camera is used. Otherwise, valid points in the desired projection could be rejected
         const styleProjectionType = typeof resolvedOptions.style === 'string' ? undefined : resolvedOptions.style?.projection?.type;
-        const shouldConstrainUsingMercatorTransform = styleProjectionType !== 'globe' && !getRegisteredProjection(styleProjectionType);
-        this.resize(null, shouldConstrainUsingMercatorTransform);
+        const shouldConstrainUsingMercatorView = styleProjectionType !== 'globe' && !getRegisteredProjection(styleProjectionType);
+        this.resize(null, shouldConstrainUsingMercatorView);
 
         this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
         this._validateStyle = resolvedOptions.validateStyle;
@@ -896,8 +901,8 @@ export class Map extends Evented<MapEventType> {
 
         this.on('style.load', () => {
             // If we didn't constrain the camera before, we do it now
-            if (!shouldConstrainUsingMercatorTransform) this._resizeTransform();
-            if (this._camera.transform.unmodified) {
+            if (!shouldConstrainUsingMercatorView) this._resizeCameraView();
+            if (this._camera.cameraState.unmodified) {
                 const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
                 this.jumpTo(coercedOptions);
             }
@@ -1043,7 +1048,7 @@ export class Map extends Evented<MapEventType> {
     * ```
     */
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
-        return coveringTiles(this._camera.transform, options);
+        return coveringTiles(this._camera.projectedCamera, this._camera.context.projection, options);
     }
 
     /**
@@ -1064,7 +1069,7 @@ export class Map extends Evented<MapEventType> {
      * let {lng, lat} = map.getCenter();
      * ```
      */
-    getCenter(): LngLat { return new LngLat(this._camera.transform.center.lng, this._camera.transform.center.lat); }
+    getCenter(): LngLat { return this._camera.getCenter(); }
     /**
      * Sets the map's geographical centerpoint. Equivalent to `jumpTo({center: center})`.
      *
@@ -1083,7 +1088,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The elevation of the map's center point, in meters above sea level.
      */
-    getCenterElevation(): number { return this._camera.transform.elevation; }
+    getCenterElevation(): number { return this._camera.getCenterElevation(); }
     /**
      * Sets the elevation of the map's center point, in meters above sea level. Equivalent to `jumpTo({elevation: elevation})`.
      *
@@ -1139,7 +1144,7 @@ export class Map extends Evented<MapEventType> {
      * map.getZoom();
      * ```
      */
-    getZoom(): number { return this._camera.transform.zoom; }
+    getZoom(): number { return this._camera.getZoom(); }
     /**
      * Sets the map's zoom level. Equivalent to `jumpTo({zoom: zoom})`.
      *
@@ -1212,7 +1217,7 @@ export class Map extends Evented<MapEventType> {
      * const verticalFieldOfView = map.getVerticalFieldOfView();
      * ```
      */
-    getVerticalFieldOfView(): number { return this._camera.transform.fov; }
+    getVerticalFieldOfView(): number { return this._camera.getVerticalFieldOfView(); }
     /**
      * Sets the map's vertical field of view, in degrees.
      *
@@ -1235,7 +1240,7 @@ export class Map extends Evented<MapEventType> {
      * @returns The map's current bearing.
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigate-the-map-with-game-like-controls/)
      */
-    getBearing(): number { return this._camera.transform.bearing; }
+    getBearing(): number { return this._camera.getBearing(); }
     /**
      * Sets the map's bearing (rotation). The bearing is the compass direction that is "up"; for example, a bearing
      * of 90° orients the map so that east is up.
@@ -1270,7 +1275,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The current padding around the map viewport.
      */
-    getPadding(): PaddingOptions { return this._camera.transform.padding; }
+    getPadding(): PaddingOptions { return this._camera.getPadding(); }
     /**
      * Sets the padding in pixels around the viewport.
      *
@@ -1331,7 +1336,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The map's current pitch, measured in degrees away from the plane of the screen.
      */
-    getPitch(): number { return this._camera.transform.pitch; }
+    getPitch(): number { return this._camera.getPitch(); }
     /**
      * Sets the map's pitch (tilt). Equivalent to `jumpTo({pitch: pitch})`.
      *
@@ -1346,7 +1351,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The map's current roll, measured in degrees about the camera boresight.
      */
-    getRoll(): number { return this._camera.transform.roll; }
+    getRoll(): number { return this._camera.getRoll(); }
     /**
      * Sets the map's roll angle. Equivalent to `jumpTo({roll: roll})`.
      *
@@ -1561,7 +1566,7 @@ export class Map extends Evented<MapEventType> {
         if (!this.terrain) {
             return null;
         }
-        return this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this._camera.transform.tileZoom);
+        return this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this._camera.projectedCamera.tileZoom);
     }
     /**
      * Returns the value of `centerClampedToGround`.
@@ -1595,9 +1600,9 @@ export class Map extends Evented<MapEventType> {
      */
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
         if (altitudeTo == null && this.terrain) {
-            altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.transform.tileZoom);
+            altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.projectedCamera.tileZoom);
         }
-        return this._camera.transform.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo ?? 0);
+        return calculateCameraOptionsFromTo(this._camera.cameraState, this._camera.context.projection, from, altitudeFrom, to, altitudeTo ?? 0);
     }
 
     /**
@@ -1622,12 +1627,12 @@ export class Map extends Evented<MapEventType> {
      * if (mapDiv.style.visibility === 'visible') map.resize();
      * ```
      */
-    resize(eventData?: any, constrainTransform = true): this {
+    resize(eventData?: any, constrainView = true): this {
         // Early out if the context is lost
         // causes a blank map otherwise
         const isContextLost = this._lostContextSnapshot.style !== null;
         if (isContextLost) return this;
-        this._resizeInternal(constrainTransform);
+        this._resizeInternal(constrainView);
 
         const fireMoving = !this._camera.isMoving();
         if (fireMoving) {
@@ -1653,9 +1658,9 @@ export class Map extends Evented<MapEventType> {
      *
      * @internal
      *
-     * @param constrainTransform - whether to constrain the transform after resizing.
+     * @param constrainView - whether to constrain the camera after resizing.
      */
-    _resizeInternal(constrainTransform = true): void {
+    _resizeInternal(constrainView = true): void {
         const [width, height] = this._containerDimensions();
 
         this._clampedPixelRatio = this._getClampedPixelRatio(width, height);
@@ -1674,13 +1679,13 @@ export class Map extends Evented<MapEventType> {
         }
         this.style?.resize();
 
-        this._resizeTransform(constrainTransform);
+        this._resizeCameraView(constrainView);
     }
 
-    _resizeTransform(constrainTransform = true): void {
+    _resizeCameraView(constrainView = true): void {
         const [width, height] = this._containerDimensions();
 
-        this._camera.resize(width, height, constrainTransform);
+        this._camera.resize(width, height, constrainView);
     }
 
     /**
@@ -1741,7 +1746,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     getBounds(): LngLatBounds {
-        return this._camera.transform.getBounds();
+        return cameraMath.getBounds(this._camera.projectedCamera, this._camera.context.projection);
     }
 
     /**
@@ -1753,7 +1758,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     getMaxBounds(): LngLatBounds | null {
-        return this._camera.transform.getMaxBounds();
+        return getMaxBounds(this._camera.cameraState);
     }
 
     /**
@@ -1778,7 +1783,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setMaxBounds(bounds?: LngLatBoundsLike | null): this {
-        this._camera.applyTransformChange(tr => tr.setMaxBounds(LngLatBounds.convert(bounds)));
+        this._camera.applyStateChange((state, context) => cameraUpdates.setMaxBounds(state, context, LngLatBounds.convert(bounds)));
         return this._update();
     }
 
@@ -1806,11 +1811,11 @@ export class Map extends Evented<MapEventType> {
 
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
-        if (minZoom >= defaultMinZoom && minZoom <= this._camera.transform.maxZoom) {
-            const zoomBefore = this._camera.transform.zoom;
-            this._camera.applyTransformChange(tr => tr.setMinZoom(minZoom));
+        if (minZoom >= defaultMinZoom && minZoom <= this._camera.cameraState.maxZoom) {
+            const zoomBefore = this._camera.cameraState.zoom;
+            this._camera.applyStateChange((state, context) => cameraUpdates.setMinZoom(state, context, minZoom));
             this._update();
-            if (zoomBefore !== this._camera.transform.zoom) {
+            if (zoomBefore !== this._camera.cameraState.zoom) {
                 this.fire(new MapMovementEvent('zoomstart'))
                     .fire(new MapMovementEvent('zoom'))
                     .fire(new MapMovementEvent('zoomend'))
@@ -1836,8 +1841,8 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     getMinZoom(constrained = false): number {
-        const transform = this._camera.transform;
-        return constrained ? transform.applyConstrain(transform.center, transform.minZoom).zoom : transform.minZoom;
+        const state = this._camera.cameraState;
+        return constrained ? applyConstrain(state, this._camera.context, state.center, state.minZoom).zoom : state.minZoom;
     }
 
     /**
@@ -1859,11 +1864,11 @@ export class Map extends Evented<MapEventType> {
 
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
-        if (maxZoom >= this._camera.transform.minZoom) {
-            const zoomBefore = this._camera.transform.zoom;
-            this._camera.applyTransformChange(tr => tr.setMaxZoom(maxZoom));
+        if (maxZoom >= this._camera.cameraState.minZoom) {
+            const zoomBefore = this._camera.cameraState.zoom;
+            this._camera.applyStateChange((state, context) => cameraUpdates.setMaxZoom(state, context, maxZoom));
             this._update();
-            if (zoomBefore !== this._camera.transform.zoom) {
+            if (zoomBefore !== this._camera.cameraState.zoom) {
                 this.fire(new MapMovementEvent('zoomstart'))
                     .fire(new MapMovementEvent('zoom'))
                     .fire(new MapMovementEvent('zoomend'))
@@ -1886,7 +1891,7 @@ export class Map extends Evented<MapEventType> {
      * let maxZoom = map.getMaxZoom();
      * ```
      */
-    getMaxZoom(): number { return this._camera.transform.maxZoom; }
+    getMaxZoom(): number { return this._camera.cameraState.maxZoom; }
 
     /**
      * Sets or clears the map's minimum pitch.
@@ -1907,11 +1912,11 @@ export class Map extends Evented<MapEventType> {
             throw new Error(`minPitch must be greater than or equal to ${defaultMinPitch}`);
         }
 
-        if (minPitch >= defaultMinPitch && minPitch <= this._camera.transform.maxPitch) {
-            const pitchBefore = this._camera.transform.pitch;
-            this._camera.applyTransformChange(tr => tr.setMinPitch(minPitch));
+        if (minPitch >= defaultMinPitch && minPitch <= this._camera.cameraState.maxPitch) {
+            const pitchBefore = this._camera.getPitch();
+            this._camera.applyStateChange(state => cameraUpdates.setMinPitch(state, minPitch));
             this._update();
-            if (pitchBefore !== this._camera.transform.pitch) {
+            if (pitchBefore !== this._camera.getPitch()) {
                 this.fire(new MapMovementEvent('pitchstart'))
                     .fire(new MapMovementEvent('pitch'))
                     .fire(new MapMovementEvent('pitchend'))
@@ -1930,7 +1935,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The minPitch
      */
-    getMinPitch(): number { return this._camera.transform.minPitch; }
+    getMinPitch(): number { return this._camera.cameraState.minPitch; }
 
     /**
      * Sets or clears the map's maximum pitch.
@@ -1951,11 +1956,11 @@ export class Map extends Evented<MapEventType> {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        if (maxPitch >= this._camera.transform.minPitch) {
-            const pitchBefore = this._camera.transform.pitch;
-            this._camera.applyTransformChange(tr => tr.setMaxPitch(maxPitch));
+        if (maxPitch >= this._camera.cameraState.minPitch) {
+            const pitchBefore = this._camera.getPitch();
+            this._camera.applyStateChange(state => cameraUpdates.setMaxPitch(state, maxPitch));
             this._update();
-            if (pitchBefore !== this._camera.transform.pitch) {
+            if (pitchBefore !== this._camera.getPitch()) {
                 this.fire(new MapMovementEvent('pitchstart'))
                     .fire(new MapMovementEvent('pitch'))
                     .fire(new MapMovementEvent('pitchend'))
@@ -1974,7 +1979,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The maxPitch
      */
-    getMaxPitch(): number { return this._camera.transform.maxPitch; }
+    getMaxPitch(): number { return this._camera.cameraState.maxPitch; }
 
     /**
      * Returns the map's anisotropic filter pitch.
@@ -2035,7 +2040,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
      */
-    getRenderWorldCopies(): boolean { return this._camera.transform.renderWorldCopies; }
+    getRenderWorldCopies(): boolean { return this._camera.cameraState.renderWorldCopies; }
 
     /**
      * Sets the state of `renderWorldCopies`.
@@ -2056,7 +2061,7 @@ export class Map extends Evented<MapEventType> {
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): this {
-        this._camera.applyTransformChange(tr => tr.setRenderWorldCopies(renderWorldCopies));
+        this._camera.applyStateChange((state, context) => cameraUpdates.setRenderWorldCopies(state, context.projection.worldCoordinateHelper, renderWorldCopies));
         return this._update();
     }
 
@@ -2064,7 +2069,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @param constrain - A {@link TransformConstrainFunction} callback defining how the viewport should respect the bounds.
      *
-     * `null` clears the callback and reverts the constrain to the map transform's default constrain function.
+     * `null` clears the callback and reverts the constrain to the map camera's default constrain function.
      * @example
      * ```ts
      * function customTransformConstrain(lngLat, zoom) {
@@ -2075,7 +2080,7 @@ export class Map extends Evented<MapEventType> {
      * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
      */
     setTransformConstrain(constrain?: TransformConstrainFunction | null): this {
-        this._camera.applyTransformChange(tr => tr.setConstrainOverride(constrain));
+        this._camera.setConstrainOverride(constrain ?? null);
         return this._update();
     }
 
@@ -2096,7 +2101,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     project(lnglat: LngLatLike): Point {
-        return this._camera.transform.locationToScreenPoint(LngLat.convert(lnglat), this.style && this.terrain);
+        return cameraMath.locationToScreenPoint(this._camera.projectedCamera, this._camera.context.projection, LngLat.convert(lnglat), this.style && this.terrain);
     }
 
     /**
@@ -2114,7 +2119,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     unproject(point: PointLike): LngLat {
-        return this._camera.transform.screenPointToLocation(Point.convert(point), this.terrain);
+        return cameraMath.screenPointToLocation(this._camera.projectedCamera, this._camera.context.projection, Point.convert(point), this.terrain);
     }
 
     /**
@@ -2617,7 +2622,7 @@ export class Map extends Evented<MapEventType> {
         }
         let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
-        const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this._camera.transform.width, this._camera.transform.height]];
+        const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this._camera.cameraState.width, this._camera.cameraState.height]];
         options ||= (isGeometry ? {} : geometryOrOptions) || {};
 
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
@@ -2628,7 +2633,7 @@ export class Map extends Evented<MapEventType> {
             queryGeometry = [tl, new Point(br.x, tl.y), br, new Point(tl.x, br.y), tl];
         }
 
-        return this.style.queryRenderedFeatures(queryGeometry, options, this._camera.transform);
+        return this.style.queryRenderedFeatures(queryGeometry, options, this._camera.projectedCamera, this._camera.context.projection);
     }
 
     /**
@@ -3031,7 +3036,7 @@ export class Map extends Evented<MapEventType> {
             if (this.terrain) {
                 this.terrain.destroy();
             }
-            this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength, () => this._camera.transform.worldCoordinateHelper);
+            this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength, () => this._camera.context.projection.worldCoordinateHelper);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this._camera.setTerrain(this.terrain);
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
@@ -4101,7 +4106,7 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * @internal
-     * The viewport in whole CSS pixels, shared by the canvas, the painter and the transform.
+     * The viewport in whole CSS pixels, shared by the canvas, the painter and the camera.
      */
     _containerDimensions(): number[] {
         let width = 0;
@@ -4125,7 +4130,7 @@ export class Map extends Evented<MapEventType> {
             return false;
         }
         const [width, height] = this._containerDimensions();
-        return width !== this._camera.transform.width || height !== this._camera.transform.height;
+        return width !== this._camera.cameraState.width || height !== this._camera.cameraState.height;
     }
 
     /**
@@ -4270,12 +4275,12 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Creates a new specialized transform instance from a projection instance and migrates
-     * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
+     * Moves the camera onto a new projection, keeping its state (center, pitch, etc.) constrained to it, and fires
+     * `projectiontransition`.
      * When the style's projection is changed (or first set), this function should be called.
      */
-    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
-        this._camera.migrateProjection(newTransform, newCameraHelper);
+    migrateProjection(projection: CameraProjection): void {
+        this._camera.migrateProjection(projection);
         this.fire(new MapProjectionEvent({
             newProjection: this.style.projection.name,
         }));
@@ -4462,7 +4467,7 @@ export class Map extends Evented<MapEventType> {
         if (this.style && this._styleDirty) {
             this._styleDirty = false;
 
-            const zoom = this._camera.transform.zoom;
+            const zoom = this._camera.cameraState.zoom;
             const currentTime = now();
             this.style.zoomHistory.update(zoom, currentTime);
 
@@ -4487,29 +4492,29 @@ export class Map extends Evented<MapEventType> {
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we
-        // need for the current transform
+        // need for the current camera
         if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
-            this.style._updateSources(this._camera.transform);
+            this.style._updateSources(this._camera.projectedCamera, this._camera.context.projection);
         }
 
         // update terrain stuff
         if (this.terrain) {
-            const renderableTilesChanged = this.terrain.tileManager.update(this._camera.transform, this.terrain);
+            const renderableTilesChanged = this.terrain.tileManager.update(this._camera.projectedCamera, this._camera.context.projection, this.terrain);
             // The cached samplers and coverage index are only valid for the tile set they were built from.
             if (renderableTilesChanged) {
                 this.terrain.resetElevationCache();
             }
         }
-        this._camera.clampCenterToGround(this.terrain);
+        this._camera.followTerrain();
 
-        this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
+        this._placementDirty = this.style?._updatePlacement(this._camera.projectedCamera, this._camera.context.projection, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         const projection = this.style.projection;
         const projectionTransition = projection?.transitionState ?? 0;
 
         // Actually draw
-        this.painter.render(this.style, this._camera.transform, {
+        this.painter.render(this.style, this._camera.projectedCamera, this._camera.context.projection, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,
             rotating: this.isRotating(),
@@ -4765,7 +4770,7 @@ export class Map extends Evented<MapEventType> {
      * @returns The elevation.
      */
     getCameraTargetElevation(): number {
-        return this._camera.transform.elevation;
+        return this._camera.cameraState.elevation;
     }
 
     /**

@@ -46,7 +46,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         feature,
         featureState,
         geometry,
-        transform,
+        projectedCamera,
         pixelsToTileUnits,
         pixelPosMatrix}: QueryIntersectsFeatureParams
     ): boolean | number {
@@ -54,7 +54,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-extrusion-translate'),
             this.paint.get('fill-extrusion-translate-anchor'),
-            -transform.bearingInRadians, pixelsToTileUnits);
+            -projectedCamera.bearingInRadians, pixelsToTileUnits);
 
         const height = this.paint.get('fill-extrusion-height').evaluate(feature, featureState);
         const base = this.paint.get('fill-extrusion-base').evaluate(feature, featureState);

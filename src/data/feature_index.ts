@@ -25,15 +25,18 @@ import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform, GetElevation, WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {GetElevation, WorldCoordinateHelper} from '../geo/camera_types.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
+import type {ProjectedCamera} from '../geo/projected_camera.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
 
 type QueryParameters = {
     scale: number;
     pixelPosMatrix: mat4;
-    transform: IReadonlyTransform;
+    projectedCamera: ProjectedCamera;
+    /** The world mapping of the projection the camera was projected with, which filters on geometry read. */
+    worldCoordinateHelper: WorldCoordinateHelper;
     tileSize: number;
     queryGeometry: Point[];
     cameraQueryGeometry: Point[];
@@ -179,7 +182,7 @@ export class FeatureIndex {
                 params.availableImages,
                 styleLayers,
                 serializedLayers,
-                args.transform.worldCoordinateHelper,
+                args.worldCoordinateHelper,
                 sourceFeatureState,
                 (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
                     featureGeometry ||= loadGeometry(feature);
@@ -190,7 +193,7 @@ export class FeatureIndex {
                         featureState,
                         geometry: featureGeometry,
                         zoom: this.z,
-                        transform: args.transform,
+                        projectedCamera: args.projectedCamera,
                         pixelsToTileUnits,
                         pixelPosMatrix: args.pixelPosMatrix,
                         unwrappedTileID: this.tileID.toUnwrapped(),

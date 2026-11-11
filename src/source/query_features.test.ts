@@ -4,16 +4,17 @@ import {
     querySourceFeatures
 } from './query_features.ts';
 import {TileManager} from '../tile/tile_manager.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createMercatorCameraProjection} from '../geo/projection/camera_projection.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
+import {createTestCamera} from '../util/test/util.ts';
 
 import type Point from '@mapbox/point-geometry';
 
 describe('QueryFeatures.rendered', () => {
     test('returns empty object if source returns no tiles', () => {
         const mockTileManager = {tilesIn () { return []; }} as any as TileManager;
-        const transform = createMercatorTransform();
-        const result = queryRenderedFeatures(mockTileManager, {}, undefined, [] as Point[], undefined, transform, undefined);
+        const cameraProjection = createMercatorCameraProjection();
+        const result = queryRenderedFeatures(mockTileManager, {}, undefined, [] as Point[], undefined, createTestCamera({}, cameraProjection).camera, cameraProjection, undefined);
         expect(result).toEqual({});
     });
 

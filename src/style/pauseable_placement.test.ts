@@ -1,16 +1,15 @@
 import {describe, expect, test} from 'vitest';
 import {PauseablePlacement} from './pauseable_placement.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createTestCamera} from '../util/test/util.ts';
 
 import type {StyleLayer} from './style_layer.ts';
 
 describe('PauseablePlacement', () => {
     test('should skip symbol layers whose layout is not yet hydrated', () => {
-        const transform = createMercatorTransform();
-        transform.resize(512, 512);
+        const {camera} = createTestCamera({width: 512, height: 512});
 
         const pp = new PauseablePlacement(
-            transform,
+            camera,
             undefined,
             ['symbol-layer'],
             true,

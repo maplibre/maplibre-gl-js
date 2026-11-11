@@ -20,12 +20,13 @@ import type {
 import type {TransitionParameters, PropertyValue} from './properties.ts';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {CrossfadeParameters} from './evaluation_parameters.ts';
-import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
+import type {GetElevation} from '../geo/camera_types.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Map} from '../ui/map.ts';
 import type {StyleSetterOptions} from './style.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
+import type {ProjectedCamera} from '../geo/projected_camera.ts';
 
 export type PaintPropertyEntry = { [K in keyof AllPaintProperties]: {name: K; value: AllPaintProperties[K]} }[keyof AllPaintProperties];
 
@@ -55,7 +56,7 @@ export type QueryIntersectsFeatureParams = {
     /**
      * The transform to convert from tile coordinates to pixels.
      */
-    transform: IReadonlyTransform;
+    projectedCamera: ProjectedCamera;
     /**
      * The number of pixels per tile unit.
      */

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Debug: terrain toggled by pitch</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <style>
+        body { margin: 0; padding: 0; font: 12px/1.4 ui-monospace, Menlo, monospace; }
+        html, body, #map { height: 100%; }
+        #panel {
+            position: absolute; top: 10px; left: 10px; z-index: 1; width: 360px;
+            background: rgba(255, 255, 255, 0.92); padding: 8px 10px; border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+        #panel label { display: block; }
+        #stats { white-space: pre; margin: 6px 0; }
+        #log { max-height: 240px; overflow-y: auto; border-top: 1px solid #ccc; padding-top: 4px; }
+        .jump { color: #c00; font-weight: bold; }
+        .step { color: #a60; }
+        .info { color: #555; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="panel">
+    <b>Terrain toggled by pitch (mapeak-style)</b>
+    <label><input type="checkbox" id="auto" checked> setTerrain on when pitch &gt; <input type="number" id="threshold" value="10" style="width: 40px">°, off below</label>
+    <label><input type="checkbox" id="aroundPointer"> dragRotate around pointer</label>
+    <label>Flag a frame when pitch moves &gt; <input type="number" id="pitchJump" value="3" style="width: 40px">° or bearing &gt; <input type="number" id="bearingJump" value="8" style="width: 40px">°</label>
+    <div id="stats"></div>
+    <button id="clear">Clear log</button>
+    <div id="log"></div>
+</div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        zoom: 12,
+        center: [11.39085, 47.27574],
+        pitch: 0,
+        hash: true,
+        style: {
+            version: 8,
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
+                    maxzoom: 19
+                },
+                terrainSource: {
+                    type: 'raster-dem',
+                    url: 'https://tiles.mapterhorn.com/tilejson.json'
+                },
+                hillshadeSource: {
+                    type: 'raster-dem',
+                    url: 'https://tiles.mapterhorn.com/tilejson.json'
+                }
+            },
+            layers: [
+                {id: 'osm', type: 'raster', source: 'osm'},
+                {id: 'hills', type: 'hillshade', source: 'hillshadeSource', paint: {'hillshade-shadow-color': '#473B24'}}
+            ],
+            sky: {}
+        },
+        maxZoom: 18,
+        maxPitch: 85
+    });
+    map.addControl(new maplibregl.NavigationControl({visualizePitch: true}));
+    window.map = map;
+
+    const $ = id => document.getElementById(id);
+    const logEl = $('log');
+
+    function log(text, cls) {
+        const line = document.createElement('div');
+        line.className = cls;
+        line.textContent = `${(performance.now() / 1000).toFixed(2)}s ${text}`;
+        logEl.prepend(line);
+    }
+
+    function cameraState() {
+        const camera = map._camera.projectedCamera;
+        return {
+            pitch: map.getPitch(),
+            bearing: map.getBearing(),
+            zoom: map.getZoom(),
+            elevation: map.getCameraTargetElevation(),
+            altitude: camera.elevation + Math.cos(camera.pitchInRadians) * camera.cameraToCenterDistance / camera.pixelsPerMeter,
+            terrain: !!map.getTerrain()
+        };
+    }
+
+    function angleDelta(a, b) {
+        return ((b - a + 540) % 360) - 180;
+    }
+
+    let last = cameraState();
+
+    map.on('pitch', () => {
+        if (!$('auto').checked) return;
+        const threshold = Number($('threshold').value);
+        const pitch = map.getPitch();
+        if (pitch > threshold && !map.getTerrain()) {
+            map.setTerrain({source: 'terrainSource'});
+            log(`terrain ON at pitch ${pitch.toFixed(2)}`, 'info');
+        } else if (pitch <= threshold && map.getTerrain()) {
+            map.setTerrain(null);
+            log(`terrain OFF at pitch ${pitch.toFixed(2)}`, 'info');
+        }
+    });
+
+    map.on('move', () => {
+        const now = cameraState();
+        const dPitch = now.pitch - last.pitch;
+        const dBearing = angleDelta(last.bearing, now.bearing);
+        const dElevation = now.elevation - last.elevation;
+        if (Math.abs(dPitch) > Number($('pitchJump').value) || Math.abs(dBearing) > Number($('bearingJump').value)) {
+            log(`JUMP pitch ${last.pitch.toFixed(2)}→${now.pitch.toFixed(2)}, bearing ${last.bearing.toFixed(2)}→${now.bearing.toFixed(2)}`, 'jump');
+        }
+        if (Math.abs(dElevation) > 1) {
+            log(`center elevation ${last.elevation.toFixed(0)}→${now.elevation.toFixed(0)} m, camera altitude ${last.altitude.toFixed(0)}→${now.altitude.toFixed(0)} m`, 'step');
+        }
+        last = now;
+    });
+
+    map.on('render', () => {
+        const s = cameraState();
+        $('stats').textContent =
+            `terrain   ${s.terrain ? 'on' : 'off'}\n` +
+            `pitch     ${s.pitch.toFixed(2)}°\n` +
+            `bearing   ${s.bearing.toFixed(2)}°\n` +
+            `zoom      ${s.zoom.toFixed(3)}\n` +
+            `center el ${s.elevation.toFixed(1)} m\n` +
+            `camera    ${s.altitude.toFixed(1)} m`;
+    });
+
+    $('aroundPointer').addEventListener('change', e => {
+        map.dragRotate.enable(e.target.checked ? {around: 'pointer'} : {around: 'center'});
+    });
+    $('clear').addEventListener('click', () => { logEl.textContent = ''; });
+</script>
+</body>
+</html>

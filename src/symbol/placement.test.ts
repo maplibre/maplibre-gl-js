@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {PACKED_HIDDEN_OPACITY, PACKED_VISIBLE_OPACITY, Placement, RetainedQueryData} from './placement.ts';
-import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createTestCamera} from '../util/test/util.ts';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -36,11 +36,8 @@ const SENTINEL = 12345;
 
 describe('placement', () => {
     let placement: Placement;
-    let transform: MercatorTransform;
     beforeEach(() => {
-        transform = createMercatorTransform();
-        transform.resize(512, 512);
-        placement = new Placement(transform, undefined, 0, true);
+        placement = new Placement(createTestCamera({width: 512, height: 512}).camera, undefined, 0, true);
     });
 
     test('should not throw on integer overflow', () => {

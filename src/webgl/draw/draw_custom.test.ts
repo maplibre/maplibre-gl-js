@@ -6,8 +6,9 @@ import {Painter} from '../../render/painter.ts';
 import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
-import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
-import {expectToBeCloseToArray, createFrameRenderData} from '../../util/test/util.ts';
+import {projectCamera} from '../../geo/projection/camera_math.ts';
+import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
+import {expectToBeCloseToArray, createFrameRenderData, createTestCamera} from '../../util/test/util.ts';
 
 import type {CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
 import type {Map} from '../../ui/map.ts';
@@ -25,11 +26,9 @@ vi.mock(import('../../symbol/projection'));
 
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
-        // same transform setup as in transform.test.ts 'creates a transform', so matrices of transform should be the same
-        const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        transform.resize(500, 500);
-        transform.setMinPitch(10);
-        transform.setMaxPitch(10);
+        // same camera setup as in mercator_camera_math.test.ts, so its matrices should be the same
+        const {state, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 500, height: 500});
+        const camera = projectCamera(cameraUpdates.setMaxPitch(cameraUpdates.setMinPitch(state, 10), 10), context.projection);
         const mockPainter = new Painter(null);
         mockPainter.context = {
             gl: {},
@@ -42,7 +41,7 @@ describe('drawCustom', () => {
                 set: () => {}
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera: camera, cameraProjection: context.projection, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         const tile = new Tile(tileId, 256);
@@ -71,11 +70,11 @@ describe('drawCustom', () => {
         drawCustom(mockPainter, tileManagerMock, mockLayer, [tileId], frameRenderContext);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
-        expect(result.args.farZ).toBe(transform.farZ);
-        expect(result.args.nearZ).toBe(transform.nearZ);
-        expect(result.args.fov).toBe(transform.fov * Math.PI / 180);
-        expect(result.args.modelViewProjectionMatrix).toEqual(transform.modelViewProjectionMatrix);
-        expect(result.args.projectionMatrix).toEqual(transform.projectionMatrix);
+        expect(result.args.farZ).toBe(camera.farZ);
+        expect(result.args.nearZ).toBe(camera.nearZ);
+        expect(result.args.fov).toBe(camera.fov * Math.PI / 180);
+        expect(result.args.modelViewProjectionMatrix).toEqual(camera.modelViewProjectionMatrix);
+        expect(result.args.projectionMatrix).toEqual(camera.projectionMatrix);
         expectToBeCloseToArray(result.args.defaultProjectionData.tileMercatorCoords, [0, 0, 1, 1]);
         expect(result.args.defaultProjectionData.mainMatrix).toBeInstanceOf(Float64Array);
         expect(result.args.defaultProjectionData.fallbackMatrix).toBeInstanceOf(Float64Array);

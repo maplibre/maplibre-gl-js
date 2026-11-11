@@ -58,7 +58,7 @@ import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeatu
 import type {Handler, HandlerResult} from './ui/handler_manager.ts';
 import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
-import type {TransformConstrainFunction} from './geo/transform_interface.ts';
+import type {TransformConstrainFunction} from './geo/camera_types.ts';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, StyleImageWebGLData, StyleImageWebGLTarget, TextFit} from './style/style_image.ts';
 import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
 import type {Tile} from './tile/tile.ts';
