@@ -6,9 +6,9 @@ import {lngLatBoxToWorldSamples, projectToWorldCoordinates, unprojectFromWorldCo
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
-import type {CameraForBoundsOptions, PointLike} from '../../ui/camera.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
+import type {CameraForBoundsOptions, PointLike} from '../../camera/camera_types.ts';
 
 export type MapControlsDeltas = {
     panDelta: Point;

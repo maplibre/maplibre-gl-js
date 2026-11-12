@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Camera, type CameraInitOptions, type CameraOptions, type PointLike} from '../ui/camera.ts';
+import {Camera, type CameraInitOptions} from '../ui/camera.ts';
 import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
@@ -17,6 +17,7 @@ import type {Terrain} from '../render/terrain.ts';
 import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
 import type {JumpToOptions} from '../../dist/maplibre-gl';
+import type {CameraOptions, PointLike} from '../camera/camera_types.ts';
 
 beforeEach(() => {
     setMatchMedia();

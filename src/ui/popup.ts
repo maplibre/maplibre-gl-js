@@ -10,8 +10,8 @@ import type {MapLibreEvent, MapMouseEvent} from './events.ts';
 import type {PositionAnchor} from './anchor.ts';
 import type {Map} from './map.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
-import type {PointLike} from './camera.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
+import type {PointLike} from '../camera/camera_types.ts';
 
 const defaultOptions = {
     closeButton: true,

@@ -12,11 +12,11 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraOptionsFromTo, TransformConstrainFunction} from '../transform_interface.ts';
 import type {CameraState} from '../camera_state.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+import type {CameraOptionsFromTo, TransformConstrainFunction} from '../../camera/camera_types.ts';
 
 /**
  * @internal

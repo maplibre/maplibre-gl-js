@@ -5,7 +5,7 @@ import {MAX_VALID_LATITUDE, radiansToDegrees} from '../util/util.ts';
 
 import type {mat2, mat4} from 'gl-matrix';
 import type {TransformOptions} from './transform.ts';
-import type {NearFarZ, TransformConstrainFunction} from './transform_interface.ts';
+import type {NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
 
 /**
  * @internal

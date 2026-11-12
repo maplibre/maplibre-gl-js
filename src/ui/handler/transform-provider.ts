@@ -1,9 +1,10 @@
 import Point from '@mapbox/point-geometry';
 
 import type {Camera} from '../camera.ts';
-import type {JumpToOptions, PointLike} from '../camera.ts';
+import type {JumpToOptions} from '../camera.ts';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {LngLat} from '../../geo/lng_lat.ts';
+import type {PointLike} from '../../camera/camera_types.ts';
 
 /**
  * @internal
