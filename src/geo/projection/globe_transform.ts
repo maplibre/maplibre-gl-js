@@ -14,6 +14,7 @@ import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {CameraViewState} from '../../camera/camera_view_state.ts';
 import type {CameraMetrics} from '../../camera/projected_camera.ts';
+import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
@@ -32,6 +33,12 @@ export class GlobeTransform implements IProjectionTransform {
      * Globe automatically transitions to mercator at high zoom levels, which causes a switch from
      * globe to mercator render path.
      */
+    readonly cameraProjection: CameraProjectionKind = 'globe';
+
+    get projectionTransition(): number {
+        return this._globeness;
+    }
+
     get isGlobeRendering(): boolean {
         return this._globeness > 0;
     }
@@ -183,10 +190,6 @@ export class GlobeTransform implements IProjectionTransform {
     getBounds(): LngLatBounds {
         return this.currentTransform.getBounds();
     }
-
-    defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        return this.currentTransform.defaultConstrain(lngLat, zoom);
-    };
 
     /** See {@link getCameraAltitude}. */
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {

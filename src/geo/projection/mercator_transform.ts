@@ -1,12 +1,12 @@
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {MercatorCoordinate, mercatorWorldCoordinateHelper, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate.ts';
+import {MercatorCoordinate, mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp, createMat4f64, degreesToRadians, radiansToDegrees, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
+import {clamp, createMat4f64, degreesToRadians, radiansToDegrees, createIdentityMat4f32, zoomScale, scaleZoom, type Mat4f32, type Mat4f64} from '../../util/util.ts';
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {getMercatorHorizon, getMercatorTileCoordinates, projectToWorldCoordinates, unprojectFromWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation, lngLatBoxToWorldBox} from './mercator_utils.ts';
+import {getMercatorHorizon, getMercatorTileCoordinates, projectToWorldCoordinates, calculateTileMatrix, maxMercatorHorizonAngle, cameraMercatorCoordinateFromCenterAndRotation} from './mercator_utils.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {Transform} from '../transform.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
@@ -16,6 +16,7 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 import {getBearing, getCenterOffset, getCenterPoint, getConstrainedCamera, getFov, getPitch, getRoll} from '../../camera/camera_view_state.ts';
 
 import type {CameraMetrics} from '../../camera/projected_camera.ts';
+import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {CameraViewState} from '../../camera/camera_view_state.ts';
@@ -68,6 +69,9 @@ export class MercatorTransform implements IProjectionTransform {
     private readonly _cameraState: Readonly<CameraViewState>;
     /** The {@link CameraMetrics} of the camera state as it is now. */
     private readonly _getMetrics: () => CameraMetrics;
+
+    readonly cameraProjection: CameraProjectionKind = 'mercator';
+    readonly projectionTransition: number = 0;
     /** The lng/lat to world coordinate mapping, mercator's unless the part is built for a registered CRS. */
     private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
@@ -91,8 +95,6 @@ export class MercatorTransform implements IProjectionTransform {
     private _fogMatrixCacheF32: Map<string, mat4> = new Map();
 
     private _coveringTilesDetailsProvider;
-    /** The last `maxBounds` projected into the world square, and the ranges it was projected from. */
-    private _maxBoundsWorldBox: {lngRange: [number, number]; latRange: [number, number]; box: {minX: number; minY: number; maxX: number; maxY: number}} | null = null;
 
     /**
      * @param cameraState - The camera state this part derives its matrices from.
@@ -464,166 +466,6 @@ export class MercatorTransform implements IProjectionTransform {
 
         cache.set(posMatrixKey, new Float32Array(fogMatrix)); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
         return cache.get(posMatrixKey);
-    }
-
-    /**
-     * This mercator implementation returns center lngLat and zoom to ensure that:
-     *
-     * 1) everything beyond the bounds is excluded
-     * 2) a given lngLat is as near the center as possible
-     *
-     * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
-     * A non-wrapping world (a registered planar CRS) keeps its center inside its world square instead, see
-     * {@link MercatorTransform._constrainToWorldSquare}.
-     */
-    defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        zoom = clamp(+zoom, this._cameraState.minZoom, this._cameraState.maxZoom);
-        if (!this._worldCoordinateHelper.wraps) return this._constrainToWorldSquare(lngLat, zoom);
-        const result = {
-            center: new LngLat(lngLat.lng, lngLat.lat),
-            zoom
-        };
-
-        let lngRange = this._cameraState.lngRange;
-
-        if (!this._cameraState.renderWorldCopies && lngRange === null) {
-            const almost180 = 180 - 1e-10;
-            lngRange = [-almost180, almost180];
-        }
-
-        const worldSize = this._cameraState.tileSize * zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
-        let minY = 0;
-        let maxY = worldSize;
-        let minX = 0;
-        let maxX = worldSize;
-        let scaleY = 0;
-        let scaleX = 0;
-        const {top = 0, bottom = 0, left = 0, right = 0} = this._cameraState.edgeInsets;
-        const screenWidth = this._cameraState.width - left - right;
-        const screenHeight = this._cameraState.height - top - bottom;
-
-        if (this._cameraState.latRange) {
-            const latRange = this._cameraState.latRange;
-            minY = mercatorYfromLat(latRange[1]) * worldSize;
-            maxY = mercatorYfromLat(latRange[0]) * worldSize;
-            const shouldZoomIn = maxY - minY < screenHeight;
-            if (shouldZoomIn) scaleY = screenHeight / (maxY - minY);
-        }
-
-        if (lngRange) {
-            minX = wrap(
-                mercatorXfromLng(lngRange[0]) * worldSize,
-                0,
-                worldSize
-            );
-            maxX = wrap(
-                mercatorXfromLng(lngRange[1]) * worldSize,
-                0,
-                worldSize
-            );
-
-            if (maxX < minX) maxX += worldSize;
-
-            const shouldZoomIn = maxX - minX < screenWidth;
-            if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
-        }
-
-        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat, this._worldCoordinateHelper);
-        let modifiedX, modifiedY;
-
-        const scale = Math.max(scaleX || 0, scaleY || 0);
-
-        if (scale) {
-            // zoom in to exclude all beyond the given lng/lat ranges
-            const newPoint = new Point(
-                scaleX ? (maxX + minX) / 2 : originalX,
-                scaleY ? (maxY + minY) / 2 : originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this._worldCoordinateHelper).wrap();
-            result.zoom += scaleZoom(scale);
-            return result;
-        }
-
-        if (this._cameraState.latRange) {
-            const h2 = screenHeight / 2;
-            if (originalY - h2 < minY) modifiedY = minY + h2;
-            if (originalY + h2 > maxY) modifiedY = maxY - h2;
-        }
-
-        if (lngRange) {
-            const centerX = (minX + maxX) / 2;
-            let wrappedX = originalX;
-            if (this._cameraState.renderWorldCopies) {
-                wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
-            }
-            const w2 = screenWidth / 2;
-
-            if (wrappedX - w2 < minX) modifiedX = minX + w2;
-            if (wrappedX + w2 > maxX) modifiedX = maxX - w2;
-        }
-
-        // pan the map if the screen goes off the range
-        if (modifiedX !== undefined || modifiedY !== undefined) {
-            const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
-            result.center = unprojectFromWorldCoordinates(worldSize, newPoint, this._worldCoordinateHelper).wrap();
-        }
-
-        return result;
-    };
-
-    /**
-     * The constrain for a projection whose world does not wrap. Without max bounds only the center stays inside the
-     * 0..1 world square and the zoom is left to `minZoom`: the square is the grid the tile matrix set picked, which
-     * can be much larger than the area of interest or narrower than the window. With max bounds, projected as a box
-     * since both world axes may depend on lng and lat, the view may not leave them and the map zooms in until they
-     * fill the screen.
-     */
-    private _constrainToWorldSquare(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
-        const worldCoordinateHelper = this._worldCoordinateHelper;
-        const lngRange = this._cameraState.lngRange;
-        const worldSize = this._cameraState.tileSize * zoomScale(zoom);
-        if (!lngRange) {
-            const {x, y} = projectToWorldCoordinates(worldSize, lngLat, worldCoordinateHelper);
-            const clampedX = clamp(x, 0, worldSize);
-            const clampedY = clamp(y, 0, worldSize);
-            if (clampedX !== x || clampedY !== y) {
-                return {center: unprojectFromWorldCoordinates(worldSize, new Point(clampedX, clampedY), worldCoordinateHelper), zoom};
-            }
-            return {center: new LngLat(lngLat.lng, lngLat.lat), zoom};
-        }
-        const box = this._projectMaxBounds(lngRange, this._cameraState.latRange);
-        const minX = Math.max(box.minX, 0) * worldSize;
-        const maxX = Math.min(box.maxX, 1) * worldSize;
-        const minY = Math.max(box.minY, 0) * worldSize;
-        const maxY = Math.min(box.maxY, 1) * worldSize;
-        const {width: screenWidth, height: screenHeight} = this._cameraState;
-        const scaleX = maxX - minX < screenWidth ? screenWidth / (maxX - minX) : 0;
-        const scaleY = maxY - minY < screenHeight ? screenHeight / (maxY - minY) : 0;
-        const {x, y} = projectToWorldCoordinates(worldSize, lngLat, worldCoordinateHelper);
-
-        const scale = Math.max(scaleX, scaleY);
-        if (scale) {
-            const newPoint = new Point(scaleX ? (maxX + minX) / 2 : x, scaleY ? (maxY + minY) / 2 : y);
-            return {center: unprojectFromWorldCoordinates(worldSize, newPoint, worldCoordinateHelper), zoom: zoom + scaleZoom(scale)};
-        }
-
-        const constrainedX = clamp(x, minX + screenWidth / 2, maxX - screenWidth / 2);
-        const constrainedY = clamp(y, minY + screenHeight / 2, maxY - screenHeight / 2);
-        if (constrainedX !== x || constrainedY !== y) {
-            return {center: unprojectFromWorldCoordinates(worldSize, new Point(constrainedX, constrainedY), worldCoordinateHelper), zoom};
-        }
-        return {center: new LngLat(lngLat.lng, lngLat.lat), zoom};
-    }
-
-    /**
-     * `maxBounds` in the world square. Projecting a box samples it on a grid and every constrain reads it,
-     * so the result is kept until the bounds change.
-     */
-    private _projectMaxBounds(lngRange: [number, number], latRange: [number, number]): {minX: number; minY: number; maxX: number; maxY: number} {
-        const cached = this._maxBoundsWorldBox;
-        if (cached?.lngRange === lngRange && cached.latRange === latRange) return cached.box;
-        const box = lngLatBoxToWorldBox(this._worldCoordinateHelper, lngRange[0], latRange[0], lngRange[1], latRange[1]);
-        this._maxBoundsWorldBox = {lngRange, latRange, box};
-        return box;
     }
 
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {

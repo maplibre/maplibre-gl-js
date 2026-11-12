@@ -292,6 +292,12 @@ export interface IReadonlyTransform extends ITransformGetters, IReadonlyProjecti
     applyConstrain: TransformConstrainFunction;
 
     /**
+     * @internal
+     * The tranform's default callback that ensures that longitude and latitude bounds are respected by the viewport.
+     */
+    defaultConstrain: TransformConstrainFunction;
+
+    /**
      * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
      * as the name for the location under the camera and on the surface of the earth (lng, lat, 0).
      * `cameraPoint` is the projected position of the `cameraLocation`.
@@ -432,12 +438,6 @@ export interface IReadonlyProjectionTransform {
      * @param terrain - Optional terrain.
      */
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
-
-    /**
-     * @internal
-     * The tranform's default callback that ensures that longitude and latitude bounds are respected by the viewport.
-     */
-    defaultConstrain: TransformConstrainFunction;
 
     maxPitchScaleFactor(): number;
 

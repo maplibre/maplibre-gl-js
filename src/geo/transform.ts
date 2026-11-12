@@ -8,6 +8,8 @@ import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projec
 import {Bounds} from './bounds.ts';
 import {createCameraViewState, getBearing, getCenterPoint, getFov, getPitch, getRoll, type CameraViewState} from '../camera/camera_view_state.ts';
 import {createCameraMetrics, type CameraMetrics} from '../camera/projected_camera.ts';
+import {createCameraContext, type CameraContext, type CameraProjectionKind} from '../camera/camera_context.ts';
+import {applyConstrain, defaultConstrain} from '../camera/camera_constrain.ts';
 
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
 import type {PaddingOptions} from './edge_insets.ts';
@@ -66,6 +68,12 @@ export interface IProjectionTransform extends IReadonlyProjectionTransform, IPro
      * Updates the matrices after the transform's camera state changed.
      */
     calcMatrices(): void;
+
+    /** The projection this part projects the camera with, see {@link CameraContext.projection}. */
+    readonly cameraProjection: CameraProjectionKind;
+
+    /** How far a globe is between mercator and the vertical perspective, see {@link CameraContext.projectionTransition}. */
+    readonly projectionTransition: number;
 
     /**
      * Returns a part of the same projection for another camera state, carrying over this part's own state.
@@ -558,16 +566,25 @@ export class Transform implements ITransform {
         }
     }
 
+    /**
+     * What the camera state is constrained with: the projection part's projection and transition, the world mapping and
+     * the constrain override.
+     */
+    get context(): CameraContext {
+        return createCameraContext({
+            projection: this._projection.cameraProjection,
+            projectionTransition: this._projection.projectionTransition,
+            worldCoordinateHelper: this._worldCoordinateHelper,
+            constrainOverride: this._constrainOverride,
+        });
+    }
+
     defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        return this._projection.defaultConstrain(lngLat, zoom);
+        return defaultConstrain(this._cameraState, this.context, lngLat, zoom);
     };
 
     applyConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        if (this._constrainOverride !== null) {
-            return this._constrainOverride(lngLat, zoom);
-        } else {
-            return this._projection.defaultConstrain(lngLat, zoom);
-        }
+        return applyConstrain(this._cameraState, this.context, lngLat, zoom);
     };
 
     /**

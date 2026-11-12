@@ -1,7 +1,7 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {Transform} from '../transform.ts';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
-import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRadians, radiansToDegrees, scaleZoom, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, remapSaturate, warnOnce, zoomScale, type Mat4f32} from '../../util/util.ts';
+import {angleToRotateBetweenVectors2D, clamp, createIdentityMat4f32, degreesToRadians, radiansToDegrees, scaleZoom, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, type Mat4f32} from '../../util/util.ts';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
@@ -14,6 +14,7 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 import {getBearing, getCenterOffset, getConstrainedCamera} from '../../camera/camera_view_state.ts';
 
 import type {CameraMetrics} from '../../camera/projected_camera.ts';
+import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {CameraViewState} from '../../camera/camera_view_state.ts';
@@ -30,12 +31,6 @@ const MAX_MERCATOR_Y = 1 - 1e-9;
 const SAME_POINT_DISTANCE = 1e-12;
 /** A camera whose horizontal offset is this small relative to its distance is straight above the center. */
 const STRAIGHT_ABOVE_RATIO = 1e-9;
-/**
- * How many times larger than the viewport the area past the mercator edge has grown when the center is back on that edge.
- * While the area fits in the viewport the center can be on the pole.
- */
-const POLE_AREA_FADE_SCALE = 4;
-
 /**
  * @internal
  * A ray to intersect with the terrain surface, in globe coordinates:
@@ -61,6 +56,9 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     private readonly _cameraState: Readonly<CameraViewState>;
     /** The {@link CameraMetrics} of the camera state as it is now. */
     private readonly _getMetrics: () => CameraMetrics;
+
+    readonly cameraProjection: CameraProjectionKind = 'vertical-perspective';
+    readonly projectionTransition: number = 1;
 
     private _cachedClippingPlane: vec4 = createVec4f64();
     private _cachedFrustum: Frustum;
@@ -499,32 +497,6 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         }
 
         return new LngLatBounds(boundsArray);
-    }
-
-    defaultConstrain: TransformConstrainFunction = (lngLat, zoom) => {
-        // Globe: TODO: respect _lngRange, _latRange
-        // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
-        const constrainedZoom = clamp(+zoom, this._cameraState.minZoom + getZoomAdjustment(0, lngLat.lat), this._cameraState.maxZoom);
-        const maxLatitude = this._getMaxLatitude(constrainedZoom);
-        return {
-            center: new LngLat(
-                lngLat.lng,
-                clamp(lngLat.lat, -maxLatitude, maxLatitude)
-            ),
-            zoom: constrainedZoom
-        };
-    };
-
-    /**
-     * Returns how close to a pole the center can be at the given zoom. Past the mercator edge there is no data,
-     * so the center reaches the pole only while that area fits in the viewport, and eases back to the edge as it outgrows it.
-     */
-    private _getMaxLatitude(zoom: number): number {
-        const areaRadians = degreesToRadians(90 - MAX_VALID_LATITUDE);
-        const areaPixels = getGlobeRadiusPixels(this._cameraState.tileSize * zoomScale(zoom), MAX_VALID_LATITUDE) * areaRadians;
-        const reachPixels = Math.min(this._cameraState.width, this._cameraState.height) / 2;
-        const centerPixels = Math.min(areaPixels, reachPixels) * remapSaturate(areaPixels, reachPixels, reachPixels * POLE_AREA_FADE_SCALE, 1, 0);
-        return MAX_VALID_LATITUDE + radiansToDegrees(areaRadians * centerPixels / areaPixels);
     }
 
     /**
