@@ -4,16 +4,16 @@ import {clamp, createMat4f64, createIdentityMat4f32, degreesToRadians, zoomScale
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {type PointProjection, xyTransformMat4} from '../symbol/projection.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getMercatorHorizon, getMercatorTileCoordinates, calculateTileMatrix, cameraMercatorCoordinateFromCenterAndRotation, projectToWorldCoordinates, maxMercatorHorizonAngle} from '../geo/projection/mercator_utils.ts';
-import {fastInvertProjMat4} from '../util/fast_maths.ts';
+import {fastInvertProjMat4, xyTransformMat4} from '../util/fast_maths.ts';
 import {getCenterOffset} from './camera_view_state.ts';
 import {EXTENT} from '../data/extent.ts';
 import {cameraPointQueryGeometry} from './projected_camera.ts';
 import {createFrustum, type Frustum} from '../util/primitives/frustum.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../render/terrain_coverage.ts';
 
+import type {PointProjection} from '../symbol/projection.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {CameraMetrics, MercatorProjectedCamera, MercatorMatrixCache} from './projected_camera.ts';
 import type {NearFarZ} from './camera_types.ts';

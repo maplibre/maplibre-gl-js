@@ -7,7 +7,8 @@ import {GridIndex} from './grid_index.ts';
 import {mat4, vec4} from 'gl-matrix';
 import {clamp, getAABB} from '../util/util.ts';
 import {Bounds} from '../geo/bounds.ts';
-import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
+import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection} from '../symbol/projection.ts';
+import {xyTransformMat4} from '../util/fast_maths.ts';
 import ONE_EM from '../symbol/one_em.ts';
 import {getCameraMath} from '../camera/camera_math_factory.ts';
 
