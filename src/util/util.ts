@@ -66,32 +66,38 @@ export function createIdentityMat4f32(): Mat4f32 {
 /**
  * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+ * @param out - The array the translation is written to and returned in; a new one by default.
  */
 export function translatePosition(
     camera: { bearingInRadians: number; zoom: number },
     tile: { tileID: OverscaledTileID; tileSize: number },
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
-    inViewportPixelUnitsUnits: boolean = false
+    inViewportPixelUnitsUnits: boolean = false,
+    out: [number, number] = [0, 0]
 ): [number, number] {
-    if (!translate[0] && !translate[1]) return [0, 0];
+    if (!translate[0] && !translate[1]) {
+        out[0] = 0;
+        out[1] = 0;
+        return out;
+    }
 
     const angle = inViewportPixelUnitsUnits ?
         (translateAnchor === 'map' ? -camera.bearingInRadians : 0) :
         (translateAnchor === 'viewport' ? camera.bearingInRadians : 0);
 
+    let x = translate[0];
+    let y = translate[1];
     if (angle) {
         const sinA = Math.sin(angle);
         const cosA = Math.cos(angle);
-        translate = [
-            translate[0] * cosA - translate[1] * sinA,
-            translate[0] * sinA + translate[1] * cosA
-        ];
+        x = translate[0] * cosA - translate[1] * sinA;
+        y = translate[0] * sinA + translate[1] * cosA;
     }
 
-    return [
-        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], camera.zoom),
-        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], camera.zoom)];
+    out[0] = inViewportPixelUnitsUnits ? x : pixelsToTileUnits(tile, x, camera.zoom);
+    out[1] = inViewportPixelUnitsUnits ? y : pixelsToTileUnits(tile, y, camera.zoom);
+    return out;
 }
 
 /**

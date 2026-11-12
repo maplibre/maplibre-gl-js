@@ -44,7 +44,8 @@ void main() {
     #pragma maplibre: initialize highp float height
     #pragma maplibre: initialize highp vec4 color
 
-    vec3 normal = vec3(a_normal_ed.xyz);
+    // Walls store ground occlusion data in z; only roofs have xy = (1, 0).
+    vec3 normal = vec3(a_normal_ed.xy, a_normal_ed.x == 1 && a_normal_ed.y == 0 ? 16384 : 0);
 
     // The vertical gradient describes the structure itself, so it keeps the extrusion's own
     // base and height before the terrain elevation is added to them below.

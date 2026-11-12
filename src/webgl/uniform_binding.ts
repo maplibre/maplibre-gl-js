@@ -61,9 +61,11 @@ class Uniform2f extends Uniform<vec2> {
         this.current = [0, 0];
     }
 
+    /** Copies `v`, so a caller may reuse the same array for the next value. */
     set(v: vec2): void {
         if (v[0] !== this.current[0] || v[1] !== this.current[1]) {
-            this.current = v;
+            this.current[0] = v[0];
+            this.current[1] = v[1];
             this.gl.uniform2f(this.location, v[0], v[1]);
         }
     }

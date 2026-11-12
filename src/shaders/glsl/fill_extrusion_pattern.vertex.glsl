@@ -65,7 +65,9 @@ void main() {
     float fromScale = u_scale.y;
     float toScale = u_scale.z;
 
-    vec3 normal = vec3(a_normal_ed.xyz);
+    // Walls store ground occlusion data in z; only roofs have xy = (1, 0).
+    bool isRoof = a_normal_ed.x == 1 && a_normal_ed.y == 0;
+    vec3 normal = vec3(a_normal_ed.xy, isRoof ? 16384 : 0);
     float edgedistance = float(a_normal_ed.w);
 
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
@@ -105,7 +107,7 @@ void main() {
         gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
     #endif
 
-    vec2 pos = a_normal_ed.x == 1 && a_normal_ed.y == 0 && a_normal_ed.z == 16384
+    vec2 pos = isRoof
         ? a_pos // extrusion top - note the lack of u_fill_translate, because translation should not affect the pattern
         : vec2(edgedistance, elevation * u_height_factor); // extrusion side
 
