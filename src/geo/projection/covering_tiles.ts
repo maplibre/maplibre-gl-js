@@ -1,7 +1,5 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {vec2, type vec3, type vec4} from 'gl-matrix';
-import {Frustum} from '../../util/primitives/frustum.ts';
-import {Aabb} from '../../util/primitives/aabb.ts';
 import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {earthRadius} from '../lng_lat.ts';
@@ -9,6 +7,7 @@ import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bo
 import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
+import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 import type {WorldCoordinateHelper} from '../world_types.ts';
@@ -247,7 +246,7 @@ function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3
             max[i] = Math.max(max[i], p[i]);
         }
     }
-    return new Frustum(points, planes, new Aabb(min, max));
+    return {points, planes, aabb: {min, max}};
 }
 
 /**

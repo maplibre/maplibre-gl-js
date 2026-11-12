@@ -18,7 +18,7 @@ import {Painter} from '../../render/painter.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {EXTENT} from '../../data/extent.ts';
-import {Frustum} from '../primitives/frustum.ts';
+import {createFrustum, type Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
 import {DEMData} from '../../data/dem_data.ts';
 import {RGBAImage} from '../image.ts';
@@ -328,7 +328,7 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
     mat4.rotateZ(proj, proj, rotation);
     mat4.invert(invProj, proj);
 
-    return Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
+    return createFrustum(invProj, 1.0, 0.0);
 }
 
 export function createDEM(heightFn: (x: number, y: number) => number, dim: number = 8): DEMData {

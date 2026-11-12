@@ -8,7 +8,7 @@ import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getMercatorTileCoordinates, tileCoordinatesToMercatorCoordinates} from '../geo/projection/mercator_utils.ts';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, planetScaleAtLatitude, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from '../geo/projection/globe_utils.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../render/terrain_coverage.ts';
-import {Frustum} from '../util/primitives/frustum.ts';
+import {createFrustum, type Frustum} from '../util/primitives/frustum.ts';
 import {getCenterOffset} from './camera_view_state.ts';
 import {cameraPointQueryGeometry} from './projected_camera.ts';
 
@@ -112,7 +112,7 @@ export function createVerticalPerspectiveProjectedCamera(metrics: CameraMetrics,
 
     const matrix = mat4.clone(inverseModelViewProjectionMatrix);
     mat4.scale(matrix, matrix, [1, 1, -1]);
-    const frustum = Frustum.fromInvProjectionMatrix(matrix, 1, 0, clippingPlane, true);
+    const frustum = createFrustum(matrix, 1, 0, clippingPlane, true);
 
     return {
         ...base,
