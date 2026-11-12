@@ -4,16 +4,17 @@ import {createCameraViewState, getBearing, getCenterPoint, getFov, getMaxBounds,
 import {projectCamera} from '../camera/project_camera.ts';
 import {getCameraMath} from '../camera/camera_math_factory.ts';
 import {getCameraPoint} from '../camera/projected_camera.ts';
-import {calculateCenterFromCameraLngLatAlt, constrainState, interpolatePadding, moveCenterToElevation, resize, setBearing, setCenter, setCenterAndZoom, setElevation, setFov, setMaxBounds, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setNearFarZOverride, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from '../camera/camera_updates.ts';
+import {calculateCenterFromCameraLngLatAlt, constrainState, interpolatePadding, resize, setBearing, setCenter, setCenterAndZoom, setElevation, setFov, setMaxBounds, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setNearFarZOverride, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from '../camera/camera_updates.ts';
 import {createCameraContext, type CameraContext, type CameraProjectionKind} from '../camera/camera_context.ts';
 import {applyConstrain, defaultConstrain} from '../camera/camera_constrain.ts';
+import {getCameraSolver} from '../camera/camera_solver_factory.ts';
 
 import type {LngLatBounds} from './lng_lat_bounds.ts';
 import type {LngLat, LngLatLike} from './lng_lat.ts';
 import type {ProjectedCamera} from '../camera/projected_camera.ts';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
 import type {PaddingOptions} from './edge_insets.ts';
-import type {IProjectionTransformMutators, IReadonlyTransform, ITransform, ITransformGetters} from './transform_interface.ts';
+import type {IReadonlyTransform, ITransform, ITransformGetters} from './transform_interface.ts';
 import type {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
@@ -57,39 +58,6 @@ export type UnwrappedTileIDType = {
     };
 };
 
-/**
- * @internal
- * The part of a {@link Transform} that depends on the projection beyond its {@link CameraMath}: the projection and
- * transition the transform projects its camera with, and where it places the camera.
- */
-export interface IProjectionTransform extends IProjectionTransformMutators {
-    /** The projection this part projects the camera with, see {@link CameraContext.projection}. */
-    readonly cameraProjection: CameraProjectionKind;
-
-    /** How far a globe is between mercator and the vertical perspective, see {@link CameraContext.projectionTransition}. */
-    readonly projectionTransition: number;
-
-    /**
-     * Returns a part of the same projection for another camera, carrying over this part's own state.
-     */
-    clone(getProjectedCamera: () => ProjectedCamera): IProjectionTransform;
-
-    /**
-     * Returns the elevation of the ground the camera looks at, which {@link Transform.recalculateZoomAndCenter}
-     * moves the center to, or null where the center stays as it is.
-     */
-    getGroundElevationAtCenter(terrain?: Terrain): number | null;
-
-    /**
-     * Returns the center and zoom that {@link Transform.setLocationAtPoint} moves the camera to, or null where the
-     * camera does not move. See {@link Transform.setLocationAtPoint} for the parameters.
-     */
-    getCameraForLocationAtPoint(lnglat: LngLat, point: Point, elevation: number | undefined, constrain: TransformConstrainFunction): {center: LngLat; zoom: number} | null;
-
-    /** See {@link ITransform.calculateCameraOptionsFromTo}. */
-    calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo;
-}
-
 export type TransformOptions = {
     /**
      * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
@@ -124,22 +92,16 @@ export type TransformOptions = {
 };
 
 /**
- * How many times {@link Transform.recalculateZoomAndCenter} picks the terrain under the center and moves the
- * center onto it, and how far above or below the terrain a center may stay. Each pass keeps the camera where it is,
- * so the center's latitude changes the mercator scale the next pass sees and the terrain pick moves with it; the
- * remainder shrinks by the scale difference each pass, from meters to under a millimeter on the second.
- */
-const CENTER_ON_TERRAIN_PASSES = 3;
-const CENTER_ON_TERRAIN_TOLERANCE_M = 0.0001;
-
-/**
  * @internal
  * This class stores all values that define a transform's state, such as center, zoom, minZoom, etc.,
  * projects its camera with {@link projectCamera}, and computes matrices and projected positions from the projected
  * camera with its projection's {@link CameraMath}.
  */
 export class Transform implements ITransform {
-    private _projection: IProjectionTransform;
+    /** The projection the transform projects its camera with, see {@link CameraContext.projection}. */
+    private readonly _projection: CameraProjectionKind;
+    /** How far a globe is between mercator and the vertical perspective, see {@link CameraContext.projectionTransition}. */
+    private _projectionTransition: number = 1;
 
     private _cameraState: CameraViewState;
     /** {@link Transform._cameraState} projected in {@link Transform.context}. */
@@ -150,22 +112,23 @@ export class Transform implements ITransform {
     private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
     /**
-     * @param createProjection - Creates the projection part for this transform, which reads the transform's
-     * {@link Transform.projectedCamera}.
+     * @param projection - The projection the transform projects its camera with.
      * @param options - Initial state.
      */
-    constructor(createProjection: (getProjectedCamera: () => ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper) => IProjectionTransform, options?: TransformOptions) {
+    constructor(projection: CameraProjectionKind, options?: TransformOptions) {
+        this._projection = projection;
         this._cameraState = createCameraViewState(options);
         this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
 
         this._constrainOverride = options?.constrainOverride ?? null;
 
-        this._projection = createProjection(() => this._projectedCamera, this._worldCoordinateHelper);
         this._projectCamera();
     }
 
+    /** A transform of the same projection and globe transition, with this one's state. */
     clone(): ITransform {
-        const clone = new Transform((getProjectedCamera) => this._projection.clone(getProjectedCamera), {worldCoordinateHelper: this._worldCoordinateHelper});
+        const clone = new Transform(this._projection, {worldCoordinateHelper: this._worldCoordinateHelper});
+        clone.setTransitionState(this._projectionTransition);
         clone.apply(this, false);
         return clone;
     }
@@ -447,13 +410,13 @@ export class Transform implements ITransform {
     }
 
     /**
-     * What the camera state is constrained and projected with: the projection part's projection and transition, the world
+     * What the camera state is constrained and projected with: the projection and the globe's transition, the world
      * mapping and the constrain override.
      */
     get context(): CameraContext {
         return createCameraContext({
-            projection: this._projection.cameraProjection,
-            projectionTransition: this._projection.projectionTransition,
+            projection: this._projection,
+            projectionTransition: this._projectionTransition,
             worldCoordinateHelper: this._worldCoordinateHelper,
             constrainOverride: this._constrainOverride,
         });
@@ -533,7 +496,8 @@ export class Transform implements ITransform {
         return getCameraMath(this._projectedCamera).getCameraLngLat(this._projectedCamera, this._worldCoordinateHelper);
     }
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
-        return this._projection.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+        const context = this.context;
+        return getCameraSolver(context).calculateCameraOptionsFromTo(this._cameraState, context, from, altitudeFrom, to, altitudeTo);
     }
     getRayDirectionFromPixel(p: Point): vec3 {
         return getCameraMath(this._projectedCamera).getRayDirectionFromPixel(this._projectedCamera, p);
@@ -568,23 +532,21 @@ export class Transform implements ITransform {
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
         return getCameraMath(this._projectedCamera).getFastPathSimpleProjectionMatrix(this._projectedCamera, tileID);
     }
+    /** Sets how far a globe is between mercator and the vertical perspective; other projections ignore it. */
     setTransitionState(value: number): void {
-        this._projection.setTransitionState(value);
+        this._projectionTransition = value;
         this._projectCamera();
     }
     recalculateZoomAndCenter(terrain?: Terrain): void {
-        for (let pass = 0; pass < CENTER_ON_TERRAIN_PASSES; pass++) {
-            const elevation = this._projection.getGroundElevationAtCenter(terrain);
-            if (elevation === null) return;
-            this._setState(moveCenterToElevation(this._cameraState, this.context, elevation));
-            if (!terrain || Math.abs(terrain.getElevationForLngLat(this._cameraState.center, this._projectedCamera.tileZoom) - this._cameraState.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return;
-        }
+        const context = this.context;
+        this._setState(getCameraSolver(context).recenterOnTerrain(this._cameraState, context, terrain));
     }
     setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void {
-        const camera = this.getCameraForLocationAtPoint(lnglat, point, elevation);
-        if (camera) this.setCenterAndZoom(camera.center, camera.zoom);
+        const context = this.context;
+        this._setState(getCameraSolver(context).setLocationAtPoint(this._cameraState, context, lnglat, point, elevation));
     }
     getCameraForLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): {center: LngLat; zoom: number} | null {
-        return this._projection.getCameraForLocationAtPoint(lnglat, point, elevation, this.applyConstrain);
+        const context = this.context;
+        return getCameraSolver(context).getCameraForLocationAtPoint(this._cameraState, context, lnglat, point, elevation);
     }
 }

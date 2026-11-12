@@ -508,7 +508,7 @@ export class VerticalPerspectiveCameraMath implements CameraMath {
     /**
      * The altitude of the rendered camera above sea level. The sphere keeps the center point at sea level whatever its
      * elevation ({@link createVerticalPerspectiveProjectedCamera} does not apply it), so unlike on mercator the center
-     * elevation does not lift the camera. `calculateCameraOptionsFromTo` of `VerticalPerspectiveTransform` is the inverse.
+     * elevation does not lift the camera. `calculateCameraOptionsFromTo` of `VerticalPerspectiveCameraSolver` is the inverse.
      */
     getCameraAltitude(projectedCamera: VerticalPerspectiveProjectedCamera): number {
         // The camera position is in unit-globe coordinates, with the sea-level surface at radius 1.
