@@ -737,6 +737,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     /**
+     * @internal
      * The camera that fits a box drawn on the screen with the map turned to `bearing`, which
      * {@link Camera.fitScreenCoordinates} moves to, or undefined where no zoom fits the box.
      */
