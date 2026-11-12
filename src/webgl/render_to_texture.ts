@@ -108,6 +108,10 @@ export class RenderToTexture {
      */
     _lastPrepareZoom: number;
     /**
+     * the ids of the layers rendered to texture whose paint was transitioning at the previous prepareForRender call
+     */
+    _lastTransitioningLayerIds: Set<string> = new Set();
+    /**
      * whether the render loop needs a follow-up frame to refresh cached textures that were kept this frame:
      * textures rendered at another zoom, and stale textures beyond the per-frame budget.
      */
@@ -130,6 +134,10 @@ export class RenderToTexture {
      * Textures whose visible layer set changed (a layer entered or left its zoom range) are kept while the zoom
      * is changing and then all re-rendered in the same frame, since a tile-by-tile change would show; a source
      * data change re-renders immediately.
+     *
+     * The stacks with a layer whose paint is transitioning are re-rendered on every tile in each frame of the
+     * transition, and once more in the frame after it: the frame that evaluates the final value is the first in
+     * which the layer no longer reports a transition.
      */
     prepareForRender(style: Style, zoom: number, isMoving: boolean): void {
         const zoomChanged = zoom !== this._lastPrepareZoom;
@@ -141,6 +149,10 @@ export class RenderToTexture {
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
         const stacks = getRenderStacks(style, this._renderableLayerIds);
         const visibleLayerIds = this._renderableLayerIds.join();
+
+        const transitioningLayerIds = new Set(stacks.flat().filter(layerId => style._layers[layerId].hasTransition()));
+        const repaintedStacks = stacks.map(layerIds => layerIds.some(layerId => transitioningLayerIds.has(layerId) || this._lastTransitioningLayerIds.has(layerId)));
+        this._lastTransitioningLayerIds = transitioningLayerIds;
 
         const rttSourceIds = new Set<string>();
         for (const layerId of this._renderableLayerIds) {
@@ -202,20 +214,49 @@ export class RenderToTexture {
                 this._releaseChangedTextures(tile, style, stacks);
             }
         }
+
+        if (repaintedStacks.includes(true)) this._releaseRepaintedStacks(style, stacks, repaintedStacks);
     }
 
     /**
-     * Releases the tile's textures of the stacks whose layers changed, or all of its textures when every stack
-     * changed, which also drops the textures of stacks that the layers no longer form.
+     * Releases, on every tile, the textures of the stacks flagged in `repaintedStacks`. A tile records one
+     * fingerprint per source for all of its stacks, so re-rendering a stack marks the other stacks that draw one of
+     * its sources as up to date for that source: those of them whose textures are stale for such a source are
+     * released along with it.
+     */
+    _releaseRepaintedStacks(style: Style, stacks: string[][], repaintedStacks: boolean[]): void {
+        const repaintedKeys = new Set(stacks.filter((_, stack) => repaintedStacks[stack]).flat().map(layerId => rttFingerprintKey(style._layers[layerId])));
+        repaintedKeys.delete(undefined);
+        for (const tile of this._renderableTiles) {
+            this._releaseStacks(tile, stacks.map((layerIds, stack) => repaintedStacks[stack] || layerIds.some(layerId => {
+                const fingerprintKey = rttFingerprintKey(style._layers[layerId]);
+                if (!repaintedKeys.has(fingerprintKey)) return false;
+                const frameFingerprint = this._rttFingerprints[fingerprintKey]?.[tile.tileID.key];
+                const tileFingerprint = tile.rttFingerprint[fingerprintKey];
+                if (!frameFingerprint && !tileFingerprint) return false;
+                return frameFingerprint?.difference(tileFingerprint) !== 'none';
+            })));
+        }
+    }
+
+    /**
+     * Releases the tile's textures of the stacks whose layers changed.
      */
     _releaseChangedTextures(tile: Tile, style: Style, stacks: string[][]): void {
-        const changedStacks = stacks.map(layerIds => this._hasStackChanged(tile, style, layerIds));
-        if (!changedStacks.includes(false)) {
+        this._releaseStacks(tile, stacks.map(layerIds => this._hasStackChanged(tile, style, layerIds)));
+    }
+
+    /**
+     * Releases the tile's textures of the stacks flagged in `releasedStacks`, or all of its textures when every
+     * stack is flagged, which also drops the textures of stacks that the layers no longer form.
+     */
+    _releaseStacks(tile: Tile, releasedStacks: boolean[]): void {
+        if (!releasedStacks.includes(false)) {
             tile.releaseRTT(this.painter);
             return;
         }
-        for (const [stack, changed] of changedStacks.entries()) {
-            if (changed) tile.releaseRTTStack(this.painter, stack);
+        for (const [stack, released] of releasedStacks.entries()) {
+            if (released) tile.releaseRTTStack(this.painter, stack);
         }
     }
 

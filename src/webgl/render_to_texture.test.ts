@@ -1,4 +1,4 @@
-import {beforeEach, describe, test, expect, vi} from 'vitest';
+import {afterEach, beforeEach, describe, test, expect, vi} from 'vitest';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
@@ -30,31 +30,36 @@ describe('render to texture', () => {
         id: 'maine-background',
         type: 'background',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as BackgroundStyleLayer;
     const fillLayer = {
         id: 'maine-fill',
         type: 'fill',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as FillStyleLayer;
     const rasterLayer = {
         id: 'maine-raster',
         type: 'raster',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as RasterStyleLayer;
     const hillshadeLayer = {
         id: 'maine-hillshade',
         type: 'line',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as HillshadeStyleLayer;
     const lineLayer = {
         id: 'maine-line',
         type: 'line',
         source: 'maine',
-        isHidden: () => false
+        isHidden: () => false,
+        hasTransition: () => false
     } as any as LineStyleLayer;
     const symbolLayer = {
         id: 'maine-symbol',
@@ -458,6 +463,103 @@ describe('render to texture', () => {
 
         expect(tile.getRTT(0)).toBeUndefined();
         expect(rtt.needsFollowUpFrame).toBe(false);
+    });
+
+    describe('paint transitions', () => {
+        const otherLineLayer = {...lineLayer, id: 'other-line', source: 'other'} as any as LineStyleLayer;
+
+        beforeEach(() => {
+            (vi.mocked(style.tileManagers['maine'].getState)).mockReturnValue({revision: 0} as any);
+            style.tileManagers['other'] = style.tileManagers['maine'];
+            style._layers['other-line'] = otherLineLayer;
+            rtt._lastTransitioningLayerIds = new Set();
+        });
+
+        afterEach(() => {
+            delete style.tileManagers['other'];
+            delete style._layers['other-line'];
+            delete style._layers['maine-fading-fill'];
+            rtt._lastTransitioningLayerIds = new Set();
+        });
+
+        function addFadingFill(hasTransition: () => boolean) {
+            style._layers['maine-fading-fill'] = {...fillLayer, id: 'maine-fading-fill', hasTransition} as any as FillStyleLayer;
+        }
+
+        test('re-renders the stack of a layer whose paint is transitioning in each frame of the transition and the frame after it, and keeps the other stacks', () => {
+            let transitioning = true;
+            addFadingFill(() => transitioning);
+            style._order = ['maine-fading-fill', 'maine-symbol', 'maine-line'];
+            const fillObj = {texture: {}, size: 512} as unknown as RTTObject;
+            const lineObj = {texture: {}, size: 512} as unknown as RTTObject;
+            tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 0, visibleLayerIds())};
+            tile.rttObjects[1] = lineObj;
+
+            tile.rttObjects[0] = fillObj;
+            rtt.prepareForRender(style, 0, false);
+            expect(tile.getRTT(0)).toBeUndefined();
+            expect(tile.getRTT(1)).toBe(lineObj);
+
+            transitioning = false;
+            tile.rttObjects[0] = fillObj;
+            rtt.prepareForRender(style, 0, false);
+            expect(tile.getRTT(0)).toBeUndefined();
+            expect(tile.getRTT(1)).toBe(lineObj);
+
+            tile.rttObjects[0] = fillObj;
+            rtt.prepareForRender(style, 0, false);
+            expect(tile.getRTT(0)).toBe(fillObj);
+            expect(tile.getRTT(1)).toBe(lineObj);
+        });
+
+        test('re-renders a stale stack that draws the source of a transitioning layer along with it, even while the map is moving', () => {
+            addFadingFill(() => true);
+            style._order = ['maine-fading-fill', 'maine-symbol', 'maine-line'];
+            tile.rttFingerprint = {maine: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())};
+            tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
+            tile.rttObjects[1] = {texture: {}, size: 512} as unknown as RTTObject;
+
+            rtt.prepareForRender(style, 10.5, true);
+
+            expect(tile.getRTT(0)).toBeUndefined();
+            expect(tile.getRTT(1)).toBeUndefined();
+        });
+
+        test('keeps a stale stack that draws another source while the map is moving, and re-renders the stack of the transitioning layer', () => {
+            addFadingFill(() => true);
+            style._order = ['maine-fading-fill', 'maine-symbol', 'other-line'];
+            const lineObj = {texture: {}, size: 512} as unknown as RTTObject;
+            tile.rttFingerprint = {
+                maine: new RTTFingerprint([tile.tileID], 0, 10.5, visibleLayerIds()),
+                other: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())
+            };
+            tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
+            tile.rttObjects[1] = lineObj;
+
+            rtt.prepareForRender(style, 10.5, true);
+
+            expect(tile.getRTT(0)).toBeUndefined();
+            expect(tile.getRTT(1)).toBe(lineObj);
+            expect(rtt.needsFollowUpFrame).toBe(true);
+        });
+
+        test('keeps a stack that draws the source of a transitioning layer while the map is moving when it is stale only for another source', () => {
+            addFadingFill(() => true);
+            style._order = ['maine-fading-fill', 'maine-symbol', 'maine-line', 'other-line'];
+            const lineObj = {texture: {}, size: 512} as unknown as RTTObject;
+            tile.rttFingerprint = {
+                maine: new RTTFingerprint([tile.tileID], 0, 10.5, visibleLayerIds()),
+                other: new RTTFingerprint([tile.tileID], 0, 10, visibleLayerIds())
+            };
+            tile.rttObjects[0] = {texture: {}, size: 512} as unknown as RTTObject;
+            tile.rttObjects[1] = lineObj;
+
+            rtt.prepareForRender(style, 10.5, true);
+
+            expect(tile.getRTT(0)).toBeUndefined();
+            expect(tile.getRTT(1)).toBe(lineObj);
+            expect(rtt.needsFollowUpFrame).toBe(true);
+        });
     });
 
     test('prepare only queries sources rendered to texture', () => {
