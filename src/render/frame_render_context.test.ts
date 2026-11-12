@@ -8,21 +8,21 @@ import {createFrameRenderData, createTestCamera} from '../util/test/util.ts';
 import type {Terrain} from './terrain.ts';
 
 describe('getProjectionDataForTile', () => {
-    test('selects projection options for regular and terrain-texture draws', ({onTestFinished}) => {
+    test('selects projection options for regular and terrain-texture draws', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-        const {projectedCamera, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 512, height: 512});
+        const {projectedCamera, context} = createTestCamera({width: 512, height: 512}, {projection: 'globe'});
         const frameRenderContext = new FrameRenderContext({projectedCamera, worldCoordinateHelper: context.worldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'offscreen', projection: null});
-        const projectionDataSpy = vi.spyOn(getCameraMath(projectedCamera), 'getProjectionData');
-        onTestFinished(() => projectionDataSpy.mockRestore());
 
         const projectionData = frameRenderContext.getProjectionDataForTile(tileID);
         frameRenderContext.isRenderingToTexture = true;
-        frameRenderContext.getProjectionDataForTile(tileID, {aligned: true, applyTerrainMatrix: false});
+        const textureProjectionData = frameRenderContext.getProjectionDataForTile(tileID, {aligned: true, applyTerrainMatrix: false});
 
-        expect(projectionData).toEqual(projectionDataSpy.mock.results[0].value);
-        expect(projectionDataSpy).toHaveBeenCalledTimes(2);
-        expect(projectionDataSpy).toHaveBeenNthCalledWith(1, projectedCamera, {overscaledTileID: tileID, aligned: undefined, applyGlobeMatrix: true, applyTerrainMatrix: true});
-        expect(projectionDataSpy).toHaveBeenNthCalledWith(2, projectedCamera, {overscaledTileID: tileID, aligned: true, applyGlobeMatrix: false, applyTerrainMatrix: false});
+        expect(projectionData).toEqual({
+            ...getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: tileID, aligned: undefined, applyGlobeMatrix: true, applyTerrainMatrix: true}),
+            uniformBufferKey: tileID.key,
+        });
+        expect(textureProjectionData).toEqual(getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: tileID, aligned: true, applyGlobeMatrix: false, applyTerrainMatrix: false}));
+        expect(textureProjectionData.projectionTransition).not.toBe(projectionData.projectionTransition);
     });
 });
 
