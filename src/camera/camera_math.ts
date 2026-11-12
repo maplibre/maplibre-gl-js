@@ -14,9 +14,9 @@ import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 /**
  * @internal
  * What a projection computes from a {@link ProjectedCamera} it projected: where locations are on the screen and back,
- * the matrices and corrections the renderer draws with, and what the camera sees. Each projection implements it. The
- * implementations hold nothing, so every method is handed the camera; those that map between lng/lat and the world are
- * handed the world mapping too.
+ * the matrices and corrections the renderer draws with, and what the camera sees. Each projection implements it, see
+ * `getCameraMath` in `camera_math_factory.ts`, which picks the one for a camera. The implementations hold nothing, so
+ * every method is handed the camera; those that map between lng/lat and the world are handed the world mapping too.
  */
 export interface CameraMath {
     /** The projection data the renderer draws a tile with. */

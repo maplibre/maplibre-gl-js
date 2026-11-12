@@ -12,6 +12,7 @@ import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_det
 import type {WorldCoordinateHelper} from './world_types.ts';
 import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -241,6 +242,12 @@ export interface IReadonlyTransform extends ITransformGetters, IReadonlyProjecti
     clone(): ITransform;
 
     /**
+     * @internal
+     * The camera projected in the transform's projection, which its matrices and projected positions are computed from.
+     */
+    get projectedCamera(): ProjectedCamera;
+
+    /**
      * The near clipping plane of the projection matrix, computed by the projection unless overridden.
      */
     get nearZ(): number;
@@ -334,7 +341,7 @@ export interface IReadonlyTransform extends ITransformGetters, IReadonlyProjecti
 
 /**
  * @internal
- * The members of {@link IReadonlyTransform} that each projection implements.
+ * The members of {@link IReadonlyTransform} that depend on the projection.
  */
 export interface IReadonlyProjectionTransform {
     get modelViewProjectionMatrix(): mat4;

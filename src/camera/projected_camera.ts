@@ -15,7 +15,7 @@ import type {WorldCoordinateHelper} from '../geo/world_types.ts';
  * screen and back. Drawing, symbol placement, tile selection and feature queries read it, through a projection's
  * {@link CameraMath}, which takes the world mapping alongside it wherever it turns lng/lat into world coordinates.
  *
- * It holds values only, and nothing writes them: a projection computes a new one for each new {@link CameraViewState},
+ * It holds values only, and nothing writes them: {@link projectCamera} computes a new one for each new {@link CameraViewState},
  * so one taken for a frame keeps describing that frame. `projection` tells the three kinds apart.
  */
 export type ProjectedCamera = MercatorProjectedCamera | VerticalPerspectiveProjectedCamera | GlobeProjectedCamera;
@@ -170,6 +170,25 @@ function pixelsToClipSpaceMatrix(view: CameraViewState): mat4 {
     mat4.translate(m, m, [-1, -1, 0]);
     mat4.scale(m, m, [2 / view.width, 2 / view.height, 1]);
     return m;
+}
+
+/**
+ * @internal
+ * The camera as the projection it is drawn with projects it: as it is, or for the globe as the vertical perspective
+ * projects it while the globe renders and as mercator does once it has turned into mercator.
+ */
+export function renderedProjectedCamera(projectedCamera: ProjectedCamera): MercatorProjectedCamera | VerticalPerspectiveProjectedCamera {
+    if (projectedCamera.projection !== 'globe') return projectedCamera;
+    return projectedCamera.globeness > 0 ? projectedCamera.verticalPerspective : projectedCamera.mercator;
+}
+
+/**
+ * @internal
+ * Whether the camera draws the globe rather than mercator, which a globe does until it has turned into mercator at
+ * high zoom levels.
+ */
+export function isGlobeRendering(projectedCamera: ProjectedCamera): boolean {
+    return renderedProjectedCamera(projectedCamera).projection === 'vertical-perspective';
 }
 
 /**
