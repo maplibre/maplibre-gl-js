@@ -8,7 +8,6 @@ import type {PaddingOptions} from './edge_insets.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
-import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
 import type {WorldCoordinateHelper} from './world_types.ts';
 import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
@@ -375,12 +374,6 @@ export interface IReadonlyProjectionTransform {
      * to describe the render geometry (additional clipping is not required), this may be null.
      */
     getClippingPlane(): vec4 | null;
-
-    /**
-     * @internal
-     * Returns this transform's CoveringTilesDetailsProvider.
-     */
-    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider;
 
     /**
      * @internal

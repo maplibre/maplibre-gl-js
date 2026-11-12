@@ -18,7 +18,6 @@ import type {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/t
 import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
-import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
 import type {WorldCoordinateHelper} from './world_types.ts';
 import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
@@ -61,7 +60,7 @@ export type UnwrappedTileIDType = {
 /**
  * @internal
  * The part of a {@link Transform} that depends on the projection beyond its {@link CameraMath}: the projection and
- * transition the transform projects its camera with, the tiles it covers, and where it places the camera.
+ * transition the transform projects its camera with, and where it places the camera.
  */
 export interface IProjectionTransform extends IProjectionTransformMutators {
     /** The projection this part projects the camera with, see {@link CameraContext.projection}. */
@@ -89,9 +88,6 @@ export interface IProjectionTransform extends IProjectionTransformMutators {
 
     /** See {@link ITransform.calculateCameraOptionsFromTo}. */
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo;
-
-    /** See {@link ITransform.getCoveringTilesDetailsProvider}. */
-    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider;
 }
 
 export type TransformOptions = {
@@ -505,9 +501,6 @@ export class Transform implements ITransform {
     }
     getClippingPlane(): vec4 | null {
         return getCameraMath(this._projectedCamera).getClippingPlane(this._projectedCamera);
-    }
-    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
-        return this._projection.getCoveringTilesDetailsProvider();
     }
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return getCameraMath(this._projectedCamera).locationToScreenPoint(this._projectedCamera, this._worldCoordinateHelper, lnglat, terrain);

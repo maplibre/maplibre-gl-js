@@ -2,7 +2,6 @@ import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {radiansToDegrees, scaleZoom} from '../../util/util.ts';
 import {Transform} from '../transform.ts';
-import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {getConstrainedCamera} from '../../camera/camera_view_state.ts';
 import {renderedProjectedCamera} from '../../camera/projected_camera.ts';
 import {screenPointToMercatorCoordinateAtZ, terrainPointPastMaxZoom} from '../../camera/mercator_camera_math.ts';
@@ -13,13 +12,12 @@ import type {MercatorProjectedCamera, ProjectedCamera} from '../../camera/projec
 import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {WorldCoordinateHelper} from '../world_types.ts';
 import type {CameraOptionsFromTo, TransformConstrainFunction} from '../../camera/camera_types.ts';
 
 /**
  * @internal
- * The mercator part of a {@link Transform}: the tiles a mercator camera covers, and where it places the camera.
+ * The mercator part of a {@link Transform}: where it places a mercator camera.
  */
 export class MercatorTransform implements IProjectionTransform {
     /** The transform's camera as it is now, see {@link Transform.projectedCamera}. */
@@ -30,8 +28,6 @@ export class MercatorTransform implements IProjectionTransform {
     /** The lng/lat to world coordinate mapping, mercator's unless the part is built for a registered CRS. */
     private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
-    private _coveringTilesDetailsProvider;
-
     /**
      * @param getProjectedCamera - Returns the transform's camera as it is now.
      * @param worldCoordinateHelper - The lng/lat to world coordinate mapping, mercator's by default.
@@ -39,7 +35,6 @@ export class MercatorTransform implements IProjectionTransform {
     constructor(getProjectedCamera: () => ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper = mercatorWorldCoordinateHelper) {
         this._getProjectedCamera = getProjectedCamera;
         this._worldCoordinateHelper = worldCoordinateHelper;
-        this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
     }
 
     /**
@@ -56,10 +51,6 @@ export class MercatorTransform implements IProjectionTransform {
 
     setTransitionState(_value: number): void {
         // Do nothing
-    }
-
-    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
-        return this._coveringTilesDetailsProvider;
     }
 
     /**

@@ -3,7 +3,6 @@ import {Transform} from '../transform.ts';
 import {LngLat, type LngLatLike, earthRadius} from '../lng_lat.ts';
 import {angleToRotateBetweenVectors2D, clamp, degreesToRadians, radiansToDegrees, scaleZoom, createVec3f64, distanceOfAnglesRadians, warnOnce} from '../../util/util.ts';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment} from './globe_utils.ts';
-import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {getBearing, getConstrainedCamera} from '../../camera/camera_view_state.ts';
 import {renderedProjectedCamera} from '../../camera/projected_camera.ts';
 import {unprojectScreenPoint} from '../../camera/vertical_perspective_camera_math.ts';
@@ -13,7 +12,6 @@ import type {ProjectedCamera, VerticalPerspectiveProjectedCamera} from '../../ca
 import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {CameraOptionsFromTo, TransformConstrainFunction} from '../../camera/camera_types.ts';
 
 /** Two points on the unit globe closer than this, a micrometre, are the same point. */
@@ -23,8 +21,7 @@ const STRAIGHT_ABOVE_RATIO = 1e-9;
 
 /**
  * @internal
- * The vertical perspective part of a {@link Transform}: the tiles a vertical perspective camera covers, and where it
- * places the camera.
+ * The vertical perspective part of a {@link Transform}: where it places a vertical perspective camera.
  */
 export class VerticalPerspectiveTransform implements IProjectionTransform {
     /** The transform's camera as it is now, see {@link Transform.projectedCamera}. */
@@ -33,14 +30,11 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     readonly cameraProjection: CameraProjectionKind = 'vertical-perspective';
     readonly projectionTransition: number = 1;
 
-    private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
-
     /**
      * @param getProjectedCamera - Returns the transform's camera as it is now.
      */
     public constructor(getProjectedCamera: () => ProjectedCamera) {
         this._getProjectedCamera = getProjectedCamera;
-        this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
 
     /**
@@ -57,10 +51,6 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
 
     setTransitionState(_value: number): void {
         // Do nothing
-    }
-
-    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
-        return this._coveringTilesDetailsProvider;
     }
 
     getGroundElevationAtCenter(terrain?: Terrain): number | null {

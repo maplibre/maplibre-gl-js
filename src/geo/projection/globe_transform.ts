@@ -8,7 +8,6 @@ import type {Terrain} from '../../render/terrain.ts';
 import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {CameraOptionsFromTo, TransformConstrainFunction} from '../../camera/camera_types.ts';
 
 /**
@@ -35,8 +34,6 @@ export class GlobeTransform implements IProjectionTransform {
 
     setTransitionState(globeness: number): void {
         this._globeness = globeness;
-        this._verticalPerspectiveTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
-        this._mercatorTransform.getCoveringTilesDetailsProvider().prepareNextFrame();
     }
 
     private get currentTransform(): IProjectionTransform {
@@ -64,10 +61,6 @@ export class GlobeTransform implements IProjectionTransform {
         const clone = new GlobeTransform(getProjectedCamera);
         clone._globeness = this._globeness;
         return clone;
-    }
-
-    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
-        return this.currentTransform.getCoveringTilesDetailsProvider();
     }
 
     getGroundElevationAtCenter(terrain?: Terrain): number | null {
