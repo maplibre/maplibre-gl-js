@@ -84,6 +84,16 @@ export function createMap(options?: Partial<MapOptions> & {deleteStyle?: boolean
     return new Map(extend(defaultOptions, options));
 }
 
+/**
+ * Returns `value` as the DOM serializes it once it is set as the inline style `property` of an element,
+ * so a test can compare a style it reads back against the value the code under test assigned.
+ */
+export function serializeStyle(property: string, value: string): string {
+    const element = window.document.createElement('div');
+    element.style.setProperty(property, value);
+    return element.style.getPropertyValue(property);
+}
+
 export function equalWithPrecision(
     test: {equal: (a: number, b: number, message: string, extra?: unknown) => unknown},
     expected: number,

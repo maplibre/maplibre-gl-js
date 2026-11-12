@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect} from 'vitest';
-import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, serializeStyle} from '../../util/test/util.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -83,7 +83,7 @@ describe('canvas CSS size', () => {
         // 850 * 1.75 is 1487.5, so the backing store cannot match the container exactly.
         expect(canvas.height).toBe(1488);
         expect(parseFloat(canvas.style.width) * 1.75).toBe(canvas.width);
-        expect(parseFloat(canvas.style.height) * 1.75).toBe(canvas.height);
+        expect(canvas.style.height).toBe(serializeStyle('height', `${canvas.height / 1.75}px`));
         expect(map.painter.width).toBe(canvas.width);
         expect(map.painter.height).toBe(canvas.height);
     });

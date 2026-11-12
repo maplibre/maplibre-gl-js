@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest, createTerrain} from '../util/test/util.ts';
+import {createMap as globalCreateMap, beforeMapTest, createTerrain, serializeStyle} from '../util/test/util.ts';
 import {Popup, type Offset} from './popup.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
@@ -446,7 +446,7 @@ describe('popup', () => {
                 .setText('Test')
                 .addTo(map);
 
-            expect(popup.getElement().style.transform).toBe(transform);
+            expect(popup.getElement().style.transform).toBe(serializeStyle('transform', transform));
         });
 
     test('Popup automatically anchors to top if its bottom offset would push it off-screen', () => {
@@ -479,7 +479,7 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        expect(popup.getElement().style.transform).toBe('translate(0,0) translate(5px,10px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(0,0) translate(5px,10px)'));
     });
 
     test('Popup is offset via an object offset option', () => {
@@ -491,7 +491,7 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        expect(popup.getElement().style.transform).toBe('translate(0,0) translate(5px,10px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(0,0) translate(5px,10px)'));
     });
 
     test('Popup is offset via an incomplete object offset option', () => {
@@ -503,7 +503,7 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(0px,0px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-100%,0) translate(0px,0px)'));
     });
 
     test('Popup offset can be set via setOffset', () => {
@@ -832,7 +832,7 @@ describe('popup', () => {
             .setText('foobar')
             .addTo(map);
 
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(0px,1px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(0px,1px)'));
     });
 
     test('Popup position is not rounded when subpixel positioning is enabled', () => {
@@ -844,7 +844,7 @@ describe('popup', () => {
             .setText('foobar')
             .addTo(map);
 
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(-0.1px,0.9px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(-0.1px,0.9px)'));
     });
 
     test('Popup subpixel positioning can be enabled with Popup.setSubpixelPositioning', () => {
@@ -859,7 +859,7 @@ describe('popup', () => {
         popup.setSubpixelPositioning(true);
         popup.setOffset([-0.1, 0.9]);
 
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(-0.1px,0.9px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(-0.1px,0.9px)'));
     });
     test('Popup subpixel positioning can be disabled with Popup.setSubpixelPositioning', () => {
         const map = createMap();
@@ -873,7 +873,7 @@ describe('popup', () => {
         popup.setSubpixelPositioning(false);
         popup.setOffset([-0.1, 0.9]);
 
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(0px,1px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(0px,1px)'));
     });
     test('Popup changes opacity when location behind globe', async () => {
         const map = createMap();
@@ -1097,13 +1097,13 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(540px,211px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(540px,211px)'));
 
         map.setProjection({type: 'globe'});
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(536px,216px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(536px,216px)'));
 
         map.setProjection({type: 'mercator'});
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(540px,211px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(540px,211px)'));
 
         map.remove();
     });
@@ -1117,12 +1117,12 @@ describe('popup', () => {
             .setText('Test')
             .addTo(map);
 
-        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-100%,0) translate(1075px,-187px)'));
 
         map.addSource('terrain', {type: 'raster-dem', tiles: ['http://example.com/{z}/{x}/{y}.png']});
         map.setTerrain({source: 'terrain'});
 
-        expect(popup.getElement().style.transform).toBe('translate(-100%,0) translate(1075px,-187px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-100%,0) translate(1075px,-187px)'));
 
         map.remove();
     });
@@ -1139,11 +1139,11 @@ describe('popup', () => {
             .addTo(map);
 
         map.jumpTo({center: [40.001, 30.001]});
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(604px,203px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(604px,203px)'));
 
         elevation = 1000; // the terrain tiles under the popup arrive, then the map settles
         map.fire('idle');
-        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(611px,100px)');
+        expect(popup.getElement().style.transform).toBe(serializeStyle('transform', 'translate(-50%,-100%) translate(611px,100px)'));
 
         map.remove();
     });
