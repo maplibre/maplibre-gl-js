@@ -3,7 +3,7 @@ import {mat2, mat4, vec2, vec4} from 'gl-matrix';
 import {getSymbolElevation} from './symbol_elevation.ts';
 import * as symbolSize from './symbol_size.ts';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
-import {fastInvertSkewMat4} from '../util/fast_maths.ts';
+import {fastInvertSkewMat4, xyTransformMat4} from '../util/fast_maths.ts';
 import {WritingMode} from '../symbol/shaping.ts';
 import {findLineIntersection} from '../util/util.ts';
 
@@ -962,16 +962,6 @@ export function hideGlyphs(num: number, dynamicLayoutVertexArray: SymbolDynamicL
         // for each set of four vertices, instead of calling addDynamicAttributes for each vertex.
         dynamicLayoutVertexArray.float32.set(hiddenGlyphAttributes, offset * 3);
     }
-}
-
-// For line label layout, we're not using z output and our w input is always 1
-// This custom matrix transformation ignores those components to make projection faster
-export function xyTransformMat4(out: vec4, a: vec4, m: mat4): vec4 {
-    const x = a[0], y = a[1];
-    out[0] = m[0] * x + m[4] * y + m[12];
-    out[1] = m[1] * x + m[5] * y + m[13];
-    out[3] = m[3] * x + m[7] * y + m[15];
-    return out;
 }
 
 /**
