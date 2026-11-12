@@ -108,7 +108,7 @@ export class ScaleControl implements IControl {
  */
 function updateScale(map: Map, container: HTMLElement, options: ScaleControlOptions): void {
     const optWidth = options?.maxWidth || 100;
-    const {width: containerWidth, height: containerHeight} = map._camera.cameraState;
+    const {width: containerWidth, height: containerHeight} = map._camera.renderedState;
     const y = containerHeight / 2;
     const x = containerWidth / 2;
     const left = map.unproject([x - optWidth / 2, y]);

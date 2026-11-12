@@ -77,28 +77,6 @@ test('derives no projection matrices until the camera has a width and a height',
     expect(projectCamera(cameraUpdates.resize(state, context, 640, 480, false), context.projection).projectionMatrix).toBeDefined();
 });
 
-test('takeState keeps every input of the camera it takes, without constraining it', () => {
-    const context: CameraContext = {...createContext(), constrainOverride: (lngLat, zoom) => ({center: lngLat, zoom})};
-    let original = createCameraState();
-    original = cameraUpdates.setBearing(original, 12);
-    original = cameraUpdates.setCenter(original, context, new LngLat(3, 4));
-    original = cameraUpdates.setElevation(original, context, 5);
-    original = cameraUpdates.setFov(original, 1);
-    original = cameraUpdates.setMaxBounds(original, context, new LngLatBounds([-160, -80, 160, 80]));
-    original = cameraUpdates.setMaxPitch(original, 50);
-    original = cameraUpdates.setMaxZoom(original, context, 10);
-    original = cameraUpdates.setMinElevationForCurrentTile(original, 0.1);
-    original = cameraUpdates.setMinPitch(original, 0.1);
-    original = cameraUpdates.setMinZoom(original, context, 0.1);
-    original = cameraUpdates.setPadding(original, context, {top: 1, right: 4, bottom: 2, left: 3});
-    original = cameraUpdates.setPitch(original, 3);
-    original = cameraUpdates.setRoll(original, 7);
-    original = cameraUpdates.setRenderWorldCopies(original, context.projection.worldCoordinateHelper, false);
-    original = cameraUpdates.setZoom(original, context, 2.3);
-
-    expect(cameraUpdates.takeState(original, createContext(), false)).toEqual(original);
-});
-
 test('normalizeCenter extends the target past the antimeridian when that path is shorter in a wrapping world', () => {
     const {state, context} = createTestCamera({renderWorldCopies: true, width: 200, height: 200, center: [170, 0]});
     const target = new LngLat(-170, 0);

@@ -1536,7 +1536,7 @@ describe('Terrain changing under and around a gesture', () => {
 
     test('a pitch drag that brings a narrow ridge under the middle of the near clipping plane lifts the plane over the ridge', async () => {
         const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 55, maxPitch: 85}, 0);
-        const atTheDragsEnd = cameraMath.projectCamera(cameraUpdates.setPitch(map._camera.cameraState, 60), map._camera.context.projection);
+        const atTheDragsEnd = cameraMath.projectCamera(cameraUpdates.setPitch(map._camera.renderedState, 60), map._camera.context.projection);
         const corners = cameraMath.getCameraFrustum(atTheDragsEnd).points.slice(0, 4);
         const middle = new MercatorCoordinate(corners.reduce((sum, c) => sum + c[0], 0) / 4, corners.reduce((sum, c) => sum + c[1], 0) / 4).toLngLat();
         const middleAltitude = corners.reduce((sum, c) => sum + c[2], 0) / 4;
@@ -1629,7 +1629,7 @@ describe('Terrain changing under and around a gesture', () => {
         const cliffSouthEdge = -0.01;
         setTerrainHeight(map, (_lng, lat) => lat < cliffSouthEdge ? 3000 : 0, 0, 3000);
         const {context} = map._camera;
-        const asked = cameraMath.projectCamera(cameraUpdates.setPitch(cameraUpdates.setZoom(map._camera.cameraState, context, 13.5), 60), context.projection);
+        const asked = cameraMath.projectCamera(cameraUpdates.setPitch(cameraUpdates.setZoom(map._camera.renderedState, context, 13.5), 60), context.projection);
 
         map.jumpTo({zoom: 13.5, pitch: 60});
 
@@ -1862,7 +1862,7 @@ describe('queryTerrainElevation', () => {
     test('calls getElevationForLngLat with the location and the transform', () => {
         const getElevationForLngLat = vi.fn();
         map.terrain = {getElevationForLngLat} as any as Terrain;
-        map._camera.applyStateChange((_state, context) => cameraUpdates.takeState(createCameraState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true}), context, false));
+        map._camera.applyStateChange(() => createCameraState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true}));
 
         map.queryTerrainElevation([1, 2]);
 

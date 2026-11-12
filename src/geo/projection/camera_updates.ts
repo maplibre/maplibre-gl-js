@@ -52,11 +52,6 @@ export function getConstrainedCamera(state: CameraState, context: CameraContext,
     return {center: constrained.center, zoom: applyConstrain(state, context, constrained.center, constrained.zoom).zoom};
 }
 
-/** @internal Takes another camera state, constrained to this camera's context where `constrain` is set. */
-export function takeState(that: CameraState, context: CameraContext, constrain: boolean): CameraState {
-    return constrain ? constrainState(that, context) : that;
-}
-
 /** @internal Sets the lowest zoom, and keeps the zoom at or above it. */
 export function setMinZoom(state: CameraState, context: CameraContext, minZoom: number): CameraState {
     if (state.minZoom === minZoom) return state;
@@ -226,7 +221,7 @@ export function setMaxBounds(state: CameraState, context: CameraContext, bounds?
  * from the old center's mercator scale.
  * @param elevation - the elevation in meters for the center
  */
-export function recalculateZoomAndCenter(state: CameraState, context: CameraContext, elevation: number): CameraState {
+export function moveCenterToElevation(state: CameraState, context: CameraContext, elevation: number): CameraState {
     if (state.elevation - elevation === 0) return state;
     const worldCoordinateHelper = context.projection.worldCoordinateHelper;
     const metrics = getCameraMetrics(state, worldCoordinateHelper);
@@ -328,9 +323,9 @@ function keepUnmodified(state: CameraState, change: (state: CameraState) => Came
  * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
  * @param center - The LngLat object of the desired center. This object will be mutated.
  */
-export function normalizeCenter(tr: Pick<CameraState, 'renderWorldCopies' | 'lngRange' | 'center'>, worldCoordinateHelper: WorldCoordinateHelper, center: LngLat): void {
-    if (!tr.renderWorldCopies || !worldCoordinateHelper.wraps || tr.lngRange) return;
-    const delta = center.lng - tr.center.lng;
+export function normalizeCenter(state: Pick<CameraState, 'renderWorldCopies' | 'lngRange' | 'center'>, worldCoordinateHelper: WorldCoordinateHelper, center: LngLat): void {
+    if (!state.renderWorldCopies || !worldCoordinateHelper.wraps || state.lngRange) return;
+    const delta = center.lng - state.center.lng;
     center.lng +=
         delta > 180 ? -360 :
             delta < -180 ? 360 : 0;
@@ -413,7 +408,7 @@ export type FlyToMotion = {
 };
 
 /** @internal Warns that no camera fits the bounds, padding and offset asked for. */
-export function cameraBoundsWarning(): void {
+export function warnBoundsCannotFit(): void {
     warnOnce(
         'Map cannot fit within canvas with the given bounds, padding, and/or offset.'
     );
@@ -447,7 +442,7 @@ export function interpolateRotation(state: CameraState, start: RollPitchBearing,
  * The camera updates of the projection a camera is drawn with: a globe is turned while it renders as a globe, and
  * moved like mercator once it has turned into mercator, see {@link usesGlobeControls}.
  */
-function updatesFor(projection: CameraProjection): typeof mercatorCameraUpdates | typeof verticalPerspectiveCameraUpdates {
+function cameraUpdatesFor(projection: CameraProjection): typeof mercatorCameraUpdates | typeof verticalPerspectiveCameraUpdates {
     return usesGlobeControls(projection) ? verticalPerspectiveCameraUpdates : mercatorCameraUpdates;
 }
 
@@ -457,17 +452,17 @@ function updatesFor(projection: CameraProjection): typeof mercatorCameraUpdates 
  * plane, kept short of the horizon, and a new center on the globe.
  */
 export function panInertia(projectedCamera: ProjectedCamera, projection: CameraProjection, pan: Point): {easingCenter: LngLat; easingOffset: Point} {
-    return updatesFor(projection).panInertia(projectedCamera, pan);
+    return cameraUpdatesFor(projection).panInertia(projectedCamera, pan);
 }
 
 /** @internal The camera turned and zoomed by a gesture frame's deltas, zooming around its `around` point on the globe. */
 export function rollPitchBearingZoom(state: CameraState, context: CameraContext, deltas: MapControlsDeltas): CameraState {
-    return updatesFor(context.projection).rollPitchBearingZoom(state, context, deltas);
+    return cameraUpdatesFor(context.projection).rollPitchBearingZoom(state, context, deltas);
 }
 
 /** @internal The camera panned by a gesture frame, keeping `preZoomAroundLoc` under the point it was grabbed at. */
 export function pan(state: CameraState, context: CameraContext, deltas: MapControlsDeltas, preZoomAroundLoc: LngLat): CameraState {
-    return updatesFor(context.projection).pan(state, context, deltas, preZoomAroundLoc);
+    return cameraUpdatesFor(context.projection).pan(state, context, deltas, preZoomAroundLoc);
 }
 
 /**
@@ -477,20 +472,20 @@ export function pan(state: CameraState, context: CameraContext, deltas: MapContr
  * @param mapPadding - The map's own padding, as in `map.getPadding()`, which the bounds must also stay clear of.
  */
 export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, state: CameraState, context: CameraContext): CameraForBoxAndBearingResult {
-    return updatesFor(context.projection).cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, state, context);
+    return cameraUpdatesFor(context.projection).cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, state, context);
 }
 
 /** @internal The camera a `jumpTo` puts at its center and zoom. */
 export function jumpToCenterZoom(state: CameraState, context: CameraContext, options: {zoom?: number; center?: LngLatLike}): CameraState {
-    return updatesFor(context.projection).jumpToCenterZoom(state, context, options);
+    return cameraUpdatesFor(context.projection).jumpToCenterZoom(state, context, options);
 }
 
 /** @internal The frames of an `easeTo` animation from the camera it starts with. */
 export function easeTo(state: CameraState, context: CameraContext, options: EaseToMotionOptions): EaseToMotion {
-    return updatesFor(context.projection).easeTo(state, context, options);
+    return cameraUpdatesFor(context.projection).easeTo(state, context, options);
 }
 
 /** @internal The frames of a `flyTo` flight from the camera it starts with. */
 export function flyTo(state: CameraState, context: CameraContext, options: FlyToMotionOptions): FlyToMotion {
-    return updatesFor(context.projection).flyTo(state, context, options);
+    return cameraUpdatesFor(context.projection).flyTo(state, context, options);
 }

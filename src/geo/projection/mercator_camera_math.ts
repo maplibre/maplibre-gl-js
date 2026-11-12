@@ -78,7 +78,7 @@ const NEAR_PLANE_CLIP_Z = -1;
  * @param nearFarZ - the depth range to use instead of computing one, by default the camera state's override; a globe
  * passes its vertical perspective's, so both draw at the same depths
  */
-export function projectMercatorCamera(metrics: CameraMetrics, projection: MercatorCameraProjection, nearFarZ: NearFarZ | null = metrics.nearFarZOverride): MercatorProjectedCamera {
+export function createMercatorProjectedCamera(metrics: CameraMetrics, projection: MercatorCameraProjection, nearFarZ: NearFarZ | null = metrics.nearFarZOverride): MercatorProjectedCamera {
     const base = {...metrics, projection: 'mercator' as const, clippingPlane: null};
     if (!metrics.width || !metrics.height) return base as MercatorProjectedCamera;
 

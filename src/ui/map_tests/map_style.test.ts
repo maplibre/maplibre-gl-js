@@ -593,7 +593,7 @@ describe('setStyle', () => {
         });
 
         const map = createMap({deleteStyle: true});
-        const initialState = map._camera.cameraState;
+        const initialState = map._camera.renderedState;
         const initialProjection = map._camera.context.projection;
         const projectionTransitionSpy = vi.fn();
         map.on('projectiontransition', projectionTransitionSpy);
@@ -609,7 +609,7 @@ describe('setStyle', () => {
 
         expect(map.style).toBeUndefined();
         expect(projectionTransitionSpy).not.toHaveBeenCalled();
-        expect(map._camera.cameraState).toBe(initialState);
+        expect(map._camera.renderedState).toBe(initialState);
         expect(map._camera.context.projection).toBe(initialProjection);
     });
 

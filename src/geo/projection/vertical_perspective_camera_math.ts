@@ -42,7 +42,7 @@ type GlobeRay = {
  * depth. A camera without a size keeps identity matrices.
  * @param nearFarZ - the depth range to use instead of computing one, by default the camera state's override
  */
-export function projectVerticalPerspectiveCamera(metrics: CameraMetrics, nearFarZ: NearFarZ | null = metrics.nearFarZOverride): VerticalPerspectiveProjectedCamera {
+export function createVerticalPerspectiveProjectedCamera(metrics: CameraMetrics, nearFarZ: NearFarZ | null = metrics.nearFarZOverride): VerticalPerspectiveProjectedCamera {
     const base = {...metrics, projection: 'vertical-perspective' as const};
     if (!metrics.width || !metrics.height) {
         return {

@@ -2,20 +2,20 @@ import {TapRecognizer} from './tap_recognizer.ts';
 import {evaluateZoomSnap} from '../../util/util.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {RequestedCameraProvider} from './requested-camera-provider.ts';
+import type {ProposedCameraProvider} from './proposed-camera-provider.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
  * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping
  */
 export class TapZoomHandler implements Handler {
-    _tr: RequestedCameraProvider;
+    _tr: ProposedCameraProvider;
     _enabled: boolean;
     _active: boolean;
     _zoomIn: TapRecognizer;
     _zoomOut: TapRecognizer;
 
-    constructor(transformProvider: RequestedCameraProvider) {
+    constructor(transformProvider: ProposedCameraProvider) {
         this._tr = transformProvider;
         this._zoomIn = new TapRecognizer({
             numTouches: 1,

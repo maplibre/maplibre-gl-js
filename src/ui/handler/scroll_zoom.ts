@@ -4,7 +4,7 @@ import {now} from '../../util/time_control.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat.ts';
 
-import type {RequestedCameraProvider} from './requested-camera-provider.ts';
+import type {ProposedCameraProvider} from './proposed-camera-provider.ts';
 import type {CooperativeGesturesHandler} from './cooperative_gestures.ts';
 import type {AroundCenterOptions} from './two_fingers_touch.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
@@ -42,7 +42,7 @@ type ScrollZoomWait = {reason: 'singleWheel'; event: WheelEvent} | {reason: 'fin
 export class ScrollZoomHandler implements Handler {
     private _canvas: HTMLElement;
     private _cooperativeGestures: CooperativeGesturesHandler;
-    private _tr: RequestedCameraProvider;
+    private _tr: ProposedCameraProvider;
     private _enabled: boolean;
     private _active: boolean;
     private _zooming: boolean;
@@ -75,7 +75,7 @@ export class ScrollZoomHandler implements Handler {
     private _wheelZoomRate: number;
 
     /** @internal */
-    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, transformProvider: RequestedCameraProvider) {
+    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, transformProvider: ProposedCameraProvider) {
         this._canvas = canvas;
         this._cooperativeGestures = cooperativeGestures;
         this._tr = transformProvider;

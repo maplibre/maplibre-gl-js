@@ -534,7 +534,7 @@ export class HandlerManager extends Evented<MapEventType> {
     }
 
     /**
-     * Applies a frame's combined handler deltas to the requested camera and fires the movement events. A
+     * Applies a frame's combined handler deltas to the proposed camera and fires the movement events. A
      * frame without a change only fires the events, so a trailing frame that merely ends a handler does not
      * start a movement on the camera.
      */
@@ -804,7 +804,7 @@ export class HandlerManager extends Evented<MapEventType> {
 
     /**
      * Fires a movement event through the camera, whose evented parent is the map: the map's listeners
-     * see the event as before, and the camera's own `moveend` listener ends the movement on the requested
+     * see the event as before, and the camera's own `moveend` listener ends the movement on the proposed
      * camera, so the next gesture starts from the camera as it was rendered.
      */
     private _fireEvent(type: string, e?: Event): void {

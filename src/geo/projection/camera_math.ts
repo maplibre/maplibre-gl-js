@@ -3,7 +3,7 @@ import {lerp} from '../../util/util.ts';
 import {Bounds} from '../bounds.ts';
 import * as mercatorMath from './mercator_camera_math.ts';
 import * as verticalPerspectiveMath from './vertical_perspective_camera_math.ts';
-import {deriveCameraMetrics} from '../projected_camera.ts';
+import {createCameraMetrics} from '../projected_camera.ts';
 import {renderedProjection} from './camera_projection.ts';
 
 import type {mat4, vec3} from 'gl-matrix';
@@ -29,14 +29,14 @@ const projectedCameraCache = new WeakMap<CameraState, WeakMap<CameraProjection, 
 
 /**
  * @internal
- * The values every projection derives from a camera state, see {@link deriveCameraMetrics}, kept for as long as the
+ * The values every projection derives from a camera state, see {@link createCameraMetrics}, kept for as long as the
  * state, which is never written to.
  */
 export function getCameraMetrics(state: CameraState, worldCoordinateHelper: WorldCoordinateHelper): CameraMetrics {
     let byHelper = metricsCache.get(state);
     if (!byHelper) metricsCache.set(state, byHelper = new WeakMap());
     let camera = byHelper.get(worldCoordinateHelper);
-    if (!camera) byHelper.set(worldCoordinateHelper, camera = deriveCameraMetrics(state, worldCoordinateHelper));
+    if (!camera) byHelper.set(worldCoordinateHelper, camera = createCameraMetrics(state, worldCoordinateHelper));
     return camera;
 }
 
@@ -46,23 +46,23 @@ export function getCameraMetrics(state: CameraState, worldCoordinateHelper: Worl
  * once per state and projection, both of which are never written to, and kept for as long as the state.
  */
 export function projectCamera(state: CameraState, projection: CameraProjection): ProjectedCamera {
-    let byProjection = projectedCameraCache.get(state);
-    if (!byProjection) projectedCameraCache.set(state, byProjection = new WeakMap());
-    let projectedCamera = byProjection.get(projection);
-    if (!projectedCamera) byProjection.set(projection, projectedCamera = deriveUncached(state, projection));
+    let forRenderedProjection = projectedCameraCache.get(state);
+    if (!forRenderedProjection) projectedCameraCache.set(state, forRenderedProjection = new WeakMap());
+    let projectedCamera = forRenderedProjection.get(projection);
+    if (!projectedCamera) forRenderedProjection.set(projection, projectedCamera = createProjectedCamera(state, projection));
     return projectedCamera;
 }
 
-function deriveUncached(state: CameraState, projection: CameraProjection): ProjectedCamera {
+function createProjectedCamera(state: CameraState, projection: CameraProjection): ProjectedCamera {
     const metrics = getCameraMetrics(state, projection.worldCoordinateHelper);
-    if (projection.kind === 'mercator') return mercatorMath.projectMercatorCamera(metrics, projection);
-    if (projection.kind === 'vertical-perspective') return verticalPerspectiveMath.projectVerticalPerspectiveCamera(metrics);
+    if (projection.kind === 'mercator') return mercatorMath.createMercatorProjectedCamera(metrics, projection);
+    if (projection.kind === 'vertical-perspective') return verticalPerspectiveMath.createVerticalPerspectiveProjectedCamera(metrics);
     // While the globe renders, mercator draws at the vertical perspective's depths, which keeps the two render paths
     // at the same depth across the transition.
-    const verticalPerspective = verticalPerspectiveMath.projectVerticalPerspectiveCamera(metrics);
+    const verticalPerspective = verticalPerspectiveMath.createVerticalPerspectiveProjectedCamera(metrics);
     const globeRendering = projection.globeness > 0;
     const nearFarZ = globeRendering && state.width && state.height ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : state.nearFarZOverride;
-    const mercator = mercatorMath.projectMercatorCamera(metrics, projection.mercator, nearFarZ);
+    const mercator = mercatorMath.createMercatorProjectedCamera(metrics, projection.mercator, nearFarZ);
     const rendered = globeRendering ? verticalPerspective : mercator;
     return {
         ...metrics,
@@ -81,10 +81,11 @@ function deriveUncached(state: CameraState, projection: CameraProjection): Proje
 }
 
 /**
+ * @internal
  * The camera as the projection it is drawn with projects it: as it is, or for the globe as the vertical perspective
  * projects it while the globe renders and as mercator does once it has turned into mercator.
  */
-function renderedCamera(projectedCamera: ProjectedCamera): MercatorProjectedCamera | VerticalPerspectiveProjectedCamera {
+export function renderedProjectedCamera(projectedCamera: ProjectedCamera): MercatorProjectedCamera | VerticalPerspectiveProjectedCamera {
     if (projectedCamera.projection !== 'globe') return projectedCamera;
     return projectedCamera.globeness > 0 ? projectedCamera.verticalPerspective : projectedCamera.mercator;
 }
@@ -93,27 +94,27 @@ function renderedCamera(projectedCamera: ProjectedCamera): MercatorProjectedCame
  * Calls the mercator or the vertical perspective version of a function that maps between lng/lat and the world, for
  * the projection the camera is drawn with; mercator gets the world mapping of that projection.
  */
-function byProjectionInWorld<A extends unknown[], R>(
+function forRenderedProjectionWithWorldMapping<A extends unknown[], R>(
     projectedCamera: ProjectedCamera,
     projection: CameraProjection,
     mercator: (projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, ...args: A) => R,
     verticalPerspective: (projectedCamera: VerticalPerspectiveProjectedCamera, ...args: A) => R,
     ...args: A
 ): R {
-    const rendered = renderedCamera(projectedCamera);
+    const rendered = renderedProjectedCamera(projectedCamera);
     return rendered.projection === 'mercator' ?
         mercator(rendered, renderedProjection(projection).worldCoordinateHelper, ...args) :
         verticalPerspective(rendered, ...args);
 }
 
 /** Calls the mercator or the vertical perspective version of a function, for the projection the camera is drawn with. */
-function byProjection<A extends unknown[], R>(
+function forRenderedProjection<A extends unknown[], R>(
     projectedCamera: ProjectedCamera,
     mercator: (projectedCamera: MercatorProjectedCamera, ...args: A) => R,
     verticalPerspective: (projectedCamera: VerticalPerspectiveProjectedCamera, ...args: A) => R,
     ...args: A
 ): R {
-    const rendered = renderedCamera(projectedCamera);
+    const rendered = renderedProjectedCamera(projectedCamera);
     return rendered.projection === 'mercator' ? mercator(rendered, ...args) : verticalPerspective(rendered, ...args);
 }
 
@@ -122,7 +123,7 @@ function byProjection<A extends unknown[], R>(
  * high zoom levels.
  */
 export function isGlobeRendering(projectedCamera: ProjectedCamera): boolean {
-    return renderedCamera(projectedCamera).projection === 'vertical-perspective';
+    return renderedProjectedCamera(projectedCamera).projection === 'vertical-perspective';
 }
 
 /** How far the camera's projection is between mercator, at 0, and the vertical perspective of the globe, at 1. */
@@ -135,7 +136,7 @@ export function getProjectionTransition(projectedCamera: ProjectedCamera): numbe
 }
 
 export function getProjectionData(projectedCamera: ProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
-    if (projectedCamera.projection !== 'globe') return byProjection(projectedCamera, mercatorMath.getProjectionData, verticalPerspectiveMath.getProjectionData, params);
+    if (projectedCamera.projection !== 'globe') return forRenderedProjection(projectedCamera, mercatorMath.getProjectionData, verticalPerspectiveMath.getProjectionData, params);
     const mercatorProjectionData = mercatorMath.getProjectionData(projectedCamera.mercator, params);
     const verticalPerspectiveProjectionData = verticalPerspectiveMath.getProjectionData(projectedCamera.verticalPerspective, params);
     return {
@@ -149,7 +150,7 @@ export function getProjectionData(projectedCamera: ProjectedCamera, params: Proj
 }
 
 export function getProjectionDataForCustomLayer(projectedCamera: ProjectedCamera, applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
-    if (projectedCamera.projection !== 'globe') return byProjection(projectedCamera, mercatorMath.getProjectionDataForCustomLayer, verticalPerspectiveMath.getProjectionDataForCustomLayer, applyGlobeMatrix);
+    if (projectedCamera.projection !== 'globe') return forRenderedProjection(projectedCamera, mercatorMath.getProjectionDataForCustomLayer, verticalPerspectiveMath.getProjectionDataForCustomLayer, applyGlobeMatrix);
     const mercatorData = mercatorMath.getProjectionDataForCustomLayer(projectedCamera.mercator, applyGlobeMatrix);
     if (!isGlobeRendering(projectedCamera)) return mercatorData;
     const globeData = verticalPerspectiveMath.getProjectionDataForCustomLayer(projectedCamera.verticalPerspective, applyGlobeMatrix);
@@ -163,16 +164,16 @@ export function getProjectionDataForCustomLayer(projectedCamera: ProjectedCamera
  * projection needs the shaders' own projection.
  */
 export function getFastPathSimpleProjectionMatrix(projectedCamera: ProjectedCamera, tileID: OverscaledTileID): mat4 {
-    return byProjection(projectedCamera, mercatorMath.getFastPathSimpleProjectionMatrix, verticalPerspectiveMath.getFastPathSimpleProjectionMatrix, tileID);
+    return forRenderedProjection(projectedCamera, mercatorMath.getFastPathSimpleProjectionMatrix, verticalPerspectiveMath.getFastPathSimpleProjectionMatrix, tileID);
 }
 
 export function projectTileCoordinates(projectedCamera: ProjectedCamera, x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
-    return byProjection(projectedCamera, mercatorMath.projectTileCoordinates, verticalPerspectiveMath.projectTileCoordinates, x, y, unwrappedTileID, elevation);
+    return forRenderedProjection(projectedCamera, mercatorMath.projectTileCoordinates, verticalPerspectiveMath.projectTileCoordinates, x, y, unwrappedTileID, elevation);
 }
 
 /** Scales the collision boxes of `text-pitch-alignment: 'map'` symbols for where their anchor lies. */
 export function getPitchedTextCorrection(projectedCamera: ProjectedCamera, textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
-    if (projectedCamera.projection !== 'globe') return byProjection(projectedCamera, mercatorMath.getPitchedTextCorrection, verticalPerspectiveMath.getPitchedTextCorrection, textAnchorX, textAnchorY, tileID);
+    if (projectedCamera.projection !== 'globe') return forRenderedProjection(projectedCamera, mercatorMath.getPitchedTextCorrection, verticalPerspectiveMath.getPitchedTextCorrection, textAnchorX, textAnchorY, tileID);
     return lerp(
         mercatorMath.getPitchedTextCorrection(projectedCamera.mercator, textAnchorX, textAnchorY, tileID),
         verticalPerspectiveMath.getPitchedTextCorrection(projectedCamera.verticalPerspective, textAnchorX, textAnchorY, tileID),
@@ -181,36 +182,36 @@ export function getPitchedTextCorrection(projectedCamera: ProjectedCamera, textA
 
 /** How much larger the circles of the camera's projection are drawn than on mercator, at the center. */
 export function getCircleRadiusCorrection(projectedCamera: ProjectedCamera): number {
-    return byProjection(projectedCamera, mercatorMath.getCircleRadiusCorrection, verticalPerspectiveMath.getCircleRadiusCorrection);
+    return forRenderedProjection(projectedCamera, mercatorMath.getCircleRadiusCorrection, verticalPerspectiveMath.getCircleRadiusCorrection);
 }
 
 /** How much the projection scales the map at the center relative to mercator, which line patterns use. */
 export function getPixelScale(projectedCamera: ProjectedCamera): number {
-    if (projectedCamera.projection !== 'globe') return byProjection(projectedCamera, mercatorMath.getPixelScale, verticalPerspectiveMath.getPixelScale);
+    if (projectedCamera.projection !== 'globe') return forRenderedProjection(projectedCamera, mercatorMath.getPixelScale, verticalPerspectiveMath.getPixelScale);
     return lerp(mercatorMath.getPixelScale(projectedCamera.mercator), verticalPerspectiveMath.getPixelScale(projectedCamera.verticalPerspective), projectedCamera.globeness);
 }
 
 /** The light direction in the space of the projection's 3D features. Mostly used for globe + fill-extrusion. */
 export function transformLightDirection(projectedCamera: ProjectedCamera, dir: vec3): vec3 {
-    return byProjection(projectedCamera, mercatorMath.transformLightDirection, verticalPerspectiveMath.transformLightDirection, dir);
+    return forRenderedProjection(projectedCamera, mercatorMath.transformLightDirection, verticalPerspectiveMath.transformLightDirection, dir);
 }
 
 export function calculateFogMatrix(projectedCamera: ProjectedCamera, unwrappedTileID: UnwrappedTileID): mat4 {
-    return byProjection(projectedCamera, mercatorMath.calculateFogMatrix, verticalPerspectiveMath.calculateFogMatrix, unwrappedTileID);
+    return forRenderedProjection(projectedCamera, mercatorMath.calculateFogMatrix, verticalPerspectiveMath.calculateFogMatrix, unwrappedTileID);
 }
 
 /** The copies of the world a tile is drawn in. */
 export function getVisibleUnwrappedCoordinates(projectedCamera: ProjectedCamera, projection: CameraProjection, tileID: CanonicalTileID): UnwrappedTileID[] {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.getVisibleUnwrappedCoordinates, verticalPerspectiveMath.getVisibleUnwrappedCoordinates, tileID);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.getVisibleUnwrappedCoordinates, verticalPerspectiveMath.getVisibleUnwrappedCoordinates, tileID);
 }
 
 export function getCameraFrustum(projectedCamera: ProjectedCamera): Frustum {
-    return byProjection(projectedCamera, mercatorMath.getCameraFrustum, verticalPerspectiveMath.getCameraFrustum);
+    return forRenderedProjection(projectedCamera, mercatorMath.getCameraFrustum, verticalPerspectiveMath.getCameraFrustum);
 }
 
 /** The plane that clips what is behind the globe, or null on mercator. */
 export function getClippingPlane(projectedCamera: ProjectedCamera): ProjectedCamera['clippingPlane'] {
-    return renderedCamera(projectedCamera).clippingPlane;
+    return renderedProjectedCamera(projectedCamera).clippingPlane;
 }
 
 /** The details of the tile grid of the projection a camera is drawn with, which tile selection reads. */
@@ -221,19 +222,19 @@ export function getCoveringTilesDetailsProvider(projection: CameraProjection): C
 /** How far a pitched view stretches the top of the screen, from the mercator pixel matrix on a globe too. */
 export function maxPitchScaleFactor(projectedCamera: ProjectedCamera): number {
     if (projectedCamera.projection === 'globe') return mercatorMath.maxPitchScaleFactor(projectedCamera.mercator);
-    return byProjection(projectedCamera, mercatorMath.maxPitchScaleFactor, verticalPerspectiveMath.maxPitchScaleFactor);
+    return forRenderedProjection(projectedCamera, mercatorMath.maxPitchScaleFactor, verticalPerspectiveMath.maxPitchScaleFactor);
 }
 
 export function getCameraAltitude(projectedCamera: ProjectedCamera): number {
-    return byProjection(projectedCamera, mercatorMath.getCameraAltitude, verticalPerspectiveMath.getCameraAltitude);
+    return forRenderedProjection(projectedCamera, mercatorMath.getCameraAltitude, verticalPerspectiveMath.getCameraAltitude);
 }
 
 export function getCameraLngLat(projectedCamera: ProjectedCamera, projection: CameraProjection): LngLat {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.getCameraLngLat, verticalPerspectiveMath.getCameraLngLat);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.getCameraLngLat, verticalPerspectiveMath.getCameraLngLat);
 }
 
 export function getBounds(projectedCamera: ProjectedCamera, projection: CameraProjection): LngLatBounds {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.getBounds, verticalPerspectiveMath.getBounds);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.getBounds, verticalPerspectiveMath.getBounds);
 }
 
 /**
@@ -248,23 +249,23 @@ export function getBounds(projectedCamera: ProjectedCamera, projection: CameraPr
  * terrain. `Marker` raises its center with it
  */
 export function isLocationOccluded(projectedCamera: ProjectedCamera, projection: CameraProjection, lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.isLocationOccluded, verticalPerspectiveMath.isLocationOccluded, lngLat, terrain, elevation);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.isLocationOccluded, verticalPerspectiveMath.isLocationOccluded, lngLat, terrain, elevation);
 }
 
 export function locationToScreenPoint(projectedCamera: ProjectedCamera, projection: CameraProjection, lnglat: LngLat, terrain?: Terrain): Point {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.locationToScreenPoint, verticalPerspectiveMath.locationToScreenPoint, lnglat, terrain);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.locationToScreenPoint, verticalPerspectiveMath.locationToScreenPoint, lnglat, terrain);
 }
 
 export function screenPointToLocation(projectedCamera: ProjectedCamera, projection: CameraProjection, p: Point, terrain?: Terrain): LngLat {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.screenPointToLocation, verticalPerspectiveMath.screenPointToLocation, p, terrain);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.screenPointToLocation, verticalPerspectiveMath.screenPointToLocation, p, terrain);
 }
 
 export function screenPointToLocationAtElevation(projectedCamera: ProjectedCamera, projection: CameraProjection, p: Point, elevation: number): LngLat {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.screenPointToLocationAtElevation, verticalPerspectiveMath.screenPointToLocationAtElevation, p, elevation);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.screenPointToLocationAtElevation, verticalPerspectiveMath.screenPointToLocationAtElevation, p, elevation);
 }
 
 export function screenPointToMercatorCoordinate(projectedCamera: ProjectedCamera, projection: CameraProjection, p: Point, terrain?: Terrain): MercatorCoordinate {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.screenPointToMercatorCoordinate, verticalPerspectiveMath.screenPointToMercatorCoordinate, p, terrain);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.screenPointToMercatorCoordinate, verticalPerspectiveMath.screenPointToMercatorCoordinate, p, terrain);
 }
 
 /**
@@ -272,11 +273,11 @@ export function screenPointToMercatorCoordinate(projectedCamera: ProjectedCamera
  * or null where the terrain has no renderable tiles or the ray never meets it.
  */
 export function screenTerrainPointToMercatorCoordinate(projectedCamera: ProjectedCamera, projection: CameraProjection, p: Point, terrain: Terrain): MercatorCoordinate | null {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.screenTerrainPointToMercatorCoordinate, verticalPerspectiveMath.screenTerrainPointToMercatorCoordinate, p, terrain);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.screenTerrainPointToMercatorCoordinate, verticalPerspectiveMath.screenTerrainPointToMercatorCoordinate, p, terrain);
 }
 
 export function isPointOnMapSurface(projectedCamera: ProjectedCamera, projection: CameraProjection, p: Point, terrain?: Terrain): boolean {
-    return byProjectionInWorld(projectedCamera, projection, mercatorMath.isPointOnMapSurface, verticalPerspectiveMath.isPointOnMapSurface, p, terrain);
+    return forRenderedProjectionWithWorldMapping(projectedCamera, projection, mercatorMath.isPointOnMapSurface, verticalPerspectiveMath.isPointOnMapSurface, p, terrain);
 }
 
 /**
@@ -306,7 +307,7 @@ export function getCameraPoint(projectedCamera: ProjectedCamera): Point {
  * screen where the *base* of a visible extrusion could be.
  */
 export function getCameraQueryGeometry(projectedCamera: ProjectedCamera, queryGeometry: Point[]): Point[] {
-    const rendered = renderedCamera(projectedCamera);
+    const rendered = renderedProjectedCamera(projectedCamera);
     const projectionGeometry = rendered.projection === 'vertical-perspective' ? verticalPerspectiveMath.getCameraQueryGeometry(rendered, queryGeometry) : null;
     if (projectionGeometry) return projectionGeometry;
     const cameraPoint = getCameraPoint(projectedCamera);

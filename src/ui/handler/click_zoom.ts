@@ -1,7 +1,7 @@
 import {evaluateZoomSnap} from '../../util/util.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {RequestedCameraProvider} from './requested-camera-provider.ts';
+import type {ProposedCameraProvider} from './proposed-camera-provider.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
@@ -10,12 +10,12 @@ import type {Handler, HandlerResult} from '../handler_manager.ts';
  */
 export class ClickZoomHandler implements Handler {
 
-    _tr: RequestedCameraProvider;
+    _tr: ProposedCameraProvider;
     _enabled: boolean;
     _active: boolean;
 
     /** @internal */
-    constructor(transformProvider: RequestedCameraProvider) {
+    constructor(transformProvider: ProposedCameraProvider) {
         this._tr = transformProvider;
         this.reset();
     }

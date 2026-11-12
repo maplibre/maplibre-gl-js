@@ -700,7 +700,7 @@ export class Marker extends Evented<MarkerEventType> {
      * Whether the viewport shows the marker's position. There is nothing to compute for one it does not.
      */
     _isInViewport(): boolean {
-        const {width, height} = this._map._camera.cameraState;
+        const {width, height} = this._map._camera.renderedState;
         return !!this._pos && this._pos.x >= 0 && this._pos.y >= 0 && this._pos.x <= width && this._pos.y <= height;
     }
 

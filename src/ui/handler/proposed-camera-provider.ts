@@ -10,19 +10,19 @@ import type {LngLat} from '../../geo/lng_lat.ts';
 /**
  * @internal
  * The camera the handlers ask for, and what they read off it. While a movement runs, the camera it asks for may differ
- * from the rendered one, see {@link Camera.requestedProjectedCamera}, and the handlers need the one they asked for to
+ * from the rendered one, see {@link Camera.proposedProjectedCamera}, and the handlers need the one they asked for to
  * add up their changes.
  */
-export class RequestedCameraProvider {
+export class ProposedCameraProvider {
     _camera: Camera;
 
     constructor(camera: Camera) {
         this._camera = camera;
     }
 
-    /** The requested camera. */
+    /** The proposed camera. */
     get camera(): ProjectedCamera {
-        return this._camera.requestedProjectedCamera;
+        return this._camera.proposedProjectedCamera;
     }
 
     get center(): {lng: number; lat: number} {
@@ -42,7 +42,7 @@ export class RequestedCameraProvider {
         return this.camera.bearing;
     }
 
-    /** The screen point of a location on the requested camera. */
+    /** The screen point of a location on the proposed camera. */
     project(lngLat: LngLat): Point {
         return cameraMath.locationToScreenPoint(this.camera, this._camera.context.projection, lngLat);
     }
@@ -56,14 +56,14 @@ export class RequestedCameraProvider {
         return cameraMath.isPointOnMapSurface(this.camera, this._camera.context.projection, point);
     }
 
-    /** The location right under the requested camera. */
+    /** The location right under the proposed camera. */
     getCameraLngLat(): LngLat {
         return cameraMath.getCameraLngLat(this.camera, this._camera.context.projection);
     }
 
     /** Where the camera's constrain puts a center and a zoom, see {@link applyConstrain}. */
     constrain(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
-        return applyConstrain(this._camera.cameraState, this._camera.context, lngLat, zoom);
+        return applyConstrain(this._camera.renderedState, this._camera.context, lngLat, zoom);
     }
 
     /** The step zoom levels snap to, see {@link Camera.getZoomSnap}. */

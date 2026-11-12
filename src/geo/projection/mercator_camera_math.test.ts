@@ -1304,15 +1304,6 @@ describe('mercator camera over the identity CRS', () => {
         expect(cameraMath.getVisibleUnwrappedCoordinates(projectMercator(state, context), context.projection, new CanonicalTileID(0, 0, 0))).toHaveLength(1);
     });
 
-    test('takeState carries a renderWorldCopies of false through the non-wrapping projection and back', () => {
-        const identity = createIdentityCrsCamera(200, 200);
-        const identityState = cameraUpdates.takeState(createCameraState({renderWorldCopies: false}), identity.context, false);
-        expect(identityState.renderWorldCopies).toBe(false);
-
-        const mercatorState = cameraUpdates.takeState(identityState, createMercatorContext(), false);
-        expect(mercatorState.renderWorldCopies).toBe(false);
-    });
-
     describe('lng/lat and screen points', () => {
         test('round trips a location through screen space with the identity mapping', () => {
             let {state, context} = createIdentityCrsCamera(200, 200);

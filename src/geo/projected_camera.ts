@@ -25,7 +25,7 @@ export type ProjectedCamera = MercatorProjectedCamera | VerticalPerspectiveProje
  * A {@link CameraState} together with the values that follow from it the same way in every projection: the scale
  * and size of the world at its zoom, its angles in degrees, the screen point it looks at, and the matrices between
  * screen pixels and clip space. Reading these needs no projection matrices, so it is cheaper than a
- * {@link ProjectedCamera}, which includes them; see {@link deriveCameraMetrics}.
+ * {@link ProjectedCamera}, which includes them; see {@link createCameraMetrics}.
  */
 export type CameraMetrics = CameraState & {
     /** The zoom level of the tiles drawn at this zoom: the zoom rounded down, and never below 0. */
@@ -134,7 +134,7 @@ export type MercatorMatrixCache = {
  * at the center. The pixel matrices and the distance to the center need a size, so they are left undefined while the
  * camera has none.
  */
-export function deriveCameraMetrics(state: CameraState, worldCoordinateHelper: WorldCoordinateHelper): CameraMetrics {
+export function createCameraMetrics(state: CameraState, worldCoordinateHelper: WorldCoordinateHelper): CameraMetrics {
     const scale = zoomScale(state.zoom);
     const worldSize = state.tileSize * scale;
     const sized = !!state.width && !!state.height;

@@ -17,7 +17,7 @@ export type DEMHoldState = 'loaded' | 'awaiting' | 'taken';
 
 /**
  * A movement's hold on the center elevation: the frames of a gesture or of an animation with `freezeElevation` leave
- * the requested elevation where it is, so the camera does not bob over the terrain, and the end puts the center back
+ * the proposed elevation where it is, so the camera does not bob over the terrain, and the end puts the center back
  * onto the terrain, see {@link Camera.releaseElevation}.
  */
 export type HeldCenterElevation = {
@@ -34,12 +34,12 @@ export type HeldCenterElevation = {
 };
 
 /**
- * How the requested center elevation follows the terrain while the center is clamped to the ground:
+ * How the proposed center elevation follows the terrain while the center is clamped to the ground:
  * - `ground`: the center sits on the terrain, keeping the elevation it has while the DEM data under it loads.
  * - `held`: a movement holds it, see {@link HeldCenterElevation}.
  * - `eased`: an animation eases it to the terrain under the center it ends on.
  *
- * Without terrain the center is drawn at sea level whatever the rule, and the requested elevation is left for the
+ * Without terrain the center is drawn at sea level whatever the rule, and the proposed elevation is left for the
  * terrain to come back to.
  */
 export type CenterElevationRule = {rule: 'ground'} | {rule: 'eased'} | HeldCenterElevation;

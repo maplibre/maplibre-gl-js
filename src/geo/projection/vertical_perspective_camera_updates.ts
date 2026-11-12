@@ -236,7 +236,7 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
     }
 
     if (!Number.isFinite(smallestNeededScale) || smallestNeededScale === 0) {
-        cameraUpdates.cameraBoundsWarning();
+        cameraUpdates.warnBoundsCannotFit();
         return undefined;
     }
 

@@ -93,7 +93,7 @@ export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPaddi
 
     // A box reaching a point the projection sends to infinity has no finite size to fit.
     if (scaleY < 0 || scaleX < 0 || !Number.isFinite(size.x) || !Number.isFinite(size.y)) {
-        cameraUpdates.cameraBoundsWarning();
+        cameraUpdates.warnBoundsCannotFit();
         return undefined;
     }
 

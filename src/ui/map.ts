@@ -937,7 +937,7 @@ export class Map extends Evented<MapEventType> {
         this.on('style.load', () => {
             // If we didn't constrain the camera before, we do it now
             if (!shouldConstrainUsingMercatorView) this._resizeCameraView();
-            if (this._camera.cameraState.unmodified) {
+            if (this._camera.renderedState.unmodified) {
                 const coercedOptions = pick(this.style.stylesheet, ['center', 'zoom', 'bearing', 'pitch', 'roll']) as CameraOptions;
                 this.jumpTo(coercedOptions);
             }
@@ -1637,7 +1637,7 @@ export class Map extends Evented<MapEventType> {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.projectedCamera.tileZoom);
         }
-        return calculateCameraOptionsFromTo(this._camera.cameraState, this._camera.context.projection, from, altitudeFrom, to, altitudeTo ?? 0);
+        return calculateCameraOptionsFromTo(this._camera.renderedState, this._camera.context.projection, from, altitudeFrom, to, altitudeTo ?? 0);
     }
 
     /**
@@ -1793,7 +1793,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     getMaxBounds(): LngLatBounds | null {
-        return getMaxBounds(this._camera.cameraState);
+        return getMaxBounds(this._camera.renderedState);
     }
 
     /**
@@ -1900,7 +1900,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     getMinZoom(constrained = false): number {
-        const state = this._camera.cameraState;
+        const state = this._camera.renderedState;
         return constrained ? applyConstrain(state, this._camera.context, state.center, state.minZoom).zoom : state.minZoom;
     }
 
@@ -1950,7 +1950,7 @@ export class Map extends Evented<MapEventType> {
      * let maxZoom = map.getMaxZoom();
      * ```
      */
-    getMaxZoom(): number { return this._camera.cameraState.maxZoom; }
+    getMaxZoom(): number { return this._camera.renderedState.maxZoom; }
 
     /**
      * Sets or clears the map's minimum pitch.
@@ -1994,7 +1994,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The minPitch
      */
-    getMinPitch(): number { return this._camera.cameraState.minPitch; }
+    getMinPitch(): number { return this._camera.renderedState.minPitch; }
 
     /**
      * Sets or clears the map's maximum pitch.
@@ -2038,7 +2038,7 @@ export class Map extends Evented<MapEventType> {
      *
      * @returns The maxPitch
      */
-    getMaxPitch(): number { return this._camera.cameraState.maxPitch; }
+    getMaxPitch(): number { return this._camera.renderedState.maxPitch; }
 
     /**
      * Returns the map's anisotropic filter pitch.
@@ -2099,7 +2099,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
      */
-    getRenderWorldCopies(): boolean { return this._camera.cameraState.renderWorldCopies; }
+    getRenderWorldCopies(): boolean { return this._camera.renderedState.renderWorldCopies; }
 
     /**
      * Sets the state of `renderWorldCopies`.
@@ -2681,7 +2681,7 @@ export class Map extends Evented<MapEventType> {
         }
         let queryGeometry: Point[];
         const isGeometry = geometryOrOptions instanceof Point || Array.isArray(geometryOrOptions);
-        const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this._camera.cameraState.width, this._camera.cameraState.height]];
+        const geometry = isGeometry ? geometryOrOptions : [[0, 0], [this._camera.renderedState.width, this._camera.renderedState.height]];
         options ||= (isGeometry ? {} : geometryOrOptions) || {};
 
         if (geometry instanceof Point || typeof geometry[0] === 'number') {
@@ -4189,7 +4189,7 @@ export class Map extends Evented<MapEventType> {
             return false;
         }
         const [width, height] = this._containerDimensions();
-        return width !== this._camera.cameraState.width || height !== this._camera.cameraState.height;
+        return width !== this._camera.renderedState.width || height !== this._camera.renderedState.height;
     }
 
     /**
@@ -4530,7 +4530,7 @@ export class Map extends Evented<MapEventType> {
         if (this.style && this._styleDirty) {
             this._styleDirty = false;
 
-            const zoom = this._camera.cameraState.zoom;
+            const zoom = this._camera.renderedState.zoom;
             const currentTime = now();
             this.style.zoomHistory.update(zoom, currentTime);
 
@@ -4833,7 +4833,7 @@ export class Map extends Evented<MapEventType> {
      * @returns The elevation.
      */
     getCameraTargetElevation(): number {
-        return this._camera.cameraState.elevation;
+        return this._camera.renderedState.elevation;
     }
 
     /**

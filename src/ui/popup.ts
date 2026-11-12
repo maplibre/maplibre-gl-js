@@ -690,7 +690,7 @@ export class Popup extends Evented<PopupEventType> {
 
             if (pos.y + offset.bottom.y < height + padding.top) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map._camera.cameraState.height - height - padding.bottom) {
+            } else if (pos.y > this._map._camera.renderedState.height - height - padding.bottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
@@ -698,7 +698,7 @@ export class Popup extends Evented<PopupEventType> {
 
             if (pos.x < width / 2 + padding.left) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map._camera.cameraState.width - width / 2 - padding.right) {
+            } else if (pos.x > this._map._camera.renderedState.width - width / 2 - padding.right) {
                 anchorComponents.push('right');
             }
 

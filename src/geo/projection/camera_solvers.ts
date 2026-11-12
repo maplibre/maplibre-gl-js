@@ -5,7 +5,7 @@ import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustme
 import {applyConstrain, type CameraContext} from './camera_constrain.ts';
 import {renderedProjection} from './camera_projection.ts';
 import * as cameraMath from './camera_math.ts';
-import {getConstrainedCamera, recalculateZoomAndCenter, setBearing, setCenter, setCenterAndZoom, setZoom} from './camera_updates.ts';
+import {getConstrainedCamera, moveCenterToElevation, setBearing, setCenter, setCenterAndZoom, setZoom} from './camera_updates.ts';
 import * as mercatorMath from './mercator_camera_math.ts';
 import * as verticalPerspectiveMath from './vertical_perspective_camera_math.ts';
 import {getBearing} from '../camera_state.ts';
@@ -30,13 +30,6 @@ const SAME_POINT_DISTANCE = 1e-12;
 /** A camera whose horizontal offset is this small relative to its distance is straight above the center. */
 const STRAIGHT_ABOVE_RATIO = 1e-9;
 
-/** The camera a projection's solvers work with: the camera as the projection it is drawn with projects it. */
-function renderedCamera(state: CameraState, projection: CameraProjection): MercatorProjectedCamera | VerticalPerspectiveProjectedCamera {
-    const projectedCamera = cameraMath.projectCamera(state, projection);
-    if (projectedCamera.projection !== 'globe') return projectedCamera;
-    return projectedCamera.globeness > 0 ? projectedCamera.verticalPerspective : projectedCamera.mercator;
-}
-
 /**
  * @internal
  * The camera moved so that `lnglat`, on the ground at `elevation` meters, renders at the screen `point`, see
@@ -53,7 +46,7 @@ export function setLocationAtPoint(state: CameraState, context: CameraContext, l
  * The center and zoom that {@link setLocationAtPoint} moves the camera to, or null where the camera stays where it is.
  */
 export function getCameraForLocationAtPoint(state: CameraState, context: CameraContext, lnglat: LngLat, point: Point, elevation: number = state.elevation): {center: LngLat; zoom: number} | null {
-    const rendered = renderedCamera(state, context.projection);
+    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(state, context.projection));
     return rendered.projection === 'mercator' ?
         mercatorCameraForLocationAtPoint(state, context, rendered, lnglat, point, elevation) :
         verticalPerspectiveCameraForLocationAtPoint(state, context, rendered, lnglat, point);
@@ -201,13 +194,13 @@ export function recenterOnTerrain(state: CameraState, context: CameraContext, te
             warnOnce('terrain is not fully supported on vertical perspective projection.');
             return state;
         }
-        return recalculateZoomAndCenter(state, context, 0);
+        return moveCenterToElevation(state, context, 0);
     }
     let next = state;
     for (let pass = 0; pass < CENTER_ON_TERRAIN_PASSES; pass++) {
         const elevation = getGroundElevationAtCenter(next, context.projection, terrain);
         if (elevation === null) return next;
-        next = recalculateZoomAndCenter(next, context, elevation);
+        next = moveCenterToElevation(next, context, elevation);
         if (!terrain || Math.abs(terrain.getElevationForLngLat(next.center, cameraMath.projectCamera(next, context.projection).tileZoom) - next.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return next;
     }
     return next;
@@ -219,7 +212,7 @@ export function recenterOnTerrain(state: CameraState, context: CameraContext, te
  * where the camera would end up below that ground.
  */
 export function getGroundElevationAtCenter(state: CameraState, projection: CameraProjection, terrain?: Terrain): number | null {
-    const rendered = renderedCamera(state, projection) as MercatorProjectedCamera;
+    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(state, projection)) as MercatorProjectedCamera;
     const worldCoordinateHelper = renderedProjection(projection).worldCoordinateHelper;
     const center = (terrain && mercatorMath.terrainPointPastMaxZoom(rendered, worldCoordinateHelper, terrain)) || mercatorMath.screenPointToLocation(rendered, worldCoordinateHelper, rendered.centerPoint, terrain);
     const elevation = terrain ? terrain.getElevationForLngLat(center, rendered.tileZoom) : 0;
@@ -233,7 +226,7 @@ export function getGroundElevationAtCenter(state: CameraState, projection: Camer
  * becomes the center at `altitudeTo` meters.
  */
 export function calculateCameraOptionsFromTo(state: CameraState, projection: CameraProjection, from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
-    const rendered = renderedCamera(state, projection);
+    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(state, projection));
     return rendered.projection === 'mercator' ?
         mercatorCameraOptionsFromTo(rendered, renderedProjection(projection).worldCoordinateHelper, from, altitudeFrom, to, altitudeTo) :
         verticalPerspectiveCameraOptionsFromTo(rendered, from, altitudeFrom, to, altitudeTo);

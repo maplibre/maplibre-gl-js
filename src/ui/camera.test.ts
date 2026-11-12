@@ -67,7 +67,7 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
 function createPivotCamera(terrain: Terrain = null): {camera: Camera; state: CameraState} {
     const {camera} = createCamera({maxZoom: 22, maxPitch: 85, renderWorldCopies: true, terrain});
     const {context} = camera;
-    let state = cameraUpdates.resize(camera.cameraState, context, 800, 600, true);
+    let state = cameraUpdates.resize(camera.renderedState, context, 800, 600, true);
     state = cameraUpdates.setCenter(state, context, new LngLat(0, 0));
     state = cameraUpdates.setZoom(state, context, 12);
     state = cameraUpdates.setElevation(state, context, 500);
@@ -2517,7 +2517,7 @@ describe('fitBounds', () => {
         const {camera} = createCamera();
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
         camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
-        const padding = camera.cameraState.padding;
+        const padding = camera.renderedState.padding;
 
         expect(padding).toEqual({
             left: 0,
@@ -2763,7 +2763,7 @@ test('create camera with globe returns make globe controls true', () => {
 });
 
 describe('migrateProjection', () => {
-    test('moves the requested camera state to the new projection', () => {
+    test('moves the proposed camera state to the new projection', () => {
         const {camera} = createCamera({transformCameraUpdate: ({center, zoom}) => ({center, zoom})});
         const stateBeforeMigration = camera.getStateForUpdate();
         const zoomed = cameraUpdates.setZoom(stateBeforeMigration, camera.context, 5);
@@ -2771,11 +2771,11 @@ describe('migrateProjection', () => {
 
         camera.migrateProjection(createProjectionFromName('globe', {}).cameraProjection);
 
-        const requestedState = camera.getStateForUpdate();
-        expect(requestedState.center.lng).toBeCloseTo(10);
-        expect(requestedState.center.lat).toBeCloseTo(20);
-        expect(requestedState.zoom).toBeCloseTo(5);
-        expect(() => cameraMath.getRayDirectionFromPixel(camera.requestedProjectedCamera, new Point(256, 256))).not.toThrow();
+        const proposedState = camera.getStateForUpdate();
+        expect(proposedState.center.lng).toBeCloseTo(10);
+        expect(proposedState.center.lat).toBeCloseTo(20);
+        expect(proposedState.zoom).toBeCloseTo(5);
+        expect(() => cameraMath.getRayDirectionFromPixel(camera.proposedProjectedCamera, new Point(256, 256))).not.toThrow();
     });
 });
 
@@ -4035,7 +4035,7 @@ describe('fitBounds globe projection', () => {
         const {camera} = createCamera();
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
         camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
-        const padding = camera.cameraState.padding;
+        const padding = camera.renderedState.padding;
 
         expect(padding).toEqual({
             left: 0,
@@ -4184,7 +4184,7 @@ describe('orbitRotationPivot', () => {
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 3000));
         const {camera} = createCamera({maxZoom: 22, maxPitch: 85, renderWorldCopies: true, terrain}, true);
         const {context} = camera;
-        let state = cameraUpdates.resize(camera.cameraState, context, 800, 600, true);
+        let state = cameraUpdates.resize(camera.renderedState, context, 800, 600, true);
         state = cameraUpdates.setCenter(state, context, new LngLat(10, 45));
         state = cameraUpdates.setZoom(state, context, 10);
         state = cameraUpdates.setPitch(state, 60);

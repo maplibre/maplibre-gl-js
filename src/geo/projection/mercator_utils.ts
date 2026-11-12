@@ -9,7 +9,7 @@ import type {LngLat} from '../lng_lat.ts';
 
 /*
 * The maximum angle to use for the Mercator horizon. This must be less than 90
-* to prevent errors in `projectMercatorCamera`. It shouldn't be too close
+* to prevent errors in `createMercatorProjectedCamera`. It shouldn't be too close
 * to 90, or the distance to the horizon will become very large, unnecessarily increasing
 * the number of tiles needed to render the map.
 */
