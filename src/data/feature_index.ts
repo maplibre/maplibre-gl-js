@@ -24,8 +24,9 @@ import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform, GetElevation, WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
+import type {GetElevation, WorldCoordinateHelper} from '../geo/world_types.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
 

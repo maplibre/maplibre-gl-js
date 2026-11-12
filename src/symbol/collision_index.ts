@@ -11,7 +11,7 @@ import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, 
 import {xyTransformMat4} from '../util/fast_maths.ts';
 import ONE_EM from '../symbol/one_em.ts';
 
-import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
@@ -20,6 +20,7 @@ import type {
 } from '../data/array_types.g.ts';
 import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import type {GetElevation} from '../geo/world_types.ts';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around

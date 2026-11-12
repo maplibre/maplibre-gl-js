@@ -16,12 +16,13 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 import {getBearing, getCenterOffset, getCenterPoint, getConstrainedCamera, getFov, getPitch, getRoll, getWorldSize} from '../camera_state.ts';
 
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
+import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../transform_interface.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {CameraState} from '../camera_state.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+import type {WorldCoordinateHelper} from '../world_types.ts';
 
 /**
  * @internal

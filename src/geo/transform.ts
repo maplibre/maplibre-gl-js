@@ -10,13 +10,14 @@ import {Bounds} from './bounds.ts';
 import {createCameraState, getBearing, getCenterPoint, getFov, getPitch, getRoll, getWorldSize, type CameraState} from './camera_state.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';
-import type {CameraOptionsFromTo, IProjectionTransformMutators, NearFarZ, IReadonlyProjectionTransform, IReadonlyTransform, ITransform, ITransformGetters, TransformConstrainFunction, WorldCoordinateHelper} from './transform_interface.ts';
+import type {CameraOptionsFromTo, IProjectionTransformMutators, NearFarZ, IReadonlyProjectionTransform, IReadonlyTransform, ITransform, ITransformGetters, TransformConstrainFunction} from './transform_interface.ts';
 import type {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
+import type {WorldCoordinateHelper} from './world_types.ts';
 /**
  * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
  * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.

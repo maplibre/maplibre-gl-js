@@ -3,7 +3,7 @@ import {mercatorTileMatrixSet} from './projection/tile_matrix_set.ts';
 
 import type {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 import type {LngLatLike} from '../geo/lng_lat.ts';
-import type {WorldCoordinateHelper} from './transform_interface.ts';
+import type {WorldCoordinateHelper} from './world_types.ts';
 
 /*
  * The average circumference of the world in meters.
