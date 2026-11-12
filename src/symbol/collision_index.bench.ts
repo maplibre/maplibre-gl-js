@@ -3,7 +3,6 @@ import Point from '@mapbox/point-geometry';
 import {CollisionIndex} from './collision_index.ts';
 import {EXTENT} from '../data/extent.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {createGlobeCameraProjection} from '../geo/projection/camera_projection.ts';
 import {calculatePosMatrix} from '../geo/projection/mercator_camera_math.ts';
 import {createTestCamera} from '../util/test/util.ts';
 
@@ -101,7 +100,7 @@ function placeAll(projectedCamera: ProjectedCamera, symbols: TestSymbol[]): void
 const mercatorCamera = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 1024, height: 1024}).projectedCamera as MercatorProjectedCamera;
 const mercatorSymbols = createSymbols((tileID) => calculatePosMatrix(mercatorCamera, tileID, false));
 
-const globeCamera = createTestCamera({width: 1024, height: 1024}, createGlobeCameraProjection()).projectedCamera;
+const globeCamera = createTestCamera({width: 1024, height: 1024}, {projection: 'globe'}).projectedCamera;
 const globeSymbols = createSymbols(() => undefined);
 
 test('placeCollisionBox', async ({bench}) => {

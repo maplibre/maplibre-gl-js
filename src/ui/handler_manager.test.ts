@@ -226,10 +226,10 @@ describe('terrain gesture anchoring', () => {
         // a plateau just under the camera, whose edge is where the ray through the pinch's first midpoint meets it
         const firstMid = start.add(new Point(15, 10));
         const plateauTop = centerElevation + 0.95 * (cameraMath.getCameraAltitude(projectedCamera) - centerElevation);
-        const edge = cameraMath.screenPointToLocationAtElevation(projectedCamera, context.projection, firstMid, plateauTop);
+        const edge = cameraMath.screenPointToLocationAtElevation(projectedCamera, context.worldCoordinateHelper, firstMid, plateauTop);
         const height = (lng: number, lat: number) => lng < edge.lng + 1e-5 && lat > edge.lat - 1e-5 ? plateauTop : centerElevation;
         vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(height, centerElevation, plateauTop));
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.projection, firstMid, map.terrain).z).toBeCloseTo(plateauTop, 0);
+        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, firstMid, map.terrain).z).toBeCloseTo(plateauTop, 0);
 
         const startCenter = map.getCenter();
         gestureStep('touchstart', target, pinchTouches(start, 30));

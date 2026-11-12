@@ -2,7 +2,6 @@ import {describe, test, expect} from 'vitest';
 import {CircleStyleLayer} from './circle_style_layer.ts';
 import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {createGlobeCameraProjection} from '../../geo/projection/camera_projection.ts';
 import {createTestCamera} from '../../util/test/util.ts';
 
 import type {EvaluationParameters} from '../evaluation_parameters.ts';
@@ -129,7 +128,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
     });
 
     describe('globe projection', () => {
-        const {projectedCamera} = createTestCamera({width: 400, height: 300}, createGlobeCameraProjection());
+        const {projectedCamera} = createTestCamera({width: 400, height: 300}, {projection: 'globe'});
 
         describe('map pitch alignment', () => {
 

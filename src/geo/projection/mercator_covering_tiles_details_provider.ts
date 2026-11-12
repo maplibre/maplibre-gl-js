@@ -56,8 +56,4 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
     allowWorldCopies(): boolean {
         return true;
     }
-
-    prepareNextFrame(): void { 
-        // Do nothing
-    }
 }

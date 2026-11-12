@@ -34,7 +34,7 @@ import type {LoadTileResult} from '../source/vector_tile_source.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {CameraProjection} from '../geo/projection/camera_projection.ts';
+import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 
 /**
  * Half the width of the world in mercator coordinates, which span from 0 to 1.
@@ -98,7 +98,7 @@ export class TileManager extends Evented<SourceEventType> {
     _shouldReloadOnResume: boolean;
     projectedCamera: ProjectedCamera;
     /** The projection {@link TileManager.projectedCamera} was projected with. */
-    cameraProjection: CameraProjection;
+    worldCoordinateHelper: WorldCoordinateHelper;
     terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
@@ -199,7 +199,7 @@ export class TileManager extends Evented<SourceEventType> {
         this._paused = false;
         this._shouldReloadOnResume = false;
         if (shouldReload) this.reload();
-        if (this.projectedCamera) this.update(this.projectedCamera, this.cameraProjection, this.terrain);
+        if (this.projectedCamera) this.update(this.projectedCamera, this.worldCoordinateHelper, this.terrain);
     }
 
     async _loadTile(tile: Tile, id: string, state: TileState, hadData: boolean): Promise<void> {
@@ -213,7 +213,7 @@ export class TileManager extends Evented<SourceEventType> {
                 this._source.fire(new ErrorEvent(ensureError(err), {tile}));
             } else {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
-                this.update(this.projectedCamera, this.cameraProjection, this.terrain);
+                this.update(this.projectedCamera, this.worldCoordinateHelper, this.terrain);
             }
         }
     }
@@ -547,16 +547,16 @@ export class TileManager extends Evented<SourceEventType> {
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(projectedCamera: ProjectedCamera, cameraProjection: CameraProjection, terrain?: Terrain): void {
+    update(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, terrain?: Terrain): void {
         if (!this._sourceLoaded || this._paused) {
             return;
         }
         this.projectedCamera = projectedCamera;
-        this.cameraProjection = cameraProjection;
+        this.worldCoordinateHelper = worldCoordinateHelper;
         this.terrain = terrain;
 
         this.updateCacheSize(projectedCamera);
-        if (cameraProjection.worldCoordinateHelper.wraps) {
+        if (worldCoordinateHelper.wraps) {
             this.handleWrapJump(this.projectedCamera.center.lng);
         }
 
@@ -565,10 +565,10 @@ export class TileManager extends Evented<SourceEventType> {
         if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
         } else if (this._source.tileID) { // image source
-            idealTileIDs = cameraMath.getVisibleUnwrappedCoordinates(projectedCamera, cameraProjection, this._source.tileID)
+            idealTileIDs = cameraMath.getVisibleUnwrappedCoordinates(projectedCamera, worldCoordinateHelper, this._source.tileID)
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
-            idealTileIDs = coveringTiles(projectedCamera, cameraProjection, {
+            idealTileIDs = coveringTiles(projectedCamera, worldCoordinateHelper, {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.type === 'vector' && this.map._zoomLevelsToOverscale !== undefined
@@ -872,7 +872,7 @@ export class TileManager extends Evented<SourceEventType> {
 
         this.reload(e.sourceDataChanged, e.shouldReloadTileOptions);
         if (this.projectedCamera) {
-            this.update(this.projectedCamera, this.cameraProjection, this.terrain);
+            this.update(this.projectedCamera, this.worldCoordinateHelper, this.terrain);
         }
         this._didEmitContent = true;
     }
@@ -906,20 +906,20 @@ export class TileManager extends Evented<SourceEventType> {
      * cover the given bounds.
      * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
      * @param projectedCamera - the camera the query geometry is on the screen of
-     * @param cameraProjection - the projection the camera was projected with
+     * @param worldCoordinateHelper - the world mapping the camera was projected with
      * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
-    tilesIn(pointQueryGeometry: Point[], maxPitchScaleFactor: number, has3DLayer: boolean, projectedCamera: ProjectedCamera | undefined = this.projectedCamera, cameraProjection: CameraProjection | undefined = this.cameraProjection): TileResult[] {
+    tilesIn(pointQueryGeometry: Point[], maxPitchScaleFactor: number, has3DLayer: boolean, projectedCamera: ProjectedCamera | undefined = this.projectedCamera, worldCoordinateHelper: WorldCoordinateHelper | undefined = this.worldCoordinateHelper): TileResult[] {
         const tileResults: TileResult[] = [];
 
         if (!projectedCamera) return tileResults;
-        const allowWorldCopies = getCoveringTilesDetailsProvider(cameraProjection).allowWorldCopies();
+        const allowWorldCopies = getCoveringTilesDetailsProvider(projectedCamera).allowWorldCopies();
 
         const cameraPointQueryGeometry = has3DLayer ?
             cameraMath.getCameraQueryGeometry(projectedCamera, pointQueryGeometry) :
             pointQueryGeometry;
 
-        const project = (point: Point) => cameraMath.screenPointToMercatorCoordinate(projectedCamera, cameraProjection, point, this.terrain);
+        const project = (point: Point) => cameraMath.screenPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, point, this.terrain);
         const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
         const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
 

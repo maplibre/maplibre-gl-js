@@ -6,7 +6,7 @@ import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from '../source/raster_dem_tile_source.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
-import {createMercatorCameraProjection} from '../geo/projection/camera_projection.ts';
+import {createCameraContext} from '../geo/projection/camera_context.ts';
 import {createCameraViewState} from '../geo/camera_view_state.ts';
 import {projectCamera} from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
@@ -18,7 +18,6 @@ import type {DEMData} from '../data/dem_data.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Painter, RTTObject} from '../render/painter.ts';
 import type {Map} from '../ui/map.ts';
-import type {CameraContext} from '../geo/projection/camera_constrain.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);
@@ -152,23 +151,22 @@ describe('TerrainTileManager', () => {
     describe('update', () => {
         test('reports whether the renderable tiles changed', () => {
             const manager = new TerrainTileManager(style.tileManagers.terrain);
-            const projection = createMercatorCameraProjection();
-            const context: CameraContext = {projection, constrainOverride: null};
+            const context = createCameraContext();
             let view = createCameraViewState();
             view = cameraUpdates.resize(view, context, 512, 512);
             view = cameraUpdates.setCenter(view, context, new LngLat(-46, -6));
             view = cameraUpdates.setZoom(view, context, 8);
             const renderableKeys = () => manager.getRenderableTiles().map(tile => tile.tileID.key);
 
-            expect(manager.update(projectCamera(view, projection), projection, null)).toBe(true);
+            expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(true);
             const keys = renderableKeys();
             expect(keys.length).toBeGreaterThan(0);
 
-            expect(manager.update(projectCamera(view, projection), projection, null)).toBe(false);
+            expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(false);
             expect(renderableKeys()).toEqual(keys);
 
             view = cameraUpdates.setZoom(view, context, 9);
-            expect(manager.update(projectCamera(view, projection), projection, null)).toBe(true);
+            expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(true);
             expect(renderableKeys()).not.toEqual(keys);
         });
     });

@@ -33,7 +33,7 @@ describe('queryRenderedFeatures', () => {
         expect(args[0]).toEqual([{x: 100, y: 100}]); // query geometry
         expect(args[1]).toEqual({availableImages: []}); // params
         expect(args[2]).toEqual(map._camera.projectedCamera); // camera
-        expect(args[3]).toBe(map._camera.context.projection); // camera projection
+        expect(args[3]).toBe(map._camera.context.worldCoordinateHelper); // world mapping
         expect(output).toEqual([]);
     });
 

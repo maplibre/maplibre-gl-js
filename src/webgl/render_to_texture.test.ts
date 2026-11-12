@@ -1,5 +1,4 @@
 import {beforeEach, describe, test, expect, vi} from 'vitest';
-import {createMercatorCameraProjection} from '../geo/projection/camera_projection.ts';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {FrameRenderContext} from '../render/frame_render_context.ts';
@@ -74,8 +73,7 @@ describe('render to texture', () => {
             size
         };
     }
-    const cameraProjection = createMercatorCameraProjection();
-    const {projectedCamera} = createTestCamera({width: 512, height: 512, zoom: 10}, cameraProjection);
+    const {projectedCamera, context} = createTestCamera({width: 512, height: 512, zoom: 10});
     const painter = {
         context: new Context(gl),
         renderLayer: vi.fn(),
@@ -138,7 +136,7 @@ describe('render to texture', () => {
     });
 
     function createFrameRenderContext(): FrameRenderContext {
-        const frameRenderContext = new FrameRenderContext({projectedCamera, cameraProjection, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera, worldCoordinateHelper: context.worldCoordinateHelper, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
         vi.spyOn(frameRenderContext, 'renderTileClippingMasks').mockImplementation(() => {});
         return frameRenderContext;
     }

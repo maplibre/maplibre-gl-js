@@ -14,7 +14,7 @@ import type {PaddingOptions} from '../edge_insets.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {CameraViewState} from '../camera_view_state.ts';
 import type {ProjectedCamera} from '../projected_camera.ts';
-import type {CameraContext} from './camera_constrain.ts';
+import type {CameraContext} from './camera_context.ts';
 import type {CameraForBoxAndBearingResult, EaseToMotion, EaseToMotionOptions, FlyToMotion, FlyToMotionOptions, MapControlsDeltas} from './camera_updates.ts';
 
 export function panInertia(projectedCamera: ProjectedCamera, pan: Point): {
@@ -34,7 +34,7 @@ export function panInertia(projectedCamera: ProjectedCamera, pan: Point): {
 }
 
 export function rollPitchBearingZoom(view: CameraViewState, context: CameraContext, deltas: MapControlsDeltas): CameraViewState {
-    const {bearing, pitch, roll} = getCameraMetrics(view, context.projection.worldCoordinateHelper);
+    const {bearing, pitch, roll} = getCameraMetrics(view, context.worldCoordinateHelper);
     if (deltas.bearingDelta) view = cameraUpdates.setBearing(view, bearing + deltas.bearingDelta);
     if (deltas.pitchDelta) view = cameraUpdates.setPitch(view, pitch + deltas.pitchDelta);
     if (deltas.rollDelta) view = cameraUpdates.setRoll(view, roll + deltas.rollDelta);
@@ -52,7 +52,7 @@ export function pan(view: CameraViewState, context: CameraContext, deltas: MapCo
 }
 
 export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, view: CameraViewState, context: CameraContext): CameraForBoxAndBearingResult {
-    const worldCoordinateHelper = context.projection.worldCoordinateHelper;
+    const worldCoordinateHelper = context.worldCoordinateHelper;
     const metrics = getCameraMetrics(view, worldCoordinateHelper);
     // Fit the whole box, not only its corners: rotate the points sampled over it by the bearing and take
     // the rectangle around them in the rotated frame, grown by how far the edges bulge past the points.
@@ -136,7 +136,7 @@ export function jumpToCenterZoom(view: CameraViewState, context: CameraContext, 
 }
 
 export function easeTo(view: CameraViewState, context: CameraContext, options: EaseToMotionOptions): EaseToMotion {
-    const start = getCameraMetrics(view, context.projection.worldCoordinateHelper);
+    const start = getCameraMetrics(view, context.worldCoordinateHelper);
     const startZoom = view.zoom;
     const startPadding = view.padding;
     const startEulerAngles = {roll: start.roll, pitch: start.pitch, bearing: start.bearing};
@@ -149,11 +149,11 @@ export function easeTo(view: CameraViewState, context: CameraContext, options: E
     const doPadding = !isPaddingEqual(view.padding, options.padding);
     const zoom = options.zoom !== undefined ? +options.zoom : startZoom;
 
-    const locationAtOffset = screenPointToLocation(projectCamera(view, context.projection), context.projection, start.centerPoint.add(options.offsetAsPoint));
+    const locationAtOffset = screenPointToLocation(projectCamera(view, context), context.worldCoordinateHelper, start.centerPoint.add(options.offsetAsPoint));
     const {center, zoom: endZoom} = applyConstrain(view, context, LngLat.convert(options.center || locationAtOffset), zoom);
-    cameraUpdates.normalizeCenter(view, context.projection.worldCoordinateHelper, center);
+    cameraUpdates.normalizeCenter(view, context.worldCoordinateHelper, center);
 
-    const worldCoordinateHelper = context.projection.worldCoordinateHelper;
+    const worldCoordinateHelper = context.worldCoordinateHelper;
     const from = projectToWorldCoordinates(start.worldSize, locationAtOffset, worldCoordinateHelper);
     const delta = projectToWorldCoordinates(start.worldSize, center, worldCoordinateHelper).sub(from);
 
@@ -188,7 +188,7 @@ export function easeTo(view: CameraViewState, context: CameraContext, options: E
 }
 
 export function flyTo(view: CameraViewState, context: CameraContext, options: FlyToMotionOptions): FlyToMotion {
-    const start = getCameraMetrics(view, context.projection.worldCoordinateHelper);
+    const start = getCameraMetrics(view, context.worldCoordinateHelper);
     const startZoom = view.zoom;
 
     const constrained = applyConstrain(
@@ -200,9 +200,9 @@ export function flyTo(view: CameraViewState, context: CameraContext, options: Fl
     const constrainedCenter = constrained.center;
     const targetZoom = constrained.zoom;
 
-    cameraUpdates.normalizeCenter(view, context.projection.worldCoordinateHelper, constrainedCenter);
+    cameraUpdates.normalizeCenter(view, context.worldCoordinateHelper, constrainedCenter);
 
-    const worldCoordinateHelper = context.projection.worldCoordinateHelper;
+    const worldCoordinateHelper = context.worldCoordinateHelper;
     const startWorldSize = start.worldSize;
     const from = projectToWorldCoordinates(startWorldSize, options.locationAtOffset, worldCoordinateHelper);
     const delta = projectToWorldCoordinates(startWorldSize, constrainedCenter, worldCoordinateHelper).sub(from);

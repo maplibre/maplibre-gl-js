@@ -24,7 +24,7 @@ import type {SkyPropsPossiblyEvaluated} from '../style/sky_properties.g.ts';
 import type {Projection, TileMeshUsage} from '../geo/projection/projection.ts';
 import type {CrossTileID, VariableOffset} from '../symbol/placement.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {CameraProjection} from '../geo/projection/camera_projection.ts';
+import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -66,7 +66,7 @@ export type FrameRenderData = {
 type FrameRenderContextOptions = {
     projectedCamera: ProjectedCamera;
     /** The projection the camera was projected with. */
-    cameraProjection: CameraProjection;
+    worldCoordinateHelper: WorldCoordinateHelper;
     terrain: Terrain | null;
     data: FrameRenderData;
     context: Context;
@@ -103,8 +103,8 @@ export class FrameRenderContext {
     /** Whether a layer composite has already sampled the shared scratch FBO in this frame. */
     layerCompositeSampled: boolean = false;
     readonly projectedCamera: ProjectedCamera;
-    /** The projection the camera was projected with, which gives the world mapping and the tile grid. */
-    readonly cameraProjection: CameraProjection;
+    /** The world mapping the camera was projected with. */
+    readonly worldCoordinateHelper: WorldCoordinateHelper;
     readonly terrain: Terrain | null;
     readonly data: FrameRenderData;
     readonly context: Context;
@@ -117,7 +117,7 @@ export class FrameRenderContext {
 
     constructor(options: FrameRenderContextOptions) {
         this.projectedCamera = options.projectedCamera;
-        this.cameraProjection = options.cameraProjection;
+        this.worldCoordinateHelper = options.worldCoordinateHelper;
         this.terrain = options.terrain;
         this.data = options.data;
         this.context = options.context;

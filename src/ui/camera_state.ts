@@ -3,7 +3,7 @@ import {constrainState, resize} from '../geo/projection/camera_updates.ts';
 
 import type {CameraViewState} from '../geo/camera_view_state.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
-import type {CameraContext} from '../geo/projection/camera_constrain.ts';
+import type {CameraContext, CameraProjectionKind} from '../geo/projection/camera_context.ts';
 import type {CenterElevationRule} from './center_elevation.ts';
 
 /**
@@ -32,6 +32,8 @@ export type CameraState = {
      * this count.
      */
     readonly terrainRevision: number;
+    /** The projection the camera is projected with, see {@link CameraProjectionKind}. */
+    readonly projection: CameraProjectionKind;
     /**
      * How far a globe is between mercator, at 0, and the vertical perspective, at 1, which the frame is drawn with.
      * Other projections do not read it.
@@ -85,6 +87,7 @@ export function createCameraStore(view: CameraViewState): CameraStore {
         motion: AT_REST,
         centerElevation: {rule: 'ground'},
         terrainRevision: 0,
+        projection: 'mercator',
         projectionTransition: 1,
     }));
 }
@@ -152,6 +155,11 @@ export function setCenterElevationRule(centerElevation: CenterElevationRule): Ca
 /** @internal The terrain the camera is drawn over changed, see {@link CameraState.terrainRevision}. */
 export function terrainChanged(): CameraAction {
     return (state) => ({terrainRevision: state.terrainRevision + 1});
+}
+
+/** @internal The camera moves onto another projection, a globe fully a globe until the next frame says otherwise. */
+export function setProjection(projection: CameraProjectionKind): CameraAction {
+    return (state) => projection === state.projection ? state : {projection, projectionTransition: 1};
 }
 
 /** @internal A globe moves to another point of its transition between mercator and the vertical perspective. */

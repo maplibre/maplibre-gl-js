@@ -9,22 +9,22 @@ import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {angularCoordinatesToSurfaceVector} from '../geo/projection/globe_utils.ts';
 import {createCameraViewState, getBearing, getCenterPoint, getFov, getPitch, getRoll, isPaddingEqual} from '../geo/camera_view_state.ts';
-import {createMercatorCameraProjection, usesGlobeControls, withGlobeness} from '../geo/projection/camera_projection.ts';
+import {createCameraContext, usesGlobeControls} from '../geo/projection/camera_context.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 import * as cameraSolvers from '../geo/projection/camera_solvers.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
 import {takeDrawnElevation} from './center_elevation.ts';
-import {adjustCamera, combineActions, constrainView, createCameraStore, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjectionTransition, startMovement, terrainChanged} from './camera_state.ts';
+import {adjustCamera, combineActions, constrainView, createCameraStore, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjection, setProjectionTransition, startMovement, terrainChanged} from './camera_state.ts';
 import {CameraMovementScheduler} from './camera_movement_scheduler.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {TransformConstrainFunction} from '../geo/camera_types.ts';
+import type {TransformConstrainFunction, WorldCoordinateHelper} from '../geo/camera_types.ts';
 import type {CameraViewState} from '../geo/camera_view_state.ts';
 import type {CameraMetrics, ProjectedCamera} from '../geo/projected_camera.ts';
-import type {CameraContext} from '../geo/projection/camera_constrain.ts';
-import type {CameraProjection} from '../geo/projection/camera_projection.ts';
+import type {CameraContext, CameraProjectionKind} from '../geo/projection/camera_context.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
@@ -374,15 +374,15 @@ export type CameraInitOptions = {
 };
 
 export class Camera extends Evented<MapEventType> {
-    /** The projection the style moved the camera onto, see {@link Camera.migrateProjection}, at a globe's full transition. */
-    private _projection: CameraProjection;
+    /** The lng/lat to world coordinate mapping of the projection the style moved the camera onto, see {@link Camera.migrateProjection}. */
+    private _worldCoordinateHelper: WorldCoordinateHelper;
     /** The function the map was given to constrain the camera with instead of the projection's own, or null. */
     private _constrainOverride: TransformConstrainFunction | null;
     /**
-     * The last context {@link Camera.context} built and the transition it was built at. It is kept so that the same
-     * projection object is handed out while nothing it is built from changes: the projected camera is memoised by it.
+     * The last context {@link Camera.context} built. It is kept while nothing it is built from changes, so that what
+     * is derived from it, see {@link Camera.renderedState}, is not derived again.
      */
-    private _contextAt: {projectionTransition: number; context: CameraContext} | null = null;
+    private _context: CameraContext | null = null;
 
     /** The last camera {@link Camera.renderedState} derived and what it derived it from. */
     private _renderedFrom: {inputs: readonly unknown[]; rendered: CameraViewState} | null = null;
@@ -405,20 +405,21 @@ export class Camera extends Evented<MapEventType> {
      * @internal
      * The camera the map is drawn with and what follows from it, see {@link CameraState.rendered}.
      */
-    get projectedCamera(): ProjectedCamera { return cameraMath.projectCamera(this.renderedState, this.context.projection); }
+    get projectedCamera(): ProjectedCamera { return cameraMath.projectCamera(this.renderedState, this.context); }
 
     /**
      * @internal
-     * What the camera is projected and constrained with: its projection, at the transition the store holds, see
-     * {@link CameraState.projectionTransition}, and the constrain it was given.
+     * What the camera is projected and constrained with: its projection and a globe's transition, which its state
+     * holds, see {@link CameraState.projection}, and the world mapping and the constrain it was given.
      */
     get context(): CameraContext {
-        const projectionTransition = this._state.projectionTransition;
-        if (this._contextAt?.projectionTransition !== projectionTransition) {
-            const projection = withGlobeness(this._projection, projectionTransition);
-            this._contextAt = {projectionTransition, context: {projection, constrainOverride: this._constrainOverride}};
+        const {projection, projectionTransition} = this._state;
+        const context = this._context;
+        if (context?.projection !== projection || context.projectionTransition !== projectionTransition ||
+            context.worldCoordinateHelper !== this._worldCoordinateHelper || context.constrainOverride !== this._constrainOverride) {
+            this._context = createCameraContext({projection, projectionTransition, worldCoordinateHelper: this._worldCoordinateHelper, constrainOverride: this._constrainOverride});
         }
-        return this._contextAt.context;
+        return this._context;
     }
 
     /**
@@ -467,15 +468,15 @@ export class Camera extends Evented<MapEventType> {
     constructor(options: CameraInitOptions) {
         super();
         // The camera starts in mercator; the style moves it onto its own projection, see `migrateProjection`.
-        this._projection = createMercatorCameraProjection();
+        this._worldCoordinateHelper = mercatorWorldCoordinateHelper;
         this._constrainOverride = options.transformConstrain ?? null;
-        const context: CameraContext = {projection: this._projection, constrainOverride: this._constrainOverride};
+        const context = createCameraContext({constrainOverride: this._constrainOverride});
         let view = createCameraViewState();
         if (options.minZoom !== undefined) view = cameraUpdates.setMinZoom(view, context, options.minZoom);
         if (options.maxZoom !== undefined) view = cameraUpdates.setMaxZoom(view, context, options.maxZoom);
         if (options.minPitch !== undefined) view = cameraUpdates.setMinPitch(view, options.minPitch);
         if (options.maxPitch !== undefined) view = cameraUpdates.setMaxPitch(view, options.maxPitch);
-        if (options.renderWorldCopies !== undefined) view = cameraUpdates.setRenderWorldCopies(view, context.projection.worldCoordinateHelper, options.renderWorldCopies);
+        if (options.renderWorldCopies !== undefined) view = cameraUpdates.setRenderWorldCopies(view, context.worldCoordinateHelper, options.renderWorldCopies);
         this._elevationHandedOut = view.elevation;
         this._store = createCameraStore(view);
         this._store.subscribe(this._onStateChange);
@@ -543,12 +544,12 @@ export class Camera extends Evented<MapEventType> {
      * A camera view state projected in the camera's context, for reading a camera a movement is changing.
      */
     _projectState(view: CameraViewState): ProjectedCamera {
-        return cameraMath.projectCamera(view, this.context.projection);
+        return cameraMath.projectCamera(view, this.context);
     }
 
     /** The values every projection derives from a camera view state. */
     private _metricsOf(view: CameraViewState): CameraMetrics {
-        return cameraMath.getCameraMetrics(view, this.context.projection.worldCoordinateHelper);
+        return cameraMath.getCameraMetrics(view, this.context.worldCoordinateHelper);
     }
 
     /**
@@ -574,11 +575,10 @@ export class Camera extends Evented<MapEventType> {
      * Moves the camera onto a new projection, at its full transition until the next frame sets it, see
      * {@link Camera.setProjectionTransition}. The camera's view state is plain data and stays, constrained to the new projection.
      */
-    migrateProjection(projection: CameraProjection): void {
-        this._projection = projection;
-        this._contextAt = null;
+    migrateProjection(projection: CameraProjectionKind, worldCoordinateHelper: WorldCoordinateHelper): void {
+        this._worldCoordinateHelper = worldCoordinateHelper;
         this._batch(() => {
-            this._dispatch(setProjectionTransition(projection.kind === 'globe' ? projection.globeness : 1));
+            this._dispatch(setProjection(projection));
             this._dispatch(constrainView(this.context));
         });
     }
@@ -591,7 +591,6 @@ export class Camera extends Evented<MapEventType> {
     setConstrainOverride(constrain: TransformConstrainFunction | null): void {
         if (this._constrainOverride === constrain) return;
         this._constrainOverride = constrain;
-        this._contextAt = null;
         this.applyStateChange(cameraUpdates.constrainState);
     }
 
@@ -616,7 +615,7 @@ export class Camera extends Evented<MapEventType> {
 
     /** Returns the location drawn at a point on the screen, on the terrain's surface when the map has terrain. */
     unproject(point: PointLike): LngLat {
-        return cameraMath.screenPointToLocation(this.projectedCamera, this.context.projection, Point.convert(point), this.terrain);
+        return cameraMath.screenPointToLocation(this.projectedCamera, this.context.worldCoordinateHelper, Point.convert(point), this.terrain);
     }
 
     setCenter(center: LngLatLike, eventData?: Record<string, unknown>): this {
@@ -829,8 +828,8 @@ export class Camera extends Evented<MapEventType> {
     fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this {
         return this._fitInternal(
             this._cameraForBoxAndBearing(
-                cameraMath.screenPointToLocation(this.projectedCamera, this.context.projection, Point.convert(p0)),
-                cameraMath.screenPointToLocation(this.projectedCamera, this.context.projection, Point.convert(p1)),
+                cameraMath.screenPointToLocation(this.projectedCamera, this.context.worldCoordinateHelper, Point.convert(p0)),
+                cameraMath.screenPointToLocation(this.projectedCamera, this.context.worldCoordinateHelper, Point.convert(p1)),
                 bearing,
                 options),
             options,
@@ -936,7 +935,7 @@ export class Camera extends Evented<MapEventType> {
         const anchor = LngLat.convert(options.anchorLocation);
         const target = Point.convert(options.anchorScreenPoint);
         const deltas: MapControlsDeltas = {
-            panDelta: target.sub(cameraMath.locationToScreenPoint(projectedCamera, this.context.projection, anchor, this.terrain)),
+            panDelta: target.sub(cameraMath.locationToScreenPoint(projectedCamera, this.context.worldCoordinateHelper, anchor, this.terrain)),
             zoomDelta: options.zoom === undefined ? 0 : options.zoom - projectedCamera.zoom,
             bearingDelta: 0,
             pitchDelta: 0,
@@ -954,7 +953,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
-        const centerInfo = cameraUpdates.calculateCenterFromCameraLngLatAlt(this.renderedState, this.context.projection.worldCoordinateHelper, cameraLngLat, cameraAlt, bearing, pitch);
+        const centerInfo = cameraUpdates.calculateCenterFromCameraLngLatAlt(this.renderedState, this.context.worldCoordinateHelper, cameraLngLat, cameraAlt, bearing, pitch);
         return {
             center: centerInfo.center,
             elevation: centerInfo.elevation,
@@ -996,7 +995,7 @@ export class Camera extends Evented<MapEventType> {
 
         if (options.around) {
             around = LngLat.convert(options.around);
-            aroundPoint = cameraMath.locationToScreenPoint(this._projectState(view), this.context.projection, around);
+            aroundPoint = cameraMath.locationToScreenPoint(this._projectState(view), this.context.worldCoordinateHelper, around);
         }
 
         const easeMotion = cameraUpdates.easeTo(view, this.context, {
@@ -1305,7 +1304,7 @@ export class Camera extends Evented<MapEventType> {
         if ((!this.terrain && view.elevation >= 0 && projectedCamera.pitch <= 90) || cameraMath.getClippingPlane(projectedCamera)) {
             return view;
         }
-        const cameraLngLat = cameraMath.getCameraLngLat(projectedCamera, this.context.projection);
+        const cameraLngLat = cameraMath.getCameraLngLat(projectedCamera, this.context.worldCoordinateHelper);
         let height = this._heightAboveCamera(projectedCamera);
         if (height <= 0) {
             return view;
@@ -1313,7 +1312,7 @@ export class Camera extends Evented<MapEventType> {
         let corrected = view;
         for (let pass = 0; pass < MAX_CAMERA_RAISES && height > 0; pass++) {
             const altitude = cameraMath.getCameraAltitude(this._projectState(corrected));
-            const {zoom, pitch} = cameraSolvers.calculateCameraOptionsFromTo(corrected, this.context.projection, cameraLngLat, altitude + height, corrected.center, corrected.elevation);
+            const {zoom, pitch} = cameraSolvers.calculateCameraOptionsFromTo(corrected, this.context, cameraLngLat, altitude + height, corrected.center, corrected.elevation);
             corrected = cameraUpdates.setPitch(cameraUpdates.setZoom(corrected, this.context, zoom), pitch);
             height = this._heightAboveCamera(this._projectState(corrected));
         }
@@ -1335,7 +1334,7 @@ export class Camera extends Evented<MapEventType> {
      * @param projectedCamera - the camera whose camera is checked
      */
     _terrainHeightAboveCamera(projectedCamera: ProjectedCamera): number {
-        let height = this.terrain.getElevationForLngLat(cameraMath.getCameraLngLat(projectedCamera, this.context.projection), projectedCamera.tileZoom) - cameraMath.getCameraAltitude(projectedCamera);
+        let height = this.terrain.getElevationForLngLat(cameraMath.getCameraLngLat(projectedCamera, this.context.worldCoordinateHelper), projectedCamera.tileZoom) - cameraMath.getCameraAltitude(projectedCamera);
         const index = cameraMath.getClippingPlane(projectedCamera) ? null : this.terrain.getCoverageIndex();
         if (!index) {
             return height;
@@ -1349,7 +1348,7 @@ export class Camera extends Evented<MapEventType> {
                 const x = w0 * p0[0] + w1 * p1[0] + w2 * p2[0] + w3 * p3[0];
                 const y = w0 * p0[1] + w1 * p1[1] + w2 * p2[1] + w3 * p3[1];
                 const altitude = w0 * p0[2] + w1 * p1[2] + w2 * p2[2] + w3 * p3[2];
-                const sample = sampleAt(index, this.terrain.exaggeration, x, y, this.context.projection.worldCoordinateHelper.wraps);
+                const sample = sampleAt(index, this.terrain.exaggeration, x, y, this.context.worldCoordinateHelper.wraps);
                 if (sample.covered) {
                     height = Math.max(height, sample.elevation - altitude);
                 }
@@ -1372,8 +1371,8 @@ export class Camera extends Evented<MapEventType> {
         if (!index) {
             return undefined;
         }
-        const worldCoordinateHelper = this.context.projection.worldCoordinateHelper;
-        const cameraLngLat = cameraMath.getCameraLngLat(projectedCamera, this.context.projection);
+        const worldCoordinateHelper = this.context.worldCoordinateHelper;
+        const cameraLngLat = cameraMath.getCameraLngLat(projectedCamera, this.context.worldCoordinateHelper);
         const camera = worldCoordinateHelper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat);
         const center = worldCoordinateHelper.worldFromLngLat(projectedCamera.center.lng, projectedCamera.center.lat);
         const distanceFractionAtMaxZoom = zoomScale(projectedCamera.zoom - projectedCamera.maxZoom);
@@ -1413,15 +1412,15 @@ export class Camera extends Evented<MapEventType> {
      * @param point - the screen point the drag starts at
      */
     captureRotationPivot(projectedCamera: ProjectedCamera, point: Point): RotationPivot {
-        if (!isBelowHorizon(projectedCamera, this.context.projection, point)) {
-            return {point: projectedCamera.centerPoint, location: projectedCamera.center, distance: distanceFromCamera(projectedCamera, this.context.projection, projectedCamera.center)};
+        if (!isBelowHorizon(projectedCamera, this.context.worldCoordinateHelper, point)) {
+            return {point: projectedCamera.centerPoint, location: projectedCamera.center, distance: distanceFromCamera(projectedCamera, this.context.worldCoordinateHelper, projectedCamera.center)};
         }
-        const hit = this.terrain ? cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, this.context.projection, point, this.terrain) : null;
-        const location = hit ? hit.toLngLat() : cameraMath.screenPointToLocation(projectedCamera, this.context.projection, point);
-        if (hit && usesGlobeControls(this.context.projection)) {
-            return {point: cameraMath.locationToScreenPoint(projectedCamera, this.context.projection, location), location, distance: distanceFromCamera(projectedCamera, this.context.projection, location)};
+        const hit = this.terrain ? cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, this.context.worldCoordinateHelper, point, this.terrain) : null;
+        const location = hit ? hit.toLngLat() : cameraMath.screenPointToLocation(projectedCamera, this.context.worldCoordinateHelper, point);
+        if (hit && usesGlobeControls(this.context)) {
+            return {point: cameraMath.locationToScreenPoint(projectedCamera, this.context.worldCoordinateHelper, location), location, distance: distanceFromCamera(projectedCamera, this.context.worldCoordinateHelper, location)};
         }
-        return {point, location, elevation: hit?.z, distance: distanceFromCamera(projectedCamera, this.context.projection, location, hit?.z)};
+        return {point, location, elevation: hit?.z, distance: distanceFromCamera(projectedCamera, this.context.worldCoordinateHelper, location, hit?.z)};
     }
 
     /**
@@ -1452,9 +1451,9 @@ export class Camera extends Evented<MapEventType> {
      */
     _turnAroundPivot(start: CameraViewState, pivot: RotationPivot, deltas: MapControlsDeltas): CameraViewState | null {
         const turned = cameraUpdates.rollPitchBearingZoom(start, this.context, deltas);
-        if (getPitch(turned) >= 90 || !isBelowHorizon(this._projectState(turned), this.context.projection, pivot.point)) return null;
+        if (getPitch(turned) >= 90 || !isBelowHorizon(this._projectState(turned), this.context.worldCoordinateHelper, pivot.point)) return null;
         const held = holdPivot(turned, this.context, pivot);
-        return held && isAtScreenPoint(this._projectState(held), this.context.projection, pivot) ? held : null;
+        return held && isAtScreenPoint(this._projectState(held), this.context.worldCoordinateHelper, pivot) ? held : null;
     }
 
     /**
@@ -1596,7 +1595,7 @@ export class Camera extends Evented<MapEventType> {
 
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = getCenterPoint(view).add(offsetAsPoint);
-        const locationAtOffset = cameraMath.screenPointToLocation(this._projectState(view), this.context.projection, pointAtOffset);
+        const locationAtOffset = cameraMath.screenPointToLocation(this._projectState(view), this.context.worldCoordinateHelper, pointAtOffset);
 
         const flyToMotion = cameraUpdates.flyTo(view, this.context, {
             bearing,
@@ -1787,7 +1786,7 @@ function holdPivot(view: CameraViewState, context: CameraContext, pivot: Rotatio
 /** Moves the camera so the pivot is at its screen point, and returns it with the pivot's distance from it. */
 function placePivot(view: CameraViewState, context: CameraContext, pivot: RotationPivot): {state: CameraViewState; distance: number} {
     const placed = cameraSolvers.setLocationAtPoint(view, context, pivot.location, pivot.point, pivot.elevation);
-    return {state: placed, distance: distanceFromCamera(cameraMath.projectCamera(placed, context.projection), context.projection, pivot.location, pivot.elevation)};
+    return {state: placed, distance: distanceFromCamera(cameraMath.projectCamera(placed, context), context.worldCoordinateHelper, pivot.location, pivot.elevation)};
 }
 
 function isAtDistance(distance: number, pivot: RotationPivot): boolean {
@@ -1795,19 +1794,19 @@ function isAtDistance(distance: number, pivot: RotationPivot): boolean {
 }
 
 /** Whether the ground under the pivot's screen point is the pivot, which the edge of the map or a pole of the globe can prevent. A pivot on terrain is not checked. */
-function isAtScreenPoint(projectedCamera: ProjectedCamera, projection: CameraProjection, pivot: RotationPivot): boolean {
+function isAtScreenPoint(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, pivot: RotationPivot): boolean {
     if (pivot.elevation !== undefined) return true;
-    const offset = vec3.distance(positionOf(cameraMath.screenPointToLocation(projectedCamera, projection, pivot.point), 0), positionOf(pivot.location, 0));
+    const offset = vec3.distance(positionOf(cameraMath.screenPointToLocation(projectedCamera, worldCoordinateHelper, pivot.point), 0), positionOf(pivot.location, 0));
     return offset < pivot.distance * PIVOT_POINT_TOLERANCE;
 }
 
-function isBelowHorizon(projectedCamera: ProjectedCamera, projection: CameraProjection, point: Point): boolean {
-    return cameraMath.isPointOnMapSurface(projectedCamera, projection, new Point(point.x, point.y - PIVOT_HORIZON_MARGIN_PX));
+function isBelowHorizon(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, point: Point): boolean {
+    return cameraMath.isPointOnMapSurface(projectedCamera, worldCoordinateHelper, new Point(point.x, point.y - PIVOT_HORIZON_MARGIN_PX));
 }
 
 /** Returns the straight-line distance in meters from the camera to a location, at the center's elevation unless it has its own. */
-function distanceFromCamera(projectedCamera: ProjectedCamera, projection: CameraProjection, location: LngLat, elevation: number = projectedCamera.elevation): number {
-    return vec3.distance(positionOf(cameraMath.getCameraLngLat(projectedCamera, projection), cameraMath.getCameraAltitude(projectedCamera)), positionOf(location, elevation));
+function distanceFromCamera(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, location: LngLat, elevation: number = projectedCamera.elevation): number {
+    return vec3.distance(positionOf(cameraMath.getCameraLngLat(projectedCamera, worldCoordinateHelper), cameraMath.getCameraAltitude(projectedCamera)), positionOf(location, elevation));
 }
 
 /** Returns the position of a location in meters from the center of the earth. */

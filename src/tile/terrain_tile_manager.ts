@@ -12,7 +12,7 @@ import type {Source} from '../source/source.ts';
 import type {TileManager} from './tile_manager.ts';
 import type {OverscaledTileID} from './tile_id.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {CameraProjection} from '../geo/projection/camera_projection.ts';
+import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 
 /**
  * @internal
@@ -90,18 +90,18 @@ export class TerrainTileManager extends Evented {
     /**
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
      * @param projectedCamera - the camera the scene is seen with
-     * @param cameraProjection - the projection the camera was projected with
+     * @param worldCoordinateHelper - the world mapping the camera was projected with
      * @param terrain - the terrain
      * @returns true when the set of renderable tiles changed
      */
-    update(projectedCamera: ProjectedCamera, cameraProjection: CameraProjection, terrain: Terrain): boolean {
+    update(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, terrain: Terrain): boolean {
         // load raster-dem tiles for the current scene.
-        this.tileManager.update(projectedCamera, cameraProjection, terrain);
+        this.tileManager.update(projectedCamera, worldCoordinateHelper, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTilesKeys = [];
         const keys = {};
         let changed = false;
-        for (const tileID of coveringTiles(projectedCamera, cameraProjection, {
+        for (const tileID of coveringTiles(projectedCamera, worldCoordinateHelper, {
             tileSize: this.tileSize,
             minzoom: this.minzoom,
             maxzoom: this.maxzoom,

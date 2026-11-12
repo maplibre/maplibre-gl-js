@@ -179,7 +179,7 @@ export class HandlerInertia {
         if (deltas.pan.mag()) {
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
             const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
-            const computedEaseOptions = cameraUpdates.panInertia(this._camera.projectedCamera, this._camera.context.projection, finalPan);
+            const computedEaseOptions = cameraUpdates.panInertia(this._camera.projectedCamera, this._camera.context, finalPan);
             easeOptions.center = computedEaseOptions.easingCenter;
             easeOptions.offset = computedEaseOptions.easingOffset;
             extendDuration(easeOptions, result);

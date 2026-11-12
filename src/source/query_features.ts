@@ -11,7 +11,6 @@ import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geoj
 import type {QueryResults, QueryResultsItem} from '../data/feature_index.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {CameraProjection} from '../geo/projection/camera_projection.ts';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;
@@ -114,13 +113,13 @@ export function queryRenderedFeatures(
     queryGeometry: Point[],
     params: QueryRenderedFeaturesOptionsStrict | undefined,
     projectedCamera: ProjectedCamera,
-    cameraProjection: CameraProjection,
+    worldCoordinateHelper: WorldCoordinateHelper,
     getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
 ): QueryRenderedFeaturesResults {
 
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, tileManager.id);
     const maxPitchScaleFactor = cameraMath.maxPitchScaleFactor(projectedCamera);
-    const tilesIn = tileManager.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer, projectedCamera, cameraProjection);
+    const tilesIn = tileManager.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer, projectedCamera, worldCoordinateHelper);
 
     tilesIn.sort(sortTilesIn);
     const renderedFeatureLayers: RenderedFeatureLayer[] = [];
@@ -136,7 +135,7 @@ export function queryRenderedFeatures(
                 tileIn.scale,
                 params,
                 projectedCamera,
-                cameraProjection.worldCoordinateHelper,
+                worldCoordinateHelper,
                 maxPitchScaleFactor,
                 getElevation ? (x: number, y: number) => getElevation(tileIn.tileID, x, y) : undefined,
             )

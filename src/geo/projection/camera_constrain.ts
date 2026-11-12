@@ -4,11 +4,11 @@ import {mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, MAX_VALID_LATITUDE, radiansToDegrees, remapSaturate, scaleZoom, wrap, zoomScale} from '../../util/util.ts';
 import {lngLatBoxToWorldBox, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
 import {getGlobeRadiusPixels, getZoomAdjustment} from './globe_utils.ts';
-import {renderedProjection} from './camera_projection.ts';
+import {renderedProjection} from './camera_context.ts';
 
 import type {CameraViewState} from '../camera_view_state.ts';
-import type {TransformConstrainFunction, WorldCoordinateHelper} from '../camera_types.ts';
-import type {CameraProjection} from './camera_projection.ts';
+import type {WorldCoordinateHelper} from '../camera_types.ts';
+import type {CameraContext} from './camera_context.ts';
 
 /**
  * How many times larger than the viewport the area past the mercator edge has grown when the center is back on that edge.
@@ -18,23 +18,13 @@ const POLE_AREA_FADE_SCALE = 4;
 
 /**
  * @internal
- * What a camera is constrained with: its projection, and the function the map was given to use instead of the
- * projection's own constrain, or null.
- */
-export type CameraContext = {
-    readonly projection: CameraProjection;
-    readonly constrainOverride: TransformConstrainFunction | null;
-};
-
-/**
- * @internal
  * Where the camera's constrain puts a center and a zoom: the override the map was given, or the projection's own,
  * see {@link defaultConstrain}.
  */
 export function applyConstrain(view: CameraViewState, context: CameraContext, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
     return context.constrainOverride !== null ?
         context.constrainOverride(lngLat, zoom) :
-        defaultConstrain(view, context.projection, lngLat, zoom);
+        defaultConstrain(view, context, lngLat, zoom);
 }
 
 /**
@@ -42,10 +32,9 @@ export function applyConstrain(view: CameraViewState, context: CameraContext, ln
  * Where the projection's own constrain puts a center and a zoom, for a camera with the given size, padding and limits.
  * A globe constrains like the projection it draws with.
  */
-export function defaultConstrain(view: CameraViewState, projection: CameraProjection, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
-    const rendered = renderedProjection(projection);
-    return rendered.kind === 'mercator' ?
-        mercatorConstrain(view, rendered.worldCoordinateHelper, lngLat, zoom) :
+export function defaultConstrain(view: CameraViewState, context: CameraContext, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    return renderedProjection(context) === 'mercator' ?
+        mercatorConstrain(view, context.worldCoordinateHelper, lngLat, zoom) :
         verticalPerspectiveConstrain(view, lngLat, zoom);
 }
 

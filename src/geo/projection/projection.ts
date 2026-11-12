@@ -19,7 +19,7 @@ export type TileMeshUsage = 'stencil' | 'raster';
  * The part of a projection that draws the map: its name, its shaders, how finely it subdivides tile meshes, and the
  * GPU resources these need. It is independent of the camera, exists once per map, and must be disposed of with
  * `destroy`, which frees what it allocated. The camera math of the same projection is a `CameraProjection`, which
- * the map's camera is projected with, see `camera_projection.ts`.
+ * the map's camera is projected with, see `camera_context.ts`.
  */
 export interface Projection {
     /**

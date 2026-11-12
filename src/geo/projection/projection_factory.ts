@@ -1,21 +1,22 @@
 import {warnOnce} from '../../util/util.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {GlobeProjection} from './globe_projection.ts';
-import {createGlobeCameraProjection, createMercatorCameraProjection, createVerticalPerspectiveCameraProjection, type CameraProjection} from './camera_projection.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
 import {CRSWorldCoordinateHelper} from './crs.ts';
 import {getRegisteredProjection} from './projection_crud.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
+import type {CameraProjectionKind} from './camera_context.ts';
 
 /**
  * @internal
- * The style projection of a projection name or expression, and the projection the camera is drawn with in it.
+ * The style projection of a projection name or expression, and the projection the camera is projected with in it.
+ * The camera's world mapping is the style projection's, see {@link Projection.worldCoordinateHelper}.
  */
 export function createProjectionFromName(name: ProjectionSpecification['type'], globalState: Record<string, any>): {
     projection: Projection;
-    cameraProjection: CameraProjection;
+    cameraProjection: CameraProjectionKind;
 } {
     if (Array.isArray(name)) {
         const registeredName = findRegisteredProjectionName(name);
@@ -25,7 +26,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         const globeProjection = new GlobeProjection({type: name}, globalState);
         return {
             projection: globeProjection,
-            cameraProjection: createGlobeCameraProjection(),
+            cameraProjection: 'globe',
         };
     }
     const registered = getRegisteredProjection(name);
@@ -33,7 +34,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         const worldCoordinateHelper = new CRSWorldCoordinateHelper(registered);
         return {
             projection: new MercatorProjection(worldCoordinateHelper),
-            cameraProjection: createMercatorCameraProjection(worldCoordinateHelper),
+            cameraProjection: 'mercator',
         };
     }
     switch (name) {
@@ -41,7 +42,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         {
             return {
                 projection: new MercatorProjection(),
-                cameraProjection: createMercatorCameraProjection(),
+                cameraProjection: 'mercator',
             };
         }
         case 'globe':
@@ -57,14 +58,14 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             ]}, {});
             return {
                 projection: globeProjection,
-                cameraProjection: createGlobeCameraProjection(),
+                cameraProjection: 'globe',
             };
         }
         case 'vertical-perspective':
         {
             return {
                 projection: new VerticalPerspectiveProjection(),
-                cameraProjection: createVerticalPerspectiveCameraProjection(),
+                cameraProjection: 'vertical-perspective',
             };
         }
         default:
@@ -72,7 +73,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
             return {
                 projection: new MercatorProjection(),
-                cameraProjection: createMercatorCameraProjection(),
+                cameraProjection: 'mercator',
             };
         }
     }

@@ -13,7 +13,7 @@ function createCamera(): TestCamera {
 }
 
 const {state: view, context, projectedCamera} = createCamera();
-const {projection} = context;
+const {worldCoordinateHelper} = context;
 const points: Point[] = [];
 const lngLats: LngLat[] = [];
 for (let i = 0; i < 100; i++) {
@@ -30,22 +30,22 @@ test('camera hot paths', async ({bench}) => {
         }),
         bench('calculateCenterFromCameraLngLatAlt (iterative)', () => {
             for (let i = 0; i < 100; i++) {
-                cameraUpdates.calculateCenterFromCameraLngLatAlt(view, projection.worldCoordinateHelper, lngLats[i], 4000 + i, 30, 45);
+                cameraUpdates.calculateCenterFromCameraLngLatAlt(view, worldCoordinateHelper, lngLats[i], 4000 + i, 30, 45);
             }
         }),
         bench('getCameraLngLat', () => {
             for (let i = 0; i < 100; i++) {
-                cameraMath.getCameraLngLat(projectedCamera, projection);
+                cameraMath.getCameraLngLat(projectedCamera, worldCoordinateHelper);
             }
         }),
         bench('screenPointToLocation', () => {
             for (let i = 0; i < 100; i++) {
-                cameraMath.screenPointToLocation(projectedCamera, projection, points[i]);
+                cameraMath.screenPointToLocation(projectedCamera, worldCoordinateHelper, points[i]);
             }
         }),
         bench('locationToScreenPoint', () => {
             for (let i = 0; i < 100; i++) {
-                cameraMath.locationToScreenPoint(projectedCamera, projection, lngLats[i]);
+                cameraMath.locationToScreenPoint(projectedCamera, worldCoordinateHelper, lngLats[i]);
             }
         }),
         bench('setLocationAtPoint', () => {
@@ -54,7 +54,7 @@ test('camera hot paths', async ({bench}) => {
             }
         }),
         bench('coveringTiles', () => {
-            coveringTiles(projectedCamera, projection, {tileSize: 512, minzoom: 0, maxzoom: 22, reparseOverscaled: false, calculateTileZoom: undefined});
+            coveringTiles(projectedCamera, worldCoordinateHelper, {tileSize: 512, minzoom: 0, maxzoom: 22, reparseOverscaled: false, calculateTileZoom: undefined});
         }),
         bench('easeTo easeFunc (per-frame animation path)', () => {
             const start = createCamera();

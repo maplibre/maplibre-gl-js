@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, test, expect, vi} from 'vitest';
 import {createProjectionFromName} from './projection_factory.ts';
-import {usesGlobeControls} from './camera_projection.ts';
+import {createCameraContext, usesGlobeControls} from './camera_context.ts';
 import {addProjection, removeProjection} from './projection_crud.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 
@@ -17,10 +17,10 @@ describe('createProjectionFromName', () => {
     });
 
     test('runs the identity projection on the mercator camera projection, moved over a plane that does not wrap', () => {
-        const {cameraProjection} = createProjectionFromName('identity', {});
-        expect(cameraProjection.kind).toBe('mercator');
-        expect(cameraProjection.worldCoordinateHelper.wraps).toBe(false);
-        expect(usesGlobeControls(cameraProjection)).toBe(false);
+        const {projection, cameraProjection} = createProjectionFromName('identity', {});
+        expect(cameraProjection).toBe('mercator');
+        expect(projection.worldCoordinateHelper.wraps).toBe(false);
+        expect(usesGlobeControls(createCameraContext({projection: cameraProjection, worldCoordinateHelper: projection.worldCoordinateHelper}))).toBe(false);
     });
 
     test('falls back to mercator for a name that only Object.prototype has', () => {
@@ -52,9 +52,9 @@ describe('createProjectionFromName', () => {
             expect([world.x, world.y]).toEqual([1, 0]);
         });
 
-        test('runs its transform on the projection\'s own mapping', () => {
-            const {projection, cameraProjection} = createProjectionFromName('test:factory', {});
-            expect(cameraProjection.worldCoordinateHelper).toBe(projection.worldCoordinateHelper);
+        test('runs its transform on the mercator camera projection', () => {
+            const {cameraProjection} = createProjectionFromName('test:factory', {});
+            expect(cameraProjection).toBe('mercator');
         });
 
         test('warns that a projection expression naming it falls back to the globe projection', () => {

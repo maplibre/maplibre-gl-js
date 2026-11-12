@@ -17,10 +17,10 @@ import {StubMap, createTestCamera, sleep, waitForEvent} from '../util/test/util.
 import {setNow, restoreNow} from '../util/time_control.ts';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
-import {createMercatorCameraProjection, type CameraProjection} from '../geo/projection/camera_projection.ts';
 
 import type {PossiblyEvaluated} from './properties.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
 import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
 import type {Tile} from '../tile/tile.ts';
@@ -3477,12 +3477,13 @@ describe('Style.queryRenderedFeatures', () => {
 
     let style: Style;
     let projectedCamera: ProjectedCamera;
-    let cameraProjection: CameraProjection;
+    let worldCoordinateHelper: WorldCoordinateHelper;
 
     beforeEach(() => new Promise<void>(callback => {
         style = new Style(getStubMap());
-        cameraProjection = createMercatorCameraProjection();
-        projectedCamera = createTestCamera({width: 512, height: 512}, cameraProjection).projectedCamera;
+        const camera = createTestCamera({width: 512, height: 512});
+        projectedCamera = camera.projectedCamera;
+        worldCoordinateHelper = camera.context.worldCoordinateHelper;
         function queryMapLibreFeatures(layers, serializedLayers, getFeatureState, queryGeom, cameraQueryGeom, scale, params) {
             const features = {
                 'land': [{
@@ -3588,12 +3589,12 @@ describe('Style.queryRenderedFeatures', () => {
             };
 
             style.tileManagers.mapLibre.projectedCamera = projectedCamera;
-            style.tileManagers.mapLibre.cameraProjection = cameraProjection;
+            style.tileManagers.mapLibre.worldCoordinateHelper = worldCoordinateHelper;
             style.tileManagers.other.projectedCamera = projectedCamera;
-            style.tileManagers.other.cameraProjection = cameraProjection;
+            style.tileManagers.other.worldCoordinateHelper = worldCoordinateHelper;
 
             style.update({zoom: 0} as EvaluationParameters);
-            style._updateSources(projectedCamera, cameraProjection);
+            style._updateSources(projectedCamera, worldCoordinateHelper);
             callback();
         });
     }));
@@ -3601,21 +3602,21 @@ describe('Style.queryRenderedFeatures', () => {
     afterEach(() => {
         style = undefined;
         projectedCamera = undefined;
-        cameraProjection = undefined;
+        worldCoordinateHelper = undefined;
     });
 
     test('returns feature type', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, projectedCamera, cameraProjection);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, projectedCamera, worldCoordinateHelper);
         expect(results[0].geometry.type).toBe('Line');
     });
 
     test('filters by `layers` option', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land']}, projectedCamera, cameraProjection);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land']}, projectedCamera, worldCoordinateHelper);
         expect(results).toHaveLength(2);
     });
 
     test('filters by `layers` option as a Set', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land'])}, projectedCamera, cameraProjection);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land'])}, projectedCamera, worldCoordinateHelper);
         expect(results).toHaveLength(2);
     });
 
@@ -3627,23 +3628,23 @@ describe('Style.queryRenderedFeatures', () => {
             }
             return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: 'string' as any}, projectedCamera, cameraProjection);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: 'string' as any}, projectedCamera, worldCoordinateHelper);
         expect(errors).toBe(1);
     });
 
     test('includes layout properties', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, projectedCamera, cameraProjection);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, projectedCamera, worldCoordinateHelper);
         const layout = results[0].layer.layout;
         expect(layout['line-cap']).toBe('round');
     });
 
     test('includes paint properties', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, projectedCamera, cameraProjection);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, projectedCamera, worldCoordinateHelper);
         expect(results[2].layer.paint['line-color']).toBe('red');
     });
 
     test('includes metadata', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, projectedCamera, cameraProjection);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, projectedCamera, worldCoordinateHelper);
 
         const layer = results[1].layer;
         expect((layer.metadata as any).something).toBe('else');
@@ -3651,13 +3652,13 @@ describe('Style.queryRenderedFeatures', () => {
     });
 
     test('include multiple layers', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land', 'landref'])}, projectedCamera, cameraProjection);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land', 'landref'])}, projectedCamera, worldCoordinateHelper);
         expect(results).toHaveLength(3);
     });
 
     test('does not query sources not implicated by `layers` parameter', () => {
         style.tileManagers.mapLibre.map.queryRenderedFeatures = vi.fn();
-        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land--other']}, projectedCamera, cameraProjection);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land--other']}, projectedCamera, worldCoordinateHelper);
         expect(style.tileManagers.mapLibre.map.queryRenderedFeatures).not.toHaveBeenCalled();
     });
 
@@ -3667,7 +3668,7 @@ describe('Style.queryRenderedFeatures', () => {
             if (event['error']?.message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
             return style;
         });
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, projectedCamera, cameraProjection);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, projectedCamera, worldCoordinateHelper);
         expect(errors).toBe(1);
         expect(results).toHaveLength(0);
     });
@@ -3724,11 +3725,12 @@ describe('Style.query*Features', () => {
     let style: Style;
     let onError;
     let projectedCamera: ProjectedCamera;
-    let cameraProjection: CameraProjection;
+    let worldCoordinateHelper: WorldCoordinateHelper;
 
     beforeEach(() => new Promise<void>(callback => {
-        cameraProjection = createMercatorCameraProjection();
-        projectedCamera = createTestCamera({width: 100, height: 100}, cameraProjection).projectedCamera;
+        const camera = createTestCamera({width: 100, height: 100});
+        projectedCamera = camera.projectedCamera;
+        worldCoordinateHelper = camera.context.worldCoordinateHelper;
         style = new Style(getStubMap());
         style.loadJSON({
             'version': 8,
@@ -3756,7 +3758,7 @@ describe('Style.query*Features', () => {
     });
 
     test('queryRenderedFeatures emits an error on incorrect filter', () => {
-        expect(style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 7 as any}, projectedCamera, cameraProjection)).toEqual([]);
+        expect(style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 7 as any}, projectedCamera, worldCoordinateHelper)).toEqual([]);
         expect(onError.mock.calls[0][0].error.message).toMatch(/queryRenderedFeatures\.filter/);
     });
 
@@ -3768,7 +3770,7 @@ describe('Style.query*Features', () => {
             }
             return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 'invalidFilter' as any, validate: false}, projectedCamera, cameraProjection);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 'invalidFilter' as any, validate: false}, projectedCamera, worldCoordinateHelper);
         expect(errors).toBe(0);
     });
 
@@ -3799,7 +3801,7 @@ describe('Style.query*Features', () => {
     test('style adds global-state to queryRenderedFeatures', async () => {
         const tileManager = style.tileManagers['geojson'];
         tileManager.projectedCamera = projectedCamera;
-        tileManager.cameraProjection = cameraProjection;
+        tileManager.worldCoordinateHelper = worldCoordinateHelper;
         const queryRenderedFeatures = vi.fn().mockReturnValue([]);
         vi.spyOn(tileManager, 'tilesIn').mockReturnValue([{
             tile: {
@@ -3810,7 +3812,7 @@ describe('Style.query*Features', () => {
             cameraQueryGeometry: [{x: 0, y: 0} as Point],
             scale: 1,
         }]);
-        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: '[]' as any, validate: false}, projectedCamera, cameraProjection);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: '[]' as any, validate: false}, projectedCamera, worldCoordinateHelper);
         expect(queryRenderedFeatures).toHaveBeenCalled();
         const params = queryRenderedFeatures.mock.lastCall[6];
         expect(params).toHaveProperty('globalState');

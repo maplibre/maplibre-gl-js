@@ -69,7 +69,7 @@ describe('FeatureIndex', () => {
                     globalState
                 },
                 projectedCamera,
-                worldCoordinateHelper: context.projection.worldCoordinateHelper
+                worldCoordinateHelper: context.worldCoordinateHelper
             } as any, {
                 layer,
             }, [], undefined);
@@ -92,7 +92,7 @@ describe('FeatureIndex', () => {
                 cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
                 params: {},
                 projectedCamera,
-                worldCoordinateHelper: context.projection.worldCoordinateHelper
+                worldCoordinateHelper: context.worldCoordinateHelper
             } as any, {
                 layer,
             }, [], undefined);
@@ -128,7 +128,7 @@ describe('FeatureIndex in a planar projection', () => {
             cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
             params: {},
             projectedCamera,
-            worldCoordinateHelper: context.projection.worldCoordinateHelper
+            worldCoordinateHelper: context.worldCoordinateHelper
         } as any, {layer}, [], undefined);
         expect((result.layer[0].feature.geometry as GeoJSON.MultiPoint).coordinates[0]).toEqual([-45, 0]);
     });

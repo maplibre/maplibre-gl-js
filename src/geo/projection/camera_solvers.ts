@@ -2,19 +2,19 @@ import {quat, vec3} from 'gl-matrix';
 import {LngLat, earthRadius, type LngLatLike} from '../lng_lat.ts';
 import {angleToRotateBetweenVectors2D, clamp, createVec3f64, createVec4f64, degreesToRadians, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, mod, radiansToDegrees, scaleZoom, warnOnce, wrap} from '../../util/util.ts';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, lngLatBearingFromOrientation, orientationFromLngLatBearing, sphereSurfacePointToCoordinates} from './globe_utils.ts';
-import {applyConstrain, type CameraContext} from './camera_constrain.ts';
-import {renderedProjection} from './camera_projection.ts';
+import {applyConstrain} from './camera_constrain.ts';
+import {renderedProjection} from './camera_context.ts';
 import * as cameraMath from './camera_math.ts';
 import {getConstrainedCamera, moveCenterToElevation, setBearing, setCenter, setCenterAndZoom, setZoom} from './camera_updates.ts';
 import * as mercatorMath from './mercator_camera_math.ts';
 import * as verticalPerspectiveMath from './vertical_perspective_camera_math.ts';
 import {getBearing} from '../camera_view_state.ts';
 
+import type {CameraContext} from './camera_context.ts';
 import type Point from '@mapbox/point-geometry';
 import type {CameraViewState} from '../camera_view_state.ts';
 import type {CameraOptionsFromTo, WorldCoordinateHelper} from '../camera_types.ts';
 import type {ProjectedCamera, MercatorProjectedCamera, VerticalPerspectiveProjectedCamera} from '../projected_camera.ts';
-import type {CameraProjection} from './camera_projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
 
 /**
@@ -46,7 +46,7 @@ export function setLocationAtPoint(view: CameraViewState, context: CameraContext
  * The center and zoom that {@link setLocationAtPoint} moves the camera to, or null where the camera stays where it is.
  */
 export function getCameraForLocationAtPoint(view: CameraViewState, context: CameraContext, lnglat: LngLat, point: Point, elevation: number = view.elevation): {center: LngLat; zoom: number} | null {
-    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(view, context.projection));
+    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(view, context));
     return rendered.projection === 'mercator' ?
         mercatorCameraForLocationAtPoint(view, context, rendered, lnglat, point, elevation) :
         verticalPerspectiveCameraForLocationAtPoint(view, context, rendered, lnglat, point);
@@ -62,7 +62,7 @@ function mercatorCameraForLocationAtPoint(view: CameraViewState, context: Camera
     const z = elevation - rendered.elevation;
     const a = mercatorMath.screenPointToMercatorCoordinateAtZ(rendered, point, z);
     const b = mercatorMath.screenPointToMercatorCoordinateAtZ(rendered, rendered.centerPoint, 0);
-    const worldCoordinateHelper = context.projection.worldCoordinateHelper;
+    const worldCoordinateHelper = context.worldCoordinateHelper;
     const loc = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
     const center = worldCoordinateHelper.lngLatFromWorld(
         loc.x - (a.x - b.x),
@@ -189,7 +189,7 @@ function verticalPerspectiveCameraForLocationAtPoint(view: CameraViewState, cont
  * perspective only recenters onto sea level, and leaves a camera over terrain where it is.
  */
 export function recenterOnTerrain(view: CameraViewState, context: CameraContext, terrain?: Terrain): CameraViewState {
-    if (renderedProjection(context.projection).kind === 'vertical-perspective') {
+    if (renderedProjection(context) === 'vertical-perspective') {
         if (terrain) {
             warnOnce('terrain is not fully supported on vertical perspective projection.');
             return view;
@@ -198,10 +198,10 @@ export function recenterOnTerrain(view: CameraViewState, context: CameraContext,
     }
     let next = view;
     for (let pass = 0; pass < CENTER_ON_TERRAIN_PASSES; pass++) {
-        const elevation = getGroundElevationAtCenter(next, context.projection, terrain);
+        const elevation = getGroundElevationAtCenter(next, context, terrain);
         if (elevation === null) return next;
         next = moveCenterToElevation(next, context, elevation);
-        if (!terrain || Math.abs(terrain.getElevationForLngLat(next.center, cameraMath.projectCamera(next, context.projection).tileZoom) - next.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return next;
+        if (!terrain || Math.abs(terrain.getElevationForLngLat(next.center, cameraMath.projectCamera(next, context).tileZoom) - next.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return next;
     }
     return next;
 }
@@ -211,9 +211,9 @@ export function recenterOnTerrain(view: CameraViewState, context: CameraContext,
  * The elevation of the ground a mercator camera looks at, which {@link recenterOnTerrain} moves the center to, or null
  * where the camera would end up below that ground.
  */
-export function getGroundElevationAtCenter(view: CameraViewState, projection: CameraProjection, terrain?: Terrain): number | null {
-    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(view, projection)) as MercatorProjectedCamera;
-    const worldCoordinateHelper = renderedProjection(projection).worldCoordinateHelper;
+export function getGroundElevationAtCenter(view: CameraViewState, context: CameraContext, terrain?: Terrain): number | null {
+    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(view, context)) as MercatorProjectedCamera;
+    const worldCoordinateHelper = context.worldCoordinateHelper;
     const center = (terrain && mercatorMath.terrainPointPastMaxZoom(rendered, worldCoordinateHelper, terrain)) || mercatorMath.screenPointToLocation(rendered, worldCoordinateHelper, rendered.centerPoint, terrain);
     const elevation = terrain ? terrain.getElevationForLngLat(center, rendered.tileZoom) : 0;
     if (rendered.pitch < 90 && elevation >= mercatorMath.getCameraAltitude(rendered)) return null;
@@ -225,10 +225,10 @@ export function getGroundElevationAtCenter(view: CameraViewState, projection: Ca
  * The camera options that put the camera at `from`, `altitudeFrom` meters above sea level, looking at `to`, which
  * becomes the center at `altitudeTo` meters.
  */
-export function calculateCameraOptionsFromTo(view: CameraViewState, projection: CameraProjection, from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
-    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(view, projection));
+export function calculateCameraOptionsFromTo(view: CameraViewState, context: CameraContext, from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
+    const rendered = cameraMath.renderedProjectedCamera(cameraMath.projectCamera(view, context));
     return rendered.projection === 'mercator' ?
-        mercatorCameraOptionsFromTo(rendered, renderedProjection(projection).worldCoordinateHelper, from, altitudeFrom, to, altitudeTo) :
+        mercatorCameraOptionsFromTo(rendered, context.worldCoordinateHelper, from, altitudeFrom, to, altitudeTo) :
         verticalPerspectiveCameraOptionsFromTo(rendered, from, altitudeFrom, to, altitudeTo);
 }
 
@@ -323,11 +323,11 @@ const PAN_MAX_ANGLE = Math.PI * 0.98;
  * @param data - The camera being dragged.
  * @param point - The cursor position.
  */
-function panSurfaceLocation(rendered: ProjectedCamera, projection: CameraProjection, point: Point): LngLat {
+function panSurfaceLocation(rendered: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, point: Point): LngLat {
     const origin = rendered.cameraPosition;
     const distance = vec3.length(origin);
     if (distance <= 1) {
-        return cameraMath.screenPointToLocation(rendered, projection, point);
+        return cameraMath.screenPointToLocation(rendered, worldCoordinateHelper, point);
     }
 
     const u = createVec3f64();
@@ -338,14 +338,14 @@ function panSurfaceLocation(rendered: ProjectedCamera, projection: CameraProject
     vec3.scaleAndAdd(lateral, direction, u, c);
     const s = vec3.length(lateral);
     if (s < 1e-9) {
-        return cameraMath.screenPointToLocation(rendered, projection, point);
+        return cameraMath.screenPointToLocation(rendered, worldCoordinateHelper, point);
     }
 
     const angle = Math.atan2(s, c);
     const horizonAngle = Math.asin(1 / distance);
     const handoverAngle = horizonAngle * (1 - PAN_FALLOFF_BAND);
     if (angle < handoverAngle) {
-        return cameraMath.screenPointToLocation(rendered, projection, point);
+        return cameraMath.screenPointToLocation(rendered, worldCoordinateHelper, point);
     }
 
     const sinHandover = distance * Math.sin(handoverAngle);
@@ -385,12 +385,12 @@ function panSurfaceLocation(rendered: ProjectedCamera, projection: CameraProject
  * location tracks the cursor exactly and the bearing drifts with it.
  */
 export function versorSetLocationAtPoint(view: CameraViewState, context: CameraContext, lnglat: LngLat, point: Point, panDelta?: Point, fixedBearing = true): CameraViewState {
-    const rendered = cameraMath.projectCamera(view, context.projection);
-    const pointLngLat = panSurfaceLocation(rendered, context.projection, point);
+    const rendered = cameraMath.projectCamera(view, context);
+    const pointLngLat = panSurfaceLocation(rendered, context.worldCoordinateHelper, point);
     let sourceLngLat = lnglat;
     if (panDelta) {
-        sourceLngLat = panSurfaceLocation(rendered, context.projection, point.sub(panDelta));
-    } else if (!cameraMath.isPointOnMapSurface(rendered, context.projection, point)) {
+        sourceLngLat = panSurfaceLocation(rendered, context.worldCoordinateHelper, point.sub(panDelta));
+    } else if (!cameraMath.isPointOnMapSurface(rendered, context.worldCoordinateHelper, point)) {
         return view;
     }
 
@@ -406,7 +406,7 @@ export function versorSetLocationAtPoint(view: CameraViewState, context: CameraC
     const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
 
     const finalLat = fixedBearing ? fixedBearingLatitude(rendered.bearing, newCenterLat, newBearing) : newCenterLat;
-    const finalLng = fixedBearing ? fixedBearingLongitude(rendered, context.projection, point, panDelta, newCenterLng) : newCenterLng;
+    const finalLng = fixedBearing ? fixedBearingLongitude(rendered, context.worldCoordinateHelper, point, panDelta, newCenterLng) : newCenterLng;
 
     let moved = setCenter(view, context, new LngLat(wrap(finalLng, -180, 180), finalLat));
     if (!fixedBearing) moved = setBearing(moved, newBearing);
@@ -440,11 +440,11 @@ function fixedBearingLatitude(bearing: number, newCenterLat: number, newBearing:
  * @param newCenterLng - The swing target longitude.
  * @returns the center longitude to apply.
  */
-function fixedBearingLongitude(rendered: ProjectedCamera, projection: CameraProjection, point: Point, panDelta: Point | undefined, newCenterLng: number): number {
+function fixedBearingLongitude(rendered: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, point: Point, panDelta: Point | undefined, newCenterLng: number): number {
     const oldLng = rendered.center.lng;
     const oldLat = rendered.center.lat;
     const poleLat = oldLat >= 0 ? 90 : -90;
-    const polePoint = cameraMath.locationToScreenPoint(rendered, projection, new LngLat(0, poleLat));
+    const polePoint = cameraMath.locationToScreenPoint(rendered, worldCoordinateHelper, new LngLat(0, poleLat));
     const rx = point.x - polePoint.x, ry = point.y - polePoint.y;
     const r2 = rx * rx + ry * ry;
 

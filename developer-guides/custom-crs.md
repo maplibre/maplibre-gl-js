@@ -17,9 +17,9 @@ A `CRS` becomes a helper through `new CRSWorldCoordinateHelper(crs)`, which appl
 
 ## Who holds the helper
 
-The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to both the `MercatorProjection` and the mercator `CameraProjection` the camera is projected with, see `createMercatorCameraProjection`. Mercator, globe and vertical-perspective share the one mercator helper.
+The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to the `MercatorProjection`, and the camera takes it from there when the style moves it onto the projection, see `Camera.migrateProjection`. Mercator, globe and vertical-perspective share the one mercator helper.
 
-A `ProjectedCamera` holds values only, so readers take the helper from the `CameraProjection` that comes with it: the camera math, the camera and covering tiles take it as an argument next to the camera; sources and queries from `map.style.projection.worldCoordinateHelper`; the terrain from a reader the `Map` passes it.
+A `ProjectedCamera` holds values only, so readers are handed the helper next to it: the camera math, the camera and covering tiles take it as an argument, from the camera's `CameraContext`; sources and queries from `map.style.projection.worldCoordinateHelper`; the terrain from a reader the `Map` passes it.
 
 A lng/lat box, such as a source's `bounds`, `maxBounds` or a `fitBounds` box, goes into the world square through `lngLatBoxToWorldSamples`, which projects a 17 by 17 grid over the box and reports how far its edges curve between the samples. Corners alone are not enough in a CRS: a parallel around a pole is a circle, and transverse mercator runs off to infinity inside a box that spans its equator 90 degrees from the central meridian. Mercator edges project straight, so a mercator box comes out exactly as its corners did.
 

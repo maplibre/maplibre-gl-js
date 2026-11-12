@@ -10,7 +10,7 @@ import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {ProjectedCamera} from '../projected_camera.ts';
-import type {CameraProjection} from './camera_projection.ts';
+import type {WorldCoordinateHelper} from '../camera_types.ts';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -277,20 +277,20 @@ export function expandCullingToContentElevation(frustum: Frustum, plane: vec4, c
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
  * @param projectedCamera - The camera the tiles are seen with.
- * @param projection - The projection the camera was projected with, which gives the world mapping and the tile grid.
+ * @param worldCoordinateHelper - The world mapping the camera was projected with.
  * @param options - Additional coveringTiles options.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function coveringTiles(projectedCamera: ProjectedCamera, projection: CameraProjection, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
+export function coveringTiles(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
     let frustum = cameraMath.getCameraFrustum(projectedCamera);
     let plane = cameraMath.getClippingPlane(projectedCamera);
     if (plane && options.maxContentElevation > 0) {
         ({frustum, plane} = expandCullingToContentElevation(frustum, plane, projectedCamera.cameraPosition, options.maxContentElevation));
     }
-    const detailsProvider = getCoveringTilesDetailsProvider(projection);
+    const detailsProvider = getCoveringTilesDetailsProvider(projectedCamera);
     const center = detailsProvider.getCenter(projectedCamera);
-    const cameraCoord = cameraMercatorCoordinate(projectedCamera, projection.worldCoordinateHelper, center);
-    const centerCoord = projection.worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, projectedCamera.elevation);
+    const cameraCoord = cameraMercatorCoordinate(projectedCamera, worldCoordinateHelper, center);
+    const centerCoord = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, projectedCamera.elevation);
     const elevationForTileCulling = getElevationForTileCulling(projectedCamera, options.maxContentElevation);
     const allowVariableZoom = detailsProvider.allowVariableZoom(projectedCamera, options);
     
@@ -320,7 +320,7 @@ export function coveringTiles(projectedCamera: ProjectedCamera, projection: Came
     const stack: CoveringTilesStackEntry[] = [];
     const result: CoveringTilesResult[] = [];
 
-    if (projectedCamera.renderWorldCopies && projection.worldCoordinateHelper.wraps && detailsProvider.allowWorldCopies()) {
+    if (projectedCamera.renderWorldCopies && worldCoordinateHelper.wraps && detailsProvider.allowWorldCopies()) {
         // Render copy of the globe thrice on both sides
         for (let i = 1; i <= 3; i++) {
             stack.push(newRootTile(-i));

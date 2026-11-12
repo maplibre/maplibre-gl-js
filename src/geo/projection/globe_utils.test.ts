@@ -2,7 +2,7 @@ import {describe, expect, test} from 'vitest';
 import {LngLat} from '../lng_lat.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeCircumferencePixels, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils.ts';
 import {createCameraViewState} from '../camera_view_state.ts';
-import {createGlobeCameraProjection} from './camera_projection.ts';
+import {createCameraContext} from './camera_context.ts';
 import {projectCamera} from './camera_math.ts';
 import * as cameraUpdates from './camera_updates.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
@@ -65,21 +65,20 @@ describe('globe utils', () => {
     });
 
     test('getGlobeCenterInViewSpace', () => {
-        const projection = createGlobeCameraProjection();
-        const context = {projection, constrainOverride: null};
+        const context = createCameraContext({projection: 'globe'});
         let view = createCameraViewState({maxPitch: 85});
         view = cameraUpdates.resize(view, context, 256, 512);
         view = cameraUpdates.setCenter(view, context, new LngLat(11.64, 47.55));
         view = cameraUpdates.setZoom(view, context, 11);
-        const radius = getGlobeRadiusPixels(projectCamera(view, projection).worldSize, view.center.lat);
+        const radius = getGlobeRadiusPixels(projectCamera(view, context).worldSize, view.center.lat);
 
-        const straightDown = projectCamera(cameraUpdates.setPitch(view, 0), projection);
+        const straightDown = projectCamera(cameraUpdates.setPitch(view, 0), context);
         const straightDownCenter = getGlobeCenterInViewSpace(straightDown);
         expect(straightDownCenter[0]).toBeCloseTo(0, 6);
         expect(straightDownCenter[1]).toBeCloseTo(0, 6);
         expect(straightDownCenter[2]).toBeCloseTo(-(straightDown.cameraToCenterDistance + radius), 2);
 
-        const pitched = projectCamera(cameraUpdates.setPitch(view, 85), projection);
+        const pitched = projectCamera(cameraUpdates.setPitch(view, 85), context);
         const pitchedCenter = getGlobeCenterInViewSpace(pitched);
         expect(Math.hypot(...pitchedCenter) / radius).toBeCloseTo(Math.hypot(...pitched.cameraPosition), 8);
     });

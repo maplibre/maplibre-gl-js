@@ -10,11 +10,11 @@ import * as cameraMath from './camera_math.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
 import type {ProjectedCamera} from '../projected_camera.ts';
-import type {CameraProjection} from './camera_projection.ts';
+import type {WorldCoordinateHelper} from '../camera_types.ts';
 
 const DEM_DIM = 256;
 
-function createScene(zoom: number, heightFn: (x: number, y: number) => number, pitch: number): {terrain: Terrain; camera: ProjectedCamera; projection: CameraProjection} {
+function createScene(zoom: number, heightFn: (x: number, y: number) => number, pitch: number): {terrain: Terrain; camera: ProjectedCamera; worldCoordinateHelper: WorldCoordinateHelper} {
     const {projectedCamera, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 1024, height: 1024, center: new LngLat(11.4, 47.3), zoom, pitch});
 
     const tileZoom = Math.max(Math.floor(zoom) - 1, 0);
@@ -33,7 +33,7 @@ function createScene(zoom: number, heightFn: (x: number, y: number) => number, p
     }
 
     const terrain = createDEMTerrain(tileIDs, createDEM(heightFn, DEM_DIM));
-    return {terrain, camera: projectedCamera, projection: context.projection};
+    return {terrain, camera: projectedCamera, worldCoordinateHelper: context.worldCoordinateHelper};
 }
 
 const scenes = [2, 10, 16].flatMap(zoom => [
@@ -43,7 +43,7 @@ const scenes = [2, 10, 16].flatMap(zoom => [
 ]);
 
 test('terrain raycast', async ({bench}) => {
-    await bench.compare(...scenes.map(({name, point, camera: projectedCamera, projection, terrain}) => bench(name, () => {
-        cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, projection, point, terrain);
+    await bench.compare(...scenes.map(({name, point, camera: projectedCamera, worldCoordinateHelper, terrain}) => bench(name, () => {
+        cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, point, terrain);
     })));
 });

@@ -54,13 +54,6 @@ export class GlobeCoveringTilesDetailsProvider implements CoveringTilesDetailsPr
     }
 
     /**
-     * Prepares the internal bounding volume cache for the next frame.
-     */
-    prepareNextFrame(): void {
-        this._boundingVolumeCache.swapBuffers();
-    }
-
-    /**
      * Returns the distance of a point to a square tile. If the point is inside the tile, returns 0.
      * Assumes the world to be of size 1.
      * Handles distances on a sphere correctly: X is wrapped when crossing the antimeridian,

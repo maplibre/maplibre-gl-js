@@ -34,7 +34,7 @@ export function drawBackground(painter: Painter, tileManager: TileManager, layer
     const depthMode = frameRenderContext.getDepthModeForSublayer(0, pass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
     const colorMode = frameRenderContext.colorModeForRenderPass();
     const program = frameRenderContext.useProgram(image ? 'backgroundPattern' : 'background');
-    const tileIDs = coords ? coords : coveringTiles(projectedCamera, frameRenderContext.cameraProjection, {tileSize, terrain: frameRenderContext.terrain});
+    const tileIDs = coords ? coords : coveringTiles(projectedCamera, frameRenderContext.worldCoordinateHelper, {tileSize, terrain: frameRenderContext.terrain});
 
     if (image) {
         context.activeTexture.set(gl.TEXTURE0);

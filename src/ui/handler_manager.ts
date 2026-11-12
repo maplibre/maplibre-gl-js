@@ -7,7 +7,7 @@ import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
-import {usesGlobeControls} from '../geo/projection/camera_projection.ts';
+import {usesGlobeControls} from '../geo/projection/camera_context.ts';
 
 import type {MapEventType} from './events.ts';
 import type {DragPanHandler} from './handler/shim/drag_pan.ts';
@@ -575,7 +575,7 @@ export class HandlerManager extends Evented<MapEventType> {
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
-        if (usesGlobeControls(this._camera.context.projection) && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, around)) {
+        if (usesGlobeControls(this._camera.context) && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, around)) {
             around = projectedCamera.centerPoint;
         }
         const preZoomAroundLoc = this._computePreZoomAroundLoc(projectedCamera, around, panDelta, aroundElevation);
@@ -629,7 +629,7 @@ export class HandlerManager extends Evented<MapEventType> {
     private _resolveAround(combinedResult: HandlerResult, terrain: Terrain | null, projectedCamera: ProjectedCamera): {around: Point; aroundOnSurface: boolean} {
         let around = combinedResult.pinchAround !== undefined ? combinedResult.pinchAround : combinedResult.around;
         around ||= this._camera.projectedCamera.centerPoint;
-        if (terrain && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, around)) {
+        if (terrain && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, around)) {
             return {around: projectedCamera.centerPoint, aroundOnSurface: false};
         }
         return {around, aroundOnSurface: true};
@@ -648,7 +648,7 @@ export class HandlerManager extends Evented<MapEventType> {
             return undefined;
         }
         if (this._terrainGesture.anchorCenterElevation !== projectedCamera.elevation && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            const anchor = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, this._camera.context.projection, around, terrain);
+            const anchor = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, this._camera.context.worldCoordinateHelper, around, terrain);
             this._terrainGesture.anchorElevation = anchor ? anchor.z : undefined;
             this._terrainGesture.anchorCenterElevation = projectedCamera.elevation;
         }
@@ -677,9 +677,9 @@ export class HandlerManager extends Evented<MapEventType> {
         }
         const aroundPreviousPoint = panDelta ? around.sub(panDelta) : around;
         if (aroundElevation !== undefined) {
-            return cameraMath.screenPointToLocationAtElevation(projectedCamera, this._camera.context.projection, aroundPreviousPoint, aroundElevation);
+            return cameraMath.screenPointToLocationAtElevation(projectedCamera, this._camera.context.worldCoordinateHelper, aroundPreviousPoint, aroundElevation);
         }
-        return cameraMath.screenPointToLocation(projectedCamera, this._camera.context.projection, aroundPreviousPoint);
+        return cameraMath.screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, aroundPreviousPoint);
     }
 
     private _handleMapControls({
@@ -695,7 +695,7 @@ export class HandlerManager extends Evented<MapEventType> {
         view = cameraUpdates.rollPitchBearingZoom(view, context, deltas);
         const projectedCamera = this._camera._projectState(view);
 
-        if (!terrain && !usesGlobeControls(context.projection) && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, deltas.around)) {
+        if (!terrain && !usesGlobeControls(context) && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, deltas.around)) {
             return panDelta ? this._panByPixels(view, projectedCamera, panDelta) : view;
         }
 
@@ -709,7 +709,7 @@ export class HandlerManager extends Evented<MapEventType> {
             return cameraUpdates.pan(view, context, deltas, preZoomAroundLoc);
         }
 
-        if (!usesGlobeControls(context.projection) && deltas.aroundElevation === undefined &&
+        if (!usesGlobeControls(context) && deltas.aroundElevation === undefined &&
             combinedEventsInProgress.drag && panDelta) {
             // no usable anchor: drag by pixel-delta on the center-elevation plane
             return this._panByPixels(view, projectedCamera, panDelta);
@@ -720,7 +720,7 @@ export class HandlerManager extends Evented<MapEventType> {
 
     /** Moves the center to the location `panDelta` pixels against the drag from it, on the plane at the center's elevation. */
     _panByPixels(view: CameraViewState, projectedCamera: ProjectedCamera, panDelta: Point): CameraViewState {
-        return cameraUpdates.setCenter(view, this._camera.context, cameraMath.screenPointToLocation(projectedCamera, this._camera.context.projection, projectedCamera.centerPoint.sub(panDelta)));
+        return cameraUpdates.setCenter(view, this._camera.context, cameraMath.screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, projectedCamera.centerPoint.sub(panDelta)));
     }
 
     private _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean): void {

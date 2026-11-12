@@ -2,17 +2,12 @@ import {describe, test, expect, vi} from 'vitest';
 import {adjustCamera, combineActions, constrainView, createCameraStore, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjectionTransition, startMovement, terrainChanged} from './camera_state.ts';
 import {createCameraViewState} from '../geo/camera_view_state.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import {createMercatorCameraProjection} from '../geo/projection/camera_projection.ts';
+import {createCameraContext} from '../geo/projection/camera_context.ts';
 
 import type {CameraViewState} from '../geo/camera_view_state.ts';
-import type {CameraContext} from '../geo/projection/camera_constrain.ts';
 
 function cameraAt(elevation: number): CameraViewState {
     return {...createCameraViewState(), elevation};
-}
-
-function createMercatorContext(): CameraContext {
-    return {projection: createMercatorCameraProjection(), constrainOverride: null};
 }
 
 /** A 512 x 512 camera at zoom 0 with its center at 80° north, which no constrain has seen yet. */
@@ -73,7 +68,7 @@ describe('camera store', () => {
     test('constrains the camera in the given context', () => {
         const store = createCameraStore(unconstrainedCamera());
 
-        store.setState(constrainView(createMercatorContext()));
+        store.setState(constrainView(createCameraContext()));
 
         expect(store.getState().view.center.lat).toBeCloseTo(0, 4);
     });
@@ -102,7 +97,7 @@ describe('camera store', () => {
     test('resizes the camera', () => {
         const store = createCameraStore(cameraAt(0));
 
-        store.setState(resizeView(createMercatorContext(), 640, 480, false));
+        store.setState(resizeView(createCameraContext(), 640, 480, false));
 
         expect(store.getState().view).toMatchObject({width: 640, height: 480});
     });

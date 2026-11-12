@@ -2,7 +2,6 @@ import {describe, test, expect} from 'vitest';
 import {HeatmapStyleLayer} from './heatmap_style_layer.ts';
 import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {createGlobeCameraProjection} from '../../geo/projection/camera_projection.ts';
 import {createTestCamera} from '../../util/test/util.ts';
 
 import type {EvaluationParameters} from '../evaluation_parameters.ts';
@@ -60,7 +59,7 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
     });
 
     describe('Globe projection', () => {
-        const {projectedCamera} = createTestCamera({width: 400, height: 300}, createGlobeCameraProjection());
+        const {projectedCamera} = createTestCamera({width: 400, height: 300}, {projection: 'globe'});
 
         test('returns `true` when a heatmap intersects a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({

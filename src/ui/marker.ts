@@ -683,7 +683,7 @@ export class Marker extends Evented<MarkerEventType> {
         if (!this._isInViewport()) return;
 
         const terrain = this._map?.terrain;
-        const occluded = cameraMath.isLocationOccluded(this._map._camera.projectedCamera, this._map._camera.context.projection, this._lngLat);
+        const occluded = cameraMath.isLocationOccluded(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat);
         if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) {
@@ -735,7 +735,7 @@ export class Marker extends Evented<MarkerEventType> {
         const elevation = terrain.getElevationForLngLat(this._lngLat, projectedCamera.tileZoom);
         const metersToCenter = Math.max(0, -this._offset.y) / projectedCamera.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
-        return cameraMath.isLocationOccluded(projectedCamera, this._map._camera.context.projection, this._lngLat, terrain, elevation + elevationToCenter);
+        return cameraMath.isLocationOccluded(projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat, terrain, elevation + elevationToCenter);
     }
 
     /**
@@ -747,12 +747,12 @@ export class Marker extends Evented<MarkerEventType> {
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' | 'idle' }): void => {
         if (!this._map) return;
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.projectedCamera, this._map._camera.context.projection);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = cameraMath.locationToScreenPoint(this._map._camera.projectedCamera, this._map._camera.context.projection, this._lngLat)._add(this._offset);
+            this._flatPos = cameraMath.locationToScreenPoint(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat)._add(this._offset);
         }
 
         let rotation = '';

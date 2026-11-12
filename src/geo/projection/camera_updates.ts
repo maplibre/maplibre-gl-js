@@ -3,21 +3,21 @@ import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, MAX_VALID_LATITUDE, scaleZoom, warnOnce, wrap} from '../../util/util.ts';
 import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {getBearing, getFov, getPitch, interpolatePadding as interpolatePaddingValues, isPaddingEqual} from '../camera_view_state.ts';
-import {applyConstrain, type CameraContext} from './camera_constrain.ts';
+import {applyConstrain} from './camera_constrain.ts';
 import {getCameraMetrics} from './camera_math.ts';
 import * as mercatorCameraUpdates from './mercator_camera_updates.ts';
 import * as verticalPerspectiveCameraUpdates from './vertical_perspective_camera_updates.ts';
 import {getRollPitchBearing, rollPitchBearingToQuat} from '../../util/util.ts';
 import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {usesGlobeControls} from './camera_projection.ts';
+import {usesGlobeControls} from './camera_context.ts';
 
+import type {CameraContext} from './camera_context.ts';
 import type {CameraViewState} from '../camera_view_state.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {NearFarZ, WorldCoordinateHelper} from '../camera_types.ts';
 import type {CameraForBoundsOptions, PointLike} from '../../ui/camera.ts';
-import type {CameraProjection} from './camera_projection.ts';
 import type {ProjectedCamera} from '../projected_camera.ts';
 import type {RollPitchBearing} from '../../util/util.ts';
 import type Point from '@mapbox/point-geometry';
@@ -223,7 +223,7 @@ export function setMaxBounds(view: CameraViewState, context: CameraContext, boun
  */
 export function moveCenterToElevation(view: CameraViewState, context: CameraContext, elevation: number): CameraViewState {
     if (view.elevation - elevation === 0) return view;
-    const worldCoordinateHelper = context.projection.worldCoordinateHelper;
+    const worldCoordinateHelper = context.worldCoordinateHelper;
     const metrics = getCameraMetrics(view, worldCoordinateHelper);
 
     const {x, y, z} = cameraDirectionFromPitchBearing(metrics.pitch, metrics.bearing);
@@ -442,8 +442,8 @@ export function interpolateRotation(view: CameraViewState, start: RollPitchBeari
  * The camera updates of the projection a camera is drawn with: a globe is turned while it renders as a globe, and
  * moved like mercator once it has turned into mercator, see {@link usesGlobeControls}.
  */
-function cameraUpdatesFor(projection: CameraProjection): typeof mercatorCameraUpdates | typeof verticalPerspectiveCameraUpdates {
-    return usesGlobeControls(projection) ? verticalPerspectiveCameraUpdates : mercatorCameraUpdates;
+function cameraUpdatesFor(context: CameraContext): typeof mercatorCameraUpdates | typeof verticalPerspectiveCameraUpdates {
+    return usesGlobeControls(context) ? verticalPerspectiveCameraUpdates : mercatorCameraUpdates;
 }
 
 /**
@@ -451,18 +451,18 @@ function cameraUpdatesFor(projection: CameraProjection): typeof mercatorCameraUp
  * Where pan inertia eases the camera to after a drag that ended moving by `pan` pixels: an offset from the center on a
  * plane, kept short of the horizon, and a new center on the globe.
  */
-export function panInertia(projectedCamera: ProjectedCamera, projection: CameraProjection, pan: Point): {easingCenter: LngLat; easingOffset: Point} {
-    return cameraUpdatesFor(projection).panInertia(projectedCamera, pan);
+export function panInertia(projectedCamera: ProjectedCamera, context: CameraContext, pan: Point): {easingCenter: LngLat; easingOffset: Point} {
+    return cameraUpdatesFor(context).panInertia(projectedCamera, pan);
 }
 
 /** @internal The camera turned and zoomed by a gesture frame's deltas, zooming around its `around` point on the globe. */
 export function rollPitchBearingZoom(view: CameraViewState, context: CameraContext, deltas: MapControlsDeltas): CameraViewState {
-    return cameraUpdatesFor(context.projection).rollPitchBearingZoom(view, context, deltas);
+    return cameraUpdatesFor(context).rollPitchBearingZoom(view, context, deltas);
 }
 
 /** @internal The camera panned by a gesture frame, keeping `preZoomAroundLoc` under the point it was grabbed at. */
 export function pan(view: CameraViewState, context: CameraContext, deltas: MapControlsDeltas, preZoomAroundLoc: LngLat): CameraViewState {
-    return cameraUpdatesFor(context.projection).pan(view, context, deltas, preZoomAroundLoc);
+    return cameraUpdatesFor(context).pan(view, context, deltas, preZoomAroundLoc);
 }
 
 /**
@@ -472,20 +472,20 @@ export function pan(view: CameraViewState, context: CameraContext, deltas: MapCo
  * @param mapPadding - The map's own padding, as in `map.getPadding()`, which the bounds must also stay clear of.
  */
 export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, view: CameraViewState, context: CameraContext): CameraForBoxAndBearingResult {
-    return cameraUpdatesFor(context.projection).cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, view, context);
+    return cameraUpdatesFor(context).cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, view, context);
 }
 
 /** @internal The camera a `jumpTo` puts at its center and zoom. */
 export function jumpToCenterZoom(view: CameraViewState, context: CameraContext, options: {zoom?: number; center?: LngLatLike}): CameraViewState {
-    return cameraUpdatesFor(context.projection).jumpToCenterZoom(view, context, options);
+    return cameraUpdatesFor(context).jumpToCenterZoom(view, context, options);
 }
 
 /** @internal The frames of an `easeTo` animation from the camera it starts with. */
 export function easeTo(view: CameraViewState, context: CameraContext, options: EaseToMotionOptions): EaseToMotion {
-    return cameraUpdatesFor(context.projection).easeTo(view, context, options);
+    return cameraUpdatesFor(context).easeTo(view, context, options);
 }
 
 /** @internal The frames of a `flyTo` flight from the camera it starts with. */
 export function flyTo(view: CameraViewState, context: CameraContext, options: FlyToMotionOptions): FlyToMotion {
-    return cameraUpdatesFor(context.projection).flyTo(view, context, options);
+    return cameraUpdatesFor(context).flyTo(view, context, options);
 }

@@ -15,7 +15,6 @@ import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type T
 
 import type {LngLat} from '../lng_lat.ts';
 import type {CameraMetrics, MercatorProjectedCamera, MercatorMatrixCache} from '../projected_camera.ts';
-import type {MercatorCameraProjection} from './camera_projection.ts';
 import type {NearFarZ, WorldCoordinateHelper} from '../camera_types.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
@@ -78,12 +77,12 @@ const NEAR_PLANE_CLIP_Z = -1;
  * @param nearFarZ - the depth range to use instead of computing one, by default the camera view state's override; a globe
  * passes its vertical perspective's, so both draw at the same depths
  */
-export function createMercatorProjectedCamera(metrics: CameraMetrics, projection: MercatorCameraProjection, nearFarZ: NearFarZ | null = metrics.nearFarZOverride): MercatorProjectedCamera {
+export function createMercatorProjectedCamera(metrics: CameraMetrics, worldCoordinateHelper: WorldCoordinateHelper, nearFarZ: NearFarZ | null = metrics.nearFarZOverride): MercatorProjectedCamera {
     const base = {...metrics, projection: 'mercator' as const, clippingPlane: null};
     if (!metrics.width || !metrics.height) return base as MercatorProjectedCamera;
 
     const offset = getCenterOffset(metrics);
-    const point = projectToWorldCoordinates(metrics.worldSize, metrics.center, projection.worldCoordinateHelper);
+    const point = projectToWorldCoordinates(metrics.worldSize, metrics.center, worldCoordinateHelper);
     const x = point.x, y = point.y;
 
     // Calculate the camera to sea-level distance in pixel in respect of terrain

@@ -14,7 +14,7 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {getBearing, getPitch, getRoll} from '../geo/camera_view_state.ts';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
-import {usesGlobeControls} from '../geo/projection/camera_projection.ts';
+import {usesGlobeControls} from '../geo/projection/camera_context.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Terrain} from '../render/terrain.ts';
@@ -50,7 +50,8 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
     camera.resize(512, 512, true);
 
     if (globe) {
-        camera.migrateProjection(createProjectionFromName('globe', {}).cameraProjection);
+        const {projection, cameraProjection} = createProjectionFromName('globe', {});
+        camera.migrateProjection(cameraProjection, projection.worldCoordinateHelper);
     }
 
     if (jumpToOptions) {
@@ -887,19 +888,19 @@ describe('easeTo', () => {
 
     test('offset computed from inertia (small) does not cross horizon when pitched', () => {
         const {camera} = createCamera(null, false, {pitch: 85, zoom: 10});
-        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 100));
+        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context, new Point(0, 100));
         expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
     });
 
     test('offset computed from inertia (large) does not cross horizon when pitched', () => {
         const {camera} = createCamera(null, false, {pitch: 85, zoom: 10});
-        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 500));
+        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context, new Point(0, 500));
         expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
     });
 
     test('offset computed from inertia (large) does not cross horizon when pitched and rotated', () => {
         const {camera} = createCamera(null, false, {pitch: 85, bearing: 135, zoom: 10});
-        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 500));
+        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context, new Point(0, 500));
         expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
     });
 
@@ -2759,7 +2760,7 @@ describe('transformCameraUpdate', () => {
 
 test('create camera with globe returns make globe controls true', () => {
     const {camera} = createCamera(null, true);
-    expect(usesGlobeControls(camera.context.projection)).toBeTruthy();
+    expect(usesGlobeControls(camera.context)).toBeTruthy();
 });
 
 describe('migrateProjection', () => {
@@ -2769,7 +2770,8 @@ describe('migrateProjection', () => {
         const zoomed = cameraUpdates.setZoom(stateBeforeMigration, camera.context, 5);
         camera.applyUpdatedState(cameraUpdates.setCenter(zoomed, camera.context, new LngLat(10, 20)));
 
-        camera.migrateProjection(createProjectionFromName('globe', {}).cameraProjection);
+        const {projection, cameraProjection} = createProjectionFromName('globe', {});
+        camera.migrateProjection(cameraProjection, projection.worldCoordinateHelper);
 
         const proposedState = camera.getStateForUpdate();
         expect(proposedState.center.lng).toBeCloseTo(10);
@@ -3129,19 +3131,19 @@ describe('easeTo globe projection', () => {
 
         test('offset computed from inertia (small) does not cross horizon when pitched', () => {
             const {camera} = createCamera(null, true, {pitch: 85, zoom: 10});
-            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 100));
+            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context, new Point(0, 100));
             expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
         });
 
         test('offset computed from inertia (large) does not cross horizon when pitched', () => {
             const {camera} = createCamera(null, true, {pitch: 85, zoom: 10});
-            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 500));
+            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context, new Point(0, 500));
             expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
         });
 
         test('offset computed from inertia (large) does not cross horizon when pitched and rotated', () => {
             const {camera} = createCamera(null, true, {pitch: 85, bearing: 135, zoom: 10});
-            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 500));
+            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context, new Point(0, 500));
             expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
         });
 
@@ -4176,7 +4178,7 @@ describe('orbitRotationPivot', () => {
         expect(getBearing(turned)).toBeCloseTo(30);
         expect(getPitch(turned)).toBeCloseTo(40);
         expect(getRoll(turned)).toBeCloseTo(10);
-        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), camera.context.projection, pivot.location, terrain).dist(new Point(570, 370))).toBeLessThan(0.1);
+        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), camera.context.worldCoordinateHelper, pivot.location, terrain).dist(new Point(570, 370))).toBeLessThan(0.1);
         expect(turned.zoom).toBeCloseTo(12.388069, 5);
     });
 
@@ -4195,7 +4197,7 @@ describe('orbitRotationPivot', () => {
         expect(pivot.elevation).toBeUndefined();
         expect(getBearing(turned)).toBeCloseTo(30);
         expect(getPitch(turned)).toBeCloseTo(40);
-        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), context.projection, pivot.location).dist(pivot.point)).toBeLessThan(0.1);
+        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), context.worldCoordinateHelper, pivot.location).dist(pivot.point)).toBeLessThan(0.1);
         expect(turned.zoom).toBeCloseTo(10.153954, 5);
     });
 
@@ -4209,7 +4211,7 @@ describe('orbitRotationPivot', () => {
         expect(turned.zoom).toBe(22);
         expect(getBearing(turned)).toBeCloseTo(30);
         expect(getPitch(turned)).toBeCloseTo(40);
-        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), camera.context.projection, pivot.location).dist(new Point(570, 370))).toBeLessThan(0.1);
+        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), camera.context.worldCoordinateHelper, pivot.location).dist(new Point(570, 370))).toBeLessThan(0.1);
     });
 
     test('keeps only the change of bearing of a frame that would tilt the pivot close to the horizon', () => {
@@ -4220,7 +4222,7 @@ describe('orbitRotationPivot', () => {
 
         expect(getBearing(turned)).toBeCloseTo(10);
         expect(getPitch(turned)).toBe(60);
-        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), camera.context.projection, pivot.location).dist(new Point(500, 50))).toBeLessThan(0.1);
+        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), camera.context.worldCoordinateHelper, pivot.location).dist(new Point(500, 50))).toBeLessThan(0.1);
     });
 
     test('keeps only the change of bearing of a frame that would make the camera look up', () => {
@@ -4232,7 +4234,7 @@ describe('orbitRotationPivot', () => {
 
         expect(getBearing(turned)).toBeCloseTo(10);
         expect(getPitch(turned)).toBe(60);
-        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), camera.context.projection, pivot.location).dist(new Point(500, 550))).toBeLessThan(0.1);
+        expect(cameraMath.locationToScreenPoint(camera._projectState(turned), camera.context.worldCoordinateHelper, pivot.location).dist(new Point(500, 550))).toBeLessThan(0.1);
     });
 
     test('turns the camera in place around the center for a point in the sky, also to where it looks up', () => {

@@ -1,5 +1,4 @@
 import {describe, test, expect, vi} from 'vitest';
-import {createMercatorCameraProjection} from '../../geo/projection/camera_projection.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
@@ -96,9 +95,8 @@ describe('drawFill', () => {
     }
 
     function constructFrameRenderContext(painter: Painter): FrameRenderContext {
-        const cameraProjection = createMercatorCameraProjection();
-        const {projectedCamera} = createTestCamera({width: 512, height: 512}, cameraProjection);
-        return new FrameRenderContext({projectedCamera, cameraProjection, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
+        const {projectedCamera, context} = createTestCamera({width: 512, height: 512});
+        return new FrameRenderContext({projectedCamera, worldCoordinateHelper: context.worldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
     }
 
     function constructMockTile(layer: FillStyleLayer): Tile {

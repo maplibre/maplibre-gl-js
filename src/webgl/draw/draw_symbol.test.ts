@@ -1,6 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {mat4} from 'gl-matrix';
-import {createMercatorCameraProjection} from '../../geo/projection/camera_projection.ts';
+import {mercatorWorldCoordinateHelper} from '../../geo/mercator_coordinate.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
@@ -40,7 +40,7 @@ function createProjectedCamera(): ProjectedCamera {
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null);
-        const frameRenderContext = new FrameRenderContext({projectedCamera: null, cameraProjection: null, terrain: null, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'opaque', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera: null, worldCoordinateHelper: null, terrain: null, data: createFrameRenderData(), context: null, programCache: null, currentPass: 'opaque', projection: null});
         vi.spyOn(frameRenderContext, 'colorModeForRenderPass');
 
         drawSymbols(mockPainter, null, null, null, frameRenderContext);
@@ -56,7 +56,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({projectedCamera: createProjectedCamera(), cameraProjection: createMercatorCameraProjection(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera: createProjectedCamera(), worldCoordinateHelper: mercatorWorldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -112,7 +112,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({projectedCamera: createProjectedCamera(), cameraProjection: createMercatorCameraProjection(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera: createProjectedCamera(), worldCoordinateHelper: mercatorWorldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',
@@ -173,7 +173,7 @@ describe('drawSymbol', () => {
                 set: () => { }
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({projectedCamera: createProjectedCamera(), cameraProjection: createMercatorCameraProjection(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera: createProjectedCamera(), worldCoordinateHelper: mercatorWorldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const layerSpec = {
             id: 'mock-layer',

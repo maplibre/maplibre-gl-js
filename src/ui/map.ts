@@ -34,7 +34,6 @@ import {config} from '../util/config.ts';
 import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
-import {getCoveringTilesDetailsProvider} from '../geo/projection/covering_tiles_details_provider_factory.ts';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 import {calculateCameraOptionsFromTo} from '../geo/projection/camera_solvers.ts';
@@ -80,8 +79,8 @@ import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {ControlPosition, IControl} from './control/control.ts';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features.ts';
-import type {TransformConstrainFunction} from '../geo/camera_types.ts';
-import type {CameraProjection} from '../geo/projection/camera_projection.ts';
+import type {TransformConstrainFunction, WorldCoordinateHelper} from '../geo/camera_types.ts';
+import type {CameraProjectionKind} from '../geo/projection/camera_context.ts';
 
 const version = packageJSON.version;
 
@@ -1084,7 +1083,7 @@ export class Map extends Evented<MapEventType> {
     * ```
     */
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
-        return coveringTiles(this._camera.projectedCamera, this._camera.context.projection, options);
+        return coveringTiles(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper, options);
     }
 
     /**
@@ -1638,7 +1637,7 @@ export class Map extends Evented<MapEventType> {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.projectedCamera.tileZoom);
         }
-        return calculateCameraOptionsFromTo(this._camera.renderedState, this._camera.context.projection, from, altitudeFrom, to, altitudeTo ?? 0);
+        return calculateCameraOptionsFromTo(this._camera.renderedState, this._camera.context, from, altitudeFrom, to, altitudeTo ?? 0);
     }
 
     /**
@@ -1782,7 +1781,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     getBounds(): LngLatBounds {
-        return cameraMath.getBounds(this._camera.projectedCamera, this._camera.context.projection);
+        return cameraMath.getBounds(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper);
     }
 
     /**
@@ -2121,7 +2120,7 @@ export class Map extends Evented<MapEventType> {
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): this {
-        this._camera.applyStateChange((view, context) => cameraUpdates.setRenderWorldCopies(view, context.projection.worldCoordinateHelper, renderWorldCopies));
+        this._camera.applyStateChange((view, context) => cameraUpdates.setRenderWorldCopies(view, context.worldCoordinateHelper, renderWorldCopies));
         return this._update();
     }
 
@@ -2161,7 +2160,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     project(lnglat: LngLatLike): Point {
-        return cameraMath.locationToScreenPoint(this._camera.projectedCamera, this._camera.context.projection, LngLat.convert(lnglat), this.style && this.terrain);
+        return cameraMath.locationToScreenPoint(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper, LngLat.convert(lnglat), this.style && this.terrain);
     }
 
     /**
@@ -2693,7 +2692,7 @@ export class Map extends Evented<MapEventType> {
             queryGeometry = [tl, new Point(br.x, tl.y), br, new Point(tl.x, br.y), tl];
         }
 
-        return this.style.queryRenderedFeatures(queryGeometry, options, this._camera.projectedCamera, this._camera.context.projection);
+        return this.style.queryRenderedFeatures(queryGeometry, options, this._camera.projectedCamera, this._camera.context.worldCoordinateHelper);
     }
 
     /**
@@ -3096,7 +3095,7 @@ export class Map extends Evented<MapEventType> {
             if (this.terrain) {
                 this.terrain.destroy();
             }
-            this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength, () => this._camera.context.projection.worldCoordinateHelper);
+            this.terrain = new Terrain(this.painter, tileManager, options, this._terrainSkirtLength, () => this._camera.context.worldCoordinateHelper);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this._camera.setTerrain(this.terrain);
             this._terrainDataCallback = e => this._handleTerrainDataEvent(e, options.source);
@@ -4339,8 +4338,8 @@ export class Map extends Evented<MapEventType> {
      * `projectiontransition`.
      * When the style's projection is changed (or first set), this function should be called.
      */
-    migrateProjection(projection: CameraProjection): void {
-        this._camera.migrateProjection(projection);
+    migrateProjection(projection: CameraProjectionKind, worldCoordinateHelper: WorldCoordinateHelper): void {
+        this._camera.migrateProjection(projection, worldCoordinateHelper);
         this.fire(new MapProjectionEvent({
             newProjection: this.style.projection.name,
         }));
@@ -4553,19 +4552,18 @@ export class Map extends Evented<MapEventType> {
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
         this._camera.setProjectionTransition(this.style.projection?.transitionState);
-        getCoveringTilesDetailsProvider(this._camera.context.projection).prepareNextFrame();
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we
         // need for the current camera
         if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
-            this.style._updateSources(this._camera.projectedCamera, this._camera.context.projection);
+            this.style._updateSources(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper);
         }
 
         // update terrain stuff
         if (this.terrain) {
-            const renderableTilesChanged = this.terrain.tileManager.update(this._camera.projectedCamera, this._camera.context.projection, this.terrain);
+            const renderableTilesChanged = this.terrain.tileManager.update(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper, this.terrain);
             // The cached samplers and coverage index are only valid for the tile set they were built from.
             if (renderableTilesChanged) {
                 this.terrain.resetElevationCache();
@@ -4573,13 +4571,13 @@ export class Map extends Evented<MapEventType> {
         }
         this._camera.followTerrain();
 
-        this._placementDirty = this.style?._updatePlacement(this._camera.projectedCamera, this._camera.context.projection, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
+        this._placementDirty = this.style?._updatePlacement(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         const projection = this.style.projection;
         const projectionTransition = projection?.transitionState ?? 0;
 
         // Actually draw
-        this.painter.render(this.style, this._camera.projectedCamera, this._camera.context.projection, {
+        this.painter.render(this.style, this._camera.projectedCamera, this._camera.context.worldCoordinateHelper, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,
             rotating: this.isRotating(),

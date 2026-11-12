@@ -5,7 +5,7 @@ import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {createCameraViewState} from '../../geo/camera_view_state.ts';
-import {createMercatorCameraProjection} from '../../geo/projection/camera_projection.ts';
+import {createCameraContext} from '../../geo/projection/camera_context.ts';
 import {projectCamera} from '../../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
 import {LngLat, type LngLatLike} from '../../geo/lng_lat.ts';
@@ -27,8 +27,8 @@ import {MercatorShaderDefine, MercatorShaderVariantKey} from '../../geo/projecti
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Style} from '../../style/style.ts';
 import type {CameraViewState, CameraViewStateOptions} from '../../geo/camera_view_state.ts';
-import type {CameraContext} from '../../geo/projection/camera_constrain.ts';
-import type {CameraProjection} from '../../geo/projection/camera_projection.ts';
+import type {CameraContext} from '../../geo/projection/camera_context.ts';
+import type {CameraProjectionKind} from '../../geo/projection/camera_context.ts';
 import type {ProjectedCamera} from '../../geo/projected_camera.ts';
 import type {PaddingOptions} from '../../geo/edge_insets.ts';
 import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -43,7 +43,7 @@ import type {TerrainCoverageIndex, TerrainElevationSampler} from '../../render/t
 export class StubMap extends Evented {
     style: Style;
     /** The projection the style last moved the map's camera onto, see {@link StubMap.migrateProjection}. */
-    cameraProjection: CameraProjection = createMercatorCameraProjection();
+    cameraProjection: CameraProjectionKind = 'mercator';
     private _requestManager: RequestManager;
     _terrain: TerrainSpecification;
 
@@ -63,7 +63,7 @@ export class StubMap extends Evented {
     setTerrain(terrain: TerrainSpecification): void { this._terrain = terrain; }
     getTerrain(): TerrainSpecification { return this._terrain; }
 
-    migrateProjection(projection: CameraProjection): void {
+    migrateProjection(projection: CameraProjectionKind): void {
         this.cameraProjection = projection;
     }
 }
@@ -452,10 +452,11 @@ export type TestCamera = {
 /**
  * Creates a camera with the given limits, then sizes it and sets what the options give, each through its
  * `camera_updates.ts` setter, so it is constrained the way a map's camera is: size, zoom, center, elevation, pitch,
- * bearing, roll, field of view, padding, in that order. Mercator unless a projection is given.
+ * bearing, roll, field of view, padding, in that order. In the context the context options give, see
+ * {@link createCameraContext}: mercator by default.
  */
-export function createTestCamera(options: TestCameraOptions = {}, projection: CameraProjection = createMercatorCameraProjection()): TestCamera {
-    const context: CameraContext = {projection, constrainOverride: null};
+export function createTestCamera(options: TestCameraOptions = {}, contextOptions: Partial<CameraContext> = {}): TestCamera {
+    const context = createCameraContext(contextOptions);
     let view = createCameraViewState(options);
     if (options.width !== undefined || options.height !== undefined) view = cameraUpdates.resize(view, context, options.width ?? 0, options.height ?? 0);
     if (options.zoom !== undefined) view = cameraUpdates.setZoom(view, context, options.zoom);
@@ -466,7 +467,7 @@ export function createTestCamera(options: TestCameraOptions = {}, projection: Ca
     if (options.roll !== undefined) view = cameraUpdates.setRoll(view, options.roll);
     if (options.fov !== undefined) view = cameraUpdates.setFov(view, options.fov);
     if (options.padding !== undefined) view = cameraUpdates.setPadding(view, context, options.padding);
-    return {state: view, context, projectedCamera: projectCamera(view, projection)};
+    return {state: view, context, projectedCamera: projectCamera(view, context)};
 }
 
 /**
@@ -476,7 +477,7 @@ export function createTestCamera(options: TestCameraOptions = {}, projection: Ca
 export function createIdentityCrsCamera(width: number, height: number): TestCamera {
     return createTestCamera(
         {minZoom: -5, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width, height},
-        createMercatorCameraProjection(new CRSWorldCoordinateHelper(identityCrs)));
+        {worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs)});
 }
 
 /**

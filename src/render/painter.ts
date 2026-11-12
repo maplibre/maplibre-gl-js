@@ -42,7 +42,7 @@ import type {IndexBuffer} from '../webgl/index_buffer.ts';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {CameraProjection} from '../geo/projection/camera_projection.ts';
+import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 
 /**
  * Holds the texture used to render a 2D tile so it can be draped over 3D
@@ -220,7 +220,7 @@ export class Painter {
 
         const program = frameRenderContext.useProgram('depth');
         const depthMode = frameRenderContext.getDepthModeFor3D();
-        const tileIDs = coveringTiles(projectedCamera, frameRenderContext.cameraProjection, {tileSize: projectedCamera.tileSize});
+        const tileIDs = coveringTiles(projectedCamera, frameRenderContext.worldCoordinateHelper, {tileSize: projectedCamera.tileSize});
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
@@ -236,12 +236,12 @@ export class Painter {
         }
     }
 
-    render(style: Style, projectedCamera: ProjectedCamera, cameraProjection: CameraProjection, data: FrameRenderData): void {
+    render(style: Style, projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, data: FrameRenderData): void {
         if (this.context.gl.isContextLost()) return;
 
         const frameRenderContext = new FrameRenderContext({
             projectedCamera,
-            cameraProjection,
+            worldCoordinateHelper,
             terrain: style.map.terrain ?? null,
             data,
             context: this.context,
