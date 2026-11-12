@@ -7,7 +7,7 @@ import {EdgeInsets} from './edge_insets.ts';
 import {MercatorCoordinate, mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
 import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './projection/mercator_utils.ts';
 import {Bounds} from './bounds.ts';
-import {createCameraState, getBearing, getCenterPoint, getFov, getPitch, getRoll, getWorldSize, type CameraState} from './camera_state.ts';
+import {createCameraViewState, getBearing, getCenterPoint, getFov, getPitch, getRoll, getWorldSize, type CameraViewState} from '../camera/camera_view_state.ts';
 
 import type {PaddingOptions} from './edge_insets.ts';
 import type {IProjectionTransformMutators, IReadonlyProjectionTransform, IReadonlyTransform, ITransform, ITransformGetters} from './transform_interface.ts';
@@ -69,7 +69,7 @@ export interface IProjectionTransform extends IReadonlyProjectionTransform, IPro
     /**
      * Returns a part of the same projection for another camera state, carrying over this part's own state.
      */
-    clone(cameraState: Readonly<CameraState>): IProjectionTransform;
+    clone(cameraState: Readonly<CameraViewState>): IProjectionTransform;
 
     /**
      * Returns the elevation of the ground the camera looks at, which {@link Transform.recalculateZoomAndCenter}
@@ -147,7 +147,7 @@ const MAX_CENTER_PASSES = 10;
 export class Transform implements ITransform {
     private _projection: IProjectionTransform;
 
-    private readonly _cameraState: CameraState;
+    private readonly _cameraState: CameraViewState;
     /**
      * Whether the camera was never deliberately positioned, in which case a loading style may apply its own camera.
      * Cleared by the setters that move the camera, but not by ones that only snap it into a valid range.
@@ -164,8 +164,8 @@ export class Transform implements ITransform {
      * @param createProjection - Creates the projection part for this transform, which reads its camera state.
      * @param options - Initial state.
      */
-    constructor(createProjection: (cameraState: Readonly<CameraState>, worldCoordinateHelper: WorldCoordinateHelper) => IProjectionTransform, options?: TransformOptions) {
-        this._cameraState = createCameraState(options);
+    constructor(createProjection: (cameraState: Readonly<CameraViewState>, worldCoordinateHelper: WorldCoordinateHelper) => IProjectionTransform, options?: TransformOptions) {
+        this._cameraState = createCameraViewState(options);
         this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
 
         this._constrainOverride = options?.constrainOverride ?? null;

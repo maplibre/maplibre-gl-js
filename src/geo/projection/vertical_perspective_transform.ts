@@ -11,11 +11,11 @@ import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, 
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
-import {getBearing, getCenterOffset, getConstrainedCamera, getWorldSize} from '../camera_state.ts';
+import {getBearing, getCenterOffset, getConstrainedCamera, getWorldSize} from '../../camera/camera_view_state.ts';
 
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {CameraState} from '../camera_state.ts';
+import type {CameraViewState} from '../../camera/camera_view_state.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
@@ -57,7 +57,7 @@ const CAMERA_QUERY_ARC_SEGMENTS = 8;
  * The vertical perspective part of a {@link Transform}.
  */
 export class VerticalPerspectiveTransform implements IProjectionTransform {
-    private readonly _cameraState: Readonly<CameraState>;
+    private readonly _cameraState: Readonly<CameraViewState>;
 
     private _cachedClippingPlane: vec4 = createVec4f64();
     private _cachedFrustum: Frustum;
@@ -80,12 +80,12 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     /**
      * @param cameraState - The camera state this part derives its matrices from.
      */
-    public constructor(cameraState: Readonly<CameraState>) {
+    public constructor(cameraState: Readonly<CameraViewState>) {
         this._cameraState = cameraState;
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
 
-    clone(cameraState: Readonly<CameraState>): VerticalPerspectiveTransform {
+    clone(cameraState: Readonly<CameraViewState>): VerticalPerspectiveTransform {
         return new VerticalPerspectiveTransform(cameraState);
     }
 
