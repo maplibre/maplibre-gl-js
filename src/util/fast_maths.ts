@@ -1,7 +1,7 @@
 /*
 This class implements fast mathematical operations to optimize or complement gl-matrix
 */
-import type {mat4} from 'gl-matrix';
+import type {mat4, vec4} from 'gl-matrix';
 
 /*
 Invert a transform matrix
@@ -108,4 +108,16 @@ export function fastInvertSkewMat4(dst: mat4, src: mat4): mat4{
     dst[15] = 1 / src[15];
 
     return dst;
+}
+
+/**
+ * Transforms the x and y of a point by a matrix, faster than `vec4.transformMat4` where neither the z output nor a w
+ * input other than 1 is needed, as in line label layout. Writes x, y and w; leaves z as it was.
+ */
+export function xyTransformMat4(out: vec4, a: vec4, m: mat4): vec4 {
+    const x = a[0], y = a[1];
+    out[0] = m[0] * x + m[4] * y + m[12];
+    out[1] = m[1] * x + m[5] * y + m[13];
+    out[3] = m[3] * x + m[7] * y + m[15];
+    return out;
 }
