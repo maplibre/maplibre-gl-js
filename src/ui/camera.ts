@@ -572,7 +572,7 @@ export class Camera extends Evented<MapEventType> {
     /**
      * @internal
      * Moves the camera onto a new projection, at its full transition until the next frame sets it, see
-     * {@link Camera.prepareNextFrame}. The camera's view state is plain data and stays, constrained to the new projection.
+     * {@link Camera.setProjectionTransition}. The camera's view state is plain data and stays, constrained to the new projection.
      */
     migrateProjection(projection: CameraProjection): void {
         this._projection = projection;
@@ -605,15 +605,11 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Prepares the camera for the next frame.
+     * Sets how far a globe is between its projections for the frame, see {@link CameraState.projectionTransition}.
      * @param transition - how far the style's projection is between mercator, at 0, and globe, at 1
      */
-    prepareNextFrame(transition: number): void {
+    setProjectionTransition(transition: number): void {
         this._dispatch(setProjectionTransition(transition));
-        const projection = this.context.projection;
-        if (projection.kind !== 'globe') return;
-        projection.verticalPerspective.coveringTilesDetailsProvider.prepareNextFrame();
-        projection.mercator.coveringTilesDetailsProvider.prepareNextFrame();
     }
 
     getCenter(): LngLat { return new LngLat(this.renderedState.center.lng, this.renderedState.center.lat); }

@@ -5,6 +5,7 @@ import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_util
 import {earthRadius} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
 import * as cameraMath from './camera_math.ts';
+import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
@@ -286,7 +287,7 @@ export function coveringTiles(projectedCamera: ProjectedCamera, projection: Came
     if (plane && options.maxContentElevation > 0) {
         ({frustum, plane} = expandCullingToContentElevation(frustum, plane, projectedCamera.cameraPosition, options.maxContentElevation));
     }
-    const detailsProvider = cameraMath.getCoveringTilesDetailsProvider(projection);
+    const detailsProvider = getCoveringTilesDetailsProvider(projection);
     const center = detailsProvider.getCenter(projectedCamera);
     const cameraCoord = cameraMercatorCoordinate(projectedCamera, projection.worldCoordinateHelper, center);
     const centerCoord = projection.worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, projectedCamera.elevation);

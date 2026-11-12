@@ -34,6 +34,7 @@ import {config} from '../util/config.ts';
 import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
+import {getCoveringTilesDetailsProvider} from '../geo/projection/covering_tiles_details_provider_factory.ts';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 import {calculateCameraOptionsFromTo} from '../geo/projection/camera_solvers.ts';
@@ -4551,7 +4552,8 @@ export class Map extends Evented<MapEventType> {
         }
 
         const globeRenderingChanged = this.style.projection?.transitionState > 0 !== isGlobeRendering;
-        this._camera.prepareNextFrame(this.style.projection?.transitionState);
+        this._camera.setProjectionTransition(this.style.projection?.transitionState);
+        getCoveringTilesDetailsProvider(this._camera.context.projection).prepareNextFrame();
 
         // If we are in _render for any reason other than an in-progress paint
         // transition, update tile managers to check for and load any tiles we

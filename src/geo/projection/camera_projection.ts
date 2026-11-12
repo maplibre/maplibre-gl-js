@@ -1,16 +1,13 @@
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
-import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
-import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 
 import type {WorldCoordinateHelper} from '../camera_types.ts';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 
 /**
  * @internal
- * What a camera is projected with besides its {@link CameraViewState}: the projection, the lng/lat to world coordinate
- * mapping the camera is positioned in, and the details of the projection's tile grid. The style's projection sets it,
- * not the changes to the camera, so it is not part of the camera's view state. It is immutable: a globe that moves between
- * its projections hands out a new one, see {@link withGlobeness}.
+ * What a camera is projected with besides its {@link CameraViewState}: the projection, and the lng/lat to world
+ * coordinate mapping the camera is positioned in. The style's projection sets it, not the changes to the camera, so it
+ * is not part of the camera's view state. It is immutable: a globe that moves between its projections hands out a new
+ * one, see {@link withGlobeness}.
  */
 export type CameraProjection = MercatorCameraProjection | VerticalPerspectiveCameraProjection | GlobeCameraProjection;
 
@@ -18,14 +15,12 @@ export type CameraProjection = MercatorCameraProjection | VerticalPerspectiveCam
 export type MercatorCameraProjection = {
     readonly kind: 'mercator';
     readonly worldCoordinateHelper: WorldCoordinateHelper;
-    readonly coveringTilesDetailsProvider: CoveringTilesDetailsProvider;
 };
 
 /** @internal The vertical perspective {@link CameraProjection} of a globe without its transition into mercator. */
 export type VerticalPerspectiveCameraProjection = {
     readonly kind: 'vertical-perspective';
     readonly worldCoordinateHelper: WorldCoordinateHelper;
-    readonly coveringTilesDetailsProvider: CoveringTilesDetailsProvider;
 };
 
 /**
@@ -44,12 +39,12 @@ export type GlobeCameraProjection = {
 
 /** @internal The mercator {@link CameraProjection} of a world mapping, by default mercator's own. */
 export function createMercatorCameraProjection(worldCoordinateHelper: WorldCoordinateHelper = mercatorWorldCoordinateHelper): MercatorCameraProjection {
-    return {kind: 'mercator', worldCoordinateHelper, coveringTilesDetailsProvider: new MercatorCoveringTilesDetailsProvider()};
+    return {kind: 'mercator', worldCoordinateHelper};
 }
 
 /** @internal The vertical perspective {@link CameraProjection}. */
 export function createVerticalPerspectiveCameraProjection(): VerticalPerspectiveCameraProjection {
-    return {kind: 'vertical-perspective', worldCoordinateHelper: mercatorWorldCoordinateHelper, coveringTilesDetailsProvider: new GlobeCoveringTilesDetailsProvider()};
+    return {kind: 'vertical-perspective', worldCoordinateHelper: mercatorWorldCoordinateHelper};
 }
 
 /** @internal The globe {@link CameraProjection}, fully a globe until its transition says otherwise. */

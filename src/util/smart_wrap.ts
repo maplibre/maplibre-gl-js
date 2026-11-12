@@ -1,5 +1,6 @@
 import {LngLat} from '../geo/lng_lat.ts';
 import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCoveringTilesDetailsProvider} from '../geo/projection/covering_tiles_details_provider_factory.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
@@ -19,7 +20,7 @@ import type {CameraProjection} from '../geo/projection/camera_projection.ts';
  * should wrap just enough to avoid doing so.
  */
 export function smartWrap(lngLat: LngLat, priorPos: Point, projectedCamera: ProjectedCamera, projection: CameraProjection, useNormalWrap: boolean = false): LngLat {
-    if (useNormalWrap || !cameraMath.getCoveringTilesDetailsProvider(projection).allowWorldCopies()) {
+    if (useNormalWrap || !getCoveringTilesDetailsProvider(projection).allowWorldCopies()) {
         return lngLat?.wrap();
     }
     const originalLngLat = new LngLat(lngLat.lng, lngLat.lat);

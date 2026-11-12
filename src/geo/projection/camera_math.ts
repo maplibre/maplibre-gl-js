@@ -11,7 +11,6 @@ import type {CameraMetrics, ProjectedCamera, MercatorProjectedCamera, VerticalPe
 import type {CameraViewState} from '../camera_view_state.ts';
 import type {WorldCoordinateHelper} from '../camera_types.ts';
 import type {CameraProjection} from './camera_projection.ts';
-import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {LngLat} from '../lng_lat.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
@@ -212,11 +211,6 @@ export function getCameraFrustum(projectedCamera: ProjectedCamera): Frustum {
 /** The plane that clips what is behind the globe, or null on mercator. */
 export function getClippingPlane(projectedCamera: ProjectedCamera): ProjectedCamera['clippingPlane'] {
     return renderedProjectedCamera(projectedCamera).clippingPlane;
-}
-
-/** The details of the tile grid of the projection a camera is drawn with, which tile selection reads. */
-export function getCoveringTilesDetailsProvider(projection: CameraProjection): CoveringTilesDetailsProvider {
-    return renderedProjection(projection).coveringTilesDetailsProvider;
 }
 
 /** How far a pitched view stretches the top of the screen, from the mercator pixel matrix on a globe too. */

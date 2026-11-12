@@ -11,6 +11,11 @@ import * as cameraUpdates from './camera_updates.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
+/** The distance of a volume's farthest point from the center of the unit sphere planet, on which 1 is the surface. */
+function farthestPoint(volume: ConvexVolume): number {
+    return Math.max(...volume.points.map((p) => Math.hypot(p[0], p[1], p[2])));
+}
+
 function tileKey(tileID: OverscaledTileID): string {
     return `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
 }
@@ -174,4 +179,20 @@ describe('poles', () => {
 
         expect(coveringTiles(projectCamera(view, projection), projection, {tileSize: 32})).toHaveLength(56);
     });
+});
+
+test('computes the bounding volume of a tile again once the terrain under it changes', () => {
+    const detailsProvider = new GlobeCoveringTilesDetailsProvider();
+    const dem: {minElevation?: number; maxElevation?: number} = {};
+    const terrain = {getMinMaxElevation: () => ({...dem})};
+    const options = {tileSize: 512, terrain} as any;
+    const tile = {x: 8, y: 5, z: 4};
+
+    const beforeDem = detailsProvider.getTileBoundingVolume(tile, 0, 0, options);
+    dem.minElevation = 0;
+    dem.maxElevation = 4000;
+    const afterDem = detailsProvider.getTileBoundingVolume(tile, 0, 0, options);
+
+    expect(afterDem).not.toBe(beforeDem);
+    expect(farthestPoint(afterDem)).toBeGreaterThan(farthestPoint(beforeDem));
 });

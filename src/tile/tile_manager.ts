@@ -10,6 +10,7 @@ import {OverscaledTileID} from './tile_id.ts';
 import {SourceFeatureState} from '../source/source_state.ts';
 import {config} from '../util/config.ts';
 import {coveringTiles, coveringZoomLevel} from '../geo/projection/covering_tiles.ts';
+import {getCoveringTilesDetailsProvider} from '../geo/projection/covering_tiles_details_provider_factory.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {EXTENT_BOUNDS} from '../data/extent_bounds.ts';
 import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
@@ -912,7 +913,7 @@ export class TileManager extends Evented<SourceEventType> {
         const tileResults: TileResult[] = [];
 
         if (!projectedCamera) return tileResults;
-        const allowWorldCopies = cameraMath.getCoveringTilesDetailsProvider(cameraProjection).allowWorldCopies();
+        const allowWorldCopies = getCoveringTilesDetailsProvider(cameraProjection).allowWorldCopies();
 
         const cameraPointQueryGeometry = has3DLayer ?
             cameraMath.getCameraQueryGeometry(projectedCamera, pointQueryGeometry) :

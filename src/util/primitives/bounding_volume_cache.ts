@@ -1,7 +1,21 @@
+import {OverscaledTileID} from '../../tile/tile_id.ts';
+
 import type {CoveringTilesOptionsInternal} from '../../geo/projection/covering_tiles.ts';
 import type {IBoundingVolume} from './bounding_volume.ts';
 
 type BoundingVolumeFactory<T extends IBoundingVolume> = (tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal) => T;
+
+/**
+ * The key of a tile's bounding volume: what the volume is computed from. The elevation is rounded, so that sub-meter
+ * changes do not defeat the cache, see `getElevationForTileCulling`. Over terrain the volume spans the tile's lowest
+ * and highest elevation, which change as the tile's DEM data lands, so they are part of the key.
+ */
+function boundingVolumeKey(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): string {
+    const key = `${tileID.z}_${tileID.x}_${tileID.y}_${Math.round(elevation)}`;
+    if (!options?.terrain) return key;
+    const {minElevation, maxElevation} = options.terrain.getMinMaxElevation(new OverscaledTileID(tileID.z, wrap, tileID.z, tileID.x, tileID.y));
+    return `${key}_${minElevation}_${maxElevation}`;
+}
 
 export class BoundingVolumeCache<T extends IBoundingVolume> {
     private _cachePrevious: Map<string, T> = new Map();
@@ -34,9 +48,7 @@ export class BoundingVolumeCache<T extends IBoundingVolume> {
      * @param tileID - Tile x, y and z for zoom.
      */
     getTileBoundingVolume(tileID: {x: number; y: number; z: number}, wrap: number, elevation: number, options: CoveringTilesOptionsInternal): T {
-        // Elevation affects the computed volume (see getElevationForTileCulling);
-        // rounding keeps sub-meter changes from defeating the cache.
-        const key = `${tileID.z}_${tileID.x}_${tileID.y}_${options?.terrain ? 't' : ''}_${Math.round(elevation)}`;
+        const key = boundingVolumeKey(tileID, wrap, elevation, options);
         const cached = this._cache.get(key);
         if (cached) {
             return cached;

@@ -4,6 +4,11 @@ import type {MercatorCoordinate} from '../mercator_coordinate.ts';
 import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
 import type {ProjectedCamera} from '../projected_camera.ts';
 
+/**
+ * @internal
+ * How tiles are selected in a projection, see `getCoveringTilesDetailsProvider` in
+ * `covering_tiles_details_provider_factory.ts`.
+ */
 export interface CoveringTilesDetailsProvider {
     /**
      * Returns the center that the tiles are selected around.
