@@ -76,8 +76,8 @@ function createSymbols(calculatePosMatrix: (tileID: UnwrappedTileID) => mat4 | u
     return symbols;
 }
 
-function placeAll(camera: ProjectedCamera, symbols: TestSymbol[]): void {
-    const collisionIndex = new CollisionIndex(camera);
+function placeAll(projectedCamera: ProjectedCamera, symbols: TestSymbol[]): void {
+    const collisionIndex = new CollisionIndex(projectedCamera);
     collisionIndex.grid.hitTest = () => true;
 
     for (const symbol of symbols) {
@@ -98,10 +98,10 @@ function placeAll(camera: ProjectedCamera, symbols: TestSymbol[]): void {
     }
 }
 
-const mercatorCamera = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 1024, height: 1024}).camera as MercatorProjectedCamera;
+const mercatorCamera = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 1024, height: 1024}).projectedCamera as MercatorProjectedCamera;
 const mercatorSymbols = createSymbols((tileID) => calculatePosMatrix(mercatorCamera, tileID, false));
 
-const globeCamera = createTestCamera({width: 1024, height: 1024}, createGlobeCameraProjection()).camera;
+const globeCamera = createTestCamera({width: 1024, height: 1024}, createGlobeCameraProjection()).projectedCamera;
 const globeSymbols = createSymbols(() => undefined);
 
 test('placeCollisionBox', async ({bench}) => {

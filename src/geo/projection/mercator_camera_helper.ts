@@ -24,19 +24,19 @@ import type {CameraContext} from './camera_constrain.ts';
 export class MercatorCameraHelper implements ICameraHelper {
     get useGlobeControls(): boolean { return false; }
 
-    handlePanInertia(pan: Point, camera: ProjectedCamera): {
+    handlePanInertia(pan: Point, projectedCamera: ProjectedCamera): {
         easingCenter: LngLat;
         easingOffset: Point;
     } {
         // Reduce the offset so that it never goes past the horizon. If it goes past
         // the horizon, the pan direction is opposite of the intended direction.
         const offsetLength = pan.mag();
-        const pixelsToHorizon = Math.abs(getMercatorHorizon(camera));
+        const pixelsToHorizon = Math.abs(getMercatorHorizon(projectedCamera));
         const horizonFactor = 0.75; // Must be < 1 to prevent the offset from crossing the horizon
         const offsetAsPoint = pan.mult(Math.min(pixelsToHorizon * horizonFactor / offsetLength, 1.0));
         return {
             easingOffset: offsetAsPoint,
-            easingCenter: camera.center,
+            easingCenter: projectedCamera.center,
         };
     }
 

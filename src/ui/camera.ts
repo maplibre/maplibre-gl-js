@@ -548,8 +548,8 @@ export class Camera extends Evented<MapEventType> {
         this._batch(() => {
             const hold = this._state.centerElevation;
             if (!terrain || hold.rule !== 'held' || !this.getCenterClampedToGround()) return;
-            const tr = this.requestedProjectedCamera;
-            if (terrain.getElevationAndDEMStateForLngLat(tr.center, tr.tileZoom).demState === 'loaded') return;
+            const projectedCamera = this.requestedProjectedCamera;
+            if (terrain.getElevationAndDEMStateForLngLat(projectedCamera.center, projectedCamera.tileZoom).demState === 'loaded') return;
             this._dispatch(combineActions(setRequestedElevation(0), setCenterElevationRule({...hold, dem: 'awaiting'})));
         });
         this.applyTerrainChange();
@@ -1087,9 +1087,9 @@ export class Camera extends Evented<MapEventType> {
      * @param holder - who holds it
      */
     holdElevation(holder: ElevationHolder): void {
-        const tr = this.requestedProjectedCamera;
-        const startedWithoutDem = !!this.terrain && this.getCenterClampedToGround() && this.terrain.getElevationAndDEMStateForLngLat(tr.center, tr.tileZoom).demState !== 'loaded';
-        const terrainAboveMaxZoomForCenter = this.terrain ? this._terrainHeightAboveMaxZoomForCenter(tr) : undefined;
+        const projectedCamera = this.requestedProjectedCamera;
+        const startedWithoutDem = !!this.terrain && this.getCenterClampedToGround() && this.terrain.getElevationAndDEMStateForLngLat(projectedCamera.center, projectedCamera.tileZoom).demState !== 'loaded';
+        const terrainAboveMaxZoomForCenter = this.terrain ? this._terrainHeightAboveMaxZoomForCenter(projectedCamera) : undefined;
         this._dispatch(setCenterElevationRule({
             rule: 'held',
             holder,
@@ -1183,13 +1183,13 @@ export class Camera extends Evented<MapEventType> {
             if (rule.rule === 'ground') this._dispatch(setRequestedElevation(0));
             return;
         }
-        const tr = this.requestedProjectedCamera;
+        const projectedCamera = this.requestedProjectedCamera;
         if (rule.rule === 'ground') {
-            const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(tr.center, tr.tileZoom);
+            const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(projectedCamera.center, projectedCamera.tileZoom);
             if (demState !== 'loading') this._dispatch(setRequestedElevation(elevation));
             return;
         }
-        const taken = takeDrawnElevation(rule, tr.center, this.terrain);
+        const taken = takeDrawnElevation(rule, projectedCamera.center, this.terrain);
         if (taken) this._dispatch(combineActions(setCenterElevationRule(taken.hold), setRequestedElevation(taken.elevation)));
         this._noteTerrainBelowMaxZoomForCenter();
     }
@@ -1198,9 +1198,9 @@ export class Camera extends Evented<MapEventType> {
     private _noteTerrainBelowMaxZoomForCenter(): void {
         const hold = this._state.centerElevation;
         if (hold.rule !== 'held' || hold.keepsTerrainBelowMaxZoomForCenter) return;
-        const tr = this.requestedProjectedCamera;
-        if (tr.pitch >= 90 || cameraMath.getClippingPlane(tr)) return;
-        const terrainAboveMaxZoomForCenter = this._terrainHeightAboveMaxZoomForCenter(tr);
+        const projectedCamera = this.requestedProjectedCamera;
+        if (projectedCamera.pitch >= 90 || cameraMath.getClippingPlane(projectedCamera)) return;
+        const terrainAboveMaxZoomForCenter = this._terrainHeightAboveMaxZoomForCenter(projectedCamera);
         if (terrainAboveMaxZoomForCenter !== undefined && terrainAboveMaxZoomForCenter <= MAX_ZOOM_FOR_CENTER_TOLERANCE_M) {
             this._dispatch(setCenterElevationRule({...hold, keepsTerrainBelowMaxZoomForCenter: true}));
         }
@@ -1318,15 +1318,15 @@ export class Camera extends Evented<MapEventType> {
      * is nearer than that plane, so terrain reaching above it would show as a hole into the ground. The points are a
      * 3 by 3 grid weighted bilinearly over the plane's four corners, the frustum's first four points in order around
      * the plane. The plane is checked on mercator only, where the frustum is in mercator coordinates.
-     * @param tr - the camera whose camera is checked
+     * @param projectedCamera - the camera whose camera is checked
      */
-    _terrainHeightAboveCamera(tr: ProjectedCamera): number {
-        let height = this.terrain.getElevationForLngLat(cameraMath.getCameraLngLat(tr, this._context.projection), tr.tileZoom) - cameraMath.getCameraAltitude(tr);
-        const index = cameraMath.getClippingPlane(tr) ? null : this.terrain.getCoverageIndex();
+    _terrainHeightAboveCamera(projectedCamera: ProjectedCamera): number {
+        let height = this.terrain.getElevationForLngLat(cameraMath.getCameraLngLat(projectedCamera, this._context.projection), projectedCamera.tileZoom) - cameraMath.getCameraAltitude(projectedCamera);
+        const index = cameraMath.getClippingPlane(projectedCamera) ? null : this.terrain.getCoverageIndex();
         if (!index) {
             return height;
         }
-        const [p0, p1, p2, p3] = cameraMath.getCameraFrustum(tr).points;
+        const [p0, p1, p2, p3] = cameraMath.getCameraFrustum(projectedCamera).points;
         for (let row = 0; row <= 2; row++) {
             const v = row / 2;
             for (let column = 0; column <= 2; column++) {
@@ -1351,20 +1351,20 @@ export class Camera extends Evented<MapEventType> {
      * drawn under it. A hold's end puts the center onto the drawn terrain the center ray meets, with the camera where it
      * is, see {@link Camera.putCenterBackOnTerrain}; terrain above that point puts it nearer than maxZoom allows, and
      * `setZoom` clamps the zoom it needs by moving the camera back.
-     * @param tr - the camera whose center ray is checked
+     * @param projectedCamera - the camera whose center ray is checked
      */
-    _terrainHeightAboveMaxZoomForCenter(tr: ProjectedCamera): number | undefined {
+    _terrainHeightAboveMaxZoomForCenter(projectedCamera: ProjectedCamera): number | undefined {
         const index = this.terrain.getCoverageIndex();
         if (!index) {
             return undefined;
         }
         const worldCoordinateHelper = this._context.projection.worldCoordinateHelper;
-        const cameraLngLat = cameraMath.getCameraLngLat(tr, this._context.projection);
+        const cameraLngLat = cameraMath.getCameraLngLat(projectedCamera, this._context.projection);
         const camera = worldCoordinateHelper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat);
-        const center = worldCoordinateHelper.worldFromLngLat(tr.center.lng, tr.center.lat);
-        const distanceFractionAtMaxZoom = zoomScale(tr.zoom - tr.maxZoom);
+        const center = worldCoordinateHelper.worldFromLngLat(projectedCamera.center.lng, projectedCamera.center.lat);
+        const distanceFractionAtMaxZoom = zoomScale(projectedCamera.zoom - projectedCamera.maxZoom);
         const sample = sampleAt(index, this.terrain.exaggeration, lerp(camera.x, center.x, distanceFractionAtMaxZoom), lerp(camera.y, center.y, distanceFractionAtMaxZoom), worldCoordinateHelper.wraps);
-        return sample.covered ? sample.elevation - lerp(cameraMath.getCameraAltitude(tr), tr.elevation, distanceFractionAtMaxZoom) : undefined;
+        return sample.covered ? sample.elevation - lerp(cameraMath.getCameraAltitude(projectedCamera), projectedCamera.elevation, distanceFractionAtMaxZoom) : undefined;
     }
 
     /**
@@ -1395,19 +1395,19 @@ export class Camera extends Evented<MapEventType> {
      * Picks the point a drag turns the camera around, the terrain under the point, or the ground without terrain there,
      * and the center for a point in the sky. On the globe, which holds no location at an elevation, a pivot on terrain
      * is held by the planet's surface under it.
-     * @param tr - the camera the drag starts from
+     * @param projectedCamera - the camera the drag starts from
      * @param point - the screen point the drag starts at
      */
-    captureRotationPivot(tr: ProjectedCamera, point: Point): RotationPivot {
-        if (!isBelowHorizon(tr, this._context.projection, point)) {
-            return {point: tr.centerPoint, location: tr.center, distance: distanceFromCamera(tr, this._context.projection, tr.center)};
+    captureRotationPivot(projectedCamera: ProjectedCamera, point: Point): RotationPivot {
+        if (!isBelowHorizon(projectedCamera, this._context.projection, point)) {
+            return {point: projectedCamera.centerPoint, location: projectedCamera.center, distance: distanceFromCamera(projectedCamera, this._context.projection, projectedCamera.center)};
         }
-        const hit = this.terrain ? cameraMath.screenTerrainPointToMercatorCoordinate(tr, this._context.projection, point, this.terrain) : null;
-        const location = hit ? hit.toLngLat() : cameraMath.screenPointToLocation(tr, this._context.projection, point);
+        const hit = this.terrain ? cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, this._context.projection, point, this.terrain) : null;
+        const location = hit ? hit.toLngLat() : cameraMath.screenPointToLocation(projectedCamera, this._context.projection, point);
         if (hit && this.cameraHelper.useGlobeControls) {
-            return {point: cameraMath.locationToScreenPoint(tr, this._context.projection, location), location, distance: distanceFromCamera(tr, this._context.projection, location)};
+            return {point: cameraMath.locationToScreenPoint(projectedCamera, this._context.projection, location), location, distance: distanceFromCamera(projectedCamera, this._context.projection, location)};
         }
-        return {point, location, elevation: hit?.z, distance: distanceFromCamera(tr, this._context.projection, location, hit?.z)};
+        return {point, location, elevation: hit?.z, distance: distanceFromCamera(projectedCamera, this._context.projection, location, hit?.z)};
     }
 
     /**
@@ -1767,19 +1767,19 @@ function isAtDistance(distance: number, pivot: RotationPivot): boolean {
 }
 
 /** Whether the ground under the pivot's screen point is the pivot, which the edge of the map or a pole of the globe can prevent. A pivot on terrain is not checked. */
-function isAtScreenPoint(tr: ProjectedCamera, projection: CameraProjection, pivot: RotationPivot): boolean {
+function isAtScreenPoint(projectedCamera: ProjectedCamera, projection: CameraProjection, pivot: RotationPivot): boolean {
     if (pivot.elevation !== undefined) return true;
-    const offset = vec3.distance(positionOf(cameraMath.screenPointToLocation(tr, projection, pivot.point), 0), positionOf(pivot.location, 0));
+    const offset = vec3.distance(positionOf(cameraMath.screenPointToLocation(projectedCamera, projection, pivot.point), 0), positionOf(pivot.location, 0));
     return offset < pivot.distance * PIVOT_POINT_TOLERANCE;
 }
 
-function isBelowHorizon(tr: ProjectedCamera, projection: CameraProjection, point: Point): boolean {
-    return cameraMath.isPointOnMapSurface(tr, projection, new Point(point.x, point.y - PIVOT_HORIZON_MARGIN_PX));
+function isBelowHorizon(projectedCamera: ProjectedCamera, projection: CameraProjection, point: Point): boolean {
+    return cameraMath.isPointOnMapSurface(projectedCamera, projection, new Point(point.x, point.y - PIVOT_HORIZON_MARGIN_PX));
 }
 
 /** Returns the straight-line distance in meters from the camera to a location, at the center's elevation unless it has its own. */
-function distanceFromCamera(tr: ProjectedCamera, projection: CameraProjection, location: LngLat, elevation: number = tr.elevation): number {
-    return vec3.distance(positionOf(cameraMath.getCameraLngLat(tr, projection), cameraMath.getCameraAltitude(tr)), positionOf(location, elevation));
+function distanceFromCamera(projectedCamera: ProjectedCamera, projection: CameraProjection, location: LngLat, elevation: number = projectedCamera.elevation): number {
+    return vec3.distance(positionOf(cameraMath.getCameraLngLat(projectedCamera, projection), cameraMath.getCameraAltitude(projectedCamera)), positionOf(location, elevation));
 }
 
 /** Returns the position of a location in meters from the center of the earth. */

@@ -559,9 +559,9 @@ export class HandlerManager extends Evented<MapEventType> {
             state = this._camera.moveCenterOntoTerrain(state, zoomDelta);
         }
 
-        const tr = this._camera._projectState(state);
-        let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, tr);
-        const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : undefined;
+        const projectedCamera = this._camera._projectState(state);
+        let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, projectedCamera);
+        const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, projectedCamera, combinedEventsInProgress) : undefined;
 
         const deltasForHelper: MapControlsDeltas = {
             panDelta,
@@ -574,10 +574,10 @@ export class HandlerManager extends Evented<MapEventType> {
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
-        if (this._camera.cameraHelper.useGlobeControls && !cameraMath.isPointOnMapSurface(tr, this._camera.context.projection, around)) {
-            around = tr.centerPoint;
+        if (this._camera.cameraHelper.useGlobeControls && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, around)) {
+            around = projectedCamera.centerPoint;
         }
-        const preZoomAroundLoc = this._computePreZoomAroundLoc(tr, around, panDelta, aroundElevation);
+        const preZoomAroundLoc = this._computePreZoomAroundLoc(projectedCamera, around, panDelta, aroundElevation);
 
         state = this._handleMapControls({
             terrain,
@@ -625,11 +625,11 @@ export class HandlerManager extends Evented<MapEventType> {
      * The gesture's anchor point: the pinch midpoint when pinching, otherwise the
      * pan's anchor, clamped to the center point when it does not lie on the map.
      */
-    private _resolveAround(combinedResult: HandlerResult, terrain: Terrain | null, tr: ProjectedCamera): {around: Point; aroundOnSurface: boolean} {
+    private _resolveAround(combinedResult: HandlerResult, terrain: Terrain | null, projectedCamera: ProjectedCamera): {around: Point; aroundOnSurface: boolean} {
         let around = combinedResult.pinchAround !== undefined ? combinedResult.pinchAround : combinedResult.around;
         around ||= this._camera.projectedCamera.centerPoint;
-        if (terrain && !cameraMath.isPointOnMapSurface(tr, this._camera.context.projection, around)) {
-            return {around: tr.centerPoint, aroundOnSurface: false};
+        if (terrain && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, around)) {
+            return {around: projectedCamera.centerPoint, aroundOnSurface: false};
         }
         return {around, aroundOnSurface: true};
     }
@@ -642,23 +642,23 @@ export class HandlerManager extends Evented<MapEventType> {
      * center-point anchor is skipped by the camera helper and would lose the pan), or
      * the anchor plane is too close to the camera for a stable ray-plane solve.
      */
-    private _terrainGestureElevation(terrain: Terrain, around: Point, aroundOnSurface: boolean, tr: ProjectedCamera, combinedEventsInProgress: EventsInProgress): number | undefined {
+    private _terrainGestureElevation(terrain: Terrain, around: Point, aroundOnSurface: boolean, projectedCamera: ProjectedCamera, combinedEventsInProgress: EventsInProgress): number | undefined {
         if (!aroundOnSurface) {
             return undefined;
         }
-        if (this._terrainGesture.anchorCenterElevation !== tr.elevation && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            const anchor = cameraMath.screenTerrainPointToMercatorCoordinate(tr, this._camera.context.projection, around, terrain);
+        if (this._terrainGesture.anchorCenterElevation !== projectedCamera.elevation && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+            const anchor = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, this._camera.context.projection, around, terrain);
             this._terrainGesture.anchorElevation = anchor ? anchor.z : undefined;
-            this._terrainGesture.anchorCenterElevation = tr.elevation;
+            this._terrainGesture.anchorCenterElevation = projectedCamera.elevation;
         }
         const elevation = this._terrainGesture.anchorElevation;
         if (elevation === null || elevation === undefined) {
             return undefined;
         }
-        if (around.distSqr(tr.centerPoint) < 1.0e-2) {
+        if (around.distSqr(projectedCamera.centerPoint) < 1.0e-2) {
             return undefined;
         }
-        if (elevation - tr.elevation >= TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION * (cameraMath.getCameraAltitude(tr) - tr.elevation)) {
+        if (elevation - projectedCamera.elevation >= TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION * (cameraMath.getCameraAltitude(projectedCamera) - projectedCamera.elevation)) {
             return undefined;
         }
         return elevation;
@@ -670,15 +670,15 @@ export class HandlerManager extends Evented<MapEventType> {
      * terrain gesture provides one. When rotating about the center point, the
      * camera's center is used directly to avoid numerical issues near the horizon.
      */
-    private _computePreZoomAroundLoc(tr: ProjectedCamera, around: Point, panDelta: Point | undefined, aroundElevation: number | undefined): LngLat {
-        if (around.distSqr(tr.centerPoint) < 1.0e-2) {
-            return tr.center;
+    private _computePreZoomAroundLoc(projectedCamera: ProjectedCamera, around: Point, panDelta: Point | undefined, aroundElevation: number | undefined): LngLat {
+        if (around.distSqr(projectedCamera.centerPoint) < 1.0e-2) {
+            return projectedCamera.center;
         }
         const aroundPreviousPoint = panDelta ? around.sub(panDelta) : around;
         if (aroundElevation !== undefined) {
-            return cameraMath.screenPointToLocationAtElevation(tr, this._camera.context.projection, aroundPreviousPoint, aroundElevation);
+            return cameraMath.screenPointToLocationAtElevation(projectedCamera, this._camera.context.projection, aroundPreviousPoint, aroundElevation);
         }
-        return cameraMath.screenPointToLocation(tr, this._camera.context.projection, aroundPreviousPoint);
+        return cameraMath.screenPointToLocation(projectedCamera, this._camera.context.projection, aroundPreviousPoint);
     }
 
     private _handleMapControls({
@@ -693,10 +693,10 @@ export class HandlerManager extends Evented<MapEventType> {
         const context = this._camera.context;
 
         state = cameraHelper.handleMapControlsRollPitchBearingZoom(state, context, deltasForHelper);
-        const tr = this._camera._projectState(state);
+        const projectedCamera = this._camera._projectState(state);
 
-        if (!terrain && !cameraHelper.useGlobeControls && !cameraMath.isPointOnMapSurface(tr, this._camera.context.projection, deltasForHelper.around)) {
-            return panDelta ? this._panByPixels(state, tr, panDelta) : state;
+        if (!terrain && !cameraHelper.useGlobeControls && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, deltasForHelper.around)) {
+            return panDelta ? this._panByPixels(state, projectedCamera, panDelta) : state;
         }
 
         if (!terrain) {
@@ -712,15 +712,15 @@ export class HandlerManager extends Evented<MapEventType> {
         if (!cameraHelper.useGlobeControls && deltasForHelper.aroundElevation === undefined &&
             combinedEventsInProgress.drag && panDelta) {
             // no usable anchor: drag by pixel-delta on the center-elevation plane
-            return this._panByPixels(state, tr, panDelta);
+            return this._panByPixels(state, projectedCamera, panDelta);
         }
 
         return cameraHelper.handleMapControlsPan(state, context, deltasForHelper, preZoomAroundLoc);
     }
 
     /** Moves the center to the location `panDelta` pixels against the drag from it, on the plane at the center's elevation. */
-    _panByPixels(state: CameraState, tr: ProjectedCamera, panDelta: Point): CameraState {
-        return cameraUpdates.setCenter(state, this._camera.context, cameraMath.screenPointToLocation(tr, this._camera.context.projection, tr.centerPoint.sub(panDelta)));
+    _panByPixels(state: CameraState, projectedCamera: ProjectedCamera, panDelta: Point): CameraState {
+        return cameraUpdates.setCenter(state, this._camera.context, cameraMath.screenPointToLocation(projectedCamera, this._camera.context.projection, projectedCamera.centerPoint.sub(panDelta)));
     }
 
     private _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean): void {

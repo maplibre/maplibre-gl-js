@@ -37,7 +37,7 @@ const SENTINEL = 12345;
 describe('placement', () => {
     let placement: Placement;
     beforeEach(() => {
-        placement = new Placement(createTestCamera({width: 512, height: 512}).camera, undefined, 0, true);
+        placement = new Placement(createTestCamera({width: 512, height: 512}).projectedCamera, undefined, 0, true);
     });
 
     test('should not throw on integer overflow', () => {

@@ -76,11 +76,11 @@ export class RequestedCameraProvider {
      * `fitScreenCoordinates` finds it, or undefined where no zoom fits the box.
      */
     cameraForScreenBox(p0: PointLike, p1: PointLike, bearing: number): JumpToOptions | undefined {
-        const camera = this._camera.projectedCamera;
+        const projectedCamera = this._camera.projectedCamera;
         const projection = this._camera.context.projection;
         return this._camera._cameraForBoxAndBearing(
-            cameraMath.screenPointToLocation(camera, projection, Point.convert(p0)),
-            cameraMath.screenPointToLocation(camera, projection, Point.convert(p1)),
+            cameraMath.screenPointToLocation(projectedCamera, projection, Point.convert(p0)),
+            cameraMath.screenPointToLocation(projectedCamera, projection, Point.convert(p1)),
             bearing);
     }
 }

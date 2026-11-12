@@ -204,29 +204,29 @@ export function getDegreesPerPixel(worldSize: number, lat: number): number {
 /**
  * Returns the camera's new center after applying panning.
  * @param panDelta - Panning delta, in same units as what is supplied to {@link HandlerManager}.
- * @param tr - Current camera. This object is not modified by the function.
+ * @param projectedCamera - The camera to pan. This object is not modified by the function.
  * @returns New center location to set to the map's camera to apply the specified panning.
  */
-export function computeGlobePanCenter(panDelta: Point, tr: {
+export function computeGlobePanCenter(panDelta: Point, projectedCamera: {
     readonly bearingInRadians: number;
     readonly worldSize: number;
     readonly center: LngLat;
     readonly zoom: number;
 }): LngLat {
     // Apply map bearing to the panning vector
-    const rotatedPanDelta = panDelta.rotate(tr.bearingInRadians);
+    const rotatedPanDelta = panDelta.rotate(projectedCamera.bearingInRadians);
     // Compute what the current zoom would be if the camera center would be moved to latitude 0.
-    const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr.center.lat, 0);
+    const normalizedGlobeZoom = projectedCamera.zoom + getZoomAdjustment(projectedCamera.center.lat, 0);
     // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.
     const lngSpeed = lerp(
-        1.0 / planetScaleAtLatitude(tr.center.lat), // speed adjusted by latitude
-        1.0 / planetScaleAtLatitude(Math.min(Math.abs(tr.center.lat), 60)), // also adjusted, but latitude is clamped to 60° to avoid too large speeds near poles
+        1.0 / planetScaleAtLatitude(projectedCamera.center.lat), // speed adjusted by latitude
+        1.0 / planetScaleAtLatitude(Math.min(Math.abs(projectedCamera.center.lat), 60)), // also adjusted, but latitude is clamped to 60° to avoid too large speeds near poles
         remapSaturate(normalizedGlobeZoom, 7, 3, 0, 1.0) // Values chosen so that globe interactions feel good. Not scientific by any means.
     );
-    const panningDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat);
+    const panningDegreesPerPixel = getDegreesPerPixel(projectedCamera.worldSize, projectedCamera.center.lat);
     return new LngLat(
-        tr.center.lng - rotatedPanDelta.x * panningDegreesPerPixel * lngSpeed,
-        clamp(tr.center.lat + rotatedPanDelta.y * panningDegreesPerPixel, -90, 90)
+        projectedCamera.center.lng - rotatedPanDelta.x * panningDegreesPerPixel * lngSpeed,
+        clamp(projectedCamera.center.lat + rotatedPanDelta.y * panningDegreesPerPixel, -90, 90)
     );
 }
 

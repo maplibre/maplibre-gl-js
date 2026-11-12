@@ -71,8 +71,8 @@ export class FillExtrusionStyleLayer extends StyleLayer {
 /**
  * Projects a point in tile coordinates at `elevation` to clip space, with the distance from the camera as its `z`.
  */
-function projectPoint(point: Point, elevation: number, camera: ProjectedCamera, tileID: UnwrappedTileID): Point3D {
-    const {point: projected, signedDistanceFromCamera} = cameraMath.projectTileCoordinates(camera, point.x, point.y, tileID, elevation);
+function projectPoint(point: Point, elevation: number, projectedCamera: ProjectedCamera, tileID: UnwrappedTileID): Point3D {
+    const {point: projected, signedDistanceFromCamera} = cameraMath.projectTileCoordinates(projectedCamera, point.x, point.y, tileID, elevation);
     const result = projected as Point3D;
     result.z = signedDistanceFromCamera;
     return result;

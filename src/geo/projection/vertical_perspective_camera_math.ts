@@ -186,40 +186,40 @@ function computeClippingPlane(metrics: CameraMetrics, globeRadiusPixels: number)
     return [...planeVector, -tangentPlaneDistanceToC * scale];
 }
 
-export function getProjectionData(camera: VerticalPerspectiveProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
+export function getProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
     const {overscaledTileID, applyGlobeMatrix} = params;
     const mercatorTileCoordinates = getMercatorTileCoordinates(overscaledTileID);
     return {
-        mainMatrix: camera.modelViewProjectionMatrix32f,
+        mainMatrix: projectedCamera.modelViewProjectionMatrix32f,
         tileMercatorCoords: mercatorTileCoordinates,
-        clippingPlane: camera.clippingPlane as [number, number, number, number],
+        clippingPlane: projectedCamera.clippingPlane as [number, number, number, number],
         projectionTransition: applyGlobeMatrix ? 1 : 0,
-        fallbackMatrix: camera.modelViewProjectionMatrix32f,
+        fallbackMatrix: projectedCamera.modelViewProjectionMatrix32f,
         clipAntimeridian: overscaledTileID?.canonical.z === 0,
     };
 }
 
 /** The vertical perspective version of `isLocationOccluded` in `camera_math.ts`. */
-export function isLocationOccluded(camera: VerticalPerspectiveProjectedCamera, lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+export function isLocationOccluded(projectedCamera: VerticalPerspectiveProjectedCamera, lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
     const coverage = terrain?.getCoverageIndex();
-    elevation ??= coverage ? terrain.getElevationForLngLat(lngLat, camera.tileZoom) : 0;
+    elevation ??= coverage ? terrain.getElevationForLngLat(lngLat, projectedCamera.tileZoom) : 0;
     const location = raisedSurfaceVector(lngLat, elevation);
-    if (!isSurfacePointVisible(camera, location)) return true;
+    if (!isSurfacePointVisible(projectedCamera, location)) return true;
     if (!coverage) return false;
 
-    const p = projectSurfacePointToScreen(camera, location);
-    const origin = camera.cameraPosition;
-    const direction = getRayDirectionFromPixel(camera, p);
+    const p = projectSurfacePointToScreen(projectedCamera, location);
+    const origin = projectedCamera.cameraPosition;
+    const direction = getRayDirectionFromPixel(projectedCamera, p);
     const tLocation = rayParameter(origin, direction, location);
     if (tLocation <= 0) return true;
 
-    const hit = screenTerrainPointToMercatorCoordinate(camera, p, terrain);
+    const hit = screenTerrainPointToMercatorCoordinate(projectedCamera, p, terrain);
     return hit != null && rayParameter(origin, direction, raisedSurfaceVector(hit.toLngLat(), hit.z)) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
 }
 
-export function transformLightDirection(camera: VerticalPerspectiveProjectedCamera, dir: vec3): vec3 {
-    const sphereX = camera.center.lng * Math.PI / 180.0;
-    const sphereY = camera.center.lat * Math.PI / 180.0;
+export function transformLightDirection(projectedCamera: VerticalPerspectiveProjectedCamera, dir: vec3): vec3 {
+    const sphereX = projectedCamera.center.lng * Math.PI / 180.0;
+    const sphereY = projectedCamera.center.lat * Math.PI / 180.0;
 
     const len = Math.cos(sphereY);
     const spherePos: vec3 = [
@@ -245,21 +245,21 @@ export function transformLightDirection(camera: VerticalPerspectiveProjectedCame
     return normalized;
 }
 
-export function getPixelScale(camera: VerticalPerspectiveProjectedCamera): number {
-    return 1.0 / planetScaleAtLatitude(camera.center.lat);
+export function getPixelScale(projectedCamera: VerticalPerspectiveProjectedCamera): number {
+    return 1.0 / planetScaleAtLatitude(projectedCamera.center.lat);
 }
 
-export function getCircleRadiusCorrection(camera: VerticalPerspectiveProjectedCamera): number {
-    return planetScaleAtLatitude(camera.center.lat);
+export function getCircleRadiusCorrection(projectedCamera: VerticalPerspectiveProjectedCamera): number {
+    return planetScaleAtLatitude(projectedCamera.center.lat);
 }
 
-export function getPitchedTextCorrection(camera: VerticalPerspectiveProjectedCamera, textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
+export function getPitchedTextCorrection(projectedCamera: VerticalPerspectiveProjectedCamera, textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
     const mercator = tileCoordinatesToMercatorCoordinates(textAnchorX, textAnchorY, tileID.canonical);
     const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator.x, mercator.y);
-    return getCircleRadiusCorrection(camera) / Math.cos(angular[1]);
+    return getCircleRadiusCorrection(projectedCamera) / Math.cos(angular[1]);
 }
 
-export function projectTileCoordinates(camera: VerticalPerspectiveProjectedCamera, x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
+export function projectTileCoordinates(projectedCamera: VerticalPerspectiveProjectedCamera, x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
     const canonical = unwrappedTileID.canonical;
     const spherePos = projectTileCoordinatesToSphere(x, y, canonical.x, canonical.y, canonical.z);
     const vectorMultiplier = 1.0 + (elevation ?? 0.0) / earthRadius;
@@ -267,14 +267,14 @@ export function projectTileCoordinates(camera: VerticalPerspectiveProjectedCamer
     const elevatedY = spherePos[1] * vectorMultiplier;
     const elevatedZ = spherePos[2] * vectorMultiplier;
     const pos: vec4 = [elevatedX, elevatedY, elevatedZ, 1];
-    vec4.transformMat4(pos, pos, camera.modelViewProjectionMatrix);
+    vec4.transformMat4(pos, pos, projectedCamera.modelViewProjectionMatrix);
 
     let isOccluded: boolean;
     if (vectorMultiplier <= 1.0) {
-        const plane = camera.clippingPlane;
+        const plane = projectedCamera.clippingPlane;
         isOccluded = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3] < 0.0;
     } else {
-        isOccluded = isLineOfSightBlocked(camera, elevatedX, elevatedY, elevatedZ);
+        isOccluded = isLineOfSightBlocked(projectedCamera, elevatedX, elevatedY, elevatedZ);
     }
 
     return {
@@ -287,8 +287,8 @@ export function projectTileCoordinates(camera: VerticalPerspectiveProjectedCamer
 /**
  * True when the segment from the camera to the given point, both in unit-globe coordinates, passes through the planet.
  */
-function isLineOfSightBlocked(camera: VerticalPerspectiveProjectedCamera, x: number, y: number, z: number): boolean {
-    const cam = camera.cameraPosition;
+function isLineOfSightBlocked(projectedCamera: VerticalPerspectiveProjectedCamera, x: number, y: number, z: number): boolean {
+    const cam = projectedCamera.cameraPosition;
     const dx = x - cam[0];
     const dy = y - cam[1];
     const dz = z - cam[2];
@@ -313,8 +313,8 @@ export function getVisibleUnwrappedCoordinates(_data: VerticalPerspectiveProject
     return [new UnwrappedTileID(0, tileID)];
 }
 
-export function getCameraFrustum(camera: VerticalPerspectiveProjectedCamera): Frustum {
-    return camera.frustum;
+export function getCameraFrustum(projectedCamera: VerticalPerspectiveProjectedCamera): Frustum {
+    return projectedCamera.frustum;
 }
 
 /** The mercator version reads the pixel matrix, which the vertical perspective does not have. */
@@ -327,37 +327,37 @@ export function maxPitchScaleFactor(_data: VerticalPerspectiveProjectedCamera): 
  * elevation (`_calcMatrices` does not apply it), so unlike on mercator the center elevation does not lift the camera.
  * `calculateCameraOptionsFromTo` in `camera_solvers.ts` is the inverse.
  */
-export function getCameraAltitude(camera: VerticalPerspectiveProjectedCamera): number {
+export function getCameraAltitude(projectedCamera: VerticalPerspectiveProjectedCamera): number {
     // The camera position is in unit-globe coordinates, with the sea-level surface at radius 1.
-    return (vec3.length(camera.cameraPosition) - 1) * earthRadius;
+    return (vec3.length(projectedCamera.cameraPosition) - 1) * earthRadius;
 }
 
-export function getCameraLngLat(camera: VerticalPerspectiveProjectedCamera): LngLat {
+export function getCameraLngLat(projectedCamera: VerticalPerspectiveProjectedCamera): LngLat {
     const surface = createVec3f64();
-    vec3.normalize(surface, camera.cameraPosition);
+    vec3.normalize(surface, projectedCamera.cameraPosition);
     return sphereSurfacePointToCoordinates(surface);
 }
 
-export function getBounds(camera: VerticalPerspectiveProjectedCamera): LngLatBounds {
-    const xMid = camera.width * 0.5;
-    const yMid = camera.height * 0.5;
+export function getBounds(projectedCamera: VerticalPerspectiveProjectedCamera): LngLatBounds {
+    const xMid = projectedCamera.width * 0.5;
+    const yMid = projectedCamera.height * 0.5;
 
     // LngLat extremes will probably tend to be in screen corners or in middle of screen edges.
     // These test points should result in a pretty good approximation.
     const testPoints = [
         new Point(0, 0),
         new Point(xMid, 0),
-        new Point(camera.width, 0),
-        new Point(camera.width, yMid),
-        new Point(camera.width, camera.height),
-        new Point(xMid, camera.height),
-        new Point(0, camera.height),
+        new Point(projectedCamera.width, 0),
+        new Point(projectedCamera.width, yMid),
+        new Point(projectedCamera.width, projectedCamera.height),
+        new Point(xMid, projectedCamera.height),
+        new Point(0, projectedCamera.height),
         new Point(0, yMid),
     ];
 
     const projectedPoints = [];
     for (const p of testPoints) {
-        projectedPoints.push(unprojectScreenPoint(camera, p));
+        projectedPoints.push(unprojectScreenPoint(projectedCamera, p));
     }
 
     // We can't construct a simple min/max aabb, since points might lie on either side of the antimeridian.
@@ -365,7 +365,7 @@ export function getBounds(camera: VerticalPerspectiveProjectedCamera): LngLatBou
     // We also take advantage of the fact that `unprojectScreenPoint` will snap pixels
     // outside the planet to the closest point on the planet's horizon.
     let mostEast = 0, mostWest = 0, mostNorth = 0, mostSouth = 0; // We will store these values signed.
-    const center = camera.center;
+    const center = projectedCamera.center;
     for (const p of projectedPoints) {
         const dLng = differenceOfAnglesDegrees(center.lng, p.lng);
         const dLat = differenceOfAnglesDegrees(center.lat, p.lat);
@@ -393,14 +393,14 @@ export function getBounds(camera: VerticalPerspectiveProjectedCamera): LngLatBou
     // Sometimes the poles might end up not being on the horizon,
     // thus not being detected as the northernmost/southernmost points.
     // We fix that here.
-    if (isSurfacePointOnScreen(camera, [0, 1, 0])) {
+    if (isSurfacePointOnScreen(projectedCamera, [0, 1, 0])) {
         // North pole is visible
         // This also means that the entire longitude range must be visible
         boundsArray[3] = 90;
         boundsArray[0] = -180;
         boundsArray[2] = 180;
     }
-    if (isSurfacePointOnScreen(camera, [0, -1, 0])) {
+    if (isSurfacePointOnScreen(projectedCamera, [0, -1, 0])) {
         // South pole is visible
         boundsArray[1] = -90;
         boundsArray[0] = -180;
@@ -410,15 +410,15 @@ export function getBounds(camera: VerticalPerspectiveProjectedCamera): LngLatBou
     return new LngLatBounds(boundsArray);
 }
 
-export function locationToScreenPoint(camera: VerticalPerspectiveProjectedCamera, lnglat: LngLat, terrain?: Terrain): Point {
+export function locationToScreenPoint(projectedCamera: VerticalPerspectiveProjectedCamera, lnglat: LngLat, terrain?: Terrain): Point {
     const pos = angularCoordinatesToSurfaceVector(lnglat);
 
     if (terrain) {
-        const elevation = terrain.getElevationForLngLat(lnglat, camera.tileZoom);
+        const elevation = terrain.getElevationForLngLat(lnglat, projectedCamera.tileZoom);
         vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
     }
 
-    return projectSurfacePointToScreen(camera, pos);
+    return projectSurfacePointToScreen(projectedCamera, pos);
 }
 
 /** The number of segments a point query's path to the camera is sampled with to follow the curve of the globe. */
@@ -430,14 +430,14 @@ const CAMERA_QUERY_ARC_SEGMENTS = 8;
  * and points off the globe get null, and with it the geometry every projection uses, see `getCameraQueryGeometry` in
  * `camera_math.ts`.
  */
-export function getCameraQueryGeometry(camera: VerticalPerspectiveProjectedCamera, queryGeometry: Point[]): Point[] | null {
-    if (queryGeometry.length !== 1 || !isPointOnMapSurface(camera, queryGeometry[0])) return null;
-    const query = angularCoordinatesToSurfaceVector(unprojectScreenPoint(camera, queryGeometry[0]));
-    const nadir = vec3.normalize(createVec3f64(), camera.cameraPosition);
+export function getCameraQueryGeometry(projectedCamera: VerticalPerspectiveProjectedCamera, queryGeometry: Point[]): Point[] | null {
+    if (queryGeometry.length !== 1 || !isPointOnMapSurface(projectedCamera, queryGeometry[0])) return null;
+    const query = angularCoordinatesToSurfaceVector(unprojectScreenPoint(projectedCamera, queryGeometry[0]));
+    const nadir = vec3.normalize(createVec3f64(), projectedCamera.cameraPosition);
     const geometry = [queryGeometry[0]];
     for (let i = 1; i <= CAMERA_QUERY_ARC_SEGMENTS; i++) {
         const point = vec3.lerp(createVec3f64(), query, nadir, i / CAMERA_QUERY_ARC_SEGMENTS);
-        geometry.push(projectSurfacePointToScreen(camera, vec3.normalize(point, point)));
+        geometry.push(projectSurfacePointToScreen(projectedCamera, vec3.normalize(point, point)));
     }
     return geometry;
 }
@@ -446,34 +446,34 @@ export function getCameraQueryGeometry(camera: VerticalPerspectiveProjectedCamer
  * Projects a given vector on the surface of a unit sphere (or possible above the surface)
  * and returns its coordinates on screen in pixels.
  */
-function projectSurfacePointToScreen(camera: VerticalPerspectiveProjectedCamera, pos: vec3): Point {
+function projectSurfacePointToScreen(projectedCamera: VerticalPerspectiveProjectedCamera, pos: vec3): Point {
     const projected = createVec4f64();
-    vec4.transformMat4(projected, [...pos, 1] as vec4, camera.modelViewProjectionMatrix);
+    vec4.transformMat4(projected, [...pos, 1] as vec4, projectedCamera.modelViewProjectionMatrix);
     projected[0] /= projected[3];
     projected[1] /= projected[3];
     return new Point(
-        (projected[0] * 0.5 + 0.5) * camera.width,
-        (-projected[1] * 0.5 + 0.5) * camera.height
+        (projected[0] * 0.5 + 0.5) * projectedCamera.width,
+        (-projected[1] * 0.5 + 0.5) * projectedCamera.height
     );
 }
 
-export function screenPointToMercatorCoordinate(camera: VerticalPerspectiveProjectedCamera, p: Point, terrain?: Terrain): MercatorCoordinate {
+export function screenPointToMercatorCoordinate(projectedCamera: VerticalPerspectiveProjectedCamera, p: Point, terrain?: Terrain): MercatorCoordinate {
     if (terrain) {
-        const coordinate = screenTerrainPointToMercatorCoordinate(camera, p, terrain);
+        const coordinate = screenTerrainPointToMercatorCoordinate(projectedCamera, p, terrain);
         if (coordinate) {
             return coordinate;
         }
     }
-    return MercatorCoordinate.fromLngLat(unprojectScreenPoint(camera, p));
+    return MercatorCoordinate.fromLngLat(unprojectScreenPoint(projectedCamera, p));
 }
 
 /** The vertical perspective version of `screenTerrainPointToMercatorCoordinate` in `camera_math.ts`. */
-export function screenTerrainPointToMercatorCoordinate(camera: VerticalPerspectiveProjectedCamera, p: Point, terrain: Terrain): MercatorCoordinate | null {
+export function screenTerrainPointToMercatorCoordinate(projectedCamera: VerticalPerspectiveProjectedCamera, p: Point, terrain: Terrain): MercatorCoordinate | null {
     const index = terrain.getCoverageIndex();
     if (!index) return null;
 
-    const origin = camera.cameraPosition;
-    const direction = getRayDirectionFromPixel(camera, p);
+    const origin = projectedCamera.cameraPosition;
+    const direction = getRayDirectionFromPixel(projectedCamera, p);
     const outer = raySphereIntersection(origin, direction, 1 + index.maxElevation / earthRadius);
     if (!outer) return null;
     const inner = raySphereIntersection(origin, direction, 1 + index.minElevation / earthRadius);
@@ -498,37 +498,37 @@ export function screenTerrainPointToMercatorCoordinate(camera: VerticalPerspecti
     return null;
 }
 
-export function screenPointToLocation(camera: VerticalPerspectiveProjectedCamera, p: Point, terrain?: Terrain): LngLat {
-    return screenPointToMercatorCoordinate(camera, p, terrain)?.toLngLat();
+export function screenPointToLocation(projectedCamera: VerticalPerspectiveProjectedCamera, p: Point, terrain?: Terrain): LngLat {
+    return screenPointToMercatorCoordinate(projectedCamera, p, terrain)?.toLngLat();
 }
 
 /** No flat ground plane to intersect at an elevation: uses the planet surface. */
-export function screenPointToLocationAtElevation(camera: VerticalPerspectiveProjectedCamera, p: Point, _elevation: number): LngLat {
-    return screenPointToLocation(camera, p);
+export function screenPointToLocationAtElevation(projectedCamera: VerticalPerspectiveProjectedCamera, p: Point, _elevation: number): LngLat {
+    return screenPointToLocation(projectedCamera, p);
 }
 
-export function isPointOnMapSurface(camera: VerticalPerspectiveProjectedCamera, p: Point, _terrain?: Terrain): boolean {
-    const rayDirection = getRayDirectionFromPixel(camera, p);
-    return !!raySphereIntersection(camera.cameraPosition, rayDirection);
+export function isPointOnMapSurface(projectedCamera: VerticalPerspectiveProjectedCamera, p: Point, _terrain?: Terrain): boolean {
+    const rayDirection = getRayDirectionFromPixel(projectedCamera, p);
+    return !!raySphereIntersection(projectedCamera.cameraPosition, rayDirection);
 }
 
 /**
  * Computes normalized direction of a ray from the camera to the given screen pixel.
  */
-export function getRayDirectionFromPixel(camera: VerticalPerspectiveProjectedCamera, p: Point): vec3 {
+export function getRayDirectionFromPixel(projectedCamera: VerticalPerspectiveProjectedCamera, p: Point): vec3 {
     const pos = createVec4f64();
-    pos[0] = (p.x / camera.width) * 2.0 - 1.0;
-    pos[1] = ((p.y / camera.height) * 2.0 - 1.0) * -1.0;
+    pos[0] = (p.x / projectedCamera.width) * 2.0 - 1.0;
+    pos[1] = ((p.y / projectedCamera.height) * 2.0 - 1.0) * -1.0;
     pos[2] = 1;
     pos[3] = 1;
-    vec4.transformMat4(pos, pos, camera.inverseModelViewProjectionMatrix);
+    vec4.transformMat4(pos, pos, projectedCamera.inverseModelViewProjectionMatrix);
     pos[0] /= pos[3];
     pos[1] /= pos[3];
     pos[2] /= pos[3];
     const ray = createVec3f64();
-    ray[0] = pos[0] - camera.cameraPosition[0];
-    ray[1] = pos[1] - camera.cameraPosition[1];
-    ray[2] = pos[2] - camera.cameraPosition[2];
+    ray[0] = pos[0] - projectedCamera.cameraPosition[0];
+    ray[1] = pos[1] - projectedCamera.cameraPosition[1];
+    ray[2] = pos[2] - projectedCamera.cameraPosition[2];
     const rayNormalized: vec3 = createVec3f64();
     vec3.normalize(rayNormalized, ray);
     return rayNormalized;
@@ -538,8 +538,8 @@ export function getRayDirectionFromPixel(camera: VerticalPerspectiveProjectedCam
  * For a given point on the unit sphere of the planet, or raised above it, returns whether it lies on the camera's
  * side of the horizon plane, the plane the globe shaders clip with (not taking into account camera rotation at all).
  */
-function isSurfacePointVisible(camera: VerticalPerspectiveProjectedCamera, p: vec3): boolean {
-    const plane = camera.clippingPlane;
+function isSurfacePointVisible(projectedCamera: VerticalPerspectiveProjectedCamera, p: vec3): boolean {
+    const plane = projectedCamera.clippingPlane;
     // dot(position on sphere, occlusion plane equation)
     const dotResult = plane[0] * p[0] + plane[1] * p[1] + plane[2] * p[2] + plane[3];
     return dotResult >= 0.0;
@@ -549,13 +549,13 @@ function isSurfacePointVisible(camera: VerticalPerspectiveProjectedCamera, p: ve
  * Returns whether surface point is visible on screen.
  * It must both project to a pixel in screen bounds and not be occluded by the planet.
  */
-function isSurfacePointOnScreen(camera: VerticalPerspectiveProjectedCamera, vec: vec3): boolean {
-    if (!isSurfacePointVisible(camera, vec)) {
+function isSurfacePointOnScreen(projectedCamera: VerticalPerspectiveProjectedCamera, vec: vec3): boolean {
+    if (!isSurfacePointVisible(projectedCamera, vec)) {
         return false;
     }
 
     const projected = createVec4f64();
-    vec4.transformMat4(projected, [...vec, 1] as vec4, camera.modelViewProjectionMatrix);
+    vec4.transformMat4(projected, [...vec, 1] as vec4, projectedCamera.modelViewProjectionMatrix);
     projected[0] /= projected[3];
     projected[1] /= projected[3];
     projected[2] /= projected[3];
@@ -570,12 +570,12 @@ function isSurfacePointOnScreen(camera: VerticalPerspectiveProjectedCamera, vec:
  * as close to the point as possible.
  * @param p - Screen point in pixels to unproject.
  */
-export function unprojectScreenPoint(camera: VerticalPerspectiveProjectedCamera, p: Point): LngLat {
+export function unprojectScreenPoint(projectedCamera: VerticalPerspectiveProjectedCamera, p: Point): LngLat {
     // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
     // As always, we assume that the planet is centered at 0,0,0 and has radius 1.
     // Ray origin is the camera position and direction is `rayDirection`.
-    const rayOrigin = camera.cameraPosition;
-    const rayDirection = getRayDirectionFromPixel(camera, p);
+    const rayOrigin = projectedCamera.cameraPosition;
+    const rayDirection = getRayDirectionFromPixel(projectedCamera, p);
     const intersection = raySphereIntersection(rayOrigin, rayDirection);
 
     if (intersection) {
@@ -594,7 +594,7 @@ export function unprojectScreenPoint(camera: VerticalPerspectiveProjectedCamera,
 
     // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
     // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
-    const horizonPlane = camera.clippingPlane;
+    const horizonPlane = projectedCamera.clippingPlane;
     const directionDotPlaneXyz = horizonPlane[0] * rayDirection[0] + horizonPlane[1] * rayDirection[1] + horizonPlane[2] * rayDirection[2];
     const originToPlaneDistance = pointPlaneSignedDistance(horizonPlane, rayOrigin);
     const distanceToIntersection = -originToPlaneDistance / directionDotPlaneXyz;
@@ -631,8 +631,8 @@ export function unprojectScreenPoint(camera: VerticalPerspectiveProjectedCamera,
     return sphereSurfacePointToCoordinates(closestOnHorizon);
 }
 
-export function getProjectionDataForCustomLayer(camera: VerticalPerspectiveProjectedCamera, applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
-    const globeData = getProjectionData(camera, {overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
+export function getProjectionDataForCustomLayer(projectedCamera: VerticalPerspectiveProjectedCamera, applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
+    const globeData = getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
     globeData.tileMercatorCoords = [0, 0, 1, 1];
     return globeData;
 }

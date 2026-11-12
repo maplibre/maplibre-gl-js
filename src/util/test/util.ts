@@ -446,7 +446,7 @@ export type TestCameraOptions = CameraStateOptions & {
 export type TestCamera = {
     state: CameraState;
     context: CameraContext;
-    camera: ProjectedCamera;
+    projectedCamera: ProjectedCamera;
 };
 
 /**
@@ -466,7 +466,7 @@ export function createTestCamera(options: TestCameraOptions = {}, projection: Ca
     if (options.roll !== undefined) state = cameraUpdates.setRoll(state, options.roll);
     if (options.fov !== undefined) state = cameraUpdates.setFov(state, options.fov);
     if (options.padding !== undefined) state = cameraUpdates.setPadding(state, context, options.padding);
-    return {state, context, camera: projectCamera(state, projection)};
+    return {state, context, projectedCamera: projectCamera(state, projection)};
 }
 
 /**

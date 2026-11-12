@@ -292,11 +292,11 @@ export class ScrollZoomHandler implements Handler {
         this._needsRerender = false;
 
         if (!this.isActive()) return;
-        const tr = this._tr.camera;
+        const projectedCamera = this._tr.camera;
 
         // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)
         if (typeof this._lastExpectedZoom === 'number') {
-            const externalZoomChange = tr.zoom - this._lastExpectedZoom;
+            const externalZoomChange = projectedCamera.zoom - this._lastExpectedZoom;
             if (typeof this._startZoom === 'number') {
                 this._startZoom += externalZoomChange;
             }
@@ -317,12 +317,12 @@ export class ScrollZoomHandler implements Handler {
                 scale = 1 / scale;
             }
 
-            const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
+            const fromScale = typeof this._targetZoom !== 'number' ? projectedCamera.scale : zoomScale(this._targetZoom);
             const target = this._tr.constrain(this._tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
             const zoomSnap = this._tr.zoomSnap;
 
             if (this._type === 'wheel' && zoomSnap > 0) {
-                const currentSnapped = evaluateZoomSnap(tr.zoom, zoomSnap);
+                const currentSnapped = evaluateZoomSnap(projectedCamera.zoom, zoomSnap);
                 this._targetZoom = evaluateZoomSnap(target, zoomSnap, target - currentSnapped);
             } else {
                 this._targetZoom = target;
@@ -332,14 +332,14 @@ export class ScrollZoomHandler implements Handler {
             // function we're using to smooth out the zooming between wheel
             // events
             if (this._type === 'wheel') {
-                this._startZoom = tr.zoom;
+                this._startZoom = projectedCamera.zoom;
                 this._easing = this._smoothOutEasing(200);
             }
 
             this._delta = 0;
         }
 
-        const targetZoom = typeof this._targetZoom !== 'number' ? tr.zoom : this._targetZoom;
+        const targetZoom = typeof this._targetZoom !== 'number' ? projectedCamera.zoom : this._targetZoom;
         const startZoom = this._startZoom;
         const easing = this._easing;
 
@@ -375,7 +375,7 @@ export class ScrollZoomHandler implements Handler {
         return {
             noInertia: true,
             needsRenderFrame: !finished,
-            zoomDelta: zoom - tr.zoom,
+            zoomDelta: zoom - projectedCamera.zoom,
             around: this._aroundPoint,
             originalEvent: this._lastWheelEvent,
             timeout: finished ? {delay: 200, token: this._finishWait} : undefined

@@ -14,7 +14,7 @@ describe('QueryFeatures.rendered', () => {
     test('returns empty object if source returns no tiles', () => {
         const mockTileManager = {tilesIn () { return []; }} as any as TileManager;
         const cameraProjection = createMercatorCameraProjection();
-        const result = queryRenderedFeatures(mockTileManager, {}, undefined, [] as Point[], undefined, createTestCamera({}, cameraProjection).camera, cameraProjection, undefined);
+        const result = queryRenderedFeatures(mockTileManager, {}, undefined, [] as Point[], undefined, createTestCamera({}, cameraProjection).projectedCamera, cameraProjection, undefined);
         expect(result).toEqual({});
     });
 

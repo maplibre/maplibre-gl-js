@@ -65,16 +65,16 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
 
     get useGlobeControls(): boolean { return true; }
 
-    handlePanInertia(pan: Point, camera: ProjectedCamera): {
+    handlePanInertia(pan: Point, projectedCamera: ProjectedCamera): {
         easingCenter: LngLat;
         easingOffset: Point;
     } {
-        const panCenter = computeGlobePanCenter(pan, camera);
-        if (Math.abs(panCenter.lng - camera.center.lng) > 180) {
+        const panCenter = computeGlobePanCenter(pan, projectedCamera);
+        if (Math.abs(panCenter.lng - projectedCamera.center.lng) > 180) {
             // If easeTo target would be over 180° distant, the animation would move
             // in the opposite direction that what the user intended.
             // Thus we clamp the movement to 179.5°.
-            panCenter.lng = camera.center.lng + 179.5 * Math.sign(panCenter.lng - camera.center.lng);
+            panCenter.lng = projectedCamera.center.lng + 179.5 * Math.sign(panCenter.lng - projectedCamera.center.lng);
         }
         return {
             easingCenter: panCenter,
@@ -175,8 +175,8 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
             return state;
         }
 
-        const camera = cameraMath.projectCamera(state, context.projection);
-        const anchor = cameraMath.isPointOnMapSurface(camera, context.projection, deltas.around) ? deltas.around : getCenterPoint(state);
+        const projectedCamera = cameraMath.projectCamera(state, context.projection);
+        const anchor = cameraMath.isPointOnMapSurface(projectedCamera, context.projection, deltas.around) ? deltas.around : getCenterPoint(state);
         return versorSetLocationAtPoint(state, context, preZoomAroundLoc, anchor, deltas.panDelta);
     }
 

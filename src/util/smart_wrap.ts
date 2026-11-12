@@ -18,7 +18,7 @@ import type {CameraProjection} from '../geo/projection/camera_projection.ts';
  * map center changes by ±360° due to automatic wrapping, and when about to go off screen,
  * should wrap just enough to avoid doing so.
  */
-export function smartWrap(lngLat: LngLat, priorPos: Point, camera: ProjectedCamera, projection: CameraProjection, useNormalWrap: boolean = false): LngLat {
+export function smartWrap(lngLat: LngLat, priorPos: Point, projectedCamera: ProjectedCamera, projection: CameraProjection, useNormalWrap: boolean = false): LngLat {
     if (useNormalWrap || !cameraMath.getCoveringTilesDetailsProvider(projection).allowWorldCopies()) {
         return lngLat?.wrap();
     }
@@ -31,22 +31,22 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, camera: ProjectedCame
     if (priorPos) {
         const left  = new LngLat(lngLat.lng - 360, lngLat.lat);
         const right = new LngLat(lngLat.lng + 360, lngLat.lat);
-        const delta = cameraMath.locationToScreenPoint(camera, projection, lngLat).distSqr(priorPos);
-        if (cameraMath.locationToScreenPoint(camera, projection, left).distSqr(priorPos) < delta) {
+        const delta = cameraMath.locationToScreenPoint(projectedCamera, projection, lngLat).distSqr(priorPos);
+        if (cameraMath.locationToScreenPoint(projectedCamera, projection, left).distSqr(priorPos) < delta) {
             lngLat = left;
-        } else if (cameraMath.locationToScreenPoint(camera, projection, right).distSqr(priorPos) < delta) {
+        } else if (cameraMath.locationToScreenPoint(projectedCamera, projection, right).distSqr(priorPos) < delta) {
             lngLat = right;
         }
     }
 
     // Second, wrap toward the center until the new position is on screen, or we can't get
     // any closer.
-    while (Math.abs(lngLat.lng - camera.center.lng) > 180) {
-        const pos = cameraMath.locationToScreenPoint(camera, projection, lngLat);
-        if (pos.x >= 0 && pos.y >= 0 && pos.x <= camera.width && pos.y <= camera.height) {
+    while (Math.abs(lngLat.lng - projectedCamera.center.lng) > 180) {
+        const pos = cameraMath.locationToScreenPoint(projectedCamera, projection, lngLat);
+        if (pos.x >= 0 && pos.y >= 0 && pos.x <= projectedCamera.width && pos.y <= projectedCamera.height) {
             break;
         }
-        if (lngLat.lng > camera.center.lng) {
+        if (lngLat.lng > projectedCamera.center.lng) {
             lngLat.lng -= 360;
         } else {
             lngLat.lng += 360;
@@ -54,7 +54,7 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, camera: ProjectedCame
     }
 
     // Apply the change only if new coord is below horizon
-    if (lngLat.lng !== originalLngLat.lng && cameraMath.isPointOnMapSurface(camera, projection, cameraMath.locationToScreenPoint(camera, projection, lngLat))) {
+    if (lngLat.lng !== originalLngLat.lng && cameraMath.isPointOnMapSurface(projectedCamera, projection, cameraMath.locationToScreenPoint(projectedCamera, projection, lngLat))) {
         return lngLat;
     }
 

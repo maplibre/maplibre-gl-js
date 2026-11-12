@@ -6,10 +6,10 @@ import type {StyleLayer} from './style_layer.ts';
 
 describe('PauseablePlacement', () => {
     test('should skip symbol layers whose layout is not yet hydrated', () => {
-        const {camera} = createTestCamera({width: 512, height: 512});
+        const {projectedCamera} = createTestCamera({width: 512, height: 512});
 
         const pp = new PauseablePlacement(
-            camera,
+            projectedCamera,
             undefined,
             ['symbol-layer'],
             true,

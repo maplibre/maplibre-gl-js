@@ -20,7 +20,7 @@ import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.
 import type {StyleImage} from '../../style/style_image.ts';
 
 const collisionBoxArray = new CollisionBoxArray();
-const {camera} = createTestCamera({width: 100, height: 100});
+const {projectedCamera} = createTestCamera({width: 100, height: 100});
 
 const glyphsByCluster = createGlyphMap();
 
@@ -78,7 +78,7 @@ describe('SymbolBucket', () => {
         const bucketA = bucketSetup();
         const bucketB = bucketSetup();
         const options = createPopulateOptions([]);
-        const placement = new Placement(camera, undefined, 0, true);
+        const placement = new Placement(projectedCamera, undefined, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 

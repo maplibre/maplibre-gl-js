@@ -37,7 +37,7 @@ describe('FeatureIndex', () => {
 
     describe('query', () => {
         const tileID = new OverscaledTileID(3, 0, 2, 1, 2);
-        const {camera, context} = createTestCamera({width: 500, height: 500});
+        const {projectedCamera, context} = createTestCamera({width: 500, height: 500});
 
         test('filter with global-state', () => {
             const features = [
@@ -68,7 +68,7 @@ describe('FeatureIndex', () => {
                     filter: ['==', ['get', 'cluster'], ['global-state', 'isCluster']],
                     globalState
                 },
-                projectedCamera: camera,
+                projectedCamera,
                 worldCoordinateHelper: context.projection.worldCoordinateHelper
             } as any, {
                 layer,
@@ -91,7 +91,7 @@ describe('FeatureIndex', () => {
                 queryGeometry: [new Point(0, 0), new Point(0, 2000), new Point(2000, 2000), new Point(2000, 0), new Point(0 ,0)],
                 cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
                 params: {},
-                projectedCamera: camera,
+                projectedCamera,
                 worldCoordinateHelper: context.projection.worldCoordinateHelper
             } as any, {
                 layer,
@@ -118,7 +118,7 @@ describe('FeatureIndex in a planar projection', () => {
 
     test('query returns geometry through the transform projection', () => {
         const {featureIndex, layer} = createIndexWithFeature();
-        const {camera, context} = createIdentityCrsCamera(500, 500);
+        const {projectedCamera, context} = createIdentityCrsCamera(500, 500);
 
         const result = featureIndex.query({
             queryPadding: 0,
@@ -127,7 +127,7 @@ describe('FeatureIndex in a planar projection', () => {
             queryGeometry: [new Point(0, 0), new Point(10, 10)],
             cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
             params: {},
-            projectedCamera: camera,
+            projectedCamera,
             worldCoordinateHelper: context.projection.worldCoordinateHelper
         } as any, {layer}, [], undefined);
         expect((result.layer[0].feature.geometry as GeoJSON.MultiPoint).coordinates[0]).toEqual([-45, 0]);

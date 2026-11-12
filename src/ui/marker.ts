@@ -731,11 +731,11 @@ export class Marker extends Evented<MarkerEventType> {
      * above it on screen, or the location itself when the offset lowers the element.
      */
     _isCovered(terrain: Terrain): boolean {
-        const camera = this._map._camera.projectedCamera;
-        const elevation = terrain.getElevationForLngLat(this._lngLat, camera.tileZoom);
-        const metersToCenter = Math.max(0, -this._offset.y) / camera.pixelsPerMeter;
+        const projectedCamera = this._map._camera.projectedCamera;
+        const elevation = terrain.getElevationForLngLat(this._lngLat, projectedCamera.tileZoom);
+        const metersToCenter = Math.max(0, -this._offset.y) / projectedCamera.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
-        return cameraMath.isLocationOccluded(camera, this._map._camera.context.projection, this._lngLat, terrain, elevation + elevationToCenter);
+        return cameraMath.isLocationOccluded(projectedCamera, this._map._camera.context.projection, this._lngLat, terrain, elevation + elevationToCenter);
     }
 
     /**

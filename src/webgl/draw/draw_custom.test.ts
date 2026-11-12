@@ -28,7 +28,7 @@ describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
         // same camera setup as in mercator_camera_math.test.ts, so its matrices should be the same
         const {state, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 500, height: 500});
-        const camera = projectCamera(cameraUpdates.setMaxPitch(cameraUpdates.setMinPitch(state, 10), 10), context.projection);
+        const projectedCamera = projectCamera(cameraUpdates.setMaxPitch(cameraUpdates.setMinPitch(state, 10), 10), context.projection);
         const mockPainter = new Painter(null);
         mockPainter.context = {
             gl: {},
@@ -41,7 +41,7 @@ describe('drawCustom', () => {
                 set: () => {}
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({projectedCamera: camera, cameraProjection: context.projection, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera, cameraProjection: context.projection, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         const tile = new Tile(tileId, 256);
@@ -70,11 +70,11 @@ describe('drawCustom', () => {
         drawCustom(mockPainter, tileManagerMock, mockLayer, [tileId], frameRenderContext);
         expect(result.gl).toBeDefined();
         expect(result.args.farZ).toBeCloseTo(804.8028169246645, 6);
-        expect(result.args.farZ).toBe(camera.farZ);
-        expect(result.args.nearZ).toBe(camera.nearZ);
-        expect(result.args.fov).toBe(camera.fov * Math.PI / 180);
-        expect(result.args.modelViewProjectionMatrix).toEqual(camera.modelViewProjectionMatrix);
-        expect(result.args.projectionMatrix).toEqual(camera.projectionMatrix);
+        expect(result.args.farZ).toBe(projectedCamera.farZ);
+        expect(result.args.nearZ).toBe(projectedCamera.nearZ);
+        expect(result.args.fov).toBe(projectedCamera.fov * Math.PI / 180);
+        expect(result.args.modelViewProjectionMatrix).toEqual(projectedCamera.modelViewProjectionMatrix);
+        expect(result.args.projectionMatrix).toEqual(projectedCamera.projectionMatrix);
         expectToBeCloseToArray(result.args.defaultProjectionData.tileMercatorCoords, [0, 0, 1, 1]);
         expect(result.args.defaultProjectionData.mainMatrix).toBeInstanceOf(Float64Array);
         expect(result.args.defaultProjectionData.fallbackMatrix).toBeInstanceOf(Float64Array);

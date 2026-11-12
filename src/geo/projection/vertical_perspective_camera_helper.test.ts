@@ -23,12 +23,12 @@ function panFrom(around: Point): CameraState {
 
 describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
     test('preserves bearing away from the poles', () => {
-        const {state, context, camera} = createTestCamera({width: 512, height: 512, zoom: 4, center: [0, 20]}, createGlobeCameraProjection());
+        const {state, context, projectedCamera} = createTestCamera({width: 512, height: 512, zoom: 4, center: [0, 20]}, createGlobeCameraProjection());
         const helper = new VerticalPerspectiveCameraHelper();
 
         const panned = helper.handleMapControlsPan(
             state, context,
-            {panDelta: new Point(50, 30), around: camera.centerPoint} as MapControlsDeltas,
+            {panDelta: new Point(50, 30), around: projectedCamera.centerPoint} as MapControlsDeltas,
             state.center);
 
         expect(panned.bearingInRadians).toBe(0);
@@ -56,12 +56,12 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
     });
 
     test('pans toward the pole in double precision', () => {
-        const {state, context, camera} = createTestCamera({width: 512, height: 512, zoom: 1, center: [-100, 88]}, createGlobeCameraProjection());
+        const {state, context, projectedCamera} = createTestCamera({width: 512, height: 512, zoom: 1, center: [-100, 88]}, createGlobeCameraProjection());
         const helper = new VerticalPerspectiveCameraHelper();
 
         const panned = helper.handleMapControlsPan(
             state, context,
-            {panDelta: new Point(0, 40), around: camera.centerPoint} as MapControlsDeltas,
+            {panDelta: new Point(0, 40), around: projectedCamera.centerPoint} as MapControlsDeltas,
             state.center);
 
         expect(panned.center.lat).toBeCloseTo(89.2138864716364, 10);
@@ -105,9 +105,9 @@ describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
 
 describe('VerticalPerspectiveCameraHelper.handlePanInertia', () => {
     test('eases onto the pole', () => {
-        const {camera} = createTestCamera({width: 512, height: 512, center: [0, 89]}, createGlobeCameraProjection());
+        const {projectedCamera} = createTestCamera({width: 512, height: 512, center: [0, 89]}, createGlobeCameraProjection());
 
-        const {easingCenter} = new VerticalPerspectiveCameraHelper().handlePanInertia(new Point(0, 50), camera);
+        const {easingCenter} = new VerticalPerspectiveCameraHelper().handlePanInertia(new Point(0, 50), projectedCamera);
 
         expect(easingCenter.lat).toBe(90);
     });

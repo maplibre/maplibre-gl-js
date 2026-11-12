@@ -12,7 +12,7 @@ function createCamera(): TestCamera {
     return createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 1280, height: 800, center: new LngLat(-73.98, 40.75), zoom: 12.3, pitch: 45, bearing: 30});
 }
 
-const {state, context, camera} = createCamera();
+const {state, context, projectedCamera} = createCamera();
 const {projection} = context;
 const cameraHelper = new MercatorCameraHelper();
 const points: Point[] = [];
@@ -36,17 +36,17 @@ test('camera hot paths', async ({bench}) => {
         }),
         bench('getCameraLngLat', () => {
             for (let i = 0; i < 100; i++) {
-                cameraMath.getCameraLngLat(camera, projection);
+                cameraMath.getCameraLngLat(projectedCamera, projection);
             }
         }),
         bench('screenPointToLocation', () => {
             for (let i = 0; i < 100; i++) {
-                cameraMath.screenPointToLocation(camera, projection, points[i]);
+                cameraMath.screenPointToLocation(projectedCamera, projection, points[i]);
             }
         }),
         bench('locationToScreenPoint', () => {
             for (let i = 0; i < 100; i++) {
-                cameraMath.locationToScreenPoint(camera, projection, lngLats[i]);
+                cameraMath.locationToScreenPoint(projectedCamera, projection, lngLats[i]);
             }
         }),
         bench('setLocationAtPoint', () => {
@@ -55,7 +55,7 @@ test('camera hot paths', async ({bench}) => {
             }
         }),
         bench('coveringTiles', () => {
-            coveringTiles(camera, projection, {tileSize: 512, minzoom: 0, maxzoom: 22, reparseOverscaled: false, calculateTileZoom: undefined});
+            coveringTiles(projectedCamera, projection, {tileSize: 512, minzoom: 0, maxzoom: 22, reparseOverscaled: false, calculateTileZoom: undefined});
         }),
         bench('easeTo easeFunc (per-frame animation path)', () => {
             const start = createCamera();

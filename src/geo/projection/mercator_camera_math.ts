@@ -53,11 +53,11 @@ type MercatorRay = {
 const matrixCaches = new WeakMap<MercatorProjectedCamera, MercatorMatrixCache>();
 
 /** @internal The tile matrices computed for a projected camera, see {@link matrixCaches}. */
-export function getMatrixCache(camera: MercatorProjectedCamera): MercatorMatrixCache {
-    let cache = matrixCaches.get(camera);
+export function getMatrixCache(projectedCamera: MercatorProjectedCamera): MercatorMatrixCache {
+    let cache = matrixCaches.get(projectedCamera);
     if (!cache) {
         cache = {posMatrices: new Map(), alignedPosMatrices: new Map(), fogMatrices: new Map()};
-        matrixCaches.set(camera, cache);
+        matrixCaches.set(projectedCamera, cache);
     }
     return cache;
 }
@@ -228,18 +228,18 @@ function calculateNearFarZ(metrics: CameraMetrics, cameraToSeaLevelDistance: num
 }
 
 /** The {@link getMercatorHorizon} of the camera. */
-export function getHorizon(camera: MercatorProjectedCamera): number {
-    return getMercatorHorizon(camera);
+export function getHorizon(projectedCamera: MercatorProjectedCamera): number {
+    return getMercatorHorizon(projectedCamera);
 }
 
 /** The copies of the world a tile is drawn in, which a world that wraps repeats across the screen. */
-export function getVisibleUnwrappedCoordinates(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, tileID: CanonicalTileID): UnwrappedTileID[] {
+export function getVisibleUnwrappedCoordinates(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, tileID: CanonicalTileID): UnwrappedTileID[] {
     const result = [new UnwrappedTileID(0, tileID)];
-    if (camera.renderWorldCopies && worldCoordinateHelper.wraps) {
-        const utl = screenPointToMercatorCoordinateAtZ(camera, new Point(0, 0));
-        const utr = screenPointToMercatorCoordinateAtZ(camera, new Point(camera.width, 0));
-        const ubl = screenPointToMercatorCoordinateAtZ(camera, new Point(camera.width, camera.height));
-        const ubr = screenPointToMercatorCoordinateAtZ(camera, new Point(0, camera.height));
+    if (projectedCamera.renderWorldCopies && worldCoordinateHelper.wraps) {
+        const utl = screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(0, 0));
+        const utr = screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(projectedCamera.width, 0));
+        const ubl = screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(projectedCamera.width, projectedCamera.height));
+        const ubr = screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(0, projectedCamera.height));
         const w0 = Math.floor(Math.min(utl.x, utr.x, ubl.x, ubr.x));
         const w1 = Math.floor(Math.max(utl.x, utr.x, ubl.x, ubr.x));
 
@@ -256,23 +256,23 @@ export function getVisibleUnwrappedCoordinates(camera: MercatorProjectedCamera, 
     return result;
 }
 
-export function getCameraFrustum(camera: MercatorProjectedCamera): Frustum {
-    return createFrustum(camera.inverseModelViewProjectionMatrix, camera.worldSize);
+export function getCameraFrustum(projectedCamera: MercatorProjectedCamera): Frustum {
+    return createFrustum(projectedCamera.inverseModelViewProjectionMatrix, projectedCamera.worldSize);
 }
 
-export function locationToScreenPoint(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, lnglat: LngLat, terrain?: Terrain): Point {
+export function locationToScreenPoint(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, lnglat: LngLat, terrain?: Terrain): Point {
     const coord = worldCoordinateHelper.worldFromLngLat(lnglat.lng, lnglat.lat);
     return terrain ?
-        coordinatePoint(camera, coord, terrain.getElevationForLngLat(lnglat, camera.tileZoom), camera.pixelMatrix3D) :
-        coordinatePoint(camera, coord);
+        coordinatePoint(projectedCamera, coord, terrain.getElevationForLngLat(lnglat, projectedCamera.tileZoom), projectedCamera.pixelMatrix3D) :
+        coordinatePoint(projectedCamera, coord);
 }
 
-export function screenPointToLocation(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, terrain?: Terrain): LngLat {
-    return worldToLngLat(worldCoordinateHelper, screenPointToMercatorCoordinate(camera, worldCoordinateHelper, p, terrain));
+export function screenPointToLocation(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, terrain?: Terrain): LngLat {
+    return worldToLngLat(worldCoordinateHelper, screenPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, p, terrain));
 }
 
-export function screenPointToLocationAtElevation(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, elevation: number): LngLat {
-    return worldToLngLat(worldCoordinateHelper, screenPointToMercatorCoordinateAtZ(camera, p, elevation - camera.elevation));
+export function screenPointToLocationAtElevation(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, elevation: number): LngLat {
+    return worldToLngLat(worldCoordinateHelper, screenPointToMercatorCoordinateAtZ(projectedCamera, p, elevation - projectedCamera.elevation));
 }
 
 /**
@@ -283,14 +283,14 @@ function worldToLngLat(worldCoordinateHelper: WorldCoordinateHelper, coord: Merc
     return coord ? worldCoordinateHelper.lngLatFromWorld(coord.x, coord.y) : undefined;
 }
 
-export function screenPointToMercatorCoordinate(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, terrain?: Terrain): MercatorCoordinate {
+export function screenPointToMercatorCoordinate(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, terrain?: Terrain): MercatorCoordinate {
     if (terrain) {
-        const coordinate = screenTerrainPointToMercatorCoordinate(camera, worldCoordinateHelper, p, terrain);
+        const coordinate = screenTerrainPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, p, terrain);
         if (coordinate != null) {
             return coordinate;
         }
     }
-    return screenPointToMercatorCoordinateAtZ(camera, p);
+    return screenPointToMercatorCoordinateAtZ(projectedCamera, p);
 }
 
 /**
@@ -300,28 +300,28 @@ export function screenPointToMercatorCoordinate(camera: MercatorProjectedCamera,
  * to the terrain behind it. Where maxZoom lets the camera nearer than the near clipping plane, the ray is followed
  * from that plane, like every terrain pick.
  */
-export function terrainPointPastMaxZoom(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, terrain: Terrain): LngLat | null {
+export function terrainPointPastMaxZoom(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, terrain: Terrain): LngLat | null {
     const index = terrain.getCoverageIndex();
     if (!index) return null;
-    const {near, far} = getRaySegmentFromPixel(camera, camera.centerPoint, NEAR_PLANE_CLIP_Z);
-    const distanceAtMaxZoom = camera.cameraToCenterDistance * zoomScale(camera.zoom - camera.maxZoom);
-    const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - camera.nearZ) / (camera.farZ - camera.nearZ)));
-    if (isBelowTerrainSample(sampleAt(index, terrain.exaggeration, start[0] / camera.worldSize, start[1] / camera.worldSize, worldCoordinateHelper.wraps), start[2])) return null;
-    return worldToLngLat(worldCoordinateHelper, raycastTerrain(camera, worldCoordinateHelper, start, far, terrain)) ?? null;
+    const {near, far} = getRaySegmentFromPixel(projectedCamera, projectedCamera.centerPoint, NEAR_PLANE_CLIP_Z);
+    const distanceAtMaxZoom = projectedCamera.cameraToCenterDistance * zoomScale(projectedCamera.zoom - projectedCamera.maxZoom);
+    const start = vec3.lerp([], near, far, Math.max(0, (distanceAtMaxZoom - projectedCamera.nearZ) / (projectedCamera.farZ - projectedCamera.nearZ)));
+    if (isBelowTerrainSample(sampleAt(index, terrain.exaggeration, start[0] / projectedCamera.worldSize, start[1] / projectedCamera.worldSize, worldCoordinateHelper.wraps), start[2])) return null;
+    return worldToLngLat(worldCoordinateHelper, raycastTerrain(projectedCamera, worldCoordinateHelper, start, far, terrain)) ?? null;
 }
 
 /** The mercator version of `screenTerrainPointToMercatorCoordinate` in `camera_math.ts`. */
-export function screenTerrainPointToMercatorCoordinate(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, terrain: Terrain): MercatorCoordinate | null {
-    const {near, far} = getRaySegmentFromPixel(camera, p, NEAR_PLANE_CLIP_Z);
-    return raycastTerrain(camera, worldCoordinateHelper, near, far, terrain);
+export function screenTerrainPointToMercatorCoordinate(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, terrain: Terrain): MercatorCoordinate | null {
+    const {near, far} = getRaySegmentFromPixel(projectedCamera, p, NEAR_PLANE_CLIP_Z);
+    return raycastTerrain(projectedCamera, worldCoordinateHelper, near, far, terrain);
 }
 
 /** The first point where the segment from `near` to `far` enters the terrain from above, or null. */
-export function raycastTerrain(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, near: vec3, far: vec3, terrain: Terrain): MercatorCoordinate | null {
+export function raycastTerrain(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, near: vec3, far: vec3, terrain: Terrain): MercatorCoordinate | null {
     const index = terrain.getCoverageIndex();
     if (!index) return null;
 
-    const worldSize = camera.worldSize;
+    const worldSize = projectedCamera.worldSize;
     const dx = far[0] - near[0];
     const dy = far[1] - near[1];
     const dz = far[2] - near[2];
@@ -375,17 +375,17 @@ export function raycastTerrain(camera: MercatorProjectedCamera, worldCoordinateH
  * is all a plane intersection needs; `NEAR_PLANE_CLIP_Z` starts the segment at the near clipping plane, so it holds
  * all the view shows, as terrain picks need.
  */
-function getRaySegmentFromPixel(camera: MercatorProjectedCamera, p: Point, clipZ: number = 0): RaySegment {
+function getRaySegmentFromPixel(projectedCamera: MercatorProjectedCamera, p: Point, clipZ: number = 0): RaySegment {
     const coord0 = [p.x, p.y, clipZ, 1] as vec4;
     const coord1 = [p.x, p.y, 1, 1] as vec4;
 
-    vec4.transformMat4(coord0, coord0, camera.pixelMatrixInverse);
-    vec4.transformMat4(coord1, coord1, camera.pixelMatrixInverse);
+    vec4.transformMat4(coord0, coord0, projectedCamera.pixelMatrixInverse);
+    vec4.transformMat4(coord1, coord1, projectedCamera.pixelMatrixInverse);
 
     const w0 = coord0[3];
     const w1 = coord1[3];
     // The pixel matrix is built before the elevation translate, so unprojected z is relative to the center's elevation.
-    const elevation = camera.elevation;
+    const elevation = projectedCamera.elevation;
 
     return {
         near: [coord0[0] / w0, coord0[1] / w0, coord0[2] / w0 + elevation],
@@ -397,15 +397,15 @@ function getRaySegmentFromPixel(camera: MercatorProjectedCamera, p: Point, clipZ
  * Intersects the ray through a screen point with the horizontal plane at `z`,
  * given in meters relative to the plane at the center's elevation (not mercator units).
  */
-export function screenPointToMercatorCoordinateAtZ(camera: MercatorProjectedCamera, p: Point, z?: number): MercatorCoordinate {
+export function screenPointToMercatorCoordinateAtZ(projectedCamera: MercatorProjectedCamera, p: Point, z?: number): MercatorCoordinate {
     const targetZ = z ? z : 0;
-    const {near, far} = getRaySegmentFromPixel(camera, p);
+    const {near, far} = getRaySegmentFromPixel(projectedCamera, p);
 
-    const t = near[2] === far[2] ? 0 : (targetZ + camera.elevation - near[2]) / (far[2] - near[2]);
+    const t = near[2] === far[2] ? 0 : (targetZ + projectedCamera.elevation - near[2]) / (far[2] - near[2]);
 
     return new MercatorCoordinate(
-        interpolates.number(near[0], far[0], t) / camera.worldSize,
-        interpolates.number(near[1], far[1], t) / camera.worldSize,
+        interpolates.number(near[0], far[0], t) / projectedCamera.worldSize,
+        interpolates.number(near[1], far[1], t) / projectedCamera.worldSize,
         targetZ);
 }
 
@@ -416,21 +416,21 @@ export function screenPointToMercatorCoordinateAtZ(camera: MercatorProjectedCame
  * @param pixelMatrix - the pixel matrix
  * @returns screen point. Point will be outside the viewport if the coordinate is behind the camera.
  */
-export function coordinatePoint(camera: MercatorProjectedCamera, coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = camera.pixelMatrix): Point {
-    const p = coordinateClipPoint(camera, coord, elevation, pixelMatrix);
+export function coordinatePoint(projectedCamera: MercatorProjectedCamera, coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = projectedCamera.pixelMatrix): Point {
+    const p = coordinateClipPoint(projectedCamera, coord, elevation, pixelMatrix);
     const w = p[3];
     if (w > 0) {
         return new Point(p[0] / w, p[1] / w);
     }
-    return offScreenPointBehindCamera(camera, p[0], p[1], w);
+    return offScreenPointBehindCamera(projectedCamera, p[0], p[1], w);
 }
 
 /**
  * The coordinate in the clip space of `pixelMatrix`: pixel x and y and NDC depth, each times `w`, which is positive
  * in front of the camera.
  */
-function coordinateClipPoint(camera: MercatorProjectedCamera, coord: MercatorCoordinate, elevation: number, pixelMatrix: mat4): vec4 {
-    const p = [coord.x * camera.worldSize, coord.y * camera.worldSize, elevation, 1] as vec4;
+function coordinateClipPoint(projectedCamera: MercatorProjectedCamera, coord: MercatorCoordinate, elevation: number, pixelMatrix: mat4): vec4 {
+    const p = [coord.x * projectedCamera.worldSize, coord.y * projectedCamera.worldSize, elevation, 1] as vec4;
     return vec4.transformMat4(p, p, pixelMatrix);
 }
 
@@ -444,40 +444,40 @@ function coordinateClipPoint(camera: MercatorProjectedCamera, coord: MercatorCoo
  * @param w - the w component of the clip space position, zero or negative
  * @returns screen point outside the viewport
  */
-function offScreenPointBehindCamera(camera: MercatorProjectedCamera, x: number, y: number, w: number): Point {
-    const cx = camera.width / 2;
-    const cy = camera.height / 2;
+function offScreenPointBehindCamera(projectedCamera: MercatorProjectedCamera, x: number, y: number, w: number): Point {
+    const cx = projectedCamera.width / 2;
+    const cy = projectedCamera.height / 2;
     const dx = x - cx * w;
     let dy = y - cy * w;
     if (dx === 0 && dy === 0) {
         dy = 1;
     }
-    const halfExtentX = cx + camera.width;
-    const halfExtentY = cy + camera.height;
+    const halfExtentX = cx + projectedCamera.width;
+    const halfExtentY = cy + projectedCamera.height;
     const scale = Math.min(
         dx !== 0 ? halfExtentX / Math.abs(dx) : Infinity,
         dy !== 0 ? halfExtentY / Math.abs(dy) : Infinity);
     return new Point(cx + dx * scale, cy + dy * scale);
 }
 
-export function getBounds(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper): LngLatBounds {
-    const top = Math.max(0, camera.height / 2 - getHorizon(camera));
+export function getBounds(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper): LngLatBounds {
+    const top = Math.max(0, projectedCamera.height / 2 - getHorizon(projectedCamera));
     return new LngLatBounds()
-        .extend(screenPointToLocation(camera, worldCoordinateHelper, new Point(0, top)))
-        .extend(screenPointToLocation(camera, worldCoordinateHelper, new Point(camera.width, top)))
-        .extend(screenPointToLocation(camera, worldCoordinateHelper, new Point(camera.width, camera.height)))
-        .extend(screenPointToLocation(camera, worldCoordinateHelper, new Point(0, camera.height)));
+        .extend(screenPointToLocation(projectedCamera, worldCoordinateHelper, new Point(0, top)))
+        .extend(screenPointToLocation(projectedCamera, worldCoordinateHelper, new Point(projectedCamera.width, top)))
+        .extend(screenPointToLocation(projectedCamera, worldCoordinateHelper, new Point(projectedCamera.width, projectedCamera.height)))
+        .extend(screenPointToLocation(projectedCamera, worldCoordinateHelper, new Point(0, projectedCamera.height)));
 }
 
-export function isPointOnMapSurface(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, terrain?: Terrain): boolean {
+export function isPointOnMapSurface(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, p: Point, terrain?: Terrain): boolean {
     if (terrain) {
-        return screenTerrainPointToMercatorCoordinate(camera, worldCoordinateHelper, p, terrain) != null;
+        return screenTerrainPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, p, terrain) != null;
     }
-    const belowHorizon = p.y > camera.centerPoint.y - getHorizon(camera);
+    const belowHorizon = p.y > projectedCamera.centerPoint.y - getHorizon(projectedCamera);
     if (!belowHorizon || worldCoordinateHelper.wraps) {
         return belowHorizon;
     }
-    const coordinate = screenPointToMercatorCoordinateAtZ(camera, p);
+    const coordinate = screenPointToMercatorCoordinateAtZ(projectedCamera, p);
     return worldCoordinateHelper.hasLngLat(coordinate.x, coordinate.y);
 }
 
@@ -488,18 +488,18 @@ export function isPointOnMapSurface(camera: MercatorProjectedCamera, worldCoordi
  * @param aligned - whether to use a pixel-aligned matrix variant, intended for rendering raster tiles
  * @param useFloat32 - when true, returns a float32 matrix instead of float64. Use float32 for matrices that are passed to shaders, use float64 for everything else.
  */
-export function calculatePosMatrix(camera: MercatorProjectedCamera, tileID: UnwrappedTileID | OverscaledTileID, aligned: boolean | undefined, useFloat32: true): Mat4f32;
-export function calculatePosMatrix(camera: MercatorProjectedCamera, tileID: UnwrappedTileID | OverscaledTileID, aligned?: boolean, useFloat32?: false): Mat4f64;
-export function calculatePosMatrix(camera: MercatorProjectedCamera, tileID: UnwrappedTileID | OverscaledTileID, aligned: boolean = false, useFloat32: boolean = false): Mat4f32 | Mat4f64 {
+export function calculatePosMatrix(projectedCamera: MercatorProjectedCamera, tileID: UnwrappedTileID | OverscaledTileID, aligned: boolean | undefined, useFloat32: true): Mat4f32;
+export function calculatePosMatrix(projectedCamera: MercatorProjectedCamera, tileID: UnwrappedTileID | OverscaledTileID, aligned?: boolean, useFloat32?: false): Mat4f64;
+export function calculatePosMatrix(projectedCamera: MercatorProjectedCamera, tileID: UnwrappedTileID | OverscaledTileID, aligned: boolean = false, useFloat32: boolean = false): Mat4f32 | Mat4f64 {
     const posMatrixKey = tileID.key ?? calculateTileKey(tileID.wrap, tileID.canonical.z, tileID.canonical.z, tileID.canonical.x, tileID.canonical.y);
-    const cache = aligned ? getMatrixCache(camera).alignedPosMatrices : getMatrixCache(camera).posMatrices;
+    const cache = aligned ? getMatrixCache(projectedCamera).alignedPosMatrices : getMatrixCache(projectedCamera).posMatrices;
     if (cache.has(posMatrixKey)) {
         const matrices = cache.get(posMatrixKey);
         return useFloat32 ? matrices.f32 : matrices.f64;
     }
 
-    const tileMatrix = calculateTileMatrix(tileID, camera.worldSize);
-    mat4.multiply(tileMatrix, aligned ? camera.alignedModelViewProjectionMatrix : camera.modelViewProjectionMatrix, tileMatrix);
+    const tileMatrix = calculateTileMatrix(tileID, projectedCamera.worldSize);
+    mat4.multiply(tileMatrix, aligned ? projectedCamera.alignedModelViewProjectionMatrix : projectedCamera.modelViewProjectionMatrix, tileMatrix);
     const matrices: {f64: Mat4f64; f32: Mat4f32} = {
         f64: tileMatrix,
         f32: new Float32Array(tileMatrix), // Must have a 32 bit float version for WebGL, otherwise WebGL calls in Chrome get very slow.
@@ -509,48 +509,48 @@ export function calculatePosMatrix(camera: MercatorProjectedCamera, tileID: Unwr
     return useFloat32 ? matrices.f32 : matrices.f64;
 }
 
-export function calculateFogMatrix(camera: MercatorProjectedCamera, unwrappedTileID: UnwrappedTileID): mat4 {
+export function calculateFogMatrix(projectedCamera: MercatorProjectedCamera, unwrappedTileID: UnwrappedTileID): mat4 {
     const posMatrixKey = unwrappedTileID.key;
-    const cache = getMatrixCache(camera).fogMatrices;
+    const cache = getMatrixCache(projectedCamera).fogMatrices;
     if (cache.has(posMatrixKey)) {
         return cache.get(posMatrixKey);
     }
 
-    const fogMatrix = calculateTileMatrix(unwrappedTileID, camera.worldSize);
-    mat4.multiply(fogMatrix, camera.fogMatrix, fogMatrix);
+    const fogMatrix = calculateTileMatrix(unwrappedTileID, projectedCamera.worldSize);
+    mat4.multiply(fogMatrix, projectedCamera.fogMatrix, fogMatrix);
 
     cache.set(posMatrixKey, new Float32Array(fogMatrix)); // Must be 32 bit floats, otherwise WebGL calls in Chrome get very slow.
     return cache.get(posMatrixKey);
 }
 
-export function maxPitchScaleFactor(camera: MercatorProjectedCamera): number {
+export function maxPitchScaleFactor(projectedCamera: MercatorProjectedCamera): number {
     // calcMatrices hasn't run yet
-    if (!camera.pixelMatrixInverse) return 1;
+    if (!projectedCamera.pixelMatrixInverse) return 1;
 
-    const coord = screenPointToMercatorCoordinateAtZ(camera, new Point(0, 0));
-    const p = [coord.x * camera.worldSize, coord.y * camera.worldSize, 0, 1] as vec4;
-    const topPoint = vec4.transformMat4(p, p, camera.pixelMatrix);
-    return topPoint[3] / camera.cameraToCenterDistance;
+    const coord = screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(0, 0));
+    const p = [coord.x * projectedCamera.worldSize, coord.y * projectedCamera.worldSize, 0, 1] as vec4;
+    const topPoint = vec4.transformMat4(p, p, projectedCamera.pixelMatrix);
+    return topPoint[3] / projectedCamera.cameraToCenterDistance;
 }
 
-export function getCameraAltitude(camera: MercatorProjectedCamera): number {
-    return Math.cos(camera.pitchInRadians) * camera.cameraToCenterDistance / camera.pixelsPerMeter + camera.elevation;
+export function getCameraAltitude(projectedCamera: MercatorProjectedCamera): number {
+    return Math.cos(projectedCamera.pitchInRadians) * projectedCamera.cameraToCenterDistance / projectedCamera.pixelsPerMeter + projectedCamera.elevation;
 }
 
-export function getCameraLngLat(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper): LngLat {
-    const center = camera.center;
+export function getCameraLngLat(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper): LngLat {
+    const center = projectedCamera.center;
     const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
-    const pixelPerMeter = mercUnitsPerMeter * camera.worldSize;
-    const cameraToCenterDistanceMeters = camera.cameraToCenterDistance / pixelPerMeter;
-    const centerMercator = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, camera.elevation);
-    const camMercator = cameraMercatorCoordinateFromCenterAndRotation(centerMercator, camera.pitch, camera.bearing, cameraToCenterDistanceMeters * mercUnitsPerMeter);
+    const pixelPerMeter = mercUnitsPerMeter * projectedCamera.worldSize;
+    const cameraToCenterDistanceMeters = projectedCamera.cameraToCenterDistance / pixelPerMeter;
+    const centerMercator = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, projectedCamera.elevation);
+    const camMercator = cameraMercatorCoordinateFromCenterAndRotation(centerMercator, projectedCamera.pitch, projectedCamera.bearing, cameraToCenterDistanceMeters * mercUnitsPerMeter);
     return worldCoordinateHelper.lngLatFromWorld(camMercator.x, camMercator.y);
 }
 
-export function getProjectionData(camera: MercatorProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
+export function getProjectionData(projectedCamera: MercatorProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
     const {overscaledTileID, aligned, applyTerrainMatrix} = params;
     const mercatorTileCoordinates = getMercatorTileCoordinates(overscaledTileID);
-    const tilePosMatrix = overscaledTileID ? calculatePosMatrix(camera, overscaledTileID, aligned, true) : null;
+    const tilePosMatrix = overscaledTileID ? calculatePosMatrix(projectedCamera, overscaledTileID, aligned, true) : null;
 
     let mainMatrix: Mat4f32;
     if (overscaledTileID?.terrainRttPosMatrix32f && applyTerrainMatrix) {
@@ -571,21 +571,21 @@ export function getProjectionData(camera: MercatorProjectedCamera, params: Proje
 }
 
 /** The mercator version of `isLocationOccluded` in `camera_math.ts`. */
-export function isLocationOccluded(camera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
+export function isLocationOccluded(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
     if (!terrain?.getCoverageIndex()) return false;
 
     const location = worldCoordinateHelper.worldFromLngLat(lngLat.lng, lngLat.lat);
-    elevation ??= terrain.getElevationForLngLat(lngLat, camera.tileZoom);
-    const clip = coordinateClipPoint(camera, location, elevation, camera.pixelMatrix3D);
+    elevation ??= terrain.getElevationForLngLat(lngLat, projectedCamera.tileZoom);
+    const clip = coordinateClipPoint(projectedCamera, location, elevation, projectedCamera.pixelMatrix3D);
     const w = clip[3];
     if (w <= 0 || clip[2] > w) return true;
     const p = new Point(clip[0] / w, clip[1] / w);
 
-    const hit = screenTerrainPointToMercatorCoordinate(camera, worldCoordinateHelper, p, terrain);
+    const hit = screenTerrainPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, p, terrain);
     if (hit == null) return false;
-    const segment = getRaySegmentFromPixel(camera, p, NEAR_PLANE_CLIP_Z);
-    const tLocation = raySegmentParameter(segment, location.x * camera.worldSize, location.y * camera.worldSize, elevation);
-    return raySegmentParameter(segment, hit.x * camera.worldSize, hit.y * camera.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
+    const segment = getRaySegmentFromPixel(projectedCamera, p, NEAR_PLANE_CLIP_Z);
+    const tLocation = raySegmentParameter(segment, location.x * projectedCamera.worldSize, location.y * projectedCamera.worldSize, elevation);
+    return raySegmentParameter(segment, hit.x * projectedCamera.worldSize, hit.y * projectedCamera.worldSize, hit.z) < tLocation * (1 - TERRAIN_OCCLUSION_MARGIN);
 }
 
 /** Mercator draws everything at the scale it projects it, so it corrects nothing. */
@@ -608,8 +608,8 @@ export function transformLightDirection(_data: MercatorProjectedCamera, dir: vec
     return vec3.clone(dir);
 }
 
-export function projectTileCoordinates(camera: MercatorProjectedCamera, x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
-    const matrix = calculatePosMatrix(camera, unwrappedTileID);
+export function projectTileCoordinates(projectedCamera: MercatorProjectedCamera, x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
+    const matrix = calculatePosMatrix(projectedCamera, unwrappedTileID);
     let pos;
     if (elevation != null) { // slow because of handle z-index
         pos = [x, y, elevation, 1] as vec4;
@@ -626,18 +626,18 @@ export function projectTileCoordinates(camera: MercatorProjectedCamera, x: numbe
     };
 }
 
-export function getProjectionDataForCustomLayer(camera: MercatorProjectedCamera, applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
+export function getProjectionDataForCustomLayer(projectedCamera: MercatorProjectedCamera, applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
     const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
-    const rendererProjectionData = getProjectionData(camera, {overscaledTileID: tileID, applyGlobeMatrix});
-    const tileMatrix = calculateTileMatrix(tileID, camera.worldSize);
-    mat4.multiply(tileMatrix, camera.modelViewProjectionMatrix, tileMatrix);
+    const rendererProjectionData = getProjectionData(projectedCamera, {overscaledTileID: tileID, applyGlobeMatrix});
+    const tileMatrix = calculateTileMatrix(tileID, projectedCamera.worldSize);
+    mat4.multiply(tileMatrix, projectedCamera.modelViewProjectionMatrix, tileMatrix);
 
     // Even though we requested projection data for the mercator base tile which covers the entire mercator range,
     // the shader projection machinery still expects inputs to be in tile units range [0..EXTENT].
     // Since custom layers are expected to supply mercator coordinates [0..1], we need to rescale
     // both matrices by EXTENT. We also need to rescale Z.
 
-    const scale: vec3 = [EXTENT, EXTENT, camera.worldSize / camera.pixelsPerMeter];
+    const scale: vec3 = [EXTENT, EXTENT, projectedCamera.worldSize / projectedCamera.pixelsPerMeter];
 
     // We pass full-precision 64bit float matrices to custom layers to prevent precision loss in case the user wants to do further transformations.
     // Otherwise we get very visible precision-artifacts and twitching for objects that are bulding-scale.
@@ -652,8 +652,8 @@ export function getProjectionDataForCustomLayer(camera: MercatorProjectedCamera,
     };
 }
 
-export function getFastPathSimpleProjectionMatrix(camera: MercatorProjectedCamera, tileID: OverscaledTileID): mat4 {
-    return calculatePosMatrix(camera, tileID);
+export function getFastPathSimpleProjectionMatrix(projectedCamera: MercatorProjectedCamera, tileID: OverscaledTileID): mat4 {
+    return calculatePosMatrix(projectedCamera, tileID);
 }
 
 function mercatorSampleAt(ray: MercatorRay, t: number): TerrainSample {

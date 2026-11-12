@@ -138,9 +138,9 @@ describe('elevated content tile retention', () => {
         state = cameraUpdates.setZoom(state, context, 4.3);
         state = cameraUpdates.setBearing(state, 315);
         state = cameraUpdates.setPitch(state, 75);
-        const camera = projectCamera(state, projection);
-        const without = coveringTiles(camera, projection, {tileSize: 512}).map(tileKey);
-        const withElevated = coveringTiles(camera, projection, {tileSize: 512, maxContentElevation: 500000}).map(tileKey);
+        const projectedCamera = projectCamera(state, projection);
+        const without = coveringTiles(projectedCamera, projection, {tileSize: 512}).map(tileKey);
+        const withElevated = coveringTiles(projectedCamera, projection, {tileSize: 512, maxContentElevation: 500000}).map(tileKey);
         expect(without).toContain('4/9/4');
         expect(withElevated).toContain('4/9/4');
     });
@@ -153,9 +153,9 @@ describe('elevated content tile retention', () => {
         state = cameraUpdates.setCenter(state, context, new LngLat(2.35, 48.85));
         state = cameraUpdates.setZoom(state, context, 4.3);
         state = cameraUpdates.setPitch(state, 95);
-        const camera = projectCamera(state, projection);
-        const without = coveringTiles(camera, projection, {tileSize: 512}).map(tileKey);
-        const withElevated = new Set(coveringTiles(camera, projection, {tileSize: 512, maxContentElevation: 500000}).map(tileKey));
+        const projectedCamera = projectCamera(state, projection);
+        const without = coveringTiles(projectedCamera, projection, {tileSize: 512}).map(tileKey);
+        const withElevated = new Set(coveringTiles(projectedCamera, projection, {tileSize: 512, maxContentElevation: 500000}).map(tileKey));
         for (const tile of without) {
             expect(withElevated, `visible ground tile ${tile} must stay retained`).toContain(tile);
         }

@@ -75,7 +75,7 @@ describe('render to texture', () => {
         };
     }
     const cameraProjection = createMercatorCameraProjection();
-    const {camera} = createTestCamera({width: 512, height: 512, zoom: 10}, cameraProjection);
+    const {projectedCamera} = createTestCamera({width: 512, height: 512, zoom: 10}, cameraProjection);
     const painter = {
         context: new Context(gl),
         renderLayer: vi.fn(),
@@ -138,7 +138,7 @@ describe('render to texture', () => {
     });
 
     function createFrameRenderContext(): FrameRenderContext {
-        const frameRenderContext = new FrameRenderContext({projectedCamera: camera, cameraProjection, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera, cameraProjection, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
         vi.spyOn(frameRenderContext, 'renderTileClippingMasks').mockImplementation(() => {});
         return frameRenderContext;
     }

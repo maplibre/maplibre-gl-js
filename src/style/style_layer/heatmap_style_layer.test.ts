@@ -40,12 +40,12 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
     }
 
     describe('Mercator projection', () => {
-        const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 400, height: 300});
+        const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 400, height: 300});
 
         test('returns `true` when a heatmap intersects a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({
                 queryGeometry: queryGeometryTrue,
-                projectedCamera: camera,
+                projectedCamera,
                 ...params
             } as any)).toBe(true);
         });
@@ -53,19 +53,19 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
         test('returns `false` when a heatmap does not intersect a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({
                 queryGeometry: queryGeometryFalse,
-                projectedCamera: camera,
+                projectedCamera,
                 ...params
             } as any)).toBe(false);
         });
     });
 
     describe('Globe projection', () => {
-        const {camera} = createTestCamera({width: 400, height: 300}, createGlobeCameraProjection());
+        const {projectedCamera} = createTestCamera({width: 400, height: 300}, createGlobeCameraProjection());
 
         test('returns `true` when a heatmap intersects a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({
                 queryGeometry: queryGeometryTrue,
-                projectedCamera: camera,
+                projectedCamera,
                 ...params
             } as any)).toBe(true);
         });
@@ -73,7 +73,7 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
         test('returns `false` when a heatmap does not intersect a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({
                 queryGeometry: queryGeometryFalse,
-                projectedCamera: camera,
+                projectedCamera,
                 ...params
             } as any)).toBe(false);
         });

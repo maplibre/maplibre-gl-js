@@ -97,8 +97,8 @@ describe('drawFill', () => {
 
     function constructFrameRenderContext(painter: Painter): FrameRenderContext {
         const cameraProjection = createMercatorCameraProjection();
-        const {camera} = createTestCamera({width: 512, height: 512}, cameraProjection);
-        return new FrameRenderContext({projectedCamera: camera, cameraProjection, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
+        const {projectedCamera} = createTestCamera({width: 512, height: 512}, cameraProjection);
+        return new FrameRenderContext({projectedCamera, cameraProjection, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
     }
 
     function constructMockTile(layer: FillStyleLayer): Tile {

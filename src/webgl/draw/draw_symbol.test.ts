@@ -34,7 +34,7 @@ vi.mock(import('../../symbol/projection'));
 (vi.mocked(symbolProjection.getPitchedLabelPlaneMatrix)).mockReturnValue(mat4.create());
 
 function createProjectedCamera(): ProjectedCamera {
-    return createTestCamera({width: 512, height: 512}).camera;
+    return createTestCamera({width: 512, height: 512}).projectedCamera;
 }
 
 describe('drawSymbol', () => {

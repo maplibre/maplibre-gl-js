@@ -18,15 +18,15 @@ import type {CameraContext} from './camera_constrain.ts';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
-        const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, zoom: 10});
-        expect(projectToWorldCoordinates(camera.worldSize, camera.center, mercatorWorldCoordinateHelper)).toEqual(new Point(262144, 262144));
+        const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, zoom: 10});
+        expect(projectToWorldCoordinates(projectedCamera.worldSize, projectedCamera.center, mercatorWorldCoordinateHelper)).toEqual(new Point(262144, 262144));
     });
 
     test('projectToWorldCoordinates clamps latitude', () => {
-        const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
+        const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
 
-        expect(projectToWorldCoordinates(camera.worldSize, new LngLat(0, -90), mercatorWorldCoordinateHelper)).toEqual(projectToWorldCoordinates(camera.worldSize, new LngLat(0, -MAX_VALID_LATITUDE), mercatorWorldCoordinateHelper));
-        expect(projectToWorldCoordinates(camera.worldSize, new LngLat(0, 90), mercatorWorldCoordinateHelper)).toEqual(projectToWorldCoordinates(camera.worldSize, new LngLat(0, MAX_VALID_LATITUDE), mercatorWorldCoordinateHelper));
+        expect(projectToWorldCoordinates(projectedCamera.worldSize, new LngLat(0, -90), mercatorWorldCoordinateHelper)).toEqual(projectToWorldCoordinates(projectedCamera.worldSize, new LngLat(0, -MAX_VALID_LATITUDE), mercatorWorldCoordinateHelper));
+        expect(projectToWorldCoordinates(projectedCamera.worldSize, new LngLat(0, 90), mercatorWorldCoordinateHelper)).toEqual(projectToWorldCoordinates(projectedCamera.worldSize, new LngLat(0, MAX_VALID_LATITUDE), mercatorWorldCoordinateHelper));
     });
 
     test('projectToWorldCoordinates does not clamp latitude for a non-wrapping helper', () => {
@@ -45,22 +45,22 @@ describe('mercator utils', () => {
     });
 
     test('getMercatorHorizon', () => {
-        const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 500, height: 500, pitch: 75});
-        const horizon = getMercatorHorizon(camera);
+        const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 500, height: 500, pitch: 75});
+        const horizon = getMercatorHorizon(projectedCamera);
 
         expect(horizon).toBeCloseTo(170.8176101748407, 10);
     });
 
     test('getMercatorHorizon90', () => {
-        const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true, width: 500, height: 500, pitch: 90});
-        const horizon = getMercatorHorizon(camera);
+        const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true, width: 500, height: 500, pitch: 90});
+        const horizon = getMercatorHorizon(projectedCamera);
 
         expect(horizon).toBeCloseTo(-9.818037813626313, 10);
     });
 
     test('getMercatorHorizon95', () => {
-        const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true, width: 500, height: 500, pitch: 95});
-        const horizon = getMercatorHorizon(camera);
+        const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true, width: 500, height: 500, pitch: 95});
+        const horizon = getMercatorHorizon(projectedCamera);
 
         expect(horizon).toBeCloseTo(-75.52102888757743, 10);
     });
@@ -75,13 +75,13 @@ describe('mercator utils', () => {
             state = cameraUpdates.setPitch(state, 55);
             state = cameraUpdates.setBearing(state, 75);
             state = cameraUpdates.resize(state, context, 512, 512);
-            const camera = cameraMath.projectCamera(state, projection);
+            const projectedCamera = cameraMath.projectCamera(state, projection);
 
-            const cameraCoord = cameraMercatorCoordinate(camera, projection.worldCoordinateHelper);
+            const cameraCoord = cameraMercatorCoordinate(projectedCamera, projection.worldCoordinateHelper);
 
             expect(cameraCoord.toLngLat().lng).toBeCloseTo(14.973921529405033, 10);
             expect(cameraCoord.toLngLat().lat).toBeCloseTo(54.99599181678275, 10);
-            expect(altitudeFromMercatorZ(cameraCoord.z, cameraCoord.y)).toBeCloseTo(cameraMath.getCameraAltitude(camera), 0);
+            expect(altitudeFromMercatorZ(cameraCoord.z, cameraCoord.y)).toBeCloseTo(cameraMath.getCameraAltitude(projectedCamera), 0);
         });
 
         test('does not depend on the projection', () => {
@@ -89,23 +89,23 @@ describe('mercator utils', () => {
             const globe = createTestCamera({maxPitch: 60, width: 512, height: 512, zoom: 5, center: [15, 55], pitch: 55, bearing: 75}, createGlobeCameraProjection());
             const mercator = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 512, height: 512, zoom: 5, center: [15, 55], pitch: 55, bearing: 75});
 
-            const cameraCoord = cameraMercatorCoordinate(globe.camera, globe.context.projection.worldCoordinateHelper);
-            const mercatorCameraCoord = cameraMercatorCoordinate(mercator.camera, mercator.context.projection.worldCoordinateHelper);
+            const cameraCoord = cameraMercatorCoordinate(globe.projectedCamera, globe.context.projection.worldCoordinateHelper);
+            const mercatorCameraCoord = cameraMercatorCoordinate(mercator.projectedCamera, mercator.context.projection.worldCoordinateHelper);
 
             expect(cameraCoord.x).toBeCloseTo(mercatorCameraCoord.x, precisionDigits);
             expect(cameraCoord.y).toBeCloseTo(mercatorCameraCoord.y, precisionDigits);
             expect(cameraCoord.z).toBeCloseTo(mercatorCameraCoord.z, precisionDigits);
 
             // The pixel under a pitched globe camera misses the sphere, so the screen round trip lands elsewhere.
-            const screenRoundTrip = cameraMath.screenPointToMercatorCoordinate(globe.camera, globe.context.projection, cameraMath.getCameraPoint(globe.camera));
+            const screenRoundTrip = cameraMath.screenPointToMercatorCoordinate(globe.projectedCamera, globe.context.projection, cameraMath.getCameraPoint(globe.projectedCamera));
             expect(cameraCoord.toLngLat().distanceTo(screenRoundTrip.toLngLat())).toBeGreaterThan(50000);
         });
     });
 
     describe('getProjectionData', () => {
         test('return identity matrix when not passing overscaledTileID', () => {
-            const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
-            const projectionData = cameraMath.getProjectionData(camera, {overscaledTileID: null});
+            const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+            const projectionData = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: null});
             expect(projectionData.fallbackMatrix).toEqual(createIdentityMat4f32());
         });
     });

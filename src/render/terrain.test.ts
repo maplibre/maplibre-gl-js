@@ -33,7 +33,7 @@ describe('Terrain', () => {
 
     function createFlatTerrain(elevation: number, zoom: number = 0) {
         const projection = createMercatorCameraProjection();
-        const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 2048, height: 512, center: new LngLat(0, 0), zoom}, projection);
+        const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 2048, height: 512, center: new LngLat(0, 0), zoom}, projection);
         const painter = {
             context: new Context(gl),
             width: 2048,
@@ -46,23 +46,23 @@ describe('Terrain', () => {
         terrain.tileManager.getRenderableTiles = () => tileIDs.map(tileID => ({tileID}) as any as Tile);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem}) as any as Tile;
         terrain.tileManager.getSource = () => ({minzoom: 0, maxzoom: 22}) as any;
-        return {terrain, camera, projection};
+        return {terrain, camera: projectedCamera, projection};
     }
 
     test('screenPointToMercatorCoordinate returns the terrain hit instead of the flat plane', () => {
-        const {terrain, camera, projection} = createFlatTerrain(1000);
+        const {terrain, camera: projectedCamera, projection} = createFlatTerrain(1000);
         const p = new Point(1024, 256);
 
-        expect(cameraMath.screenPointToMercatorCoordinate(camera, projection, p).z).toBe(0);
-        expect(cameraMath.screenPointToMercatorCoordinate(camera, projection, p, terrain).z).toBeCloseTo(1000, 6);
+        expect(cameraMath.screenPointToMercatorCoordinate(projectedCamera, projection, p).z).toBe(0);
+        expect(cameraMath.screenPointToMercatorCoordinate(projectedCamera, projection, p, terrain).z).toBeCloseTo(1000, 6);
     });
 
     test('a globe transform that renders mercator picks with the mercator raycast', () => {
         const {terrain} = createFlatTerrain(0);
         const projection = withGlobeness(createGlobeCameraProjection(), 0);
-        const {camera} = createTestCamera({width: 2048, height: 512, zoom: 0}, projection);
+        const {projectedCamera} = createTestCamera({width: 2048, height: 512, zoom: 0}, projection);
 
-        const coordinate = cameraMath.screenTerrainPointToMercatorCoordinate(camera, projection, new Point(1024, 256), terrain);
+        const coordinate = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, projection, new Point(1024, 256), terrain);
 
         expect(coordinate).not.toBeNull();
         expect(coordinate.x).toBeCloseTo(0.5, 10);
@@ -73,10 +73,10 @@ describe('Terrain', () => {
     test('a globe transform that renders the globe picks with the globe raycast', () => {
         const {terrain} = createFlatTerrain(0);
         const globe = createGlobeCameraProjection();
-        const {state, camera} = createTestCamera({width: 2048, height: 512, zoom: 1}, globe);
+        const {state, projectedCamera} = createTestCamera({width: 2048, height: 512, zoom: 1}, globe);
         const p = new Point(1100, 280);
 
-        const coordinate = cameraMath.screenTerrainPointToMercatorCoordinate(camera, globe, p, terrain);
+        const coordinate = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, globe, p, terrain);
         const verticalPerspective = createVerticalPerspectiveCameraProjection();
         const expected = cameraMath.screenTerrainPointToMercatorCoordinate(cameraMath.projectCamera(state, verticalPerspective), verticalPerspective, p, terrain);
 
@@ -296,28 +296,28 @@ describe('Terrain', () => {
     });
 
     test('getElevationForLngLat samples the rendered tile where its DEM is loaded', () => {
-        const {terrain, camera} = createFlatTerrain(500, 3); // renders z0 tiles, covering tiles are z3
+        const {terrain, camera: projectedCamera} = createFlatTerrain(500, 3); // renders z0 tiles, covering tiles are z3
         terrain.tileManager.minzoom = 0;
         terrain.tileManager.maxzoom = 22;
         const renderedDEM = createDEM(() => 500);
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
 
-        expect(terrain.getElevationForLngLat(new LngLat(0, 40), camera.tileZoom)).toBeCloseTo(500, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(0, 40), projectedCamera.tileZoom)).toBeCloseTo(500, 6);
     });
 
     test('getElevationForLngLat traverses the covering tiles while the rendered tile\'s DEM is loading', () => {
-        const {terrain, camera} = createFlatTerrain(500, 3); // renders z0 tiles, covering tiles are z3
+        const {terrain, camera: projectedCamera} = createFlatTerrain(500, 3); // renders z0 tiles, covering tiles are z3
         terrain.tileManager.minzoom = 0;
         terrain.tileManager.maxzoom = 22;
         const coveringDEM = createDEM(() => 100);
         terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === 0 ? undefined : ({tileID, dem: coveringDEM}) as any as Tile;
 
-        expect(terrain.getElevationForLngLat(new LngLat(0, 40), camera.tileZoom)).toBeCloseTo(100, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(0, 40), projectedCamera.tileZoom)).toBeCloseTo(100, 6);
     });
 
     test('getElevationForLngLat traverses the covering tiles outside the rendered tiles', () => {
-        const {terrain, camera} = createFlatTerrain(500, 3); // renders z0 tiles, covering tiles are z3
+        const {terrain, camera: projectedCamera} = createFlatTerrain(500, 3); // renders z0 tiles, covering tiles are z3
         terrain.tileManager.minzoom = 0;
         terrain.tileManager.maxzoom = 22;
         const renderedDEM = createDEM(() => 500);
@@ -325,7 +325,7 @@ describe('Terrain', () => {
         terrain.tileManager.getSourceTile = (tileID) => ({tileID, dem: tileID.canonical.z === 0 ? renderedDEM : coveringDEM}) as any as Tile;
         terrain.tileManager.getRenderableTiles = () => [{tileID: new OverscaledTileID(1, 0, 1, 0, 0)}] as any as Tile[];
 
-        expect(terrain.getElevationForLngLat(new LngLat(90, -40), camera.tileZoom)).toBeCloseTo(100, 6);
+        expect(terrain.getElevationForLngLat(new LngLat(90, -40), projectedCamera.tileZoom)).toBeCloseTo(100, 6);
     });
 
     test('getElevationForLngLat reads at the tile zoom outside the drawn tiles', () => {
@@ -351,8 +351,8 @@ describe('Terrain', () => {
 
         const spy = vi.fn();
         terrain.getElevation = spy;
-        const {camera} = createTestCamera({minZoom: 3, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 200, height: 200, zoom});
-        terrain.getElevationForLngLat(new LngLat(0, 0), camera.tileZoom);
+        const {projectedCamera} = createTestCamera({minZoom: 3, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 200, height: 200, zoom});
+        terrain.getElevationForLngLat(new LngLat(0, 0), projectedCamera.tileZoom);
 
         expect(spy).toHaveBeenCalled();
         expect((spy.mock.calls[0][0] as OverscaledTileID).canonical.z).toBe(zoom);
@@ -362,10 +362,10 @@ describe('Terrain', () => {
         const demElevation = 3000;
         const dem = createDEM(() => demElevation);
         const terrain = createDEMTerrain([], dem);
-        const {camera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 800, height: 600, zoom: 14.6, center: new LngLat(11.4, 47.3)});
-        terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === camera.tileZoom ? {tileID, dem} as Tile : undefined;
+        const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 800, height: 600, zoom: 14.6, center: new LngLat(11.4, 47.3)});
+        terrain.tileManager.getSourceTile = (tileID) => tileID.canonical.z === projectedCamera.tileZoom ? {tileID, dem} as Tile : undefined;
 
-        expect(terrain.getElevationForLngLat(camera.center, camera.tileZoom)).toBe(demElevation);
+        expect(terrain.getElevationForLngLat(projectedCamera.center, projectedCamera.tileZoom)).toBe(demElevation);
     });
 
     test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {

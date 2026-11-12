@@ -32,9 +32,9 @@ const STRAIGHT_ABOVE_RATIO = 1e-9;
 
 /** The camera a projection's solvers work with: the camera as the projection it is drawn with projects it. */
 function renderedCamera(state: CameraState, projection: CameraProjection): MercatorProjectedCamera | VerticalPerspectiveProjectedCamera {
-    const camera = cameraMath.projectCamera(state, projection);
-    if (camera.projection !== 'globe') return camera;
-    return camera.globeness > 0 ? camera.verticalPerspective : camera.mercator;
+    const projectedCamera = cameraMath.projectCamera(state, projection);
+    if (projectedCamera.projection !== 'globe') return projectedCamera;
+    return projectedCamera.globeness > 0 ? projectedCamera.verticalPerspective : projectedCamera.mercator;
 }
 
 /**

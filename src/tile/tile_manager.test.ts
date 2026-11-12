@@ -1940,13 +1940,13 @@ describe('TileManager.clearTiles', () => {
 
 describe('TileManager.tilesIn', () => {
     test('graceful response before source loaded', () => {
-        const {camera, context} = createTestCamera({width: 512, height: 512});
+        const {projectedCamera, context} = createTestCamera({width: 512, height: 512});
         const tileManager = createTileManager({noLoad: true});
         tileManager.onAdd(undefined);
         expect(tileManager.tilesIn([
             new Point(0, 0),
             new Point(512, 256)
-        ], 10, true, camera, context.projection)).toEqual([]);
+        ], 10, true, projectedCamera, context.projection)).toEqual([]);
 
     });
 
@@ -2622,7 +2622,7 @@ describe('tile manager get ids', () => {
         ];
 
         const tileManager = createTileManager({});
-        tileManager.projectedCamera = createTestCamera().camera;
+        tileManager.projectedCamera = createTestCamera().projectedCamera;
         for (const id of ids) {
             tileManager._inViewTiles.setTile(id.key, {tileID: id} as any as Tile);
         }
