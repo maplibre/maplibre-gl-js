@@ -1,7 +1,7 @@
 import {now} from '../util/time_control.ts';
 import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util.ts';
 import Point from '@mapbox/point-geometry';
-import {getCameraMotions} from '../geo/projection/camera_motions_factory.ts';
+import {getCameraMotions} from '../camera/camera_motions_factory.ts';
 
 import type {DragPanOptions} from './handler/shim/drag_pan.ts';
 import type {HandlerResult} from './handler_manager.ts';

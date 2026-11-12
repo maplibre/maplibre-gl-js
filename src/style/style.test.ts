@@ -19,8 +19,7 @@ import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 import type {PossiblyEvaluated} from './properties.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from './style_layer/symbol_style_layer_properties.g.ts';
 import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
 import type {Tile} from '../tile/tile.ts';
@@ -28,6 +27,7 @@ import type {GeoJSONSource} from '../source/geojson_source.ts';
 import type {AJAXError} from '../util/ajax.ts';
 import type Point from '@mapbox/point-geometry';
 import type {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({

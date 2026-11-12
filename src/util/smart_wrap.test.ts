@@ -2,7 +2,7 @@ import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from './smart_wrap.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 import {createTestCamera} from './test/util.ts';
 
 describe('smartWrap', () => {

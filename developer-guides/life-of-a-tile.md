@@ -39,7 +39,7 @@ sequenceDiagram
 - [Camera](../src/ui/camera.ts) holds the proposed camera, the pitch, zoom, bearing, bounds and so on that movements ask for, as plain data. It is the only place that changes it:
   - in response to explicit calls such as `Map#panTo` and `Map#setCenter`;
   - in response to DOM events, which [HandlerManager](../src/ui/handler_manager.ts) forwards to the interaction processors in [src/ui/handler](../src/ui/handler). They accumulate a merged [HandlerResult](../src/ui/handler_manager.ts) that kicks off a render frame loop, and [HandlerManager#\_updateMapCamera()](../src/ui/handler_manager.ts) applies it to the proposed camera on each frame, decreasing the inertia until it reaches 0.
-- The [projected camera](../src/geo/projected_camera.ts) the map is drawn with is derived from the proposed camera, with the corrections that keep the camera out of the terrain and the result of `transformCameraUpdate`.
+- The [projected camera](../src/camera/projected_camera.ts) the map is drawn with is derived from the proposed camera, with the corrections that keep the camera out of the terrain and the result of `transformCameraUpdate`.
 - Both camera and handler_manager are responsible for firing `move`, `zoom`, `movestart`, `moveend`, ... events on the map after they update the camera. Each of these events (along with style changes and data load events) triggers a call to [Map#\_render()](../src/ui/map.ts) which renders a single frame of the map.
 
 ## Tile loading

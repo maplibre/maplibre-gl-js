@@ -41,8 +41,8 @@ import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
 import type {IndexBuffer} from '../webgl/index_buffer.ts';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * Holds the texture used to render a 2D tile so it can be draped over 3D

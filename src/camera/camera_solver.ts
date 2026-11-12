@@ -1,9 +1,9 @@
 import type Point from '@mapbox/point-geometry';
-import type {LngLat, LngLatLike} from '../lng_lat.ts';
-import type {CameraViewState} from '../camera_view_state.ts';
+import type {LngLat, LngLatLike} from '../geo/lng_lat.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
-import type {CameraOptionsFromTo} from '../camera_types.ts';
-import type {Terrain} from '../../render/terrain.ts';
+import type {CameraOptionsFromTo} from './camera_types.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 /**
  * @internal

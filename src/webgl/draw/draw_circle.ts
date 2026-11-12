@@ -4,7 +4,7 @@ import {CullFaceMode} from '../cull_face_mode.ts';
 import {circleUniformValues} from '../program/circle_program.ts';
 import {SegmentVector} from '../../data/segment.ts';
 import {translatePosition} from '../../util/util.ts';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';

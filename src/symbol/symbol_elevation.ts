@@ -1,4 +1,5 @@
-import type {GetElevation} from '../geo/camera_types.ts';
+
+import type {GetElevation} from '../geo/world_types.ts';
 
 /**
  * Resolves the elevation of a symbol at a tile coordinate, combining the terrain elevation with the

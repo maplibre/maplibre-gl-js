@@ -10,11 +10,10 @@ import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mod
 import {TextAnchorEnum, type TextAnchor} from '../style/style_layer/variable_text_anchor.ts';
 import {translatePosition, warnOnce} from '../util/util.ts';
 import {symbolInstance as symbolInstanceLayout} from '../data/bucket/symbol_attributes.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
-import type {GetElevation} from '../geo/camera_types.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {PossiblyEvaluated} from '../style/properties.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
@@ -24,7 +23,8 @@ import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchor
 import type {FeatureIndex} from '../data/feature_index.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {GetElevation} from '../geo/world_types.ts';
 
 class OpacityState {
     opacity: number;

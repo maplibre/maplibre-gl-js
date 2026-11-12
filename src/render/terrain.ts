@@ -13,13 +13,13 @@ import {NORTH_POLE_Y, SOUTH_POLE_Y} from './subdivision.ts';
 import {TerrainCoverage, type TerrainCoverageIndex} from './terrain_coverage.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
-import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Painter} from './painter.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * @experimental

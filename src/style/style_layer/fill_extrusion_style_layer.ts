@@ -4,13 +4,13 @@ import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../uti
 import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
 import Point from '@mapbox/point-geometry';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
 import type {FillExtrusionLayoutProps, FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 import type {UnwrappedTileID} from '../../tile/tile_id.ts';
 
 export class Point3D extends Point {

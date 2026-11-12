@@ -1,17 +1,17 @@
 import {describe, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
-import {LngLat, earthRadius} from '../lng_lat.ts';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
-import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed.ts';
-import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {getMercatorHorizon} from './mercator_utils.ts';
-import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsCamera, createTestCamera, createWrappingWorldCrs} from '../../util/test/util.ts';
-import {CRSWorldCoordinateHelper} from './crs.ts';
-import {Terrain} from '../../render/terrain.ts';
-import {EXTENT} from '../../data/extent.ts';
-import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
-import {createCameraViewState, getMaxBounds} from '../camera_view_state.ts';
+import {LngLat, earthRadius} from '../geo/lng_lat.ts';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
+import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsCamera, createTestCamera, createWrappingWorldCrs} from '../util/test/util.ts';
+import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
+import {Terrain} from '../render/terrain.ts';
+import {EXTENT} from '../data/extent.ts';
+import {MercatorCoordinate, mercatorZfromAltitude} from '../geo/mercator_coordinate.ts';
+import {createCameraViewState, getMaxBounds} from './camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
 import {projectCamera} from './project_camera.ts';
 import {getCameraMath} from './camera_math_factory.ts';
@@ -19,10 +19,10 @@ import {raycastTerrain, screenPointToMercatorCoordinateAtZ} from './mercator_cam
 import {calculateCenterFromCameraLngLatAlt, resize, setBearing, setCenter, setElevation, setFov, setMaxBounds, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from './camera_updates.ts';
 import {getCameraSolver} from './camera_solver_factory.ts';
 
-import type {Tile} from '../../tile/tile.ts';
-import type {CameraViewState} from '../camera_view_state.ts';
+import type {Tile} from '../tile/tile.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
-import type {MercatorProjectedCamera} from '../projected_camera.ts';
+import type {MercatorProjectedCamera} from './projected_camera.ts';
 
 /** The camera a state projects to in a mercator context, typed for the functions in `mercator_camera_math.ts`. */
 function projectMercator(view: CameraViewState, context: CameraContext): MercatorProjectedCamera {

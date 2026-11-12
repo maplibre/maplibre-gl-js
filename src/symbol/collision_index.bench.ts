@@ -3,11 +3,11 @@ import Point from '@mapbox/point-geometry';
 import {CollisionIndex} from './collision_index.ts';
 import {EXTENT} from '../data/extent.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {calculatePosMatrix} from '../geo/projection/mercator_camera_math.ts';
+import {calculatePosMatrix} from '../camera/mercator_camera_math.ts';
 import {createTestCamera} from '../util/test/util.ts';
 
 import type {mat4} from 'gl-matrix';
-import type {MercatorProjectedCamera, ProjectedCamera} from '../geo/projected_camera.ts';
+import type {MercatorProjectedCamera, ProjectedCamera} from '../camera/projected_camera.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
 import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';

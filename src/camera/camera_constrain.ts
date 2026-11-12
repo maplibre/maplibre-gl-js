@@ -1,14 +1,14 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat.ts';
-import {mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate.ts';
-import {clamp, degreesToRadians, MAX_VALID_LATITUDE, radiansToDegrees, remapSaturate, scaleZoom, wrap, zoomScale} from '../../util/util.ts';
-import {lngLatBoxToWorldBox, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
-import {getGlobeRadiusPixels, getZoomAdjustment} from './globe_utils.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {mercatorXfromLng, mercatorYfromLat} from '../geo/mercator_coordinate.ts';
+import {clamp, degreesToRadians, MAX_VALID_LATITUDE, radiansToDegrees, remapSaturate, scaleZoom, wrap, zoomScale} from '../util/util.ts';
+import {lngLatBoxToWorldBox, projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_utils.ts';
+import {getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_utils.ts';
 import {renderedProjection} from './camera_context.ts';
 
-import type {CameraViewState} from '../camera_view_state.ts';
-import type {WorldCoordinateHelper} from '../camera_types.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * How many times larger than the viewport the area past the mercator edge has grown when the center is back on that edge.

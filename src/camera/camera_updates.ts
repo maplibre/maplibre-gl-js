@@ -1,20 +1,21 @@
-import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {clamp, degreesToRadians, MAX_VALID_LATITUDE, scaleZoom, warnOnce, wrap} from '../../util/util.ts';
-import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './mercator_utils.ts';
-import {getBearing, getFov, getPitch, interpolatePadding as interpolatePaddingValues, isPaddingEqual} from '../camera_view_state.ts';
+import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {clamp, degreesToRadians, MAX_VALID_LATITUDE, scaleZoom, warnOnce, wrap} from '../util/util.ts';
+import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from '../geo/projection/mercator_utils.ts';
+import {getBearing, getFov, getPitch, interpolatePadding as interpolatePaddingValues, isPaddingEqual} from './camera_view_state.ts';
 import {applyConstrain} from './camera_constrain.ts';
 import {getCameraMetrics} from './project_camera.ts';
-import {getRollPitchBearing, rollPitchBearingToQuat} from '../../util/util.ts';
+import {getRollPitchBearing, rollPitchBearingToQuat} from '../util/util.ts';
 import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {CameraContext} from './camera_context.ts';
-import type {CameraViewState} from '../camera_view_state.ts';
-import type {LngLatBounds} from '../lng_lat_bounds.ts';
-import type {PaddingOptions} from '../edge_insets.ts';
-import type {NearFarZ, WorldCoordinateHelper} from '../camera_types.ts';
-import type {RollPitchBearing} from '../../util/util.ts';
+import type {CameraViewState} from './camera_view_state.ts';
+import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import type {PaddingOptions} from '../geo/edge_insets.ts';
+import type {NearFarZ} from './camera_types.ts';
+import type {RollPitchBearing} from '../util/util.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /** The most passes {@link centerAlongView} takes to agree on the mercator scale at the center it finds. */
 const MAX_CENTER_PASSES = 10;

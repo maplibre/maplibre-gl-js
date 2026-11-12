@@ -1,14 +1,14 @@
 import Point from '@mapbox/point-geometry';
 import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 
 import type {PossiblyEvaluatedPropertyValue} from './properties.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CircleBucket} from '../data/bucket/circle_bucket.ts';
 import type {LineBucket} from '../data/bucket/line_bucket.ts';
-import type {GetElevation} from '../geo/camera_types.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {GetElevation} from '../geo/world_types.ts';
 
 export function getMaximumPaintValue(
     property: string,

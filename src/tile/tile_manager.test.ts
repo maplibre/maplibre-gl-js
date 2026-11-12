@@ -11,10 +11,10 @@ import {TileBounds} from './tile_bounds.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap as globalCreateMap, createPolarStereographicCrs, createTestCamera, sleep, waitForEvent} from '../util/test/util.ts';
 import {now, restoreNow, setNow} from '../util/time_control.ts';
-import {createCameraContext} from '../geo/projection/camera_context.ts';
-import {createCameraViewState} from '../geo/camera_view_state.ts';
-import {projectCamera} from '../geo/projection/project_camera.ts';
-import {resize, setBearing, setCenter, setMaxPitch, setPitch, setZoom} from '../geo/projection/camera_updates.ts';
+import {createCameraContext} from '../camera/camera_context.ts';
+import {createCameraViewState} from '../camera/camera_view_state.ts';
+import {projectCamera} from '../camera/project_camera.ts';
+import {resize, setBearing, setCenter, setMaxPitch, setPitch, setZoom} from '../camera/camera_updates.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 

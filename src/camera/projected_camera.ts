@@ -1,13 +1,13 @@
 import {mat2, mat4} from 'gl-matrix';
 import {zoomScale} from '../util/util.ts';
-import {Bounds} from './bounds.ts';
+import {Bounds} from '../geo/bounds.ts';
 import {getBearing, getCenterPoint, getFov, getPitch, getRoll, type CameraViewState} from './camera_view_state.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {vec3, vec4} from 'gl-matrix';
-import type {WorldCoordinateHelper} from './camera_types.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
 import type {Mat4f32, Mat4f64} from '../util/util.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * @internal

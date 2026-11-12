@@ -9,7 +9,7 @@ import {
     heatmapTextureUniformValues
 } from '../program/heatmap_program.ts';
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer.ts';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Context} from '../context.ts';

@@ -1,10 +1,10 @@
 import {describe, expect, test} from 'vitest';
 import {LngLat} from '../lng_lat.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeCircumferencePixels, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels} from './globe_utils.ts';
-import {createCameraViewState} from '../camera_view_state.ts';
-import {createCameraContext} from './camera_context.ts';
-import {projectCamera} from './project_camera.ts';
-import {resize, setCenter, setPitch, setZoom} from './camera_updates.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
+import {createCameraContext} from '../../camera/camera_context.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
+import {resize, setCenter, setPitch, setZoom} from '../../camera/camera_updates.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
 
 describe('globe utils', () => {

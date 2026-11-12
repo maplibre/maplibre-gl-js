@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, test, expect, vi} from 'vitest';
 import {createProjectionFromName} from './projection_factory.ts';
-import {createCameraContext, usesGlobeControls} from './camera_context.ts';
+import {createCameraContext, usesGlobeControls} from '../../camera/camera_context.ts';
 import {addProjection, removeProjection} from './projection_crud.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 

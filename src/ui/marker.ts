@@ -2,7 +2,7 @@ import {DOM} from '../util/dom.ts';
 import {throttle} from '../util/throttle.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import {Event, Evented} from '../util/evented.ts';
 import Point from '@mapbox/point-geometry';
@@ -12,8 +12,8 @@ import type {Map} from './map.ts';
 import type {Popup, Offset} from './popup.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {MapMouseEvent, MapTouchEvent} from './events.ts';
-import type {PointLike} from './camera.ts';
 import type {Terrain} from '../render/terrain.ts';
+import type {PointLike} from '../camera/camera_types.ts';
 
 /**
  * Alignment options of rotation and pitch

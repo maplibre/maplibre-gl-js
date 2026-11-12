@@ -11,7 +11,7 @@ import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 import type {Tile} from '../../tile/tile.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export type FillUniformsType = {
     'u_fill_translate': Uniform2f;

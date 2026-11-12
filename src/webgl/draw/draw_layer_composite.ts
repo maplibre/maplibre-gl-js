@@ -7,7 +7,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent.ts';
 import {isLineStyleLayer, type LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import {isFillStyleLayer, type FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 import {isRasterStyleLayer, type RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';

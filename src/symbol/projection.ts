@@ -6,10 +6,9 @@ import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
 import {fastInvertSkewMat4} from '../util/fast_maths.ts';
 import {WritingMode} from '../symbol/shaping.ts';
 import {findLineIntersection} from '../util/util.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 
 import type {Painter} from '../render/painter.ts';
-import type {GetElevation} from '../geo/camera_types.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
@@ -19,7 +18,8 @@ import type {
 } from '../data/array_types.g.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {StructArray} from '../util/struct_array.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {GetElevation} from '../geo/world_types.ts';
 
 /**
  * Pre-allocate objects to avoid online allocation

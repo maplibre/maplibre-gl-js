@@ -11,7 +11,7 @@ import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Context} from '../../webgl/context.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {Projection, TileMeshUsage} from './projection.ts';
-import type {WorldCoordinateHelper} from '../camera_types.ts';
+import type {WorldCoordinateHelper} from '../world_types.ts';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';

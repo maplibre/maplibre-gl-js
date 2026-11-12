@@ -1,21 +1,21 @@
-import {lerp} from '../../util/util.ts';
-import {isGlobeRendering, renderedProjectedCamera} from '../projected_camera.ts';
+import {lerp} from '../util/util.ts';
+import {isGlobeRendering, renderedProjectedCamera} from './projected_camera.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {mat4, vec3, vec4} from 'gl-matrix';
-import type {GlobeProjectedCamera} from '../projected_camera.ts';
-import type {WorldCoordinateHelper} from '../camera_types.ts';
-import type {LngLat} from '../lng_lat.ts';
-import type {LngLatBounds} from '../lng_lat_bounds.ts';
-import type {MercatorCoordinate} from '../mercator_coordinate.ts';
-import type {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
-import type {PointProjection} from '../../symbol/projection.ts';
-import type {Terrain} from '../../render/terrain.ts';
-import type {Frustum} from '../../util/primitives/frustum.ts';
+import type {GlobeProjectedCamera} from './projected_camera.ts';
+import type {LngLat} from '../geo/lng_lat.ts';
+import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import type {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import type {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import type {PointProjection} from '../symbol/projection.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {Frustum} from '../util/primitives/frustum.ts';
 import type {CameraMath} from './camera_math.ts';
 import type {MercatorCameraMath} from './mercator_camera_math.ts';
 import type {VerticalPerspectiveCameraMath} from './vertical_perspective_camera_math.ts';
-import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from '../geo/projection/projection_data.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * @internal

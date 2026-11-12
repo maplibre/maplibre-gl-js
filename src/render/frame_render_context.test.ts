@@ -1,7 +1,7 @@
 import {describe, test, expect, vi} from 'vitest';
 import {FrameRenderContext} from './frame_render_context.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createFrameRenderData, createTestCamera} from '../util/test/util.ts';
 

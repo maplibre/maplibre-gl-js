@@ -4,7 +4,7 @@ import {extend} from '../../util/util.ts';
 import type {mat4} from 'gl-matrix';
 import type {Context} from '../../webgl/context.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export type SymbolIconUniformsType = {
     'u_is_size_zoom_constant': Uniform1i;

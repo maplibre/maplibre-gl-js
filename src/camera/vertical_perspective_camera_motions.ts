@@ -1,10 +1,10 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
+import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from '../geo/projection/globe_utils.ts';
+import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {getCenterPoint, isPaddingEqual} from '../camera_view_state.ts';
+import {getCenterPoint, isPaddingEqual} from './camera_view_state.ts';
 import {applyConstrain} from './camera_constrain.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 import {projectCamera, getCameraMetrics} from './project_camera.ts';
@@ -12,14 +12,14 @@ import {getCameraSolver} from './camera_solver_factory.ts';
 import {versorSetLocationAtPoint} from './vertical_perspective_camera_solver.ts';
 import {interpolatePadding, interpolateRotation, normalizeCenter, setBearing, setCenter, setPadding, setPitch, setRoll, setZoom, warnBoundsCannotFit} from './camera_updates.ts';
 
-import type {CameraForBoundsOptions} from '../../ui/camera.ts';
-import type {LngLatBounds} from '../lng_lat_bounds.ts';
-import type {PaddingOptions} from '../edge_insets.ts';
-import type {CameraViewState} from '../camera_view_state.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
+import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import type {PaddingOptions} from '../geo/edge_insets.ts';
+import type {CameraViewState} from './camera_view_state.ts';
+import type {ProjectedCamera} from './projected_camera.ts';
 import type {CameraContext} from './camera_context.ts';
 import type {MercatorCameraMotions} from './mercator_camera_motions.ts';
 import type {CameraForBoxAndBearingResult, CameraMotions, EaseToMotion, EaseToMotionOptions, FlyToMotion, FlyToMotionOptions, MapControlsDeltas} from './camera_motions.ts';
+import type {CameraForBoundsOptions} from './camera_types.ts';
 
 /**
  * Zoom movement slowing starts when the mouse ray passes further than this above the planet surface,

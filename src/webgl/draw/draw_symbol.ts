@@ -19,7 +19,7 @@ import {
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
 } from '../program/symbol_program.ts';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -33,12 +33,12 @@ import type {CrossTileID, VariableOffset} from '../../symbol/placement.ts';
 import type {SymbolBucket, SymbolBuffers} from '../../data/bucket/symbol_bucket.ts';
 import type {TerrainData} from '../../render/terrain.ts';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GetElevation} from '../../geo/camera_types.ts';
 import type {ColorMode} from '../color_mode.ts';
 import type {Program} from '../program.ts';
 import type {TextAnchor} from '../../style/style_layer/variable_text_anchor.ts';
 import type {ProjectionData} from '../../geo/projection/projection_data.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
+import type {GetElevation} from '../../geo/world_types.ts';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;

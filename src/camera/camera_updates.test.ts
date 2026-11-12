@@ -1,14 +1,14 @@
 import {describe, expect, test} from 'vitest';
-import {LngLat} from '../lng_lat.ts';
-import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {createCameraViewState} from '../camera_view_state.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import {createCameraViewState} from './camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
 import {projectCamera} from './project_camera.ts';
 import {normalizeCenter, resize, setCenter, setMaxBounds, setZoom} from './camera_updates.ts';
-import {CRSWorldCoordinateHelper} from './crs.ts';
-import {createRotatedCrs, createTestCamera} from '../../util/test/util.ts';
+import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
+import {createRotatedCrs, createTestCamera} from '../util/test/util.ts';
 
-import type {CameraViewState} from '../camera_view_state.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
 
 function createSizedState(context: CameraContext): CameraViewState {

@@ -1,10 +1,10 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat} from './lng_lat.ts';
-import {EdgeInsets} from './edge_insets.ts';
-import {LngLatBounds} from './lng_lat_bounds.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {EdgeInsets} from '../geo/edge_insets.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {MAX_VALID_LATITUDE, radiansToDegrees} from '../util/util.ts';
 
-import type {PaddingOptions} from './edge_insets.ts';
+import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {NearFarZ} from './camera_types.ts';
 
 /** @internal The limits a new camera view state starts with, see {@link createCameraViewState}. */

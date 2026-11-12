@@ -64,30 +64,3 @@ export interface WorldCoordinateHelper {
  * @returns the terrain elevation in meters
  */
 export type GetElevation = (x: number, y: number) => number;
-
-/**
- * The callback defining how the camera constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
- * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
- */
-export type TransformConstrainFunction =  (
-    lngLat: LngLat,
-    zoom: number
-) => {
-    center: LngLat;
-    zoom: number;
-};
-
-/**
- * @internal
- * The depth range of a projection matrix, from the near to the far clipping plane.
- */
-export type NearFarZ = {
-    readonly nearZ: number;
-    readonly farZ: number;
-};
-
-/**
- * @internal
- * The camera placement `calculateCameraOptionsFromTo` of a `CameraSolver` solves for.
- */
-export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};

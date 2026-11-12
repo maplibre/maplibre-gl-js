@@ -1,9 +1,9 @@
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
-import {renderedProjectedCamera} from '../projected_camera.ts';
+import {renderedProjectedCamera} from '../../camera/projected_camera.ts';
 
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 /** The mercator provider. Neither provider holds anything of a map's, so one of each serves every map. */
 let mercatorProvider: MercatorCoveringTilesDetailsProvider | null = null;

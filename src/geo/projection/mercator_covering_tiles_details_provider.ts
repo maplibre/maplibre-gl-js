@@ -7,7 +7,7 @@ import type {MercatorCoordinate} from '../mercator_coordinate.ts';
 import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
 

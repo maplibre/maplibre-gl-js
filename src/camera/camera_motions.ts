@@ -1,11 +1,11 @@
 import type Point from '@mapbox/point-geometry';
-import type {LngLat, LngLatLike} from '../lng_lat.ts';
-import type {LngLatBounds} from '../lng_lat_bounds.ts';
-import type {PaddingOptions} from '../edge_insets.ts';
-import type {CameraViewState} from '../camera_view_state.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
-import type {CameraForBoundsOptions, PointLike} from '../../ui/camera.ts';
+import type {LngLat, LngLatLike} from '../geo/lng_lat.ts';
+import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import type {PaddingOptions} from '../geo/edge_insets.ts';
+import type {CameraViewState} from './camera_view_state.ts';
+import type {ProjectedCamera} from './projected_camera.ts';
 import type {CameraContext} from './camera_context.ts';
+import type {CameraForBoundsOptions, PointLike} from './camera_types.ts';
 
 /** @internal What a frame of a gesture changes, which {@link CameraMotions.rollPitchBearingZoom} and {@link CameraMotions.pan} apply. */
 export type MapControlsDeltas = {

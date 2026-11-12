@@ -7,12 +7,12 @@ import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPix
 import {mat4, vec3} from 'gl-matrix';
 import {ColorMode} from '../color_mode.ts';
 import {sphericalToCartesian} from '../../util/util.ts';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
 import type {Mesh} from '../../render/mesh.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export function drawSky(mesh: Mesh, frameRenderContext: FrameRenderContext): void {
     const context = frameRenderContext.context;

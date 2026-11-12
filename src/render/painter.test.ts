@@ -9,8 +9,8 @@ import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
 
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 describe('render', () => {
     let painter: Painter;

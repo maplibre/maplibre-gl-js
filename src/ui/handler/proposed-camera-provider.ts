@@ -1,11 +1,12 @@
 import Point from '@mapbox/point-geometry';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
-import {applyConstrain} from '../../geo/projection/camera_constrain.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
+import {applyConstrain} from '../../camera/camera_constrain.ts';
 
 import type {Camera} from '../camera.ts';
-import type {JumpToOptions, PointLike} from '../camera.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {JumpToOptions} from '../camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 import type {LngLat} from '../../geo/lng_lat.ts';
+import type {PointLike} from '../../camera/camera_types.ts';
 
 /**
  * @internal

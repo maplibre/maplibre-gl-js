@@ -18,7 +18,7 @@ import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manag
 import {backfillDEM} from './tile_manager_raster_dem.ts';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {Context} from '../webgl/context.ts';
@@ -33,8 +33,8 @@ import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {LoadTileResult} from '../source/vector_tile_source.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * Half the width of the world in mercator coordinates, which span from 0 to 1.

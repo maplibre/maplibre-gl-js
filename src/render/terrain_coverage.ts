@@ -4,7 +4,7 @@ import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {TerrainTileManager} from '../tile/terrain_tile_manager.ts';
-import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 export type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
 

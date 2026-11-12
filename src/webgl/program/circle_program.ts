@@ -6,7 +6,7 @@ import type {Context} from '../../webgl/context.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export type CircleUniformsType = {
     'u_scale_with_map': Uniform1i;

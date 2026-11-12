@@ -1,10 +1,10 @@
 import {test} from 'vitest';
 import {LngLat} from '../lng_lat.ts';
 import {coveringTiles} from './covering_tiles.ts';
-import {createCameraViewState} from '../camera_view_state.ts';
-import {createCameraContext, type CameraProjectionKind} from './camera_context.ts';
-import {projectCamera} from './project_camera.ts';
-import {resize, setCenter, setMaxPitch, setPitch, setZoom} from './camera_updates.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
+import {createCameraContext, type CameraProjectionKind} from '../../camera/camera_context.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
+import {resize, setCenter, setMaxPitch, setPitch, setZoom} from '../../camera/camera_updates.ts';
 
 function coverWithPitch(projection: CameraProjectionKind, pitch: number): void {
     const context = createCameraContext({projection});

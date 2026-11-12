@@ -4,10 +4,10 @@ import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
 import {coveringTiles} from './covering_tiles.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
-import {createCameraViewState} from '../camera_view_state.ts';
-import {createCameraContext} from './camera_context.ts';
-import {projectCamera} from './project_camera.ts';
-import {resize, setBearing, setCenter, setPitch, setZoom} from './camera_updates.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
+import {createCameraContext} from '../../camera/camera_context.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
+import {resize, setBearing, setCenter, setPitch, setZoom} from '../../camera/camera_updates.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 

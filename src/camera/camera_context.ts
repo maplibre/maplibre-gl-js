@@ -1,6 +1,7 @@
-import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 
-import type {TransformConstrainFunction, WorldCoordinateHelper} from '../camera_types.ts';
+import type {TransformConstrainFunction} from './camera_types.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * @internal

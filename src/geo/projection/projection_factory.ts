@@ -7,7 +7,7 @@ import {getRegisteredProjection} from './projection_crud.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
-import type {CameraProjectionKind} from './camera_context.ts';
+import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 
 /**
  * @internal

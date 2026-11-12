@@ -4,10 +4,10 @@ import {coveringTiles, coveringZoomLevel, createCalculateTileZoomFunction, type 
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from './crs.ts';
 import {createIdentityCrsCamera} from '../../util/test/util.ts';
-import {createCameraContext} from './camera_context.ts';
-import {createCameraViewState, type CameraViewState} from '../camera_view_state.ts';
-import {projectCamera} from './project_camera.ts';
-import {resize, setBearing, setCenter, setElevation, setFov, setMaxPitch, setPadding, setPitch, setRenderWorldCopies, setZoom} from './camera_updates.ts';
+import {createCameraContext} from '../../camera/camera_context.ts';
+import {createCameraViewState, type CameraViewState} from '../../camera/camera_view_state.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
+import {resize, setBearing, setCenter, setElevation, setFov, setMaxPitch, setPadding, setPitch, setRenderWorldCopies, setZoom} from '../../camera/camera_updates.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {

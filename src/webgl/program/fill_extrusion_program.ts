@@ -7,7 +7,7 @@ import {
 } from '../uniform_binding.ts';
 import {mat3, vec3} from 'gl-matrix';
 import {extend, sphericalToCartesian} from '../../util/util.ts';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {Context} from '../../webgl/context.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -15,7 +15,7 @@ import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;

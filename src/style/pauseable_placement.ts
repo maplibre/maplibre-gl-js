@@ -6,7 +6,7 @@ import type {StyleLayer} from './style_layer.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {BucketPart} from '../symbol/placement.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;

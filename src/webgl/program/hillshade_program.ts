@@ -17,8 +17,8 @@ import type {Tile} from '../../tile/tile.ts';
 import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';
 import type {DEMData} from '../../data/dem_data.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
-import type {WorldCoordinateHelper} from '../../geo/camera_types.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../../geo/world_types.ts';
 
 export type HillshadeUniformsType = {
     'u_image': Uniform1i;

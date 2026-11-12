@@ -1,8 +1,8 @@
 import {afterEach, beforeEach, describe, expect, vi, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
-import {setElevation} from '../geo/projection/camera_updates.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {setElevation} from '../camera/camera_updates.ts';
 import {beforeMapTest, createMap, createTerrain, createCoverageIndex} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
 import * as timeControl from '../util/time_control.ts';

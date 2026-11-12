@@ -70,8 +70,8 @@ import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Validator} from './validate_style.ts';
 import type {Projection} from '../geo/projection/projection.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 const empty = emptyStyle();
 /**

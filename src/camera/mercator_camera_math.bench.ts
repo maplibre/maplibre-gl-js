@@ -2,15 +2,15 @@
 // The DEM terrain fixture builds a real painter over the null GL context, which needs a canvas.
 import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat.ts';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {OverscaledTileID} from '../../tile/tile_id.ts';
-import {createDEM, createDEMTerrain, createTestCamera} from '../../util/test/util.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {createDEM, createDEMTerrain, createTestCamera} from '../util/test/util.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 
-import type {Terrain} from '../../render/terrain.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
-import type {WorldCoordinateHelper} from '../camera_types.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {ProjectedCamera} from './projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 const DEM_DIM = 256;
 

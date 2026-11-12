@@ -4,13 +4,13 @@ import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {earthRadius} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
-import {getCameraMath} from './camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
-import type {WorldCoordinateHelper} from '../camera_types.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../world_types.ts';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;

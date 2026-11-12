@@ -1,14 +1,14 @@
 import {describe, expect, test, vi} from 'vitest';
-import {EXTENT} from '../../data/extent.ts';
+import {EXTENT} from '../data/extent.ts';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat.ts';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
-import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils.ts';
-import {createTerrain, createTestCamera, expectToBeCloseToArray} from '../../util/test/util.ts';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {tileCoordinatesToLocation} from './mercator_utils.ts';
-import {differenceOfAnglesDegrees} from '../../util/util.ts';
-import {createCameraViewState, getBearing, getCenterPoint} from '../camera_view_state.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
+import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from '../geo/projection/globe_utils.ts';
+import {createTerrain, createTestCamera, expectToBeCloseToArray} from '../util/test/util.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {tileCoordinatesToLocation} from '../geo/projection/mercator_utils.ts';
+import {differenceOfAnglesDegrees} from '../util/util.ts';
+import {createCameraViewState, getBearing, getCenterPoint} from './camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 import {projectCamera} from './project_camera.ts';
@@ -16,7 +16,7 @@ import {resize, setBearing, setCenter, setFov, setNearFarZOverride, setPitch, se
 import {getCameraSolver} from './camera_solver_factory.ts';
 import {versorSetLocationAtPoint} from './vertical_perspective_camera_solver.ts';
 
-import type {CameraViewState} from '../camera_view_state.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {

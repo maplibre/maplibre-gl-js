@@ -1,10 +1,10 @@
 import {describe, test, expect, vi} from 'vitest';
 import {adjustCamera, combineActions, constrainView, createCameraStore, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjectionTransition, startMovement, terrainChanged} from './camera_state.ts';
-import {createCameraViewState} from '../geo/camera_view_state.ts';
+import {createCameraViewState} from './camera_view_state.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import {createCameraContext} from '../geo/projection/camera_context.ts';
+import {createCameraContext} from './camera_context.ts';
 
-import type {CameraViewState} from '../geo/camera_view_state.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 
 function cameraAt(elevation: number): CameraViewState {
     return {...createCameraViewState(), elevation};

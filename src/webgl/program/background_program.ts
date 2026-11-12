@@ -14,7 +14,7 @@ import type {Color, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import type {CrossFaded} from '../../style/properties.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export type BackgroundUniformsType = {
     'u_opacity': Uniform1f;

@@ -4,7 +4,7 @@ import {terrainUniformValues, terrainDepthUniformValues, terrainHeightUniformVal
 import {CullFaceMode} from '../cull_face_mode.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../color_mode.ts';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Terrain, TerrainHeightMapTarget} from '../../render/terrain.ts';

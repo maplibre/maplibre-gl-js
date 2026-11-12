@@ -2,10 +2,10 @@ import {describe, test, expect} from 'vitest';
 import {CollisionIndex} from './collision_index.ts';
 import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import {createIdentityMat4f32, createIdentityMat4f64} from '../util/util.ts';
-import {getMatrixCache} from '../geo/projection/mercator_camera_math.ts';
+import {getMatrixCache} from '../camera/mercator_camera_math.ts';
 import {createTestCamera} from '../util/test/util.ts';
 
-import type {MercatorProjectedCamera} from '../geo/projected_camera.ts';
+import type {MercatorProjectedCamera} from '../camera/projected_camera.ts';
 
 describe('CollisionIndex', () => {
     test('floating point precision', () => {

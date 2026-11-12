@@ -1,16 +1,16 @@
 import {describe, expect, test, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat.ts';
-import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {createCameraViewState, getCenterPoint} from '../camera_view_state.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import {createCameraViewState, getCenterPoint} from './camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
 import {resize, setCenter, setMinZoom, setZoom} from './camera_updates.ts';
-import {getZoomAdjustment} from './globe_utils.ts';
+import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
 import {VerticalPerspectiveCameraMotions} from './vertical_perspective_camera_motions.ts';
 import {MercatorCameraMotions} from './mercator_camera_motions.ts';
-import {createTestCamera} from '../../util/test/util.ts';
+import {createTestCamera} from '../util/test/util.ts';
 
-import type {CameraViewState} from '../camera_view_state.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {MapControlsDeltas} from './camera_motions.ts';
 
 const verticalPerspectiveCameraMotions = new VerticalPerspectiveCameraMotions(new MercatorCameraMotions());

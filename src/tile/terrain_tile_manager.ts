@@ -11,8 +11,8 @@ import type {CanonicalTileRange} from '../source/image_source.ts';
 import type {Source} from '../source/source.ts';
 import type {TileManager} from './tile_manager.ts';
 import type {OverscaledTileID} from './tile_id.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
-import type {WorldCoordinateHelper} from '../geo/camera_types.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * @internal

@@ -3,7 +3,7 @@ import {Event, Evented} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import Point from '@mapbox/point-geometry';
 
@@ -11,8 +11,8 @@ import type {MapLibreEvent, MapMouseEvent} from './events.ts';
 import type {PositionAnchor} from './anchor.ts';
 import type {Map} from './map.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
-import type {PointLike} from './camera.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
+import type {PointLike} from '../camera/camera_types.ts';
 
 const defaultOptions = {
     closeButton: true,

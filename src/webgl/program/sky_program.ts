@@ -2,12 +2,12 @@ import {UniformColor, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '..
 import {getMercatorHorizon} from '../../geo/projection/mercator_utils.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
 import {vec3} from 'gl-matrix';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {SkyPropsPossiblyEvaluated} from '../../style/sky_properties.g.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export type SkyUniformsType = {
     'u_sky_color': UniformColor;

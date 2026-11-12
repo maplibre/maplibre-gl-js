@@ -1,9 +1,9 @@
 import {createStore, type StoreApi} from 'zustand/vanilla';
-import {constrainState, resize} from '../geo/projection/camera_updates.ts';
+import {constrainState, resize} from './camera_updates.ts';
 
-import type {CameraViewState} from '../geo/camera_view_state.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
-import type {CameraContext, CameraProjectionKind} from '../geo/projection/camera_context.ts';
+import type {CameraContext, CameraProjectionKind} from './camera_context.ts';
 import type {CenterElevationRule} from './center_elevation.ts';
 
 /**

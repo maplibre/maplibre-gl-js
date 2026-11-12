@@ -8,46 +8,34 @@ import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {angularCoordinatesToSurfaceVector} from '../geo/projection/globe_utils.ts';
-import {createCameraViewState, getBearing, getCenterPoint, getFov, getPitch, getRoll, isPaddingEqual} from '../geo/camera_view_state.ts';
-import {createCameraContext, usesGlobeControls} from '../geo/projection/camera_context.ts';
+import {createCameraViewState, getBearing, getCenterPoint, getFov, getPitch, getRoll, isPaddingEqual} from '../camera/camera_view_state.ts';
+import {createCameraContext, usesGlobeControls} from '../camera/camera_context.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
-import {projectCamera, getCameraMetrics} from '../geo/projection/project_camera.ts';
-import {isGlobeRendering} from '../geo/projected_camera.ts';
-import {calculateCenterFromCameraLngLatAlt, constrainState, interpolatePadding, setBearing, setCenter, setElevation, setFov, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from '../geo/projection/camera_updates.ts';
-import {getCameraMotions} from '../geo/projection/camera_motions_factory.ts';
-import {getCameraSolver} from '../geo/projection/camera_solver_factory.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {projectCamera, getCameraMetrics} from '../camera/project_camera.ts';
+import {isGlobeRendering} from '../camera/projected_camera.ts';
+import {calculateCenterFromCameraLngLatAlt, constrainState, interpolatePadding, setBearing, setCenter, setElevation, setFov, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from '../camera/camera_updates.ts';
+import {getCameraMotions} from '../camera/camera_motions_factory.ts';
+import {getCameraSolver} from '../camera/camera_solver_factory.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
-import {takeDrawnElevation} from './center_elevation.ts';
-import {adjustCamera, combineActions, constrainView, createCameraStore, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjection, setProjectionTransition, startMovement, terrainChanged} from './camera_state.ts';
+import {takeDrawnElevation} from '../camera/center_elevation.ts';
+import {adjustCamera, combineActions, constrainView, createCameraStore, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjection, setProjectionTransition, startMovement, terrainChanged} from '../camera/camera_state.ts';
 import {CameraMovementScheduler} from './camera_movement_scheduler.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {TransformConstrainFunction, WorldCoordinateHelper} from '../geo/camera_types.ts';
-import type {CameraViewState} from '../geo/camera_view_state.ts';
-import type {CameraMetrics, ProjectedCamera} from '../geo/projected_camera.ts';
-import type {CameraContext, CameraProjectionKind} from '../geo/projection/camera_context.ts';
+import type {CameraForBoundsOptions, CameraOptions, PointLike, TransformConstrainFunction} from '../camera/camera_types.ts';
+import type {CameraViewState} from '../camera/camera_view_state.ts';
+import type {CameraMetrics, ProjectedCamera} from '../camera/projected_camera.ts';
+import type {CameraContext, CameraProjectionKind} from '../camera/camera_context.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
-import type {MapControlsDeltas} from '../geo/projection/camera_motions.ts';
-import type {ElevationHolder} from './center_elevation.ts';
-import type {CameraAction, CameraAdjustment, CameraStore, CameraState} from './camera_state.ts';
+import type {MapControlsDeltas} from '../camera/camera_motions.ts';
+import type {ElevationHolder} from '../camera/center_elevation.ts';
+import type {CameraAction, CameraAdjustment, CameraStore, CameraState} from '../camera/camera_state.ts';
 import type {RenderLoop} from './camera_movement_scheduler.ts';
-
-/**
- * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
- *
- * @group Geography and Geometry
- *
- * @example
- * ```ts
- * let p1 = new Point(-77, 38); // a PointLike which is a Point
- * let p2 = [-77, 38]; // a PointLike which is an array of two numbers
- * ```
- */
-export type PointLike = Point | [number, number];
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * How many times a camera update outside a held gesture raises a camera it found inside the terrain, each time by as far
@@ -93,65 +81,6 @@ export type RotationPivot = {
 };
 
 /**
- * Options common to {@link Map.jumpTo}, {@link Map.easeTo}, and {@link Map.flyTo}, controlling the desired location,
- * zoom, bearing, pitch, and roll of the camera. All properties are optional, and when a property is omitted, the current
- * camera value for that property will remain unchanged.
- *
- * @example
- * Set the map's initial perspective with CameraOptions
- * ```ts
- * let map = new Map({
- *   container: 'map',
- *   style: 'https://demotiles.maplibre.org/style.json',
- *   center: [-73.5804, 45.53483],
- *   pitch: 60,
- *   bearing: -60,
- *   zoom: 10
- * });
- * ```
- * @see [Set pitch and bearing](https://maplibre.org/maplibre-gl-js/docs/examples/set-pitch-and-bearing/)
- * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to-a-series-of-locations/)
- * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/fly-to-a-location/)
- * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/)
- */
-export type CameraOptions = CenterZoomBearing & {
-    /**
-     * The desired pitch in degrees. The pitch is the angle towards the horizon
-     * measured in degrees with a range between 0 and 60 degrees. For example, pitch: 0 provides the appearance
-     * of looking straight down at the map, while pitch: 60 tilts the user's perspective towards the horizon.
-     * Increasing the pitch value is often used to display 3D objects.
-     */
-    pitch?: number;
-    /**
-     * The desired roll in degrees. The roll is the angle about the camera boresight.
-     */
-    roll?: number;
-    /**
-     * The elevation of the center point in meters above sea level.
-     */
-    elevation?: number;
-};
-
-/**
- * Holds center, zoom and bearing properties
- */
-export type CenterZoomBearing = {
-    /**
-     * The desired center.
-     */
-    center?: LngLatLike;
-    /**
-     * The desired mercator zoom level.
-     */
-    zoom?: number;
-    /**
-     * The desired bearing in degrees. The bearing is the compass direction that
-     * is "up". For example, `bearing: 90` orients the map so that east is up.
-     */
-    bearing?: number;
-};
-
-/**
  * The options object related to the {@link Map.jumpTo} method
  */
 export type JumpToOptions = CameraOptions & {
@@ -169,31 +98,6 @@ export type AnchoredCameraOptions = {
     anchorScreenPoint: PointLike;
     /** Desired zoom level. */
     zoom?: number;
-};
-
-/**
- * A options object for the {@link Map.cameraForBounds} method
- */
-export type CameraForBoundsOptions = CameraOptions & {
-    /**
-     * The amount of padding in pixels to add to the given bounds, on top of the map's current padding.
-     */
-    padding?: number | PaddingOptions;
-    /**
-     * If `true`, `padding` replaces the map's current padding instead of adding to it, and is returned with the result.
-     * This will become the default in version 7.
-     * @defaultValue false
-     */
-    absolutePadding?: boolean;
-    /**
-     * The center of the given bounds relative to the map's center, measured in pixels.
-     * @defaultValue [0, 0]
-     */
-    offset?: PointLike;
-    /**
-     * The maximum zoom level to allow when the camera would transition to the specified bounds.
-     */
-    maxZoom?: number;
 };
 
 /**

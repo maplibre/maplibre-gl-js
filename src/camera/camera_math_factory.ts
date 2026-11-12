@@ -2,7 +2,7 @@ import {MercatorCameraMath} from './mercator_camera_math.ts';
 import {VerticalPerspectiveCameraMath} from './vertical_perspective_camera_math.ts';
 import {GlobeCameraMath} from './globe_camera_math.ts';
 
-import type {ProjectedCamera} from '../projected_camera.ts';
+import type {ProjectedCamera} from './projected_camera.ts';
 import type {CameraMath} from './camera_math.ts';
 
 /** The math of each projection holds nothing, so every camera of a projection shares one. */

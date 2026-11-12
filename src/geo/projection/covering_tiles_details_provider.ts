@@ -2,7 +2,7 @@ import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
 import type {LngLat} from '../lng_lat.ts';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
 import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 /**
  * @internal

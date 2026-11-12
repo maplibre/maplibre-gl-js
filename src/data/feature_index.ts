@@ -24,9 +24,9 @@ import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GetElevation, WorldCoordinateHelper} from '../geo/camera_types.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {GetElevation, WorldCoordinateHelper} from '../geo/world_types.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
 

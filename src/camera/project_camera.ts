@@ -1,11 +1,11 @@
-import {createCameraMetrics} from '../projected_camera.ts';
+import {createCameraMetrics} from './projected_camera.ts';
 import {createMercatorProjectedCamera} from './mercator_camera_math.ts';
 import {createVerticalPerspectiveProjectedCamera} from './vertical_perspective_camera_math.ts';
 
-import type {CameraMetrics, ProjectedCamera} from '../projected_camera.ts';
-import type {CameraViewState} from '../camera_view_state.ts';
-import type {WorldCoordinateHelper} from '../camera_types.ts';
+import type {CameraMetrics, ProjectedCamera} from './projected_camera.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /** The {@link CameraMetrics} derived from each {@link CameraViewState}, for each world mapping it was derived in. */
 const metricsCache = new WeakMap<CameraViewState, WeakMap<WorldCoordinateHelper, CameraMetrics>>();

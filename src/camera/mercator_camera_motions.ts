@@ -1,22 +1,22 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {clamp, degreesToRadians, MAX_VALID_LATITUDE, rollPitchBearingEqual, scaleZoom, zoomScale} from '../../util/util.ts';
-import {getMercatorHorizon, lngLatBoxToWorldSamples, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils.ts';
+import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
+import {clamp, degreesToRadians, MAX_VALID_LATITUDE, rollPitchBearingEqual, scaleZoom, zoomScale} from '../util/util.ts';
+import {getMercatorHorizon, lngLatBoxToWorldSamples, projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_utils.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {getCenterPoint, isPaddingEqual} from '../camera_view_state.ts';
+import {getCenterPoint, isPaddingEqual} from './camera_view_state.ts';
 import {applyConstrain} from './camera_constrain.ts';
 import {projectCamera, getCameraMetrics} from './project_camera.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 import {getCameraSolver} from './camera_solver_factory.ts';
 import {interpolatePadding, interpolateRotation, normalizeCenter, setBearing, setCenter, setPadding, setPitch, setRoll, setZoom, warnBoundsCannotFit} from './camera_updates.ts';
 
-import type {CameraForBoundsOptions} from '../../ui/camera.ts';
-import type {PaddingOptions} from '../edge_insets.ts';
-import type {LngLatBounds} from '../lng_lat_bounds.ts';
-import type {CameraViewState} from '../camera_view_state.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
+import type {PaddingOptions} from '../geo/edge_insets.ts';
+import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import type {CameraViewState} from './camera_view_state.ts';
+import type {ProjectedCamera} from './projected_camera.ts';
 import type {CameraContext} from './camera_context.ts';
 import type {CameraForBoxAndBearingResult, CameraMotions, EaseToMotion, EaseToMotionOptions, FlyToMotion, FlyToMotionOptions, MapControlsDeltas} from './camera_motions.ts';
+import type {CameraForBoundsOptions} from './camera_types.ts';
 
 /**
  * The camera at the animation's end zoom, angles and padding, for reading where the map center ends up once a

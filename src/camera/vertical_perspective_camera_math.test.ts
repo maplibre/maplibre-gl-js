@@ -1,19 +1,19 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {EXTENT} from '../../data/extent.ts';
-import {LngLat, earthRadius} from '../lng_lat.ts';
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
-import {OverscaledTileID} from '../../tile/tile_id.ts';
-import {createDEM, createDEMTerrain, createTestCamera} from '../../util/test/util.ts';
-import {createCameraViewState} from '../camera_view_state.ts';
+import {EXTENT} from '../data/extent.ts';
+import {LngLat, earthRadius} from '../geo/lng_lat.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {OverscaledTileID} from '../tile/tile_id.ts';
+import {createDEM, createDEMTerrain, createTestCamera} from '../util/test/util.ts';
+import {createCameraViewState} from './camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 import {projectCamera} from './project_camera.ts';
-import {getCameraPoint} from '../projected_camera.ts';
+import {getCameraPoint} from './projected_camera.ts';
 import {resize, setBearing, setCenter, setPitch, setRoll, setZoom} from './camera_updates.ts';
 import {getCameraSolver} from './camera_solver_factory.ts';
 
-import type {CameraViewState} from '../camera_view_state.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
 
 function createContext(): CameraContext {

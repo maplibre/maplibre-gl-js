@@ -4,8 +4,8 @@ import {clamp, degreesToRadians, MAX_VALID_LATITUDE, zoomScale, type Mat4f64} fr
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
 
-import type {WorldCoordinateHelper} from '../camera_types.ts';
 import type {LngLat} from '../lng_lat.ts';
+import type {WorldCoordinateHelper} from '../world_types.ts';
 
 /*
 * The maximum angle to use for the Mercator horizon. This must be less than 90

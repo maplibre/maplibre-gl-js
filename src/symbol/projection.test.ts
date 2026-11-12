@@ -6,11 +6,11 @@ import {SymbolLineVertexArray} from '../data/array_types.g.ts';
 import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {expectToBeCloseToArray, createTestCamera} from '../util/test/util.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
-import {projectCamera} from '../geo/projection/project_camera.ts';
-import {setBearing, setPitch} from '../geo/projection/camera_updates.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {projectCamera} from '../camera/project_camera.ts';
+import {setBearing, setPitch} from '../camera/camera_updates.ts';
 
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 
 const TERRAIN_ELEVATION = 100;
 const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0));

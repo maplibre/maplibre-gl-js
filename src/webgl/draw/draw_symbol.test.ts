@@ -14,7 +14,7 @@ import * as symbolProjection from '../../symbol/projection.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
 import {createFrameRenderData, createTestCamera} from '../../util/test/util.ts';
 
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 import type {ZoomHistory} from '../../style/zoom_history.ts';
 import type {Map} from '../../ui/map.ts';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';

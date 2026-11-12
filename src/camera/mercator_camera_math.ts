@@ -1,25 +1,26 @@
-import {MercatorCoordinate} from '../mercator_coordinate.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
-import {clamp, createMat4f64, createIdentityMat4f32, degreesToRadians, zoomScale, type Mat4f32, type Mat4f64} from '../../util/util.ts';
+import {clamp, createMat4f64, createIdentityMat4f32, degreesToRadians, zoomScale, type Mat4f32, type Mat4f64} from '../util/util.ts';
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../../tile/tile_id.ts';
+import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {type PointProjection, xyTransformMat4} from '../../symbol/projection.ts';
-import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {getMercatorHorizon, getMercatorTileCoordinates, calculateTileMatrix, cameraMercatorCoordinateFromCenterAndRotation, projectToWorldCoordinates, maxMercatorHorizonAngle} from './mercator_utils.ts';
-import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-import {getCenterOffset} from '../camera_view_state.ts';
-import {EXTENT} from '../../data/extent.ts';
-import {cameraPointQueryGeometry} from '../projected_camera.ts';
-import {createFrustum, type Frustum} from '../../util/primitives/frustum.ts';
-import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
+import {type PointProjection, xyTransformMat4} from '../symbol/projection.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import {getMercatorHorizon, getMercatorTileCoordinates, calculateTileMatrix, cameraMercatorCoordinateFromCenterAndRotation, projectToWorldCoordinates, maxMercatorHorizonAngle} from '../geo/projection/mercator_utils.ts';
+import {fastInvertProjMat4} from '../util/fast_maths.ts';
+import {getCenterOffset} from './camera_view_state.ts';
+import {EXTENT} from '../data/extent.ts';
+import {cameraPointQueryGeometry} from './projected_camera.ts';
+import {createFrustum, type Frustum} from '../util/primitives/frustum.ts';
+import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../render/terrain_coverage.ts';
 
-import type {LngLat} from '../lng_lat.ts';
-import type {CameraMetrics, MercatorProjectedCamera, MercatorMatrixCache} from '../projected_camera.ts';
-import type {NearFarZ, WorldCoordinateHelper} from '../camera_types.ts';
-import type {Terrain} from '../../render/terrain.ts';
-import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
+import type {LngLat} from '../geo/lng_lat.ts';
+import type {CameraMetrics, MercatorProjectedCamera, MercatorMatrixCache} from './projected_camera.ts';
+import type {NearFarZ} from './camera_types.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from '../geo/projection/projection_data.ts';
 import type {CameraMath} from './camera_math.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * @internal

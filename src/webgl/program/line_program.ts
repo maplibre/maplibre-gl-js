@@ -8,7 +8,7 @@ import type {Tile} from '../../tile/tile.ts';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import type {LineAtlas} from '../../render/line_atlas.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
-import type {ProjectedCamera} from '../../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export type LineUniformsType = {
     'u_translation': Uniform2f;

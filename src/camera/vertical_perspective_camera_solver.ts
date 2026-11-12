@@ -1,22 +1,23 @@
 import {quat, vec3} from 'gl-matrix';
-import {LngLat, earthRadius, type LngLatLike} from '../lng_lat.ts';
-import {angleToRotateBetweenVectors2D, clamp, createVec3f64, createVec4f64, degreesToRadians, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, mod, radiansToDegrees, scaleZoom, warnOnce, wrap} from '../../util/util.ts';
-import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, lngLatBearingFromOrientation, orientationFromLngLatBearing, sphereSurfacePointToCoordinates} from './globe_utils.ts';
+import {LngLat, earthRadius, type LngLatLike} from '../geo/lng_lat.ts';
+import {angleToRotateBetweenVectors2D, clamp, createVec3f64, createVec4f64, degreesToRadians, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, mod, radiansToDegrees, scaleZoom, warnOnce, wrap} from '../util/util.ts';
+import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, lngLatBearingFromOrientation, orientationFromLngLatBearing, sphereSurfacePointToCoordinates} from '../geo/projection/globe_utils.ts';
 import {applyConstrain} from './camera_constrain.ts';
 import {getConstrainedCamera, moveCenterToElevation, setBearing, setCenter, setCenterAndZoom, setZoom} from './camera_updates.ts';
 import {projectCamera} from './project_camera.ts';
-import {renderedProjectedCamera} from '../projected_camera.ts';
+import {renderedProjectedCamera} from './projected_camera.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 import {unprojectScreenPoint} from './vertical_perspective_camera_math.ts';
-import {getBearing} from '../camera_view_state.ts';
+import {getBearing} from './camera_view_state.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {CameraViewState} from '../camera_view_state.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
-import type {CameraOptionsFromTo, WorldCoordinateHelper} from '../camera_types.ts';
-import type {ProjectedCamera, VerticalPerspectiveProjectedCamera} from '../projected_camera.ts';
-import type {Terrain} from '../../render/terrain.ts';
+import type {CameraOptionsFromTo} from './camera_types.ts';
+import type {ProjectedCamera, VerticalPerspectiveProjectedCamera} from './projected_camera.ts';
+import type {Terrain} from '../render/terrain.ts';
 import type {CameraSolver} from './camera_solver.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /** Two points on the unit globe closer than this, a micrometre, are the same point. */
 const SAME_POINT_DISTANCE = 1e-12;

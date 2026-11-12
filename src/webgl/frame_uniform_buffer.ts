@@ -2,7 +2,7 @@ import {UBO_BINDINGS, UniformBuffer, std140Layout} from './uniform_buffer.ts';
 
 import type {Context} from './context.ts';
 import type {FrameRenderData} from '../render/frame_render_context.ts';
-import type {ProjectedCamera} from '../geo/projected_camera.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 
 const layout = std140Layout([
     {name: 'u_units_to_pixels', type: 'vec2'},

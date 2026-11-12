@@ -2,7 +2,7 @@ import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {drawTerrainHeightMap} from './draw_terrain.ts';
-import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';

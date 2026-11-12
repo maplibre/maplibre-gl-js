@@ -11,7 +11,7 @@ import {clamp, MAX_VALID_LATITUDE, threePlaneIntersection} from '../../util/util
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
-import type {ProjectedCamera} from '../projected_camera.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 /**
  * Computes distance of a point to a tile in an arbitrary axis.

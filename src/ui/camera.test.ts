@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {Camera, type CameraInitOptions, type CameraOptions, type PointLike} from '../ui/camera.ts';
+import {Camera, type CameraInitOptions} from './camera.ts';
 import {TaskQueue} from '../util/task_queue.ts';
 import * as timeControl from '../util/time_control.ts';
 import {browser} from '../util/browser.ts';
@@ -11,17 +11,18 @@ import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
 import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {getBearing, getPitch, getRoll} from '../geo/camera_view_state.ts';
-import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
-import {resize, setCenter, setElevation, setMaxPitch, setMaxZoom, setMinZoom, setPitch, setZoom} from '../geo/projection/camera_updates.ts';
-import {getCameraMotions} from '../geo/projection/camera_motions_factory.ts';
-import {usesGlobeControls} from '../geo/projection/camera_context.ts';
+import {getBearing, getPitch, getRoll} from '../camera/camera_view_state.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {resize, setCenter, setElevation, setMaxPitch, setMaxZoom, setMinZoom, setPitch, setZoom} from '../camera/camera_updates.ts';
+import {getCameraMotions} from '../camera/camera_motions_factory.ts';
+import {usesGlobeControls} from '../camera/camera_context.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Terrain} from '../render/terrain.ts';
-import type {MapControlsDeltas} from '../geo/projection/camera_motions.ts';
-import type {CameraViewState} from '../geo/camera_view_state.ts';
+import type {MapControlsDeltas} from '../camera/camera_motions.ts';
+import type {CameraViewState} from '../camera/camera_view_state.ts';
 import type {JumpToOptions} from '../../dist/maplibre-gl';
+import type {CameraOptions, PointLike} from '../camera/camera_types.ts';
 
 beforeEach(() => {
     setMatchMedia();

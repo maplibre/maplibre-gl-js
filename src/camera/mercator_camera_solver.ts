@@ -1,17 +1,17 @@
-import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {radiansToDegrees, scaleZoom} from '../../util/util.ts';
+import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
+import {radiansToDegrees, scaleZoom} from '../util/util.ts';
 import {getConstrainedCamera, moveCenterToElevation, setCenterAndZoom} from './camera_updates.ts';
 import {projectCamera} from './project_camera.ts';
-import {renderedProjectedCamera} from '../projected_camera.ts';
+import {renderedProjectedCamera} from './projected_camera.ts';
 import {screenPointToMercatorCoordinateAtZ, terrainPointPastMaxZoom} from './mercator_camera_math.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {CameraViewState} from '../camera_view_state.ts';
+import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
-import type {CameraOptionsFromTo} from '../camera_types.ts';
-import type {MercatorProjectedCamera} from '../projected_camera.ts';
-import type {Terrain} from '../../render/terrain.ts';
+import type {CameraOptionsFromTo} from './camera_types.ts';
+import type {MercatorProjectedCamera} from './projected_camera.ts';
+import type {Terrain} from '../render/terrain.ts';
 import type {CameraSolver} from './camera_solver.ts';
 
 /**

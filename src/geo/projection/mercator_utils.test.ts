@@ -4,17 +4,17 @@ import {LngLat} from '../lng_lat.ts';
 import {cameraMercatorCoordinate, degreesPerWorldUnit, getMercatorHorizon, getMercatorTileCoordinates, lngLatBoxToWorldBox, projectToWorldCoordinates, tileCoordinatesToLocation, tileCoordinatesToMercatorCoordinates, unprojectFromWorldCoordinates, worldBoxToLngLatBox} from './mercator_utils.ts';
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from './crs.ts';
-import {createCameraContext} from './camera_context.ts';
-import {createCameraViewState} from '../camera_view_state.ts';
-import {resize, setBearing, setCenter, setElevation, setPitch, setZoom} from './camera_updates.ts';
+import {createCameraContext} from '../../camera/camera_context.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
+import {resize, setBearing, setCenter, setElevation, setPitch, setZoom} from '../../camera/camera_updates.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
 import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {createIdentityMat4f32, MAX_VALID_LATITUDE} from '../../util/util.ts';
 import {createRotatedCrs, createTestCamera, expectToBeCloseToArray} from '../../util/test/util.ts';
-import {getCameraMath} from './camera_math_factory.ts';
-import {projectCamera} from './project_camera.ts';
-import {getCameraPoint} from '../projected_camera.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
+import {getCameraPoint} from '../../camera/projected_camera.ts';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {

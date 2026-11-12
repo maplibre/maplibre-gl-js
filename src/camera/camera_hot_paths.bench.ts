@@ -1,9 +1,9 @@
 import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import {MercatorCameraMotions} from './mercator_camera_motions.ts';
-import {coveringTiles} from './covering_tiles.ts';
-import {createTestCamera, type TestCamera} from '../../util/test/util.ts';
+import {coveringTiles} from '../geo/projection/covering_tiles.ts';
+import {createTestCamera, type TestCamera} from '../util/test/util.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 import {calculateCenterFromCameraLngLatAlt, setElevation} from './camera_updates.ts';
 import {getCameraSolver} from './camera_solver_factory.ts';
