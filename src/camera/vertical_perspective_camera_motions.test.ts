@@ -1,28 +1,45 @@
 import {describe, expect, test, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat.ts';
-import {LngLatBounds} from '../lng_lat_bounds.ts';
-import {createGlobeTransform} from './globe_transform.ts';
-import {getZoomAdjustment} from './globe_utils.ts';
-import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
+import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
+import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
+import {VerticalPerspectiveCameraMotions} from './vertical_perspective_camera_motions.ts';
+import {MercatorCameraMotions} from './mercator_camera_motions.ts';
 
-import type {MapControlsDeltas} from './camera_helper.ts';
+import type {CameraViewState} from './camera_view_state.ts';
+import type {MapControlsDeltas} from './camera_motions.ts';
 
-describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
+const verticalPerspectiveCameraMotions = new VerticalPerspectiveCameraMotions(new MercatorCameraMotions());
+
+/** Pans a 512 x 512 globe at zoom 1 over 0, 0 by 50, 30 pixels, grabbed at the given screen point. */
+function panFrom(around: Point): CameraViewState {
+    const tr = createGlobeTransform();
+    tr.resize(512, 512);
+    tr.setZoom(1);
+    tr.setCenter(new LngLat(0, 0));
+    tr.setTransitionState(1);
+    return verticalPerspectiveCameraMotions.pan(
+        tr.viewState, tr.context,
+        {panDelta: new Point(50, 30), around} as MapControlsDeltas,
+        tr.center);
+}
+
+describe('VerticalPerspectiveCameraMotions.pan', () => {
     test('preserves bearing away from the poles', () => {
         const tr = createGlobeTransform();
         tr.resize(512, 512);
         tr.setZoom(4);
         tr.setCenter(new LngLat(0, 20));
         tr.setTransitionState(1);
-        const helper = new VerticalPerspectiveCameraHelper();
 
-        helper.handleMapControlsPan(
+        const panned = verticalPerspectiveCameraMotions.pan(
+            tr.viewState, tr.context,
             {panDelta: new Point(50, 30), around: tr.centerPoint} as MapControlsDeltas,
-            tr, tr.center);
+            tr.center);
 
-        expect(tr.bearing).toBe(0);
-        expect(tr.center.lat).not.toBe(20);
+        expect(panned.bearingInRadians).toBe(0);
+        expect(panned.center.lat).not.toBe(20);
     });
 
     test('does not zoom in when panning off the pole on the constrained min zoom', () => {
@@ -34,15 +51,15 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
         tr.setZoom(0); // clamps to the latitude-compensated floor, minZoom + getZoomAdjustment(0, 80)
         const zoomBefore = tr.zoom;
         expect(zoomBefore).toBeCloseTo(3 + getZoomAdjustment(0, 80), 10);
-        const helper = new VerticalPerspectiveCameraHelper();
 
-        helper.handleMapControlsPan(
+        const panned = verticalPerspectiveCameraMotions.pan(
+            tr.viewState, tr.context,
             {panDelta: new Point(0, -50), around: tr.centerPoint} as MapControlsDeltas,
-            tr, tr.center);
+            tr.center);
 
-        expect(tr.center.lat).toBeLessThan(80);
+        expect(panned.center.lat).toBeLessThan(80);
         // The globe's drawn size is unchanged: zoom moved by exactly the latitude compensation
-        expect(tr.zoom).toBeCloseTo(zoomBefore + getZoomAdjustment(80, tr.center.lat), 10);
+        expect(panned.zoom).toBeCloseTo(zoomBefore + getZoomAdjustment(80, panned.center.lat), 10);
     });
 
     test('pans toward the pole in double precision', () => {
@@ -51,34 +68,19 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
         tr.setZoom(1);
         tr.setCenter(new LngLat(-100, 88));
         tr.setTransitionState(1);
-        const helper = new VerticalPerspectiveCameraHelper();
 
-        helper.handleMapControlsPan(
+        const panned = verticalPerspectiveCameraMotions.pan(
+            tr.viewState, tr.context,
             {panDelta: new Point(0, 40), around: tr.centerPoint} as MapControlsDeltas,
-            tr, tr.center);
+            tr.center);
 
-        expect(tr.center.lat).toBeCloseTo(89.2138864716364, 10);
+        expect(panned.center.lat).toBeCloseTo(89.2138864716364, 10);
     });
 
     describe('anchor', () => {
-        function panFrom(around: Point) {
-            const tr = createGlobeTransform();
-            tr.resize(512, 512);
-            tr.setZoom(1);
-            tr.setCenter(new LngLat(0, 0));
-            tr.setTransitionState(1);
-            new VerticalPerspectiveCameraHelper().handleMapControlsPan(
-                {panDelta: new Point(50, 30), around} as MapControlsDeltas,
-                tr, tr.center);
-            return tr;
-        }
-
-        const centerPoint = new Point(256, 256);
-        const offSphere = new Point(500, 30);
-
         test('a grab off the sphere pans from the center point', () => {
-            const dragged = panFrom(offSphere);
-            const centered = panFrom(centerPoint);
+            const dragged = panFrom(new Point(500, 30));
+            const centered = panFrom(new Point(256, 256));
 
             expect(dragged.center.lng).toBe(centered.center.lng);
             expect(dragged.center.lat).toBe(centered.center.lat);
@@ -87,12 +89,12 @@ describe('VerticalPerspectiveCameraHelper.handleMapControlsPan', () => {
         test('a grab on the sphere pans from the grab', () => {
             const dragged = panFrom(new Point(300, 256));
 
-            expect(dragged.center.lng).not.toBe(panFrom(centerPoint).center.lng);
+            expect(dragged.center.lng).not.toBe(panFrom(new Point(256, 256)).center.lng);
         });
     });
 });
 
-describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
+describe('VerticalPerspectiveCameraMotions.cameraForBoxAndBearing', () => {
     test('returns undefined instead of throwing when the padding exceeds the viewport', () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         const tr = createGlobeTransform();
@@ -100,14 +102,13 @@ describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
         tr.setZoom(2);
         tr.setCenter(new LngLat(0, 0));
         tr.setTransitionState(1);
-        const helper = new VerticalPerspectiveCameraHelper();
 
-        const result = helper.cameraForBoxAndBearing(
+        const result = verticalPerspectiveCameraMotions.cameraForBoxAndBearing(
             {maxZoom: 22, offset: [0, 0]},
             {top: 50, bottom: 512, left: 50, right: 50},
             tr.padding,
             new LngLatBounds([-10, -10], [10, 10]),
-            0, tr);
+            0, tr.viewState, tr.context);
 
         expect(result).toBeUndefined();
         expect(warn).toHaveBeenCalledTimes(1);
@@ -115,14 +116,14 @@ describe('VerticalPerspectiveCameraHelper.cameraForBoxAndBearing', () => {
     });
 });
 
-describe('VerticalPerspectiveCameraHelper.handlePanInertia', () => {
+describe('VerticalPerspectiveCameraMotions.panInertia', () => {
     test('eases onto the pole', () => {
         const tr = createGlobeTransform();
         tr.resize(512, 512);
         tr.setCenter(new LngLat(0, 89));
         tr.setTransitionState(1);
 
-        const {easingCenter} = new VerticalPerspectiveCameraHelper().handlePanInertia(new Point(0, 50), tr);
+        const {easingCenter} = verticalPerspectiveCameraMotions.panInertia(tr.projectedCamera, new Point(0, 50));
 
         expect(easingCenter.lat).toBe(90);
     });

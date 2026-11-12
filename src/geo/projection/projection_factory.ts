@@ -1,11 +1,8 @@
 import {warnOnce} from '../../util/util.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {createMercatorTransform} from './mercator_transform.ts';
-import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 import {GlobeProjection} from './globe_projection.ts';
 import {createGlobeTransform} from './globe_transform.ts';
-import {GlobeCameraHelper} from './globe_camera_helper.ts';
-import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
 import {createVerticalPerspectiveTransform} from './vertical_perspective_transform.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
 import {CRSWorldCoordinateHelper} from './crs.ts';
@@ -14,13 +11,11 @@ import {getRegisteredProjection} from './projection_crud.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
 import type {ITransform} from '../transform_interface.ts';
-import type {ICameraHelper} from './camera_helper.ts';
 import type {TransformConstrainFunction} from '../../camera/camera_types.ts';
 
 export function createProjectionFromName(name: ProjectionSpecification['type'], transformConstrain: TransformConstrainFunction | undefined, globalState: Record<string, any>): {
     projection: Projection;
     transform: ITransform;
-    cameraHelper: ICameraHelper;
 } {
     const transformOptions = {constrainOverride: transformConstrain};
     if (Array.isArray(name)) {
@@ -32,7 +27,6 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         return {
             projection: globeProjection,
             transform: createGlobeTransform(transformOptions),
-            cameraHelper: new GlobeCameraHelper(globeProjection),
         };
     }
     const registered = getRegisteredProjection(name);
@@ -41,7 +35,6 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         return {
             projection: new MercatorProjection(worldCoordinateHelper),
             transform: createMercatorTransform({...transformOptions, worldCoordinateHelper}),
-            cameraHelper: new MercatorCameraHelper(),
         };
     }
     switch (name) {
@@ -50,7 +43,6 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             return {
                 projection: new MercatorProjection(),
                 transform: createMercatorTransform(transformOptions),
-                cameraHelper: new MercatorCameraHelper(),
             };
         }
         case 'globe':
@@ -67,7 +59,6 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             return {
                 projection: globeProjection,
                 transform: createGlobeTransform(transformOptions),
-                cameraHelper: new GlobeCameraHelper(globeProjection),
             };
         }
         case 'vertical-perspective':
@@ -75,7 +66,6 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             return {
                 projection: new VerticalPerspectiveProjection(),
                 transform: createVerticalPerspectiveTransform(transformOptions),
-                cameraHelper: new VerticalPerspectiveCameraHelper(),
             };
         }
         default:
@@ -84,7 +74,6 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             return {
                 projection: new MercatorProjection(),
                 transform: createMercatorTransform(transformOptions),
-                cameraHelper: new MercatorCameraHelper(),
             };
         }
     }

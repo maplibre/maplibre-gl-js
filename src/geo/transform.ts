@@ -14,7 +14,7 @@ import type {LngLat, LngLatLike} from './lng_lat.ts';
 import type {ProjectedCamera} from '../camera/projected_camera.ts';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
 import type {PaddingOptions} from './edge_insets.ts';
-import type {IReadonlyTransform, ITransform, ITransformGetters} from './transform_interface.ts';
+import type {ITransform, ITransformGetters} from './transform_interface.ts';
 import type {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
@@ -22,18 +22,6 @@ import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjection
 import type {Frustum} from '../util/primitives/frustum.ts';
 import type {WorldCoordinateHelper} from './world_types.ts';
 import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
-/**
- * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
- * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
- * @param center - The LngLat object of the desired center. This object will be mutated.
- */
-export function normalizeCenter(tr: IReadonlyTransform, center: LngLat): void {
-    if (!tr.renderWorldCopies || !tr.worldCoordinateHelper.wraps || tr.lngRange) return;
-    const delta = center.lng - tr.center.lng;
-    center.lng +=
-        delta > 180 ? -360 :
-            delta < -180 ? 360 : 0;
-}
 
 export type UnwrappedTileIDType = {
     /**
@@ -166,6 +154,17 @@ export class Transform implements ITransform {
         if (view === this._cameraState) return;
         this._cameraState = view;
         this._projectCamera();
+    }
+
+    /** The camera view state the transform holds, which the camera motions of `camera_motions.ts` move from. */
+    get viewState(): CameraViewState { return this._cameraState; }
+
+    /**
+     * Replaces the camera view state with one a camera motion returned. A motion constrains the state it returns, so
+     * the state is taken as it is.
+     */
+    setViewState(view: CameraViewState): void {
+        this._setState(view);
     }
 
     /** Projects the camera state in the context as they are now, see {@link Transform.projectedCamera}. */

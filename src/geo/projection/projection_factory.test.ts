@@ -4,7 +4,8 @@ import {addProjection, removeProjection} from './projection_crud.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
-import {MercatorCameraHelper} from './mercator_camera_helper.ts';
+import {getCameraMotions} from '../../camera/camera_motions_factory.ts';
+import {MercatorCameraMotions} from '../../camera/mercator_camera_motions.ts';
 
 afterEach(() => {
     removeProjection('test:factory');
@@ -18,11 +19,11 @@ describe('createProjectionFromName', () => {
         expect(projection.name).toBe('identity');
     });
 
-    test('runs the identity projection on the mercator transform and camera helper over a non-wrapping world', () => {
-        const {transform, cameraHelper} = createProjectionFromName('identity', undefined, {});
+    test('runs the identity projection on the mercator transform and camera motions over a non-wrapping world', () => {
+        const {transform} = createProjectionFromName('identity', undefined, {});
         expect(getCoveringTilesDetailsProvider(transform.projectedCamera)).toBeInstanceOf(MercatorCoveringTilesDetailsProvider);
         expect(transform.worldCoordinateHelper.wraps).toBe(false);
-        expect(cameraHelper).toBeInstanceOf(MercatorCameraHelper);
+        expect(getCameraMotions(transform.context)).toBeInstanceOf(MercatorCameraMotions);
     });
 
     test('falls back to mercator for a name that only Object.prototype has', () => {

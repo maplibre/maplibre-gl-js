@@ -74,7 +74,6 @@ import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geoj
 import type {ControlPosition, IControl} from './control/control.ts';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features.ts';
 import type {ITransform} from '../geo/transform_interface.ts';
-import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
 import type {TransformConstrainFunction, CameraOptions, CameraForBoundsOptions, PointLike} from '../camera/camera_types.ts';
 
 const version = packageJSON.version;
@@ -4333,8 +4332,8 @@ export class Map extends Evented<MapEventType> {
      * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
      * When the style's projection is changed (or first set), this function should be called.
      */
-    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
-        this._camera.migrateProjection(newTransform, newCameraHelper);
+    migrateProjection(newTransform: ITransform): void {
+        this._camera.migrateProjection(newTransform);
         this.fire(new MapProjectionEvent({
             newProjection: this.style.projection.name,
         }));

@@ -2,7 +2,7 @@ import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
 import {createMercatorTransform} from './mercator_transform.ts';
-import {MercatorCameraHelper} from './mercator_camera_helper.ts';
+import {MercatorCameraMotions} from '../../camera/mercator_camera_motions.ts';
 import {coveringTiles} from './covering_tiles.ts';
 
 import type {Transform} from '../transform.ts';
@@ -18,7 +18,7 @@ function createTransform(): Transform {
 }
 
 const transform = createTransform();
-const cameraHelper = new MercatorCameraHelper();
+const cameraMotions = new MercatorCameraMotions();
 const points: Point[] = [];
 const lngLats: LngLat[] = [];
 for (let i = 0; i < 100; i++) {
@@ -64,11 +64,11 @@ test('transform hot paths', async ({bench}) => {
         }),
         bench('easeTo easeFunc (per-frame animation path)', () => {
             const tr = createTransform();
-            const {easeFunc} = cameraHelper.handleEaseTo(tr, {
+            const {easeFunc} = cameraMotions.easeTo(tr.viewState, tr.context, {
                 bearing: 60, pitch: 50, roll: 0, padding: {top: 0, bottom: 0, left: 0, right: 0},
                 offsetAsPoint: new Point(0, 0), center: new LngLat(-73.5, 41), zoom: 13.5,
             });
-            for (let i = 0; i <= 100; i++) easeFunc(i / 100);
+            for (let i = 0; i <= 100; i++) tr.setViewState(easeFunc(tr.viewState, tr.context, i / 100));
         }),
     );
 });

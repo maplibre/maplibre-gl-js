@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
 import {LngLat} from './lng_lat.ts';
 import {LngLatBounds} from './lng_lat_bounds.ts';
-import {normalizeCenter} from './transform.ts';
+import {normalizeCenter} from '../camera/camera_updates.ts';
 import {createRotatedCrs} from '../util/test/util.ts';
 import {createMercatorTransform} from './projection/mercator_transform.ts';
 import {CRSWorldCoordinateHelper} from './projection/crs.ts';
@@ -127,7 +127,7 @@ describe('Transform', () => {
             transform.resize(200, 200);
             transform.setCenter(new LngLat(170, 0));
             const target = new LngLat(-170, 0);
-            normalizeCenter(transform, target);
+            normalizeCenter(transform.viewState, transform.worldCoordinateHelper, target);
             expect(target.lng).toBe(190);
         });
 
@@ -137,7 +137,7 @@ describe('Transform', () => {
             transform.setZoom(4);
             transform.setCenter(new LngLat(140, 0));
             const target = new LngLat(-140, 0);
-            normalizeCenter(transform, target);
+            normalizeCenter(transform.viewState, transform.worldCoordinateHelper, target);
             expect(target.lng).toBe(-140);
         });
     });

@@ -12,6 +12,8 @@ import type {WorldCoordinateHelper} from './world_types.ts';
 import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
 import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {CameraViewState} from '../camera/camera_view_state.ts';
+import type {CameraContext} from '../camera/camera_context.ts';
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -108,6 +110,12 @@ interface ITransformMutators extends IProjectionTransformMutators {
      * @param constrain - Whether to constrain the transform's center and zoom and recompute internal matrices once applied.
      */
     apply(that: IReadonlyTransform, constrain: boolean): void;
+
+    /**
+     * @internal
+     * Replaces the camera view state with one a camera motion returned, which the motion has already constrained.
+     */
+    setViewState(view: CameraViewState): void;
 
     /**
      * Sets the transform's minimal allowed zoom level.
@@ -245,6 +253,12 @@ export interface IReadonlyTransform extends ITransformGetters, IReadonlyProjecti
      * The camera projected in the transform's projection, which its matrices and projected positions are computed from.
      */
     get projectedCamera(): ProjectedCamera;
+
+    /** @internal The camera view state the transform holds, which the camera motions of `camera_motions.ts` move from. */
+    get viewState(): CameraViewState;
+
+    /** @internal What the transform's camera view state is constrained and projected with. */
+    get context(): CameraContext;
 
     /**
      * The near clipping plane of the projection matrix, computed by the projection unless overridden.

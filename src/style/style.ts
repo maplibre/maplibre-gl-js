@@ -1843,7 +1843,7 @@ export class Style extends Evented<MapEventType> {
      */
     private _applyProjection(projectionObjects: ReturnType<typeof createProjectionFromName>): void {
         this.projection = projectionObjects.projection;
-        this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
+        this.map.migrateProjection(projectionObjects.transform);
         for (const key in this.tileManagers) {
             this.tileManagers[key].reload();
         }

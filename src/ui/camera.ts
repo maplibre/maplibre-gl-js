@@ -8,7 +8,8 @@ import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {MercatorCameraHelper} from '../geo/projection/mercator_camera_helper.ts';
+import {getCameraMotions} from '../camera/camera_motions_factory.ts';
+import {usesGlobeControls} from '../camera/camera_context.ts';
 import {angularCoordinatesToSurfaceVector} from '../geo/projection/globe_utils.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
 import {ElevationHold} from './elevation_hold.ts';
@@ -20,7 +21,7 @@ import type {IReadonlyTransform, ITransform} from '../geo/transform_interface.ts
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
-import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+import type {MapControlsDeltas} from '../camera/camera_motions.ts';
 import type {ElevationHolder} from './elevation_hold.ts';
 import type {RenderLoop} from './camera_movement_scheduler.ts';
 import type {CameraForBoundsOptions, CameraOptions, PointLike, TransformConstrainFunction} from '../camera/camera_types.ts';
@@ -289,7 +290,6 @@ export class Camera extends Evented<MapEventType> {
      * The camera reads terrain for elevation handling but does not own it.
      */
     terrain: Terrain;
-    cameraHelper: ICameraHelper;
 
     /** Runs `easeTo`, `flyTo` and `jumpTo` and fires their movement events. */
     private readonly _scheduler: CameraMovementScheduler;
@@ -335,7 +335,6 @@ export class Camera extends Evented<MapEventType> {
         // Transform specialization will later be set by style when it creates its projection instance.
         // When this happens, the new transform will inherit all properties of this temporary transform.
         this._transform = createMercatorTransform();
-        this.cameraHelper = new MercatorCameraHelper();
         if (options.minZoom !== undefined) {
             this._transform.setMinZoom(options.minZoom);
         }
@@ -379,14 +378,13 @@ export class Camera extends Evented<MapEventType> {
         this.applyTerrainChange();
     }
 
-    migrateProjection(newTransform: ITransform, newCameraHelper: ICameraHelper): void {
+    migrateProjection(newTransform: ITransform): void {
         newTransform.apply(this.transform, true);
         this._transform = newTransform;
-        this.cameraHelper = newCameraHelper;
         if (this._requestedCameraState) {
             // The requested camera state is a transform of the old projection, so it has to be
-            // moved onto the new one as well, otherwise the camera keeps reading a transform
-            // that the new camera helper cannot use.
+            // moved onto the new one as well, otherwise the camera keeps moving a transform
+            // of the old projection.
             const requestedCameraState = newTransform.clone();
             requestedCameraState.apply(this._requestedCameraState, true);
             this._requestedCameraState = requestedCameraState;
@@ -611,7 +609,7 @@ export class Camera extends Evented<MapEventType> {
         const fitPadding = options.absolutePadding ? noPadding : padding;
         const mapPadding = options.absolutePadding ? padding : extend(noPadding, tr.padding) as PaddingOptions;
 
-        const result = this.cameraHelper.cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, tr);
+        const result = getCameraMotions(tr.context).cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, tr.viewState, tr.context);
         if (!result) return undefined;
         if (this._zoomSnap) {
             result.zoom = evaluateZoomSnap(result.zoom, this._zoomSnap, -1);
@@ -677,7 +675,7 @@ export class Camera extends Evented<MapEventType> {
             const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(options.center ? LngLat.convert(options.center) : tr.center, tr.tileZoom);
             if (demState !== 'loading') tr.setElevation(elevation);
         }
-        this.cameraHelper.handleJumpToCenterZoom(tr, options);
+        tr.setViewState(getCameraMotions(this.transform.context).jumpToCenterZoom(tr.viewState, tr.context, options));
 
         const zoomChanged = tr.zoom !== oldZoom;
 
@@ -748,7 +746,7 @@ export class Camera extends Evented<MapEventType> {
      * changing this camera.
      */
     calculateAnchoredCameraOptions(options: AnchoredCameraOptions): CameraOptions {
-        const tr = this.transform.clone();
+        const tr = this.transform;
         const anchor = LngLat.convert(options.anchorLocation);
         const target = Point.convert(options.anchorScreenPoint);
         const deltas: MapControlsDeltas = {
@@ -760,12 +758,13 @@ export class Camera extends Evented<MapEventType> {
             around: target,
             aroundElevation: this.terrain?.getElevationForLngLat(anchor, tr.tileZoom)
         };
-        this.cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
-        this.cameraHelper.handleMapControlsPan(deltas, tr, anchor);
+        const motions = getCameraMotions(tr.context);
+        const zoomed = motions.rollPitchBearingZoom(tr.viewState, tr.context, deltas);
+        const anchored = motions.pan(zoomed, tr.context, deltas, anchor);
 
         return {
-            center: tr.center,
-            zoom: tr.zoom
+            center: anchored.center,
+            zoom: anchored.zoom
         };
     }
 
@@ -815,7 +814,7 @@ export class Camera extends Evented<MapEventType> {
             aroundPoint = tr.locationToScreenPoint(around);
         }
 
-        const easeHandler = this.cameraHelper.handleEaseTo(tr, {
+        const easeMotion = getCameraMotions(this.transform.context).easeTo(tr.viewState, tr.context, {
             bearing,
             pitch,
             roll,
@@ -828,11 +827,11 @@ export class Camera extends Evented<MapEventType> {
             center: options.center,
         });
 
-        const elevationHandler = this._createElevationEase(tr, easeHandler.elevationCenter, options.freezeElevation);
+        const elevationHandler = this._createElevationEase(tr, easeMotion.elevationCenter, options.freezeElevation);
 
         this._scheduler.scheduleSegment({
             onFrame: (k) => {
-                easeHandler.easeFunc(k);
+                tr.setViewState(easeMotion.easeFunc(tr.viewState, tr.context, k));
                 elevationHandler.easeFunc(k);
                 this.applyUpdatedTransform(tr);
             },
@@ -840,7 +839,7 @@ export class Camera extends Evented<MapEventType> {
         }, {
             duration: options.duration,
             easing: options.easing,
-            axes: {zoom: easeHandler.isZooming, rotate: startBearing !== bearing, pitch: pitch !== startPitch, roll: roll !== startRoll},
+            axes: {zoom: easeMotion.isZooming, rotate: startBearing !== bearing, pitch: pitch !== startPitch, roll: roll !== startRoll},
             eventData,
             easeId: options.easeId,
             movestartFired: options.noMoveStart
@@ -851,7 +850,7 @@ export class Camera extends Evented<MapEventType> {
 
     /**
      * Creates the handler of the center elevation for an animation, whose `easeFunc` each frame calls like the camera
-     * helper's, and starts the animation's hold on the elevation when it has one.
+     * motion's, and starts the animation's hold on the elevation when it has one.
      *
      * Over terrain the animation either holds the center elevation, with `freezeElevation`, or eases it to the
      * terrain under the center it ends on. Terrain that is added while an easing animation runs is eased to from the
@@ -1172,7 +1171,7 @@ export class Camera extends Evented<MapEventType> {
         }
         const hit = this.terrain ? tr.screenTerrainPointToMercatorCoordinate(point, this.terrain) : null;
         const location = hit ? hit.toLngLat() : tr.screenPointToLocation(point);
-        if (hit && this.cameraHelper.useGlobeControls) {
+        if (hit && usesGlobeControls(this.transform.context)) {
             return {point: tr.locationToScreenPoint(location), location, distance: distanceFromCamera(tr, location)};
         }
         return {point, location, elevation: hit?.z, distance: distanceFromCamera(tr, location, hit?.z)};
@@ -1189,12 +1188,12 @@ export class Camera extends Evented<MapEventType> {
      */
     orbitRotationPivot(tr: ITransform, pivot: RotationPivot, deltas: MapControlsDeltas): boolean {
         if (pivot.point.equals(tr.centerPoint)) {
-            this.cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
+            tr.setViewState(getCameraMotions(this.transform.context).rollPitchBearingZoom(tr.viewState, tr.context, deltas));
             return true;
         }
         const camera = this._turnAroundPivot(tr, pivot, deltas) ?? this._turnAroundPivot(tr, pivot, {...deltas, pitchDelta: 0, rollDelta: 0});
         if (!camera) {
-            this.cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, tr);
+            tr.setViewState(getCameraMotions(this.transform.context).rollPitchBearingZoom(tr.viewState, tr.context, deltas));
             return false;
         }
         tr.apply(camera, false);
@@ -1208,7 +1207,7 @@ export class Camera extends Evented<MapEventType> {
      */
     _turnAroundPivot(start: ITransform, pivot: RotationPivot, deltas: MapControlsDeltas): ITransform | null {
         const camera = start.clone();
-        this.cameraHelper.handleMapControlsRollPitchBearingZoom(deltas, camera);
+        camera.setViewState(getCameraMotions(this.transform.context).rollPitchBearingZoom(camera.viewState, camera.context, deltas));
         if (camera.pitch >= 90 || !isBelowHorizon(camera, pivot.point)) return null;
         return holdPivot(camera, pivot) && isAtScreenPoint(camera, pivot) ? camera : null;
     }
@@ -1317,7 +1316,7 @@ export class Camera extends Evented<MapEventType> {
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.screenPointToLocation(pointAtOffset);
 
-        const flyToHandler = this.cameraHelper.handleFlyTo(tr, {
+        const flyToMotion = getCameraMotions(this.transform.context).flyTo(tr.viewState, tr.context, {
             bearing,
             pitch,
             roll,
@@ -1334,14 +1333,14 @@ export class Camera extends Evented<MapEventType> {
         // w₀: Initial visible span, measured in pixels at the initial scale.
         const w0 = Math.max(tr.width, tr.height);
         // w₁: Final visible span, measured in pixels with respect to the initial scale.
-        const w1 = w0 / flyToHandler.scaleOfZoom;
+        const w1 = w0 / flyToMotion.scaleOfZoom;
         // Length of the flight path as projected onto the ground plane, measured in pixels from
         // the world image origin at the initial scale.
-        const u1 = flyToHandler.pixelPathLength;
+        const u1 = flyToMotion.pixelPathLength;
 
         // w<sub>m</sub>: Maximum visible span, measured in pixels with respect to the initial
         // scale.
-        const wMax = w0 / flyToHandler.scaleOfMinZoom;
+        const wMax = w0 / flyToMotion.scaleOfMinZoom;
         // Only reduce rho (limit zoom-out). If the natural arc stays within the minZoom
         // boundary, preserve the default rho rather than forcing the arc deeper.
         rho = Math.min(rho, Math.sqrt(wMax / u1 * 2));
@@ -1409,7 +1408,7 @@ export class Camera extends Evented<MapEventType> {
         const rolling = roll !== startRoll;
         const paddingChanging = !tr.isPaddingEqual(padding);
 
-        const elevationHandler = this._createElevationEase(tr, flyToHandler.targetCenter, options.freezeElevation);
+        const elevationHandler = this._createElevationEase(tr, flyToMotion.targetCenter, options.freezeElevation);
 
         this._scheduler.scheduleSegment({
             onFrame: (k) => {
@@ -1427,7 +1426,7 @@ export class Camera extends Evented<MapEventType> {
                     pointAtOffset = tr.centerPoint.add(offsetAsPoint);
                 }
 
-                flyToHandler.easeFunc(k, scale, centerFactor, pointAtOffset);
+                tr.setViewState(flyToMotion.easeFunc(tr.viewState, tr.context, k, scale, centerFactor, pointAtOffset));
 
                 elevationHandler.easeFunc(k);
                 this.applyUpdatedTransform(tr);
