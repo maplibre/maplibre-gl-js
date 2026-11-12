@@ -14,10 +14,11 @@ import {OverscaledTileID} from '../tile/tile_id.ts';
 import {getBearing, getPitch, getRoll} from '../geo/camera_state.ts';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {usesGlobeControls} from '../geo/projection/camera_projection.ts';
 import Point from '@mapbox/point-geometry';
 
 import type {Terrain} from '../render/terrain.ts';
-import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+import type {MapControlsDeltas} from '../geo/projection/camera_updates.ts';
 import type {CameraState} from '../geo/camera_state.ts';
 import type {JumpToOptions} from '../../dist/maplibre-gl';
 
@@ -886,19 +887,19 @@ describe('easeTo', () => {
 
     test('offset computed from inertia (small) does not cross horizon when pitched', () => {
         const {camera} = createCamera(null, false, {pitch: 85, zoom: 10});
-        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 100), camera.projectedCamera);
+        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 100));
         expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
     });
 
     test('offset computed from inertia (large) does not cross horizon when pitched', () => {
         const {camera} = createCamera(null, false, {pitch: 85, zoom: 10});
-        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.projectedCamera);
+        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 500));
         expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
     });
 
     test('offset computed from inertia (large) does not cross horizon when pitched and rotated', () => {
         const {camera} = createCamera(null, false, {pitch: 85, bearing: 135, zoom: 10});
-        const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.projectedCamera);
+        const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 500));
         expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
     });
 
@@ -2758,7 +2759,7 @@ describe('transformCameraUpdate', () => {
 
 test('create camera with globe returns make globe controls true', () => {
     const {camera} = createCamera(null, true);
-    expect(camera.cameraHelper.useGlobeControls).toBeTruthy();
+    expect(usesGlobeControls(camera.context.projection)).toBeTruthy();
 });
 
 describe('migrateProjection', () => {
@@ -3128,19 +3129,19 @@ describe('easeTo globe projection', () => {
 
         test('offset computed from inertia (small) does not cross horizon when pitched', () => {
             const {camera} = createCamera(null, true, {pitch: 85, zoom: 10});
-            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 100), camera.projectedCamera);
+            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 100));
             expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
         });
 
         test('offset computed from inertia (large) does not cross horizon when pitched', () => {
             const {camera} = createCamera(null, true, {pitch: 85, zoom: 10});
-            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.projectedCamera);
+            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 500));
             expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
         });
 
         test('offset computed from inertia (large) does not cross horizon when pitched and rotated', () => {
             const {camera} = createCamera(null, true, {pitch: 85, bearing: 135, zoom: 10});
-            const easeOptions = camera.cameraHelper.handlePanInertia(new Point(0, 500), camera.projectedCamera);
+            const easeOptions = cameraUpdates.panInertia(camera.projectedCamera, camera.context.projection, new Point(0, 500));
             expect(easeOptions.easingOffset.mag()).toBeLessThan(Math.abs(getMercatorHorizon(camera.projectedCamera)));
         });
 

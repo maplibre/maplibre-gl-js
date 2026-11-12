@@ -1,7 +1,7 @@
 import {test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat.ts';
-import {MercatorCameraHelper} from './mercator_camera_helper.ts';
+import * as mercatorCameraUpdates from './mercator_camera_updates.ts';
 import {coveringTiles} from './covering_tiles.ts';
 import {createTestCamera, type TestCamera} from '../../util/test/util.ts';
 import * as cameraMath from './camera_math.ts';
@@ -14,7 +14,6 @@ function createCamera(): TestCamera {
 
 const {state, context, projectedCamera} = createCamera();
 const {projection} = context;
-const cameraHelper = new MercatorCameraHelper();
 const points: Point[] = [];
 const lngLats: LngLat[] = [];
 for (let i = 0; i < 100; i++) {
@@ -59,7 +58,7 @@ test('camera hot paths', async ({bench}) => {
         }),
         bench('easeTo easeFunc (per-frame animation path)', () => {
             const start = createCamera();
-            const {easeFunc} = cameraHelper.handleEaseTo(start.state, start.context, {
+            const {easeFunc} = mercatorCameraUpdates.easeTo(start.state, start.context, {
                 bearing: 60, pitch: 50, roll: 0, padding: {top: 0, bottom: 0, left: 0, right: 0},
                 offsetAsPoint: new Point(0, 0), center: new LngLat(-73.5, 41), zoom: 13.5,
             });

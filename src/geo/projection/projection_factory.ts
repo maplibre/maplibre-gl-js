@@ -1,28 +1,13 @@
 import {warnOnce} from '../../util/util.ts';
 import {MercatorProjection} from './mercator_projection.ts';
-import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 import {GlobeProjection} from './globe_projection.ts';
-import {VerticalPerspectiveCameraHelper} from './vertical_perspective_camera_helper.ts';
-import {createGlobeCameraProjection, createMercatorCameraProjection, createVerticalPerspectiveCameraProjection, renderedProjection, type CameraProjection} from './camera_projection.ts';
+import {createGlobeCameraProjection, createMercatorCameraProjection, createVerticalPerspectiveCameraProjection, type CameraProjection} from './camera_projection.ts';
 import {VerticalPerspectiveProjection} from './vertical_perspective_projection.ts';
 import {CRSWorldCoordinateHelper} from './crs.ts';
 import {getRegisteredProjection} from './projection_crud.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
-import type {ICameraHelper} from './camera_helper.ts';
-
-const mercatorCameraHelper = new MercatorCameraHelper();
-const verticalPerspectiveCameraHelper = new VerticalPerspectiveCameraHelper();
-
-/**
- * @internal
- * The camera controls of the projection a camera is drawn with: a globe is turned while it renders as a globe and
- * moved like mercator once it has turned into mercator.
- */
-export function getCameraHelper(projection: CameraProjection): ICameraHelper {
-    return renderedProjection(projection).kind === 'vertical-perspective' ? verticalPerspectiveCameraHelper : mercatorCameraHelper;
-}
 
 /**
  * @internal

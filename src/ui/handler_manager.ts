@@ -7,11 +7,12 @@ import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
 import * as cameraMath from '../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {usesGlobeControls} from '../geo/projection/camera_projection.ts';
 
 import type {MapEventType} from './events.ts';
 import type {DragPanHandler} from './handler/shim/drag_pan.ts';
 import type {Camera, EaseToOptions, RotationPivot} from './camera.ts';
-import type {MapControlsDeltas} from '../geo/projection/camera_helper.ts';
+import type {MapControlsDeltas} from '../geo/projection/camera_updates.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {CameraState} from '../geo/camera_state.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
@@ -168,7 +169,7 @@ type EventsInProgress = {
 type MapControlsScenarioOptions = {
     terrain?: Terrain | null;
     state: CameraState;
-    deltasForHelper: MapControlsDeltas;
+    deltas: MapControlsDeltas;
     preZoomAroundLoc: LngLat;
     combinedEventsInProgress: EventsInProgress;
     panDelta?: Point;
@@ -563,7 +564,7 @@ export class HandlerManager extends Evented<MapEventType> {
         let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, projectedCamera);
         const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, projectedCamera, combinedEventsInProgress) : undefined;
 
-        const deltasForHelper: MapControlsDeltas = {
+        const deltas: MapControlsDeltas = {
             panDelta,
             zoomDelta,
             rollDelta,
@@ -574,7 +575,7 @@ export class HandlerManager extends Evented<MapEventType> {
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
-        if (this._camera.cameraHelper.useGlobeControls && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, around)) {
+        if (usesGlobeControls(this._camera.context.projection) && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, around)) {
             around = projectedCamera.centerPoint;
         }
         const preZoomAroundLoc = this._computePreZoomAroundLoc(projectedCamera, around, panDelta, aroundElevation);
@@ -582,7 +583,7 @@ export class HandlerManager extends Evented<MapEventType> {
         state = this._handleMapControls({
             terrain,
             state,
-            deltasForHelper,
+            deltas,
             preZoomAroundLoc,
             combinedEventsInProgress,
             panDelta,
@@ -639,7 +640,7 @@ export class HandlerManager extends Evented<MapEventType> {
      * terrain point grabbed at gesture start, captured here on the gesture's first
      * frame. Undefined means the gesture is solved at the center's elevation instead —
      * when the grabbed terrain is not loaded, the anchor is the center point (a
-     * center-point anchor is skipped by the camera helper and would lose the pan), or
+     * center-point anchor is skipped by `pan` in `camera_updates.ts` and would lose the pan), or
      * the anchor plane is too close to the camera for a stable ray-plane solve.
      */
     private _terrainGestureElevation(terrain: Terrain, around: Point, aroundOnSurface: boolean, projectedCamera: ProjectedCamera, combinedEventsInProgress: EventsInProgress): number | undefined {
@@ -666,7 +667,7 @@ export class HandlerManager extends Evented<MapEventType> {
 
     /**
      * The location that was under `around` before this frame's deltas — the point the
-     * camera helper re-anchors after zooming — solved at `aroundElevation` when a
+     * pan re-anchors after zooming — solved at `aroundElevation` when a
      * terrain gesture provides one. When rotating about the center point, the
      * camera's center is used directly to avoid numerical issues near the horizon.
      */
@@ -684,38 +685,37 @@ export class HandlerManager extends Evented<MapEventType> {
     private _handleMapControls({
         terrain,
         state,
-        deltasForHelper,
+        deltas,
         preZoomAroundLoc,
         combinedEventsInProgress,
         panDelta}: MapControlsScenarioOptions): CameraState {
 
-        const cameraHelper = this._camera.cameraHelper;
         const context = this._camera.context;
 
-        state = cameraHelper.handleMapControlsRollPitchBearingZoom(state, context, deltasForHelper);
+        state = cameraUpdates.rollPitchBearingZoom(state, context, deltas);
         const projectedCamera = this._camera._projectState(state);
 
-        if (!terrain && !cameraHelper.useGlobeControls && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, deltasForHelper.around)) {
+        if (!terrain && !usesGlobeControls(context.projection) && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.projection, deltas.around)) {
             return panDelta ? this._panByPixels(state, projectedCamera, panDelta) : state;
         }
 
         if (!terrain) {
-            return cameraHelper.handleMapControlsPan(state, context, deltasForHelper, preZoomAroundLoc);
+            return cameraUpdates.pan(state, context, deltas, preZoomAroundLoc);
         }
 
         if (!this._terrainGesture.inFlight) {
             this._terrainGesture.inFlight = true;
             this._camera.holdElevation('gesture');
-            return cameraHelper.handleMapControlsPan(state, context, deltasForHelper, preZoomAroundLoc);
+            return cameraUpdates.pan(state, context, deltas, preZoomAroundLoc);
         }
 
-        if (!cameraHelper.useGlobeControls && deltasForHelper.aroundElevation === undefined &&
+        if (!usesGlobeControls(context.projection) && deltas.aroundElevation === undefined &&
             combinedEventsInProgress.drag && panDelta) {
             // no usable anchor: drag by pixel-delta on the center-elevation plane
             return this._panByPixels(state, projectedCamera, panDelta);
         }
 
-        return cameraHelper.handleMapControlsPan(state, context, deltasForHelper, preZoomAroundLoc);
+        return cameraUpdates.pan(state, context, deltas, preZoomAroundLoc);
     }
 
     /** Moves the center to the location `panDelta` pixels against the drag from it, on the plane at the center's elevation. */

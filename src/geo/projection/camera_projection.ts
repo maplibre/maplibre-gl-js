@@ -82,3 +82,12 @@ export function renderedProjection(projection: CameraProjection): MercatorCamera
     if (projection.kind !== 'globe') return projection;
     return projection.globeness > 0 ? projection.verticalPerspective : projection.mercator;
 }
+
+/**
+ * @internal
+ * Whether the camera is moved by turning a globe rather than over a plane: on the vertical perspective, and on a globe
+ * while it renders as one.
+ */
+export function usesGlobeControls(projection: CameraProjection): boolean {
+    return renderedProjection(projection).kind === 'vertical-perspective';
+}

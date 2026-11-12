@@ -1,8 +1,8 @@
 import {afterEach, beforeEach, describe, test, expect, vi} from 'vitest';
-import {createProjectionFromName, getCameraHelper} from './projection_factory.ts';
+import {createProjectionFromName} from './projection_factory.ts';
+import {usesGlobeControls} from './camera_projection.ts';
 import {addProjection, removeProjection} from './projection_crud.ts';
 import {MercatorProjection} from './mercator_projection.ts';
-import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 
 afterEach(() => {
     removeProjection('test:factory');
@@ -16,11 +16,11 @@ describe('createProjectionFromName', () => {
         expect(projection.name).toBe('identity');
     });
 
-    test('runs the identity projection on the mercator camera projection and camera helper over a non-wrapping world', () => {
+    test('runs the identity projection on the mercator camera projection, moved over a plane that does not wrap', () => {
         const {cameraProjection} = createProjectionFromName('identity', {});
         expect(cameraProjection.kind).toBe('mercator');
         expect(cameraProjection.worldCoordinateHelper.wraps).toBe(false);
-        expect(getCameraHelper(cameraProjection)).toBeInstanceOf(MercatorCameraHelper);
+        expect(usesGlobeControls(cameraProjection)).toBe(false);
     });
 
     test('falls back to mercator for a name that only Object.prototype has', () => {
