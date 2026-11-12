@@ -1,140 +1,53 @@
-import {describe, expect, test} from 'vitest';
-import {GlobeCoveringTilesDetailsProvider} from '../../geo/projection/globe_covering_tiles_details_provider.ts';
+import {expect, test, vi} from 'vitest';
+import {BoundingVolumeCache} from './bounding_volume_cache.ts';
+import {Aabb} from './aabb.ts';
 
-describe('bounding volume cache', () => {
-    test('retains bounding volumes from last frame', () => {
-        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
-        const box1a = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        detailsProvider.prepareNextFrame();
-        const box1b = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        expect(box1a).toBe(box1b); // Test reference equality
-    });
+import type {CoveringTilesOptionsInternal} from '../../geo/projection/covering_tiles.ts';
 
-    test('clears no longer used bounding volumes', () => {
-        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
-        // Get 1+2+3
-        const box1a = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        const box2a = detailsProvider.getTileBoundingVolume({
-            x: 1,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        const box3a = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 1,
-            z: 1,
-        }, null, null, null);
-        detailsProvider.prepareNextFrame();
-        // Get 2+3+4
-        const box2b = detailsProvider.getTileBoundingVolume({
-            x: 1,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        const box3b = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 1,
-            z: 1,
-        }, null, null, null);
-        const box4b = detailsProvider.getTileBoundingVolume({
-            x: 1,
-            y: 1,
-            z: 1,
-        }, null, null, null);
-        detailsProvider.prepareNextFrame();
-        // Get 1+3+4
-        const box1c = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        const box3c = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 1,
-            z: 1,
-        }, null, null, null);
-        const box4c = detailsProvider.getTileBoundingVolume({
-            x: 1,
-            y: 1,
-            z: 1,
-        }, null, null, null);
-        // All returned objects should have equal internal values
-        expect(box1a).toEqual(box1c);
-        expect(box2a).toEqual(box2b);
-        expect(box3a).toEqual(box3b);
-        expect(box3a).toEqual(box3c);
-        expect(box4b).toEqual(box4c);
-        // Test that cache behaves as expected
-        expect(box1a).not.toBe(box1c);
-        expect(box2a).toBe(box2b);
-        expect(box3a).toBe(box3b);
-        expect(box3a).toBe(box3c);
-        expect(box4b).toBe(box4c);
-    });
+/** A bounding volume factory that makes a fresh box per call, so that a cached volume is told apart by reference. */
+function createFactory() {
+    return vi.fn(() => new Aabb([0, 0, 0], [1, 1, 1]));
+}
 
-    test('does not clear cache if no new box was added', () => {
-        const detailsProvider = new GlobeCoveringTilesDetailsProvider();
-        // Get 1+2+3
-        const box1a = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        const box2a = detailsProvider.getTileBoundingVolume({
-            x: 1,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        const box3a = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 1,
-            z: 1,
-        }, null, null, null);
-        detailsProvider.prepareNextFrame();
-        // Get 2+3
-        const box2b = detailsProvider.getTileBoundingVolume({
-            x: 1,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        const box3b = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 1,
-            z: 1,
-        }, null, null, null);
-        detailsProvider.prepareNextFrame();
-        // Get 1+3
-        const box1c = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 0,
-            z: 1,
-        }, null, null, null);
-        const box3c = detailsProvider.getTileBoundingVolume({
-            x: 0,
-            y: 1,
-            z: 1,
-        }, null, null, null);
-        // All returned objects should have equal internal values
-        expect(box1a).toEqual(box1c);
-        expect(box2a).toEqual(box2b);
-        expect(box3a).toEqual(box3b);
-        expect(box3a).toEqual(box3c);
-        // Test that cache behaves as expected
-        expect(box1a).toBe(box1c);
-        expect(box2a).toBe(box2b);
-        expect(box3a).toBe(box3b);
-        expect(box3a).toBe(box3c);
-    });
+function tile(x: number): {x: number; y: number; z: number} {
+    return {x, y: 0, z: 1};
+}
+
+test('returns the volume it computed for a tile while it holds it', () => {
+    const factory = createFactory();
+    const cache = new BoundingVolumeCache(factory);
+
+    const first = cache.getTileBoundingVolume(tile(0), 0, 0, null);
+    const second = cache.getTileBoundingVolume(tile(0), 0, 0, null);
+
+    expect(second).toBe(first);
+    expect(factory).toHaveBeenCalledTimes(1);
+});
+
+test('drops the volume used longest ago once it holds more than its capacity', () => {
+    const factory = createFactory();
+    const cache = new BoundingVolumeCache(factory, 2);
+    const first = cache.getTileBoundingVolume(tile(0), 0, 0, null);
+    cache.getTileBoundingVolume(tile(1), 0, 0, null);
+    cache.getTileBoundingVolume(tile(0), 0, 0, null);
+
+    cache.getTileBoundingVolume(tile(2), 0, 0, null);
+
+    expect(cache.getTileBoundingVolume(tile(0), 0, 0, null)).toBe(first);
+    expect(factory).toHaveBeenCalledTimes(3);
+    cache.getTileBoundingVolume(tile(1), 0, 0, null);
+    expect(factory).toHaveBeenCalledTimes(4);
+});
+
+test('computes the volume again when the terrain under the tile changes', () => {
+    const factory = createFactory();
+    const cache = new BoundingVolumeCache(factory);
+    const dem: {minElevation?: number; maxElevation?: number} = {};
+    const options = {tileSize: 512, terrain: {getMinMaxElevation: () => ({...dem})}} as unknown as CoveringTilesOptionsInternal;
+    const beforeDem = cache.getTileBoundingVolume(tile(0), 0, 0, options);
+
+    dem.minElevation = 0;
+    dem.maxElevation = 4000;
+
+    expect(cache.getTileBoundingVolume(tile(0), 0, 0, options)).not.toBe(beforeDem);
 });

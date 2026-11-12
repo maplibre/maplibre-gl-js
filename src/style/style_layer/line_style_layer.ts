@@ -96,13 +96,13 @@ export class LineStyleLayer extends StyleLayer {
         feature,
         featureState,
         geometry,
-        transform,
+        projectedCamera,
         pixelsToTileUnits}: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('line-translate'),
             this.paint.get('line-translate-anchor'),
-            -transform.bearingInRadians, pixelsToTileUnits);
+            -projectedCamera.bearingInRadians, pixelsToTileUnits);
         const halfWidth = pixelsToTileUnits / 2 * getLineWidth(
             this.paint.get('line-width').evaluate(feature, featureState),
             this.paint.get('line-gap-width').evaluate(feature, featureState));

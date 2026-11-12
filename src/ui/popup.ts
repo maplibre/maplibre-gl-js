@@ -3,6 +3,7 @@ import {Event, Evented} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import Point from '@mapbox/point-geometry';
 
@@ -10,8 +11,8 @@ import type {MapLibreEvent, MapMouseEvent} from './events.ts';
 import type {PositionAnchor} from './anchor.ts';
 import type {Map} from './map.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
-import type {PointLike} from './camera.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
+import type {PointLike} from '../camera/camera_types.ts';
 
 const defaultOptions = {
     closeButton: true,
@@ -283,7 +284,7 @@ export class Popup extends Evented<PopupEventType> {
         if (this.options.locationOccludedOpacity === undefined) {
             return;
         }
-        if (this._map._camera.transform.isLocationOccluded(this.getLngLat())) {
+        if (getCameraMath(this._map._camera.projectedCamera).isLocationOccluded(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this.getLngLat())) {
             this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
         } else {
             this._container.style.opacity = '';
@@ -664,7 +665,7 @@ export class Popup extends Evented<PopupEventType> {
             this._container.style.maxWidth = this.options.maxWidth;
         }
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform, this._trackPointer);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._trackPointer);
 
         let cursor: Point;
         if (event && 'point' in event && event.point) {
@@ -675,7 +676,7 @@ export class Popup extends Evented<PopupEventType> {
         const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._trackPointer && cursor ? cursor : this._map._camera.transform.locationToScreenPoint(this._lngLat);
+            this._flatPos = this._trackPointer && cursor ? cursor : getCameraMath(this._map._camera.projectedCamera).locationToScreenPoint(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat);
         }
 
         let anchor = this.options.anchor;
@@ -689,7 +690,7 @@ export class Popup extends Evented<PopupEventType> {
 
             if (pos.y + offset.bottom.y < height + padding.top) {
                 anchorComponents = ['top'];
-            } else if (pos.y > this._map._camera.transform.height - height - padding.bottom) {
+            } else if (pos.y > this._map._camera.renderedState.height - height - padding.bottom) {
                 anchorComponents = ['bottom'];
             } else {
                 anchorComponents = [];
@@ -697,7 +698,7 @@ export class Popup extends Evented<PopupEventType> {
 
             if (pos.x < width / 2 + padding.left) {
                 anchorComponents.push('left');
-            } else if (pos.x > this._map._camera.transform.width - width / 2 - padding.right) {
+            } else if (pos.x > this._map._camera.renderedState.width - width / 2 - padding.right) {
                 anchorComponents.push('right');
             }
 

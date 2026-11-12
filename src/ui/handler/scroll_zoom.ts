@@ -4,7 +4,7 @@ import {now} from '../../util/time_control.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat.ts';
 
-import type {TransformProvider} from './transform-provider.ts';
+import type {ProposedCameraProvider} from './proposed-camera-provider.ts';
 import type {CooperativeGesturesHandler} from './cooperative_gestures.ts';
 import type {AroundCenterOptions} from './two_fingers_touch.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
@@ -42,7 +42,7 @@ type ScrollZoomWait = {reason: 'singleWheel'; event: WheelEvent} | {reason: 'fin
 export class ScrollZoomHandler implements Handler {
     private _canvas: HTMLElement;
     private _cooperativeGestures: CooperativeGesturesHandler;
-    private _tr: TransformProvider;
+    private _tr: ProposedCameraProvider;
     private _enabled: boolean;
     private _active: boolean;
     private _zooming: boolean;
@@ -75,7 +75,7 @@ export class ScrollZoomHandler implements Handler {
     private _wheelZoomRate: number;
 
     /** @internal */
-    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, transformProvider: TransformProvider) {
+    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, transformProvider: ProposedCameraProvider) {
         this._canvas = canvas;
         this._cooperativeGestures = cooperativeGestures;
         this._tr = transformProvider;
@@ -276,7 +276,7 @@ export class ScrollZoomHandler implements Handler {
 
         // Whether aroundPoint is actually unprojectable is not a problem to be solved here, but in handler_manager.ts instead.
         if (this._aroundCenter) {
-            this._aroundPoint = tr.transform.locationToScreenPoint(LngLat.convert(tr.center));
+            this._aroundPoint = tr.project(LngLat.convert(tr.center));
         } else {
             this._aroundPoint = pos;
         }
@@ -292,11 +292,11 @@ export class ScrollZoomHandler implements Handler {
         this._needsRerender = false;
 
         if (!this.isActive()) return;
-        const tr = this._tr.transform;
+        const projectedCamera = this._tr.camera;
 
         // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)
         if (typeof this._lastExpectedZoom === 'number') {
-            const externalZoomChange = tr.zoom - this._lastExpectedZoom;
+            const externalZoomChange = projectedCamera.zoom - this._lastExpectedZoom;
             if (typeof this._startZoom === 'number') {
                 this._startZoom += externalZoomChange;
             }
@@ -317,12 +317,12 @@ export class ScrollZoomHandler implements Handler {
                 scale = 1 / scale;
             }
 
-            const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
-            const target = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
+            const fromScale = typeof this._targetZoom !== 'number' ? projectedCamera.scale : zoomScale(this._targetZoom);
+            const target = this._tr.constrain(this._tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
             const zoomSnap = this._tr.zoomSnap;
 
             if (this._type === 'wheel' && zoomSnap > 0) {
-                const currentSnapped = evaluateZoomSnap(tr.zoom, zoomSnap);
+                const currentSnapped = evaluateZoomSnap(projectedCamera.zoom, zoomSnap);
                 this._targetZoom = evaluateZoomSnap(target, zoomSnap, target - currentSnapped);
             } else {
                 this._targetZoom = target;
@@ -332,14 +332,14 @@ export class ScrollZoomHandler implements Handler {
             // function we're using to smooth out the zooming between wheel
             // events
             if (this._type === 'wheel') {
-                this._startZoom = tr.zoom;
+                this._startZoom = projectedCamera.zoom;
                 this._easing = this._smoothOutEasing(200);
             }
 
             this._delta = 0;
         }
 
-        const targetZoom = typeof this._targetZoom !== 'number' ? tr.zoom : this._targetZoom;
+        const targetZoom = typeof this._targetZoom !== 'number' ? projectedCamera.zoom : this._targetZoom;
         const startZoom = this._startZoom;
         const easing = this._easing;
 
@@ -375,7 +375,7 @@ export class ScrollZoomHandler implements Handler {
         return {
             noInertia: true,
             needsRenderFrame: !finished,
-            zoomDelta: zoom - tr.zoom,
+            zoomDelta: zoom - projectedCamera.zoom,
             around: this._aroundPoint,
             originalEvent: this._lastWheelEvent,
             timeout: finished ? {delay: 200, token: this._finishWait} : undefined

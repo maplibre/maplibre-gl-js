@@ -5,23 +5,7 @@ import type {Mesh} from '../../render/mesh.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import type {WorldCoordinateHelper} from '../transform_interface.ts';
-
-/**
- * Custom projections are handled both by a class which implements this `Projection` interface,
- * and a class that is derived from the `Transform` base class. What is the difference?
- *
- * The transform-derived class:
- * - should do all the heavy lifting for the projection - implement all the `project*` and `unproject*` functions, etc.
- * - must store the map's state - center, pitch, etc. - this is handled in the `Transform` base class
- * - must be cloneable - it should not create any heavy resources
- *
- * The projection-implementing class:
- * - must provide basic information and data about the projection, which is *independent of the map's state* - name, shader functions, subdivision settings, etc.
- * - must be a "singleton" - no matter how many copies of the matching Transform class exist, the Projection should always exist as a single instance (per Map)
- * - may create heavy resources that should not exist in multiple copies (projection is never cloned) - for example, see the GPU inaccuracy mitigation for globe projection
- * - must be explicitly disposed of after usage using the `destroy` function - this allows the implementing class to free any allocated resources
- */
+import type {WorldCoordinateHelper} from '../world_types.ts';
 
 /**
  * @internal
@@ -32,7 +16,10 @@ import type {WorldCoordinateHelper} from '../transform_interface.ts';
 export type TileMeshUsage = 'stencil' | 'raster';
 
 /**
- * An interface the implementations of which are used internally by MapLibre to handle different projections.
+ * The part of a projection that draws the map: its name, its shaders, how finely it subdivides tile meshes, and the
+ * GPU resources these need. It is independent of the camera, exists once per map, and must be disposed of with
+ * `destroy`, which frees what it allocated. The camera math of the same projection is a `CameraProjection`, which
+ * the map's camera is projected with, see `camera_context.ts`.
  */
 export interface Projection {
     /**
@@ -45,7 +32,7 @@ export interface Projection {
      * @internal
      * The mapping between geographic coordinates and the world plane the projection's tiles sit in:
      * mercator for the built-in projections, the CRS's own mapping for a projection registered with `addProjection`.
-     * The transform built for the projection runs on this same instance.
+     * The camera projection built alongside it runs on this same instance.
      */
     get worldCoordinateHelper(): WorldCoordinateHelper;
 

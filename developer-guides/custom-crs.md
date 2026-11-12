@@ -4,22 +4,22 @@ This is the internal counterpart to the [Custom Planar Coordinate Reference Syst
 
 ## The seam: `WorldCoordinateHelper`
 
-The transform, camera, covering tiles, terrain, sources and queries used to call `MercatorCoordinate.fromLngLat`, `mercatorXfromLng`, `mercatorZfromAltitude` and friends directly. Those calls now go through a `WorldCoordinateHelper`:
+The camera math, camera, covering tiles, terrain, sources and queries used to call `MercatorCoordinate.fromLngLat`, `mercatorXfromLng`, `mercatorZfromAltitude` and friends directly. Those calls now go through a `WorldCoordinateHelper`:
 
 - `worldFromLngLat(lng, lat, altitude?)` and `lngLatFromWorld(x, y)` map between lng/lat and world coordinates, the unit square that tile 0/0/0 covers and that the quad tree subdivides. `MercatorCoordinate` stays the container type for a world position; `z` is the altitude in world units, and stays `0` when no altitude is given. For a CRS, an `inverse` counts as an answer only where `forward` takes it back to the position; where it has none, `lngLatFromWorld` uses the nearest position inside the world square, or else the edge of the answers on the line to the square's center, assuming they form one stretch from the center outwards.
-- `hasLngLat(x, y)` tells whether a world position has an answer of its own: always for Mercator, and for a CRS where its `inverse` answers. `MercatorTransform.isPointOnMapSurface` is `false` where it has none, so gestures past the edge of a world projection zoom around the center and drag by pixels, as they do above the horizon.
+- `hasLngLat(x, y)` tells whether a world position has an answer of its own: always for Mercator, and for a CRS where its `inverse` answers. `isPointOnMapSurface` in `camera_math.ts` is `false` where it has none, so gestures past the edge of a world projection zoom around the center and drag by pixels, as they do above the horizon.
 - `metersPerWorldUnit(x, y)` is the local scale at a world position, used by the camera-to-center search and terrain skirts. Mercator returns the latitude-dependent value; a planar CRS returns a constant (`extentAtZoom0`, its units taken as meters) and ignores the arguments.
 - `worldZFromAltitude(altitude, lngLat)` is the same idea for the vertical axis: an altitude in meters to world z.
-- `wraps` is `true` only for Mercator. It gates world copies, `LngLat.wrap()`, antimeridian handling, the `MAX_VALID_LATITUDE` clamp and the hillshade latitude correction. With a non-wrapping helper `MercatorTransform._constrainToWorldSquare` keeps the center inside tile 0/0/0 and leaves the zoom to `minZoom`, or keeps the view inside the `maxBounds` box.
+- `wraps` is `true` only for Mercator. It gates world copies, `LngLat.wrap()`, antimeridian handling, the `MAX_VALID_LATITUDE` clamp and the hillshade latitude correction. With a non-wrapping helper `constrainToWorldSquare` in `camera_constrain.ts` keeps the center inside tile 0/0/0 and leaves the zoom to `minZoom`, or keeps the view inside the `maxBounds` box.
 - `tileMatrixSet` is the grid whose tile 0/0/0 is the world square, in CRS units, which the `{bbox}` tile URL token is expressed in; EPSG:3857 meters for Mercator.
 
 A `CRS` becomes a helper through `new CRSWorldCoordinateHelper(crs)`, which applies the world-coordinate formula from the user guide.
 
 ## Who holds the helper
 
-The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to both the `MercatorProjection` and the `MercatorTransform`. The transform receives it through its `worldCoordinateHelper` constructor option and keeps it when cloned. Mercator, globe and vertical-perspective share the one mercator helper.
+The projection factory checks the registry populated by `addProjection` before its built-in switch. For a registered CRS it builds one `CRSWorldCoordinateHelper` and gives it to the `MercatorProjection`, and the camera takes it from there when the style moves it onto the projection, see `Camera.migrateProjection`. Mercator, globe and vertical-perspective share the one mercator helper.
 
-Readers take the helper from what they already hold: the transform, camera and covering tiles from the transform; sources and queries from `map.style.projection.worldCoordinateHelper`; the terrain from a reader the `Map` passes it, since the painter holds no transform.
+A `ProjectedCamera` holds values only, so readers are handed the helper next to it: the camera math, the camera and covering tiles take it as an argument, from the camera's `CameraContext`; sources and queries from `map.style.projection.worldCoordinateHelper`; the terrain from a reader the `Map` passes it.
 
 A lng/lat box, such as a source's `bounds`, `maxBounds` or a `fitBounds` box, goes into the world square through `lngLatBoxToWorldSamples`, which projects a 17 by 17 grid over the box and reports how far its edges curve between the samples. Corners alone are not enough in a CRS: a parallel around a pole is a circle, and transverse mercator runs off to infinity inside a box that spans its equator 90 degrees from the central meridian. Mercator edges project straight, so a mercator box comes out exactly as its corners did.
 
@@ -27,7 +27,7 @@ A registered CRS shares the mercator shader variant, prelude and tile mesh. A ti
 
 ## Why Mercator keeps its own functions
 
-Mercator does not go through the generic CRS formula. Its helper calls the existing `mercatorXfromLng`/`mercatorYfromLat` functions with the same arguments the transform used before the seam existed, and a unit test pins the transform's outputs against values captured from the code without the seam. The one known difference is `calculateCenterFromCameraLngLatAlt`, which without the seam seeds its center search with `altitudeFromMercatorZ` and iterates with `meterInMercatorCoordinateUnits`, which round the same number differently; the helper has one method for it, so the result can differ in its last bits. When you touch a transform call site, feed the helper the same value the old code used rather than a value that would need a round trip through lng/lat.
+Mercator does not go through the generic CRS formula. Its helper calls the existing `mercatorXfromLng`/`mercatorYfromLat` functions with the same arguments the camera math used before the seam existed, and a unit test pins the camera math's outputs against values captured from the code without the seam. The one known difference is `calculateCenterFromCameraLngLatAlt`, which without the seam seeds its center search with `altitudeFromMercatorZ` and iterates with `meterInMercatorCoordinateUnits`, which round the same number differently; the helper has one method for it, so the result can differ in its last bits. When you touch a camera math call site, feed the helper the same value the old code used rather than a value that would need a round trip through lng/lat.
 
 ## Hillshade
 

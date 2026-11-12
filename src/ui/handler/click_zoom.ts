@@ -1,7 +1,7 @@
 import {evaluateZoomSnap} from '../../util/util.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {TransformProvider} from './transform-provider.ts';
+import type {ProposedCameraProvider} from './proposed-camera-provider.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
@@ -10,12 +10,12 @@ import type {Handler, HandlerResult} from '../handler_manager.ts';
  */
 export class ClickZoomHandler implements Handler {
 
-    _tr: TransformProvider;
+    _tr: ProposedCameraProvider;
     _enabled: boolean;
     _active: boolean;
 
     /** @internal */
-    constructor(transformProvider: TransformProvider) {
+    constructor(transformProvider: ProposedCameraProvider) {
         this._tr = transformProvider;
         this.reset();
     }
@@ -30,7 +30,7 @@ export class ClickZoomHandler implements Handler {
             easeTo: {
                 duration: 300,
                 zoom: evaluateZoomSnap(this._tr.zoom + (e.shiftKey ? -1 : 1), this._tr.zoomSnap),
-                around: this._tr.transform.isPointOnMapSurface(point) ? this._tr.unproject(point) : undefined
+                around: this._tr.isPointOnMapSurface(point) ? this._tr.unproject(point) : undefined
             }
         };
     }

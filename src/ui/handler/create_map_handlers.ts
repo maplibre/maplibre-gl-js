@@ -13,7 +13,7 @@ import {DragPanHandler} from './shim/drag_pan.ts';
 import {DragRotateHandler} from './shim/drag_rotate.ts';
 import {TwoFingersTouchZoomRotateHandler} from './shim/two_fingers_touch.ts';
 import {CooperativeGesturesHandler} from './cooperative_gestures.ts';
-import {TransformProvider} from './transform-provider.ts';
+import {ProposedCameraProvider} from './proposed-camera-provider.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {Camera} from '../camera.ts';
@@ -63,7 +63,7 @@ export type MapHandlersContext = {
  */
 export function createMapHandlers(context: MapHandlersContext, options: CompleteMapOptions): {registrations: HandlerRegistration[]; mapHandlers: MapHandlers} {
     const {camera, canvas, canvasContainer: el} = context;
-    const transformProvider = new TransformProvider(camera);
+    const transformProvider = new ProposedCameraProvider(camera);
 
     const registrations: HandlerRegistration[] = [];
     function add(handlerName: string, handler: Handler, allowed?: string[]): void {
@@ -102,7 +102,7 @@ export function createMapHandlers(context: MapHandlersContext, options: Complete
         touchPitch.enable(options.touchPitch);
     }
 
-    const getCenter = () => camera.transform.centerPoint;
+    const getCenter = () => camera.projectedCamera.centerPoint;
     const getAround = () => dragRotate.around;
     const getMovement = () => dragRotate.movement;
     const mouseRotate = generateMouseRotationHandler(options, getCenter, getAround, getMovement);

@@ -17,11 +17,12 @@ sequenceDiagram
     participant handler_manager
     participant handler
     participant camera
-    participant transform
+    participant projected_camera as projected camera
     participant map
 
     user->>camera: map#setCenter, map#panTo
-    camera->>transform: update
+    camera->>camera: update the proposed camera
+    camera->>projected_camera: render it
     camera->>map: fire move event
     map->>map: _render()
 
@@ -29,15 +30,17 @@ sequenceDiagram
     DOM->>handler_manager: DOM events
     handler_manager->>handler: forward event
     handler-->>handler_manager: HandlerResult
-    handler_manager->>transform: update
+    handler_manager->>camera: apply the HandlerResult
+    camera->>projected_camera: render it
     handler_manager->>map: fire move event
     map->>map: _render()
 ```
 
-- [Transform](../src/geo/transform_interface.ts) holds the current viewport details (pitch, zoom, bearing, bounds, etc.). Two places in the code update transform directly:
-  - [Camera](../src/ui/camera.ts) (parent class of [Map](../src/ui/map.ts)) in response to explicit calls to [Camera#panTo](../src/ui/camera.ts#L207), [Camera#setCenter](../src/ui/camera.ts#L169)
-  - [HandlerManager](../src/ui/handler_manager.ts) in response to DOM events. It forwards those events to interaction processors that live in [src/ui/handler](../src/ui/handler), which accumulate a merged [HandlerResult](../src/ui/handler_manager.ts#L64) that kick off a render frame loop, decreasing the inertia and nudging map.transform by that amount on each frame from [HandlerManager#\_updateMapTransform()](../src/ui/handler_manager.ts#L413). That loop continues in the inertia decreases to 0.
-- Both camera and handler_manager are responsible for firing `move`, `zoom`, `movestart`, `moveend`, ... events on the map after they update transform. Each of these events (along with style changes and data load events) triggers a call to [Map#\_render()](../src/ui/map.ts#L2480) which renders a single frame of the map.
+- [Camera](../src/ui/camera.ts) holds the proposed camera, the pitch, zoom, bearing, bounds and so on that movements ask for, as plain data. It is the only place that changes it:
+  - in response to explicit calls such as `Map#panTo` and `Map#setCenter`;
+  - in response to DOM events, which [HandlerManager](../src/ui/handler_manager.ts) forwards to the interaction processors in [src/ui/handler](../src/ui/handler). They accumulate a merged [HandlerResult](../src/ui/handler_manager.ts) that kicks off a render frame loop, and [HandlerManager#\_updateMapCamera()](../src/ui/handler_manager.ts) applies it to the proposed camera on each frame, decreasing the inertia until it reaches 0.
+- The [projected camera](../src/camera/projected_camera.ts) the map is drawn with is derived from the proposed camera, with the corrections that keep the camera out of the terrain and the result of `transformCameraUpdate`.
+- Both camera and handler_manager are responsible for firing `move`, `zoom`, `movestart`, `moveend`, ... events on the map after they update the camera. Each of these events (along with style changes and data load events) triggers a call to [Map#\_render()](../src/ui/map.ts) which renders a single frame of the map.
 
 ## Tile loading
 
@@ -57,7 +60,7 @@ sequenceDiagram
     participant worker_ajax
   end
 
-  map->>tile_manager: update(transform)
+  map->>tile_manager: update(projectedCamera, cameraProjection)
   tile_manager->>tile_manager: compute covering<br> tiles
   tile_manager->>source: loadTile() for each<br>missing tile
   alt raster_tile_source
@@ -116,7 +119,7 @@ sequenceDiagram
 
 [Map#\_render()](../src/ui/map.ts#L2480) works in 2 different modes based on the value of `Map._sourcesDirty`. When `Map._sourcesDirty === true`, it starts by asking each source if it needs to load any new data:
 
-- Call [TileManager#update(transform)](../src/tile/tile_manager.ts#L479) on each map data source. This computes the ideal tiles that cover the current viewport and requests missing ones. When a tile is missing, searches child/parent tiles to find the best alternative to show while the ideal tile is loading.
+- Call [TileManager#update(projectedCamera, cameraProjection)](../src/tile/tile_manager.ts#L479) on each map data source. This computes the ideal tiles that cover the current viewport and requests missing ones. When a tile is missing, searches child/parent tiles to find the best alternative to show while the ideal tile is loading.
 - Call `Source#loadTile(tile, callback)` on each source to load the missing tile. Each source implements this differently:
   - [RasterTileSource#loadTile](../src/source/raster_tile_source.ts#L110) just kicks off a getImage request using [src/util/image_request](../src/util/image_request.ts) which keeps a queue of pending requests and limits the number of in-progress requests.
   - [RasterDEMTileSource#loadTile](../src/source/raster_dem_tile_source.ts#L39) starts off the same to fetch the image, but then it sends the bytes in a `loadDEMTile` message to a worker to process before returning the results. Getting pixels from the image response requires drawing it to a canvas and reading the pixels back. This can be expensive, so when the browser supports `OffscreenCanvas`, do that in a worker, otherwise do it here before sending.
@@ -147,7 +150,7 @@ sequenceDiagram
 - When the vector sources (geojson/vector tile) responses get back to the main thread, it calls [Tile#loadVectorData](../src/tile/tile.ts#L140) with the result which deserializes and stores the buckets for each style layer, image/glyph atlases, and lazy-loads the RTL text plugin if this is the first tile to contain RTL text.
 - Back up in [TileManager](../src/tile/tile_manager.ts), now that it has the loaded tile:
   - [TileManager#\_backfillDEM](../src/tile/tile_manager.ts#L275) copies the edge pixels to and from all neighboring tiles so that there are no rendering artifacts when each tile computes the slope up to the very edge of the tile.
-  - Fire a `data {dataType: 'source'}` event on the source, which bubbles up to [TileManager](../src/tile/tile_manager.ts), [Style](../src/style/style.ts), and [Map](../src/ui/map.ts), which translates it to a `sourcedata` event and also calls [Map#\_update()](../src/ui/map.ts#L2443) which calls [Map#triggerRepaint()](../src/ui/map.ts#L2664) then [Map#\_render()](../src/ui/map.ts#L2480) which renders a new frame just like when user interaction triggers transform change.
+  - Fire a `data {dataType: 'source'}` event on the source, which bubbles up to [TileManager](../src/tile/tile_manager.ts), [Style](../src/style/style.ts), and [Map](../src/ui/map.ts), which translates it to a `sourcedata` event and also calls [Map#\_update()](../src/ui/map.ts#L2443) which calls [Map#triggerRepaint()](../src/ui/map.ts#L2664) then [Map#\_render()](../src/ui/map.ts#L2480) which renders a new frame just like when user interaction changes the camera.
 
 ## Render loop
 
@@ -161,10 +164,10 @@ sequenceDiagram
     participant GPU
     actor user
 
-    map->>style: update(transform)
+    map->>style: update(projectedCamera, cameraProjection)
     style->>layer: recalculate()
     layer->>layer: recompute<br>paint properties
-    map->>tile_manager: update(transform)
+    map->>tile_manager: update(projectedCamera, cameraProjection)
     tile_manager->>tile_manager: fetch new tiles
     map->>painter: render(style)
     painter->>tile_manager: prepare(context)
@@ -188,8 +191,8 @@ sequenceDiagram
 
 When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.ts#L2480) just renders a new frame entirely within the main UI thread:
 
-- Recompute "paint properties" based on the current zoom and current transition status by calling [Style#update()](../src/style/style.ts) with the new transform. This calls `recalculate()` on each style layer to compute the new paint properties.
-- Fetch new tiles by calling [TileManager#update(transform)](../src/tile/tile_manager.ts#L479) (see above)
+- Recompute "paint properties" based on the current zoom and current transition status by calling [Style#update()](../src/style/style.ts) with the new projected camera. This calls `recalculate()` on each style layer to compute the new paint properties.
+- Fetch new tiles by calling [TileManager#update(projectedCamera, cameraProjection)](../src/tile/tile_manager.ts#L479) (see above)
 - Call [Painter#render(style)](../src/render/painter.ts#L359) with the current style
   - Calls [TileManager#prepare(context)](../src/tile/tile_manager.ts#L170) on each source
   - Then for each tile in the source:

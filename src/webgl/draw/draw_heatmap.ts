@@ -9,6 +9,7 @@ import {
     heatmapTextureUniformValues
 } from '../program/heatmap_program.ts';
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Context} from '../context.ts';
@@ -53,7 +54,7 @@ export function drawHeatmap(painter: Painter, tileManager: TileManager, layer: H
 function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: HeatmapStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext) {
     const context = frameRenderContext.context;
     const gl = context.gl;
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
     // Allow kernels to be drawn across boundaries, so that
     // large kernels are not clipped to tiles
@@ -81,13 +82,13 @@ function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: H
 
         const projectionData = frameRenderContext.getProjectionDataForTile(coord, {applyTerrainMatrix: false});
 
-        const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
+        const radiusCorrectionFactor = getCameraMath(projectedCamera).getCircleRadiusCorrection(projectedCamera);
 
         program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW,
-            heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
+            heatmapUniformValues(tile, projectedCamera.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
             null, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
-            bucket.segments, layer.paint, transform.zoom,
+            bucket.segments, layer.paint, projectedCamera.zoom,
             programConfiguration);
     }
 
@@ -116,7 +117,7 @@ function renderHeatmapFlat(painter: Painter, layer: HeatmapStyleLayer, frameRend
         DepthMode.disabled, StencilMode.disabled, frameRenderContext.colorModeForRenderPass(), CullFaceMode.disabled,
         heatmapTextureUniformValues(painter, layer, 0, 1), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
-        painter.viewportSegments, layer.paint, frameRenderContext.transform.zoom);
+        painter.viewportSegments, layer.paint, frameRenderContext.projectedCamera.zoom);
 }
 
 function prepareHeatmapTerrain(tile: Tile, layer: HeatmapStyleLayer, coord: OverscaledTileID, frameRenderContext: FrameRenderContext) {
@@ -149,16 +150,16 @@ function prepareHeatmapTerrain(tile: Tile, layer: HeatmapStyleLayer, coord: Over
 
     const terrainData = frameRenderContext.getTerrainDataForTile(coord);
     program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-        heatmapUniformValues(tile, frameRenderContext.transform.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData,
+        heatmapUniformValues(tile, frameRenderContext.projectedCamera.zoom, layer.paint.get('heatmap-intensity'), 1.0), terrainData, projectionData,
         layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
-        bucket.segments, layer.paint, frameRenderContext.transform.zoom,
+        bucket.segments, layer.paint, frameRenderContext.projectedCamera.zoom,
         programConfiguration);
 }
 
 function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord: OverscaledTileID, frameRenderContext: FrameRenderContext) {
     const context = frameRenderContext.context;
     const gl = context.gl;
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
     context.setColorMode(frameRenderContext.colorModeForRenderPass());
 
@@ -183,7 +184,7 @@ function renderHeatmapTerrain(painter: Painter, layer: HeatmapStyleLayer, coord:
         DepthMode.disabled, StencilMode.disabled, frameRenderContext.colorModeForRenderPass(), CullFaceMode.disabled,
         heatmapTextureUniformValues(painter, layer, 0, 1), null, projectionData,
         layer.id, painter.rasterBoundsBuffer, painter.quadTriangleIndexBuffer,
-        painter.rasterBoundsSegments, layer.paint, transform.zoom);
+        painter.rasterBoundsSegments, layer.paint, projectedCamera.zoom);
 
     // destroy the FBO after rendering
     fbo.destroy();
