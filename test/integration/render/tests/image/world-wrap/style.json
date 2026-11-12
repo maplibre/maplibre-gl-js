@@ -1,0 +1,56 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 128
+    }
+  },
+  "center": [
+    180,
+    0
+  ],
+  "zoom": 1,
+  "sources": {
+    "image": {
+      "type": "image",
+      "coordinates": [
+        [
+          -180,
+          85.05112878
+        ],
+        [
+          180,
+          85.05112878
+        ],
+        [
+          180,
+          -85.05112878
+        ],
+        [
+          -180,
+          -85.05112878
+        ]
+      ],
+      "url": "local://image/world-wrap.png"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ff00ff"
+      }
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {
+        "raster-fade-duration": 0,
+        "raster-resampling": "nearest"
+      }
+    }
+  ]
+}

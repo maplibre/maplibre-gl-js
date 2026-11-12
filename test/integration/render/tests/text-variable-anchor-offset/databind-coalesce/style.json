@@ -1,0 +1,56 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 240,
+      "height": 100
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [{
+          "type": "Feature",
+          "properties": { },
+          "geometry": { "type": "Point", "coordinates": [-30, 0] }
+         }, {
+          "type": "Feature",
+          "properties": { "tvao": ["top", [0, -4.5]] },
+          "geometry": { "type": "Point", "coordinates": [0, 0] }
+         }, {
+          "type": "Feature",
+          "properties": { "tvao": ["right", [4.5, 0]] },
+          "geometry": { "type": "Point", "coordinates": [30, 0] }
+         }
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/2x",
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [{
+      "id": "bg",
+      "type": "background",
+      "paint": {
+        "background-color": "#ccc"
+      }
+    }, {
+      "id": "test",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "icon-image": "icon",
+        "text-field": "Label",
+        "text-size": 10,
+        "text-justify": "auto",
+        "text-variable-anchor-offset": ["coalesce", ["get", "tvao"], ["literal", ["left", [-4.5, 0]]]],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      }
+    }
+  ]
+}

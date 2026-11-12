@@ -1,0 +1,74 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256,
+      "description": "This test verifies that changing hillshade array properties one at a time (causing temporary length mismatch) does not cause crashes or rendering artifacts. Starts with 4 lights, changes direction to 1, then updates colors to 1. Using a dramatic 4->1 change makes any issues more visible (per HarelM's suggestion).",
+      "operations": [
+        [
+          "setPaintProperty",
+          "hillshade",
+          "hillshade-illumination-direction",
+          315
+        ],
+        [
+          "wait"
+        ],
+        [
+          "setPaintProperty",
+          "hillshade",
+          "hillshade-highlight-color",
+          "#FFFFFF"
+        ],
+        [
+          "wait"
+        ],
+        [
+          "setPaintProperty",
+          "hillshade",
+          "hillshade-shadow-color",
+          "#000000"
+        ],
+        [
+          "wait"
+        ]
+      ]
+    }
+  },
+  "transition": {
+    "duration": 0
+  },
+  "center": [-113.26903, 35.9654],
+  "zoom": 11,
+  "sources": {
+    "source": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 15,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "gray"
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "source",
+      "paint": {
+        "hillshade-method": "multidirectional",
+        "hillshade-highlight-color": ["#FF4000", "#FFFF00", "#40ff00", "#00FF80"],
+        "hillshade-shadow-color": ["#00bfff", "#0000ff", "#bf00ff", "#FF0080"],
+        "hillshade-illumination-direction": [270, 315, 0, 45]
+      }
+    }
+  ]
+}
