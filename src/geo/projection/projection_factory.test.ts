@@ -6,6 +6,9 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 import {getCameraMotions} from '../../camera/camera_motions_factory.ts';
 import {MercatorCameraMotions} from '../../camera/mercator_camera_motions.ts';
+import {createCameraContext} from '../../camera/camera_context.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
 
 afterEach(() => {
     removeProjection('test:factory');
@@ -19,11 +22,13 @@ describe('createProjectionFromName', () => {
         expect(projection.name).toBe('identity');
     });
 
-    test('runs the identity projection on the mercator transform and camera motions over a non-wrapping world', () => {
-        const {transform} = createProjectionFromName('identity', undefined, {});
-        expect(getCoveringTilesDetailsProvider(transform.projectedCamera)).toBeInstanceOf(MercatorCoveringTilesDetailsProvider);
-        expect(transform.worldCoordinateHelper.wraps).toBe(false);
-        expect(getCameraMotions(transform.context)).toBeInstanceOf(MercatorCameraMotions);
+    test('runs the identity projection on the mercator camera projection, moved over a plane that does not wrap', () => {
+        const {projection, cameraProjection} = createProjectionFromName('identity', undefined, {});
+        const context = createCameraContext({projection: cameraProjection, worldCoordinateHelper: projection.worldCoordinateHelper});
+        expect(cameraProjection).toBe('mercator');
+        expect(getCoveringTilesDetailsProvider(projectCamera(createCameraViewState(), context))).toBeInstanceOf(MercatorCoveringTilesDetailsProvider);
+        expect(projection.worldCoordinateHelper.wraps).toBe(false);
+        expect(getCameraMotions(context)).toBeInstanceOf(MercatorCameraMotions);
     });
 
     test('falls back to mercator for a name that only Object.prototype has', () => {
@@ -55,9 +60,9 @@ describe('createProjectionFromName', () => {
             expect([world.x, world.y]).toEqual([1, 0]);
         });
 
-        test('runs its transform on the projection\'s own mapping', () => {
-            const {projection, transform} = createProjectionFromName('test:factory', undefined, {});
-            expect(transform.worldCoordinateHelper).toBe(projection.worldCoordinateHelper);
+        test('runs its transform on the mercator camera projection', () => {
+            const {cameraProjection} = createProjectionFromName('test:factory', undefined, {});
+            expect(cameraProjection).toBe('mercator');
         });
 
         test('warns that a projection expression naming it falls back to the globe projection', () => {

@@ -1,7 +1,6 @@
 import {describe, test, expect, vi} from 'vitest';
 import {mat4} from 'gl-matrix';
 import {mercatorWorldCoordinateHelper} from '../../geo/mercator_coordinate.ts';
-import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {SymbolBucket} from '../../data/bucket/symbol_bucket.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
@@ -13,7 +12,7 @@ import {Program} from '../program.ts';
 import {drawSymbols} from './draw_symbol.ts';
 import * as symbolProjection from '../../symbol/projection.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
-import {createFrameRenderData} from '../../util/test/util.ts';
+import {createFrameRenderData, createTestCamera} from '../../util/test/util.ts';
 
 import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 import type {ZoomHistory} from '../../style/zoom_history.ts';
@@ -35,9 +34,7 @@ vi.mock(import('../../symbol/projection'));
 (vi.mocked(symbolProjection.getPitchedLabelPlaneMatrix)).mockReturnValue(mat4.create());
 
 function createProjectedCamera(): ProjectedCamera {
-    const transform = createMercatorTransform();
-    transform.resize(512, 512);
-    return transform.projectedCamera;
+    return createTestCamera({width: 512, height: 512}).projectedCamera;
 }
 
 describe('drawSymbol', () => {

@@ -3,6 +3,9 @@ import {adjustCamera, combineActions, constrainView, createCameraStore, endMovem
 import {createCameraViewState} from './camera_view_state.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {createCameraContext} from './camera_context.ts';
+import {projectCamera} from './project_camera.ts';
+import {setBearing, setCenter, setElevation, setFov, setMaxBounds, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from './camera_updates.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 
 import type {CameraViewState} from './camera_view_state.ts';
 
@@ -63,6 +66,32 @@ describe('camera store', () => {
         store.setState(endMovement({...cameraAt(1200), zoom: 3}));
 
         expect(store.getState()).toMatchObject({motion: {moving: false, adjustment: null}, view: {elevation: 1000, zoom: 3}});
+    });
+
+    test('sets every field of a view, leaving it unconstrained', () => {
+        const context = createCameraContext({constrainOverride: (lngLat, zoom) => ({center: lngLat, zoom: zoom ?? 0})});
+        let view = createCameraViewState();
+        view = setBearing(view, 12);
+        view = setCenter(view, context, new LngLat(3, 4));
+        view = setElevation(view, context, 5);
+        view = setFov(view, 1);
+        view = setMaxBounds(view, context, new LngLatBounds([-160, -80, 160, 80]));
+        view = setMaxPitch(view, 50);
+        view = setMaxZoom(view, context, 10);
+        view = setMinElevationForCurrentTile(view, 0.1);
+        view = setMinPitch(view, 0.1);
+        view = setMinZoom(view, context, 0.1);
+        view = setPadding(view, context, {top: 1, right: 4, bottom: 2, left: 3});
+        view = setPitch(view, 3);
+        view = setRoll(view, 7);
+        view = setRenderWorldCopies(view, context.worldCoordinateHelper, false);
+        view = setZoom(view, context, 2.3);
+        const store = createCameraStore(createCameraViewState());
+
+        store.setState(setView(view));
+
+        expect(store.getState().view).toEqual(view);
+        expect(projectCamera(store.getState().view, context)).toEqual(projectCamera(view, context));
     });
 
     test('constrains the camera in the given context', () => {

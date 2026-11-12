@@ -10,6 +10,8 @@ import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getZoomAdjustment} from '../geo/projection/globe_utils.ts';
 import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
 import {createProjectionFromName} from '../geo/projection/projection_factory.ts';
+import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {getBearing, getPitch, getRoll} from '../camera/camera_view_state.ts';
 import {getCameraMath} from '../camera/camera_math_factory.ts';
@@ -2780,6 +2782,34 @@ describe('migrateProjection', () => {
         expect(proposedState.center.lat).toBeCloseTo(20);
         expect(proposedState.zoom).toBeCloseTo(5);
         expect(() => getCameraMath(camera.proposedProjectedCamera).getRayDirectionFromPixel(camera.proposedProjectedCamera, new Point(256, 256))).not.toThrow();
+    });
+
+    test('keeps the world mapping it moved onto when its context is built again', () => {
+        const {camera} = createCamera();
+        const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
+        camera.migrateProjection('mercator', worldCoordinateHelper);
+
+        camera.setConstrainOverride((lngLat, zoom) => ({center: lngLat, zoom: zoom ?? 0}));
+
+        expect(camera.context.worldCoordinateHelper).toBe(worldCoordinateHelper);
+    });
+
+    test('carries a renderWorldCopies of false onto a world that does not wrap and back', () => {
+        const {camera} = createCamera({renderWorldCopies: false});
+
+        camera.migrateProjection('mercator', new CRSWorldCoordinateHelper(identityCrs));
+        expect(camera.getStateForUpdate().renderWorldCopies).toBe(false);
+
+        camera.migrateProjection('mercator', mercatorWorldCoordinateHelper);
+        expect(camera.getStateForUpdate().renderWorldCopies).toBe(false);
+    });
+
+    test('carries a renderWorldCopies of true from the globe onto mercator', () => {
+        const {camera} = createCamera({renderWorldCopies: true}, true);
+
+        camera.migrateProjection('mercator', mercatorWorldCoordinateHelper);
+
+        expect(camera.getStateForUpdate().renderWorldCopies).toBe(true);
     });
 });
 
