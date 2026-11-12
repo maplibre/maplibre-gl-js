@@ -13,7 +13,7 @@ import {beforeMapTest, createMap as globalCreateMap, createPolarStereographicCrs
 import {now, restoreNow, setNow} from '../util/time_control.ts';
 import {createCameraContext} from '../geo/projection/camera_context.ts';
 import {createCameraViewState} from '../geo/camera_view_state.ts';
-import {projectCamera} from '../geo/projection/camera_math.ts';
+import {projectCamera} from '../geo/projection/project_camera.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';

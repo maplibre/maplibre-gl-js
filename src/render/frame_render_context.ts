@@ -6,7 +6,7 @@ import {StencilMode} from '../webgl/stencil_mode.ts';
 import {CullFaceMode} from '../webgl/cull_face_mode.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 
 import type {Terrain, TerrainData} from './terrain.ts';
 import type {RendererProjectionData} from '../geo/projection/projection_data.ts';
@@ -127,7 +127,7 @@ export class FrameRenderContext {
     }
 
     getProjectionDataForTile(tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
-        const projectionData = cameraMath.getProjectionData(this.projectedCamera, {
+        const projectionData = getCameraMath(this.projectedCamera).getProjectionData(this.projectedCamera, {
             overscaledTileID: tileID,
             aligned: options.aligned,
             applyGlobeMatrix: !this.isRenderingToTexture,

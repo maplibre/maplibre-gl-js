@@ -4,7 +4,7 @@ import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {earthRadius} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
-import * as cameraMath from './camera_math.ts';
+import {getCameraMath} from './camera_math_factory.ts';
 import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 
 import type {Frustum} from '../../util/primitives/frustum.ts';
@@ -282,8 +282,8 @@ export function expandCullingToContentElevation(frustum: Frustum, plane: vec4, c
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
 export function coveringTiles(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
-    let frustum = cameraMath.getCameraFrustum(projectedCamera);
-    let plane = cameraMath.getClippingPlane(projectedCamera);
+    let frustum = getCameraMath(projectedCamera).getCameraFrustum(projectedCamera);
+    let plane = getCameraMath(projectedCamera).getClippingPlane(projectedCamera);
     if (plane && options.maxContentElevation > 0) {
         ({frustum, plane} = expandCullingToContentElevation(frustum, plane, projectedCamera.cameraPosition, options.maxContentElevation));
     }

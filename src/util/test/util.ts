@@ -6,7 +6,7 @@ import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '..
 import {Evented} from '../evented.ts';
 import {createCameraViewState} from '../../geo/camera_view_state.ts';
 import {createCameraContext} from '../../geo/projection/camera_context.ts';
-import {projectCamera} from '../../geo/projection/camera_math.ts';
+import {projectCamera} from '../../geo/projection/project_camera.ts';
 import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
 import {LngLat, type LngLatLike} from '../../geo/lng_lat.ts';
 import {CRSWorldCoordinateHelper, identityCrs, type CRS} from '../../geo/projection/crs.ts';

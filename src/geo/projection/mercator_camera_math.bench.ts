@@ -6,7 +6,7 @@ import {LngLat} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {createDEM, createDEMTerrain, createTestCamera} from '../../util/test/util.ts';
-import * as cameraMath from './camera_math.ts';
+import {getCameraMath} from './camera_math_factory.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
 import type {ProjectedCamera} from '../projected_camera.ts';
@@ -44,6 +44,6 @@ const scenes = [2, 10, 16].flatMap(zoom => [
 
 test('terrain raycast', async ({bench}) => {
     await bench.compare(...scenes.map(({name, point, camera: projectedCamera, worldCoordinateHelper, terrain}) => bench(name, () => {
-        cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, point, terrain);
+        getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, point, terrain);
     })));
 });

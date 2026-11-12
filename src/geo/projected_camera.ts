@@ -1,8 +1,9 @@
 import {mat2, mat4} from 'gl-matrix';
 import {zoomScale} from '../util/util.ts';
+import {Bounds} from './bounds.ts';
 import {getBearing, getCenterPoint, getFov, getPitch, getRoll, type CameraViewState} from './camera_view_state.ts';
+import Point from '@mapbox/point-geometry';
 
-import type Point from '@mapbox/point-geometry';
 import type {vec3, vec4} from 'gl-matrix';
 import type {WorldCoordinateHelper} from './camera_types.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
@@ -170,4 +171,62 @@ function pixelsToClipSpaceMatrix(view: CameraViewState): mat4 {
     mat4.translate(m, m, [-1, -1, 0]);
     mat4.scale(m, m, [2 / view.width, 2 / view.height, 1]);
     return m;
+}
+
+/**
+ * @internal
+ * The camera as the projection it is drawn with projects it: as it is, or for the globe as the vertical perspective
+ * projects it while the globe renders and as mercator does once it has turned into mercator.
+ */
+export function renderedProjectedCamera(projectedCamera: ProjectedCamera): MercatorProjectedCamera | VerticalPerspectiveProjectedCamera {
+    if (projectedCamera.projection !== 'globe') return projectedCamera;
+    return projectedCamera.globeness > 0 ? projectedCamera.verticalPerspective : projectedCamera.mercator;
+}
+
+/**
+ * @internal
+ * Whether the camera draws the globe rather than mercator, which a globe does until it has turned into mercator at
+ * high zoom levels.
+ */
+export function isGlobeRendering(projectedCamera: ProjectedCamera): boolean {
+    return renderedProjectedCamera(projectedCamera).projection === 'vertical-perspective';
+}
+
+/** @internal How far the camera's projection is between mercator, at 0, and the vertical perspective of the globe, at 1. */
+export function getProjectionTransition(projectedCamera: ProjectedCamera): number {
+    switch (projectedCamera.projection) {
+        case 'mercator': return 0;
+        case 'vertical-perspective': return 1;
+        case 'globe': return projectedCamera.globeness;
+    }
+}
+
+/**
+ * @internal
+ * The point on the screen right under the camera: the center point moved down by the pitch and turned by the roll.
+ */
+export function getCameraPoint(projectedCamera: ProjectedCamera): Point {
+    const offset = Math.tan(projectedCamera.pitchInRadians) * (projectedCamera.cameraToCenterDistance || 1);
+    return projectedCamera.centerPoint.add(new Point(offset * Math.sin(projectedCamera.rollInRadians), offset * Math.cos(projectedCamera.rollInRadians)));
+}
+
+/**
+ * @internal
+ * The geometry a query for features that may extrude up into the query area covers on a plane: for a point query the
+ * line from the point to the camera point, see {@link getCameraPoint}, and for other geometries their envelope with the
+ * camera point. Every position on the screen where the base of a visible extrusion could be is inside it.
+ */
+export function cameraPointQueryGeometry(projectedCamera: ProjectedCamera, queryGeometry: Point[]): Point[] {
+    const cameraPoint = getCameraPoint(projectedCamera);
+    if (queryGeometry.length === 1) {
+        return [queryGeometry[0], cameraPoint];
+    }
+    const {minX, minY, maxX, maxY} = Bounds.fromPoints(queryGeometry).extend(cameraPoint);
+    return [
+        new Point(minX, minY),
+        new Point(maxX, minY),
+        new Point(maxX, maxY),
+        new Point(minX, maxY),
+        new Point(minX, minY)
+    ];
 }

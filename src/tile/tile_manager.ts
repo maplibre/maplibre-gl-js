@@ -18,7 +18,7 @@ import {hasRasterTransition, isRasterType, updateFadingTiles} from './tile_manag
 import {backfillDEM} from './tile_manager_raster_dem.ts';
 import {InViewTiles} from './tile_manager_in_view_tiles.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {Context} from '../webgl/context.ts';
@@ -565,7 +565,7 @@ export class TileManager extends Evented<SourceEventType> {
         if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
         } else if (this._source.tileID) { // image source
-            idealTileIDs = cameraMath.getVisibleUnwrappedCoordinates(projectedCamera, worldCoordinateHelper, this._source.tileID)
+            idealTileIDs = getCameraMath(projectedCamera).getVisibleUnwrappedCoordinates(projectedCamera, worldCoordinateHelper, this._source.tileID)
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
             idealTileIDs = coveringTiles(projectedCamera, worldCoordinateHelper, {
@@ -916,10 +916,10 @@ export class TileManager extends Evented<SourceEventType> {
         const allowWorldCopies = getCoveringTilesDetailsProvider(projectedCamera).allowWorldCopies();
 
         const cameraPointQueryGeometry = has3DLayer ?
-            cameraMath.getCameraQueryGeometry(projectedCamera, pointQueryGeometry) :
+            getCameraMath(projectedCamera).getCameraQueryGeometry(projectedCamera, pointQueryGeometry) :
             pointQueryGeometry;
 
-        const project = (point: Point) => cameraMath.screenPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, point, this.terrain);
+        const project = (point: Point) => getCameraMath(projectedCamera).screenPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, point, this.terrain);
         const queryGeometry = this.transformBbox(pointQueryGeometry, project, !allowWorldCopies);
         const cameraQueryGeometry = this.transformBbox(cameraPointQueryGeometry, project, !allowWorldCopies);
 

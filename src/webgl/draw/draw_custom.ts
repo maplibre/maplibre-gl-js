@@ -2,7 +2,7 @@ import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {drawTerrainHeightMap} from './draw_terrain.ts';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 
 import type {Painter} from '../../render/painter.ts';
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
@@ -22,7 +22,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
     const implementation = layer.implementation;
     const projectedCamera = frameRenderContext.projectedCamera;
 
-    const projectionData = cameraMath.getProjectionDataForCustomLayer(projectedCamera, isRenderingGlobe);
+    const projectionData = getCameraMath(projectedCamera).getProjectionDataForCustomLayer(projectedCamera, isRenderingGlobe);
 
     const customLayerArgs: CustomRenderMethodInput = {
         farZ: projectedCamera.farZ,
@@ -37,7 +37,7 @@ export function drawCustom(painter: Painter, tileManager: TileManager, layer: Cu
         },
         defaultProjectionData: projectionData,
         getProjectionData: (params: CustomLayerProjectionDataParams) => {
-            return cameraMath.getProjectionData(projectedCamera, {
+            return getCameraMath(projectedCamera).getProjectionData(projectedCamera, {
                 overscaledTileID: new OverscaledTileID(
                     params.tileID.canonical.z,
                     params.tileID.wrap ?? 0,

@@ -6,7 +6,7 @@ import {Painter} from '../../render/painter.ts';
 import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
-import {projectCamera} from '../../geo/projection/camera_math.ts';
+import {projectCamera} from '../../geo/projection/project_camera.ts';
 import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
 import {expectToBeCloseToArray, createFrameRenderData, createTestCamera} from '../../util/test/util.ts';
 

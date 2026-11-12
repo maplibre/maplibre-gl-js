@@ -8,7 +8,7 @@ import {OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
 import {createCameraContext} from '../geo/projection/camera_context.ts';
 import {createCameraViewState} from '../geo/camera_view_state.ts';
-import {projectCamera} from '../geo/projection/camera_math.ts';
+import {projectCamera} from '../geo/projection/project_camera.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {StubMap, beforeMapTest, createMap} from '../util/test/util.ts';

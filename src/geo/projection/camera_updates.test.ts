@@ -3,7 +3,7 @@ import {LngLat} from '../lng_lat.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {createCameraViewState} from '../camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
-import {projectCamera} from './camera_math.ts';
+import {projectCamera} from './project_camera.ts';
 import * as cameraUpdates from './camera_updates.ts';
 import {CRSWorldCoordinateHelper} from './crs.ts';
 import {createRotatedCrs, createTestCamera} from '../../util/test/util.ts';

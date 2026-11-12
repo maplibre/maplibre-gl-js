@@ -7,7 +7,7 @@ import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPix
 import {mat4, vec3} from 'gl-matrix';
 import {ColorMode} from '../color_mode.ts';
 import {sphericalToCartesian} from '../../util/util.ts';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
@@ -60,7 +60,7 @@ export function drawAtmosphere(mesh: Mesh, frameRenderContext: FrameRenderContex
 
     const sunPos = getSunPos(light, projectedCamera);
 
-    const projectionData = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
+    const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const globeRadius = getGlobeRadiusPixels(projectedCamera.worldSize, projectedCamera.center.lat);
     const globePosition = getGlobeCenterInViewSpace(projectedCamera);
     const altitudeBlend = getAtmosphereAltitudeBlend(vec3.length(globePosition) - globeRadius, globeRadius);

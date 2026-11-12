@@ -3,7 +3,7 @@ import {Event, Evented} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import Point from '@mapbox/point-geometry';
 
@@ -284,7 +284,7 @@ export class Popup extends Evented<PopupEventType> {
         if (this.options.locationOccludedOpacity === undefined) {
             return;
         }
-        if (cameraMath.isLocationOccluded(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this.getLngLat())) {
+        if (getCameraMath(this._map._camera.projectedCamera).isLocationOccluded(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this.getLngLat())) {
             this._container.style.opacity = `${this.options.locationOccludedOpacity}`;
         } else {
             this._container.style.opacity = '';
@@ -676,7 +676,7 @@ export class Popup extends Evented<PopupEventType> {
         const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = this._trackPointer && cursor ? cursor : cameraMath.locationToScreenPoint(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat);
+            this._flatPos = this._trackPointer && cursor ? cursor : getCameraMath(this._map._camera.projectedCamera).locationToScreenPoint(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat);
         }
 
         let anchor = this.options.anchor;

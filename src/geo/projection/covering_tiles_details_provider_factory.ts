@@ -1,6 +1,6 @@
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
-import {renderedProjectedCamera} from './camera_math.ts';
+import {renderedProjectedCamera} from '../projected_camera.ts';
 
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {ProjectedCamera} from '../projected_camera.ts';

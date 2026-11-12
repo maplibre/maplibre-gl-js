@@ -2,7 +2,7 @@ import {UniformColor, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '..
 import {getMercatorHorizon} from '../../geo/projection/mercator_utils.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
 import {vec3} from 'gl-matrix';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 
 import type {SkyPropsPossiblyEvaluated} from '../../style/sky_properties.g.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
@@ -39,7 +39,7 @@ const skyUniformValues = (sky: Readonly<SkyPropsPossiblyEvaluated>, projectedCam
     const cosRoll = Math.cos(projectedCamera.rollInRadians);
     const sinRoll = Math.sin(projectedCamera.rollInRadians);
     const mercatorHorizon  = getMercatorHorizon(projectedCamera);
-    const projectionData = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
+    const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const skyBlend = projectionData.projectionTransition;
     const globePosition = getGlobeCenterInViewSpace(projectedCamera);
     const globeRadius = getGlobeRadiusPixels(projectedCamera.worldSize, projectedCamera.center.lat);

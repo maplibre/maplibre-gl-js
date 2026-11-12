@@ -7,7 +7,7 @@ import {
 } from '../uniform_binding.ts';
 import {mat3, vec3} from 'gl-matrix';
 import {extend, sphericalToCartesian} from '../../util/util.ts';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 
 import type {Context} from '../../webgl/context.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -86,7 +86,7 @@ const fillExtrusionUniformValues = (
         mat3.fromRotation(lightMat, projectedCamera.bearingInRadians);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
-    const transformedLightPos = cameraMath.transformLightDirection(projectedCamera, lightPos);
+    const transformedLightPos = getCameraMath(projectedCamera).transformLightDirection(projectedCamera, lightPos);
 
     const lightColor = light.color;
 

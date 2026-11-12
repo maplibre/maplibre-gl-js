@@ -12,7 +12,7 @@ import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -223,7 +223,7 @@ function drawLineTiles(
 
         const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
-        const pixelRatio = cameraMath.getPixelScale(projectedCamera);
+        const pixelRatio = getCameraMath(projectedCamera).getPixelScale(projectedCamera);
 
         let uniformValues;
         if (image) {

@@ -1,4 +1,4 @@
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {TileManager} from '../tile/tile_manager.ts';
@@ -118,7 +118,7 @@ export function queryRenderedFeatures(
 ): QueryRenderedFeaturesResults {
 
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, tileManager.id);
-    const maxPitchScaleFactor = cameraMath.maxPitchScaleFactor(projectedCamera);
+    const maxPitchScaleFactor = getCameraMath(projectedCamera).maxPitchScaleFactor(projectedCamera);
     const tilesIn = tileManager.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer, projectedCamera, worldCoordinateHelper);
 
     tilesIn.sort(sortTilesIn);

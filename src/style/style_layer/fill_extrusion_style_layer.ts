@@ -4,7 +4,7 @@ import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../uti
 import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
 import Point from '@mapbox/point-geometry';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -72,7 +72,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
  * Projects a point in tile coordinates at `elevation` to clip space, with the distance from the camera as its `z`.
  */
 function projectPoint(point: Point, elevation: number, projectedCamera: ProjectedCamera, tileID: UnwrappedTileID): Point3D {
-    const {point: projected, signedDistanceFromCamera} = cameraMath.projectTileCoordinates(projectedCamera, point.x, point.y, tileID, elevation);
+    const {point: projected, signedDistanceFromCamera} = getCameraMath(projectedCamera).projectTileCoordinates(projectedCamera, point.x, point.y, tileID, elevation);
     const result = projected as Point3D;
     result.z = signedDistanceFromCamera;
     return result;

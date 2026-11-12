@@ -6,7 +6,8 @@ import {SymbolLineVertexArray} from '../data/array_types.g.ts';
 import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {expectToBeCloseToArray, createTestCamera} from '../util/test/util.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {projectCamera} from '../geo/projection/project_camera.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
@@ -284,13 +285,13 @@ describe('Find offset line intersections', () => {
             [0, 1], 9);
 
         const pitched = cameraUpdates.setPitch(view, 90);
-        const pitchedCamera = cameraMath.projectCamera(pitched, context);
+        const pitchedCamera = projectCamera(pitched, context);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecEast],
             [0, 0]);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecSouth],
             [0, 1], 9);
 
-        const turnedCamera = cameraMath.projectCamera(cameraUpdates.setBearing(pitched, 90), context);
+        const turnedCamera = projectCamera(cameraUpdates.setBearing(pitched, 90), context);
         expectToBeCloseToArray([...getTileSkewVectors(turnedCamera).vecEast],
             [0, 0]);
         expectToBeCloseToArray([...getTileSkewVectors(turnedCamera).vecSouth],
@@ -305,7 +306,7 @@ describe('Find offset line intersections', () => {
         expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [-0.7193379402160645, 0.6946603059768677], 9);
 
-        const pitchedCamera = cameraMath.projectCamera(cameraUpdates.setPitch(view, 90), context);
+        const pitchedCamera = projectCamera(cameraUpdates.setPitch(view, 90), context);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecEast],
             [-0.7071067690849304, 0.7071067690849304]);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecSouth],
@@ -320,7 +321,7 @@ describe('symbol height offset projection', () => {
     test('projectTileCoordinatesToClipSpace measures the height offset from the terrain when the anchor is ground', () => {
         const projectionContext = createProjectionContext({heightOffset: HEIGHT_OFFSET, heightAnchorGround: true});
         const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
-        const expected = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, TERRAIN_ELEVATION + HEIGHT_OFFSET);
+        const expected = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, TERRAIN_ELEVATION + HEIGHT_OFFSET);
         expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
         expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
     });
@@ -328,7 +329,7 @@ describe('symbol height offset projection', () => {
     test('projectTileCoordinatesToClipSpace ignores the terrain when the anchor is absolute', () => {
         const projectionContext = createProjectionContext({heightOffset: HEIGHT_OFFSET, heightAnchorGround: false});
         const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
-        const expected = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, HEIGHT_OFFSET);
+        const expected = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, HEIGHT_OFFSET);
         expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
         expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
     });
@@ -336,7 +337,7 @@ describe('symbol height offset projection', () => {
     test('projectTileCoordinatesToClipSpace defaults to the plain terrain elevation without height properties', () => {
         const projectionContext = createProjectionContext();
         const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
-        const expected = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, TERRAIN_ELEVATION);
+        const expected = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, TERRAIN_ELEVATION);
         expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
         expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
     });

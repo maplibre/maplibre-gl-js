@@ -6,7 +6,7 @@ import {CRSWorldCoordinateHelper, identityCrs} from './crs.ts';
 import {createIdentityCrsCamera} from '../../util/test/util.ts';
 import {createCameraContext} from './camera_context.ts';
 import {createCameraViewState, type CameraViewState} from '../camera_view_state.ts';
-import {projectCamera} from './camera_math.ts';
+import {projectCamera} from './project_camera.ts';
 import * as cameraUpdates from './camera_updates.ts';
 
 describe('coveringTiles', () => {

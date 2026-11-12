@@ -6,7 +6,7 @@ import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
 import {fastInvertSkewMat4} from '../util/fast_maths.ts';
 import {WritingMode} from '../symbol/shaping.ts';
 import {findLineIntersection} from '../util/util.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 
 import type {Painter} from '../render/painter.ts';
 import type {GetElevation} from '../geo/camera_types.ts';
@@ -294,7 +294,7 @@ export function updateLineLabels(bucket: SymbolBucket,
         const perspectiveRatio = getPerspectiveRatio(projectedCamera.cameraToCenterDistance, cameraToAnchorDistance);
 
         const fontSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
-        const pitchScaledFontSize = pitchWithMap ? (fontSize * cameraMath.getPitchedTextCorrection(projectedCamera, symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
+        const pitchScaledFontSize = pitchWithMap ? (fontSize * getCameraMath(projectedCamera).getPitchedTextCorrection(projectedCamera, symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
 
         const placeUnflipped = placeGlyphsAlongLine({
             projectionContext,
@@ -694,7 +694,7 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
         projection = projectWithMatrix(translatedX, translatedY, projectionContext.pitchedLabelPlaneMatrix, elevationAt(projectionContext, translatedX, translatedY));
         projection.isOccluded = false;
     } else {
-        projection = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, translatedX, translatedY, projectionContext.unwrappedTileID, elevationAt(projectionContext, translatedX, translatedY));
+        projection = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, translatedX, translatedY, projectionContext.unwrappedTileID, elevationAt(projectionContext, translatedX, translatedY));
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
     }
@@ -707,7 +707,7 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
         vec4.transformMat4(pos, pos, pitchedLabelPlaneMatrixInverse);
         const tileX = pos[0] / pos[3];
         const tileY = pos[1] / pos[3];
-        return cameraMath.projectTileCoordinates(projectionContext.projectedCamera, tileX, tileY, projectionContext.unwrappedTileID, elevationAt(projectionContext, tileX, tileY)).point;
+        return getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, tileX, tileY, projectionContext.unwrappedTileID, elevationAt(projectionContext, tileX, tileY)).point;
     } else {
         return {
             x: (x / projectionContext.width) * 2.0 - 1.0,
@@ -720,7 +720,7 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
  * Projects the given point in tile coordinates to the GL clip space (-1..1).
  */
 export function projectTileCoordinatesToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
-    const projection = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, x, y, projectionContext.unwrappedTileID, elevationAt(projectionContext, x, y));
+    const projection = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, x, y, projectionContext.unwrappedTileID, elevationAt(projectionContext, x, y));
     return projection;
 }
 
@@ -987,7 +987,7 @@ export function projectPathSpecialProjection(projectedPath: Point[], projectionC
     fastInvertSkewMat4(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
         const backProjected = projectWithMatrix(p.x, p.y, inverseLabelPlaneMatrix, elevationAt(projectionContext, p.x, p.y));
-        const projected = cameraMath.projectTileCoordinates(projectionContext.projectedCamera, backProjected.point.x, backProjected.point.y, projectionContext.unwrappedTileID, elevationAt(projectionContext, backProjected.point.x, backProjected.point.y));
+        const projected = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, backProjected.point.x, backProjected.point.y, projectionContext.unwrappedTileID, elevationAt(projectionContext, backProjected.point.x, backProjected.point.y));
         projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionContext.width;
         projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionContext.height;
         return projected;

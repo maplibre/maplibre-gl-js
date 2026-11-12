@@ -13,11 +13,11 @@ import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import {createCameraViewState, getMaxBounds} from '../camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
-import {projectCamera} from './camera_math.ts';
-import * as cameraMath from './camera_math.ts';
-import * as mercatorMath from './mercator_camera_math.ts';
+import {projectCamera} from './project_camera.ts';
+import {getCameraMath} from './camera_math_factory.ts';
+import {raycastTerrain, screenPointToMercatorCoordinateAtZ} from './mercator_camera_math.ts';
 import * as cameraUpdates from './camera_updates.ts';
-import * as cameraSolvers from './camera_solvers.ts';
+import {getCameraSolver} from './camera_solver_factory.ts';
 
 import type {Tile} from '../../tile/tile.ts';
 import type {CameraViewState} from '../camera_view_state.ts';
@@ -92,10 +92,10 @@ describe('mercator camera', () => {
             0, 0, 1, 0,
             0, 0, 0, 1], 6);
         expect([...projectedCamera.modelViewProjectionMatrix]).toEqual([3, 0, 0, 0, 0, -2.954423259036624, -0.1780177690666898, -0.17364817766693033, -0, 0.006822967915294533, -0.013222891287479163, -0.012898324631281611, -786432, 774484.3308168967, 47414.91102496082, 46270.827886319785]);
-        expect(fixedLngLat(cameraMath.screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(250, 250)))).toEqual({lng: 0, lat: 0});
-        expect(fixedCoord(cameraMath.screenPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
-        expect(fixedCoord(mercatorMath.screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(250, 250), 1))).toEqual({x: 0.5, y: 0.5000000044, z: 1});
-        expect(cameraMath.locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(0, 0))).toEqual({x: 250, y: 250});
+        expect(fixedLngLat(getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(250, 250)))).toEqual({lng: 0, lat: 0});
+        expect(fixedCoord(getCameraMath(projectedCamera).screenPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
+        expect(fixedCoord(screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(250, 250), 1))).toEqual({x: 0.5, y: 0.5000000044, z: 1});
+        expect(getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(0, 0))).toEqual({x: 250, y: 250});
     });
 
     test('setMinElevationForCurrentTile below sea level moves the far plane', () => {
@@ -164,8 +164,8 @@ describe('mercator camera', () => {
 
         expect([...projectedCamera.modelViewProjectionMatrix]).toEqual([...expected.modelViewProjectionMatrix]);
         expect([...projectedCamera.cameraPosition]).toEqual([...expected.cameraPosition]);
-        expect(fixedLngLat(cameraMath.screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(250, 250)))).toEqual({lng: 10, lat: 20});
-        expect(fixedCoord(cameraMath.screenPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(250, 250)))).toEqual(fixedCoord(cameraMath.screenPointToMercatorCoordinate(expected, context.worldCoordinateHelper, new Point(250, 250))));
+        expect(fixedLngLat(getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(250, 250)))).toEqual({lng: 10, lat: 20});
+        expect(fixedCoord(getCameraMath(projectedCamera).screenPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(250, 250)))).toEqual(fixedCoord(getCameraMath(expected).screenPointToMercatorCoordinate(expected, context.worldCoordinateHelper, new Point(250, 250))));
     });
 
     test('setLocationAtPoint', () => {
@@ -174,8 +174,9 @@ describe('mercator camera', () => {
         view = cameraUpdates.resize(view, context, 500, 500);
         view = cameraUpdates.setZoom(view, context, 4);
         expect(view.center).toEqual({lng: 0, lat: 0});
-        view = cameraSolvers.setLocationAtPoint(view, context, new LngLat(13, 10), new Point(15, 45));
-        expect(fixedLngLat(cameraMath.screenPointToLocation(projectMercator(view, context), context.worldCoordinateHelper, new Point(15, 45)))).toEqual({lng: 13, lat: 10});
+        view = getCameraSolver(context).setLocationAtPoint(view, context, new LngLat(13, 10), new Point(15, 45));
+        const projectedCamera = projectMercator(view, context);
+        expect(fixedLngLat(getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(15, 45)))).toEqual({lng: 13, lat: 10});
     });
 
     test('setLocationAtPoint tilted', () => {
@@ -185,8 +186,9 @@ describe('mercator camera', () => {
         view = cameraUpdates.setZoom(view, context, 4);
         view = cameraUpdates.setPitch(view, 50);
         expect(view.center).toEqual({lng: 0, lat: 0});
-        view = cameraSolvers.setLocationAtPoint(view, context, new LngLat(13, 10), new Point(15, 45));
-        expect(fixedLngLat(cameraMath.screenPointToLocation(projectMercator(view, context), context.worldCoordinateHelper, new Point(15, 45)))).toEqual({lng: 13, lat: 10});
+        view = getCameraSolver(context).setLocationAtPoint(view, context, new LngLat(13, 10), new Point(15, 45));
+        const projectedCamera = projectMercator(view, context);
+        expect(fixedLngLat(getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(15, 45)))).toEqual({lng: 13, lat: 10});
     });
 
     test('setLocationAtPoint tilted rolled', () => {
@@ -197,8 +199,9 @@ describe('mercator camera', () => {
         view = cameraUpdates.setPitch(view, 50);
         view = cameraUpdates.setRoll(view, 50);
         expect(view.center).toEqual({lng: 0, lat: 0});
-        view = cameraSolvers.setLocationAtPoint(view, context, new LngLat(13, 10), new Point(15, 45));
-        expect(fixedLngLat(cameraMath.screenPointToLocation(projectMercator(view, context), context.worldCoordinateHelper, new Point(15, 45)))).toEqual({lng: 13, lat: 10});
+        view = getCameraSolver(context).setLocationAtPoint(view, context, new LngLat(13, 10), new Point(15, 45));
+        const projectedCamera = projectMercator(view, context);
+        expect(fixedLngLat(getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(15, 45)))).toEqual({lng: 13, lat: 10});
     });
 
     test('setLocationAtPoint wraps a center it leaves in place', () => {
@@ -207,7 +210,7 @@ describe('mercator camera', () => {
         view = cameraUpdates.resize(view, context, 500, 500);
         view = cameraUpdates.setZoom(view, context, 4);
         view = cameraUpdates.setCenter(view, context, new LngLat(360, 0));
-        view = cameraSolvers.setLocationAtPoint(view, context, view.center, projectMercator(view, context).centerPoint);
+        view = getCameraSolver(context).setLocationAtPoint(view, context, view.center, projectMercator(view, context).centerPoint);
         expect(view.center).toEqual({lng: 0, lat: 0});
     });
 
@@ -218,12 +221,12 @@ describe('mercator camera', () => {
         view = cameraUpdates.setZoom(view, context, 4);
         const centerPoint = projectMercator(view, context).centerPoint;
 
-        const camera = cameraSolvers.getCameraForLocationAtPoint(view, context, new LngLat(179, 0), centerPoint);
+        const camera = getCameraSolver(context).getCameraForLocationAtPoint(view, context, new LngLat(179, 0), centerPoint);
 
         expect(view.center).toEqual({lng: 0, lat: 0});
         expect(camera.center.lng).toBeLessThan(179);
-        expect(cameraSolvers.getCameraForLocationAtPoint(view, context, view.center, centerPoint)).toBeNull();
-        view = cameraSolvers.setLocationAtPoint(view, context, new LngLat(179, 0), centerPoint);
+        expect(getCameraSolver(context).getCameraForLocationAtPoint(view, context, view.center, centerPoint)).toBeNull();
+        view = getCameraSolver(context).setLocationAtPoint(view, context, new LngLat(179, 0), centerPoint);
         expect(view.center).toEqual(camera.center);
         expect(view.zoom).toBe(camera.zoom);
     });
@@ -290,7 +293,8 @@ describe('mercator camera', () => {
 
         view = cameraUpdates.setCenter(view, context, new LngLat(50, -50));
 
-        const southeast = cameraMath.locationToScreenPoint(projectMercator(view, context), context.worldCoordinateHelper, new LngLat(5, -5));
+        const projectedCamera = projectMercator(view, context);
+        const southeast = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(5, -5));
         expect(southeast.x).toBeCloseTo(500, 6);
         expect(southeast.y).toBeCloseTo(500, 6);
     });
@@ -306,7 +310,8 @@ describe('mercator camera', () => {
 
         view = cameraUpdates.setPadding(view, context, {top: 0, right: 0, bottom: 0, left: 0});
 
-        const southeast = cameraMath.locationToScreenPoint(projectMercator(view, context), context.worldCoordinateHelper, new LngLat(5, -5));
+        const projectedCamera = projectMercator(view, context);
+        const southeast = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(5, -5));
         expect(southeast.x).toBeCloseTo(1000, 6);
         expect(southeast.y).toBeCloseTo(1000, 6);
     });
@@ -365,12 +370,14 @@ describe('mercator camera', () => {
         view = cameraUpdates.setZoom(view, context, 0);
         view = cameraUpdates.setCenter(view, context, new LngLat(-170.01, 0.01));
 
-        let unwrappedCoords = cameraMath.getVisibleUnwrappedCoordinates(projectMercator(view, context), context.worldCoordinateHelper, new CanonicalTileID(0, 0, 0));
+        const projectedCamera = projectMercator(view, context);
+        let unwrappedCoords = getCameraMath(projectedCamera).getVisibleUnwrappedCoordinates(projectedCamera, context.worldCoordinateHelper, new CanonicalTileID(0, 0, 0));
         expect(unwrappedCoords).toHaveLength(4);
 
         //getVisibleUnwrappedCoordinates should honor _renderWorldCopies
         view = cameraUpdates.setRenderWorldCopies(view, context.worldCoordinateHelper, false);
-        unwrappedCoords = cameraMath.getVisibleUnwrappedCoordinates(projectMercator(view, context), context.worldCoordinateHelper, new CanonicalTileID(0, 0, 0));
+        const withoutWorldCopies = projectMercator(view, context);
+        unwrappedCoords = getCameraMath(withoutWorldCopies).getVisibleUnwrappedCoordinates(withoutWorldCopies, context.worldCoordinateHelper, new CanonicalTileID(0, 0, 0));
         expect(unwrappedCoords).toHaveLength(1);
     });
 
@@ -383,10 +390,10 @@ describe('mercator camera', () => {
         view = cameraUpdates.setCenter(view, context, new LngLat(0.0, 0.0));
         const projectedCamera = projectMercator(view, context);
 
-        const customLayerMatrix = cameraMath.getProjectionDataForCustomLayer(projectedCamera).mainMatrix;
+        const customLayerMatrix = getCameraMath(projectedCamera).getProjectionDataForCustomLayer(projectedCamera).mainMatrix;
         expect(customLayerMatrix[0].toString().length).toBeGreaterThan(9);
         expect(projectedCamera.pixelsToClipSpaceMatrix[0].toString().length).toBeGreaterThan(9);
-        expect(cameraMath.maxPitchScaleFactor(projectedCamera)).toBeCloseTo(2.366025418080343, 5);
+        expect(getCameraMath(projectedCamera).maxPitchScaleFactor(projectedCamera)).toBeCloseTo(2.366025418080343, 5);
     });
 
     test('recenterOnTerrain: no change', () => {
@@ -403,8 +410,8 @@ describe('mercator camera', () => {
         // closer to the terrain (and therefore also when the terrain is closer to the camera),
         // but that shouldn't change the camera's position in world space if that wasn't requested.
         const expectedAltitude = 1865.7579397718;
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
-        const expectedCamLngLat = cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
+        const expectedCamLngLat = getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
         expect(expectedCamLngLat.lng).toBeCloseTo(10, 10);
         expect(expectedCamLngLat.lat).toBeCloseTo(49.9850171656428, 10);
 
@@ -413,9 +420,9 @@ describe('mercator camera', () => {
             ...createTerrain(),
             getElevationForLngLat: () => 200,
         } as any;
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
         projectedCamera = projectMercator(view, context);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
         expect(view.zoom).toBe(14);
     });
 
@@ -434,7 +441,7 @@ describe('mercator camera', () => {
             ...createTerrain(),
             getElevationForLngLat: () => 200 + 1,
         } as any;
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
         expect(view.center.lat).toBeCloseTo(82, 4);
     });
 
@@ -452,8 +459,8 @@ describe('mercator camera', () => {
         // closer to the terrain (and therefore also when the terrain is closer to the camera),
         // but that shouldn't change the camera's position in world space if that wasn't requested.
         const expectedAltitude = 1865.7579397718;
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
-        const expectedCamLngLat = cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
+        const expectedCamLngLat = getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
         expect(expectedCamLngLat.lng).toBeCloseTo(10, 10);
         expect(expectedCamLngLat.lat).toBeCloseTo(49.9850171656428, 10);
 
@@ -462,14 +469,14 @@ describe('mercator camera', () => {
             ...createTerrain(),
             getElevationForLngLat: () => 400,
         } as any;
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
         projectedCamera = projectMercator(view, context);
         expect(view.elevation).toBe(400);
         expect(view.center.lng).toBeCloseTo(10, 10);
         expect(view.center.lat).toBeCloseTo(49.99820083233257, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(expectedCamLngLat.lng, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(expectedCamLngLat.lat, 10);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(expectedCamLngLat.lng, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(expectedCamLngLat.lat, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
         expect(view.zoom).toBeCloseTo(14.184585886440683, 10);
     });
 
@@ -481,17 +488,19 @@ describe('mercator camera', () => {
         view = cameraUpdates.setZoom(view, context, 14);
         view = cameraUpdates.setPitch(view, 45);
         view = cameraUpdates.resize(view, context, 512, 512);
-        const expectedAltitude = cameraMath.getCameraAltitude(projectMercator(view, context));
+        const projectedCamera = projectMercator(view, context);
+        const expectedAltitude = getCameraMath(projectedCamera).getCameraAltitude(projectedCamera);
         const terrain = {
             ...createTerrain(),
             getElevationForLngLat: () => 400,
             getElevationForLngLatZoom: () => 1000,
         } as any;
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         expect(view.elevation).toBe(400);
-        expect(cameraMath.getCameraAltitude(projectMercator(view, context))).toBeCloseTo(expectedAltitude, 10);
+        const recentered = projectMercator(view, context);
+        expect(getCameraMath(recentered).getCameraAltitude(recentered)).toBeCloseTo(expectedAltitude, 10);
     });
 
     test('recenterOnTerrain: elevation decrease', () => {
@@ -508,8 +517,8 @@ describe('mercator camera', () => {
         // closer to the terrain (and therefore also when the terrain is closer to the camera),
         // but that shouldn't change the camera's position in world space if that wasn't requested.
         const expectedAltitude = 1865.7579397718;
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
-        const expectedCamLngLat = cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
+        const expectedCamLngLat = getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
         expect(expectedCamLngLat.lng).toBeCloseTo(10, 10);
         expect(expectedCamLngLat.lat).toBeCloseTo(49.9850171656428, 10);
 
@@ -518,12 +527,12 @@ describe('mercator camera', () => {
             ...createTerrain(),
             getElevationForLngLat: () => -200,
         } as any;
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
         projectedCamera = projectMercator(view, context);
         expect(view.elevation).toBe(-200);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(expectedCamLngLat.lng, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(expectedCamLngLat.lat, 10);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(expectedCamLngLat.lng, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(expectedCamLngLat.lat, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
         expect(view.zoom).toBeCloseTo(13.689399565250616, 10);
     });
 
@@ -536,15 +545,17 @@ describe('mercator camera', () => {
         view = cameraUpdates.resize(view, context, 512, 512);
         const plateauUnderTheCameraThenAPlain = createDEM((_x, y) => y >= 26 ? 2400 : 0, 64);
         const terrain = createDEMTerrain([new OverscaledTileID(10, 0, 10, 512, 512)], plateauUnderTheCameraThenAPlain);
-        const cameraLngLat = cameraMath.getCameraLngLat(projectMercator(view, context), context.worldCoordinateHelper);
-        const cameraAltitude = cameraMath.getCameraAltitude(projectMercator(view, context));
+        const projectedCamera = projectMercator(view, context);
+        const cameraLngLat = getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
+        const cameraAltitude = getCameraMath(projectedCamera).getCameraAltitude(projectedCamera);
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         expect(view.zoom).toBeCloseTo(12, 6);
         expect(view.elevation).toBeCloseTo(0, 6);
-        expect(cameraMath.getCameraLngLat(projectMercator(view, context), context.worldCoordinateHelper).lat).toBeCloseTo(cameraLngLat.lat, 9);
-        expect(cameraMath.getCameraAltitude(projectMercator(view, context))).toBeCloseTo(cameraAltitude, 3);
+        const recentered = projectMercator(view, context);
+        expect(getCameraMath(recentered).getCameraLngLat(recentered, context.worldCoordinateHelper).lat).toBeCloseTo(cameraLngLat.lat, 9);
+        expect(getCameraMath(recentered).getCameraAltitude(recentered)).toBeCloseTo(cameraAltitude, 3);
     });
 
     test('recenterOnTerrain leaves out terrain between the camera and the near clipping plane when maxZoom lets the camera nearer than that plane', () => {
@@ -556,14 +567,14 @@ describe('mercator camera', () => {
         view = cameraUpdates.resize(view, context, 512, 512);
         const projectedCamera = projectMercator(view, context);
         const metersPerDegree = 2 * Math.PI * earthRadius / 360;
-        const wallLat = cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat + 100 / metersPerDegree;
-        const wallTop = cameraMath.getCameraAltitude(projectedCamera) - 12;
+        const wallLat = getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat + 100 / metersPerDegree;
+        const wallTop = getCameraMath(projectedCamera).getCameraAltitude(projectedCamera) - 12;
         const wallBeforeTheNearPlane = (_lng: number, lat: number) => Math.abs(lat - wallLat) < 15 / metersPerDegree ? wallTop : 0;
         const terrain = createDEMTerrain([], null);
         vi.spyOn(terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(wallBeforeTheNearPlane, 0, wallTop));
         vi.spyOn(terrain, 'getElevationForLngLat').mockImplementation(lngLat => wallBeforeTheNearPlane(lngLat.lng, lngLat.lat));
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         expect(view.zoom).toBeCloseTo(12, 6);
         expect(view.center.lat).toBeCloseTo(0, 6);
@@ -579,7 +590,7 @@ describe('mercator camera', () => {
         const blockBetweenTheCameraAndTheCenter = createDEM((_x, y) => y >= 8 && y < 22 ? 1500 : 0, 64);
         const terrain = createDEMTerrain([new OverscaledTileID(10, 0, 10, 512, 512)], blockBetweenTheCameraAndTheCenter);
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         expect(view.elevation).toBeCloseTo(1500, 6);
         expect(view.zoom).toBe(12.5);
@@ -594,11 +605,11 @@ describe('mercator camera', () => {
         view = cameraUpdates.resize(view, context, 512, 512);
         const terrain = createDEMTerrain([new OverscaledTileID(10, 0, 10, 512, 512)], createDEM(() => 2400, 64));
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         const projectedCamera = projectMercator(view, context);
         expect(view.center.lat).toBeCloseTo(-0.152407, 6);
-        expect(cameraMath.screenPointToLocation(projectedCamera, context.worldCoordinateHelper, projectedCamera.centerPoint).lat).toBeCloseTo(-0.152407, 6);
+        expect(getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, projectedCamera.centerPoint).lat).toBeCloseTo(-0.152407, 6);
     });
 
     test('recenterOnTerrain puts the center on sloped terrain with the camera where it was', () => {
@@ -608,20 +619,21 @@ describe('mercator camera', () => {
         view = cameraUpdates.setZoom(view, context, 11);
         view = cameraUpdates.setPitch(view, 85);
         view = cameraUpdates.setCenter(view, context, new LngLat(0.7, 60));
-        const cameraBefore = cameraMath.getCameraLngLat(projectMercator(view, context), context.worldCoordinateHelper);
-        const altitudeBefore = cameraMath.getCameraAltitude(projectMercator(view, context));
+        const projectedBefore = projectMercator(view, context);
+        const cameraBefore = getCameraMath(projectedBefore).getCameraLngLat(projectedBefore, context.worldCoordinateHelper);
+        const altitudeBefore = getCameraMath(projectedBefore).getCameraAltitude(projectedBefore);
         const demTile = new OverscaledTileID(8, 0, 8, 128, 74);
         const risingNorthward = createDEM((_x, y) => (64 - y) * 30, 64);
         const terrain = createDEMTerrain([demTile], risingNorthward);
         terrain.tileManager.getSourceTile = () => ({tileID: demTile, dem: risingNorthward} as Tile);
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         const projectedCamera = projectMercator(view, context);
         expect(view.elevation).toBeCloseTo(997.526, 2);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(cameraBefore.lat, 8);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(cameraBefore.lng, 8);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(altitudeBefore, 6);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(cameraBefore.lat, 8);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(cameraBefore.lng, 8);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(altitudeBefore, 6);
     });
 
     test('recenterOnTerrain keeps the camera where it is when the center moves to another latitude', () => {
@@ -631,17 +643,18 @@ describe('mercator camera', () => {
         view = cameraUpdates.setCenter(view, context, new LngLat(10, 60));
         view = cameraUpdates.setZoom(view, context, 11);
         view = cameraUpdates.setPitch(view, 85);
-        const cameraBefore = cameraMath.getCameraLngLat(projectMercator(view, context), context.worldCoordinateHelper);
-        const altitudeBefore = cameraMath.getCameraAltitude(projectMercator(view, context));
+        const projectedBefore = projectMercator(view, context);
+        const cameraBefore = getCameraMath(projectedBefore).getCameraLngLat(projectedBefore, context.worldCoordinateHelper);
+        const altitudeBefore = getCameraMath(projectedBefore).getCameraAltitude(projectedBefore);
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 1000));
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         const projectedCamera = projectMercator(view, context);
         expect(view.elevation).toBe(1000);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(cameraBefore.lat, 8);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(cameraBefore.lng, 8);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(altitudeBefore, 6);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(cameraBefore.lat, 8);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(cameraBefore.lng, 8);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(altitudeBefore, 6);
     });
 
     test('recenterOnTerrain keeps the camera where it is at an extreme latitude', () => {
@@ -652,24 +665,25 @@ describe('mercator camera', () => {
         view = cameraUpdates.setZoom(view, context, 10);
         view = cameraUpdates.setPitch(view, 70);
         view = cameraUpdates.setBearing(view, 135);
-        const cameraBefore = cameraMath.getCameraLngLat(projectMercator(view, context), context.worldCoordinateHelper);
-        const altitudeBefore = cameraMath.getCameraAltitude(projectMercator(view, context));
+        const projectedBefore = projectMercator(view, context);
+        const cameraBefore = getCameraMath(projectedBefore).getCameraLngLat(projectedBefore, context.worldCoordinateHelper);
+        const altitudeBefore = getCameraMath(projectedBefore).getCameraAltitude(projectedBefore);
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 2500));
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         const projectedCamera = projectMercator(view, context);
         expect(view.elevation).toBe(2500);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(cameraBefore.lat, 8);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(cameraBefore.lng, 8);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(altitudeBefore, 6);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(cameraBefore.lat, 8);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(cameraBefore.lng, 8);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(altitudeBefore, 6);
     });
 
     test('recenterOnTerrain leaves the center where it is while the terrain under it is above the camera', () => {
         const {state: view, context} = createCameraAt(new LngLat(0, 0), 15, 60);
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 5000));
 
-        const recentered = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        const recentered = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         expect(recentered.zoom).toBe(15);
         expect(recentered.center).toEqual(new LngLat(0, 0));
@@ -686,7 +700,7 @@ describe('mercator camera', () => {
         view = cameraUpdates.setElevation(view, context, 3000);
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 2500));
 
-        view = cameraSolvers.recenterOnTerrain(view, context, terrain);
+        view = getCameraSolver(context).recenterOnTerrain(view, context, terrain);
 
         expect(view.elevation).toBe(2500);
         expect(view.zoom).toBeCloseTo(16.1383, 4);
@@ -706,20 +720,20 @@ describe('mercator camera', () => {
         // closer to the terrain (and therefore also when the terrain is closer to the camera),
         // but that shouldn't change the camera's position in world space if that wasn't requested.
         const expectedAltitude = 1865.7579397718;
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
-        const expectedCamLngLat = cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
+        const expectedCamLngLat = getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
         expect(expectedCamLngLat.lng).toBeCloseTo(10, 10);
         expect(expectedCamLngLat.lat).toBeCloseTo(49.9850171656428, 10);
 
         // expect same values because of no elevation change
-        view = cameraSolvers.recenterOnTerrain(view, context);
+        view = getCameraSolver(context).recenterOnTerrain(view, context);
         projectedCamera = projectMercator(view, context);
         expect(view.elevation).toBeCloseTo(0, 10);
         expect(view.center.lng).toBeCloseTo(10, 10);
         expect(view.center.lat).toBeCloseTo(50.00179923503546, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(expectedCamLngLat.lng, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(expectedCamLngLat.lat, 10);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(expectedCamLngLat.lng, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(expectedCamLngLat.lat, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(expectedAltitude, 10);
         expect(view.zoom).toBeCloseTo(13.836362951286565, 10);
     });
 
@@ -727,7 +741,8 @@ describe('mercator camera', () => {
         const context = createCameraContext();
         let view = createCameraViewState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
         view = cameraUpdates.resize(view, context, 500, 500);
-        const coordinate = cameraMath.screenPointToMercatorCoordinate(projectMercator(view, context), context.worldCoordinateHelper, new Point(0, 0), createTerrain());
+        const projectedCamera = projectMercator(view, context);
+        const coordinate = getCameraMath(projectedCamera).screenPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(0, 0), createTerrain());
 
         expect(coordinate).toBeDefined();
     });
@@ -739,13 +754,13 @@ describe('mercator camera', () => {
 
         view = cameraUpdates.setPitch(view, 60);
         let projectedCamera = projectMercator(view, context);
-        expect(cameraMath.getBounds(projectedCamera, context.worldCoordinateHelper).getNorthWest().toArray()).toStrictEqual(cameraMath.screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(0, 0)).toArray());
+        expect(getCameraMath(projectedCamera).getBounds(projectedCamera, context.worldCoordinateHelper).getNorthWest().toArray()).toStrictEqual(getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(0, 0)).toArray());
 
         view = cameraUpdates.setPitch(view, 75);
         projectedCamera = projectMercator(view, context);
         const top = Math.max(0, projectedCamera.height / 2 - getMercatorHorizon(projectedCamera));
         expect(top).toBeCloseTo(79.1823898251593, 10);
-        expect(cameraMath.getBounds(projectedCamera, context.worldCoordinateHelper).getNorthWest().toArray()).toStrictEqual(cameraMath.screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(0, top)).toArray());
+        expect(getCameraMath(projectedCamera).getBounds(projectedCamera, context.worldCoordinateHelper).getNorthWest().toArray()).toStrictEqual(getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(0, top)).toArray());
     });
 
     test('isPointOnMapSurface with padding', () => {
@@ -755,10 +770,12 @@ describe('mercator camera', () => {
         view = cameraUpdates.setPitch(view, 80);
 
         view = cameraUpdates.setPadding(view, context, {top: 200, bottom: 0, left: 0, right: 0});
-        expect(cameraMath.isPointOnMapSurface(projectMercator(view, context), context.worldCoordinateHelper, new Point(250, 200))).toBe(false);
+        const projectedCamera = projectMercator(view, context);
+        expect(getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, context.worldCoordinateHelper, new Point(250, 200))).toBe(false);
 
         view = cameraUpdates.setPadding(view, context, {top: 0, bottom: 200, left: 0, right: 0});
-        expect(cameraMath.isPointOnMapSurface(projectMercator(view, context), context.worldCoordinateHelper, new Point(250, 100))).toBe(true);
+        const padded = projectMercator(view, context);
+        expect(getCameraMath(padded).isPointOnMapSurface(padded, context.worldCoordinateHelper, new Point(250, 100))).toBe(true);
     });
 
     test('isPointOnMapSurface is false past the edge of a world projection', () => {
@@ -768,8 +785,8 @@ describe('mercator camera', () => {
         view = cameraUpdates.setZoom(view, context, -1);
         const projectedCamera = projectMercator(view, context);
 
-        expect(cameraMath.isPointOnMapSurface(projectedCamera, context.worldCoordinateHelper, new Point(300, 250))).toBe(true);
-        expect(cameraMath.isPointOnMapSurface(projectedCamera, context.worldCoordinateHelper, new Point(400, 250))).toBe(false);
+        expect(getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, context.worldCoordinateHelper, new Point(300, 250))).toBe(true);
+        expect(getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, context.worldCoordinateHelper, new Point(400, 250))).toBe(false);
     });
 
     test('projectTileCoordinates', () => {
@@ -778,14 +795,16 @@ describe('mercator camera', () => {
         let view = createCameraViewState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
         view = cameraUpdates.resize(view, context, 500, 500);
         view = cameraUpdates.setCenter(view, context, new LngLat(10.0, 50.0));
-        let projection = cameraMath.projectTileCoordinates(projectMercator(view, context), 1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 0);
+        const projectedCamera = projectMercator(view, context);
+        let projection = getCameraMath(projectedCamera).projectTileCoordinates(projectedCamera, 1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 0);
         expect(projection.point.x).toBeCloseTo(0.07111111111111101, precisionDigits);
         expect(projection.point.y).toBeCloseTo(0.8719999854792714, precisionDigits);
         expect(projection.signedDistanceFromCamera).toBeCloseTo(750, precisionDigits);
         expect(projection.isOccluded).toBe(false);
         view = cameraUpdates.setBearing(view, 12);
         view = cameraUpdates.setPitch(view, 10);
-        projection = cameraMath.projectTileCoordinates(projectMercator(view, context), 1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 0);
+        const turned = projectMercator(view, context);
+        projection = getCameraMath(turned).projectTileCoordinates(turned, 1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), 0);
         expect(projection.point.x).toBeCloseTo(-0.10639783257205901, precisionDigits);
         expect(projection.point.y).toBeCloseTo(0.8136784996777623, precisionDigits);
         expect(projection.signedDistanceFromCamera).toBeCloseTo(787.6699126802941, precisionDigits);
@@ -795,7 +814,7 @@ describe('mercator camera', () => {
     test('locationToScreenPoint projects a location in front of the camera', () => {
         const {projectedCamera, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 512, height: 512, zoom: 10, center: new LngLat(0, 0), pitch: 80});
 
-        const inFrontOfCamera = cameraMath.locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(0, 0.05));
+        const inFrontOfCamera = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(0, 0.05));
         expect(inFrontOfCamera.x).toBeCloseTo(256, 1);
         expect(inFrontOfCamera.y).toBeCloseTo(244.4, 1);
     });
@@ -804,22 +823,22 @@ describe('mercator camera', () => {
         const {projectedCamera, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 512, height: 512, zoom: 10, center: new LngLat(0, 0), pitch: 80});
 
         // The camera looks north, so a location south of it left the screen through the bottom edge.
-        const behindCamera = cameraMath.locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(0, -2));
+        const behindCamera = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(0, -2));
         expect(behindCamera.x).toBeCloseTo(256, 6);
         expect(behindCamera.y).toBeCloseTo(1024, 6);
 
         // West of a north-facing camera is the left side of the screen.
-        const behindLeft = cameraMath.locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(-2, -2));
+        const behindLeft = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(-2, -2));
         expect(behindLeft.x).toBeCloseTo(-512, 6);
         expect(behindLeft.y).toBeGreaterThan(256);
         expect(behindLeft.y).toBeLessThan(1024);
 
-        const behindRight = cameraMath.locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(2, -2));
+        const behindRight = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(2, -2));
         expect(behindRight.x).toBeCloseTo(1024, 6);
         expect(behindRight.y).toBeCloseTo(behindLeft.y, 6);
 
         // A location only slightly west still leaves through the bottom edge, left of centre.
-        const behindSlightlyLeft = cameraMath.locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(-0.2, -2));
+        const behindSlightlyLeft = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(-0.2, -2));
         expect(behindSlightlyLeft.y).toBeCloseTo(1024, 6);
         expect(behindSlightlyLeft.x).toBeLessThan(256);
         expect(behindSlightlyLeft.x).toBeGreaterThan(-512);
@@ -836,16 +855,16 @@ describe('mercator camera', () => {
         view = cameraUpdates.resize(view, context, 512, 512);
         let projectedCamera = projectMercator(view, context);
 
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(1405.7075926414002, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(14.973921529405033, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(54.99599181678275, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(1405.7075926414002, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(14.973921529405033, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(54.99599181678275, 10);
 
         view = cameraUpdates.setRoll(view, 31);
         projectedCamera = projectMercator(view, context);
 
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(1405.7075926414002, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(14.973921529405033, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(54.99599181678275, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(1405.7075926414002, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(14.973921529405033, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(54.99599181678275, 10);
     });
 
     test('calculateCenterFromCameraLngLatAlt no pitch no bearing', () => {
@@ -863,9 +882,9 @@ describe('mercator camera', () => {
         view = cameraUpdates.setElevation(view, context, centerInfo.elevation);
         const projectedCamera = projectMercator(view, context);
         expect(view.zoom).toBeGreaterThan(0);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(camAlt, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(camLngLat.lng, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(camLngLat.lat, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(camAlt, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(camLngLat.lat, 10);
     });
 
     test('calculateCenterFromCameraLngLatAlt no pitch', () => {
@@ -885,9 +904,9 @@ describe('mercator camera', () => {
         view = cameraUpdates.setBearing(view, bearing);
         const projectedCamera = projectMercator(view, context);
         expect(view.zoom).toBeGreaterThan(0);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(camAlt, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(camLngLat.lng, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(camLngLat.lat, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(camAlt, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(camLngLat.lat, 10);
     });
 
     test.each([30, 88, 89.99, 90, 95, 180])('calculateCenterFromCameraLngLatAlt %f degrees pitch', (pitch) => {
@@ -908,20 +927,20 @@ describe('mercator camera', () => {
         view = cameraUpdates.setPitch(view, pitch);
         const projectedCamera = projectMercator(view, context);
         expect(view.zoom).toBeGreaterThan(0);
-        expect(cameraMath.getCameraAltitude(projectedCamera)).toBeCloseTo(camAlt, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(camLngLat.lng, 10);
-        expect(cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(camLngLat.lat, 10);
+        expect(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera)).toBeCloseTo(camAlt, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(camLngLat.lng, 10);
+        expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(camLngLat.lat, 10);
     });
 
     test('getProjectionData parses OverscaledTileID', () => {
         const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true, width: 512, height: 512});
-        const projectionData = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
+        const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0)});
         expectToBeCloseToArray(projectionData.tileMercatorCoords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
     });
 
     test('getProjectionData parses null', () => {
         const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true, width: 512, height: 512});
-        const projectionData = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: null});
+        const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: null});
         expectToBeCloseToArray(projectionData.tileMercatorCoords, [0, 0, 1, 1]);
     });
 });
@@ -931,14 +950,14 @@ describe('calculateCameraOptionsFromTo', () => {
     const {state: view, context} = createTestCamera({width: 512, height: 512, zoom: 1});
 
     test('look at north', () => {
-        const cameraOptions = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 0, {lng: 1, lat: 1}, 0);
+        const cameraOptions = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 0, {lng: 1, lat: 1}, 0);
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.center).toBeDefined();
         expect(cameraOptions.bearing).toBeCloseTo(0);
     });
 
     test('look at west', () => {
-        const cameraOptions = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 0, {lng: 0, lat: 0}, 0);
+        const cameraOptions = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 0, {lng: 0, lat: 0}, 0);
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.bearing).toBeCloseTo(-90);
     });
@@ -946,13 +965,13 @@ describe('calculateCameraOptionsFromTo', () => {
     test('pitch 45', () => {
         // altitude same as grounddistance => 45°
         // distance between lng x and lng x+1 is 111.2km at same lat
-        const cameraOptions = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 0);
+        const cameraOptions = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 0);
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(45);
     });
 
     test('pitch 90', () => {
-        const cameraOptions = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 0, {lng: 0, lat: 0}, 0);
+        const cameraOptions = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 0, {lng: 0, lat: 0}, 0);
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(90);
     });
@@ -962,14 +981,14 @@ describe('calculateCameraOptionsFromTo', () => {
         // distance between lng x and lng x+1 is 111.2km at same lat
         // (elevation difference of cam and center) / 2 = grounddistance =>
         // acos(111.2 / sqrt(111.2² + (111.2 * 2)²)) = acos(1/sqrt(5)) => 63.435 + 90 (looking up) = 153.435
-        const cameraOptions = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 111200 * 3);
+        const cameraOptions = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 1, lat: 0}, 111200, {lng: 0, lat: 0}, 111200 * 3);
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.pitch).toBeCloseTo(153.435);
     });
 
     test('zoom distance 1000', () => {
         const expectedZoom = Math.log2(projectMercator(view, context).cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / view.tileSize);
-        const cameraOptions = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 1000);
+        const cameraOptions = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 1000);
 
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
@@ -977,14 +996,14 @@ describe('calculateCameraOptionsFromTo', () => {
 
     test('zoom distance 1 lng (111.2km), 111.2km altitude away', () => {
         const expectedZoom = Math.log2(projectMercator(view, context).cameraToCenterDistance / mercatorZfromAltitude(Math.hypot(111200, 111200), 0) / view.tileSize);
-        const cameraOptions = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 1, lat: 0}, 111200);
+        const cameraOptions = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 1, lat: 0}, 111200);
 
         expect(cameraOptions).toBeDefined();
         expect(cameraOptions.zoom).toBeCloseTo(expectedZoom);
     });
 
     test('same To as From error', () => {
-        expect(() => cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow('Can\'t calculate camera options with same From and To');
+        expect(() => getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 0, lat: 0}, 0)).toThrow('Can\'t calculate camera options with same From and To');
     });
 });
 
@@ -996,9 +1015,9 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         const projectedCamera = projectMercator(view, context);
 
         for (const p of [new Point(256, 256), new Point(100, 400), new Point(400, 300)]) {
-            const result = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
+            const result = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
             expect(result).not.toBeNull();
-            expectWorldPixelsClose(result, mercatorMath.screenPointToMercatorCoordinateAtZ(projectedCamera, p, height), projectedCamera.worldSize);
+            expectWorldPixelsClose(result, screenPointToMercatorCoordinateAtZ(projectedCamera, p, height), projectedCamera.worldSize);
             expect(result.z).toBeCloseTo(height, 10);
         }
     });
@@ -1010,11 +1029,11 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         const projectedCamera = projectMercator(view, context);
         const center = new Point(256, 256);
 
-        const result = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, center, terrain);
+        const result = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, center, terrain);
 
         expect(result).not.toBeNull();
         expect(result.z).toBeCloseTo(height, 6);
-        expectWorldPixelsClose(result, mercatorMath.screenPointToMercatorCoordinateAtZ(projectedCamera, center, height), projectedCamera.worldSize);
+        expectWorldPixelsClose(result, screenPointToMercatorCoordinateAtZ(projectedCamera, center, height), projectedCamera.worldSize);
     });
 
     test('applies the terrain exaggeration to the hit elevation', () => {
@@ -1023,10 +1042,10 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         const {state: view, context} = createCameraAt(new LngLat(0, 0), 4, 30);
         const projectedCamera = projectMercator(view, context);
 
-        const result = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(256, 256), terrain);
+        const result = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(256, 256), terrain);
 
         expect(result.z).toBeCloseTo(height * 2.5, 10);
-        expectWorldPixelsClose(result, mercatorMath.screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(256, 256), height * 2.5), projectedCamera.worldSize);
+        expectWorldPixelsClose(result, screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(256, 256), height * 2.5), projectedCamera.worldSize);
     });
 
     test('the hit elevation matches the terrain elevation at the hit position', () => {
@@ -1036,7 +1055,7 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         const projectedCamera = projectMercator(view, context);
 
         for (const p of [new Point(200, 300), new Point(256, 350), new Point(330, 420)]) {
-            const result = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
+            const result = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
             expect(result).not.toBeNull();
             const elevation = terrain.getElevation(tileID, result.x * EXTENT, result.y * EXTENT, EXTENT);
             expect(elevation).toBeCloseTo(result.z, 6);
@@ -1051,7 +1070,7 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         const crossed = new Set<number>();
 
         for (const p of [new Point(180, 300), new Point(256, 300), new Point(340, 300)]) {
-            const result = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
+            const result = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
             expect(result).not.toBeNull();
             const tileX = Math.floor(result.x * 2);
             const tileY = Math.floor(result.y * 2);
@@ -1068,24 +1087,28 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         // Into the sky.
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 0));
         const sky = createCameraAt(new LngLat(0, 0), 4, 80);
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectMercator(sky.state, sky.context), sky.context.worldCoordinateHelper, new Point(256, 0), terrain)).toBeNull();
+        const skyCamera = projectMercator(sky.state, sky.context);
+        expect(getCameraMath(skyCamera).screenTerrainPointToMercatorCoordinate(skyCamera, sky.context.worldCoordinateHelper, new Point(256, 0), terrain)).toBeNull();
 
         // Leaving the world vertically past the covered tiles.
         const edgeTerrain = createDEMTerrain([new OverscaledTileID(1, 0, 1, 0, 0)], createDEM(() => 0));
         const edge = createCameraAt(new LngLat(0, 0), 1, 0);
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectMercator(edge.state, edge.context), edge.context.worldCoordinateHelper, new Point(400, 400), edgeTerrain)).toBeNull();
+        const edgeCamera = projectMercator(edge.state, edge.context);
+        expect(getCameraMath(edgeCamera).screenTerrainPointToMercatorCoordinate(edgeCamera, edge.context.worldCoordinateHelper, new Point(400, 400), edgeTerrain)).toBeNull();
 
         // Staying below the terrain surface the whole way: at zoom 22 the camera sits about 28 meters up, under a 100 meter plateau.
         const submergedTerrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 100));
         const submerged = createCameraAt(new LngLat(0, 0), 22, 0);
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectMercator(submerged.state, submerged.context), submerged.context.worldCoordinateHelper, new Point(256, 256), submergedTerrain)).toBeNull();
+        const submergedCamera = projectMercator(submerged.state, submerged.context);
+        expect(getCameraMath(submergedCamera).screenTerrainPointToMercatorCoordinate(submergedCamera, submerged.context.worldCoordinateHelper, new Point(256, 256), submergedTerrain)).toBeNull();
     });
 
     test('returns null when the terrain has no renderable tiles', () => {
         const terrain = createDEMTerrain([], null);
         const {state: view, context} = createCameraAt(new LngLat(0, 0), 4);
 
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectMercator(view, context), context.worldCoordinateHelper, new Point(256, 256), terrain)).toBeNull();
+        const projectedCamera = projectMercator(view, context);
+        expect(getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(256, 256), terrain)).toBeNull();
     });
 
     test('hits a renderable tile whose DEM has not loaded at elevation zero', () => {
@@ -1094,10 +1117,10 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         const projectedCamera = projectMercator(view, context);
         const p = new Point(256, 300);
 
-        const result = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
+        const result = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
 
         expect(result.z).toBe(0);
-        expectWorldPixelsClose(result, mercatorMath.screenPointToMercatorCoordinateAtZ(projectedCamera, p, 0), projectedCamera.worldSize);
+        expectWorldPixelsClose(result, screenPointToMercatorCoordinateAtZ(projectedCamera, p, 0), projectedCamera.worldSize);
     });
 
     test('returns coordinates outside the central world for wrapped copies', () => {
@@ -1108,13 +1131,13 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
 
         const leftPoint = new Point(600, 256);
         const rightPoint = new Point(1500, 256);
-        const left = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, leftPoint, terrain);
-        const right = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, rightPoint, terrain);
+        const left = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, leftPoint, terrain);
+        const right = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, rightPoint, terrain);
 
         expect(left.x).toBeLessThan(0);
         expect(right.x).toBeGreaterThan(1);
-        expectWorldPixelsClose(left, mercatorMath.screenPointToMercatorCoordinateAtZ(projectedCamera, leftPoint, 0), projectedCamera.worldSize);
-        expectWorldPixelsClose(right, mercatorMath.screenPointToMercatorCoordinateAtZ(projectedCamera, rightPoint, 0), projectedCamera.worldSize);
+        expectWorldPixelsClose(left, screenPointToMercatorCoordinateAtZ(projectedCamera, leftPoint, 0), projectedCamera.worldSize);
+        expectWorldPixelsClose(right, screenPointToMercatorCoordinateAtZ(projectedCamera, rightPoint, 0), projectedCamera.worldSize);
     });
 
     test('samples overscaled tiles from their parent DEM', () => {
@@ -1127,7 +1150,8 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         const center = new MercatorCoordinate((tileID.canonical.x + 0.5) / scale, (tileID.canonical.y + 0.5) / scale).toLngLat();
         const {state: view, context} = createCameraAt(center, 15, 30);
 
-        const result = cameraMath.screenTerrainPointToMercatorCoordinate(projectMercator(view, context), context.worldCoordinateHelper, new Point(256, 256), terrain);
+        const projectedCamera = projectMercator(view, context);
+        const result = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(256, 256), terrain);
 
         expect(result).not.toBeNull();
         expect(result.z).toBeGreaterThan(0);
@@ -1140,7 +1164,8 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         expect(() => terrain.getElevation(tileID, EXTENT - 1e-9, EXTENT - 1e-9, EXTENT)).not.toThrow();
 
         const {state: view, context} = createCameraAt(new LngLat(179.999, -85), 6, 0);
-        expect(() => cameraMath.screenTerrainPointToMercatorCoordinate(projectMercator(view, context), context.worldCoordinateHelper, new Point(256, 256), terrain)).not.toThrow();
+        const projectedCamera = projectMercator(view, context);
+        expect(() => getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(256, 256), terrain)).not.toThrow();
     });
 
     test('skips renderable tiles that have no terrain tile yet', () => {
@@ -1149,7 +1174,8 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         terrain.tileManager.getRenderableTiles = () => [null, ...tiles];
         const {state: view, context} = createCameraAt(new LngLat(0, 0), 4, 30);
 
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectMercator(view, context), context.worldCoordinateHelper, new Point(256, 256), terrain).z).toBeCloseTo(100, 6);
+        const projectedCamera = projectMercator(view, context);
+        expect(getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(256, 256), terrain).z).toBeCloseTo(100, 6);
     });
 
     test('samples the highest zoom tile covering the position', () => {
@@ -1162,8 +1188,8 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
         const {state: view, context} = createCameraAt(new LngLat(0, 0), 1, 0);
         const projectedCamera = projectMercator(view, context);
 
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(128, 128), terrain).z).toBeCloseTo(900, 6);
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(384, 384), terrain).z).toBeCloseTo(100, 6);
+        expect(getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(128, 128), terrain).z).toBeCloseTo(900, 6);
+        expect(getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(384, 384), terrain).z).toBeCloseTo(100, 6);
     });
 
     test('handles a ray with no vertical component', () => {
@@ -1173,8 +1199,8 @@ describe('screenTerrainPointToMercatorCoordinate', () => {
 
         const projectedCamera = projectMercator(createCameraViewState(), context);
 
-        expect(mercatorMath.raycastTerrain(projectedCamera, context.worldCoordinateHelper, [0, 256, 500], [512, 256, 500], terrain)).not.toBeNull();
-        expect(mercatorMath.raycastTerrain(projectedCamera, context.worldCoordinateHelper, [0, 256, 5000], [512, 256, 5000], terrain)).toBeNull();
+        expect(raycastTerrain(projectedCamera, context.worldCoordinateHelper, [0, 256, 500], [512, 256, 500], terrain)).not.toBeNull();
+        expect(raycastTerrain(projectedCamera, context.worldCoordinateHelper, [0, 256, 5000], [512, 256, 5000], terrain)).toBeNull();
     });
 });
 
@@ -1200,9 +1226,9 @@ describe('mercator camera bit identity with the pre-refactor transform', () => {
         view = cameraUpdates.setElevation(view, context, elevation);
         const projectedCamera = projectMercator(view, context);
 
-        const cameraLngLat = cameraMath.getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
+        const cameraLngLat = getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
         const fromCamera = cameraUpdates.calculateCenterFromCameraLngLatAlt(view, context.worldCoordinateHelper, new LngLat(camLng, camLat), alt, bearing, pitch);
-        const screen = cameraMath.screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(px, py));
+        const screen = getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, new Point(px, py));
 
         expect([
             projectedCamera.pixelsPerMeter, cameraLngLat.lng, cameraLngLat.lat,
@@ -1284,7 +1310,7 @@ describe('mercator camera over the identity CRS', () => {
             let {state: view, context} = createIdentityCrsCamera(200, 200);
             view = cameraUpdates.setZoom(view, context, 4);
 
-            view = cameraSolvers.setLocationAtPoint(view, context, new LngLat(85, 0), projectMercator(view, context).centerPoint);
+            view = getCameraSolver(context).setLocationAtPoint(view, context, new LngLat(85, 0), projectMercator(view, context).centerPoint);
 
             expect(view.center.lng).toBeCloseTo(85, 6);
         });
@@ -1295,7 +1321,8 @@ describe('mercator camera over the identity CRS', () => {
         view = cameraUpdates.setZoom(view, context, 0);
         view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
         expect(view.renderWorldCopies).toBe(true);
-        expect(cameraMath.getVisibleUnwrappedCoordinates(projectMercator(view, context), context.worldCoordinateHelper, new CanonicalTileID(0, 0, 0))).toHaveLength(1);
+        const projectedCamera = projectMercator(view, context);
+        expect(getCameraMath(projectedCamera).getVisibleUnwrappedCoordinates(projectedCamera, context.worldCoordinateHelper, new CanonicalTileID(0, 0, 0))).toHaveLength(1);
     });
 
     describe('lng/lat and screen points', () => {
@@ -1304,8 +1331,8 @@ describe('mercator camera over the identity CRS', () => {
             view = cameraUpdates.setZoom(view, context, 2);
             view = cameraUpdates.setCenter(view, context, new LngLat(30, -20));
             const projectedCamera = projectMercator(view, context);
-            const point = cameraMath.locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(35, -25));
-            const back = cameraMath.screenPointToLocation(projectedCamera, context.worldCoordinateHelper, point);
+            const point = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(35, -25));
+            const back = getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, point);
             expect(back.lng).toBeCloseTo(35, 6);
             expect(back.lat).toBeCloseTo(-25, 6);
         });
@@ -1315,7 +1342,8 @@ describe('mercator camera over the identity CRS', () => {
             view = cameraUpdates.setZoom(view, context, 0);
             view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
             const worldSizeAtZoom0 = 512;
-            const point = cameraMath.locationToScreenPoint(projectMercator(view, context), context.worldCoordinateHelper, new LngLat(45, 45));
+            const projectedCamera = projectMercator(view, context);
+            const point = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(45, 45));
             expect(point.x).toBeCloseTo(0.75 * worldSizeAtZoom0, 6);
             expect(point.y).toBeCloseTo(0.25 * worldSizeAtZoom0, 6);
         });
@@ -1326,7 +1354,8 @@ describe('mercator camera over the identity CRS', () => {
             view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
             view = cameraUpdates.setPitch(view, 60);
 
-            const bounds = cameraMath.getBounds(projectMercator(view, context), context.worldCoordinateHelper);
+            const projectedCamera = projectMercator(view, context);
+            const bounds = getCameraMath(projectedCamera).getBounds(projectedCamera, context.worldCoordinateHelper);
 
             expect(bounds.getNorth()).toBe(90);
             expect(bounds.getSouth()).toBe(-90);
@@ -1336,7 +1365,8 @@ describe('mercator camera over the identity CRS', () => {
             let {state: view, context} = createIdentityCrsCamera(512, 512);
             view = cameraUpdates.setZoom(view, context, 3);
             view = cameraUpdates.setCenter(view, context, new LngLat(10, 20));
-            const camera = cameraMath.getCameraLngLat(projectMercator(view, context), context.worldCoordinateHelper);
+            const projectedCamera = projectMercator(view, context);
+            const camera = getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper);
             expect(camera.lng).toBeCloseTo(10, 6);
             expect(camera.lat).toBeCloseTo(20, 6);
         });
@@ -1347,7 +1377,7 @@ describe('mercator camera over the identity CRS', () => {
             let {state: view, context} = createIdentityCrsCamera(512, 512);
             view = cameraUpdates.setZoom(view, context, 1);
 
-            const options = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0);
+            const options = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0);
 
             expect(options.bearing).toBeCloseTo(45, 10);
             expect(options.pitch).toBeCloseTo(90, 10);
@@ -1358,14 +1388,14 @@ describe('mercator camera over the identity CRS', () => {
         test('mercator tilts the bearing of the same step by its latitude stretch', () => {
             const {state: view, context} = createTestCamera({width: 512, height: 512, zoom: 1});
 
-            expect(cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0).bearing).not.toBeCloseTo(45, 1);
+            expect(getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 0, {lng: 10, lat: 10}, 0).bearing).not.toBeCloseTo(45, 1);
         });
 
         test('altitude is scaled by the CRS meters per world unit, so 90 meters down in a 180 meter world is half a world unit', () => {
             let {state: view, context} = createIdentityCrsCamera(512, 512);
             view = cameraUpdates.setZoom(view, context, 1);
 
-            const options = cameraSolvers.calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 90, {lng: 0, lat: 0}, 0);
+            const options = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, {lng: 0, lat: 0}, 90, {lng: 0, lat: 0}, 0);
 
             expect(options.pitch).toBeCloseTo(0, 10);
             expect(options.zoom).toBeCloseTo(1.584963, 6);
@@ -1384,8 +1414,8 @@ describe('isLocationOccluded', () => {
         const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
         const inFrontOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.3);
 
-        expect(cameraMath.isLocationOccluded(projectedCamera, context.worldCoordinateHelper, behindRidge, terrain)).toBe(true);
-        expect(cameraMath.isLocationOccluded(projectedCamera, context.worldCoordinateHelper, inFrontOfRidge, terrain)).toBe(false);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, behindRidge, terrain)).toBe(true);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, inFrontOfRidge, terrain)).toBe(false);
     });
 
     test('a location behind a ridge is in view once raised above the ridge', () => {
@@ -1397,7 +1427,8 @@ describe('isLocationOccluded', () => {
         const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
         const elevationAboveRidge = 3500;
 
-        expect(cameraMath.isLocationOccluded(projectMercator(view, context), context.worldCoordinateHelper, behindRidge, terrain, elevationAboveRidge)).toBe(false);
+        const projectedCamera = projectMercator(view, context);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, behindRidge, terrain, elevationAboveRidge)).toBe(false);
     });
 
     test('a location on the terrain nearer than twice the near clipping plane\'s distance is in view', () => {
@@ -1405,9 +1436,9 @@ describe('isLocationOccluded', () => {
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => height));
         const {state: view, context} = createCameraAt(new LngLat(0, 0), 16, 60);
         const projectedCamera = projectMercator(view, context);
-        const drawnAtTheScreenCenter = mercatorMath.screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(256, 256), height).toLngLat();
+        const drawnAtTheScreenCenter = screenPointToMercatorCoordinateAtZ(projectedCamera, new Point(256, 256), height).toLngLat();
 
-        expect(cameraMath.isLocationOccluded(projectedCamera, context.worldCoordinateHelper, drawnAtTheScreenCenter, terrain)).toBe(false);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, drawnAtTheScreenCenter, terrain)).toBe(false);
     });
 
     test('a location behind the camera or beyond the far plane is hidden', () => {
@@ -1417,15 +1448,16 @@ describe('isLocationOccluded', () => {
         const behindTheCamera = new LngLat(0, -70);
         const beyondTheFarPlane = new LngLat(0, 70);
 
-        expect(cameraMath.isLocationOccluded(projectedCamera, context.worldCoordinateHelper, behindTheCamera, terrain)).toBe(true);
-        expect(cameraMath.isLocationOccluded(projectedCamera, context.worldCoordinateHelper, beyondTheFarPlane, terrain)).toBe(true);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, behindTheCamera, terrain)).toBe(true);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, beyondTheFarPlane, terrain)).toBe(true);
     });
 
     test('nothing is hidden when the terrain has no renderable tiles', () => {
         const terrain = createDEMTerrain([], null);
         const {state: view, context} = createCameraAt(new LngLat(0, 0), 12, 75);
 
-        expect(cameraMath.isLocationOccluded(projectMercator(view, context), context.worldCoordinateHelper, new LngLat(0, 0.01), terrain)).toBe(false);
+        const projectedCamera = projectMercator(view, context);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, new LngLat(0, 0.01), terrain)).toBe(false);
     });
 
     test('a location behind a ridge on the identity CRS is hidden, where mercator math would place it in front of the ridge', () => {
@@ -1442,7 +1474,7 @@ describe('isLocationOccluded', () => {
         const behindRidge = new LngLat(tileSpanAtZoom2 / 2, 30);
         const inFrontOfRidge = new LngLat(tileSpanAtZoom2 / 2, tileSpanAtZoom2 * 0.3);
 
-        expect(cameraMath.isLocationOccluded(projectedCamera, context.worldCoordinateHelper, behindRidge, terrain)).toBe(true);
-        expect(cameraMath.isLocationOccluded(projectedCamera, context.worldCoordinateHelper, inFrontOfRidge, terrain)).toBe(false);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, behindRidge, terrain)).toBe(true);
+        expect(getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, context.worldCoordinateHelper, inFrontOfRidge, terrain)).toBe(false);
     });
 });

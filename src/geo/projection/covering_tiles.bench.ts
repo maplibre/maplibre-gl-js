@@ -3,7 +3,7 @@ import {LngLat} from '../lng_lat.ts';
 import {coveringTiles} from './covering_tiles.ts';
 import {createCameraViewState} from '../camera_view_state.ts';
 import {createCameraContext, type CameraProjectionKind} from './camera_context.ts';
-import {projectCamera} from './camera_math.ts';
+import {projectCamera} from './project_camera.ts';
 import * as cameraUpdates from './camera_updates.ts';
 
 function coverWithPitch(projection: CameraProjectionKind, pitch: number): void {

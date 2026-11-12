@@ -10,7 +10,8 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {EXTENT} from '../data/extent.ts';
 import {MAX_TILE_ZOOM, MIN_TILE_ZOOM} from '../util/util.ts';
 import {createCameraContext} from '../geo/projection/camera_context.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
+import {projectCamera} from '../geo/projection/project_camera.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTestCamera} from '../util/test/util.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
@@ -52,15 +53,15 @@ describe('Terrain', () => {
         const {terrain, camera: projectedCamera, worldCoordinateHelper} = createFlatTerrain(1000);
         const p = new Point(1024, 256);
 
-        expect(cameraMath.screenPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, p).z).toBe(0);
-        expect(cameraMath.screenPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, p, terrain).z).toBeCloseTo(1000, 6);
+        expect(getCameraMath(projectedCamera).screenPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, p).z).toBe(0);
+        expect(getCameraMath(projectedCamera).screenPointToMercatorCoordinate(projectedCamera, worldCoordinateHelper, p, terrain).z).toBeCloseTo(1000, 6);
     });
 
     test('a globe transform that renders mercator picks with the mercator raycast', () => {
         const {terrain} = createFlatTerrain(0);
         const {projectedCamera, context} = createTestCamera({width: 2048, height: 512, zoom: 0}, {projection: 'globe', projectionTransition: 0});
 
-        const coordinate = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(1024, 256), terrain);
+        const coordinate = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, new Point(1024, 256), terrain);
 
         expect(coordinate).not.toBeNull();
         expect(coordinate.x).toBeCloseTo(0.5, 10);
@@ -73,9 +74,10 @@ describe('Terrain', () => {
         const {state: view, projectedCamera, context} = createTestCamera({width: 2048, height: 512, zoom: 1}, {projection: 'globe'});
         const p = new Point(1100, 280);
 
-        const coordinate = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
+        const coordinate = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, p, terrain);
         const verticalPerspective = createCameraContext({projection: 'vertical-perspective'});
-        const expected = cameraMath.screenTerrainPointToMercatorCoordinate(cameraMath.projectCamera(view, verticalPerspective), verticalPerspective.worldCoordinateHelper, p, terrain);
+        const verticalPerspectiveCamera = projectCamera(view, verticalPerspective);
+        const expected = getCameraMath(verticalPerspectiveCamera).screenTerrainPointToMercatorCoordinate(verticalPerspectiveCamera, verticalPerspective.worldCoordinateHelper, p, terrain);
 
         expect(expected).not.toBeNull();
         expect(coordinate).not.toBeNull();

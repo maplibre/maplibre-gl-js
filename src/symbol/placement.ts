@@ -10,7 +10,7 @@ import {getOverlapMode, type OverlapMode} from '../style/style_layer/overlap_mod
 import {TextAnchorEnum, type TextAnchor} from '../style/style_layer/variable_text_anchor.ts';
 import {translatePosition, warnOnce} from '../util/util.ts';
 import {symbolInstance as symbolInstanceLayout} from '../data/bucket/symbol_attributes.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
@@ -480,7 +480,7 @@ export class Placement {
 
         const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
         const getElevation = this._getTerrainElevationFunc(tileID);
-        const simpleProjectionMatrix = cameraMath.getFastPathSimpleProjectionMatrix(this.projectedCamera, tileID);
+        const simpleProjectionMatrix = getCameraMath(this.projectedCamera).getFastPathSimpleProjectionMatrix(this.projectedCamera, tileID);
 
         const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays, symbolIndex: number) => {
             if (seenCrossTileIDs[symbolInstance.crossTileID]) return;

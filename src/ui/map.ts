@@ -34,9 +34,9 @@ import {config} from '../util/config.ts';
 import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
-import {calculateCameraOptionsFromTo} from '../geo/projection/camera_solvers.ts';
+import {getCameraSolver} from '../geo/projection/camera_solver_factory.ts';
 import {applyConstrain} from '../geo/projection/camera_constrain.ts';
 import {getMaxBounds} from '../geo/camera_view_state.ts';
 import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
@@ -1637,7 +1637,7 @@ export class Map extends Evented<MapEventType> {
         if (altitudeTo == null && this.terrain) {
             altitudeTo = this.terrain.getElevationForLngLat(to, this._camera.projectedCamera.tileZoom);
         }
-        return calculateCameraOptionsFromTo(this._camera.renderedState, this._camera.context, from, altitudeFrom, to, altitudeTo ?? 0);
+        return getCameraSolver(this._camera.context).calculateCameraOptionsFromTo(this._camera.renderedState, this._camera.context, from, altitudeFrom, to, altitudeTo ?? 0);
     }
 
     /**
@@ -1781,7 +1781,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     getBounds(): LngLatBounds {
-        return cameraMath.getBounds(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper);
+        return getCameraMath(this._camera.projectedCamera).getBounds(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper);
     }
 
     /**
@@ -2160,7 +2160,7 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     project(lnglat: LngLatLike): Point {
-        return cameraMath.locationToScreenPoint(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper, LngLat.convert(lnglat), this.style && this.terrain);
+        return getCameraMath(this._camera.projectedCamera).locationToScreenPoint(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper, LngLat.convert(lnglat), this.style && this.terrain);
     }
 
     /**

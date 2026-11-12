@@ -2,7 +2,7 @@ import {DOM} from '../util/dom.ts';
 import {throttle} from '../util/throttle.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from '../util/smart_wrap.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import {Event, Evented} from '../util/evented.ts';
 import Point from '@mapbox/point-geometry';
@@ -683,7 +683,7 @@ export class Marker extends Evented<MarkerEventType> {
         if (!this._isInViewport()) return;
 
         const terrain = this._map?.terrain;
-        const occluded = cameraMath.isLocationOccluded(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat);
+        const occluded = getCameraMath(this._map._camera.projectedCamera).isLocationOccluded(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat);
         if (!terrain || occluded) {
             const targetOpacity = occluded ? this._opacityWhenCovered : this._opacity;
             if (this._element.style.opacity !== targetOpacity) {
@@ -735,7 +735,7 @@ export class Marker extends Evented<MarkerEventType> {
         const elevation = terrain.getElevationForLngLat(this._lngLat, projectedCamera.tileZoom);
         const metersToCenter = Math.max(0, -this._offset.y) / projectedCamera.pixelsPerMeter;
         const elevationToCenter = Math.sin(this._map.getPitch() * Math.PI / 180) * metersToCenter;
-        return cameraMath.isLocationOccluded(projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat, terrain, elevation + elevationToCenter);
+        return getCameraMath(projectedCamera).isLocationOccluded(projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat, terrain, elevation + elevationToCenter);
     }
 
     /**
@@ -752,7 +752,7 @@ export class Marker extends Evented<MarkerEventType> {
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {
             // flat position is saved because smartWrap needs non-elevated points
-            this._flatPos = cameraMath.locationToScreenPoint(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat)._add(this._offset);
+            this._flatPos = getCameraMath(this._map._camera.projectedCamera).locationToScreenPoint(this._map._camera.projectedCamera, this._map._camera.context.worldCoordinateHelper, this._lngLat)._add(this._offset);
         }
 
         let rotation = '';

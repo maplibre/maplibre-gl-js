@@ -12,7 +12,9 @@ import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {createIdentityMat4f32, MAX_VALID_LATITUDE} from '../../util/util.ts';
 import {createRotatedCrs, createTestCamera, expectToBeCloseToArray} from '../../util/test/util.ts';
-import * as cameraMath from './camera_math.ts';
+import {getCameraMath} from './camera_math_factory.ts';
+import {projectCamera} from './project_camera.ts';
+import {getCameraPoint} from '../projected_camera.ts';
 
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
@@ -72,13 +74,13 @@ describe('mercator utils', () => {
             view = cameraUpdates.setPitch(view, 55);
             view = cameraUpdates.setBearing(view, 75);
             view = cameraUpdates.resize(view, context, 512, 512);
-            const projectedCamera = cameraMath.projectCamera(view, context);
+            const projectedCamera = projectCamera(view, context);
 
             const cameraCoord = cameraMercatorCoordinate(projectedCamera, context.worldCoordinateHelper);
 
             expect(cameraCoord.toLngLat().lng).toBeCloseTo(14.973921529405033, 10);
             expect(cameraCoord.toLngLat().lat).toBeCloseTo(54.99599181678275, 10);
-            expect(altitudeFromMercatorZ(cameraCoord.z, cameraCoord.y)).toBeCloseTo(cameraMath.getCameraAltitude(projectedCamera), 0);
+            expect(altitudeFromMercatorZ(cameraCoord.z, cameraCoord.y)).toBeCloseTo(getCameraMath(projectedCamera).getCameraAltitude(projectedCamera), 0);
         });
 
         test('does not depend on the projection', () => {
@@ -94,7 +96,7 @@ describe('mercator utils', () => {
             expect(cameraCoord.z).toBeCloseTo(mercatorCameraCoord.z, precisionDigits);
 
             // The pixel under a pitched globe camera misses the sphere, so the screen round trip lands elsewhere.
-            const screenRoundTrip = cameraMath.screenPointToMercatorCoordinate(globe.projectedCamera, globe.context.worldCoordinateHelper, cameraMath.getCameraPoint(globe.projectedCamera));
+            const screenRoundTrip = getCameraMath(globe.projectedCamera).screenPointToMercatorCoordinate(globe.projectedCamera, globe.context.worldCoordinateHelper, getCameraPoint(globe.projectedCamera));
             expect(cameraCoord.toLngLat().distanceTo(screenRoundTrip.toLngLat())).toBeGreaterThan(50000);
         });
     });
@@ -102,7 +104,7 @@ describe('mercator utils', () => {
     describe('getProjectionData', () => {
         test('return identity matrix when not passing overscaledTileID', () => {
             const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
-            const projectionData = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: null});
+            const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: null});
             expect(projectionData.fallbackMatrix).toEqual(createIdentityMat4f32());
         });
     });

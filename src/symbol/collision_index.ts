@@ -9,7 +9,7 @@ import {clamp, getAABB} from '../util/util.ts';
 import {Bounds} from '../geo/bounds.ts';
 import {type PointProjection, type SymbolProjectionContext, getTileSkewVectors, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection, xyTransformMat4} from '../symbol/projection.ts';
 import ONE_EM from '../symbol/one_em.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 
 import type {GetElevation} from '../geo/camera_types.ts';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
@@ -210,7 +210,7 @@ export class CollisionIndex {
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
         const perspectiveRatio = this.getPerspectiveRatio(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation?.(tileUnitAnchorPoint.x, tileUnitAnchorPoint.y));
 
-        const labelPlaneFontSize = pitchWithMap ? (fontSize * cameraMath.getPitchedTextCorrection(this.projectedCamera, symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
+        const labelPlaneFontSize = pitchWithMap ? (fontSize * getCameraMath(this.projectedCamera).getPitchedTextCorrection(this.projectedCamera, symbol.anchorX, symbol.anchorY, unwrappedTileID) / perspectiveRatio) : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
 
         const projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
@@ -471,7 +471,7 @@ export class CollisionIndex {
                 signedDistanceFromCamera: w
             };
         } else {
-            const projected = cameraMath.projectTileCoordinates(this.projectedCamera, x, y, unwrappedTileID, elevation);
+            const projected = getCameraMath(this.projectedCamera).projectTileCoordinates(this.projectedCamera, x, y, unwrappedTileID, elevation);
             return {
                 x: (((projected.point.x + 1) / 2) * this.projectedCamera.width) + viewportPadding,
                 y: (((-projected.point.y + 1) / 2) * this.projectedCamera.height) + viewportPadding,
@@ -487,7 +487,7 @@ export class CollisionIndex {
 
     getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): number {
         // We don't care about the actual projected point, just its W component.
-        const projected = cameraMath.projectTileCoordinates(this.projectedCamera, x, y, unwrappedTileID, elevation);
+        const projected = getCameraMath(this.projectedCamera).projectTileCoordinates(this.projectedCamera, x, y, unwrappedTileID, elevation);
         return 0.5 + 0.5 * (this.projectedCamera.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
@@ -576,7 +576,7 @@ export class CollisionIndex {
 
             const zoomFraction = this.projectedCamera.zoom - tileID.overscaledZ;
             distanceMultiplier = Math.pow(2, -zoomFraction);
-            distanceMultiplier *= cameraMath.getPitchedTextCorrection(this.projectedCamera, translatedAnchorX, translatedAnchorY, unwrappedTileID);
+            distanceMultiplier *= getCameraMath(this.projectedCamera).getPitchedTextCorrection(this.projectedCamera, translatedAnchorX, translatedAnchorY, unwrappedTileID);
 
             // This next correction can't be applied when variable anchors are in use.
             if (!shift) {

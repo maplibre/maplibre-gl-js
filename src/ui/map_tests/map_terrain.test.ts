@@ -5,7 +5,9 @@ import {LngLat, earthRadius} from '../../geo/lng_lat.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {createCameraViewState} from '../../geo/camera_view_state.ts';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
+import {projectCamera} from '../../geo/projection/project_camera.ts';
+import {getCameraPoint} from '../../geo/projected_camera.ts';
 import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
@@ -753,7 +755,7 @@ describe('Terrain changing under and around a gesture', () => {
         now.mockReturnValue(1000);
         map.redraw();
 
-        expect(cameraMath.getCameraAltitude(map._camera.projectedCamera)).toBeGreaterThanOrEqual(1000);
+        expect(getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera)).toBeGreaterThanOrEqual(1000);
     });
 
     test('a pitch drag with the center not clamped to the ground keeps the center elevation when the terrain switches off before it ends', async () => {
@@ -1412,8 +1414,8 @@ describe('Terrain changing under and around a gesture', () => {
     }
 
     function cameraPosition(map: Map): [number, number, number] {
-        const {lng, lat} = cameraMath.getCameraLngLat(map._camera.projectedCamera, map._camera.context.worldCoordinateHelper);
-        return [lng * metersPerDegree, lat * metersPerDegree, cameraMath.getCameraAltitude(map._camera.projectedCamera)];
+        const {lng, lat} = getCameraMath(map._camera.projectedCamera).getCameraLngLat(map._camera.projectedCamera, map._camera.context.worldCoordinateHelper);
+        return [lng * metersPerDegree, lat * metersPerDegree, getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera)];
     }
 
     function renderFrames(frame: () => void, count: number): void {
@@ -1485,7 +1487,7 @@ describe('Terrain changing under and around a gesture', () => {
     }
 
     function lowestNearPlaneAltitude(map: Map): number {
-        return Math.min(...cameraMath.getCameraFrustum(map._camera.projectedCamera).points.slice(0, 4).map(corner => corner[2]));
+        return Math.min(...getCameraMath(map._camera.projectedCamera).getCameraFrustum(map._camera.projectedCamera).points.slice(0, 4).map(corner => corner[2]));
     }
 
     function setTerrainHeight(map: Map, height: TerrainHeight, min: number, max: number): void {
@@ -1508,12 +1510,12 @@ describe('Terrain changing under and around a gesture', () => {
         map._renderTaskQueue.run();
         expect(map.getPitch()).toBe(80);
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, 0);
-        const cameraAltitude = cameraMath.getCameraAltitude(map._camera.projectedCamera);
+        const cameraAltitude = getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera);
 
         simulate.mouseup(map.getCanvas(), {buttons: 0, button: 2, clientX: 100, clientY: 80});
         map._renderTaskQueue.run();
         expect(map.getPitch()).toBeCloseTo(80, 0);
-        expect(cameraMath.getCameraAltitude(map._camera.projectedCamera)).toBeGreaterThanOrEqual(cameraAltitude);
+        expect(getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera)).toBeGreaterThanOrEqual(cameraAltitude);
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(20000, -1);
     });
 
@@ -1536,8 +1538,8 @@ describe('Terrain changing under and around a gesture', () => {
 
     test('a pitch drag that brings a narrow ridge under the middle of the near clipping plane lifts the plane over the ridge', async () => {
         const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 55, maxPitch: 85}, 0);
-        const atTheDragsEnd = cameraMath.projectCamera(cameraUpdates.setPitch(map._camera.renderedState, 60), map._camera.context);
-        const corners = cameraMath.getCameraFrustum(atTheDragsEnd).points.slice(0, 4);
+        const atTheDragsEnd = projectCamera(cameraUpdates.setPitch(map._camera.renderedState, 60), map._camera.context);
+        const corners = getCameraMath(atTheDragsEnd).getCameraFrustum(atTheDragsEnd).points.slice(0, 4);
         const middle = new MercatorCoordinate(corners.reduce((sum, c) => sum + c[0], 0) / 4, corners.reduce((sum, c) => sum + c[1], 0) / 4).toLngLat();
         const middleAltitude = corners.reduce((sum, c) => sum + c[2], 0) / 4;
         const ridgeAboveTheMiddle = 8;
@@ -1568,7 +1570,7 @@ describe('Terrain changing under and around a gesture', () => {
         map._renderTaskQueue.run();
         map.redraw();
 
-        expect(cameraMath.getCameraAltitude(map._camera.projectedCamera)).toBeCloseTo(10000, 1);
+        expect(getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera)).toBeCloseTo(10000, 1);
     });
 
     test('a pitch drag over terrain whose DEM has not loaded keeps the near clipping plane above the flat surface drawn in its place', async () => {
@@ -1609,7 +1611,7 @@ describe('Terrain changing under and around a gesture', () => {
         renderFrames(frame, 90);
 
         expect(map.getZoom()).toBeCloseTo(15, 6);
-        expect(cameraMath.getCameraAltitude(map._camera.projectedCamera)).toBeCloseTo(start[2], 1);
+        expect(getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera)).toBeCloseTo(start[2], 1);
     });
 
     test('an easeTo that would end with the camera inside the terrain ends with the camera and its near clipping plane above it', async () => {
@@ -1629,7 +1631,7 @@ describe('Terrain changing under and around a gesture', () => {
         const cliffSouthEdge = -0.01;
         setTerrainHeight(map, (_lng, lat) => lat < cliffSouthEdge ? 3000 : 0, 0, 3000);
         const {context} = map._camera;
-        const asked = cameraMath.projectCamera(cameraUpdates.setPitch(cameraUpdates.setZoom(map._camera.renderedState, context, 13.5), 60), context);
+        const asked = projectCamera(cameraUpdates.setPitch(cameraUpdates.setZoom(map._camera.renderedState, context, 13.5), 60), context);
 
         map.jumpTo({zoom: 13.5, pitch: 60});
 
@@ -1637,7 +1639,7 @@ describe('Terrain changing under and around a gesture', () => {
         expect(map.getZoom()).toBeCloseTo(12.7034, 4);
         expect(map.getPitch()).toBeCloseTo(29.9058, 4);
         expect(lowestNearPlaneAltitude(map)).toBeCloseTo(3000, 1);
-        expect(cameraMath.getCameraLngLat(map._camera.projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(cameraMath.getCameraLngLat(asked, context.worldCoordinateHelper).lat, 9);
+        expect(getCameraMath(map._camera.projectedCamera).getCameraLngLat(map._camera.projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(getCameraMath(asked).getCameraLngLat(asked, context.worldCoordinateHelper).lat, 9);
     });
 
     test('a pitch drag past 90 degrees over terrain that rests before its release leaves the camera where it rested', async () => {
@@ -1832,8 +1834,8 @@ describe('Keep camera outside terrain', () => {
         // Terrain elevation is 10 everywhere, we are above it at zoom level 15
         // with pitch 45 deg.
         map.jumpTo({center: [0.0, 0.0], bearing: 0, pitch: 45, zoom: 15});
-        const initialLngLat = cameraMath.screenPointToLocation(map._camera.projectedCamera, map._camera.context.worldCoordinateHelper, cameraMath.getCameraPoint(map._camera.projectedCamera));
-        const initialAltitude = cameraMath.getCameraAltitude(map._camera.projectedCamera);
+        const initialLngLat = getCameraMath(map._camera.projectedCamera).screenPointToLocation(map._camera.projectedCamera, map._camera.context.worldCoordinateHelper, getCameraPoint(map._camera.projectedCamera));
+        const initialAltitude = getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera);
         expect(initialAltitude).toBeCloseTo(516, 0);
 
         // Now we set the elevation to 5000 everywhere and try to jump to the
@@ -1844,11 +1846,11 @@ describe('Keep camera outside terrain', () => {
         terrainElevation = 5000;
         map.jumpTo({center: [0.0, 0.0], pitch: 45, zoom: 15});
 
-        const lngLat = cameraMath.screenPointToLocation(map._camera.projectedCamera, map._camera.context.worldCoordinateHelper, cameraMath.getCameraPoint(map._camera.projectedCamera));
+        const lngLat = getCameraMath(map._camera.projectedCamera).screenPointToLocation(map._camera.projectedCamera, map._camera.context.worldCoordinateHelper, getCameraPoint(map._camera.projectedCamera));
         expect(lngLat.lng).toBeCloseTo(initialLngLat.lng);
         expect(lngLat.lat).toBeCloseTo(initialLngLat.lat);
-        expect(cameraMath.getCameraAltitude(map._camera.projectedCamera)).toBeGreaterThan(initialAltitude);
-        expect(cameraMath.getCameraAltitude(map._camera.projectedCamera)).toBeGreaterThan(terrainElevation);
+        expect(getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera)).toBeGreaterThan(initialAltitude);
+        expect(getCameraMath(map._camera.projectedCamera).getCameraAltitude(map._camera.projectedCamera)).toBeGreaterThan(terrainElevation);
     });
 });
 

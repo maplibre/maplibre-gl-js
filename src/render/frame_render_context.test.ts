@@ -1,7 +1,7 @@
 import {describe, test, expect, vi} from 'vitest';
 import {FrameRenderContext} from './frame_render_context.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
-import {getProjectionData} from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createFrameRenderData, createTestCamera} from '../util/test/util.ts';
 
@@ -18,10 +18,10 @@ describe('getProjectionDataForTile', () => {
         const textureProjectionData = frameRenderContext.getProjectionDataForTile(tileID, {aligned: true, applyTerrainMatrix: false});
 
         expect(projectionData).toEqual({
-            ...getProjectionData(projectedCamera, {overscaledTileID: tileID, aligned: undefined, applyGlobeMatrix: true, applyTerrainMatrix: true}),
+            ...getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: tileID, aligned: undefined, applyGlobeMatrix: true, applyTerrainMatrix: true}),
             uniformBufferKey: tileID.key,
         });
-        expect(textureProjectionData).toEqual(getProjectionData(projectedCamera, {overscaledTileID: tileID, aligned: true, applyGlobeMatrix: false, applyTerrainMatrix: false}));
+        expect(textureProjectionData).toEqual(getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: tileID, aligned: true, applyGlobeMatrix: false, applyTerrainMatrix: false}));
         expect(textureProjectionData.projectionTransition).not.toBe(projectionData.projectionTransition);
     });
 });

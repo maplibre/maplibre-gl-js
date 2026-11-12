@@ -9,7 +9,7 @@ import {
     heatmapTextureUniformValues
 } from '../program/heatmap_program.ts';
 import {HEATMAP_FULL_RENDER_FBO_KEY} from '../../style/style_layer/heatmap_style_layer.ts';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Context} from '../context.ts';
@@ -82,7 +82,7 @@ function prepareHeatmapFlat(painter: Painter, tileManager: TileManager, layer: H
 
         const projectionData = frameRenderContext.getProjectionDataForTile(coord, {applyTerrainMatrix: false});
 
-        const radiusCorrectionFactor = cameraMath.getCircleRadiusCorrection(projectedCamera);
+        const radiusCorrectionFactor = getCameraMath(projectedCamera).getCircleRadiusCorrection(projectedCamera);
 
         program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW,
             heatmapUniformValues(tile, projectedCamera.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),

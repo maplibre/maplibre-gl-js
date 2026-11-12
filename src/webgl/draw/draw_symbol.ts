@@ -19,7 +19,7 @@ import {
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
 } from '../program/symbol_program.ts';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -246,7 +246,7 @@ function updateVariableAnchorsForBucket(
             const {width, height, anchor, textOffset, textBoxScale} = variableOffset;
             const shift = calculateVariableRenderShift(anchor, width, height, textOffset, textBoxScale, renderTextSize);
 
-            const pitchedTextCorrection = cameraMath.getPitchedTextCorrection(projectedCamera, tileAnchor.x + translation[0], tileAnchor.y + translation[1], unwrappedTileID);
+            const pitchedTextCorrection = getCameraMath(projectedCamera).getPitchedTextCorrection(projectedCamera, tileAnchor.x + translation[0], tileAnchor.y + translation[1], unwrappedTileID);
             const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionContext, rotateWithMap, shift, -projectedCamera.bearingInRadians, pitchedTextCorrection);
 
             const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === WritingMode.vertical) ? Math.PI / 2 : 0;
@@ -329,7 +329,7 @@ function drawLayerSymbols(
 
     const tileRenderState: SymbolTileRenderState[] = [];
 
-    const pitchedTextRescaling = cameraMath.getCircleRadiusCorrection(projectedCamera);
+    const pitchedTextRescaling = getCameraMath(projectedCamera).getCircleRadiusCorrection(projectedCamera);
 
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);

@@ -1,7 +1,7 @@
 import {afterEach, beforeEach, describe, expect, vi, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
 import {beforeMapTest, createMap, createTerrain, createCoverageIndex} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
@@ -225,11 +225,11 @@ describe('terrain gesture anchoring', () => {
         const centerElevation = map.getCameraTargetElevation();
         // a plateau just under the camera, whose edge is where the ray through the pinch's first midpoint meets it
         const firstMid = start.add(new Point(15, 10));
-        const plateauTop = centerElevation + 0.95 * (cameraMath.getCameraAltitude(projectedCamera) - centerElevation);
-        const edge = cameraMath.screenPointToLocationAtElevation(projectedCamera, context.worldCoordinateHelper, firstMid, plateauTop);
+        const plateauTop = centerElevation + 0.95 * (getCameraMath(projectedCamera).getCameraAltitude(projectedCamera) - centerElevation);
+        const edge = getCameraMath(projectedCamera).screenPointToLocationAtElevation(projectedCamera, context.worldCoordinateHelper, firstMid, plateauTop);
         const height = (lng: number, lat: number) => lng < edge.lng + 1e-5 && lat > edge.lat - 1e-5 ? plateauTop : centerElevation;
         vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(height, centerElevation, plateauTop));
-        expect(cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, firstMid, map.terrain).z).toBeCloseTo(plateauTop, 0);
+        expect(getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, firstMid, map.terrain).z).toBeCloseTo(plateauTop, 0);
 
         const startCenter = map.getCenter();
         gestureStep('touchstart', target, pinchTouches(start, 30));

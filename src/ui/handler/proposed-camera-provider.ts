@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import * as cameraMath from '../../geo/projection/camera_math.ts';
+import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 import {applyConstrain} from '../../geo/projection/camera_constrain.ts';
 
 import type {Camera} from '../camera.ts';
@@ -44,21 +44,21 @@ export class ProposedCameraProvider {
 
     /** The screen point of a location on the proposed camera. */
     project(lngLat: LngLat): Point {
-        return cameraMath.locationToScreenPoint(this.camera, this._camera.context.worldCoordinateHelper, lngLat);
+        return getCameraMath(this.camera).locationToScreenPoint(this.camera, this._camera.context.worldCoordinateHelper, lngLat);
     }
 
     unproject(point: PointLike): LngLat {
-        return cameraMath.screenPointToLocation(this.camera, this._camera.context.worldCoordinateHelper, Point.convert(point), this._camera.terrain);
+        return getCameraMath(this.camera).screenPointToLocation(this.camera, this._camera.context.worldCoordinateHelper, Point.convert(point), this._camera.terrain);
     }
 
     /** Whether a screen point shows the map, rather than the sky or the space around the globe. */
     isPointOnMapSurface(point: Point): boolean {
-        return cameraMath.isPointOnMapSurface(this.camera, this._camera.context.worldCoordinateHelper, point);
+        return getCameraMath(this.camera).isPointOnMapSurface(this.camera, this._camera.context.worldCoordinateHelper, point);
     }
 
     /** The location right under the proposed camera. */
     getCameraLngLat(): LngLat {
-        return cameraMath.getCameraLngLat(this.camera, this._camera.context.worldCoordinateHelper);
+        return getCameraMath(this.camera).getCameraLngLat(this.camera, this._camera.context.worldCoordinateHelper);
     }
 
     /** Where the camera's constrain puts a center and a zoom, see {@link applyConstrain}. */
@@ -79,8 +79,8 @@ export class ProposedCameraProvider {
         const projectedCamera = this._camera.projectedCamera;
         const worldCoordinateHelper = this._camera.context.worldCoordinateHelper;
         return this._camera._cameraForBoxAndBearing(
-            cameraMath.screenPointToLocation(projectedCamera, worldCoordinateHelper, Point.convert(p0)),
-            cameraMath.screenPointToLocation(projectedCamera, worldCoordinateHelper, Point.convert(p1)),
+            getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, worldCoordinateHelper, Point.convert(p0)),
+            getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, worldCoordinateHelper, Point.convert(p1)),
             bearing);
     }
 }

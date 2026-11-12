@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 
 import type {PossiblyEvaluatedPropertyValue} from './properties.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
@@ -114,13 +114,13 @@ function intersectionTestMapMap({queryGeometry, size}: CircleIntersectionTestPar
 }
 
 function intersectionTestMapViewport({queryGeometry, size, projectedCamera, unwrappedTileID, getElevation}: CircleIntersectionTestParams, point: Point): boolean {
-    const w = cameraMath.projectTileCoordinates(projectedCamera, point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
+    const w = getCameraMath(projectedCamera).projectTileCoordinates(projectedCamera, point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
     const adjustedSize = size * (w / projectedCamera.cameraToCenterDistance);
     return polygonIntersectsBufferedPoint(queryGeometry, point, adjustedSize);
 }
 
 function intersectionTestViewportMap({queryGeometry, size, projectedCamera, unwrappedTileID, getElevation}: CircleIntersectionTestParams, point: Point): boolean {
-    const w = cameraMath.projectTileCoordinates(projectedCamera, point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
+    const w = getCameraMath(projectedCamera).projectTileCoordinates(projectedCamera, point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
     const adjustedSize = size * (projectedCamera.cameraToCenterDistance / w);
     return polygonIntersectsBufferedPoint(queryGeometry, projectPoint(point, projectedCamera, unwrappedTileID, getElevation), adjustedSize);
 }
@@ -155,7 +155,7 @@ export function circleIntersection({
 
 function projectPoint(tilePoint: Point, projectedCamera: ProjectedCamera, unwrappedTileID: UnwrappedTileID, getElevation: GetElevation | undefined): Point {
     // Convert `tilePoint` from tile coordinates to clip coordinates.
-    const clipPoint = cameraMath.projectTileCoordinates(projectedCamera, tilePoint.x, tilePoint.y, unwrappedTileID, getElevation?.(tilePoint.x, tilePoint.y)).point;
+    const clipPoint = getCameraMath(projectedCamera).projectTileCoordinates(projectedCamera, tilePoint.x, tilePoint.y, unwrappedTileID, getElevation?.(tilePoint.x, tilePoint.y)).point;
     // Convert `clipPoint` from clip coordinates into pixel/screen coordinates.
     return new Point(
         (clipPoint.x * 0.5 + 0.5) * projectedCamera.width,

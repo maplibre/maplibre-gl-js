@@ -88,6 +88,6 @@ export type NearFarZ = {
 
 /**
  * @internal
- * The camera placement `calculateCameraOptionsFromTo` in `camera_solvers.ts` solves for.
+ * The camera placement `calculateCameraOptionsFromTo` of a `CameraSolver` solves for.
  */
 export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};

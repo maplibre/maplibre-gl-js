@@ -5,14 +5,15 @@ import {HandlerInertia} from './handler_inertia.ts';
 import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
-import * as cameraMath from '../geo/projection/camera_math.ts';
+import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {getCameraMotions} from '../geo/projection/camera_motions_factory.ts';
 import {usesGlobeControls} from '../geo/projection/camera_context.ts';
 
 import type {MapEventType} from './events.ts';
 import type {DragPanHandler} from './handler/shim/drag_pan.ts';
 import type {Camera, EaseToOptions, RotationPivot} from './camera.ts';
-import type {MapControlsDeltas} from '../geo/projection/camera_updates.ts';
+import type {MapControlsDeltas} from '../geo/projection/camera_motions.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {CameraViewState} from '../geo/camera_view_state.ts';
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
@@ -575,7 +576,7 @@ export class HandlerManager extends Evented<MapEventType> {
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
-        if (usesGlobeControls(this._camera.context) && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, around)) {
+        if (usesGlobeControls(this._camera.context) && !getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, around)) {
             around = projectedCamera.centerPoint;
         }
         const preZoomAroundLoc = this._computePreZoomAroundLoc(projectedCamera, around, panDelta, aroundElevation);
@@ -629,7 +630,7 @@ export class HandlerManager extends Evented<MapEventType> {
     private _resolveAround(combinedResult: HandlerResult, terrain: Terrain | null, projectedCamera: ProjectedCamera): {around: Point; aroundOnSurface: boolean} {
         let around = combinedResult.pinchAround !== undefined ? combinedResult.pinchAround : combinedResult.around;
         around ||= this._camera.projectedCamera.centerPoint;
-        if (terrain && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, around)) {
+        if (terrain && !getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, around)) {
             return {around: projectedCamera.centerPoint, aroundOnSurface: false};
         }
         return {around, aroundOnSurface: true};
@@ -640,7 +641,7 @@ export class HandlerManager extends Evented<MapEventType> {
      * terrain point grabbed at gesture start, captured here on the gesture's first
      * frame. Undefined means the gesture is solved at the center's elevation instead —
      * when the grabbed terrain is not loaded, the anchor is the center point (a
-     * center-point anchor is skipped by `pan` in `camera_updates.ts` and would lose the pan), or
+     * center-point anchor is skipped by `CameraMotions.pan` and would lose the pan), or
      * the anchor plane is too close to the camera for a stable ray-plane solve.
      */
     private _terrainGestureElevation(terrain: Terrain, around: Point, aroundOnSurface: boolean, projectedCamera: ProjectedCamera, combinedEventsInProgress: EventsInProgress): number | undefined {
@@ -648,7 +649,7 @@ export class HandlerManager extends Evented<MapEventType> {
             return undefined;
         }
         if (this._terrainGesture.anchorCenterElevation !== projectedCamera.elevation && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            const anchor = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, this._camera.context.worldCoordinateHelper, around, terrain);
+            const anchor = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, this._camera.context.worldCoordinateHelper, around, terrain);
             this._terrainGesture.anchorElevation = anchor ? anchor.z : undefined;
             this._terrainGesture.anchorCenterElevation = projectedCamera.elevation;
         }
@@ -659,7 +660,7 @@ export class HandlerManager extends Evented<MapEventType> {
         if (around.distSqr(projectedCamera.centerPoint) < 1.0e-2) {
             return undefined;
         }
-        if (elevation - projectedCamera.elevation >= TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION * (cameraMath.getCameraAltitude(projectedCamera) - projectedCamera.elevation)) {
+        if (elevation - projectedCamera.elevation >= TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION * (getCameraMath(projectedCamera).getCameraAltitude(projectedCamera) - projectedCamera.elevation)) {
             return undefined;
         }
         return elevation;
@@ -677,9 +678,9 @@ export class HandlerManager extends Evented<MapEventType> {
         }
         const aroundPreviousPoint = panDelta ? around.sub(panDelta) : around;
         if (aroundElevation !== undefined) {
-            return cameraMath.screenPointToLocationAtElevation(projectedCamera, this._camera.context.worldCoordinateHelper, aroundPreviousPoint, aroundElevation);
+            return getCameraMath(projectedCamera).screenPointToLocationAtElevation(projectedCamera, this._camera.context.worldCoordinateHelper, aroundPreviousPoint, aroundElevation);
         }
-        return cameraMath.screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, aroundPreviousPoint);
+        return getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, aroundPreviousPoint);
     }
 
     private _handleMapControls({
@@ -692,21 +693,21 @@ export class HandlerManager extends Evented<MapEventType> {
 
         const context = this._camera.context;
 
-        view = cameraUpdates.rollPitchBearingZoom(view, context, deltas);
+        view = getCameraMotions(context).rollPitchBearingZoom(view, context, deltas);
         const projectedCamera = this._camera._projectState(view);
 
-        if (!terrain && !usesGlobeControls(context) && !cameraMath.isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, deltas.around)) {
+        if (!terrain && !usesGlobeControls(context) && !getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, deltas.around)) {
             return panDelta ? this._panByPixels(view, projectedCamera, panDelta) : view;
         }
 
         if (!terrain) {
-            return cameraUpdates.pan(view, context, deltas, preZoomAroundLoc);
+            return getCameraMotions(context).pan(view, context, deltas, preZoomAroundLoc);
         }
 
         if (!this._terrainGesture.inFlight) {
             this._terrainGesture.inFlight = true;
             this._camera.holdElevation('gesture');
-            return cameraUpdates.pan(view, context, deltas, preZoomAroundLoc);
+            return getCameraMotions(context).pan(view, context, deltas, preZoomAroundLoc);
         }
 
         if (!usesGlobeControls(context) && deltas.aroundElevation === undefined &&
@@ -715,12 +716,12 @@ export class HandlerManager extends Evented<MapEventType> {
             return this._panByPixels(view, projectedCamera, panDelta);
         }
 
-        return cameraUpdates.pan(view, context, deltas, preZoomAroundLoc);
+        return getCameraMotions(context).pan(view, context, deltas, preZoomAroundLoc);
     }
 
     /** Moves the center to the location `panDelta` pixels against the drag from it, on the plane at the center's elevation. */
     _panByPixels(view: CameraViewState, projectedCamera: ProjectedCamera, panDelta: Point): CameraViewState {
-        return cameraUpdates.setCenter(view, this._camera.context, cameraMath.screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, projectedCamera.centerPoint.sub(panDelta)));
+        return cameraUpdates.setCenter(view, this._camera.context, getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, projectedCamera.centerPoint.sub(panDelta)));
     }
 
     private _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean): void {
