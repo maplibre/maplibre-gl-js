@@ -359,7 +359,7 @@ describe('marker', () => {
             .addTo(map);
 
         expect(marker.getElement().classList).toContain('maplibregl-marker-anchor-center');
-        expect(marker.getElement().style.transform).toMatch(/translate\(-50%,-50%\)/);
+        expect(marker.getElement().style.transform).toMatch(/translate\(-50%, -50%\)/);
 
         map.remove();
     });
@@ -371,7 +371,7 @@ describe('marker', () => {
             .addTo(map);
 
         expect(marker.getElement().classList).toContain('maplibregl-marker-anchor-top');
-        expect(marker.getElement().style.transform).toMatch(/translate\(-50%,0\)/);
+        expect(marker.getElement().style.transform).toMatch(/translate\(-50%\)/);
 
         map.remove();
     });
@@ -1243,11 +1243,11 @@ describe('marker', () => {
             .addTo(map);
 
         map.jumpTo({center: [40.001, 30.001]});
-        expect(marker.getElement().style.transform).toBe('translate(-50%,-50%) translate(604px, 189px) rotateX(0deg) rotateZ(0deg)');
+        expect(marker.getElement().style.transform).toBe('translate(-50%, -50%) translate(604px, 189px) rotateX(0deg) rotateZ(0deg)');
 
         elevation = 1000; // the terrain tiles under the marker arrive, then the map settles
         map.fire('idle');
-        expect(marker.getElement().style.transform).toBe('translate(-50%,-50%) translate(611px, 86px) rotateX(0deg) rotateZ(0deg)');
+        expect(marker.getElement().style.transform).toBe('translate(-50%, -50%) translate(611px, 86px) rotateX(0deg) rotateZ(0deg)');
 
         map.remove();
     });
@@ -1579,7 +1579,7 @@ describe('marker', () => {
 
         const adjustedTransform = marker.getElement().style.transform;
         expect(adjustedTransform)
-            .toContain('translate(262.4px, 235.5934100987358px)');
+            .toContain('translate(262.4px, 235.593px)');
     });
 
     test('Sets opacity according to options.opacity when provided a number', async () => {

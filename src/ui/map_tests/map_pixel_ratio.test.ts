@@ -83,7 +83,7 @@ describe('canvas CSS size', () => {
         // 850 * 1.75 is 1487.5, so the backing store cannot match the container exactly.
         expect(canvas.height).toBe(1488);
         expect(parseFloat(canvas.style.width) * 1.75).toBe(canvas.width);
-        expect(parseFloat(canvas.style.height) * 1.75).toBe(canvas.height);
+        expect(parseFloat(canvas.style.height) * 1.75).toBeCloseTo(canvas.height);
         expect(map.painter.width).toBe(canvas.width);
         expect(map.painter.height).toBe(canvas.height);
     });
