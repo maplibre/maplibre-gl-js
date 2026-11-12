@@ -8,7 +8,7 @@ import {type PointProjection, xyTransformMat4} from '../../symbol/projection.ts'
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon, getMercatorTileCoordinates, calculateTileMatrix, cameraMercatorCoordinateFromCenterAndRotation, projectToWorldCoordinates, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {fastInvertProjMat4} from '../../util/fast_maths.ts';
-import {getCenterOffset} from '../camera_state.ts';
+import {getCenterOffset} from '../camera_view_state.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {createFrustum, type Frustum} from '../../util/primitives/frustum.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
@@ -75,7 +75,7 @@ const NEAR_PLANE_CLIP_Z = -1;
  * @internal
  * Derives the {@link MercatorProjectedCamera} of a camera: the matrices the mercator projection draws it with. A camera
  * without a size has none.
- * @param nearFarZ - the depth range to use instead of computing one, by default the camera state's override; a globe
+ * @param nearFarZ - the depth range to use instead of computing one, by default the camera view state's override; a globe
  * passes its vertical perspective's, so both draw at the same depths
  */
 export function createMercatorProjectedCamera(metrics: CameraMetrics, projection: MercatorCameraProjection, nearFarZ: NearFarZ | null = metrics.nearFarZOverride): MercatorProjectedCamera {

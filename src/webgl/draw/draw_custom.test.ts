@@ -27,8 +27,8 @@ vi.mock(import('../../symbol/projection'));
 describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
         // same camera setup as in mercator_camera_math.test.ts, so its matrices should be the same
-        const {state, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 500, height: 500});
-        const projectedCamera = projectCamera(cameraUpdates.setMaxPitch(cameraUpdates.setMinPitch(state, 10), 10), context.projection);
+        const {state: view, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 500, height: 500});
+        const projectedCamera = projectCamera(cameraUpdates.setMaxPitch(cameraUpdates.setMinPitch(view, 10), 10), context.projection);
         const mockPainter = new Painter(null);
         mockPainter.context = {
             gl: {},

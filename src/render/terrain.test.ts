@@ -73,12 +73,12 @@ describe('Terrain', () => {
     test('a globe transform that renders the globe picks with the globe raycast', () => {
         const {terrain} = createFlatTerrain(0);
         const globe = createGlobeCameraProjection();
-        const {state, projectedCamera} = createTestCamera({width: 2048, height: 512, zoom: 1}, globe);
+        const {state: view, projectedCamera} = createTestCamera({width: 2048, height: 512, zoom: 1}, globe);
         const p = new Point(1100, 280);
 
         const coordinate = cameraMath.screenTerrainPointToMercatorCoordinate(projectedCamera, globe, p, terrain);
         const verticalPerspective = createVerticalPerspectiveCameraProjection();
-        const expected = cameraMath.screenTerrainPointToMercatorCoordinate(cameraMath.projectCamera(state, verticalPerspective), verticalPerspective, p, terrain);
+        const expected = cameraMath.screenTerrainPointToMercatorCoordinate(cameraMath.projectCamera(view, verticalPerspective), verticalPerspective, p, terrain);
 
         expect(expected).not.toBeNull();
         expect(coordinate).not.toBeNull();

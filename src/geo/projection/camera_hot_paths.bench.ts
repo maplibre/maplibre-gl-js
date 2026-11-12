@@ -12,7 +12,7 @@ function createCamera(): TestCamera {
     return createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 1280, height: 800, center: new LngLat(-73.98, 40.75), zoom: 12.3, pitch: 45, bearing: 30});
 }
 
-const {state, context, projectedCamera} = createCamera();
+const {state: view, context, projectedCamera} = createCamera();
 const {projection} = context;
 const points: Point[] = [];
 const lngLats: LngLat[] = [];
@@ -25,12 +25,12 @@ test('camera hot paths', async ({bench}) => {
     await bench.compare(
         bench('recenterOnTerrain (per-frame terrain path)', () => {
             for (let i = 0; i < 100; i++) {
-                cameraSolvers.recenterOnTerrain(cameraUpdates.setElevation(state, context, i % 2 ? 250 : 0), context);
+                cameraSolvers.recenterOnTerrain(cameraUpdates.setElevation(view, context, i % 2 ? 250 : 0), context);
             }
         }),
         bench('calculateCenterFromCameraLngLatAlt (iterative)', () => {
             for (let i = 0; i < 100; i++) {
-                cameraUpdates.calculateCenterFromCameraLngLatAlt(state, projection.worldCoordinateHelper, lngLats[i], 4000 + i, 30, 45);
+                cameraUpdates.calculateCenterFromCameraLngLatAlt(view, projection.worldCoordinateHelper, lngLats[i], 4000 + i, 30, 45);
             }
         }),
         bench('getCameraLngLat', () => {
@@ -50,7 +50,7 @@ test('camera hot paths', async ({bench}) => {
         }),
         bench('setLocationAtPoint', () => {
             for (let i = 0; i < 100; i++) {
-                cameraSolvers.setLocationAtPoint(state, context, lngLats[i], points[i]);
+                cameraSolvers.setLocationAtPoint(view, context, lngLats[i], points[i]);
             }
         }),
         bench('coveringTiles', () => {

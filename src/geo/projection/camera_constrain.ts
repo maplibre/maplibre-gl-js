@@ -6,7 +6,7 @@ import {lngLatBoxToWorldBox, projectToWorldCoordinates, unprojectFromWorldCoordi
 import {getGlobeRadiusPixels, getZoomAdjustment} from './globe_utils.ts';
 import {renderedProjection} from './camera_projection.ts';
 
-import type {CameraState} from '../camera_state.ts';
+import type {CameraViewState} from '../camera_view_state.ts';
 import type {TransformConstrainFunction, WorldCoordinateHelper} from '../camera_types.ts';
 import type {CameraProjection} from './camera_projection.ts';
 
@@ -31,10 +31,10 @@ export type CameraContext = {
  * Where the camera's constrain puts a center and a zoom: the override the map was given, or the projection's own,
  * see {@link defaultConstrain}.
  */
-export function applyConstrain(state: CameraState, context: CameraContext, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+export function applyConstrain(view: CameraViewState, context: CameraContext, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
     return context.constrainOverride !== null ?
         context.constrainOverride(lngLat, zoom) :
-        defaultConstrain(state, context.projection, lngLat, zoom);
+        defaultConstrain(view, context.projection, lngLat, zoom);
 }
 
 /**
@@ -42,11 +42,11 @@ export function applyConstrain(state: CameraState, context: CameraContext, lngLa
  * Where the projection's own constrain puts a center and a zoom, for a camera with the given size, padding and limits.
  * A globe constrains like the projection it draws with.
  */
-export function defaultConstrain(state: CameraState, projection: CameraProjection, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+export function defaultConstrain(view: CameraViewState, projection: CameraProjection, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
     const rendered = renderedProjection(projection);
     return rendered.kind === 'mercator' ?
-        mercatorConstrain(state, rendered.worldCoordinateHelper, lngLat, zoom) :
-        verticalPerspectiveConstrain(state, lngLat, zoom);
+        mercatorConstrain(view, rendered.worldCoordinateHelper, lngLat, zoom) :
+        verticalPerspectiveConstrain(view, lngLat, zoom);
 }
 
 /**
@@ -55,34 +55,34 @@ export function defaultConstrain(state: CameraState, projection: CameraProjectio
  * south poles and, if only one copy of the world is drawn, the antimeridian. A world that does not wrap (a registered
  * planar CRS) keeps its center inside its world square instead, see {@link constrainToWorldSquare}.
  */
-function mercatorConstrain(state: CameraState, worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
-    zoom = clamp(+zoom, state.minZoom, state.maxZoom);
-    if (!worldCoordinateHelper.wraps) return constrainToWorldSquare(state, worldCoordinateHelper, lngLat, zoom);
+function mercatorConstrain(view: CameraViewState, worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    zoom = clamp(+zoom, view.minZoom, view.maxZoom);
+    if (!worldCoordinateHelper.wraps) return constrainToWorldSquare(view, worldCoordinateHelper, lngLat, zoom);
     const result = {
         center: new LngLat(lngLat.lng, lngLat.lat),
         zoom
     };
 
-    let lngRange = state.lngRange;
+    let lngRange = view.lngRange;
 
-    if (!state.renderWorldCopies && lngRange === null) {
+    if (!view.renderWorldCopies && lngRange === null) {
         const almost180 = 180 - 1e-10;
         lngRange = [-almost180, almost180];
     }
 
-    const worldSize = state.tileSize * zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
+    const worldSize = view.tileSize * zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
     let minY = 0;
     let maxY = worldSize;
     let minX = 0;
     let maxX = worldSize;
     let scaleY = 0;
     let scaleX = 0;
-    const {top, bottom, left, right} = state.padding;
-    const screenWidth = state.width - left - right;
-    const screenHeight = state.height - top - bottom;
+    const {top, bottom, left, right} = view.padding;
+    const screenWidth = view.width - left - right;
+    const screenHeight = view.height - top - bottom;
 
-    if (state.latRange) {
-        const latRange = state.latRange;
+    if (view.latRange) {
+        const latRange = view.latRange;
         minY = mercatorYfromLat(latRange[1]) * worldSize;
         maxY = mercatorYfromLat(latRange[0]) * worldSize;
         const shouldZoomIn = maxY - minY < screenHeight;
@@ -122,7 +122,7 @@ function mercatorConstrain(state: CameraState, worldCoordinateHelper: WorldCoord
         return result;
     }
 
-    if (state.latRange) {
+    if (view.latRange) {
         const h2 = screenHeight / 2;
         if (originalY - h2 < minY) modifiedY = minY + h2;
         if (originalY + h2 > maxY) modifiedY = maxY - h2;
@@ -131,7 +131,7 @@ function mercatorConstrain(state: CameraState, worldCoordinateHelper: WorldCoord
     if (lngRange) {
         const centerX = (minX + maxX) / 2;
         let wrappedX = originalX;
-        if (state.renderWorldCopies) {
+        if (view.renderWorldCopies) {
             wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
         }
         const w2 = screenWidth / 2;
@@ -156,9 +156,9 @@ function mercatorConstrain(state: CameraState, worldCoordinateHelper: WorldCoord
  * since both world axes may depend on lng and lat, the view may not leave them and the map zooms in until they
  * fill the screen.
  */
-function constrainToWorldSquare(state: CameraState, worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
-    const lngRange = state.lngRange;
-    const worldSize = state.tileSize * zoomScale(zoom);
+function constrainToWorldSquare(view: CameraViewState, worldCoordinateHelper: WorldCoordinateHelper, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    const lngRange = view.lngRange;
+    const worldSize = view.tileSize * zoomScale(zoom);
     if (!lngRange) {
         const {x, y} = projectToWorldCoordinates(worldSize, lngLat, worldCoordinateHelper);
         const clampedX = clamp(x, 0, worldSize);
@@ -168,12 +168,12 @@ function constrainToWorldSquare(state: CameraState, worldCoordinateHelper: World
         }
         return {center: new LngLat(lngLat.lng, lngLat.lat), zoom};
     }
-    const box = projectMaxBounds(worldCoordinateHelper, lngRange, state.latRange);
+    const box = projectMaxBounds(worldCoordinateHelper, lngRange, view.latRange);
     const minX = Math.max(box.minX, 0) * worldSize;
     const maxX = Math.min(box.maxX, 1) * worldSize;
     const minY = Math.max(box.minY, 0) * worldSize;
     const maxY = Math.min(box.maxY, 1) * worldSize;
-    const {width: screenWidth, height: screenHeight} = state;
+    const {width: screenWidth, height: screenHeight} = view;
     const scaleX = maxX - minX < screenWidth ? screenWidth / (maxX - minX) : 0;
     const scaleY = maxY - minY < screenHeight ? screenHeight / (maxY - minY) : 0;
     const {x, y} = projectToWorldCoordinates(worldSize, lngLat, worldCoordinateHelper);
@@ -193,7 +193,7 @@ function constrainToWorldSquare(state: CameraState, worldCoordinateHelper: World
 }
 
 /**
- * `maxBounds` projected into the world square, by the range arrays of the camera state it was projected for, which
+ * `maxBounds` projected into the world square, by the range arrays of the camera view state it was projected for, which
  * are never written to. Projecting a box samples it on a grid and every constrain reads it.
  */
 const maxBoundsWorldBoxes = new WeakMap<[number, number], {latRange: [number, number]; worldCoordinateHelper: WorldCoordinateHelper; box: {minX: number; minY: number; maxX: number; maxY: number}}>();
@@ -210,9 +210,9 @@ function projectMaxBounds(worldCoordinateHelper: WorldCoordinateHelper, lngRange
  * The vertical perspective constrain, which keeps the zoom within its limits, adjusted for the planet's scale at the
  * latitude, and the center as close to a pole as {@link getMaxLatitude} allows. It does not respect the max bounds.
  */
-function verticalPerspectiveConstrain(state: CameraState, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
-    const constrainedZoom = clamp(+zoom, state.minZoom + getZoomAdjustment(0, lngLat.lat), state.maxZoom);
-    const maxLatitude = getMaxLatitude(state, constrainedZoom);
+function verticalPerspectiveConstrain(view: CameraViewState, lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    const constrainedZoom = clamp(+zoom, view.minZoom + getZoomAdjustment(0, lngLat.lat), view.maxZoom);
+    const maxLatitude = getMaxLatitude(view, constrainedZoom);
     return {
         center: new LngLat(
             lngLat.lng,
@@ -226,10 +226,10 @@ function verticalPerspectiveConstrain(state: CameraState, lngLat: LngLat, zoom: 
  * Returns how close to a pole the center can be at the given zoom. Past the mercator edge there is no data,
  * so the center reaches the pole only while that area fits in the viewport, and eases back to the edge as it outgrows it.
  */
-function getMaxLatitude(state: CameraState, zoom: number): number {
+function getMaxLatitude(view: CameraViewState, zoom: number): number {
     const areaRadians = degreesToRadians(90 - MAX_VALID_LATITUDE);
-    const areaPixels = getGlobeRadiusPixels(state.tileSize * zoomScale(zoom), MAX_VALID_LATITUDE) * areaRadians;
-    const reachPixels = Math.min(state.width, state.height) / 2;
+    const areaPixels = getGlobeRadiusPixels(view.tileSize * zoomScale(zoom), MAX_VALID_LATITUDE) * areaRadians;
+    const reachPixels = Math.min(view.width, view.height) / 2;
     const centerPixels = Math.min(areaPixels, reachPixels) * remapSaturate(areaPixels, reachPixels, reachPixels * POLE_AREA_FADE_SCALE, 1, 0);
     return MAX_VALID_LATITUDE + radiansToDegrees(areaRadians * centerPixels / areaPixels);
 }

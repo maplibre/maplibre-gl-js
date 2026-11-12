@@ -4,7 +4,7 @@ import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {LngLat, earthRadius} from '../../geo/lng_lat.ts';
 import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {createCameraState} from '../../geo/camera_state.ts';
+import {createCameraViewState} from '../../geo/camera_view_state.ts';
 import * as cameraMath from '../../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
@@ -1862,7 +1862,7 @@ describe('queryTerrainElevation', () => {
     test('calls getElevationForLngLat with the location and the transform', () => {
         const getElevationForLngLat = vi.fn();
         map.terrain = {getElevationForLngLat} as any as Terrain;
-        map._camera.applyStateChange(() => createCameraState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true}));
+        map._camera.applyStateChange(() => createCameraViewState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true}));
 
         map.queryTerrainElevation([1, 2]);
 

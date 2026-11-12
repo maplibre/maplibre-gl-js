@@ -7,8 +7,8 @@ import {MAX_VALID_LATITUDE, radiansToDegrees} from '../util/util.ts';
 import type {PaddingOptions} from './edge_insets.ts';
 import type {NearFarZ} from './camera_types.ts';
 
-/** @internal The limits a new camera state starts with, see {@link createCameraState}. */
-export type CameraStateOptions = {
+/** @internal The limits a new camera view state starts with, see {@link createCameraViewState}. */
+export type CameraViewStateOptions = {
     /**
      * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
      * @defaultValue 0
@@ -42,7 +42,7 @@ export type CameraStateOptions = {
  * It holds only what a change sets. What follows from it is {@link ProjectedCamera}: the values every projection derives
  * from it the same way, see {@link CameraMetrics}, and the projection's own matrices.
  */
-export type CameraState = {
+export type CameraViewState = {
     readonly tileSize: number;
     readonly width: number;
     readonly height: number;
@@ -86,7 +86,7 @@ export type CameraState = {
  * @internal
  * The state of a new camera, which has no size yet and no bounds.
  */
-export function createCameraState(options?: CameraStateOptions): CameraState {
+export function createCameraViewState(options?: CameraViewStateOptions): CameraViewState {
     return {
         tileSize: 512,
         width: 0,
@@ -134,7 +134,7 @@ export function isPaddingEqual(padding: Readonly<Required<PaddingOptions>>, othe
  * The center of the screen in pixels with the top-left corner being (0,0) and +y axis pointing downwards.
  * This accounts for padding.
  */
-export function getCenterPoint(camera: Pick<CameraState, 'padding' | 'width' | 'height'>): Point {
+export function getCenterPoint(camera: Pick<CameraViewState, 'padding' | 'width' | 'height'>): Point {
     const {top, bottom, left, right} = camera.padding;
     return new EdgeInsets(top, bottom, left, right).getCenter(camera.width, camera.height);
 }
@@ -143,7 +143,7 @@ export function getCenterPoint(camera: Pick<CameraState, 'padding' | 'width' | '
  * @internal
  * How far the padding moves the center point away from the middle of the screen, in pixels.
  */
-export function getCenterOffset(camera: Pick<CameraState, 'padding' | 'width' | 'height'>): Point {
+export function getCenterOffset(camera: Pick<CameraViewState, 'padding' | 'width' | 'height'>): Point {
     return getCenterPoint(camera)._sub(new Point(camera.width, camera.height)._div(2));
 }
 
@@ -159,7 +159,7 @@ export function getWorldSize(camera: {readonly tileSize: number; readonly scale:
  * @internal
  * The bearing in degrees.
  */
-export function getBearing(camera: Pick<CameraState, 'bearingInRadians'>): number {
+export function getBearing(camera: Pick<CameraViewState, 'bearingInRadians'>): number {
     return camera.bearingInRadians / Math.PI * 180;
 }
 
@@ -167,7 +167,7 @@ export function getBearing(camera: Pick<CameraState, 'bearingInRadians'>): numbe
  * @internal
  * The pitch in degrees.
  */
-export function getPitch(camera: Pick<CameraState, 'pitchInRadians'>): number {
+export function getPitch(camera: Pick<CameraViewState, 'pitchInRadians'>): number {
     return camera.pitchInRadians / Math.PI * 180;
 }
 
@@ -175,7 +175,7 @@ export function getPitch(camera: Pick<CameraState, 'pitchInRadians'>): number {
  * @internal
  * The roll in degrees.
  */
-export function getRoll(camera: Pick<CameraState, 'rollInRadians'>): number {
+export function getRoll(camera: Pick<CameraViewState, 'rollInRadians'>): number {
     return camera.rollInRadians / Math.PI * 180;
 }
 
@@ -184,7 +184,7 @@ export function getRoll(camera: Pick<CameraState, 'rollInRadians'>): number {
  * The bounds the camera's center is kept in, or null where it is kept in neither longitude nor latitude. A longitude
  * left unbounded spans from -Infinity to Infinity.
  */
-export function getMaxBounds(camera: Pick<CameraState, 'lngRange' | 'latRange'>): LngLatBounds | null {
+export function getMaxBounds(camera: Pick<CameraViewState, 'lngRange' | 'latRange'>): LngLatBounds | null {
     const {lngRange, latRange} = camera;
     if (!lngRange && latRange[0] === -MAX_VALID_LATITUDE && latRange[1] === MAX_VALID_LATITUDE) return null;
     return new LngLatBounds([lngRange?.[0] ?? -Infinity, latRange[0], lngRange?.[1] ?? Infinity, latRange[1]]);
@@ -194,6 +194,6 @@ export function getMaxBounds(camera: Pick<CameraState, 'lngRange' | 'latRange'>)
  * @internal
  * The vertical field of view in degrees.
  */
-export function getFov(camera: Pick<CameraState, 'fovInRadians'>): number {
+export function getFov(camera: Pick<CameraViewState, 'fovInRadians'>): number {
     return radiansToDegrees(camera.fovInRadians);
 }

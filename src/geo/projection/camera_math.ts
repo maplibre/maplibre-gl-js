@@ -8,7 +8,7 @@ import {renderedProjection} from './camera_projection.ts';
 
 import type {mat4, vec3} from 'gl-matrix';
 import type {CameraMetrics, ProjectedCamera, MercatorProjectedCamera, VerticalPerspectiveProjectedCamera} from '../projected_camera.ts';
-import type {CameraState} from '../camera_state.ts';
+import type {CameraViewState} from '../camera_view_state.ts';
 import type {WorldCoordinateHelper} from '../camera_types.ts';
 import type {CameraProjection} from './camera_projection.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
@@ -21,47 +21,47 @@ import type {Terrain} from '../../render/terrain.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 
-/** The {@link CameraMetrics} derived from each camera state, for each world mapping it was derived in. */
-const metricsCache = new WeakMap<CameraState, WeakMap<WorldCoordinateHelper, CameraMetrics>>();
+/** The {@link CameraMetrics} derived from each {@link CameraViewState}, for each world mapping it was derived in. */
+const metricsCache = new WeakMap<CameraViewState, WeakMap<WorldCoordinateHelper, CameraMetrics>>();
 
-/** The {@link ProjectedCamera} derived from each camera state, for each projection it was derived in. */
-const projectedCameraCache = new WeakMap<CameraState, WeakMap<CameraProjection, ProjectedCamera>>();
+/** The {@link ProjectedCamera} derived from each {@link CameraViewState}, for each projection it was derived in. */
+const projectedCameraCache = new WeakMap<CameraViewState, WeakMap<CameraProjection, ProjectedCamera>>();
 
 /**
  * @internal
- * The values every projection derives from a camera state, see {@link createCameraMetrics}, kept for as long as the
+ * The values every projection derives from a camera view state, see {@link createCameraMetrics}, kept for as long as the
  * state, which is never written to.
  */
-export function getCameraMetrics(state: CameraState, worldCoordinateHelper: WorldCoordinateHelper): CameraMetrics {
-    let byHelper = metricsCache.get(state);
-    if (!byHelper) metricsCache.set(state, byHelper = new WeakMap());
+export function getCameraMetrics(view: CameraViewState, worldCoordinateHelper: WorldCoordinateHelper): CameraMetrics {
+    let byHelper = metricsCache.get(view);
+    if (!byHelper) metricsCache.set(view, byHelper = new WeakMap());
     let camera = byHelper.get(worldCoordinateHelper);
-    if (!camera) byHelper.set(worldCoordinateHelper, camera = createCameraMetrics(state, worldCoordinateHelper));
+    if (!camera) byHelper.set(worldCoordinateHelper, camera = createCameraMetrics(view, worldCoordinateHelper));
     return camera;
 }
 
 /**
  * @internal
- * The {@link ProjectedCamera} of a camera state in a projection: what the camera is drawn and queried with. It is derived
+ * The {@link ProjectedCamera} of a camera view state in a projection: what the camera is drawn and queried with. It is derived
  * once per state and projection, both of which are never written to, and kept for as long as the state.
  */
-export function projectCamera(state: CameraState, projection: CameraProjection): ProjectedCamera {
-    let forRenderedProjection = projectedCameraCache.get(state);
-    if (!forRenderedProjection) projectedCameraCache.set(state, forRenderedProjection = new WeakMap());
+export function projectCamera(view: CameraViewState, projection: CameraProjection): ProjectedCamera {
+    let forRenderedProjection = projectedCameraCache.get(view);
+    if (!forRenderedProjection) projectedCameraCache.set(view, forRenderedProjection = new WeakMap());
     let projectedCamera = forRenderedProjection.get(projection);
-    if (!projectedCamera) forRenderedProjection.set(projection, projectedCamera = createProjectedCamera(state, projection));
+    if (!projectedCamera) forRenderedProjection.set(projection, projectedCamera = createProjectedCamera(view, projection));
     return projectedCamera;
 }
 
-function createProjectedCamera(state: CameraState, projection: CameraProjection): ProjectedCamera {
-    const metrics = getCameraMetrics(state, projection.worldCoordinateHelper);
+function createProjectedCamera(view: CameraViewState, projection: CameraProjection): ProjectedCamera {
+    const metrics = getCameraMetrics(view, projection.worldCoordinateHelper);
     if (projection.kind === 'mercator') return mercatorMath.createMercatorProjectedCamera(metrics, projection);
     if (projection.kind === 'vertical-perspective') return verticalPerspectiveMath.createVerticalPerspectiveProjectedCamera(metrics);
     // While the globe renders, mercator draws at the vertical perspective's depths, which keeps the two render paths
     // at the same depth across the transition.
     const verticalPerspective = verticalPerspectiveMath.createVerticalPerspectiveProjectedCamera(metrics);
     const globeRendering = projection.globeness > 0;
-    const nearFarZ = globeRendering && state.width && state.height ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : state.nearFarZOverride;
+    const nearFarZ = globeRendering && view.width && view.height ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : view.nearFarZOverride;
     const mercator = mercatorMath.createMercatorProjectedCamera(metrics, projection.mercator, nearFarZ);
     const rendered = globeRendering ? verticalPerspective : mercator;
     return {

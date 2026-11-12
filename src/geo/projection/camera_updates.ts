@@ -2,7 +2,7 @@ import {LngLat, type LngLatLike} from '../lng_lat.ts';
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {clamp, degreesToRadians, MAX_VALID_LATITUDE, scaleZoom, warnOnce, wrap} from '../../util/util.ts';
 import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from './mercator_utils.ts';
-import {getBearing, getFov, getPitch, interpolatePadding as interpolatePaddingValues, isPaddingEqual} from '../camera_state.ts';
+import {getBearing, getFov, getPitch, interpolatePadding as interpolatePaddingValues, isPaddingEqual} from '../camera_view_state.ts';
 import {applyConstrain, type CameraContext} from './camera_constrain.ts';
 import {getCameraMetrics} from './camera_math.ts';
 import * as mercatorCameraUpdates from './mercator_camera_updates.ts';
@@ -12,7 +12,7 @@ import {quat} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {usesGlobeControls} from './camera_projection.ts';
 
-import type {CameraState} from '../camera_state.ts';
+import type {CameraViewState} from '../camera_view_state.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {NearFarZ, WorldCoordinateHelper} from '../camera_types.ts';
@@ -29,12 +29,12 @@ const MAX_CENTER_PASSES = 10;
  * @internal
  * Snaps the camera's center and zoom into the range its constrain allows, see {@link applyConstrain}. A camera
  * without a size is not constrained. Snapping into range does not count as moving the camera, so the state keeps
- * whether it was {@link CameraState.unmodified}.
+ * whether it was {@link CameraViewState.unmodified}.
  */
-export function constrainState(state: CameraState, context: CameraContext): CameraState {
-    if (!state.width || !state.height) return state;
-    const {center, zoom} = applyConstrain(state, context, state.center, state.zoom);
-    let next = state;
+export function constrainState(view: CameraViewState, context: CameraContext): CameraViewState {
+    if (!view.width || !view.height) return view;
+    const {center, zoom} = applyConstrain(view, context, view.center, view.zoom);
+    let next = view;
     if (center.lat !== next.center.lat || center.lng !== next.center.lng) next = {...next, center};
     const constrainedZoom = applyConstrain(next, context, next.center, zoom).zoom;
     if (next.zoom !== constrainedZoom) next = {...next, zoom: constrainedZoom};
@@ -46,43 +46,43 @@ export function constrainState(state: CameraState, context: CameraContext): Came
  * Where the constrain puts a camera moved to `center` and `zoom`. A camera without a size is not constrained, so it
  * keeps the two as they are.
  */
-export function getConstrainedCamera(state: CameraState, context: CameraContext, center: LngLat, zoom: number): {center: LngLat; zoom: number} {
-    if (!state.width || !state.height) return {center, zoom};
-    const constrained = applyConstrain(state, context, center, zoom);
-    return {center: constrained.center, zoom: applyConstrain(state, context, constrained.center, constrained.zoom).zoom};
+export function getConstrainedCamera(view: CameraViewState, context: CameraContext, center: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    if (!view.width || !view.height) return {center, zoom};
+    const constrained = applyConstrain(view, context, center, zoom);
+    return {center: constrained.center, zoom: applyConstrain(view, context, constrained.center, constrained.zoom).zoom};
 }
 
 /** @internal Sets the lowest zoom, and keeps the zoom at or above it. */
-export function setMinZoom(state: CameraState, context: CameraContext, minZoom: number): CameraState {
-    if (state.minZoom === minZoom) return state;
-    return keepUnmodified(state, (s) => {
+export function setMinZoom(view: CameraViewState, context: CameraContext, minZoom: number): CameraViewState {
+    if (view.minZoom === minZoom) return view;
+    return keepUnmodified(view, (s) => {
         const next = {...s, minZoom};
         return setZoom(next, context, applyConstrain(next, context, next.center, next.zoom).zoom);
     });
 }
 
 /** @internal Sets the highest zoom, and keeps the zoom at or below it. */
-export function setMaxZoom(state: CameraState, context: CameraContext, maxZoom: number): CameraState {
-    if (state.maxZoom === maxZoom) return state;
-    return keepUnmodified(state, (s) => {
+export function setMaxZoom(view: CameraViewState, context: CameraContext, maxZoom: number): CameraViewState {
+    if (view.maxZoom === maxZoom) return view;
+    return keepUnmodified(view, (s) => {
         const next = {...s, maxZoom};
         return setZoom(next, context, applyConstrain(next, context, next.center, next.zoom).zoom);
     });
 }
 
 /** @internal Sets the lowest pitch, in degrees, and keeps the pitch at or above it. */
-export function setMinPitch(state: CameraState, minPitch: number): CameraState {
-    if (state.minPitch === minPitch) return state;
-    return keepUnmodified(state, (s) => {
+export function setMinPitch(view: CameraViewState, minPitch: number): CameraViewState {
+    if (view.minPitch === minPitch) return view;
+    return keepUnmodified(view, (s) => {
         const next = {...s, minPitch};
         return setPitch(next, Math.max(getPitch(next), minPitch));
     });
 }
 
 /** @internal Sets the highest pitch, in degrees, and keeps the pitch at or below it. */
-export function setMaxPitch(state: CameraState, maxPitch: number): CameraState {
-    if (state.maxPitch === maxPitch) return state;
-    return keepUnmodified(state, (s) => {
+export function setMaxPitch(view: CameraViewState, maxPitch: number): CameraViewState {
+    if (view.maxPitch === maxPitch) return view;
+    return keepUnmodified(view, (s) => {
         const next = {...s, maxPitch};
         return setPitch(next, Math.min(getPitch(next), maxPitch));
     });
@@ -93,7 +93,7 @@ export function setMaxPitch(state: CameraState, maxPitch: number): CameraState {
  * Sets whether the world is drawn more than once, side by side, which a world that does not wrap ignores. Undefined
  * draws it more than once, null once.
  */
-export function setRenderWorldCopies(state: CameraState, worldCoordinateHelper: WorldCoordinateHelper, renderWorldCopies: boolean | null | undefined): CameraState {
+export function setRenderWorldCopies(view: CameraViewState, worldCoordinateHelper: WorldCoordinateHelper, renderWorldCopies: boolean | null | undefined): CameraViewState {
     if (renderWorldCopies === undefined) {
         renderWorldCopies = true;
     } else if (renderWorldCopies === null) {
@@ -102,86 +102,86 @@ export function setRenderWorldCopies(state: CameraState, worldCoordinateHelper: 
     if (renderWorldCopies && !worldCoordinateHelper.wraps) {
         warnOnce('renderWorldCopies has no effect in a projection whose world does not wrap.');
     }
-    return state.renderWorldCopies === renderWorldCopies ? state : {...state, renderWorldCopies};
+    return view.renderWorldCopies === renderWorldCopies ? view : {...view, renderWorldCopies};
 }
 
 /** @internal Sets the bearing, in degrees. */
-export function setBearing(state: CameraState, bearing: number): CameraState {
+export function setBearing(view: CameraViewState, bearing: number): CameraViewState {
     const b = wrap(bearing, -180, 180) * Math.PI / 180;
-    if (state.bearingInRadians === b) return state;
-    return {...state, unmodified: false, bearingInRadians: b};
+    if (view.bearingInRadians === b) return view;
+    return {...view, unmodified: false, bearingInRadians: b};
 }
 
 /** @internal Sets the pitch, in degrees, within the camera's pitch limits. */
-export function setPitch(state: CameraState, pitch: number): CameraState {
-    const p = clamp(pitch, state.minPitch, state.maxPitch) / 180 * Math.PI;
-    if (state.pitchInRadians === p) return state;
-    return {...state, unmodified: false, pitchInRadians: p};
+export function setPitch(view: CameraViewState, pitch: number): CameraViewState {
+    const p = clamp(pitch, view.minPitch, view.maxPitch) / 180 * Math.PI;
+    if (view.pitchInRadians === p) return view;
+    return {...view, unmodified: false, pitchInRadians: p};
 }
 
 /** @internal Sets the roll, in degrees. */
-export function setRoll(state: CameraState, roll: number): CameraState {
+export function setRoll(view: CameraViewState, roll: number): CameraViewState {
     const r = roll / 180 * Math.PI;
-    if (state.rollInRadians === r) return state;
-    return {...state, unmodified: false, rollInRadians: r};
+    if (view.rollInRadians === r) return view;
+    return {...view, unmodified: false, rollInRadians: r};
 }
 
 /** @internal Sets the vertical field of view, in degrees, between 0.1 and 150. */
-export function setFov(state: CameraState, fov: number): CameraState {
+export function setFov(view: CameraViewState, fov: number): CameraViewState {
     fov = clamp(fov, 0.1, 150);
-    if (getFov(state) === fov) return state;
-    return {...state, unmodified: false, fovInRadians: degreesToRadians(fov)};
+    if (getFov(view) === fov) return view;
+    return {...view, unmodified: false, fovInRadians: degreesToRadians(fov)};
 }
 
 /** @internal Sets the zoom, as the constrain allows it at the current center, and constrains the camera. */
-export function setZoom(state: CameraState, context: CameraContext, zoom: number): CameraState {
-    const constrainedZoom = applyConstrain(state, context, state.center, zoom).zoom;
-    if (state.zoom === constrainedZoom) return state;
-    return constrainState({...state, unmodified: false, zoom: constrainedZoom}, context);
+export function setZoom(view: CameraViewState, context: CameraContext, zoom: number): CameraViewState {
+    const constrainedZoom = applyConstrain(view, context, view.center, zoom).zoom;
+    if (view.zoom === constrainedZoom) return view;
+    return constrainState({...view, unmodified: false, zoom: constrainedZoom}, context);
 }
 
 /** @internal Sets the center, and constrains the camera. */
-export function setCenter(state: CameraState, context: CameraContext, center: LngLat): CameraState {
-    if (center.lat === state.center.lat && center.lng === state.center.lng) return state;
-    return constrainState({...state, unmodified: false, center}, context);
+export function setCenter(view: CameraViewState, context: CameraContext, center: LngLat): CameraViewState {
+    if (center.lat === view.center.lat && center.lng === view.center.lng) return view;
+    return constrainState({...view, unmodified: false, center}, context);
 }
 
 /** @internal Moves the center and the zoom in one change, to a camera that is already constrained. */
-export function setCenterAndZoom(state: CameraState, center: LngLat, zoom: number): CameraState {
-    return {...state, unmodified: false, center, zoom};
+export function setCenterAndZoom(view: CameraViewState, center: LngLat, zoom: number): CameraViewState {
+    return {...view, unmodified: false, center, zoom};
 }
 
 /** @internal Sets the elevation of the center, in meters above sea level, and constrains the camera. */
-export function setElevation(state: CameraState, context: CameraContext, elevation: number): CameraState {
-    if (elevation === state.elevation) return state;
-    return constrainState({...state, elevation}, context);
+export function setElevation(view: CameraViewState, context: CameraContext, elevation: number): CameraViewState {
+    if (elevation === view.elevation) return view;
+    return constrainState({...view, elevation}, context);
 }
 
 /** @internal Sets the padding, and constrains the camera. */
-export function setPadding(state: CameraState, context: CameraContext, padding: PaddingOptions): CameraState {
-    if (isPaddingEqual(state.padding, padding)) return state;
-    return constrainState({...state, unmodified: false, padding: interpolatePaddingValues(state.padding, padding, 1)}, context);
+export function setPadding(view: CameraViewState, context: CameraContext, padding: PaddingOptions): CameraViewState {
+    if (isPaddingEqual(view.padding, padding)) return view;
+    return constrainState({...view, unmodified: false, padding: interpolatePaddingValues(view.padding, padding, 1)}, context);
 }
 
 /** @internal Moves the padding `t` of the way from `start` to `target`, and constrains the camera. */
-export function interpolatePadding(state: CameraState, context: CameraContext, start: PaddingOptions, target: PaddingOptions, t: number): CameraState {
-    return constrainState({...state, unmodified: false, padding: interpolatePaddingValues(start, target, t)}, context);
+export function interpolatePadding(view: CameraViewState, context: CameraContext, start: PaddingOptions, target: PaddingOptions, t: number): CameraViewState {
+    return constrainState({...view, unmodified: false, padding: interpolatePaddingValues(start, target, t)}, context);
 }
 
 /** @internal Sets the size of the viewport, in pixels, and constrains the camera where `constrain` is set. */
-export function resize(state: CameraState, context: CameraContext, width: number, height: number, constrain: boolean = true): CameraState {
-    const next = state.width === width && state.height === height ? state : {...state, width, height};
+export function resize(view: CameraViewState, context: CameraContext, width: number, height: number, constrain: boolean = true): CameraViewState {
+    const next = view.width === width && view.height === height ? view : {...view, width, height};
     return constrain ? constrainState(next, context) : next;
 }
 
 /** @internal Sets the lowest elevation of the terrain tile under the center. */
-export function setMinElevationForCurrentTile(state: CameraState, minElevationForCurrentTile: number): CameraState {
-    return minElevationForCurrentTile === state.minElevationForCurrentTile ? state : {...state, minElevationForCurrentTile};
+export function setMinElevationForCurrentTile(view: CameraViewState, minElevationForCurrentTile: number): CameraViewState {
+    return minElevationForCurrentTile === view.minElevationForCurrentTile ? view : {...view, minElevationForCurrentTile};
 }
 
 /** @internal Sets the depth range to use instead of the one the projection computes, or null to let it compute one. */
-export function setNearFarZOverride(state: CameraState, nearFarZOverride: NearFarZ | null): CameraState {
-    return {...state, nearFarZOverride};
+export function setNearFarZOverride(view: CameraViewState, nearFarZOverride: NearFarZ | null): CameraViewState {
+    return {...view, nearFarZOverride};
 }
 
 /**
@@ -189,9 +189,9 @@ export function setNearFarZOverride(state: CameraState, nearFarZOverride: NearFa
  * Sets or clears the geographical bounds the camera keeps to, and constrains the camera to the new bounds.
  * @param bounds - The bounds, or null to clear them.
  */
-export function setMaxBounds(state: CameraState, context: CameraContext, bounds?: LngLatBounds | null): CameraState {
+export function setMaxBounds(view: CameraViewState, context: CameraContext, bounds?: LngLatBounds | null): CameraViewState {
     if (!bounds) {
-        return {...state, lngRange: null, latRange: [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE]};
+        return {...view, lngRange: null, latRange: [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE]};
     }
 
     const west = bounds.getWest();
@@ -205,7 +205,7 @@ export function setMaxBounds(state: CameraState, context: CameraContext, bounds?
     }
 
     return constrainState({
-        ...state,
+        ...view,
         lngRange: longitudeUnconstrained ? null : [west, east],
         latRange: [
             clamp(south, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE),
@@ -221,10 +221,10 @@ export function setMaxBounds(state: CameraState, context: CameraContext, bounds?
  * from the old center's mercator scale.
  * @param elevation - the elevation in meters for the center
  */
-export function moveCenterToElevation(state: CameraState, context: CameraContext, elevation: number): CameraState {
-    if (state.elevation - elevation === 0) return state;
+export function moveCenterToElevation(view: CameraViewState, context: CameraContext, elevation: number): CameraViewState {
+    if (view.elevation - elevation === 0) return view;
     const worldCoordinateHelper = context.projection.worldCoordinateHelper;
-    const metrics = getCameraMetrics(state, worldCoordinateHelper);
+    const metrics = getCameraMetrics(view, worldCoordinateHelper);
 
     const {x, y, z} = cameraDirectionFromPitchBearing(metrics.pitch, metrics.bearing);
     const originalCenterMercator = worldCoordinateHelper.worldFromLngLat(metrics.center.lng, metrics.center.lat, metrics.elevation);
@@ -237,7 +237,7 @@ export function moveCenterToElevation(state: CameraState, context: CameraContext
     const center = worldCoordinateHelper.lngLatFromWorld(centerMercator.x, centerMercator.y);
     const zoom = scaleZoom(metrics.cameraToCenterDistance / dMercator / metrics.tileSize);
 
-    const moved = {...state, elevation: clampedElevation, center};
+    const moved = {...view, elevation: clampedElevation, center};
     const zoomed = setZoom(moved, context, zoom);
     if (zoomed.zoom !== moved.zoom) return zoomed;
     return constrainState({...zoomed, unmodified: false}, context);
@@ -248,18 +248,18 @@ export function moveCenterToElevation(state: CameraState, context: CameraContext
  * The center, elevation and zoom of the camera that sits at `lnglat`, `alt` meters above sea level, and looks with the
  * given bearing and pitch, by default the camera's own.
  */
-export function calculateCenterFromCameraLngLatAlt(state: CameraState, worldCoordinateHelper: WorldCoordinateHelper, lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
-    const cameraBearing = bearing !== undefined ? bearing : getBearing(state);
-    const cameraPitch = pitch !== undefined ? pitch : getPitch(state);
+export function calculateCenterFromCameraLngLatAlt(view: CameraViewState, worldCoordinateHelper: WorldCoordinateHelper, lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
+    const cameraBearing = bearing !== undefined ? bearing : getBearing(view);
+    const cameraPitch = pitch !== undefined ? pitch : getPitch(view);
 
-    const {distanceToCenter, clampedElevation} = distanceToCenterFromAltElevationPitch(alt, state.elevation, cameraPitch);
+    const {distanceToCenter, clampedElevation} = distanceToCenterFromAltElevationPitch(alt, view.elevation, cameraPitch);
     const {x, y} = cameraDirectionFromPitchBearing(cameraPitch, cameraBearing);
 
     const cameraLngLat = LngLat.convert(lnglat);
     const camMercator = worldCoordinateHelper.worldFromLngLat(cameraLngLat.lng, cameraLngLat.lat, alt);
     const {centerMercator, dMercator} = centerAlongView(worldCoordinateHelper, camMercator, x, y, distanceToCenter, worldCoordinateHelper.metersPerWorldUnit(camMercator.x, camMercator.y));
     const center = worldCoordinateHelper.lngLatFromWorld(centerMercator.x, centerMercator.y);
-    const zoom = scaleZoom(state.height / 2 / Math.tan(state.fovInRadians / 2) / dMercator / state.tileSize);
+    const zoom = scaleZoom(view.height / 2 / Math.tan(view.fovInRadians / 2) / dMercator / view.tileSize);
     return {center, elevation: clampedElevation, zoom};
 }
 
@@ -312,9 +312,9 @@ function distanceToCenterFromAltElevationPitch(alt: number, elevation: number, p
 }
 
 /** Runs a change that moves the camera only to keep it within new limits, which does not count as moving it. */
-function keepUnmodified(state: CameraState, change: (state: CameraState) => CameraState): CameraState {
-    const next = change(state);
-    return next.unmodified === state.unmodified ? next : {...next, unmodified: state.unmodified};
+function keepUnmodified(view: CameraViewState, change: (view: CameraViewState) => CameraViewState): CameraViewState {
+    const next = change(view);
+    return next.unmodified === view.unmodified ? next : {...next, unmodified: view.unmodified};
 }
 
 /**
@@ -323,7 +323,7 @@ function keepUnmodified(state: CameraState, change: (state: CameraState) => Came
  * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
  * @param center - The LngLat object of the desired center. This object will be mutated.
  */
-export function normalizeCenter(state: Pick<CameraState, 'renderWorldCopies' | 'lngRange' | 'center'>, worldCoordinateHelper: WorldCoordinateHelper, center: LngLat): void {
+export function normalizeCenter(state: Pick<CameraViewState, 'renderWorldCopies' | 'lngRange' | 'center'>, worldCoordinateHelper: WorldCoordinateHelper, center: LngLat): void {
     if (!state.renderWorldCopies || !worldCoordinateHelper.wraps || state.lngRange) return;
     const delta = center.lng - state.center.lng;
     center.lng +=
@@ -373,7 +373,7 @@ export type EaseToMotion = {
      * The camera `k` of the way through the animation, from the camera the frame starts with and the context it is in
      * then, which a globe's transition between its projections changes as it zooms.
      */
-    easeFunc: (state: CameraState, context: CameraContext, k: number) => CameraState;
+    easeFunc: (view: CameraViewState, context: CameraContext, k: number) => CameraViewState;
     /**
      * The map center when the animation ends.
      */
@@ -397,7 +397,7 @@ export type FlyToMotionOptions = {
 /** @internal The frames of a `flyTo` flight, see {@link flyTo}. */
 export type FlyToMotion = {
     /** The camera `k` of the way along the flight, from the camera the frame starts with and its context, see {@link EaseToMotion.easeFunc}. */
-    easeFunc: (state: CameraState, context: CameraContext, k: number, scale: number, centerFactor: number, pointAtOffset: Point) => CameraState;
+    easeFunc: (view: CameraViewState, context: CameraContext, k: number, scale: number, centerFactor: number, pointAtOffset: Point) => CameraViewState;
     scaleOfZoom: number;
     scaleOfMinZoom: number;
     /**
@@ -419,7 +419,7 @@ export function warnBoundsCannotFit(): void {
  * Returns the camera with its rotation `k` of the way between two sets of Euler angles.
  * @param useSlerp - whether to interpolate the rotation spherically rather than each angle linearly
  */
-export function interpolateRotation(state: CameraState, start: RollPitchBearing, end: RollPitchBearing, k: number, useSlerp: boolean): CameraState {
+export function interpolateRotation(view: CameraViewState, start: RollPitchBearing, end: RollPitchBearing, k: number, useSlerp: boolean): CameraViewState {
     let angles: RollPitchBearing;
     if (!useSlerp) {
         angles = {
@@ -435,7 +435,7 @@ export function interpolateRotation(state: CameraState, start: RollPitchBearing,
         // At pitch 0 the Euler angles are ambiguous, so the animation ends on the ones it was asked for.
         angles = end;
     }
-    return setBearing(setPitch(setRoll(state, angles.roll), angles.pitch), angles.bearing);
+    return setBearing(setPitch(setRoll(view, angles.roll), angles.pitch), angles.bearing);
 }
 
 /**
@@ -456,13 +456,13 @@ export function panInertia(projectedCamera: ProjectedCamera, projection: CameraP
 }
 
 /** @internal The camera turned and zoomed by a gesture frame's deltas, zooming around its `around` point on the globe. */
-export function rollPitchBearingZoom(state: CameraState, context: CameraContext, deltas: MapControlsDeltas): CameraState {
-    return cameraUpdatesFor(context.projection).rollPitchBearingZoom(state, context, deltas);
+export function rollPitchBearingZoom(view: CameraViewState, context: CameraContext, deltas: MapControlsDeltas): CameraViewState {
+    return cameraUpdatesFor(context.projection).rollPitchBearingZoom(view, context, deltas);
 }
 
 /** @internal The camera panned by a gesture frame, keeping `preZoomAroundLoc` under the point it was grabbed at. */
-export function pan(state: CameraState, context: CameraContext, deltas: MapControlsDeltas, preZoomAroundLoc: LngLat): CameraState {
-    return cameraUpdatesFor(context.projection).pan(state, context, deltas, preZoomAroundLoc);
+export function pan(view: CameraViewState, context: CameraContext, deltas: MapControlsDeltas, preZoomAroundLoc: LngLat): CameraViewState {
+    return cameraUpdatesFor(context.projection).pan(view, context, deltas, preZoomAroundLoc);
 }
 
 /**
@@ -471,21 +471,21 @@ export function pan(state: CameraState, context: CameraContext, deltas: MapContr
  * @param fitPadding - The `padding` option of `cameraForBounds`: the space wanted around the bounds.
  * @param mapPadding - The map's own padding, as in `map.getPadding()`, which the bounds must also stay clear of.
  */
-export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, state: CameraState, context: CameraContext): CameraForBoxAndBearingResult {
-    return cameraUpdatesFor(context.projection).cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, state, context);
+export function cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, view: CameraViewState, context: CameraContext): CameraForBoxAndBearingResult {
+    return cameraUpdatesFor(context.projection).cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, view, context);
 }
 
 /** @internal The camera a `jumpTo` puts at its center and zoom. */
-export function jumpToCenterZoom(state: CameraState, context: CameraContext, options: {zoom?: number; center?: LngLatLike}): CameraState {
-    return cameraUpdatesFor(context.projection).jumpToCenterZoom(state, context, options);
+export function jumpToCenterZoom(view: CameraViewState, context: CameraContext, options: {zoom?: number; center?: LngLatLike}): CameraViewState {
+    return cameraUpdatesFor(context.projection).jumpToCenterZoom(view, context, options);
 }
 
 /** @internal The frames of an `easeTo` animation from the camera it starts with. */
-export function easeTo(state: CameraState, context: CameraContext, options: EaseToMotionOptions): EaseToMotion {
-    return cameraUpdatesFor(context.projection).easeTo(state, context, options);
+export function easeTo(view: CameraViewState, context: CameraContext, options: EaseToMotionOptions): EaseToMotion {
+    return cameraUpdatesFor(context.projection).easeTo(view, context, options);
 }
 
 /** @internal The frames of a `flyTo` flight from the camera it starts with. */
-export function flyTo(state: CameraState, context: CameraContext, options: FlyToMotionOptions): FlyToMotion {
-    return cameraUpdatesFor(context.projection).flyTo(state, context, options);
+export function flyTo(view: CameraViewState, context: CameraContext, options: FlyToMotionOptions): FlyToMotion {
+    return cameraUpdatesFor(context.projection).flyTo(view, context, options);
 }

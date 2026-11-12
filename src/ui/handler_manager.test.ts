@@ -129,7 +129,7 @@ describe('terrain gesture anchoring', () => {
         } as any as Terrain;
         map._camera.setTerrain(map.terrain);
         vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(elevationAt, 300, 2000));
-        map._camera.applyStateChange((state, context) => cameraUpdates.setElevation(state, context, 300));
+        map._camera.applyStateChange((view, context) => cameraUpdates.setElevation(view, context, 300));
 
         const start = map.project(anchor);
         expect(start.x).toBeGreaterThan(20);

@@ -7,9 +7,9 @@ import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provid
 
 /**
  * @internal
- * What a camera is projected with besides its {@link CameraState}: the projection, the lng/lat to world coordinate
+ * What a camera is projected with besides its {@link CameraViewState}: the projection, the lng/lat to world coordinate
  * mapping the camera is positioned in, and the details of the projection's tile grid. The style's projection sets it,
- * not the changes to the camera, so it is not part of the camera's state. It is immutable: a globe that moves between
+ * not the changes to the camera, so it is not part of the camera's view state. It is immutable: a globe that moves between
  * its projections hands out a new one, see {@link withGlobeness}.
  */
 export type CameraProjection = MercatorCameraProjection | VerticalPerspectiveCameraProjection | GlobeCameraProjection;

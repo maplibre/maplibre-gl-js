@@ -8,13 +8,13 @@ import {createTerrain, createTestCamera, expectToBeCloseToArray} from '../../uti
 import {MercatorCoordinate} from '../mercator_coordinate.ts';
 import {tileCoordinatesToLocation} from './mercator_utils.ts';
 import {differenceOfAnglesDegrees} from '../../util/util.ts';
-import {createCameraState, getBearing, getCenterPoint} from '../camera_state.ts';
+import {createCameraViewState, getBearing, getCenterPoint} from '../camera_view_state.ts';
 import {createGlobeCameraProjection, createVerticalPerspectiveCameraProjection, withGlobeness} from './camera_projection.ts';
 import * as cameraMath from './camera_math.ts';
 import * as cameraUpdates from './camera_updates.ts';
 import {calculateCameraOptionsFromTo, recenterOnTerrain, setLocationAtPoint, versorSetLocationAtPoint} from './camera_solvers.ts';
 
-import type {CameraState} from '../camera_state.ts';
+import type {CameraViewState} from '../camera_view_state.ts';
 import type {CameraContext} from './camera_constrain.ts';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: number[]) {
@@ -38,9 +38,9 @@ function createGlobeContext(globeness: number = 1): CameraContext {
     return {projection: withGlobeness(createGlobeCameraProjection(), globeness), constrainOverride: null};
 }
 
-/** A camera state 640 x 480 pixels with a 45° field of view. */
-function createDefaultState(context: CameraContext): CameraState {
-    return cameraUpdates.setFov(cameraUpdates.resize(createCameraState(), context, 640, 480), 45);
+/** A camera 640 x 480 pixels with a 45° field of view. */
+function createDefaultState(context: CameraContext): CameraViewState {
+    return cameraUpdates.setFov(cameraUpdates.resize(createCameraViewState(), context, 640, 480), 45);
 }
 
 /**
@@ -49,27 +49,27 @@ function createDefaultState(context: CameraContext): CameraState {
  */
 function panTravel(screenPoint: Point): number {
     const context = createGlobeContext();
-    let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
-    state = cameraUpdates.setCenter(state, context, new LngLat(0, 0));
+    let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+    view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
     const panDelta = new Point(20, 0);
-    const location = cameraMath.screenPointToLocation(cameraMath.projectCamera(state, context.projection), context.projection, screenPoint.sub(panDelta));
-    state = versorSetLocationAtPoint(state, context, location, screenPoint, panDelta);
-    return Math.abs(differenceOfAnglesDegrees(0, state.center.lng));
+    const location = cameraMath.screenPointToLocation(cameraMath.projectCamera(view, context.projection), context.projection, screenPoint.sub(panDelta));
+    view = versorSetLocationAtPoint(view, context, location, screenPoint, panDelta);
+    return Math.abs(differenceOfAnglesDegrees(0, view.center.lng));
 }
 
 describe('zero size', () => {
     test('does not throw when projected at a zero size', () => {
         for (const [width, height] of [[0, 480], [640, 0]]) {
             const context = createGlobeContext();
-            const state = cameraUpdates.resize(createCameraState(), context, width, height);
-            expect(() => cameraMath.projectCamera(state, context.projection)).not.toThrow();
+            const view = cameraUpdates.resize(createCameraViewState(), context, width, height);
+            expect(() => cameraMath.projectCamera(view, context.projection)).not.toThrow();
         }
     });
 
     test('calculates matrices again once a zero width becomes a real size', () => {
         const projection = createGlobeCameraProjection();
-        const {state, context} = createTestCamera({width: 0, height: 480, zoom: 3, center: [10, 20]}, projection);
-        const resized = cameraMath.projectCamera(cameraUpdates.resize(state, context, 640, 480, true), projection);
+        const {state: view, context} = createTestCamera({width: 0, height: 480, zoom: 3, center: [10, 20]}, projection);
+        const resized = cameraMath.projectCamera(cameraUpdates.resize(view, context, 640, 480, true), projection);
 
         const expected = createTestCamera({width: 640, height: 480, zoom: 3, center: [10, 20]}, projection).projectedCamera;
 
@@ -81,9 +81,9 @@ describe('zero size', () => {
 
 test('uses the overridden depth range until the override is cleared', () => {
     const context = createGlobeContext();
-    const state = createDefaultState(context);
+    const view = createDefaultState(context);
 
-    const overridden = cameraUpdates.setNearFarZOverride(state, {nearZ: 5, farZ: 500});
+    const overridden = cameraUpdates.setNearFarZOverride(view, {nearZ: 5, farZ: 500});
     const overriddenCamera = cameraMath.projectCamera(overridden, context.projection);
 
     expect(overridden.nearFarZOverride).not.toBeNull();
@@ -196,26 +196,26 @@ describe('projection', () => {
         const precisionDigits = 10;
         const context = createGlobeContext();
 
-        let state = createDefaultState(context);
-        expectToBeCloseToArray(cameraMath.projectCamera(state, context.projection).cameraPosition as number[], [0, 0, 8.110445867263898], precisionDigits);
+        let view = createDefaultState(context);
+        expectToBeCloseToArray(cameraMath.projectCamera(view, context.projection).cameraPosition as number[], [0, 0, 8.110445867263898], precisionDigits);
 
-        state = cameraUpdates.resize(state, context, 512, 512);
-        state = cameraUpdates.setZoom(state, context, -0.5);
-        state = cameraUpdates.setCenter(state, context, new LngLat(0, 80));
-        expectToBeCloseToArray(cameraMath.projectCamera(state, context.projection).cameraPosition as number[], [0, 2.2818294674820794, 0.40234810049271963], precisionDigits);
+        view = cameraUpdates.resize(view, context, 512, 512);
+        view = cameraUpdates.setZoom(view, context, -0.5);
+        view = cameraUpdates.setCenter(view, context, new LngLat(0, 80));
+        expectToBeCloseToArray(cameraMath.projectCamera(view, context.projection).cameraPosition as number[], [0, 2.2818294674820794, 0.40234810049271963], precisionDigits);
 
-        state = cameraUpdates.setPitch(state, 35);
-        state = cameraUpdates.setBearing(state, 70);
-        expectToBeCloseToArray(cameraMath.projectCamera(state, context.projection).cameraPosition as number[], [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
+        view = cameraUpdates.setPitch(view, 35);
+        view = cameraUpdates.setBearing(view, 70);
+        expectToBeCloseToArray(cameraMath.projectCamera(view, context.projection).cameraPosition as number[], [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
-        state = cameraUpdates.setRoll(state, 40);
-        expectToBeCloseToArray(cameraMath.projectCamera(state, context.projection).cameraPosition as number[], [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
+        view = cameraUpdates.setRoll(view, 40);
+        expectToBeCloseToArray(cameraMath.projectCamera(view, context.projection).cameraPosition as number[], [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
-        state = cameraUpdates.setRoll(state, 180);
-        expectToBeCloseToArray(cameraMath.projectCamera(state, context.projection).cameraPosition as number[], [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
+        view = cameraUpdates.setRoll(view, 180);
+        expectToBeCloseToArray(cameraMath.projectCamera(view, context.projection).cameraPosition as number[], [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
-        state = cameraUpdates.setCenter(state, context, new LngLat(-10, 42));
-        expectToBeCloseToArray(cameraMath.projectCamera(state, context.projection).cameraPosition as number[], [-3.8450970996236364, 2.9368285470351516, 4.311953269048194], precisionDigits);
+        view = cameraUpdates.setCenter(view, context, new LngLat(-10, 42));
+        expectToBeCloseToArray(cameraMath.projectCamera(view, context.projection).cameraPosition as number[], [-3.8450970996236364, 2.9368285470351516, 4.311953269048194], precisionDigits);
     });
 
     test('sphere point to coordinate', () => {
@@ -239,10 +239,10 @@ describe('projection', () => {
 
         test('basic test', () => {
             const context = createGlobeContext();
-            const state = createDefaultState(context);
+            const view = createDefaultState(context);
 
             for (const center of [new LngLat(0, 0), new LngLat(70, 50), new LngLat(0, 84)]) {
-                const centered = cameraUpdates.setCenter(state, context, center);
+                const centered = cameraUpdates.setCenter(view, context, center);
                 const projected = cameraMath.locationToScreenPoint(cameraMath.projectCamera(centered, context.projection), context.projection, centered.center);
                 expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
                 expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
@@ -251,8 +251,8 @@ describe('projection', () => {
 
         test('project a location that is slightly above and below map\'s center point', () => {
             const context = createGlobeContext();
-            const state = cameraUpdates.setCenter(createDefaultState(context), context, new LngLat(0, 0));
-            const projectedCamera = cameraMath.projectCamera(state, context.projection);
+            const view = cameraUpdates.setCenter(createDefaultState(context), context, new LngLat(0, 0));
+            const projectedCamera = cameraMath.projectCamera(view, context.projection);
 
             let projected = cameraMath.locationToScreenPoint(projectedCamera, context.projection, new LngLat(0, 1));
             expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
@@ -268,9 +268,9 @@ describe('projection', () => {
         test('unproject screen center', () => {
             const precisionDigits = 10;
             const context = createGlobeContext();
-            const state = createDefaultState(context);
+            const view = createDefaultState(context);
 
-            for (const centered of [state, cameraUpdates.setCenter(state, context, new LngLat(90.0, 0.0)), cameraUpdates.setCenter(state, context, new LngLat(0.0, 60.0))]) {
+            for (const centered of [view, cameraUpdates.setCenter(view, context, new LngLat(90.0, 0.0)), cameraUpdates.setCenter(view, context, new LngLat(0.0, 60.0))]) {
                 const unprojected = cameraMath.screenPointToLocation(cameraMath.projectCamera(centered, context.projection), context.projection, screenCenter);
                 expect(unprojected.lng).toBeCloseTo(centered.center.lng, precisionDigits);
                 expect(unprojected.lat).toBeCloseTo(centered.center.lat, precisionDigits);
@@ -299,10 +299,10 @@ describe('projection', () => {
             const context = createGlobeContext();
             // Camera settings from the render test projection/globe/fill-planet-pole
             // See the expected result for how the globe should look with this camera.
-            let state = cameraUpdates.resize(createDefaultState(context), context, 512, 512);
-            state = cameraUpdates.setZoom(state, context, -0.5);
-            state = cameraUpdates.setCenter(state, context, new LngLat(0, 80));
-            const projectedCamera = cameraMath.projectCamera(state, context.projection);
+            let view = cameraUpdates.resize(createDefaultState(context), context, 512, 512);
+            view = cameraUpdates.setZoom(view, context, -0.5);
+            view = cameraUpdates.setCenter(view, context, new LngLat(0, 80));
+            const projectedCamera = cameraMath.projectCamera(view, context.projection);
 
             let coords: LngLat;
             let projected: Point;
@@ -330,16 +330,16 @@ describe('projection', () => {
             const precisionDigits = 10;
             const context = createGlobeContext();
             // Try unprojection a point somewhere above the western horizon
-            const state = cameraUpdates.setBearing(cameraUpdates.setPitch(createDefaultState(context), 60), -90);
-            const unprojected = cameraMath.screenPointToLocation(cameraMath.projectCamera(state, context.projection), context.projection, screenTopEdgeCenter);
+            const view = cameraUpdates.setBearing(cameraUpdates.setPitch(createDefaultState(context), 60), -90);
+            const unprojected = cameraMath.screenPointToLocation(cameraMath.projectCamera(view, context.projection), context.projection, screenTopEdgeCenter);
             expect(unprojected.lng).toBeCloseTo(-28.990298145461963, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
         });
 
         test('unproject further outside of sphere clamps to horizon', () => {
             const context = createGlobeContext();
-            const state = cameraUpdates.setBearing(cameraUpdates.setPitch(createDefaultState(context), 60), -90);
-            const projectedCamera = cameraMath.projectCamera(state, context.projection);
+            const view = cameraUpdates.setBearing(cameraUpdates.setPitch(createDefaultState(context), 60), -90);
+            const projectedCamera = cameraMath.projectCamera(view, context.projection);
             const screenPointAboveWesternHorizon = screenTopEdgeCenter;
             const screenPointFurtherAboveWesternHorizon = screenTopEdgeCenter.sub(new Point(0, -100));
             const unprojected = cameraMath.screenPointToLocation(projectedCamera, context.projection, screenPointAboveWesternHorizon);
@@ -362,12 +362,12 @@ describe('projection', () => {
             {name: 'rotated offset pixel + lnglat', bearing: 90, coords: new LngLat(0, 10), point: new Point(350, 240)},
         ])('$name', ({bearing, coords, point}) => {
             const context = createGlobeContext();
-            let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
-            state = cameraUpdates.setBearing(state, bearing);
+            let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+            view = cameraUpdates.setBearing(view, bearing);
 
-            state = setLocationAtPoint(state, context, coords, point);
+            view = setLocationAtPoint(view, context, coords, point);
 
-            const projectedCamera = cameraMath.projectCamera(state, context.projection);
+            const projectedCamera = cameraMath.projectCamera(view, context.projection);
             const unprojected = cameraMath.screenPointToLocation(projectedCamera, context.projection, point);
             const projected = cameraMath.locationToScreenPoint(projectedCamera, context.projection, coords);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
@@ -378,38 +378,38 @@ describe('projection', () => {
 
         test('rotated offset pixel + lnglat moves the center to where the location lands at the point', () => {
             const context = createGlobeContext();
-            let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
-            state = cameraUpdates.setBearing(state, 90);
+            let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+            view = cameraUpdates.setBearing(view, 90);
 
-            state = setLocationAtPoint(state, context, new LngLat(0, 10), new Point(350, 240));
+            view = setLocationAtPoint(view, context, new LngLat(0, 10), new Point(350, 240));
 
-            expect(state.center.lat).toBeCloseTo(20.659450722109348, precisionDigits);
+            expect(view.center.lat).toBeCloseTo(20.659450722109348, precisionDigits);
         });
 
         test('ignores the elevation parameter when rendering the globe', () => {
             const context = createGlobeContext();
-            let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+            let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
             const coords = new LngLat(5, 10);
             const point = new Point(320, 240);
 
-            state = setLocationAtPoint(state, context, coords, point, 1000);
+            view = setLocationAtPoint(view, context, coords, point, 1000);
 
-            const unprojected = cameraMath.screenPointToLocationAtElevation(cameraMath.projectCamera(state, context.projection), context.projection, point, 1000);
+            const unprojected = cameraMath.screenPointToLocationAtElevation(cameraMath.projectCamera(view, context.projection), context.projection, point, 1000);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
         });
 
         test('solves on the plane at the given elevation when rendering mercator', () => {
             const globeContext = createGlobeContext();
-            let state = cameraUpdates.setZoom(createDefaultState(globeContext), globeContext, 5);
-            state = cameraUpdates.setPitch(state, 40);
+            let view = cameraUpdates.setZoom(createDefaultState(globeContext), globeContext, 5);
+            view = cameraUpdates.setPitch(view, 40);
             const mercatorContext = createGlobeContext(0);
             const coords = new LngLat(5, 10);
             const point = new Point(320, 200);
 
-            state = setLocationAtPoint(state, mercatorContext, coords, point, 500);
+            view = setLocationAtPoint(view, mercatorContext, coords, point, 500);
 
-            const unprojected = cameraMath.screenPointToLocationAtElevation(cameraMath.projectCamera(state, mercatorContext.projection), mercatorContext.projection, point, 500);
+            const unprojected = cameraMath.screenPointToLocationAtElevation(cameraMath.projectCamera(view, mercatorContext.projection), mercatorContext.projection, point, 500);
             // exact up to the center-latitude change the solve itself causes (~1e-5 deg)
             expect(unprojected.lng).toBeCloseTo(coords.lng, 3);
             expect(unprojected.lat).toBeCloseTo(coords.lat, 3);
@@ -417,9 +417,9 @@ describe('projection', () => {
 
         test('does not move the camera where no center puts the location at the point', () => {
             const context = createGlobeContext();
-            const state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+            const view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
 
-            const moved = setLocationAtPoint(state, context, new LngLat(0, 89), new Point(470, 240));
+            const moved = setLocationAtPoint(view, context, new LngLat(0, 89), new Point(470, 240));
 
             expect(moved.center).toEqual(new LngLat(0, 0));
         });
@@ -488,11 +488,11 @@ describe('getBounds', () => {
 
     test('basic', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.resize(createCameraState(), context, 640, 480);
-        state = cameraUpdates.setCenter(state, context, new LngLat(0, 0));
-        state = cameraUpdates.setZoom(state, context, 1);
+        let view = cameraUpdates.resize(createCameraViewState(), context, 640, 480);
+        view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
+        view = cameraUpdates.setZoom(view, context, 1);
 
-        const bounds = cameraMath.getBounds(cameraMath.projectCamera(state, context.projection), context.projection);
+        const bounds = cameraMath.getBounds(cameraMath.projectCamera(view, context.projection), context.projection);
         expect(bounds._ne.lat).toBeCloseTo(79.3636705287052, precisionDigits);
         expect(bounds._ne.lng).toBeCloseTo(79.36367052870514, precisionDigits);
         expect(bounds._sw.lat).toBeCloseTo(-79.3636705287052, precisionDigits);
@@ -501,11 +501,11 @@ describe('getBounds', () => {
 
     test('zoomed in', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.resize(createCameraState(), context, 640, 480);
-        state = cameraUpdates.setCenter(state, context, new LngLat(0, 0));
-        state = cameraUpdates.setZoom(state, context, 4);
+        let view = cameraUpdates.resize(createCameraViewState(), context, 640, 480);
+        view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
+        view = cameraUpdates.setZoom(view, context, 4);
 
-        const bounds = cameraMath.getBounds(cameraMath.projectCamera(state, context.projection), context.projection);
+        const bounds = cameraMath.getBounds(cameraMath.projectCamera(view, context.projection), context.projection);
         expect(bounds._ne.lat).toBeCloseTo(11.76627084591695, precisionDigits);
         expect(bounds._ne.lng).toBeCloseTo(16.124697669965144, precisionDigits);
         expect(bounds._sw.lat).toBeCloseTo(-11.76627084591695, precisionDigits);
@@ -514,11 +514,11 @@ describe('getBounds', () => {
 
     test('looking at south pole', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.resize(createCameraState(), context, 640, 480);
-        state = cameraUpdates.setCenter(state, context, new LngLat(0, -84));
-        state = cameraUpdates.setZoom(state, context, -2);
+        let view = cameraUpdates.resize(createCameraViewState(), context, 640, 480);
+        view = cameraUpdates.setCenter(view, context, new LngLat(0, -84));
+        view = cameraUpdates.setZoom(view, context, -2);
 
-        const bounds = cameraMath.getBounds(cameraMath.projectCamera(state, context.projection), context.projection);
+        const bounds = cameraMath.getBounds(cameraMath.projectCamera(view, context.projection), context.projection);
         expect(bounds._ne.lat).toBeCloseTo(-6.299534770946991, precisionDigits);
         expect(bounds._ne.lng).toBeCloseTo(180, precisionDigits);
         expect(bounds._sw.lat).toBeCloseTo(-90, precisionDigits);
@@ -527,11 +527,11 @@ describe('getBounds', () => {
 
     test('looking at south edge of mercator', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.resize(createCameraState(), context, 640, 480);
-        state = cameraUpdates.setCenter(state, context, new LngLat(-163, -83));
-        state = cameraUpdates.setZoom(state, context, 3);
+        let view = cameraUpdates.resize(createCameraViewState(), context, 640, 480);
+        view = cameraUpdates.setCenter(view, context, new LngLat(-163, -83));
+        view = cameraUpdates.setZoom(view, context, 3);
 
-        const bounds = cameraMath.getBounds(cameraMath.projectCamera(state, context.projection), context.projection);
+        const bounds = cameraMath.getBounds(cameraMath.projectCamera(view, context.projection), context.projection);
         expect(bounds._ne.lat).toBeCloseTo(-79.75570418234764, precisionDigits);
         expect(bounds._ne.lng).toBeCloseTo(-124.19771985801174, precisionDigits);
         expect(bounds._sw.lat).toBeCloseTo(-85.59109073899032, precisionDigits);
@@ -542,7 +542,7 @@ describe('getBounds', () => {
 describe('projectTileCoordinates', () => {
     const precisionDigits = 10;
     const context = createGlobeContext();
-    let base = cameraUpdates.resize(createCameraState(), context, 512, 512);
+    let base = cameraUpdates.resize(createCameraViewState(), context, 512, 512);
     base = cameraUpdates.setCenter(base, context, new LngLat(10.0, 50.0));
     base = cameraUpdates.setZoom(base, context, -1);
 
@@ -596,10 +596,10 @@ describe('projectTileCoordinates', () => {
 
 describe('isLocationOccluded', () => {
     const context = createGlobeContext();
-    let state = cameraUpdates.resize(createCameraState(), context, 512, 512);
-    state = cameraUpdates.setCenter(state, context, new LngLat(0.0, 0.0));
-    state = cameraUpdates.setZoom(state, context, -1);
-    const projectedCamera = cameraMath.projectCamera(state, context.projection);
+    let view = cameraUpdates.resize(createCameraViewState(), context, 512, 512);
+    view = cameraUpdates.setCenter(view, context, new LngLat(0.0, 0.0));
+    view = cameraUpdates.setZoom(view, context, -1);
+    const projectedCamera = cameraMath.projectCamera(view, context.projection);
 
     test('center', () => {
         expect(cameraMath.isLocationOccluded(projectedCamera, context.projection, new LngLat(0, 0))).toBe(false);
@@ -652,21 +652,21 @@ describe('getCameraAltitude', () => {
     });
 
     test('reads the camera from the projection the globeness selects', () => {
-        const {state} = createTestCamera({maxPitch: 180, width: 512, height: 512, zoom: 4, center: [10, 50], pitch: 100}, createGlobeCameraProjection());
+        const {state: view} = createTestCamera({maxPitch: 180, width: 512, height: 512, zoom: 4, center: [10, 50], pitch: 100}, createGlobeCameraProjection());
         const mercator = createTestCamera({maxPitch: 180, width: 512, height: 512, zoom: 4, center: [10, 50], pitch: 100});
         const vp = createTestCamera({maxPitch: 180, width: 512, height: 512, zoom: 4, center: [10, 50], pitch: 100}, createVerticalPerspectiveCameraProjection());
 
         const asMercator = withGlobeness(createGlobeCameraProjection(), 0);
-        const asMercatorCamera = cameraMath.projectCamera(state, asMercator);
+        const asMercatorCamera = cameraMath.projectCamera(view, asMercator);
         expect(cameraMath.getCameraAltitude(asMercatorCamera)).toBeLessThan(0);
         expect(cameraMath.getCameraAltitude(asMercatorCamera)).toBeCloseTo(cameraMath.getCameraAltitude(mercator.projectedCamera), 6);
-        expect(calculateCameraOptionsFromTo(state, asMercator, cameraMath.getCameraLngLat(asMercatorCamera, asMercator), 0, state.center, 0).pitch).toBeCloseTo(90, 9);
+        expect(calculateCameraOptionsFromTo(view, asMercator, cameraMath.getCameraLngLat(asMercatorCamera, asMercator), 0, view.center, 0).pitch).toBeCloseTo(90, 9);
 
         const asGlobe = createGlobeCameraProjection();
-        const asGlobeCamera = cameraMath.projectCamera(state, asGlobe);
+        const asGlobeCamera = cameraMath.projectCamera(view, asGlobe);
         expect(cameraMath.getCameraAltitude(asGlobeCamera)).toBeGreaterThan(0);
         expect(cameraMath.getCameraAltitude(asGlobeCamera)).toBeCloseTo(cameraMath.getCameraAltitude(vp.projectedCamera), 6);
-        expect(calculateCameraOptionsFromTo(state, asGlobe, cameraMath.getCameraLngLat(asGlobeCamera, asGlobe), 0, state.center, 0).pitch).toBeGreaterThan(90);
+        expect(calculateCameraOptionsFromTo(view, asGlobe, cameraMath.getCameraLngLat(asGlobeCamera, asGlobe), 0, view.center, 0).pitch).toBeGreaterThan(90);
     });
 
     test('matches the mercator camera while the globe is rendered as a sphere', () => {
@@ -680,9 +680,9 @@ describe('getCameraAltitude', () => {
 test('recenterOnTerrain adjusts elevation, zoom and center to the terrain under the rendered projection', () => {
     const terrain = createTerrain();
     terrain.getElevationForLngLat = () => 1000;
-    const {state, context} = createTestCamera({width: 512, height: 512, zoom: 13, center: [8, 47], pitch: 60}, withGlobeness(createGlobeCameraProjection(), 0));
+    const {state: view, context} = createTestCamera({width: 512, height: 512, zoom: 13, center: [8, 47], pitch: 60}, withGlobeness(createGlobeCameraProjection(), 0));
 
-    const recentered = recenterOnTerrain(state, context, terrain);
+    const recentered = recenterOnTerrain(view, context, terrain);
 
     expect(recentered.elevation).toBe(1000);
     expect(recentered.zoom).toBeCloseTo(13.7376, 4);
@@ -693,30 +693,30 @@ test('recenterOnTerrain adjusts elevation, zoom and center to the terrain under 
 test('recenterOnTerrain does not jump center on globe + terrain (#7025)', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     const context = createGlobeContext();
-    const state = cameraUpdates.setCenter(createDefaultState(context), context, new LngLat(10, 50));
+    const view = cameraUpdates.setCenter(createDefaultState(context), context, new LngLat(10, 50));
     const terrain = {
         getElevationForLngLatZoom: () => 200
     } as any;
 
-    const recentered = recenterOnTerrain(state, context, terrain);
+    const recentered = recenterOnTerrain(view, context, terrain);
 
-    expect(recentered.center.lng).toBeCloseTo(state.center.lng, 10);
-    expect(recentered.center.lat).toBeCloseTo(state.center.lat, 10);
+    expect(recentered.center.lng).toBeCloseTo(view.center.lng, 10);
+    expect(recentered.center.lat).toBeCloseTo(view.center.lat, 10);
 });
 
 test('the center reaches the pole', () => {
     const context = createGlobeContext();
-    const state = cameraUpdates.setCenter(createDefaultState(context), context, new LngLat(0, 90));
+    const view = cameraUpdates.setCenter(createDefaultState(context), context, new LngLat(0, 90));
 
-    expect(state.center.lat).toBe(90);
+    expect(view.center.lat).toBe(90);
 });
 
 test('the center moves back towards the mercator edge as the area past it outgrows the viewport', () => {
     const context = createGlobeContext();
-    let state = cameraUpdates.setCenter(createDefaultState(context), context, new LngLat(0, 90));
-    state = cameraUpdates.setZoom(state, context, 2.5);
+    let view = cameraUpdates.setCenter(createDefaultState(context), context, new LngLat(0, 90));
+    view = cameraUpdates.setZoom(view, context, 2.5);
 
-    expect(state.center.lat).toBeCloseTo(86.8327, 4);
+    expect(view.center.lat).toBeCloseTo(86.8327, 4);
 });
 
 describe('versorSetLocationAtPoint', () => {
@@ -724,122 +724,122 @@ describe('versorSetLocationAtPoint', () => {
 
     test('round-trip accuracy', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
         const coords = new LngLat(20, 30);
         const point = new Point(280, 200);
 
-        state = versorSetLocationAtPoint(state, context, coords, point, undefined, false);
+        view = versorSetLocationAtPoint(view, context, coords, point, undefined, false);
 
-        const unprojected = cameraMath.screenPointToLocation(cameraMath.projectCamera(state, context.projection), context.projection, point);
+        const unprojected = cameraMath.screenPointToLocation(cameraMath.projectCamera(view, context.projection), context.projection, point);
         expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
         expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
     });
 
     test('round-trip accuracy at center', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
         const coords = new LngLat(10, 15);
         const point = new Point(320, 240);
 
-        state = versorSetLocationAtPoint(state, context, coords, point);
+        view = versorSetLocationAtPoint(view, context, coords, point);
 
-        const unprojected = cameraMath.screenPointToLocation(cameraMath.projectCamera(state, context.projection), context.projection, point);
+        const unprojected = cameraMath.screenPointToLocation(cameraMath.projectCamera(view, context.projection), context.projection, point);
         expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
         expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
     });
 
     test('near-pole panning stays finite', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
-        state = cameraUpdates.setCenter(state, context, new LngLat(0, 80));
+        let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        view = cameraUpdates.setCenter(view, context, new LngLat(0, 80));
 
-        state = versorSetLocationAtPoint(state, context, new LngLat(10, 85), new Point(300, 230));
+        view = versorSetLocationAtPoint(view, context, new LngLat(10, 85), new Point(300, 230));
 
-        expect(isNaN(state.center.lng)).toBe(false);
-        expect(isNaN(state.center.lat)).toBe(false);
-        expect(isNaN(getBearing(state))).toBe(false);
+        expect(isNaN(view.center.lng)).toBe(false);
+        expect(isNaN(view.center.lat)).toBe(false);
+        expect(isNaN(getBearing(view))).toBe(false);
     });
 
     test('identical source and target points leave the center unchanged', () => {
         const context = createGlobeContext();
-        const state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        const view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
         const point = new Point(320, 240);
-        const coords = cameraMath.screenPointToLocation(cameraMath.projectCamera(state, context.projection), context.projection, point);
+        const coords = cameraMath.screenPointToLocation(cameraMath.projectCamera(view, context.projection), context.projection, point);
 
-        const moved = versorSetLocationAtPoint(state, context, coords, point);
+        const moved = versorSetLocationAtPoint(view, context, coords, point);
 
-        expect(moved.center.lng).toBeCloseTo(state.center.lng, precisionDigits);
-        expect(moved.center.lat).toBeCloseTo(state.center.lat, precisionDigits);
+        expect(moved.center.lng).toBeCloseTo(view.center.lng, precisionDigits);
+        expect(moved.center.lat).toBeCloseTo(view.center.lat, precisionDigits);
     });
 
     test('bearing changes when panning off-center without a fixed bearing', () => {
         const context = createGlobeContext();
-        const state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        const view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
 
-        const moved = versorSetLocationAtPoint(state, context, new LngLat(20, 30), new Point(250, 180), undefined, false);
+        const moved = versorSetLocationAtPoint(view, context, new LngLat(20, 30), new Point(250, 180), undefined, false);
 
-        expect(getBearing(moved)).not.toBeCloseTo(getBearing(state), 1);
+        expect(getBearing(moved)).not.toBeCloseTo(getBearing(view), 1);
     });
 
     test('target points that miss the globe are ignored without a pan delta', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
-        state = cameraUpdates.setCenter(state, context, new LngLat(5, 10));
-        const projectedCamera = cameraMath.projectCamera(state, context.projection);
+        let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        view = cameraUpdates.setCenter(view, context, new LngLat(5, 10));
+        const projectedCamera = cameraMath.projectCamera(view, context.projection);
         const point = new Point(620, 240);
         expect(cameraMath.isPointOnMapSurface(projectedCamera, context.projection, point)).toBe(false);
         const coords = cameraMath.screenPointToLocation(projectedCamera, context.projection, point);
 
-        const moved = versorSetLocationAtPoint(state, context, coords, point);
+        const moved = versorSetLocationAtPoint(view, context, coords, point);
 
-        expect(moved.center.lng).toBe(state.center.lng);
-        expect(moved.center.lat).toBe(state.center.lat);
-        expect(getBearing(moved)).toBe(getBearing(state));
+        expect(moved.center.lng).toBe(view.center.lng);
+        expect(moved.center.lat).toBe(view.center.lat);
+        expect(getBearing(moved)).toBe(getBearing(view));
     });
 
     test('panning continues once the cursor leaves the globe', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
-        state = cameraUpdates.setCenter(state, context, new LngLat(5, 10));
-        const projectedCamera = cameraMath.projectCamera(state, context.projection);
+        let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        view = cameraUpdates.setCenter(view, context, new LngLat(5, 10));
+        const projectedCamera = cameraMath.projectCamera(view, context.projection);
         const point = new Point(620, 240);
         expect(cameraMath.isPointOnMapSurface(projectedCamera, context.projection, point)).toBe(false);
         const coords = cameraMath.screenPointToLocation(projectedCamera, context.projection, point);
 
-        const moved = versorSetLocationAtPoint(state, context, coords, point, new Point(20, 0));
+        const moved = versorSetLocationAtPoint(view, context, coords, point, new Point(20, 0));
 
-        expect(moved.center.lng).not.toBe(state.center.lng);
+        expect(moved.center.lng).not.toBe(view.center.lng);
         expect(isNaN(moved.center.lng)).toBe(false);
         expect(isNaN(moved.center.lat)).toBe(false);
-        expect(getBearing(moved)).toBe(getBearing(state));
+        expect(getBearing(moved)).toBe(getBearing(view));
     });
 
     test('panning does not freeze near a centred pole', () => {
         // With the pole centred the dial supplies all of the longitude change, so if the dial
         // gives up the drag stops moving entirely.
         const context = createGlobeContext();
-        let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
-        state = cameraUpdates.setCenter(state, context, new LngLat(0, 90));
-        const projectedCamera = cameraMath.projectCamera(state, context.projection);
+        let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        view = cameraUpdates.setCenter(view, context, new LngLat(0, 90));
+        const projectedCamera = cameraMath.projectCamera(view, context.projection);
         const pole = cameraMath.locationToScreenPoint(projectedCamera, context.projection, new LngLat(0, 90));
         const cursor = new Point(pole.x + 10, pole.y);
         const panDelta = new Point(0, 8); // tangential, so it sweeps around the pole
         const location = cameraMath.screenPointToLocation(projectedCamera, context.projection, cursor.sub(panDelta));
 
-        const moved = versorSetLocationAtPoint(state, context, location, cursor, panDelta);
+        const moved = versorSetLocationAtPoint(view, context, location, cursor, panDelta);
 
-        expect(Math.abs(differenceOfAnglesDegrees(state.center.lng, moved.center.lng))).toBeGreaterThan(1);
+        expect(Math.abs(differenceOfAnglesDegrees(view.center.lng, moved.center.lng))).toBeGreaterThan(1);
     });
 
     test('dragging past the pole stops on it', () => {
         const context = createGlobeContext();
-        let state = cameraUpdates.setZoom(createDefaultState(context), context, 1);
-        state = cameraUpdates.setCenter(state, context, new LngLat(0, 88));
-        const centerPoint = getCenterPoint(state);
+        let view = cameraUpdates.setZoom(createDefaultState(context), context, 1);
+        view = cameraUpdates.setCenter(view, context, new LngLat(0, 88));
+        const centerPoint = getCenterPoint(view);
         const panDelta = new Point(0, 100);
-        const location = cameraMath.screenPointToLocation(cameraMath.projectCamera(state, context.projection), context.projection, centerPoint);
+        const location = cameraMath.screenPointToLocation(cameraMath.projectCamera(view, context.projection), context.projection, centerPoint);
 
-        const moved = versorSetLocationAtPoint(state, context, location, centerPoint.add(panDelta), panDelta);
+        const moved = versorSetLocationAtPoint(view, context, location, centerPoint.add(panDelta), panDelta);
 
         expect(moved.center.lat).toBe(90);
     });

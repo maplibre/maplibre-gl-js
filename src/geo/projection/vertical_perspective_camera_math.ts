@@ -9,7 +9,7 @@ import {getMercatorTileCoordinates, tileCoordinatesToMercatorCoordinates} from '
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, planetScaleAtLatitude, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from './globe_utils.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
 import {createFrustum, type Frustum} from '../../util/primitives/frustum.ts';
-import {getCenterOffset} from '../camera_state.ts';
+import {getCenterOffset} from '../camera_view_state.ts';
 
 import type {LngLat} from '../lng_lat.ts';
 import type {CameraMetrics, VerticalPerspectiveProjectedCamera} from '../projected_camera.ts';
@@ -40,7 +40,7 @@ type GlobeRay = {
  * Derives the {@link VerticalPerspectiveProjectedCamera} of a camera: the matrices the vertical perspective draws it with.
  * The computed far plane only has to be far enough to take in the globe, since the vertex shader computes its own
  * depth. A camera without a size keeps identity matrices.
- * @param nearFarZ - the depth range to use instead of computing one, by default the camera state's override
+ * @param nearFarZ - the depth range to use instead of computing one, by default the camera view state's override
  */
 export function createVerticalPerspectiveProjectedCamera(metrics: CameraMetrics, nearFarZ: NearFarZ | null = metrics.nearFarZOverride): VerticalPerspectiveProjectedCamera {
     const base = {...metrics, projection: 'vertical-perspective' as const};

@@ -4,7 +4,7 @@ import {NullWebGL2RenderingContext, createNullGL} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
-import {createCameraState} from '../../geo/camera_state.ts';
+import {createCameraViewState} from '../../geo/camera_view_state.ts';
 import {createMercatorCameraProjection} from '../../geo/projection/camera_projection.ts';
 import {projectCamera} from '../../geo/projection/camera_math.ts';
 import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
@@ -26,7 +26,7 @@ import {MercatorShaderDefine, MercatorShaderVariantKey} from '../../geo/projecti
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Style} from '../../style/style.ts';
-import type {CameraState, CameraStateOptions} from '../../geo/camera_state.ts';
+import type {CameraViewState, CameraViewStateOptions} from '../../geo/camera_view_state.ts';
 import type {CameraContext} from '../../geo/projection/camera_constrain.ts';
 import type {CameraProjection} from '../../geo/projection/camera_projection.ts';
 import type {ProjectedCamera} from '../../geo/projected_camera.ts';
@@ -428,8 +428,8 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
     };
 }
 
-/** What a test camera is set to, on top of the limits {@link createCameraState} takes. */
-export type TestCameraOptions = CameraStateOptions & {
+/** What a test camera is set to, on top of the limits {@link createCameraViewState} takes. */
+export type TestCameraOptions = CameraViewStateOptions & {
     width?: number;
     height?: number;
     zoom?: number;
@@ -444,7 +444,7 @@ export type TestCameraOptions = CameraStateOptions & {
 
 /** A test camera: its state, the context it is constrained in, and the state projected in that context. */
 export type TestCamera = {
-    state: CameraState;
+    state: CameraViewState;
     context: CameraContext;
     projectedCamera: ProjectedCamera;
 };
@@ -456,17 +456,17 @@ export type TestCamera = {
  */
 export function createTestCamera(options: TestCameraOptions = {}, projection: CameraProjection = createMercatorCameraProjection()): TestCamera {
     const context: CameraContext = {projection, constrainOverride: null};
-    let state = createCameraState(options);
-    if (options.width !== undefined || options.height !== undefined) state = cameraUpdates.resize(state, context, options.width ?? 0, options.height ?? 0);
-    if (options.zoom !== undefined) state = cameraUpdates.setZoom(state, context, options.zoom);
-    if (options.center !== undefined) state = cameraUpdates.setCenter(state, context, LngLat.convert(options.center));
-    if (options.elevation !== undefined) state = cameraUpdates.setElevation(state, context, options.elevation);
-    if (options.pitch !== undefined) state = cameraUpdates.setPitch(state, options.pitch);
-    if (options.bearing !== undefined) state = cameraUpdates.setBearing(state, options.bearing);
-    if (options.roll !== undefined) state = cameraUpdates.setRoll(state, options.roll);
-    if (options.fov !== undefined) state = cameraUpdates.setFov(state, options.fov);
-    if (options.padding !== undefined) state = cameraUpdates.setPadding(state, context, options.padding);
-    return {state, context, projectedCamera: projectCamera(state, projection)};
+    let view = createCameraViewState(options);
+    if (options.width !== undefined || options.height !== undefined) view = cameraUpdates.resize(view, context, options.width ?? 0, options.height ?? 0);
+    if (options.zoom !== undefined) view = cameraUpdates.setZoom(view, context, options.zoom);
+    if (options.center !== undefined) view = cameraUpdates.setCenter(view, context, LngLat.convert(options.center));
+    if (options.elevation !== undefined) view = cameraUpdates.setElevation(view, context, options.elevation);
+    if (options.pitch !== undefined) view = cameraUpdates.setPitch(view, options.pitch);
+    if (options.bearing !== undefined) view = cameraUpdates.setBearing(view, options.bearing);
+    if (options.roll !== undefined) view = cameraUpdates.setRoll(view, options.roll);
+    if (options.fov !== undefined) view = cameraUpdates.setFov(view, options.fov);
+    if (options.padding !== undefined) view = cameraUpdates.setPadding(view, context, options.padding);
+    return {state: view, context, projectedCamera: projectCamera(view, projection)};
 }
 
 /**

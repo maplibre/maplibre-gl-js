@@ -5,7 +5,7 @@ import {cameraMercatorCoordinate, degreesPerWorldUnit, getMercatorHorizon, getMe
 import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from './crs.ts';
 import {createGlobeCameraProjection, createMercatorCameraProjection} from './camera_projection.ts';
-import {createCameraState} from '../camera_state.ts';
+import {createCameraViewState} from '../camera_view_state.ts';
 import * as cameraUpdates from './camera_updates.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
 import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
@@ -68,14 +68,14 @@ describe('mercator utils', () => {
         test('places the camera above the ground', () => {
             const projection = createMercatorCameraProjection();
             const context: CameraContext = {projection, constrainOverride: null};
-            let state = createCameraState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
-            state = cameraUpdates.setElevation(state, context, 200);
-            state = cameraUpdates.setCenter(state, context, new LngLat(15.0, 55.0));
-            state = cameraUpdates.setZoom(state, context, 14);
-            state = cameraUpdates.setPitch(state, 55);
-            state = cameraUpdates.setBearing(state, 75);
-            state = cameraUpdates.resize(state, context, 512, 512);
-            const projectedCamera = cameraMath.projectCamera(state, projection);
+            let view = createCameraViewState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
+            view = cameraUpdates.setElevation(view, context, 200);
+            view = cameraUpdates.setCenter(view, context, new LngLat(15.0, 55.0));
+            view = cameraUpdates.setZoom(view, context, 14);
+            view = cameraUpdates.setPitch(view, 55);
+            view = cameraUpdates.setBearing(view, 75);
+            view = cameraUpdates.resize(view, context, 512, 512);
+            const projectedCamera = cameraMath.projectCamera(view, projection);
 
             const cameraCoord = cameraMercatorCoordinate(projectedCamera, projection.worldCoordinateHelper);
 

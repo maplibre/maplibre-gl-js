@@ -4,7 +4,7 @@ import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
 import {coveringTiles} from './covering_tiles.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
-import {createCameraState} from '../camera_state.ts';
+import {createCameraViewState} from '../camera_view_state.ts';
 import {createGlobeCameraProjection} from './camera_projection.ts';
 import {projectCamera} from './camera_math.ts';
 import * as cameraUpdates from './camera_updates.ts';
@@ -132,13 +132,13 @@ describe('elevated content tile retention', () => {
     test('far corner translation keeps ground tiles retained at moderate pitch', () => {
         const projection = createGlobeCameraProjection();
         const context = {projection, constrainOverride: null};
-        let state = createCameraState({maxPitch: 179});
-        state = cameraUpdates.resize(state, context, 1400, 800);
-        state = cameraUpdates.setCenter(state, context, new LngLat(2.3522, 52.0566));
-        state = cameraUpdates.setZoom(state, context, 4.3);
-        state = cameraUpdates.setBearing(state, 315);
-        state = cameraUpdates.setPitch(state, 75);
-        const projectedCamera = projectCamera(state, projection);
+        let view = createCameraViewState({maxPitch: 179});
+        view = cameraUpdates.resize(view, context, 1400, 800);
+        view = cameraUpdates.setCenter(view, context, new LngLat(2.3522, 52.0566));
+        view = cameraUpdates.setZoom(view, context, 4.3);
+        view = cameraUpdates.setBearing(view, 315);
+        view = cameraUpdates.setPitch(view, 75);
+        const projectedCamera = projectCamera(view, projection);
         const without = coveringTiles(projectedCamera, projection, {tileSize: 512}).map(tileKey);
         const withElevated = coveringTiles(projectedCamera, projection, {tileSize: 512, maxContentElevation: 500000}).map(tileKey);
         expect(without).toContain('4/9/4');
@@ -148,12 +148,12 @@ describe('elevated content tile retention', () => {
     test('maxContentElevation keeps tiles that the horizon culling would drop', () => {
         const projection = createGlobeCameraProjection();
         const context = {projection, constrainOverride: null};
-        let state = createCameraState({maxPitch: 179});
-        state = cameraUpdates.resize(state, context, 1400, 800);
-        state = cameraUpdates.setCenter(state, context, new LngLat(2.35, 48.85));
-        state = cameraUpdates.setZoom(state, context, 4.3);
-        state = cameraUpdates.setPitch(state, 95);
-        const projectedCamera = projectCamera(state, projection);
+        let view = createCameraViewState({maxPitch: 179});
+        view = cameraUpdates.resize(view, context, 1400, 800);
+        view = cameraUpdates.setCenter(view, context, new LngLat(2.35, 48.85));
+        view = cameraUpdates.setZoom(view, context, 4.3);
+        view = cameraUpdates.setPitch(view, 95);
+        const projectedCamera = projectCamera(view, projection);
         const without = coveringTiles(projectedCamera, projection, {tileSize: 512}).map(tileKey);
         const withElevated = new Set(coveringTiles(projectedCamera, projection, {tileSize: 512, maxContentElevation: 500000}).map(tileKey));
         for (const tile of without) {
@@ -168,10 +168,10 @@ describe('poles', () => {
     test('covers the tiles around the south pole', () => {
         const projection = createGlobeCameraProjection();
         const context = {projection, constrainOverride: null};
-        let state = cameraUpdates.resize(createCameraState(), context, 512, 512);
-        state = cameraUpdates.setCenter(state, context, new LngLat(0, -90));
-        state = cameraUpdates.setZoom(state, context, 1.6);
+        let view = cameraUpdates.resize(createCameraViewState(), context, 512, 512);
+        view = cameraUpdates.setCenter(view, context, new LngLat(0, -90));
+        view = cameraUpdates.setZoom(view, context, 1.6);
 
-        expect(coveringTiles(projectCamera(state, projection), projection, {tileSize: 32})).toHaveLength(56);
+        expect(coveringTiles(projectCamera(view, projection), projection, {tileSize: 32})).toHaveLength(56);
     });
 });

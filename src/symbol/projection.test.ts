@@ -276,14 +276,14 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: pitch 90 degrees', () => {
-        const {state, context, projectedCamera} = createTestCamera({maxPitch: 180, bearing: 0, pitch: 89, roll: 0});
+        const {state: view, context, projectedCamera} = createTestCamera({maxPitch: 180, bearing: 0, pitch: 89, roll: 0});
 
         expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecEast],
             [1, 0]);
         expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [0, 1], 9);
 
-        const pitched = cameraUpdates.setPitch(state, 90);
+        const pitched = cameraUpdates.setPitch(view, 90);
         const pitchedCamera = cameraMath.projectCamera(pitched, context.projection);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecEast],
             [0, 0]);
@@ -298,14 +298,14 @@ describe('Find offset line intersections', () => {
     });
 
     test('getTileSkewVectors: pitch 90 degrees with roll and bearing', () => {
-        const {state, context, projectedCamera} = createTestCamera({maxPitch: 180, bearing: 45, pitch: 89, roll: 45});
+        const {state: view, context, projectedCamera} = createTestCamera({maxPitch: 180, bearing: 45, pitch: 89, roll: 45});
 
         expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecEast],
             [-0.6946603059768677, 0.7193379402160645]);
         expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [-0.7193379402160645, 0.6946603059768677], 9);
 
-        const pitchedCamera = cameraMath.projectCamera(cameraUpdates.setPitch(state, 90), context.projection);
+        const pitchedCamera = cameraMath.projectCamera(cameraUpdates.setPitch(view, 90), context.projection);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecEast],
             [-0.7071067690849304, 0.7071067690849304]);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecSouth],
