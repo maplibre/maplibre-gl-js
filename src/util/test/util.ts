@@ -5,6 +5,11 @@ import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
+import {createCameraContext} from '../../camera/camera_context.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
+import {resize, setBearing, setCenter, setElevation, setFov, setPadding, setPitch, setRoll, setZoom} from '../../camera/camera_updates.ts';
+import {LngLat, type LngLatLike} from '../../geo/lng_lat.ts';
 import {CRSWorldCoordinateHelper, identityCrs, type CRS} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
 import {getGlobalWorkerPool} from '../global_worker_pool.ts';
@@ -22,7 +27,11 @@ import {MercatorShaderDefine, MercatorShaderVariantKey} from '../../geo/projecti
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 import type {Style} from '../../style/style.ts';
-import type {IReadonlyTransform, ITransform} from '../../geo/transform_interface.ts';
+import type {CameraViewState, CameraViewStateOptions} from '../../camera/camera_view_state.ts';
+import type {CameraContext} from '../../camera/camera_context.ts';
+import type {CameraProjectionKind} from '../../camera/camera_context.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
+import type {PaddingOptions} from '../../geo/edge_insets.ts';
 import type {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {SourceEventType} from '../../ui/events.ts';
 import type {IActor} from '../actor.ts';
@@ -35,13 +44,13 @@ import type {Transform} from '../../geo/transform.ts';
 
 export class StubMap extends Evented {
     style: Style;
-    transform: IReadonlyTransform;
+    /** The projection the style last moved the map's camera onto, see {@link StubMap.migrateProjection}. */
+    cameraProjection: CameraProjectionKind = 'mercator';
     private _requestManager: RequestManager;
     _terrain: TerrainSpecification;
 
     constructor() {
         super();
-        this.transform = createMercatorTransform();
         this._requestManager = new RequestManager();
     }
 
@@ -56,9 +65,8 @@ export class StubMap extends Evented {
     setTerrain(terrain: TerrainSpecification): void { this._terrain = terrain; }
     getTerrain(): TerrainSpecification { return this._terrain; }
 
-    migrateProjection(newTransform: ITransform): void {
-        newTransform.apply(this.transform, true);
-        this.transform = newTransform;
+    migrateProjection(projection: CameraProjectionKind): void {
+        this.cameraProjection = projection;
     }
 }
 
@@ -267,6 +275,7 @@ export function expectToBeCloseToArray(actual: number[], expected: number[], pre
 
 export function createTerrain(): Terrain {
     return {
+        exaggeration: 1,
         getCoverageIndex: () => null,
         getElevationForLngLatZoom: () => 1000,
         getElevationForLngLat: () => 1000,
@@ -419,6 +428,58 @@ export function createFakeActor(shouldAbort?: () => boolean, onAbort?: () => voi
             });
         })
     };
+}
+
+/** What a test camera is set to, on top of the limits {@link createCameraViewState} takes. */
+export type TestCameraOptions = CameraViewStateOptions & {
+    width?: number;
+    height?: number;
+    zoom?: number;
+    center?: LngLatLike;
+    elevation?: number;
+    pitch?: number;
+    bearing?: number;
+    roll?: number;
+    fov?: number;
+    padding?: PaddingOptions;
+};
+
+/** A test camera: its state, the context it is constrained in, and the state projected in that context. */
+export type TestCamera = {
+    state: CameraViewState;
+    context: CameraContext;
+    projectedCamera: ProjectedCamera;
+};
+
+/**
+ * Creates a camera with the given limits, then sizes it and sets what the options give, each through its
+ * `camera_updates.ts` setter, so it is constrained the way a map's camera is: size, zoom, center, elevation, pitch,
+ * bearing, roll, field of view, padding, in that order. In the context the context options give, see
+ * {@link createCameraContext}: mercator by default.
+ */
+export function createTestCamera(options: TestCameraOptions = {}, contextOptions: Partial<CameraContext> = {}): TestCamera {
+    const context = createCameraContext(contextOptions);
+    let view = createCameraViewState(options);
+    if (options.width !== undefined || options.height !== undefined) view = resize(view, context, options.width ?? 0, options.height ?? 0);
+    if (options.zoom !== undefined) view = setZoom(view, context, options.zoom);
+    if (options.center !== undefined) view = setCenter(view, context, LngLat.convert(options.center));
+    if (options.elevation !== undefined) view = setElevation(view, context, options.elevation);
+    if (options.pitch !== undefined) view = setPitch(view, options.pitch);
+    if (options.bearing !== undefined) view = setBearing(view, options.bearing);
+    if (options.roll !== undefined) view = setRoll(view, options.roll);
+    if (options.fov !== undefined) view = setFov(view, options.fov);
+    if (options.padding !== undefined) view = setPadding(view, context, options.padding);
+    return {state: view, context, projectedCamera: projectCamera(view, context)};
+}
+
+/**
+ * A camera over the built-in identity CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both axes),
+ * sized to the given viewport.
+ */
+export function createIdentityCrsCamera(width: number, height: number): TestCamera {
+    return createTestCamera(
+        {minZoom: -5, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width, height},
+        {worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs)});
 }
 
 /**

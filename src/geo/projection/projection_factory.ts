@@ -12,10 +12,17 @@ import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
 import type {ITransform} from '../transform_interface.ts';
 import type {TransformConstrainFunction} from '../../camera/camera_types.ts';
+import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 
+/**
+ * @internal
+ * The style projection of a projection name or expression, and the projection the camera is projected with in it.
+ * The camera's world mapping is the style projection's, see {@link Projection.worldCoordinateHelper}.
+ */
 export function createProjectionFromName(name: ProjectionSpecification['type'], transformConstrain: TransformConstrainFunction | undefined, globalState: Record<string, any>): {
     projection: Projection;
     transform: ITransform;
+    cameraProjection: CameraProjectionKind;
 } {
     const transformOptions = {constrainOverride: transformConstrain};
     if (Array.isArray(name)) {
@@ -27,6 +34,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         return {
             projection: globeProjection,
             transform: createGlobeTransform(transformOptions),
+            cameraProjection: 'globe',
         };
     }
     const registered = getRegisteredProjection(name);
@@ -35,6 +43,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
         return {
             projection: new MercatorProjection(worldCoordinateHelper),
             transform: createMercatorTransform({...transformOptions, worldCoordinateHelper}),
+            cameraProjection: 'mercator',
         };
     }
     switch (name) {
@@ -43,6 +52,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             return {
                 projection: new MercatorProjection(),
                 transform: createMercatorTransform(transformOptions),
+                cameraProjection: 'mercator',
             };
         }
         case 'globe':
@@ -59,6 +69,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             return {
                 projection: globeProjection,
                 transform: createGlobeTransform(transformOptions),
+                cameraProjection: 'globe',
             };
         }
         case 'vertical-perspective':
@@ -66,6 +77,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             return {
                 projection: new VerticalPerspectiveProjection(),
                 transform: createVerticalPerspectiveTransform(transformOptions),
+                cameraProjection: 'vertical-perspective',
             };
         }
         default:
@@ -74,6 +86,7 @@ export function createProjectionFromName(name: ProjectionSpecification['type'], 
             return {
                 projection: new MercatorProjection(),
                 transform: createMercatorTransform(transformOptions),
+                cameraProjection: 'mercator',
             };
         }
     }
