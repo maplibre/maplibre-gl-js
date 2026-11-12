@@ -241,6 +241,34 @@ describe('drag_pan', () => {
         map.remove();
     });
 
+    test('DragPanHandler begins a drag with the ctrl key down when dragRotate is disabled', () => {
+        const map = new Map({
+            container: DOM.create('div', '', window.document.body),
+            clickTolerance: 0,
+            cooperativeGestures: true,
+            dragRotate: false,
+        });
+
+        const dragstart = vi.fn();
+        const dragend = vi.fn();
+        map.on('dragstart', dragstart);
+        map.on('dragend', dragend);
+
+        simulate.mousedown(map.getCanvas(), {buttons, ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+
+        simulate.mousemove(map.getCanvas(), {buttons, ctrlKey: true, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(1);
+
+        simulate.mouseup(map.getCanvas(), {ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(dragend).toHaveBeenCalledTimes(1);
+
+        map.remove();
+    });
+
     const modifiers = ['ctrl', 'shift'];
     test.each(modifiers)('DragPanHandler does not begin a drag if the %s key is down on mousedown', (modifier) => {
         const map = createMap();

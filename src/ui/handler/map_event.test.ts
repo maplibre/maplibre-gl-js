@@ -125,6 +125,22 @@ describe('map events', () => {
         expect(contextmenu).toHaveBeenCalledTimes(0);
     });
 
+    test('MapEvent handler fires contextmenu on a Ctrl + click on MacOS when dragRotate is disabled', () => {
+        const map = createMap();
+        const relatedTarget = map.getCanvas();
+        map.dragRotate.disable();
+
+        const contextmenu = vi.fn();
+
+        map.on('contextmenu', contextmenu);
+
+        simulate.mousedown(map.getCanvas(), {relatedTarget, button: 0, ctrlKey: true, clientX: 10, clientY: 10});
+        simulate.contextmenu(map.getCanvas(), {relatedTarget, ctrlKey: true}); // triggered immediately after mousedown
+        expect(contextmenu).toHaveBeenCalledTimes(0);
+        simulate.mouseup(map.getCanvas(), {relatedTarget, button: 0, ctrlKey: true, clientX: 10, clientY: 10});
+        expect(contextmenu).toHaveBeenCalledTimes(1);
+    });
+
     test('MapEvent handler fires contextmenu on Windows', () => {
         const map = createMap();
         const relatedTarget = map.getCanvas();
