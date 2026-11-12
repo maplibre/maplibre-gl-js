@@ -976,7 +976,7 @@ function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Tra
 function createRayTransform(near: number[], far: number[]): MercatorTransform {
     const cameraState = createCameraViewState();
     const metrics = createCameraMetrics(cameraState, mercatorWorldCoordinateHelper);
-    const part = new MercatorTransform(cameraState, () => metrics);
+    const part = new MercatorTransform(() => metrics);
     Object.defineProperty(part, 'getRaySegmentFromPixel', {value: () => ({near, far})});
     return part;
 }

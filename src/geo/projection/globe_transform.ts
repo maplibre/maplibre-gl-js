@@ -12,7 +12,6 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraViewState} from '../../camera/camera_view_state.ts';
 import type {CameraMetrics} from '../../camera/projected_camera.ts';
 import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
@@ -26,7 +25,6 @@ import type {CameraOptionsFromTo, TransformConstrainFunction} from '../../camera
  * Both child parts belong to the same {@link Transform}, and this part drives their `calcMatrices`.
  */
 export class GlobeTransform implements IProjectionTransform {
-    private readonly _cameraState: Readonly<CameraViewState>;
 
     /**
      * True when globe render path should be used instead of the old but simpler mercator rendering.
@@ -61,20 +59,21 @@ export class GlobeTransform implements IProjectionTransform {
     private _globeness: number = 1.0;
     private _mercatorTransform: MercatorTransform;
     private _verticalPerspectiveTransform: VerticalPerspectiveTransform;
+    /** The {@link CameraMetrics} of the camera state as it is now. */
+    private readonly _getMetrics: () => CameraMetrics;
 
     /**
-     * @param cameraState - The camera state this part's children derive their matrices from.
      * @param getMetrics - Returns the {@link CameraMetrics} of the camera state as it is now.
      */
-    public constructor(cameraState: Readonly<CameraViewState>, getMetrics: () => CameraMetrics) {
-        this._cameraState = cameraState;
+    public constructor(getMetrics: () => CameraMetrics) {
+        this._getMetrics = getMetrics;
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
-        this._mercatorTransform = new MercatorTransform(cameraState, getMetrics);
-        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(cameraState, getMetrics);
+        this._mercatorTransform = new MercatorTransform(getMetrics);
+        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(getMetrics);
     }
 
-    clone(cameraState: Readonly<CameraViewState>, getMetrics: () => CameraMetrics): GlobeTransform {
-        const clone = new GlobeTransform(cameraState, getMetrics);
+    clone(getMetrics: () => CameraMetrics): GlobeTransform {
+        const clone = new GlobeTransform(getMetrics);
         clone._globeness = this._globeness;
         return clone;
     }
@@ -141,12 +140,12 @@ export class GlobeTransform implements IProjectionTransform {
      * instead of its own, which keeps the two render paths at the same depth across the globe-to-mercator transition.
      */
     calcMatrices(): void {
-        if (!this._cameraState.width || !this._cameraState.height) {
+        if (!this._getMetrics().width || !this._getMetrics().height) {
             return;
         }
         const verticalPerspective = this._verticalPerspectiveTransform;
         verticalPerspective.calcMatrices();
-        const nearFarZ = this.isGlobeRendering ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : this._cameraState.nearFarZOverride;
+        const nearFarZ = this.isGlobeRendering ? {nearZ: verticalPerspective.nearZ, farZ: verticalPerspective.farZ} : this._getMetrics().nearFarZOverride;
         this._mercatorTransform.calcMatrices(nearFarZ);
     }
 
@@ -257,5 +256,5 @@ export class GlobeTransform implements IProjectionTransform {
  * Creates a transform for the globe projection.
  */
 export function createGlobeTransform(options?: TransformOptions): Transform {
-    return new Transform((cameraState, getMetrics) => new GlobeTransform(cameraState, getMetrics), options);
+    return new Transform((getMetrics) => new GlobeTransform(getMetrics), options);
 }

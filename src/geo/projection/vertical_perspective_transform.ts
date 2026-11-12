@@ -17,7 +17,6 @@ import type {CameraMetrics} from '../../camera/projected_camera.ts';
 import type {CameraProjectionKind} from '../../camera/camera_context.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {CameraViewState} from '../../camera/camera_view_state.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
@@ -53,7 +52,6 @@ const CAMERA_QUERY_ARC_SEGMENTS = 8;
  * The vertical perspective part of a {@link Transform}.
  */
 export class VerticalPerspectiveTransform implements IProjectionTransform {
-    private readonly _cameraState: Readonly<CameraViewState>;
     /** The {@link CameraMetrics} of the camera state as it is now. */
     private readonly _getMetrics: () => CameraMetrics;
 
@@ -79,17 +77,15 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     private _coveringTilesDetailsProvider: GlobeCoveringTilesDetailsProvider;
 
     /**
-     * @param cameraState - The camera state this part derives its matrices from.
      * @param getMetrics - Returns the {@link CameraMetrics} of the camera state as it is now.
      */
-    public constructor(cameraState: Readonly<CameraViewState>, getMetrics: () => CameraMetrics) {
-        this._cameraState = cameraState;
+    public constructor(getMetrics: () => CameraMetrics) {
         this._getMetrics = getMetrics;
         this._coveringTilesDetailsProvider = new GlobeCoveringTilesDetailsProvider();
     }
 
-    clone(cameraState: Readonly<CameraViewState>, getMetrics: () => CameraMetrics): VerticalPerspectiveTransform {
-        return new VerticalPerspectiveTransform(cameraState, getMetrics);
+    clone(getMetrics: () => CameraMetrics): VerticalPerspectiveTransform {
+        return new VerticalPerspectiveTransform(getMetrics);
     }
 
     /**
@@ -178,7 +174,7 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         // - "T" is any point where a tangent line from "cam" touches the globe surface
         // - elevation is assumed to be zero - globe rendering must be separate from terrain rendering anyway
 
-        const pitch = this._cameraState.pitchInRadians;
+        const pitch = this._getMetrics().pitchInRadians;
         // scale things so that the globe radius is 1
         const distanceCameraToB = this._getMetrics().cameraToCenterDistance / globeRadiusPixels;
         const radius = 1;
@@ -204,9 +200,9 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         // Note the swizzled components
         const planeVector: vec3 = [0, vectorCtoCamX, vectorCtoCamY];
         // Apply transforms - lat, lng and angle (NOT pitch - already accounted for, as it affects the tangent plane)
-        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], -this._cameraState.bearingInRadians);
-        vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * this._cameraState.center.lat * Math.PI / 180.0);
-        vec3.rotateY(planeVector, planeVector, [0, 0, 0], this._cameraState.center.lng * Math.PI / 180.0);
+        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], -this._getMetrics().bearingInRadians);
+        vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * this._getMetrics().center.lat * Math.PI / 180.0);
+        vec3.rotateY(planeVector, planeVector, [0, 0, 0], this._getMetrics().center.lng * Math.PI / 180.0);
         // Normalize the plane vector
         const scale = 1 / vec3.length(planeVector);
         vec3.scale(planeVector, planeVector, scale);
@@ -232,8 +228,8 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     }
 
     public transformLightDirection(dir: vec3): vec3 {
-        const sphereX = this._cameraState.center.lng * Math.PI / 180.0;
-        const sphereY = this._cameraState.center.lat * Math.PI / 180.0;
+        const sphereX = this._getMetrics().center.lng * Math.PI / 180.0;
+        const sphereY = this._getMetrics().center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
         const spherePos: vec3 = [
@@ -260,11 +256,11 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     }
 
     public getPixelScale(): number {
-        return 1.0 / planetScaleAtLatitude(this._cameraState.center.lat);
+        return 1.0 / planetScaleAtLatitude(this._getMetrics().center.lat);
     }
 
     public getCircleRadiusCorrection(): number {
-        return planetScaleAtLatitude(this._cameraState.center.lat);
+        return planetScaleAtLatitude(this._getMetrics().center.lat);
     }
 
     public getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
@@ -320,28 +316,28 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
      * depth.
      * @param nearFarZ - The depth range to use instead of computing one, by default the camera state's override.
      */
-    calcMatrices(nearFarZ: NearFarZ | null = this._cameraState.nearFarZOverride): void {
-        const globeRadiusPixels = getGlobeRadiusPixels(this._getMetrics().worldSize, this._cameraState.center.lat);
+    calcMatrices(nearFarZ: NearFarZ | null = this._getMetrics().nearFarZOverride): void {
+        const globeRadiusPixels = getGlobeRadiusPixels(this._getMetrics().worldSize, this._getMetrics().center.lat);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4f64();
         const {nearZ, farZ} = nearFarZ ?? {nearZ: 0.5, farZ: this._getMetrics().cameraToCenterDistance + globeRadiusPixels * 2.0};
         this._nearZ = nearZ;
         this._farZ = farZ;
-        mat4.perspective(globeMatrix, this._cameraState.fovInRadians, this._cameraState.width / this._cameraState.height, this._nearZ, this._farZ);
+        mat4.perspective(globeMatrix, this._getMetrics().fovInRadians, this._getMetrics().width / this._getMetrics().height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
-        const offset = getCenterOffset(this._cameraState);
-        globeMatrix[8] = -offset.x * 2 / this._cameraState.width;
-        globeMatrix[9] = offset.y * 2 / this._cameraState.height;
+        const offset = getCenterOffset(this._getMetrics());
+        globeMatrix[8] = -offset.x * 2 / this._getMetrics().width;
+        globeMatrix[9] = offset.y * 2 / this._getMetrics().height;
         this._projectionMatrix = mat4.clone(globeMatrix);
 
         this._globeProjMatrixInverted = createMat4f64();
         mat4.invert(this._globeProjMatrixInverted, globeMatrix);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this._getMetrics().cameraToCenterDistance]);
-        mat4.rotateZ(globeMatrix, globeMatrix, this._cameraState.rollInRadians);
-        mat4.rotateX(globeMatrix, globeMatrix, -this._cameraState.pitchInRadians);
-        mat4.rotateZ(globeMatrix, globeMatrix, this._cameraState.bearingInRadians);
+        mat4.rotateZ(globeMatrix, globeMatrix, this._getMetrics().rollInRadians);
+        mat4.rotateX(globeMatrix, globeMatrix, -this._getMetrics().pitchInRadians);
+        mat4.rotateZ(globeMatrix, globeMatrix, this._getMetrics().bearingInRadians);
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
@@ -350,8 +346,8 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         scaleVec[1] = globeRadiusPixels;
         scaleVec[2] = globeRadiusPixels;
 
-        mat4.rotateX(globeMatrix, globeMatrix, this._cameraState.center.lat * Math.PI / 180.0);
-        mat4.rotateY(globeMatrix, globeMatrix, -this._cameraState.center.lng * Math.PI / 180.0);
+        mat4.rotateX(globeMatrix, globeMatrix, this._getMetrics().center.lat * Math.PI / 180.0);
+        mat4.rotateY(globeMatrix, globeMatrix, -this._getMetrics().center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeViewProjMatrixF64 = globeMatrix;
         this._globeViewProjMatrix32f = new Float32Array(globeMatrix);
@@ -362,12 +358,12 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         const zero = createVec3f64();
         this._cameraPosition = createVec3f64();
         this._cameraPosition[2] = this._getMetrics().cameraToCenterDistance / globeRadiusPixels;
-        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this._cameraState.rollInRadians);
-        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this._cameraState.pitchInRadians);
-        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this._cameraState.bearingInRadians);
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this._getMetrics().rollInRadians);
+        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this._getMetrics().pitchInRadians);
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, -this._getMetrics().bearingInRadians);
         vec3.add(this._cameraPosition, this._cameraPosition, [0, 0, 1]);
-        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, -this._cameraState.center.lat * Math.PI / 180.0);
-        vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this._cameraState.center.lng * Math.PI / 180.0);
+        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, -this._getMetrics().center.lat * Math.PI / 180.0);
+        vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this._getMetrics().center.lng * Math.PI / 180.0);
 
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
 
@@ -428,19 +424,19 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
     }
 
     getBounds(): LngLatBounds {
-        const xMid = this._cameraState.width * 0.5;
-        const yMid = this._cameraState.height * 0.5;
+        const xMid = this._getMetrics().width * 0.5;
+        const yMid = this._getMetrics().height * 0.5;
 
         // LngLat extremes will probably tend to be in screen corners or in middle of screen edges.
         // These test points should result in a pretty good approximation.
         const testPoints = [
             new Point(0, 0),
             new Point(xMid, 0),
-            new Point(this._cameraState.width, 0),
-            new Point(this._cameraState.width, yMid),
-            new Point(this._cameraState.width, this._cameraState.height),
-            new Point(xMid, this._cameraState.height),
-            new Point(0, this._cameraState.height),
+            new Point(this._getMetrics().width, 0),
+            new Point(this._getMetrics().width, yMid),
+            new Point(this._getMetrics().width, this._getMetrics().height),
+            new Point(xMid, this._getMetrics().height),
+            new Point(0, this._getMetrics().height),
             new Point(0, yMid),
         ];
 
@@ -454,7 +450,7 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         // We also take advantage of the fact that `unprojectScreenPoint` will snap pixels
         // outside the planet to the closest point on the planet's horizon.
         let mostEast = 0, mostWest = 0, mostNorth = 0, mostSouth = 0; // We will store these values signed.
-        const center = this._cameraState.center;
+        const center = this._getMetrics().center;
         for (const p of projectedPoints) {
             const dLng = differenceOfAnglesDegrees(center.lng, p.lng);
             const dLat = differenceOfAnglesDegrees(center.lat, p.lat);
@@ -522,10 +518,10 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         vec3.rotateX(toCamera, toCamera, zero, degreesToRadians(center.lat));
         const pitch = radiansToDegrees(Math.acos(clamp(toCamera[2] / distance, -1, 1)));
         const straightAbove = Math.hypot(toCamera[0], toCamera[1]) < distance * STRAIGHT_ABOVE_RATIO;
-        const bearing = straightAbove ? getBearing(this._cameraState) : radiansToDegrees(Math.atan2(-toCamera[0], -toCamera[1]));
+        const bearing = straightAbove ? getBearing(this._getMetrics()) : radiansToDegrees(Math.atan2(-toCamera[0], -toCamera[1]));
 
         // The camera sits cameraToCenterDistance / getGlobeRadiusPixels(worldSize, lat) from the center, and the radius doubles per zoom level.
-        const zoom = scaleZoom(this._getMetrics().cameraToCenterDistance / distance / getGlobeRadiusPixels(this._cameraState.tileSize, center.lat));
+        const zoom = scaleZoom(this._getMetrics().cameraToCenterDistance / distance / getGlobeRadiusPixels(this._getMetrics().tileSize, center.lat));
 
         return {center, elevation: altitudeTo, zoom, pitch, bearing};
     }
@@ -547,8 +543,8 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         vec3.zero(zero);
 
         const rotatedPixelVector = createVec3f64();
-        vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this._cameraState.center.lng * Math.PI / 180.0);
-        vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this._cameraState.center.lat * Math.PI / 180.0);
+        vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this._getMetrics().center.lng * Math.PI / 180.0);
+        vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this._getMetrics().center.lat * Math.PI / 180.0);
 
         // We are looking for the lng,lat that will rotate `vecToTarget`
         // so that it is equal to `rotatedPixelVector`.
@@ -601,8 +597,8 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         let validLat: number;
         if (isValidA && isValidB) {
             // Pick the solution that is closer to current map center.
-            const centerLngRadians = this._cameraState.center.lng * Math.PI / 180.0;
-            const centerLatRadians = this._cameraState.center.lat * Math.PI / 180.0;
+            const centerLngRadians = this._getMetrics().center.lng * Math.PI / 180.0;
+            const centerLatRadians = this._getMetrics().center.lat * Math.PI / 180.0;
             const lngDistA = distanceOfAnglesRadians(lngA, centerLngRadians);
             const latDistA = distanceOfAnglesRadians(latA, centerLatRadians);
             const lngDistB = distanceOfAnglesRadians(lngB, centerLngRadians);
@@ -628,12 +624,12 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
 
         const newLng = validLng / Math.PI * 180;
         const newLat = clamp(validLat / Math.PI * 180, -90, 90);
-        const moved = newLng !== this._cameraState.center.lng || newLat !== this._cameraState.center.lat;
+        const moved = newLng !== this._getMetrics().center.lng || newLat !== this._getMetrics().center.lat;
         const {center, zoom} = moved ?
-            getConstrainedCamera(this._cameraState, constrain, new LngLat(newLng, newLat), this._cameraState.zoom) :
-            {center: this._cameraState.center, zoom: this._cameraState.zoom};
-        const adjustedZoom = constrain(center, zoom + getZoomAdjustment(this._cameraState.center.lat, center.lat)).zoom;
-        if (adjustedZoom !== zoom) return getConstrainedCamera(this._cameraState, constrain, center, adjustedZoom);
+            getConstrainedCamera(this._getMetrics(), constrain, new LngLat(newLng, newLat), this._getMetrics().zoom) :
+            {center: this._getMetrics().center, zoom: this._getMetrics().zoom};
+        const adjustedZoom = constrain(center, zoom + getZoomAdjustment(this._getMetrics().center.lat, center.lat)).zoom;
+        if (adjustedZoom !== zoom) return getConstrainedCamera(this._getMetrics(), constrain, center, adjustedZoom);
         return moved ? {center, zoom} : null;
     }
 
@@ -658,8 +654,8 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
         projected[0] /= projected[3];
         projected[1] /= projected[3];
         return new Point(
-            (projected[0] * 0.5 + 0.5) * this._cameraState.width,
-            (-projected[1] * 0.5 + 0.5) * this._cameraState.height
+            (projected[0] * 0.5 + 0.5) * this._getMetrics().width,
+            (-projected[1] * 0.5 + 0.5) * this._getMetrics().height
         );
     }
 
@@ -727,8 +723,8 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
      */
     getRayDirectionFromPixel(p: Point): vec3 {
         const pos = createVec4f64();
-        pos[0] = (p.x / this._cameraState.width) * 2.0 - 1.0;
-        pos[1] = ((p.y / this._cameraState.height) * 2.0 - 1.0) * -1.0;
+        pos[0] = (p.x / this._getMetrics().width) * 2.0 - 1.0;
+        pos[1] = ((p.y / this._getMetrics().height) * 2.0 - 1.0) * -1.0;
         pos[2] = 1;
         pos[3] = 1;
         vec4.transformMat4(pos, pos, this._globeViewProjMatrixF64Inverted);
@@ -858,7 +854,7 @@ export class VerticalPerspectiveTransform implements IProjectionTransform {
  * Creates a transform for the vertical perspective projection.
  */
 export function createVerticalPerspectiveTransform(options?: TransformOptions): Transform {
-    return new Transform((cameraState, getMetrics) => new VerticalPerspectiveTransform(cameraState, getMetrics), options);
+    return new Transform((getMetrics) => new VerticalPerspectiveTransform(getMetrics), options);
 }
 
 function globeSampleAt(ray: GlobeRay, t: number): {sample: TerrainSample; radius: number; mercator: MercatorCoordinate} {

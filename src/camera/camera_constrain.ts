@@ -66,7 +66,7 @@ function mercatorConstrain(view: CameraViewState, worldCoordinateHelper: WorldCo
     let maxX = worldSize;
     let scaleY = 0;
     let scaleX = 0;
-    const {top = 0, bottom = 0, left = 0, right = 0} = view.edgeInsets;
+    const {top, bottom, left, right} = view.padding;
     const screenWidth = view.width - left - right;
     const screenHeight = view.height - top - bottom;
 
