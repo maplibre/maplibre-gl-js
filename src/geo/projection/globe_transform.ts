@@ -13,6 +13,7 @@ import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
 import type {CameraViewState} from '../../camera/camera_view_state.ts';
+import type {CameraMetrics} from '../../camera/projected_camera.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
@@ -56,16 +57,17 @@ export class GlobeTransform implements IProjectionTransform {
 
     /**
      * @param cameraState - The camera state this part's children derive their matrices from.
+     * @param getMetrics - Returns the {@link CameraMetrics} of the camera state as it is now.
      */
-    public constructor(cameraState: Readonly<CameraViewState>) {
+    public constructor(cameraState: Readonly<CameraViewState>, getMetrics: () => CameraMetrics) {
         this._cameraState = cameraState;
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
-        this._mercatorTransform = new MercatorTransform(cameraState);
-        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(cameraState);
+        this._mercatorTransform = new MercatorTransform(cameraState, getMetrics);
+        this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(cameraState, getMetrics);
     }
 
-    clone(cameraState: Readonly<CameraViewState>): GlobeTransform {
-        const clone = new GlobeTransform(cameraState);
+    clone(cameraState: Readonly<CameraViewState>, getMetrics: () => CameraMetrics): GlobeTransform {
+        const clone = new GlobeTransform(cameraState, getMetrics);
         clone._globeness = this._globeness;
         return clone;
     }
@@ -252,5 +254,5 @@ export class GlobeTransform implements IProjectionTransform {
  * Creates a transform for the globe projection.
  */
 export function createGlobeTransform(options?: TransformOptions): Transform {
-    return new Transform((cameraState) => new GlobeTransform(cameraState), options);
+    return new Transform((cameraState, getMetrics) => new GlobeTransform(cameraState, getMetrics), options);
 }

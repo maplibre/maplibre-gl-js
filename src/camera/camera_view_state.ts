@@ -3,15 +3,14 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {EdgeInsets} from '../geo/edge_insets.ts';
 import {MAX_VALID_LATITUDE, radiansToDegrees} from '../util/util.ts';
 
-import type {mat2, mat4} from 'gl-matrix';
 import type {TransformOptions} from '../geo/transform.ts';
 import type {NearFarZ, TransformConstrainFunction} from './camera_types.ts';
 
 /**
  * @internal
- * The camera of a {@link Transform}, which is its position, its size and limits, and the values that follow from
- * them in every projection. It is plain data. The transform is the only one to change it, and its projection part
- * reads it.
+ * The camera of a {@link Transform}: its position, its size and its limits, as plain data. What follows from it the
+ * same way in every projection is its {@link CameraMetrics}. The transform is the only one to change it, and its
+ * projection part reads it.
  */
 export type CameraViewState = {
     readonly tileSize: number;
@@ -43,28 +42,11 @@ export type CameraViewState = {
      * The depth range to use instead of the one each projection computes, or null.
      */
     nearFarZOverride: NearFarZ | null;
-
-    // Derived the same way in every projection
-    /**
-     * The integer zoom level for tiles.
-     */
-    tileZoom: number;
-    /**
-     * Computed based on zoom.
-     */
-    scale: number;
-    pixelsPerMeter: number;
-    cameraToCenterDistance: number;
-    rotationMatrix: mat2;
-    pixelsToGLUnits: [number, number];
-    pixelsToClipSpaceMatrix: mat4;
-    clipSpaceToPixelsMatrix: mat4;
 };
 
 /**
  * @internal
- * The camera state of a new transform, which has no size yet and no bounds. The matrices and the values computed
- * with them start out `undefined` until the transform computes them.
+ * The camera state of a new transform, which has no size yet and no bounds.
  */
 export function createCameraViewState(options?: TransformOptions): CameraViewState {
     return {
@@ -88,14 +70,6 @@ export function createCameraViewState(options?: TransformOptions): CameraViewSta
         renderWorldCopies: options?.renderWorldCopies === undefined ? true : !!options?.renderWorldCopies,
         minElevationForCurrentTile: 0,
         nearFarZOverride: null,
-        tileZoom: 0,
-        scale: 1,
-        pixelsPerMeter: undefined,
-        cameraToCenterDistance: undefined,
-        rotationMatrix: undefined,
-        pixelsToGLUnits: undefined,
-        pixelsToClipSpaceMatrix: undefined,
-        clipSpaceToPixelsMatrix: undefined,
     };
 }
 
@@ -120,8 +94,8 @@ export function getCenterOffset(view: Readonly<CameraViewState>): Point {
  * @internal
  * The size of the world in pixels at the zoom.
  */
-export function getWorldSize(view: Readonly<CameraViewState>): number {
-    return view.tileSize * view.scale;
+export function getWorldSize(camera: {readonly tileSize: number; readonly scale: number}): number {
+    return camera.tileSize * camera.scale;
 }
 
 /**
