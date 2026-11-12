@@ -1077,7 +1077,7 @@ export class Map extends Evented<MapEventType> {
     * ```
     */
     coveringTiles(options: CoveringTilesOptions): OverscaledTileID[] {
-        return coveringTiles(this._camera.transform, options);
+        return coveringTiles(this._camera.transform.projectedCamera, this._camera.transform.worldCoordinateHelper, options);
     }
 
     /**
@@ -2686,7 +2686,7 @@ export class Map extends Evented<MapEventType> {
             queryGeometry = [tl, new Point(br.x, tl.y), br, new Point(tl.x, br.y), tl];
         }
 
-        return this.style.queryRenderedFeatures(queryGeometry, options, this._camera.transform);
+        return this.style.queryRenderedFeatures(queryGeometry, options, this._camera.transform.projectedCamera, this._camera.transform.worldCoordinateHelper);
     }
 
     /**
@@ -4552,12 +4552,12 @@ export class Map extends Evented<MapEventType> {
         // need for the current transform
         if (this.style && (this._sourcesDirty || globeRenderingChanged)) {
             this._sourcesDirty = false;
-            this.style._updateSources(this._camera.transform);
+            this.style._updateSources(this._camera.transform.projectedCamera, this._camera.transform.worldCoordinateHelper);
         }
 
         // update terrain stuff
         if (this.terrain) {
-            const renderableTilesChanged = this.terrain.tileManager.update(this._camera.transform, this.terrain);
+            const renderableTilesChanged = this.terrain.tileManager.update(this._camera.transform.projectedCamera, this._camera.transform.worldCoordinateHelper, this.terrain);
             // The cached samplers and coverage index are only valid for the tile set they were built from.
             if (renderableTilesChanged) {
                 this.terrain.resetElevationCache();
@@ -4565,13 +4565,13 @@ export class Map extends Evented<MapEventType> {
         }
         this._camera.clampCenterToGround(this.terrain);
 
-        this._placementDirty = this.style?._updatePlacement(this._camera.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
+        this._placementDirty = this.style?._updatePlacement(this._camera.transform.projectedCamera, this._camera.transform.worldCoordinateHelper, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, globeRenderingChanged);
 
         const projection = this.style.projection;
         const projectionTransition = projection?.transitionState ?? 0;
 
         // Actually draw
-        this.painter.render(this.style, this._camera.transform, {
+        this.painter.render(this.style, this._camera.transform.projectedCamera, this._camera.transform.worldCoordinateHelper, {
             showTileBoundaries: this.showTileBoundaries,
             showOverdrawInspector: this._showOverdrawInspector,
             rotating: this.isRotating(),

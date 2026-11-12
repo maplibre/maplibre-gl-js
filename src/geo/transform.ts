@@ -179,7 +179,6 @@ export class Transform implements ITransform {
     get projectedCamera(): ProjectedCamera { return this._projectedCamera; }
 
     get pixelsToClipSpaceMatrix(): mat4 { return this._projectedCamera.pixelsToClipSpaceMatrix; }
-    get clipSpaceToPixelsMatrix(): mat4 { return this._projectedCamera.clipSpaceToPixelsMatrix; }
 
     get minElevationForCurrentTile(): number { return this._cameraState.minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number): void {
@@ -208,8 +207,6 @@ export class Transform implements ITransform {
     get lngRange(): [number, number] { return this._cameraState.lngRange; }
     get latRange(): [number, number] { return this._cameraState.latRange; }
     get worldCoordinateHelper(): WorldCoordinateHelper { return this._worldCoordinateHelper; }
-
-    get pixelsToGLUnits(): [number, number] { return this._projectedCamera.pixelsToGLUnits; }
 
     get minZoom(): number { return this._cameraState.minZoom; }
     setMinZoom(zoom: number): void {
@@ -501,26 +498,11 @@ export class Transform implements ITransform {
     getRayDirectionFromPixel(p: Point): vec3 {
         return getCameraMath(this._projectedCamera).getRayDirectionFromPixel(this._projectedCamera, p);
     }
-    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
-        return getCameraMath(this._projectedCamera).calculateFogMatrix(this._projectedCamera, unwrappedTileID);
-    }
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
         return getCameraMath(this._projectedCamera).getProjectionData(this._projectedCamera, params);
     }
     isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
         return getCameraMath(this._projectedCamera).isLocationOccluded(this._projectedCamera, this._worldCoordinateHelper, lngLat, terrain, elevation);
-    }
-    getPixelScale(): number {
-        return getCameraMath(this._projectedCamera).getPixelScale(this._projectedCamera);
-    }
-    getCircleRadiusCorrection(): number {
-        return getCameraMath(this._projectedCamera).getCircleRadiusCorrection(this._projectedCamera);
-    }
-    getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
-        return getCameraMath(this._projectedCamera).getPitchedTextCorrection(this._projectedCamera, textAnchorX, textAnchorY, tileID);
-    }
-    transformLightDirection(dir: vec3): vec3 {
-        return getCameraMath(this._projectedCamera).transformLightDirection(this._projectedCamera, dir);
     }
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
         return getCameraMath(this._projectedCamera).projectTileCoordinates(this._projectedCamera, x, y, unwrappedTileID, elevation);

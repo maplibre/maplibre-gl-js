@@ -62,7 +62,7 @@ export function drawCollisionDebug(tileManager: TileManager, layer: StyleLayer, 
             frameRenderContext.getTerrainDataForTile(coord),
             frameRenderContext.getProjectionDataForTile(coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
-            buffers.segments, null, frameRenderContext.transform.zoom, null, null,
+            buffers.segments, null, frameRenderContext.projectedCamera.zoom, null, null,
             buffers.collisionVertexBuffer);
     }
 
@@ -120,7 +120,7 @@ export function drawCollisionDebug(tileManager: TileManager, layer: StyleLayer, 
             indexBuffer,
             SegmentVector.simpleSegment(0, batch.circleOffset * 2, batch.circleArray.length, batch.circleArray.length / 2),
             null,
-            frameRenderContext.transform.zoom,
+            frameRenderContext.projectedCamera.zoom,
             null,
             null,
             null);

@@ -3587,11 +3587,13 @@ describe('Style.queryRenderedFeatures', () => {
                 return [];
             };
 
-            style.tileManagers.mapLibre.transform = transform;
-            style.tileManagers.other.transform = transform;
+            style.tileManagers.mapLibre.projectedCamera = transform.projectedCamera;
+            style.tileManagers.mapLibre.worldCoordinateHelper = transform.worldCoordinateHelper;
+            style.tileManagers.other.projectedCamera = transform.projectedCamera;
+            style.tileManagers.other.worldCoordinateHelper = transform.worldCoordinateHelper;
 
             style.update({zoom: 0} as EvaluationParameters);
-            style._updateSources(transform);
+            style._updateSources(transform.projectedCamera, transform.worldCoordinateHelper);
             callback();
         });
     }));
@@ -3602,17 +3604,17 @@ describe('Style.queryRenderedFeatures', () => {
     });
 
     test('returns feature type', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(results[0].geometry.type).toBe('Line');
     });
 
     test('filters by `layers` option', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land']}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land']}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(results).toHaveLength(2);
     });
 
     test('filters by `layers` option as a Set', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land'])}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land'])}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(results).toHaveLength(2);
     });
 
@@ -3624,23 +3626,23 @@ describe('Style.queryRenderedFeatures', () => {
             }
             return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: 'string' as any}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: 'string' as any}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(errors).toBe(1);
     });
 
     test('includes layout properties', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform.projectedCamera, transform.worldCoordinateHelper);
         const layout = results[0].layer.layout;
         expect(layout['line-cap']).toBe('round');
     });
 
     test('includes paint properties', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(results[2].layer.paint['line-color']).toBe('red');
     });
 
     test('includes metadata', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {}, transform.projectedCamera, transform.worldCoordinateHelper);
 
         const layer = results[1].layer;
         expect((layer.metadata as any).something).toBe('else');
@@ -3648,13 +3650,13 @@ describe('Style.queryRenderedFeatures', () => {
     });
 
     test('include multiple layers', () => {
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land', 'landref'])}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: new Set(['land', 'landref'])}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(results).toHaveLength(3);
     });
 
     test('does not query sources not implicated by `layers` parameter', () => {
         style.tileManagers.mapLibre.map.queryRenderedFeatures = vi.fn();
-        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land--other']}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['land--other']}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(style.tileManagers.mapLibre.map.queryRenderedFeatures).not.toHaveBeenCalled();
     });
 
@@ -3664,7 +3666,7 @@ describe('Style.queryRenderedFeatures', () => {
             if (event['error']?.message.includes('does not exist in the map\'s style and cannot be queried for features.')) errors++;
             return style;
         });
-        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, transform);
+        const results = style.queryRenderedFeatures([{x: 0, y: 0} as Point], {layers: ['merp']}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(errors).toBe(1);
         expect(results).toHaveLength(0);
     });
@@ -3752,7 +3754,7 @@ describe('Style.query*Features', () => {
     });
 
     test('queryRenderedFeatures emits an error on incorrect filter', () => {
-        expect(style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 7 as any}, transform)).toEqual([]);
+        expect(style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 7 as any}, transform.projectedCamera, transform.worldCoordinateHelper)).toEqual([]);
         expect(onError.mock.calls[0][0].error.message).toMatch(/queryRenderedFeatures\.filter/);
     });
 
@@ -3764,7 +3766,7 @@ describe('Style.query*Features', () => {
             }
             return style;
         });
-        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 'invalidFilter' as any, validate: false}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: 'invalidFilter' as any, validate: false}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(errors).toBe(0);
     });
 
@@ -3794,7 +3796,8 @@ describe('Style.query*Features', () => {
 
     test('style adds global-state to queryRenderedFeatures', async () => {
         const tileManager = style.tileManagers['geojson'];
-        tileManager.transform = transform;
+        tileManager.projectedCamera = transform.projectedCamera;
+        tileManager.worldCoordinateHelper = transform.worldCoordinateHelper;
         const queryRenderedFeatures = vi.fn().mockReturnValue([]);
         vi.spyOn(tileManager, 'tilesIn').mockReturnValue([{
             tile: {
@@ -3805,7 +3808,7 @@ describe('Style.query*Features', () => {
             cameraQueryGeometry: [{x: 0, y: 0} as Point],
             scale: 1,
         }]);
-        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: '[]' as any, validate: false}, transform);
+        style.queryRenderedFeatures([{x: 0, y: 0} as Point], {filter: '[]' as any, validate: false}, transform.projectedCamera, transform.worldCoordinateHelper);
         expect(queryRenderedFeatures).toHaveBeenCalled();
         const params = queryRenderedFeatures.mock.lastCall[6];
         expect(params).toHaveProperty('globalState');

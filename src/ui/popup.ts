@@ -664,7 +664,7 @@ export class Popup extends Evented<PopupEventType> {
             this._container.style.maxWidth = this.options.maxWidth;
         }
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform, this._trackPointer);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform.projectedCamera, this._map._camera.transform.worldCoordinateHelper, this._trackPointer);
 
         let cursor: Point;
         if (event && 'point' in event && event.point) {

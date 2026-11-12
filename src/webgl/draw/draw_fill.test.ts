@@ -1,5 +1,4 @@
 import {describe, test, expect, vi} from 'vitest';
-import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {TileManager} from '../../tile/tile_manager.ts';
 import {Tile} from '../../tile/tile.ts';
@@ -11,11 +10,10 @@ import {drawFill} from './draw_fill.ts';
 import {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
 import {createFrameRenderData} from '../../util/test/util.ts';
+import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 
 import type {ProgramConfiguration, ProgramConfigurationSet} from '../../data/program_configuration.ts';
-import type {ProjectionData} from '../../geo/projection/projection_data.ts';
 import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import type {Map} from '../../ui/map.ts';
 import type {ZoomHistory} from '../../style/zoom_history.ts';
@@ -98,23 +96,9 @@ describe('drawFill', () => {
     }
 
     function constructFrameRenderContext(painter: Painter): FrameRenderContext {
-        const transform = {
-            pitch: 0,
-            labelPlaneMatrix: mat4.create(),
-            zoom: 0,
-            angle: 0,
-            getProjectionData(_canonical, fallback): ProjectionData {
-                return {
-                    mainMatrix: fallback,
-                    tileMercatorCoords: [0, 0, 1, 1],
-                    clippingPlane: [0, 0, 0, 0],
-                    projectionTransition: 0.0,
-                    fallbackMatrix: fallback,
-                    clipAntimeridian: false,
-                };
-            },
-        } as any as IReadonlyTransform;
-        return new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
+        const transform = createMercatorTransform();
+        transform.resize(512, 512);
+        return new FrameRenderContext({projectedCamera: transform.projectedCamera, worldCoordinateHelper: transform.worldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
     }
 
     function constructMockTile(layer: FillStyleLayer): Tile {

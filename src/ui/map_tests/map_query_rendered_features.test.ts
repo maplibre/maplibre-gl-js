@@ -32,7 +32,8 @@ describe('queryRenderedFeatures', () => {
         const args = spy.mock.calls[0];
         expect(args[0]).toEqual([{x: 100, y: 100}]); // query geometry
         expect(args[1]).toEqual({availableImages: []}); // params
-        expect(args[2]).toEqual(map._camera.transform); // transform
+        expect(args[2]).toEqual(map._camera.transform.projectedCamera); // camera
+        expect(args[3]).toBe(map._camera.transform.worldCoordinateHelper); // world mapping
         expect(output).toEqual([]);
     });
 

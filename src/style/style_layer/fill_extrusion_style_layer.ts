@@ -4,12 +4,13 @@ import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../uti
 import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillExtrusionLayoutPropsPossiblyEvaluated, type FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
 import Point from '@mapbox/point-geometry';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {Layout, Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
 import type {FillExtrusionLayoutProps, FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
-import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 import type {UnwrappedTileID} from '../../tile/tile_id.ts';
 
 export class Point3D extends Point {
@@ -47,7 +48,7 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         feature,
         featureState,
         geometry,
-        transform,
+        projectedCamera,
         pixelsToTileUnits,
         unwrappedTileID}: QueryIntersectsFeatureParams
     ): boolean | number {
@@ -55,14 +56,14 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-extrusion-translate'),
             this.paint.get('fill-extrusion-translate-anchor'),
-            -transform.bearingInRadians, pixelsToTileUnits);
+            -projectedCamera.bearingInRadians, pixelsToTileUnits);
 
         const height = this.paint.get('fill-extrusion-height').evaluate(feature, featureState);
         const base = this.paint.get('fill-extrusion-base').evaluate(feature, featureState);
 
-        const projectedQueryGeometry = translatedPolygon.map(p => projectPoint(p, 0, transform, unwrappedTileID));
-        const projectedBase = geometry.map(ring => ring.map(p => projectPoint(p, base, transform, unwrappedTileID)));
-        const projectedTop = geometry.map(ring => ring.map(p => projectPoint(p, height, transform, unwrappedTileID)));
+        const projectedQueryGeometry = translatedPolygon.map(p => projectPoint(p, 0, projectedCamera, unwrappedTileID));
+        const projectedBase = geometry.map(ring => ring.map(p => projectPoint(p, base, projectedCamera, unwrappedTileID)));
+        const projectedTop = geometry.map(ring => ring.map(p => projectPoint(p, height, projectedCamera, unwrappedTileID)));
         return checkIntersection(projectedBase, projectedTop, projectedQueryGeometry);
     }
 }
@@ -70,8 +71,8 @@ export class FillExtrusionStyleLayer extends StyleLayer {
 /**
  * Projects a point in tile coordinates at `elevation` to clip space, with the distance from the camera as its `z`.
  */
-function projectPoint(point: Point, elevation: number, transform: IReadonlyTransform, tileID: UnwrappedTileID): Point3D {
-    const {point: projected, signedDistanceFromCamera} = transform.projectTileCoordinates(point.x, point.y, tileID, elevation);
+function projectPoint(point: Point, elevation: number, projectedCamera: ProjectedCamera, tileID: UnwrappedTileID): Point3D {
+    const {point: projected, signedDistanceFromCamera} = getCameraMath(projectedCamera).projectTileCoordinates(projectedCamera, point.x, point.y, tileID, elevation);
     const result = projected as Point3D;
     result.z = signedDistanceFromCamera;
     return result;

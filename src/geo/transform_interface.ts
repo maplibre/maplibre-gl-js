@@ -275,8 +275,6 @@ export interface IReadonlyTransform extends ITransformGetters, IReadonlyProjecti
      */
     get cameraToCenterDistance(): number;
     get pixelsToClipSpaceMatrix(): mat4;
-    get clipSpaceToPixelsMatrix(): mat4;
-    get pixelsToGLUnits(): [number, number];
     /**
      * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
      */
@@ -480,14 +478,6 @@ export interface IReadonlyProjectionTransform {
 
     /**
      * @internal
-     * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
-     * Currently only supported in mercator projection.
-     * @param unwrappedTileID - the tile ID
-     */
-    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
-
-    /**
-     * @internal
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      * @param params - Parameters for the projection data generation.
      */
@@ -507,38 +497,6 @@ export interface IReadonlyProjectionTransform {
      * in view. Terrain with no renderable tiles hides nothing.
      */
     isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean;
-
-    /**
-     * @internal
-     */
-    getPixelScale(): number;
-
-    /**
-     * @internal
-     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
-     * Circle radius and heatmap kernel radius is multiplied by this value.
-     */
-    getCircleRadiusCorrection(): number;
-
-    /**
-     * @internal
-     * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
-     * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
-     * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
-     * @param textAnchorX - Text anchor position inside the tile, X axis.
-     * @param textAnchorY - Text anchor position inside the tile, Y axis.
-     * @param tileID - The tile coordinates.
-     */
-    getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number;
-
-    /**
-     * @internal
-     * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
-     * @param transform - Current map transform.
-     * @param dir - The light direction.
-     * @returns A new vector with the transformed light direction.
-     */
-    transformLightDirection(dir: vec3): vec3;
 
     /**
      * @internal

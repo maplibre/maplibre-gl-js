@@ -22,7 +22,7 @@ new CrossTileSymbolIndex().addLayer(layer, tiles, 0);
 
 const transform = createMercatorTransform();
 transform.resize(1280, 900);
-const placement = new Placement(transform, undefined, 0, true);
+const placement = new Placement(transform.projectedCamera, undefined, 0, true);
 placement.updateLayerOpacities(layer, tiles);
 
 test('Placement.updateLayerOpacities', async ({bench}) => {

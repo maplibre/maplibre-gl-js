@@ -60,7 +60,7 @@ test('transform hot paths', async ({bench}) => {
             }
         }),
         bench('coveringTiles', () => {
-            coveringTiles(transform, {tileSize: 512, minzoom: 0, maxzoom: 22, reparseOverscaled: false, calculateTileZoom: undefined});
+            coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {tileSize: 512, minzoom: 0, maxzoom: 22, reparseOverscaled: false, calculateTileZoom: undefined});
         }),
         bench('easeTo easeFunc (per-frame animation path)', () => {
             const tr = createTransform();

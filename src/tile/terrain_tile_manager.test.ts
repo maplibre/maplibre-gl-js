@@ -157,15 +157,15 @@ describe('TerrainTileManager', () => {
             transform.setZoom(8);
             const renderableKeys = () => manager.getRenderableTiles().map(tile => tile.tileID.key);
 
-            expect(manager.update(transform, null)).toBe(true);
+            expect(manager.update(transform.projectedCamera, transform.worldCoordinateHelper, null)).toBe(true);
             const keys = renderableKeys();
             expect(keys.length).toBeGreaterThan(0);
 
-            expect(manager.update(transform, null)).toBe(false);
+            expect(manager.update(transform.projectedCamera, transform.worldCoordinateHelper, null)).toBe(false);
             expect(renderableKeys()).toEqual(keys);
 
             transform.setZoom(9);
-            expect(manager.update(transform, null)).toBe(true);
+            expect(manager.update(transform.projectedCamera, transform.worldCoordinateHelper, null)).toBe(true);
             expect(renderableKeys()).not.toEqual(keys);
         });
     });

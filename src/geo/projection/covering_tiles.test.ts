@@ -18,7 +18,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(0.0, 0.0));
             transform.setZoom(-1);
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
             });
     
@@ -33,7 +33,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(-0.02, 0.01));
             transform.setZoom(3);
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
             });
     
@@ -51,7 +51,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(-0.02, 0.01));
             transform.setZoom(3);
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
             });
     
@@ -75,7 +75,7 @@ describe('coveringTiles', () => {
             transform.setMaxPitch(80);
             transform.setPitch(80);
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
             });
     
@@ -98,7 +98,7 @@ describe('coveringTiles', () => {
             transform.setPitch(80);
             transform.setBearing(45);
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
             });
     
@@ -121,7 +121,7 @@ describe('coveringTiles', () => {
             transform.setPitch(60);
             transform.setFov(15);
 
-            const tiles = coveringTiles(transform, {tileSize: 512});
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {tileSize: 512});
             const nominalZ = coveringZoomLevel(transform, {tileSize: 512});
             const levels = tiles.map(tile => tile.canonical.z);
 
@@ -139,7 +139,7 @@ describe('coveringTiles', () => {
             transform.setPitch(15);
             transform.setFov(5);
 
-            const tiles = coveringTiles(transform, {tileSize: 512});
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {tileSize: 512});
             const nominalZ = coveringZoomLevel(transform, {tileSize: 512});
             const levels = tiles.map(tile => tile.canonical.z);
 
@@ -154,7 +154,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(179.99, -0.001));
             transform.setZoom(5);
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
             });
     
@@ -172,7 +172,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(-179.99, 0.001));
             transform.setZoom(5);
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
             });
     
@@ -190,7 +190,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(0.0, 80.0));
             transform.setZoom(-0.5);
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 0,
@@ -209,7 +209,7 @@ describe('coveringTiles', () => {
             transform.setPitch(0);
             transform.setCenter(new LngLat(-179.73, -0.087));
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
@@ -228,7 +228,7 @@ describe('coveringTiles', () => {
             transform.setPitch(0);
             transform.setCenter(new LngLat(-179.73, 60.02));
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
@@ -247,7 +247,7 @@ describe('coveringTiles', () => {
             transform.setPitch(0);
             transform.setCenter(new LngLat(-179.73, 85.028));
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
@@ -266,7 +266,7 @@ describe('coveringTiles', () => {
             transform.setPitch(0);
             transform.setCenter(new LngLat(-58.97, 60.02));
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
@@ -285,7 +285,7 @@ describe('coveringTiles', () => {
             transform.setPitch(0);
             transform.setCenter(new LngLat(-58.97, -0.087));
     
-            const tiles = coveringTiles(transform, {
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
                 tileSize: 512,
                 minzoom: 0,
                 maxzoom: 15,
@@ -312,7 +312,7 @@ describe('coveringTiles', () => {
                 transform.setCenter(new LngLat(0.021, 0.0915));
                 transform.setElevation(20000);
 
-                expect(coveringTiles(transform, options)).toEqual([
+                expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                     new OverscaledTileID(11, 0, 11, 1024, 1023),
                     new OverscaledTileID(10, 0, 10, 511, 511),
                 ]);
@@ -336,7 +336,7 @@ describe('coveringTiles', () => {
                     transform.setCenter(new LngLat(0.021, 0.0915));
                     transform.setElevation(20000);
 
-                    expect(coveringTiles(transform, options)).toEqual([
+                    expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                         new OverscaledTileID(11, 0, 11, 1023, 1023),
                         new OverscaledTileID(11, 0, 11, 1024, 1022),
                         new OverscaledTileID(11, 0, 11, 1023, 1022),
@@ -361,7 +361,7 @@ describe('coveringTiles', () => {
                     transform.setCenter(new LngLat(0.021, 0.0915));
                     transform.setElevation(20000);
 
-                    expect(coveringTiles(transform, options)).toEqual([
+                    expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                         new OverscaledTileID(11, 0, 11, 1024, 1023),
                         new OverscaledTileID(9, 0, 9, 256, 256),
                         new OverscaledTileID(12, 0, 12, 2047, 2046),
@@ -385,7 +385,7 @@ describe('coveringTiles', () => {
                     transform.setCenter(new LngLat(0.021, 0.0915));
                     transform.setElevation(20000);
 
-                    expect(coveringTiles(transform, options)).toEqual([
+                    expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                         new OverscaledTileID(11, 0, 11, 1023, 1023),
                         new OverscaledTileID(8, 0, 8, 128, 128),
                         new OverscaledTileID(8, 0, 8, 127, 128),
@@ -410,7 +410,7 @@ describe('coveringTiles', () => {
                     transform.setCenter(new LngLat(0.021, 0.0915));
                     transform.setElevation(20000);
 
-                    expect(coveringTiles(transform, options)).toEqual([
+                    expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                         new OverscaledTileID(10, 0, 10, 511, 511),
                         new OverscaledTileID(9, 0, 9, 255, 256),
                         new OverscaledTileID(12, 0, 12, 2048, 2046),
@@ -437,31 +437,31 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(-0.01, 0.01));
     
             transform.setZoom(0);
-            expect(coveringTiles(transform, options)).toEqual([]);
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([]);
     
             transform.setZoom(1);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 1, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, 0, 1, 1, 1)]);
     
             transform.setZoom(2.4);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(2, 0, 2, 1, 1),
                 new OverscaledTileID(2, 0, 2, 2, 1),
                 new OverscaledTileID(2, 0, 2, 1, 2),
                 new OverscaledTileID(2, 0, 2, 2, 2)]);
     
             transform.setZoom(10);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
     
             transform.setZoom(11);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
@@ -470,7 +470,7 @@ describe('coveringTiles', () => {
             transform.resize(2048, 128);
             transform.setZoom(9);
             transform.setPadding({top: 16});
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(9, 0, 9, 255, 255),
                 new OverscaledTileID(9, 0, 9, 256, 255),
                 new OverscaledTileID(9, 0, 9, 255, 256),
@@ -488,7 +488,7 @@ describe('coveringTiles', () => {
             transform.setBearing(32.0);
             transform.setCenter(new LngLat(56.90, 48.20));
             transform.resize(1024, 768);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(5, 0, 5, 21, 11),
                 new OverscaledTileID(5, 0, 5, 20, 11),
                 new OverscaledTileID(5, 0, 5, 21, 10),
@@ -517,7 +517,7 @@ describe('coveringTiles', () => {
             transform.setBearing(0.0);
             transform.setCenter(new LngLat(20.918, 39.232));
             transform.resize(50, 1000);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 142, 98),
                 new OverscaledTileID(7, 0, 7, 71, 48),
                 new OverscaledTileID(5, 0, 5, 17, 11),
@@ -531,14 +531,14 @@ describe('coveringTiles', () => {
             transform.setBearing(45.0);
             transform.setCenter(new LngLat(25.02, 60.15));
             transform.resize(300, 50);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74)
             ]);
     
             transform.resize(50, 300);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74),
@@ -557,7 +557,7 @@ describe('coveringTiles', () => {
             };
             transform.resize(50, 300);
             transform.setPitch(70);
-            expect(coveringTiles(transform, optionsWithCustomTileLoading)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, optionsWithCustomTileLoading)).toEqual([
                 new OverscaledTileID(7, 0, 7, 74, 36),
                 new OverscaledTileID(7, 0, 7, 73, 37),
                 new OverscaledTileID(7, 0, 7, 74, 35),
@@ -576,7 +576,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 calculateTileZoom: createCalculateTileZoomFunction(1.0, 1.0)
             };
-            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, optionsWithTileLodParams)).toEqual([
                 new OverscaledTileID(5, 0, 5, 18, 9),
                 new OverscaledTileID(5, 0, 5, 18, 8)
             ]);
@@ -590,7 +590,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 calculateTileZoom: createCalculateTileZoomFunction(1.0, 10.0)
             };
-            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, optionsWithTileLodParams)).toEqual([
                 new OverscaledTileID(6, 0, 6, 37, 18),
                 new OverscaledTileID(6, 0, 6, 37, 17),
                 new OverscaledTileID(6, 0, 6, 36, 18),
@@ -606,7 +606,7 @@ describe('coveringTiles', () => {
                 tileSize: 512,
                 calculateTileZoom: createCalculateTileZoomFunction(10.0, 1.0)
             };
-            expect(coveringTiles(transform, optionsWithTileLodParams)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, optionsWithTileLodParams)).toEqual([
                 new OverscaledTileID(7, 0, 7, 73, 37),
                 new OverscaledTileID(7, 0, 7, 73, 36),
                 new OverscaledTileID(7, 0, 7, 72, 36),
@@ -623,7 +623,7 @@ describe('coveringTiles', () => {
             transform.setBearing(0);
             transform.resize(300, 300);
             transform.setCenter(new LngLat(630.01, 0.01));
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(2, 2, 2, 1, 1),
                 new OverscaledTileID(2, 2, 2, 1, 2),
                 new OverscaledTileID(2, 2, 2, 0, 1),
@@ -633,7 +633,7 @@ describe('coveringTiles', () => {
     
         test('calculates tile coverage at w = -1', () => {
             transform.setCenter(new LngLat(-360.01, 0.01));
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(2, -1, 2, 1, 1),
                 new OverscaledTileID(2, -1, 2, 1, 2),
                 new OverscaledTileID(2, -1, 2, 2, 1),
@@ -644,7 +644,7 @@ describe('coveringTiles', () => {
         test('calculates tile coverage across meridian', () => {
             transform.setZoom(1);
             transform.setCenter(new LngLat(-180.01, 0.01));
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, -1, 1, 1, 0),
@@ -656,7 +656,7 @@ describe('coveringTiles', () => {
             transform.setZoom(1);
             transform.setCenter(new LngLat(-180.01, 0.01));
             transform.setRenderWorldCopies(false);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1)
             ]);
@@ -668,7 +668,7 @@ describe('coveringTiles', () => {
             identityTransform.setZoom(1);
             identityTransform.setPitch(60);
             identityTransform.setCenter(new LngLat(80, 0));
-            const tiles = coveringTiles(identityTransform, options);
+            const tiles = coveringTiles(identityTransform.projectedCamera, identityTransform.worldCoordinateHelper, options);
             expect(tiles.length).toBeGreaterThan(0);
             expect(tiles.every((tileID) => tileID.wrap === 0)).toBe(true);
         });
@@ -689,7 +689,7 @@ describe('coveringTiles', () => {
             transform.setFov(10);
         
             transform.setZoom(10);
-            const tiles = coveringTiles(transform, options);
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options);
             for (const tile of tiles) {
                 expect(tile.overscaledZ).toBeGreaterThanOrEqual(tile.canonical.z);
             }
@@ -706,7 +706,7 @@ describe('coveringTiles', () => {
             transform.resize(200, 200);
             transform.setCenter(new LngLat(0.01, 0.01));
             transform.setZoom(8);
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(0, 0, 0, 0, 0)
             ]);
         });
@@ -724,7 +724,7 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, -0.087));
         
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1024)
             ]);
         });
@@ -742,7 +742,7 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, 60.02));
         
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 594)
             ]);
         });
@@ -760,7 +760,7 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setCenter(new LngLat(-179.73, 85.028));
         
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1)
             ]);
         });
@@ -778,7 +778,7 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setCenter(new LngLat(-58.97, 60.02));
         
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 594)
             ]);
         });
@@ -796,7 +796,7 @@ describe('coveringTiles', () => {
             transform.setZoom(11);
             transform.setCenter(new LngLat(-58.97, -0.087));
         
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 1024)
             ]);
         });
@@ -815,7 +815,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(0.03, 0.0915));
             transform.setElevation(20000);
 
-            expect(coveringTiles(transform, options)).toEqual([
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1024, 1023),
                 new OverscaledTileID(11, 0, 11, 1023, 1023)
             ]);
@@ -835,7 +835,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(-0.01, 0.01));
             transform.setZoom(0);
 
-            expect(coveringTiles(transform, options)).toEqual([new OverscaledTileID(0, 0, 0, 0, 0)]);
+            expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options)).toEqual([new OverscaledTileID(0, 0, 0, 0, 0)]);
         });
 
         test('covers the four children of the root tile at zoom 1 around the center of the square', () => {
@@ -843,7 +843,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(-0.01, 0.01));
             transform.setZoom(1);
 
-            const tiles = coveringTiles(transform, options);
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options);
 
             expect(tiles).toHaveLength(4);
             for (const [x, y] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
@@ -856,7 +856,7 @@ describe('coveringTiles', () => {
             transform.setCenter(new LngLat(45, 45));
             transform.setZoom(2.5);
 
-            const tiles = coveringTiles(transform, options);
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options);
 
             expect(tiles.every((tile) => tile.canonical.z === 2)).toBe(true);
             for (const [x, y] of [[2, 0], [3, 0], [2, 1], [3, 1]]) {
@@ -868,7 +868,7 @@ describe('coveringTiles', () => {
             const transform = createIdentityCrsTransform(1024, 200);
             transform.setCenter(new LngLat(89, 0));
             transform.setZoom(2);
-            const tiles = coveringTiles(transform, options);
+            const tiles = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, options);
             expect(tiles.length).toBeGreaterThan(0);
             for (const tile of tiles) {
                 expect(tile.wrap).toBe(0);

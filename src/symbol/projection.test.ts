@@ -7,6 +7,7 @@ import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {expectToBeCloseToArray} from '../util/test/util.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 
 import type {Transform} from '../geo/transform.ts';
 
@@ -35,7 +36,7 @@ function createProjectionContext(overrides: Partial<SymbolProjectionContext> = {
         tileAnchorPoint: new Point(0, 0),
         pitchWithMap: false,
         unwrappedTileID,
-        transform: overrides.transform ?? createDefaultTransform(),
+        projectedCamera: overrides.projectedCamera ?? createDefaultTransform().projectedCamera,
         width: 100,
         height: 100,
         translation: [0, 0],
@@ -67,7 +68,7 @@ describe('Vertex to viewport projection', () => {
             tileAnchorPoint: new Point(0, 0),
             pitchWithMap: true,
             unwrappedTileID: null,
-            transform,
+            projectedCamera: transform.projectedCamera,
             width: 1,
             height: 1
         });
@@ -104,7 +105,7 @@ describe('Find offset line intersections', () => {
     const projectionContext = createProjectionContext({
         lineVertexArray,
         getElevation: (_x, _y) => 0,
-        transform,
+        projectedCamera: transform.projectedCamera,
         pitchWithMap: true,
         unwrappedTileID: null,
         width: 1,
@@ -208,9 +209,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform.projectedCamera, 2)],
             [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform.projectedCamera, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
@@ -220,9 +221,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform.projectedCamera, 2)],
             [0.3535533845424652, -0.3535533845424652, 0, 0, 0.3535533845424652, 0.3535533845424652, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform.projectedCamera, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
@@ -232,9 +233,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform.projectedCamera, 2)],
             [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform.projectedCamera, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
@@ -245,13 +246,13 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform, 2)],
+        expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform.projectedCamera, 2)],
             [...transform.pixelsToClipSpaceMatrix], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform, 2)],
+        expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform.projectedCamera, 2)],
             [...transform.pixelsToClipSpaceMatrix], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform, 2)],
+        expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform.projectedCamera, 2)],
             [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform, 2)],
+        expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform.projectedCamera, 2)],
             [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
@@ -261,9 +262,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(0);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
@@ -273,9 +274,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(0);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
@@ -285,9 +286,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [1.0, 0.0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [0.0, 1.0], 9);
     });
 
@@ -297,9 +298,9 @@ describe('Find offset line intersections', () => {
         transform.setPitch(45);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [-0.16910198330879211, 0.9855985641479492]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [-0.9855985641479492, 0.16910198330879211], 9);
     });
 
@@ -310,21 +311,21 @@ describe('Find offset line intersections', () => {
         transform.setPitch(89);
         transform.setRoll(0);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [1, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [0, 1], 9);
 
         transform.setPitch(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [0, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [0, 1], 9);
 
         transform.setBearing(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [0, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [-1, 0], 9);
     });
 
@@ -335,15 +336,15 @@ describe('Find offset line intersections', () => {
         transform.setPitch(89);
         transform.setRoll(45);
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [-0.6946603059768677, 0.7193379402160645]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [-0.7193379402160645, 0.6946603059768677], 9);
 
         transform.setPitch(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
             [-0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
@@ -355,7 +356,7 @@ describe('symbol height offset projection', () => {
     test('projectTileCoordinatesToClipSpace measures the height offset from the terrain when the anchor is ground', () => {
         const projectionContext = createProjectionContext({heightOffset: HEIGHT_OFFSET, heightAnchorGround: true});
         const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
-        const expected = projectionContext.transform.projectTileCoordinates(1024, 1024, unwrappedTileID, TERRAIN_ELEVATION + HEIGHT_OFFSET);
+        const expected = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, TERRAIN_ELEVATION + HEIGHT_OFFSET);
         expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
         expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
     });
@@ -363,7 +364,7 @@ describe('symbol height offset projection', () => {
     test('projectTileCoordinatesToClipSpace ignores the terrain when the anchor is absolute', () => {
         const projectionContext = createProjectionContext({heightOffset: HEIGHT_OFFSET, heightAnchorGround: false});
         const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
-        const expected = projectionContext.transform.projectTileCoordinates(1024, 1024, unwrappedTileID, HEIGHT_OFFSET);
+        const expected = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, HEIGHT_OFFSET);
         expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
         expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
     });
@@ -371,7 +372,7 @@ describe('symbol height offset projection', () => {
     test('projectTileCoordinatesToClipSpace defaults to the plain terrain elevation without height properties', () => {
         const projectionContext = createProjectionContext();
         const projected = projectTileCoordinatesToClipSpace(1024, 1024, projectionContext);
-        const expected = projectionContext.transform.projectTileCoordinates(1024, 1024, unwrappedTileID, TERRAIN_ELEVATION);
+        const expected = getCameraMath(projectionContext.projectedCamera).projectTileCoordinates(projectionContext.projectedCamera, 1024, 1024, unwrappedTileID, TERRAIN_ELEVATION);
         expect(projected.point.x).toBeCloseTo(expected.point.x, 10);
         expect(projected.point.y).toBeCloseTo(expected.point.y, 10);
     });

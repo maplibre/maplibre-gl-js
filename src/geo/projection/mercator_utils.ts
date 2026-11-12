@@ -88,9 +88,9 @@ export function unprojectFromWorldCoordinates(worldSize: number, point: Point, h
  * The calculated value is the horizontal line from the camera-height to sea-level.
  * @returns Horizon above center in pixels.
  */
-export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDistance: number}): number {
-    return transform.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - transform.pitch)) * 0.85,
-        Math.tan(degreesToRadians(maxMercatorHorizonAngle - transform.pitch)));
+export function getMercatorHorizon(camera: {pitch: number; cameraToCenterDistance: number}): number {
+    return camera.cameraToCenterDistance * Math.min(Math.tan(degreesToRadians(90 - camera.pitch)) * 0.85,
+        Math.tan(degreesToRadians(maxMercatorHorizonAngle - camera.pitch)));
 }
 
 export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldSize: number): Mat4f64 {
@@ -107,7 +107,7 @@ export function calculateTileMatrix(unwrappedTileID: UnwrappedTileIDType, worldS
 
 /**
  * Returns the camera position for a center already mapped to world coordinates.
- * Callers resolve the center through the transform's `WorldCoordinateHelper`; keeping the helper
+ * Callers resolve the center through the projection's `WorldCoordinateHelper`; keeping the helper
  * out of this function lets the engine inline it on the per-frame camera path.
  * @param centerMercator - the center in world coordinates, with its elevation in `z`
  * @param dMercator - camera to center distance in world units
@@ -124,23 +124,21 @@ export function cameraMercatorCoordinateFromCenterAndRotation(centerMercator: Me
 /**
  * Returns the position of the camera in mercator coordinates, with its altitude in `z`.
  * Computed from the center, pitch, bearing and camera distance, so it holds for any projection.
- * @param center - The center to compute from, the transform's own by default.
+ * @param center - The center to compute from, the camera's own by default.
  */
-export function cameraMercatorCoordinate(transform: {
+export function cameraMercatorCoordinate(camera: {
     center: LngLat;
     elevation: number;
     pitch: number;
     bearing: number;
     cameraToCenterDistance: number;
     worldSize: number;
-    worldCoordinateHelper: WorldCoordinateHelper;
-}, center: LngLat = transform.center): MercatorCoordinate {
-    const worldCoordinateHelper = transform.worldCoordinateHelper;
+}, worldCoordinateHelper: WorldCoordinateHelper, center: LngLat = camera.center): MercatorCoordinate {
     const mercUnitsPerMeter = worldCoordinateHelper.worldZFromAltitude(1, center);
-    const pixelPerMeter = mercUnitsPerMeter * transform.worldSize;
-    const distance = transform.cameraToCenterDistance / pixelPerMeter;
-    const centerMercator = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, transform.elevation);
-    return cameraMercatorCoordinateFromCenterAndRotation(centerMercator, transform.pitch, transform.bearing, distance * mercUnitsPerMeter);
+    const pixelPerMeter = mercUnitsPerMeter * camera.worldSize;
+    const distance = camera.cameraToCenterDistance / pixelPerMeter;
+    const centerMercator = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, camera.elevation);
+    return cameraMercatorCoordinateFromCenterAndRotation(centerMercator, camera.pitch, camera.bearing, distance * mercUnitsPerMeter);
 }
 
 export function cameraDirectionFromPitchBearing(pitch: number, bearing: number): {x: number; y: number; z: number} {

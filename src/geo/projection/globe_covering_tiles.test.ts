@@ -134,8 +134,8 @@ describe('elevated content tile retention', () => {
         transform.setMaxPitch(179);
         transform.setPitch(75);
         const key = (tileID) => `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
-        const without = coveringTiles(transform, {tileSize: 512}).map(key);
-        const withElevated = coveringTiles(transform, {tileSize: 512, maxContentElevation: 500000}).map(key);
+        const without = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {tileSize: 512}).map(key);
+        const withElevated = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {tileSize: 512, maxContentElevation: 500000}).map(key);
         expect(without).toContain('4/9/4');
         expect(withElevated).toContain('4/9/4');
     });
@@ -148,8 +148,8 @@ describe('elevated content tile retention', () => {
         transform.setMaxPitch(179);
         transform.setPitch(95);
         const key = (tileID) => `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
-        const without = coveringTiles(transform, {tileSize: 512}).map(key);
-        const withElevated = new Set(coveringTiles(transform, {tileSize: 512, maxContentElevation: 500000}).map(key));
+        const without = coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {tileSize: 512}).map(key);
+        const withElevated = new Set(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {tileSize: 512, maxContentElevation: 500000}).map(key));
         for (const tile of without) {
             expect(withElevated, `visible ground tile ${tile} must stay retained`).toContain(tile);
         }
@@ -165,7 +165,7 @@ describe('poles', () => {
         transform.setCenter(new LngLat(0, -90));
         transform.setZoom(1.6);
 
-        expect(coveringTiles(transform, {tileSize: 32})).toHaveLength(56);
+        expect(coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {tileSize: 32})).toHaveLength(56);
     });
 });
 

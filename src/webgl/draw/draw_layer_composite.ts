@@ -7,6 +7,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent.ts';
 import {isLineStyleLayer, type LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import {isFillStyleLayer, type FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 import {isRasterStyleLayer, type RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
@@ -89,7 +90,7 @@ function getCoordsViewportBounds(coords: OverscaledTileID[], frameRenderContext:
     for (const coord of coords) {
         const unwrapped = coord.toUnwrapped();
         for (const [cx, cy] of TILE_CORNERS) {
-            const {point, signedDistanceFromCamera} = frameRenderContext.transform.projectTileCoordinates(cx, cy, unwrapped, null);
+            const {point, signedDistanceFromCamera} = getCameraMath(frameRenderContext.projectedCamera).projectTileCoordinates(frameRenderContext.projectedCamera, cx, cy, unwrapped, null);
             if (signedDistanceFromCamera <= 0) return wholeViewport;
 
             const sx = (point.x + 1) * 0.5 * viewportWidth;
@@ -256,7 +257,7 @@ export function drawLayerComposite(painter: Painter, opacity: number, blend: Lay
         frameRenderContext.getDepthModeForSublayer(0, DepthMode.ReadOnly), StencilMode.disabled, colorMode, CullFaceMode.disabled,
         layerCompositeUniformValues(opacity, 0, 1, [bx, by]), null, null,
         layer.id, painter.viewportBuffer, painter.quadTriangleIndexBuffer,
-        painter.viewportSegments, layer.paint, frameRenderContext.transform.zoom);
+        painter.viewportSegments, layer.paint, frameRenderContext.projectedCamera.zoom);
 
     gl.disable(gl.SCISSOR_TEST);
 

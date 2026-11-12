@@ -15,7 +15,7 @@ function coverWithPitch(transform: ITransform, pitch: number): void {
 
     for (let i = 0; i < 40; i++) {
         transform.setCenter(new LngLat(i * 0.2, 0));
-        coveringTiles(transform, {
+        coveringTiles(transform.projectedCamera, transform.worldCoordinateHelper, {
             tileSize: 256,
         });
     }

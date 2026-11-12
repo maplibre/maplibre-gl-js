@@ -46,7 +46,7 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
         test('returns `true` when a heatmap intersects a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({
                 queryGeometry: queryGeometryTrue,
-                transform,
+                projectedCamera: transform.projectedCamera,
                 ...params
             } as any)).toBe(true);
         });
@@ -54,7 +54,7 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
         test('returns `false` when a heatmap does not intersect a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({
                 queryGeometry: queryGeometryFalse,
-                transform,
+                projectedCamera: transform.projectedCamera,
                 ...params
             } as any)).toBe(false);
         });
@@ -67,7 +67,7 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
         test('returns `true` when a heatmap intersects a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({
                 queryGeometry: queryGeometryTrue,
-                transform,
+                projectedCamera: transform.projectedCamera,
                 ...params
             } as any)).toBe(true);
         });
@@ -75,7 +75,7 @@ describe('HeatmapStyleLayer.queryIntersectsFeature', () => {
         test('returns `false` when a heatmap does not intersect a point', () => {
             expect(createHeatmapLayer().queryIntersectsFeature({
                 queryGeometry: queryGeometryFalse,
-                transform,
+                projectedCamera: transform.projectedCamera,
                 ...params
             } as any)).toBe(false);
         });

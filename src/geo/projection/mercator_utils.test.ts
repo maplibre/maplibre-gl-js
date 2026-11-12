@@ -77,7 +77,7 @@ describe('mercator utils', () => {
             transform.setBearing(75);
             transform.resize(512, 512);
 
-            const cameraCoord = cameraMercatorCoordinate(transform);
+            const cameraCoord = cameraMercatorCoordinate(transform, transform.worldCoordinateHelper);
 
             expect(cameraCoord.toLngLat().lng).toBeCloseTo(14.973921529405033, 10);
             expect(cameraCoord.toLngLat().lat).toBeCloseTo(54.99599181678275, 10);
@@ -101,8 +101,8 @@ describe('mercator utils', () => {
             mercatorTransform.setPitch(55);
             mercatorTransform.setBearing(75);
 
-            const cameraCoord = cameraMercatorCoordinate(globeTransform);
-            const mercatorCameraCoord = cameraMercatorCoordinate(mercatorTransform);
+            const cameraCoord = cameraMercatorCoordinate(globeTransform, globeTransform.worldCoordinateHelper);
+            const mercatorCameraCoord = cameraMercatorCoordinate(mercatorTransform, mercatorTransform.worldCoordinateHelper);
 
             expect(cameraCoord.x).toBeCloseTo(mercatorCameraCoord.x, precisionDigits);
             expect(cameraCoord.y).toBeCloseTo(mercatorCameraCoord.y, precisionDigits);

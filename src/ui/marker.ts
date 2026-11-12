@@ -746,7 +746,7 @@ export class Marker extends Evented<MarkerEventType> {
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'projectiontransition' | 'idle' }): void => {
         if (!this._map) return;
 
-        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform);
+        this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map._camera.transform.projectedCamera, this._map._camera.transform.worldCoordinateHelper);
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
         if (this._map.terrain) {

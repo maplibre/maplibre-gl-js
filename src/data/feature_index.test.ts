@@ -70,7 +70,8 @@ describe('FeatureIndex', () => {
                     filter: ['==', ['get', 'cluster'], ['global-state', 'isCluster']],
                     globalState
                 },
-                transform
+                projectedCamera: transform.projectedCamera,
+                worldCoordinateHelper: transform.worldCoordinateHelper
             } as any, {
                 layer,
             }, [], undefined);
@@ -92,7 +93,8 @@ describe('FeatureIndex', () => {
                 queryGeometry: [new Point(0, 0), new Point(0, 2000), new Point(2000, 2000), new Point(2000, 0), new Point(0 ,0)],
                 cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
                 params: {},
-                transform
+                projectedCamera: transform.projectedCamera,
+                worldCoordinateHelper: transform.worldCoordinateHelper
             } as any, {
                 layer,
             }, [], undefined);
@@ -127,7 +129,8 @@ describe('FeatureIndex in a planar projection', () => {
             queryGeometry: [new Point(0, 0), new Point(10, 10)],
             cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
             params: {},
-            transform
+            projectedCamera: transform.projectedCamera,
+            worldCoordinateHelper: transform.worldCoordinateHelper
         } as any, {layer}, [], undefined);
         expect((result.layer[0].feature.geometry as GeoJSON.MultiPoint).coordinates[0]).toEqual([-45, 0]);
     });

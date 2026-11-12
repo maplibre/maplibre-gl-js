@@ -10,7 +10,7 @@ describe('PauseablePlacement', () => {
         transform.resize(512, 512);
 
         const pp = new PauseablePlacement(
-            transform,
+            transform.projectedCamera,
             undefined,
             ['symbol-layer'],
             true,

@@ -78,7 +78,7 @@ function createSymbols(transform: ITransform, getSimpleProjectionMatrix: (tileID
 }
 
 function placeAll(transform: ITransform, symbols: TestSymbol[]): void {
-    const collisionIndex = new CollisionIndex(transform);
+    const collisionIndex = new CollisionIndex(transform.projectedCamera);
     collisionIndex.grid.hitTest = () => true;
 
     for (const symbol of symbols) {

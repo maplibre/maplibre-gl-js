@@ -42,7 +42,7 @@ describe('drawCustom', () => {
                 set: () => {}
             }
         } as any;
-        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera: transform.projectedCamera, worldCoordinateHelper: transform.worldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: mockPainter.context, programCache: null, currentPass: 'translucent', projection: null});
 
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
         const tile = new Tile(tileId, 256);

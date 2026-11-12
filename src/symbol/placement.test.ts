@@ -41,7 +41,7 @@ describe('placement', () => {
     beforeEach(() => {
         transform = createMercatorTransform();
         transform.resize(512, 512);
-        placement = new Placement(transform, undefined, 0, true);
+        placement = new Placement(transform.projectedCamera, undefined, 0, true);
     });
 
     test('should not throw on integer overflow', () => {

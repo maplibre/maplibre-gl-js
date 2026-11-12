@@ -57,7 +57,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `true` when a circle intersects a point', () => {
                     expect(createCircleLayer().queryIntersectsFeature({
                         queryGeometry: queryGeometryTrue,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(true);
                 });
@@ -65,7 +65,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `false` when a circle does not intersect a point', () => {
                     expect(createCircleLayer().queryIntersectsFeature({
                         queryGeometry: queryGeometryFalse,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(false);
                 });
@@ -75,7 +75,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `true` when a circle intersects a point', () => {
                     expect(createCircleLayer({pitchScale: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryTrue,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(true);
                 });
@@ -83,7 +83,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `false` when a circle does not intersect a point', () => {
                     expect(createCircleLayer({pitchScale: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryFalse,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(false);
                 });
@@ -96,14 +96,14 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `true` when a circle intersects a point', () => {
                     expect(createCircleLayer({pitchAlignment: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryTrue,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(true);
                 });
                 test('returns `false` when a circle does not intersect a point', () => {
                     expect(createCircleLayer({pitchAlignment: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryFalse,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(false);
                 });
@@ -113,7 +113,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `true` when a circle intersects a point', () => {
                     expect(createCircleLayer({pitchScale: 'viewport', pitchAlignment: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryTrue,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(true);
                 });
@@ -121,7 +121,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `false` when a circle does not intersect a point', () => {
                     expect(createCircleLayer({pitchScale: 'viewport', pitchAlignment: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryFalse,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(false);
                 });
@@ -139,7 +139,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `true` when a circle intersects a point', () => {
                     expect(createCircleLayer().queryIntersectsFeature({
                         queryGeometry: queryGeometryTrue,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(true);
                 });
@@ -147,7 +147,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `false` when a circle does not intersect a point', () => {
                     expect(createCircleLayer().queryIntersectsFeature({
                         queryGeometry: queryGeometryFalse,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(false);
                 });
@@ -157,7 +157,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `true` when a circle intersects a point', () => {
                     expect(createCircleLayer({pitchScale: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryTrue,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(true);
                 });
@@ -165,7 +165,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `false` when a circle does not intersect a point', () => {
                     expect(createCircleLayer({pitchScale: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryFalse,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(false);
                 });
@@ -178,14 +178,14 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `true` when a circle intersects a point', () => {
                     expect(createCircleLayer({pitchAlignment: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryTrue,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(true);
                 });
                 test('returns `false` when a circle does not intersect a point', () => {
                     expect(createCircleLayer({pitchAlignment: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryFalse,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(false);
                 });
@@ -195,7 +195,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `true` when a circle intersects a point', () => {
                     expect(createCircleLayer({pitchScale: 'viewport', pitchAlignment: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryTrue,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(true);
                 });
@@ -203,7 +203,7 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
                 test('returns `false` when a circle does not intersect a point', () => {
                     expect(createCircleLayer({pitchScale: 'viewport', pitchAlignment: 'viewport'}).queryIntersectsFeature({
                         queryGeometry: queryGeometryFalse,
-                        transform,
+                        projectedCamera: transform.projectedCamera,
                         ...params
                     } as any)).toBe(false);
                 });

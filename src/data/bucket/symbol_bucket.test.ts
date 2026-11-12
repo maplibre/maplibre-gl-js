@@ -79,7 +79,7 @@ describe('SymbolBucket', () => {
         const bucketA = bucketSetup();
         const bucketB = bucketSetup();
         const options = createPopulateOptions([]);
-        const placement = new Placement(transform, undefined, 0, true);
+        const placement = new Placement(transform.projectedCamera, undefined, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 
