@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {
     Uniform1i,
     Uniform1f,
@@ -68,6 +68,18 @@ describe('Uniform Binding', () => {
         expect(u.current).toEqual([1, 1]);
         u.set([1, 1]);
         u.set([1, 2]);
+    });
+
+    test('Uniform2f uploads a reused array when its values change', () => {
+        const uniform2f = vi.fn();
+        const u = new Uniform2f({gl: {uniform2f}} as any as Context, 0);
+        const v: [number, number] = [1, 1];
+
+        u.set(v);
+        v[1] = 2;
+        u.set(v);
+
+        expect(uniform2f.mock.calls).toEqual([[0, 1, 1], [0, 1, 2]]);
     });
 
     test('Uniform3f', () => {

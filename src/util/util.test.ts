@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util.ts';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap, translatePosition} from './util.ts';
 import {Canvas} from 'canvas';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {expectToBeCloseToArray} from './test/util.ts';
@@ -190,6 +190,25 @@ describe('util', () => {
         expect(remapSaturate(1, 1, 0, 2, 3)).toBe(2);
         expect(remapSaturate(1, 0, 1, 3, 2)).toBe(2);
         expect(remapSaturate(1, 1, 0, 3, 2)).toBe(3);
+    });
+
+    test('translatePosition writes the translation in tile units into out, including a zero one', () => {
+        const tile = {tileID: new OverscaledTileID(0, 0, 0, 0, 0), tileSize: 512};
+        const out: [number, number] = [9, 9];
+
+        expect(translatePosition({bearingInRadians: 0, zoom: 0}, tile, [1, 2], 'map', false, out)).toBe(out);
+        expect(out).toEqual([16, 32]);
+
+        translatePosition({bearingInRadians: 0, zoom: 0}, tile, [0, 0], 'map', false, out);
+        expect(out).toEqual([0, 0]);
+    });
+
+    test('translatePosition rotates a viewport-anchored translation by the bearing', () => {
+        const tile = {tileID: new OverscaledTileID(0, 0, 0, 0, 0), tileSize: 512};
+
+        const translation = translatePosition({bearingInRadians: Math.PI / 2, zoom: 0}, tile, [1, 0], 'viewport');
+
+        expectToBeCloseToArray(translation, [0, 16]);
     });
 });
 
