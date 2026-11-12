@@ -18,7 +18,7 @@ import {Bounds} from '../geo/bounds.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 
 import type Point from '@mapbox/point-geometry';
-import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
 import type {SourceFeatureState} from '../source/source_state.ts';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
@@ -169,7 +169,6 @@ export class FeatureIndex {
             previousIndex = index;
 
             const match = this.featureIndexArray.get(index);
-            let featureGeometry = null;
             this.loadMatchingFeature(
                 result,
                 match.bucketIndex,
@@ -182,14 +181,12 @@ export class FeatureIndex {
                 serializedLayers,
                 args.worldCoordinateHelper,
                 sourceFeatureState,
-                (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
-                    featureGeometry ||= loadGeometry(feature);
-
+                (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState, geometry: Point[][]) => {
                     return styleLayer.queryIntersectsFeature({
                         queryGeometry,
                         feature,
                         featureState,
-                        geometry: featureGeometry,
+                        geometry,
                         zoom: this.z,
                         projectedCamera: args.projectedCamera,
                         pixelsToTileUnits,
@@ -219,7 +216,7 @@ export class FeatureIndex {
             feature: VectorTileFeatureLike,
             styleLayer: StyleLayer,
             featureState: any,
-            id: string | number | void
+            geometry: Point[][]
         ) => boolean | number): void {
 
         const layerIDs = this.bucketLayerIDs[bucketIndex];
@@ -230,14 +227,23 @@ export class FeatureIndex {
         const sourceLayer = this.vtLayers[sourceLayerName];
         const feature = sourceLayer.feature(featureIndex);
 
+        let geometry: Point[][] | undefined;
         if (filter.needGeometry) {
             const evaluationFeature = toEvaluationFeature(feature, true);
             if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), evaluationFeature, this.tileID.canonical)) {
                 return;
             }
+            geometry = evaluationFeature.geometry;
         } else if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), feature)) {
             return;
         }
+        const getGeometry = () => geometry ||= loadGeometry(feature);
+        const featureWithGeometry: Feature = {
+            type: feature.type,
+            id: feature.id,
+            properties: feature.properties,
+            get geometry() { return getGeometry(); }
+        };
 
         const id = this.getId(feature, sourceLayerName);
 
@@ -259,10 +265,10 @@ export class FeatureIndex {
 
             const serializedLayer = extend({}, serializedLayers[layerID]);
 
-            serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, feature, featureState, availableImages);
-            serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, feature, featureState, availableImages);
+            serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, featureWithGeometry, featureState, this.tileID.canonical, availableImages);
+            serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, featureWithGeometry, featureState, this.tileID.canonical, availableImages);
 
-            const intersectionZ = !intersectionTest || intersectionTest(feature, styleLayer, featureState);
+            const intersectionZ = !intersectionTest || intersectionTest(feature, styleLayer, featureState, getGeometry());
             if (!intersectionZ) {
                 // Only applied for non-symbol features
                 continue;
@@ -365,6 +371,10 @@ function needsEvaluating(value: unknown): value is PossiblyEvaluatedPropertyValu
  *
  * A property the layer does not carry as a possibly-evaluated value, or one that is already a plain
  * value, is passed through as it is.
+ *
+ * The feature carries its geometry and the tile is passed as `canonical`, because `within` and
+ * `distance` need both, as they do when the bucket evaluates the feature. The geometry is a getter,
+ * so it is only decoded for expressions that read it.
  */
 
 function evaluateProperties<Props, PossiblyEvaluatedProps>(
@@ -372,13 +382,14 @@ function evaluateProperties<Props, PossiblyEvaluatedProps>(
     styleLayerProperties: PossiblyEvaluated<Props, PossiblyEvaluatedProps> | unknown,
     feature: Feature,
     featureState: FeatureState,
+    canonical: CanonicalTileID,
     availableImages: string[]
 ): Record<string, unknown> {
     return mapObject(serializedProperties, (_property, key) => {
         const value = styleLayerProperties instanceof PossiblyEvaluated ?
             styleLayerProperties.get(key as keyof PossiblyEvaluatedProps) :
             null;
-        return needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value;
+        return needsEvaluating(value) ? value.evaluate(feature, featureState, canonical, availableImages) : value;
     });
 }
 
