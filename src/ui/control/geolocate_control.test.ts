@@ -1,7 +1,7 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} from 'vitest';
 import geolocation from 'mock-geolocation';
 import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
-import {createMap, beforeMapTest, sleep, serializeStyle} from '../../util/test/util.ts';
+import {createMap, beforeMapTest, sleep} from '../../util/test/util.ts';
 import {GeolocateControl} from './geolocate_control.ts';
 vi.mock(import('../../util/geolocation_support'), () => (
     {
@@ -871,7 +871,7 @@ describe('GeolocateControl with no options', () => {
         geolocation.send({latitude: 10, longitude: 20, accuracy: 20});
         map.zoomTo(20, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe(serializeStyle('width', '19063.56px'));
+        expect(geolocate._circleElement.style.width).toBe('19063.6px');
         zoomendPromise = map.once('zoomend');
         map.zoomTo(18, {duration: 0});
         await zoomendPromise;
