@@ -13,7 +13,7 @@ import {createProjectionFromName} from '../geo/projection/projection_factory.ts'
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {getBearing, getPitch, getRoll} from '../geo/camera_view_state.ts';
 import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
-import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {resize, setCenter, setElevation, setMaxPitch, setMaxZoom, setMinZoom, setPitch, setZoom} from '../geo/projection/camera_updates.ts';
 import {getCameraMotions} from '../geo/projection/camera_motions_factory.ts';
 import {usesGlobeControls} from '../geo/projection/camera_context.ts';
 import Point from '@mapbox/point-geometry';
@@ -69,11 +69,11 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
 function createPivotCamera(terrain: Terrain = null): {camera: Camera; state: CameraViewState} {
     const {camera} = createCamera({maxZoom: 22, maxPitch: 85, renderWorldCopies: true, terrain});
     const {context} = camera;
-    let view = cameraUpdates.resize(camera.renderedState, context, 800, 600, true);
-    view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
-    view = cameraUpdates.setZoom(view, context, 12);
-    view = cameraUpdates.setElevation(view, context, 500);
-    view = cameraUpdates.setPitch(view, 60);
+    let view = resize(camera.renderedState, context, 800, 600, true);
+    view = setCenter(view, context, new LngLat(0, 0));
+    view = setZoom(view, context, 12);
+    view = setElevation(view, context, 500);
+    view = setPitch(view, 60);
     return {camera, state: view};
 }
 
@@ -2017,7 +2017,7 @@ describe('flyTo', () => {
 
     test('flight arc does not zoom below transform minZoom when only map setMinZoom is used', async () => {
         const {camera, queue} = createCamera(null, false, {zoom: 20});
-        camera.applyStateChange((view, context) => cameraUpdates.setMinZoom(view, context, 10));
+        camera.applyStateChange((view, context) => setMinZoom(view, context, 10));
         const stub = vi.spyOn(timeControl, 'now');
 
         const mapMinZoom = 10;
@@ -2768,8 +2768,8 @@ describe('migrateProjection', () => {
     test('moves the camera to the new projection', () => {
         const {camera} = createCamera({transformCameraUpdate: ({center, zoom}) => ({center, zoom})});
         const stateBeforeMigration = camera.getStateForUpdate();
-        const zoomed = cameraUpdates.setZoom(stateBeforeMigration, camera.context, 5);
-        camera.applyUpdatedState(cameraUpdates.setCenter(zoomed, camera.context, new LngLat(10, 20)));
+        const zoomed = setZoom(stateBeforeMigration, camera.context, 5);
+        camera.applyUpdatedState(setCenter(zoomed, camera.context, new LngLat(10, 20)));
 
         const {projection, cameraProjection} = createProjectionFromName('globe', {});
         camera.migrateProjection(cameraProjection, projection.worldCoordinateHelper);
@@ -3920,7 +3920,7 @@ describe('flyTo globe projection', () => {
 
         test('flight arc does not zoom below transform minZoom when only map setMinZoom is used (globe projection)', async () => {
             const {camera, queue} = createCamera(null, true, {zoom: 20});
-            camera.applyStateChange((view, context) => cameraUpdates.setMinZoom(view, context, 10));
+            camera.applyStateChange((view, context) => setMinZoom(view, context, 10));
             const stub = vi.spyOn(timeControl, 'now');
 
             const mapMinZoom = 10;
@@ -3943,8 +3943,8 @@ describe('flyTo globe projection', () => {
 
         test('respects transform\'s maxZoom', async () => {
             const {camera, queue} = createCamera(null, true);
-            camera.applyStateChange((view, context) => cameraUpdates.setMinZoom(view, context, 2));
-            camera.applyStateChange((view, context) => cameraUpdates.setMaxZoom(view, context, 10));
+            camera.applyStateChange((view, context) => setMinZoom(view, context, 2));
+            camera.applyStateChange((view, context) => setMaxZoom(view, context, 10));
 
             const promise = camera.once('moveend');
 
@@ -4188,10 +4188,10 @@ describe('orbitRotationPivot', () => {
         const terrain = createDEMTerrain([new OverscaledTileID(0, 0, 0, 0, 0)], createDEM(() => 3000));
         const {camera} = createCamera({maxZoom: 22, maxPitch: 85, renderWorldCopies: true, terrain}, true);
         const {context} = camera;
-        let view = cameraUpdates.resize(camera.renderedState, context, 800, 600, true);
-        view = cameraUpdates.setCenter(view, context, new LngLat(10, 45));
-        view = cameraUpdates.setZoom(view, context, 10);
-        view = cameraUpdates.setPitch(view, 60);
+        let view = resize(camera.renderedState, context, 800, 600, true);
+        view = setCenter(view, context, new LngLat(10, 45));
+        view = setZoom(view, context, 10);
+        view = setPitch(view, 60);
         const pivot = camera.captureRotationPivot(camera._projectState(view), new Point(570, 370));
 
         const turned = camera.orbitRotationPivot(view, pivot, turnBy({bearingDelta: 30, pitchDelta: -20})).state;
@@ -4206,7 +4206,7 @@ describe('orbitRotationPivot', () => {
 
     test('keeps the pivot at its screen point where the zoom is at its limit', () => {
         const {camera, state: atZoom12} = createPivotCamera();
-        const view = cameraUpdates.setZoom(atZoom12, camera.context, 22);
+        const view = setZoom(atZoom12, camera.context, 22);
         const pivot = camera.captureRotationPivot(camera._projectState(view), new Point(570, 370));
 
         const turned = camera.orbitRotationPivot(view, pivot, turnBy({bearingDelta: 30, pitchDelta: -20})).state;
@@ -4232,7 +4232,7 @@ describe('orbitRotationPivot', () => {
 
     test('keeps only the change of bearing of a frame that would make the camera look up', () => {
         const {camera, state: upTo85} = createPivotCamera();
-        const view = cameraUpdates.setMaxPitch(upTo85, 180);
+        const view = setMaxPitch(upTo85, 180);
         const pivot = camera.captureRotationPivot(camera._projectState(view), new Point(500, 550));
 
         const turned = camera.orbitRotationPivot(view, pivot, turnBy({bearingDelta: 10, pitchDelta: 40})).state;
@@ -4245,7 +4245,7 @@ describe('orbitRotationPivot', () => {
 
     test('turns the camera in place around the center for a point in the sky, also to where it looks up', () => {
         const {camera, state: atPitch60} = createPivotCamera();
-        const view = cameraUpdates.setPitch(cameraUpdates.setMaxPitch(atPitch60, 180), 85);
+        const view = setPitch(setMaxPitch(atPitch60, 180), 85);
         const pivot = camera.captureRotationPivot(camera._projectState(view), new Point(400, 0));
 
         const turned = camera.orbitRotationPivot(view, pivot, turnBy({bearingDelta: 10, pitchDelta: 10})).state;
@@ -4258,7 +4258,7 @@ describe('orbitRotationPivot', () => {
 
     test('turns the camera in place where the edge of the map keeps the pivot from its screen point', () => {
         const {camera, state: atZoom12} = createPivotCamera();
-        const view = cameraUpdates.setZoom(atZoom12, camera.context, 1);
+        const view = setZoom(atZoom12, camera.context, 1);
         const pivot = camera.captureRotationPivot(camera._projectState(view), new Point(700, 100));
 
         const {state: turned, held} = camera.orbitRotationPivot(view, pivot, turnBy({bearingDelta: 60}));

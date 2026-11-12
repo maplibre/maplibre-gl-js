@@ -8,7 +8,7 @@ import {createCameraViewState} from '../../geo/camera_view_state.ts';
 import {getCameraMath} from '../../geo/projection/camera_math_factory.ts';
 import {projectCamera} from '../../geo/projection/project_camera.ts';
 import {getCameraPoint} from '../../geo/projected_camera.ts';
-import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
+import {setPitch, setZoom} from '../../geo/projection/camera_updates.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {AttributionControl, defaultAttributionControlOptions} from '../control/attribution_control.ts';
 import {ImageRequest} from '../../util/image_request.ts';
@@ -1538,7 +1538,7 @@ describe('Terrain changing under and around a gesture', () => {
 
     test('a pitch drag that brings a narrow ridge under the middle of the near clipping plane lifts the plane over the ridge', async () => {
         const {map, frame} = await createMapOverFlatTerrain({zoom: 12, pitch: 55, maxPitch: 85}, 0);
-        const atTheDragsEnd = projectCamera(cameraUpdates.setPitch(map._camera.renderedState, 60), map._camera.context);
+        const atTheDragsEnd = projectCamera(setPitch(map._camera.renderedState, 60), map._camera.context);
         const corners = getCameraMath(atTheDragsEnd).getCameraFrustum(atTheDragsEnd).points.slice(0, 4);
         const middle = new MercatorCoordinate(corners.reduce((sum, c) => sum + c[0], 0) / 4, corners.reduce((sum, c) => sum + c[1], 0) / 4).toLngLat();
         const middleAltitude = corners.reduce((sum, c) => sum + c[2], 0) / 4;
@@ -1631,7 +1631,7 @@ describe('Terrain changing under and around a gesture', () => {
         const cliffSouthEdge = -0.01;
         setTerrainHeight(map, (_lng, lat) => lat < cliffSouthEdge ? 3000 : 0, 0, 3000);
         const {context} = map._camera;
-        const asked = projectCamera(cameraUpdates.setPitch(cameraUpdates.setZoom(map._camera.renderedState, context, 13.5), 60), context);
+        const asked = projectCamera(setPitch(setZoom(map._camera.renderedState, context, 13.5), 60), context);
 
         map.jumpTo({zoom: 13.5, pitch: 60});
 

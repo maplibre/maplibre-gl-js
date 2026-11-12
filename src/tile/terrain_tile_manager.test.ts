@@ -9,7 +9,7 @@ import {Tile} from './tile.ts';
 import {createCameraContext} from '../geo/projection/camera_context.ts';
 import {createCameraViewState} from '../geo/camera_view_state.ts';
 import {projectCamera} from '../geo/projection/project_camera.ts';
-import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {resize, setCenter, setZoom} from '../geo/projection/camera_updates.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {StubMap, beforeMapTest, createMap} from '../util/test/util.ts';
 import {TileManager} from './tile_manager.ts';
@@ -153,9 +153,9 @@ describe('TerrainTileManager', () => {
             const manager = new TerrainTileManager(style.tileManagers.terrain);
             const context = createCameraContext();
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 512, 512);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-46, -6));
-            view = cameraUpdates.setZoom(view, context, 8);
+            view = resize(view, context, 512, 512);
+            view = setCenter(view, context, new LngLat(-46, -6));
+            view = setZoom(view, context, 8);
             const renderableKeys = () => manager.getRenderableTiles().map(tile => tile.tileID.key);
 
             expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(true);
@@ -165,7 +165,7 @@ describe('TerrainTileManager', () => {
             expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(false);
             expect(renderableKeys()).toEqual(keys);
 
-            view = cameraUpdates.setZoom(view, context, 9);
+            view = setZoom(view, context, 9);
             expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(true);
             expect(renderableKeys()).not.toEqual(keys);
         });

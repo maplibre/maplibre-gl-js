@@ -7,7 +7,7 @@ import {Evented} from '../evented.ts';
 import {createCameraViewState} from '../../geo/camera_view_state.ts';
 import {createCameraContext} from '../../geo/projection/camera_context.ts';
 import {projectCamera} from '../../geo/projection/project_camera.ts';
-import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
+import {resize, setBearing, setCenter, setElevation, setFov, setPadding, setPitch, setRoll, setZoom} from '../../geo/projection/camera_updates.ts';
 import {LngLat, type LngLatLike} from '../../geo/lng_lat.ts';
 import {CRSWorldCoordinateHelper, identityCrs, type CRS} from '../../geo/projection/crs.ts';
 import {RequestManager} from '../request_manager.ts';
@@ -458,15 +458,15 @@ export type TestCamera = {
 export function createTestCamera(options: TestCameraOptions = {}, contextOptions: Partial<CameraContext> = {}): TestCamera {
     const context = createCameraContext(contextOptions);
     let view = createCameraViewState(options);
-    if (options.width !== undefined || options.height !== undefined) view = cameraUpdates.resize(view, context, options.width ?? 0, options.height ?? 0);
-    if (options.zoom !== undefined) view = cameraUpdates.setZoom(view, context, options.zoom);
-    if (options.center !== undefined) view = cameraUpdates.setCenter(view, context, LngLat.convert(options.center));
-    if (options.elevation !== undefined) view = cameraUpdates.setElevation(view, context, options.elevation);
-    if (options.pitch !== undefined) view = cameraUpdates.setPitch(view, options.pitch);
-    if (options.bearing !== undefined) view = cameraUpdates.setBearing(view, options.bearing);
-    if (options.roll !== undefined) view = cameraUpdates.setRoll(view, options.roll);
-    if (options.fov !== undefined) view = cameraUpdates.setFov(view, options.fov);
-    if (options.padding !== undefined) view = cameraUpdates.setPadding(view, context, options.padding);
+    if (options.width !== undefined || options.height !== undefined) view = resize(view, context, options.width ?? 0, options.height ?? 0);
+    if (options.zoom !== undefined) view = setZoom(view, context, options.zoom);
+    if (options.center !== undefined) view = setCenter(view, context, LngLat.convert(options.center));
+    if (options.elevation !== undefined) view = setElevation(view, context, options.elevation);
+    if (options.pitch !== undefined) view = setPitch(view, options.pitch);
+    if (options.bearing !== undefined) view = setBearing(view, options.bearing);
+    if (options.roll !== undefined) view = setRoll(view, options.roll);
+    if (options.fov !== undefined) view = setFov(view, options.fov);
+    if (options.padding !== undefined) view = setPadding(view, context, options.padding);
     return {state: view, context, projectedCamera: projectCamera(view, context)};
 }
 

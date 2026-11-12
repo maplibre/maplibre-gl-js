@@ -10,7 +10,7 @@ import {createCameraContext} from './camera_context.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 import {projectCamera} from './project_camera.ts';
 import {getCameraPoint} from '../projected_camera.ts';
-import * as cameraUpdates from './camera_updates.ts';
+import {resize, setBearing, setCenter, setPitch, setRoll, setZoom} from './camera_updates.ts';
 import {getCameraSolver} from './camera_solver_factory.ts';
 
 import type {CameraViewState} from '../camera_view_state.ts';
@@ -22,9 +22,9 @@ function createContext(): CameraContext {
 
 /** A 512 x 512 vertical perspective camera, centered on `center` before it is zoomed to `zoom`. */
 function createCenteredState(context: CameraContext, center: LngLat, zoom: number): CameraViewState {
-    let view = cameraUpdates.resize(createCameraViewState(), context, 512, 512);
-    view = cameraUpdates.setCenter(view, context, center);
-    return cameraUpdates.setZoom(view, context, zoom);
+    let view = resize(createCameraViewState(), context, 512, 512);
+    view = setCenter(view, context, center);
+    return setZoom(view, context, zoom);
 }
 
 describe('screenTerrainPointToMercatorCoordinate', () => {
@@ -154,13 +154,13 @@ describe('camera position', () => {
         expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lng).toBeCloseTo(8, 6);
         expect(getCameraMath(projectedCamera).getCameraLngLat(projectedCamera, context.worldCoordinateHelper).lat).toBeCloseTo(28.7359793, 6);
 
-        const bearing90 = cameraUpdates.setBearing(view, 90);
+        const bearing90 = setBearing(view, 90);
         const turned = projectCamera(bearing90, context);
         expect(getCameraMath(turned).getCameraLngLat(turned, context.worldCoordinateHelper).lng).toBeCloseTo(-17.8225358, 6);
         expect(getCameraMath(turned).getCameraLngLat(turned, context.worldCoordinateHelper).lat).toBeCloseTo(43.9881758, 6);
         expect(getCameraMath(turned).getCameraAltitude(turned)).toBeCloseTo(1917203.7524, 3);
 
-        const rolled = projectCamera(cameraUpdates.setRoll(bearing90, 31), context);
+        const rolled = projectCamera(setRoll(bearing90, 31), context);
         expect(getCameraMath(rolled).getCameraLngLat(rolled, context.worldCoordinateHelper).lng).toBeCloseTo(-17.8225358, 6);
         expect(getCameraMath(rolled).getCameraLngLat(rolled, context.worldCoordinateHelper).lat).toBeCloseTo(43.9881758, 6);
         expect(getCameraMath(rolled).getCameraAltitude(rolled)).toBeCloseTo(1917203.7524, 3);
@@ -228,9 +228,9 @@ describe('calculateCameraOptionsFromTo', () => {
         expect(cameraOptions.zoom).toBeCloseTo(4.9929031, 6);
         expect(cameraOptions.bearing).toBeCloseTo(0, 6);
 
-        let lifted = cameraUpdates.setZoom(view, context, cameraOptions.zoom);
-        lifted = cameraUpdates.setPitch(lifted, cameraOptions.pitch);
-        lifted = cameraUpdates.setBearing(lifted, cameraOptions.bearing);
+        let lifted = setZoom(view, context, cameraOptions.zoom);
+        lifted = setPitch(lifted, cameraOptions.pitch);
+        lifted = setBearing(lifted, cameraOptions.bearing);
         const liftedCamera = projectCamera(lifted, context);
         expect(getCameraMath(liftedCamera).getCameraAltitude(liftedCamera)).toBeCloseTo(0, 3);
     });
@@ -239,12 +239,12 @@ describe('calculateCameraOptionsFromTo', () => {
 describe('isLocationOccluded', () => {
     test('a location just past the horizon is hidden on the ground and in view once raised above the horizon plane', () => {
         const context = createContext();
-        let view = cameraUpdates.resize(createCameraViewState(), context, 512, 512);
+        let view = resize(createCameraViewState(), context, 512, 512);
         const oneEarthRadiusAboveTheEquator = getCameraSolver(context).calculateCameraOptionsFromTo(view, context, new LngLat(0, 0), earthRadius, new LngLat(0, 0.001), 0);
-        view = cameraUpdates.setCenter(view, context, oneEarthRadiusAboveTheEquator.center);
-        view = cameraUpdates.setZoom(view, context, oneEarthRadiusAboveTheEquator.zoom);
-        view = cameraUpdates.setPitch(view, oneEarthRadiusAboveTheEquator.pitch);
-        view = cameraUpdates.setBearing(view, oneEarthRadiusAboveTheEquator.bearing);
+        view = setCenter(view, context, oneEarthRadiusAboveTheEquator.center);
+        view = setZoom(view, context, oneEarthRadiusAboveTheEquator.zoom);
+        view = setPitch(view, oneEarthRadiusAboveTheEquator.pitch);
+        view = setBearing(view, oneEarthRadiusAboveTheEquator.bearing);
         const projectedCamera = projectCamera(view, context);
         const justPastTheSixtyDegreeHorizon = new LngLat(0, 60.03);
         const highEnoughToClearTheHorizonPlane = 8000;
@@ -258,7 +258,7 @@ describe('isLocationOccluded', () => {
         const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
         const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
         const context = createContext();
-        const view = cameraUpdates.setPitch(createCenteredState(context, new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25), 12), 75);
+        const view = setPitch(createCenteredState(context, new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25), 12), 75);
         const projectedCamera = projectCamera(view, context);
         const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
         const inFrontOfRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.3);
@@ -272,7 +272,7 @@ describe('isLocationOccluded', () => {
         const ridgeAcrossTheTwoMiddleRows = createDEM((_x, y) => (y === 3 || y === 4) ? 3000 : 0);
         const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], ridgeAcrossTheTwoMiddleRows);
         const context = createContext();
-        const view = cameraUpdates.setPitch(createCenteredState(context, new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25), 12), 75);
+        const view = setPitch(createCenteredState(context, new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25), 12), 75);
         const projectedCamera = projectCamera(view, context);
         const behindRidge = new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.8);
         const elevationAboveRidge = 3500;
@@ -284,7 +284,7 @@ describe('isLocationOccluded', () => {
         const tileSpanAtZoom12 = 360 / (1 << 12);
         const terrain = createDEMTerrain([new OverscaledTileID(12, 0, 12, 2048, 2047)], createDEM(() => 0));
         const context = createContext();
-        const view = cameraUpdates.setPitch(createCenteredState(context, new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25), 12), 75);
+        const view = setPitch(createCenteredState(context, new LngLat(tileSpanAtZoom12 / 2, tileSpanAtZoom12 * 0.25), 12), 75);
         const projectedCamera = projectCamera(view, context);
         const behindTheCamera = new LngLat(tileSpanAtZoom12 / 2, -tileSpanAtZoom12 * 2);
 
@@ -301,10 +301,10 @@ describe('isLocationOccluded', () => {
 
 test('resize does not constrain the center when told not to', () => {
     const context = createContext();
-    let view = cameraUpdates.setZoom(createCameraViewState(), context, 5);
-    view = cameraUpdates.setCenter(view, context, new LngLat(0, 89));
+    let view = setZoom(createCameraViewState(), context, 5);
+    view = setCenter(view, context, new LngLat(0, 89));
 
-    view = cameraUpdates.resize(view, context, 640, 480, false);
+    view = resize(view, context, 640, 480, false);
 
     expect(view.center.lat).toBe(89);
 });

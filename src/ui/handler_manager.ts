@@ -6,7 +6,7 @@ import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} 
 import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
 import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
-import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {setCenter} from '../geo/projection/camera_updates.ts';
 import {getCameraMotions} from '../geo/projection/camera_motions_factory.ts';
 import {usesGlobeControls} from '../geo/projection/camera_context.ts';
 
@@ -721,7 +721,7 @@ export class HandlerManager extends Evented<MapEventType> {
 
     /** Moves the center to the location `panDelta` pixels against the drag from it, on the plane at the center's elevation. */
     _panByPixels(view: CameraViewState, projectedCamera: ProjectedCamera, panDelta: Point): CameraViewState {
-        return cameraUpdates.setCenter(view, this._camera.context, getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, projectedCamera.centerPoint.sub(panDelta)));
+        return setCenter(view, this._camera.context, getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, projectedCamera.centerPoint.sub(panDelta)));
     }
 
     private _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean): void {

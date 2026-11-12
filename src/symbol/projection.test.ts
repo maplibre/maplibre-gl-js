@@ -8,7 +8,7 @@ import {LngLat} from '../geo/lng_lat.ts';
 import {expectToBeCloseToArray, createTestCamera} from '../util/test/util.ts';
 import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 import {projectCamera} from '../geo/projection/project_camera.ts';
-import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {setBearing, setPitch} from '../geo/projection/camera_updates.ts';
 
 import type {ProjectedCamera} from '../geo/projected_camera.ts';
 
@@ -284,14 +284,14 @@ describe('Find offset line intersections', () => {
         expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [0, 1], 9);
 
-        const pitched = cameraUpdates.setPitch(view, 90);
+        const pitched = setPitch(view, 90);
         const pitchedCamera = projectCamera(pitched, context);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecEast],
             [0, 0]);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecSouth],
             [0, 1], 9);
 
-        const turnedCamera = projectCamera(cameraUpdates.setBearing(pitched, 90), context);
+        const turnedCamera = projectCamera(setBearing(pitched, 90), context);
         expectToBeCloseToArray([...getTileSkewVectors(turnedCamera).vecEast],
             [0, 0]);
         expectToBeCloseToArray([...getTileSkewVectors(turnedCamera).vecSouth],
@@ -306,7 +306,7 @@ describe('Find offset line intersections', () => {
         expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [-0.7193379402160645, 0.6946603059768677], 9);
 
-        const pitchedCamera = projectCamera(cameraUpdates.setPitch(view, 90), context);
+        const pitchedCamera = projectCamera(setPitch(view, 90), context);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecEast],
             [-0.7071067690849304, 0.7071067690849304]);
         expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecSouth],

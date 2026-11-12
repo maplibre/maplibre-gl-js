@@ -4,19 +4,19 @@ import {coveringTiles} from './covering_tiles.ts';
 import {createCameraViewState} from '../camera_view_state.ts';
 import {createCameraContext, type CameraProjectionKind} from './camera_context.ts';
 import {projectCamera} from './project_camera.ts';
-import * as cameraUpdates from './camera_updates.ts';
+import {resize, setCenter, setMaxPitch, setPitch, setZoom} from './camera_updates.ts';
 
 function coverWithPitch(projection: CameraProjectionKind, pitch: number): void {
     const context = createCameraContext({projection});
     let view = createCameraViewState();
-    view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
-    view = cameraUpdates.setZoom(view, context, 4);
-    view = cameraUpdates.resize(view, context, 4096, 4096, true);
-    view = cameraUpdates.setMaxPitch(view, pitch);
-    view = cameraUpdates.setPitch(view, pitch);
+    view = setCenter(view, context, new LngLat(0, 0));
+    view = setZoom(view, context, 4);
+    view = resize(view, context, 4096, 4096, true);
+    view = setMaxPitch(view, pitch);
+    view = setPitch(view, pitch);
 
     for (let i = 0; i < 40; i++) {
-        view = cameraUpdates.setCenter(view, context, new LngLat(i * 0.2, 0));
+        view = setCenter(view, context, new LngLat(i * 0.2, 0));
         coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
             tileSize: 256,
         });

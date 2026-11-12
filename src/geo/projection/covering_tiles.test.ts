@@ -7,7 +7,7 @@ import {createIdentityCrsCamera} from '../../util/test/util.ts';
 import {createCameraContext} from './camera_context.ts';
 import {createCameraViewState, type CameraViewState} from '../camera_view_state.ts';
 import {projectCamera} from './project_camera.ts';
-import * as cameraUpdates from './camera_updates.ts';
+import {resize, setBearing, setCenter, setElevation, setFov, setMaxPitch, setPadding, setPitch, setRenderWorldCopies, setZoom} from './camera_updates.ts';
 
 describe('coveringTiles', () => {
     describe('globe', () => {
@@ -15,9 +15,9 @@ describe('coveringTiles', () => {
         test('zoomed out', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setCenter(view, context, new LngLat(0.0, 0.0));
-            view = cameraUpdates.setZoom(view, context, -1);
+            view = resize(view, context, 128, 128);
+            view = setCenter(view, context, new LngLat(0.0, 0.0));
+            view = setZoom(view, context, -1);
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -31,9 +31,9 @@ describe('coveringTiles', () => {
         test('zoomed in', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-0.02, 0.01));
-            view = cameraUpdates.setZoom(view, context, 3);
+            view = resize(view, context, 128, 128);
+            view = setCenter(view, context, new LngLat(-0.02, 0.01));
+            view = setZoom(view, context, 3);
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -50,9 +50,9 @@ describe('coveringTiles', () => {
         test('zoomed in 512x512', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 512, 512);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-0.02, 0.01));
-            view = cameraUpdates.setZoom(view, context, 3);
+            view = resize(view, context, 512, 512);
+            view = setCenter(view, context, new LngLat(-0.02, 0.01));
+            view = setZoom(view, context, 3);
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -73,11 +73,11 @@ describe('coveringTiles', () => {
         test('pitched', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-0.002, 0.001));
-            view = cameraUpdates.setZoom(view, context, 8);
-            view = cameraUpdates.setMaxPitch(view, 80);
-            view = cameraUpdates.setPitch(view, 80);
+            view = resize(view, context, 128, 128);
+            view = setCenter(view, context, new LngLat(-0.002, 0.001));
+            view = setZoom(view, context, 8);
+            view = setMaxPitch(view, 80);
+            view = setPitch(view, 80);
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -96,12 +96,12 @@ describe('coveringTiles', () => {
         test('pitched+rotated', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-0.002, 0.001));
-            view = cameraUpdates.setZoom(view, context, 8);
-            view = cameraUpdates.setMaxPitch(view, 80);
-            view = cameraUpdates.setPitch(view, 80);
-            view = cameraUpdates.setBearing(view, 45);
+            view = resize(view, context, 128, 128);
+            view = setCenter(view, context, new LngLat(-0.002, 0.001));
+            view = setZoom(view, context, 8);
+            view = setMaxPitch(view, 80);
+            view = setPitch(view, 80);
+            view = setBearing(view, 45);
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -120,12 +120,12 @@ describe('coveringTiles', () => {
         test('tile zoom stays at the nominal zoom for a distant pitched camera', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 2560, 1265);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-140, -52));
-            view = cameraUpdates.setZoom(view, context, 5.66);
-            view = cameraUpdates.setMaxPitch(view, 60);
-            view = cameraUpdates.setPitch(view, 60);
-            view = cameraUpdates.setFov(view, 15);
+            view = resize(view, context, 2560, 1265);
+            view = setCenter(view, context, new LngLat(-140, -52));
+            view = setZoom(view, context, 5.66);
+            view = setMaxPitch(view, 60);
+            view = setPitch(view, 60);
+            view = setFov(view, 15);
 
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {tileSize: 512});
             const nominalZ = coveringZoomLevel(projectCamera(view, context), {tileSize: 512});
@@ -139,12 +139,12 @@ describe('coveringTiles', () => {
         test('tile zoom stays at the nominal zoom for a distant camera with a narrow field of view', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 2560, 1265);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-140, 0));
-            view = cameraUpdates.setZoom(view, context, 5.5);
-            view = cameraUpdates.setMaxPitch(view, 60);
-            view = cameraUpdates.setPitch(view, 15);
-            view = cameraUpdates.setFov(view, 5);
+            view = resize(view, context, 2560, 1265);
+            view = setCenter(view, context, new LngLat(-140, 0));
+            view = setZoom(view, context, 5.5);
+            view = setMaxPitch(view, 60);
+            view = setPitch(view, 15);
+            view = setFov(view, 5);
 
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {tileSize: 512});
             const nominalZ = coveringZoomLevel(projectCamera(view, context), {tileSize: 512});
@@ -158,9 +158,9 @@ describe('coveringTiles', () => {
         test('antimeridian1', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setCenter(view, context, new LngLat(179.99, -0.001));
-            view = cameraUpdates.setZoom(view, context, 5);
+            view = resize(view, context, 128, 128);
+            view = setCenter(view, context, new LngLat(179.99, -0.001));
+            view = setZoom(view, context, 5);
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -177,9 +177,9 @@ describe('coveringTiles', () => {
         test('antimeridian2', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-179.99, 0.001));
-            view = cameraUpdates.setZoom(view, context, 5);
+            view = resize(view, context, 128, 128);
+            view = setCenter(view, context, new LngLat(-179.99, 0.001));
+            view = setZoom(view, context, 5);
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -196,9 +196,9 @@ describe('coveringTiles', () => {
         test('zoom < 0', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setCenter(view, context, new LngLat(0.0, 80.0));
-            view = cameraUpdates.setZoom(view, context, -0.5);
+            view = resize(view, context, 128, 128);
+            view = setCenter(view, context, new LngLat(0.0, 80.0));
+            view = setZoom(view, context, -0.5);
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -215,10 +215,10 @@ describe('coveringTiles', () => {
         test('zoom = 11', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setPitch(view, 0);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-179.73, -0.087));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setPitch(view, 0);
+            view = setCenter(view, context, new LngLat(-179.73, -0.087));
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -235,10 +235,10 @@ describe('coveringTiles', () => {
         test('zoom = 11, mid lat', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setPitch(view, 0);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-179.73, 60.02));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setPitch(view, 0);
+            view = setCenter(view, context, new LngLat(-179.73, 60.02));
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -255,10 +255,10 @@ describe('coveringTiles', () => {
         test('zoom = 11, high lat', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setPitch(view, 0);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-179.73, 85.028));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setPitch(view, 0);
+            view = setCenter(view, context, new LngLat(-179.73, 85.028));
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -275,10 +275,10 @@ describe('coveringTiles', () => {
         test('zoom = 11, mid lat, mid lng', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setPitch(view, 0);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-58.97, 60.02));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setPitch(view, 0);
+            view = setCenter(view, context, new LngLat(-58.97, 60.02));
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -295,10 +295,10 @@ describe('coveringTiles', () => {
         test('zoom = 11, mid lng', () => {
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setPitch(view, 0);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-58.97, -0.087));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setPitch(view, 0);
+            view = setCenter(view, context, new LngLat(-58.97, -0.087));
     
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
                 tileSize: 512,
@@ -323,10 +323,10 @@ describe('coveringTiles', () => {
 
                 const context = createCameraContext({projection: 'globe'});
                 let view = createCameraViewState();
-                view = cameraUpdates.resize(view, context, 128, 128);
-                view = cameraUpdates.setZoom(view, context, 11);
-                view = cameraUpdates.setCenter(view, context, new LngLat(0.021, 0.0915));
-                view = cameraUpdates.setElevation(view, context, 20000);
+                view = resize(view, context, 128, 128);
+                view = setZoom(view, context, 11);
+                view = setCenter(view, context, new LngLat(0.021, 0.0915));
+                view = setElevation(view, context, 20000);
 
                 expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                     new OverscaledTileID(11, 0, 11, 1024, 1023),
@@ -346,12 +346,12 @@ describe('coveringTiles', () => {
 
                     const context = createCameraContext({projection: 'globe'});
                     let view = createCameraViewState();
-                    view = cameraUpdates.resize(view, context, 128, 128);
-                    view = cameraUpdates.setZoom(view, context, 11);
-                    view = cameraUpdates.setPitch(view, 70);
-                    view = cameraUpdates.setBearing(view, 0);
-                    view = cameraUpdates.setCenter(view, context, new LngLat(0.021, 0.0915));
-                    view = cameraUpdates.setElevation(view, context, 20000);
+                    view = resize(view, context, 128, 128);
+                    view = setZoom(view, context, 11);
+                    view = setPitch(view, 70);
+                    view = setBearing(view, 0);
+                    view = setCenter(view, context, new LngLat(0.021, 0.0915));
+                    view = setElevation(view, context, 20000);
 
                     expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                         new OverscaledTileID(11, 0, 11, 1023, 1023),
@@ -372,12 +372,12 @@ describe('coveringTiles', () => {
 
                     const context = createCameraContext({projection: 'globe'});
                     let view = createCameraViewState();
-                    view = cameraUpdates.resize(view, context, 128, 128);
-                    view = cameraUpdates.setZoom(view, context, 11);
-                    view = cameraUpdates.setPitch(view, 70);
-                    view = cameraUpdates.setBearing(view, 90);
-                    view = cameraUpdates.setCenter(view, context, new LngLat(0.021, 0.0915));
-                    view = cameraUpdates.setElevation(view, context, 20000);
+                    view = resize(view, context, 128, 128);
+                    view = setZoom(view, context, 11);
+                    view = setPitch(view, 70);
+                    view = setBearing(view, 90);
+                    view = setCenter(view, context, new LngLat(0.021, 0.0915));
+                    view = setElevation(view, context, 20000);
 
                     expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                         new OverscaledTileID(11, 0, 11, 1024, 1023),
@@ -397,12 +397,12 @@ describe('coveringTiles', () => {
 
                     const context = createCameraContext({projection: 'globe'});
                     let view = createCameraViewState();
-                    view = cameraUpdates.resize(view, context, 128, 128);
-                    view = cameraUpdates.setZoom(view, context, 11);
-                    view = cameraUpdates.setPitch(view, 70);
-                    view = cameraUpdates.setBearing(view, 180);
-                    view = cameraUpdates.setCenter(view, context, new LngLat(0.021, 0.0915));
-                    view = cameraUpdates.setElevation(view, context, 20000);
+                    view = resize(view, context, 128, 128);
+                    view = setZoom(view, context, 11);
+                    view = setPitch(view, 70);
+                    view = setBearing(view, 180);
+                    view = setCenter(view, context, new LngLat(0.021, 0.0915));
+                    view = setElevation(view, context, 20000);
 
                     expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                         new OverscaledTileID(11, 0, 11, 1023, 1023),
@@ -423,12 +423,12 @@ describe('coveringTiles', () => {
 
                     const context = createCameraContext({projection: 'globe'});
                     let view = createCameraViewState();
-                    view = cameraUpdates.resize(view, context, 128, 128);
-                    view = cameraUpdates.setZoom(view, context, 11);
-                    view = cameraUpdates.setPitch(view, 70);
-                    view = cameraUpdates.setBearing(view, 270);
-                    view = cameraUpdates.setCenter(view, context, new LngLat(0.021, 0.0915));
-                    view = cameraUpdates.setElevation(view, context, 20000);
+                    view = resize(view, context, 128, 128);
+                    view = setZoom(view, context, 11);
+                    view = setPitch(view, 70);
+                    view = setBearing(view, 270);
+                    view = setCenter(view, context, new LngLat(0.021, 0.0915));
+                    view = setElevation(view, context, 20000);
 
                     expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                         new OverscaledTileID(10, 0, 10, 511, 511),
@@ -450,47 +450,47 @@ describe('coveringTiles', () => {
     
         const context = createCameraContext();
         let view = createCameraViewState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-        view = cameraUpdates.resize(view, context, 200, 200);
+        view = resize(view, context, 200, 200);
     
         test('general', () => {
     
             // make slightly off center so that sort order is not subject to precision issues
-            view = cameraUpdates.setCenter(view, context, new LngLat(-0.01, 0.01));
+            view = setCenter(view, context, new LngLat(-0.01, 0.01));
     
-            view = cameraUpdates.setZoom(view, context, 0);
+            view = setZoom(view, context, 0);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([]);
     
-            view = cameraUpdates.setZoom(view, context, 1);
+            view = setZoom(view, context, 1);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 1, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
                 new OverscaledTileID(1, 0, 1, 1, 1)]);
     
-            view = cameraUpdates.setZoom(view, context, 2.4);
+            view = setZoom(view, context, 2.4);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(2, 0, 2, 1, 1),
                 new OverscaledTileID(2, 0, 2, 2, 1),
                 new OverscaledTileID(2, 0, 2, 1, 2),
                 new OverscaledTileID(2, 0, 2, 2, 2)]);
     
-            view = cameraUpdates.setZoom(view, context, 10);
+            view = setZoom(view, context, 10);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
     
-            view = cameraUpdates.setZoom(view, context, 11);
+            view = setZoom(view, context, 11);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(10, 0, 10, 511, 511),
                 new OverscaledTileID(10, 0, 10, 512, 511),
                 new OverscaledTileID(10, 0, 10, 511, 512),
                 new OverscaledTileID(10, 0, 10, 512, 512)]);
     
-            view = cameraUpdates.resize(view, context, 2048, 128);
-            view = cameraUpdates.setZoom(view, context, 9);
-            view = cameraUpdates.setPadding(view, context, {top: 16});
+            view = resize(view, context, 2048, 128);
+            view = setZoom(view, context, 9);
+            view = setPadding(view, context, {top: 16});
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(9, 0, 9, 255, 255),
                 new OverscaledTileID(9, 0, 9, 256, 255),
@@ -503,12 +503,12 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(9, 0, 9, 253, 255),
                 new OverscaledTileID(9, 0, 9, 253, 256)]);
     
-            view = cameraUpdates.setPadding(view, context, {top: 0});
-            view = cameraUpdates.setZoom(view, context, 5.1);
-            view = cameraUpdates.setPitch(view, 60.0);
-            view = cameraUpdates.setBearing(view, 32.0);
-            view = cameraUpdates.setCenter(view, context, new LngLat(56.90, 48.20));
-            view = cameraUpdates.resize(view, context, 1024, 768);
+            view = setPadding(view, context, {top: 0});
+            view = setZoom(view, context, 5.1);
+            view = setPitch(view, 60.0);
+            view = setBearing(view, 32.0);
+            view = setCenter(view, context, new LngLat(56.90, 48.20));
+            view = resize(view, context, 1024, 768);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(5, 0, 5, 21, 11),
                 new OverscaledTileID(5, 0, 5, 20, 11),
@@ -533,11 +533,11 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(5, 0, 5, 22, 7)
             ]);
     
-            view = cameraUpdates.setZoom(view, context, 8);
-            view = cameraUpdates.setPitch(view, 85.0);
-            view = cameraUpdates.setBearing(view, 0.0);
-            view = cameraUpdates.setCenter(view, context, new LngLat(20.918, 39.232));
-            view = cameraUpdates.resize(view, context, 50, 1000);
+            view = setZoom(view, context, 8);
+            view = setPitch(view, 85.0);
+            view = setBearing(view, 0.0);
+            view = setCenter(view, context, new LngLat(20.918, 39.232));
+            view = resize(view, context, 50, 1000);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 142, 98),
                 new OverscaledTileID(7, 0, 7, 71, 48),
@@ -547,18 +547,18 @@ describe('coveringTiles', () => {
                 new OverscaledTileID(9, 0, 9, 285, 199)
             ]);
     
-            view = cameraUpdates.setZoom(view, context, 8);
-            view = cameraUpdates.setPitch(view, 60);
-            view = cameraUpdates.setBearing(view, 45.0);
-            view = cameraUpdates.setCenter(view, context, new LngLat(25.02, 60.15));
-            view = cameraUpdates.resize(view, context, 300, 50);
+            view = setZoom(view, context, 8);
+            view = setPitch(view, 60);
+            view = setBearing(view, 45.0);
+            view = setCenter(view, context, new LngLat(25.02, 60.15));
+            view = resize(view, context, 300, 50);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
                 new OverscaledTileID(8, 0, 8, 146, 74)
             ]);
     
-            view = cameraUpdates.resize(view, context, 50, 300);
+            view = resize(view, context, 50, 300);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(8, 0, 8, 145, 74),
                 new OverscaledTileID(8, 0, 8, 145, 73),
@@ -576,8 +576,8 @@ describe('coveringTiles', () => {
                     _distanceToCenter3D: number,
                     _cameraVerticalFOV: number) => { return 7; }
             };
-            view = cameraUpdates.resize(view, context, 50, 300);
-            view = cameraUpdates.setPitch(view, 70);
+            view = resize(view, context, 50, 300);
+            view = setPitch(view, 70);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, optionsWithCustomTileLoading)).toEqual([
                 new OverscaledTileID(7, 0, 7, 74, 36),
                 new OverscaledTileID(7, 0, 7, 73, 37),
@@ -639,11 +639,11 @@ describe('coveringTiles', () => {
         });
     
         test('calculates tile coverage at w > 0', () => {
-            view = cameraUpdates.setZoom(view, context, 2);
-            view = cameraUpdates.setPitch(view, 0);
-            view = cameraUpdates.setBearing(view, 0);
-            view = cameraUpdates.resize(view, context, 300, 300);
-            view = cameraUpdates.setCenter(view, context, new LngLat(630.01, 0.01));
+            view = setZoom(view, context, 2);
+            view = setPitch(view, 0);
+            view = setBearing(view, 0);
+            view = resize(view, context, 300, 300);
+            view = setCenter(view, context, new LngLat(630.01, 0.01));
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(2, 2, 2, 1, 1),
                 new OverscaledTileID(2, 2, 2, 1, 2),
@@ -653,7 +653,7 @@ describe('coveringTiles', () => {
         });
     
         test('calculates tile coverage at w = -1', () => {
-            view = cameraUpdates.setCenter(view, context, new LngLat(-360.01, 0.01));
+            view = setCenter(view, context, new LngLat(-360.01, 0.01));
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(2, -1, 2, 1, 1),
                 new OverscaledTileID(2, -1, 2, 1, 2),
@@ -663,8 +663,8 @@ describe('coveringTiles', () => {
         });
     
         test('calculates tile coverage across meridian', () => {
-            view = cameraUpdates.setZoom(view, context, 1);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-180.01, 0.01));
+            view = setZoom(view, context, 1);
+            view = setCenter(view, context, new LngLat(-180.01, 0.01));
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1),
@@ -674,9 +674,9 @@ describe('coveringTiles', () => {
         });
     
         test('only includes tiles for a single world, if renderWorldCopies is set to false', () => {
-            view = cameraUpdates.setZoom(view, context, 1);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-180.01, 0.01));
-            view = cameraUpdates.setRenderWorldCopies(view, context.worldCoordinateHelper, false);
+            view = setZoom(view, context, 1);
+            view = setCenter(view, context, new LngLat(-180.01, 0.01));
+            view = setRenderWorldCopies(view, context.worldCoordinateHelper, false);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(1, 0, 1, 0, 0),
                 new OverscaledTileID(1, 0, 1, 0, 1)
@@ -686,10 +686,10 @@ describe('coveringTiles', () => {
         test('only includes tiles for a single world over a non-wrapping CRS, even where a pitched view sees past its edge', () => {
             const context = createCameraContext({worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs)});
             let view = createCameraViewState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 512, 512);
-            view = cameraUpdates.setZoom(view, context, 1);
-            view = cameraUpdates.setPitch(view, 60);
-            view = cameraUpdates.setCenter(view, context, new LngLat(80, 0));
+            view = resize(view, context, 512, 512);
+            view = setZoom(view, context, 1);
+            view = setPitch(view, 60);
+            view = setCenter(view, context, new LngLat(80, 0));
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options);
             expect(tiles.length).toBeGreaterThan(0);
             expect(tiles.every((tileID) => tileID.wrap === 0)).toBe(true);
@@ -705,13 +705,13 @@ describe('coveringTiles', () => {
         
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 10, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 10, 400);
+            view = resize(view, context, 10, 400);
             // make slightly off center so that sort order is not subject to precision issues
-            view = cameraUpdates.setCenter(view, context, new LngLat(-0.01, 0.01));
-            view = cameraUpdates.setPitch(view, 85);
-            view = cameraUpdates.setFov(view, 10);
+            view = setCenter(view, context, new LngLat(-0.01, 0.01));
+            view = setPitch(view, 85);
+            view = setFov(view, 10);
         
-            view = cameraUpdates.setZoom(view, context, 10);
+            view = setZoom(view, context, 10);
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options);
             for (const tile of tiles) {
                 expect(tile.overscaledZ).toBeGreaterThanOrEqual(tile.canonical.z);
@@ -727,9 +727,9 @@ describe('coveringTiles', () => {
         
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 0, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 200, 200);
-            view = cameraUpdates.setCenter(view, context, new LngLat(0.01, 0.01));
-            view = cameraUpdates.setZoom(view, context, 8);
+            view = resize(view, context, 200, 200);
+            view = setCenter(view, context, new LngLat(0.01, 0.01));
+            view = setZoom(view, context, 8);
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(0, 0, 0, 0, 0)
             ]);
@@ -745,9 +745,9 @@ describe('coveringTiles', () => {
         
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-179.73, -0.087));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setCenter(view, context, new LngLat(-179.73, -0.087));
         
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1024)
@@ -764,9 +764,9 @@ describe('coveringTiles', () => {
         
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-179.73, 60.02));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setCenter(view, context, new LngLat(-179.73, 60.02));
         
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 594)
@@ -783,9 +783,9 @@ describe('coveringTiles', () => {
         
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-179.73, 85.028));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setCenter(view, context, new LngLat(-179.73, 85.028));
         
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1, 1)
@@ -802,9 +802,9 @@ describe('coveringTiles', () => {
         
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-58.97, 60.02));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setCenter(view, context, new LngLat(-58.97, 60.02));
         
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 594)
@@ -821,9 +821,9 @@ describe('coveringTiles', () => {
         
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-58.97, -0.087));
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setCenter(view, context, new LngLat(-58.97, -0.087));
         
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 688, 1024)
@@ -840,10 +840,10 @@ describe('coveringTiles', () => {
         
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 15, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-            view = cameraUpdates.resize(view, context, 128, 128);
-            view = cameraUpdates.setZoom(view, context, 11);
-            view = cameraUpdates.setCenter(view, context, new LngLat(0.03, 0.0915));
-            view = cameraUpdates.setElevation(view, context, 20000);
+            view = resize(view, context, 128, 128);
+            view = setZoom(view, context, 11);
+            view = setCenter(view, context, new LngLat(0.03, 0.0915));
+            view = setElevation(view, context, 20000);
 
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([
                 new OverscaledTileID(11, 0, 11, 1024, 1023),
@@ -862,16 +862,16 @@ describe('coveringTiles', () => {
 
         test('covers the root tile at zoom 0', () => {
             let {state: view, context} = createIdentityCrsCamera(200, 200);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-0.01, 0.01));
-            view = cameraUpdates.setZoom(view, context, 0);
+            view = setCenter(view, context, new LngLat(-0.01, 0.01));
+            view = setZoom(view, context, 0);
 
             expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options)).toEqual([new OverscaledTileID(0, 0, 0, 0, 0)]);
         });
 
         test('covers the four children of the root tile at zoom 1 around the center of the square', () => {
             let {state: view, context} = createIdentityCrsCamera(200, 200);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-0.01, 0.01));
-            view = cameraUpdates.setZoom(view, context, 1);
+            view = setCenter(view, context, new LngLat(-0.01, 0.01));
+            view = setZoom(view, context, 1);
 
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options);
 
@@ -883,8 +883,8 @@ describe('coveringTiles', () => {
 
         test('addresses tiles by the CRS grid, where lng/lat 45,45 is the top-right quadrant, not by mercator', () => {
             let {state: view, context} = createIdentityCrsCamera(200, 200);
-            view = cameraUpdates.setCenter(view, context, new LngLat(45, 45));
-            view = cameraUpdates.setZoom(view, context, 2.5);
+            view = setCenter(view, context, new LngLat(45, 45));
+            view = setZoom(view, context, 2.5);
 
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options);
 
@@ -896,8 +896,8 @@ describe('coveringTiles', () => {
 
         test('never produces wrapped tiles at the edge of the square', () => {
             let {state: view, context} = createIdentityCrsCamera(1024, 200);
-            view = cameraUpdates.setCenter(view, context, new LngLat(89, 0));
-            view = cameraUpdates.setZoom(view, context, 2);
+            view = setCenter(view, context, new LngLat(89, 0));
+            view = setZoom(view, context, 2);
             const tiles = coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, options);
             expect(tiles.length).toBeGreaterThan(0);
             for (const tile of tiles) {
@@ -923,48 +923,48 @@ describe('coveringZoomLevel', () => {
     });
 
     test('zoom 0', () => {
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = setZoom(view, context, 0);
         expect(coveringZoomLevel(projectCamera(view, context), options)).toBe(0);
     });
 
     test('small zoom should be floored to 0', () => {
-        view = cameraUpdates.setZoom(view, context, 0.1);
+        view = setZoom(view, context, 0.1);
         expect(coveringZoomLevel(projectCamera(view, context), options)).toBe(0);
     });
 
     test('zoom 2.7 should be floored to 2', () => {
-        view = cameraUpdates.setZoom(view, context, 2.7);
+        view = setZoom(view, context, 2.7);
         expect(coveringZoomLevel(projectCamera(view, context), options)).toBe(2);
     });
 
     test('zoom 0 for small tile size', () => {
         options.tileSize = 256;
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = setZoom(view, context, 0);
         expect(coveringZoomLevel(projectCamera(view, context), options)).toBe(1);
     });
 
     test('zoom 0.1 for small tile size', () => {
         options.tileSize = 256;
-        view = cameraUpdates.setZoom(view, context, 0.1);
+        view = setZoom(view, context, 0.1);
         expect(coveringZoomLevel(projectCamera(view, context), options)).toBe(1);
     });
 
     test('zoom 1 for small tile size', () => {
         options.tileSize = 256;
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = setZoom(view, context, 1);
         expect(coveringZoomLevel(projectCamera(view, context), options)).toBe(2);
     });
 
     test('zoom 2.4 for small tile size', () => {
         options.tileSize = 256;
-        view = cameraUpdates.setZoom(view, context, 2.4);
+        view = setZoom(view, context, 2.4);
         expect(coveringZoomLevel(projectCamera(view, context), options)).toBe(3);
     });
 
     test('zoom 11.5 with rounded setting and small tile size', () => {
         options.tileSize = 256;
         options.roundZoom = true;
-        view = cameraUpdates.setZoom(view, context, 11.5);
+        view = setZoom(view, context, 11.5);
         expect(coveringZoomLevel(projectCamera(view, context), options)).toBe(13);
     });
 });

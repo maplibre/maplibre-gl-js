@@ -10,7 +10,7 @@ import {getCameraMath} from './camera_math_factory.ts';
 import {projectCamera, getCameraMetrics} from './project_camera.ts';
 import {getCameraSolver} from './camera_solver_factory.ts';
 import {versorSetLocationAtPoint} from './vertical_perspective_camera_solver.ts';
-import * as cameraUpdates from './camera_updates.ts';
+import {interpolatePadding, interpolateRotation, normalizeCenter, setBearing, setCenter, setPadding, setPitch, setRoll, setZoom, warnBoundsCannotFit} from './camera_updates.ts';
 
 import type {CameraForBoundsOptions} from '../../ui/camera.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
@@ -154,11 +154,11 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
         const start = projectCamera(view, context);
         const zoomLoc = getCameraMath(start).screenPointToLocation(start, context.worldCoordinateHelper, zoomPixel);
 
-        if (deltas.bearingDelta) view = cameraUpdates.setBearing(view, start.bearing + deltas.bearingDelta);
-        if (deltas.pitchDelta) view = cameraUpdates.setPitch(view, start.pitch + deltas.pitchDelta);
-        if (deltas.rollDelta) view = cameraUpdates.setRoll(view, start.roll + deltas.rollDelta);
+        if (deltas.bearingDelta) view = setBearing(view, start.bearing + deltas.bearingDelta);
+        if (deltas.pitchDelta) view = setPitch(view, start.pitch + deltas.pitchDelta);
+        if (deltas.rollDelta) view = setRoll(view, start.roll + deltas.rollDelta);
         const oldZoomPreZoomDelta = view.zoom;
-        if (deltas.zoomDelta) view = cameraUpdates.setZoom(view, context, view.zoom + deltas.zoomDelta);
+        if (deltas.zoomDelta) view = setZoom(view, context, view.zoom + deltas.zoomDelta);
         const actualZoomDelta = view.zoom - oldZoomPreZoomDelta;
 
         if (actualZoomDelta === 0) {
@@ -214,11 +214,11 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
         const lngExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lng, heuristicCenter.lng);
         const latExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lat, heuristicCenter.lat);
 
-        const blended = cameraUpdates.setCenter(exact, context, new LngLat(
+        const blended = setCenter(exact, context, new LngLat(
             exactCenter.lng + lngExactToHeuristic * heuristicFactor,
             clamp(exactCenter.lat + latExactToHeuristic * heuristicFactor, -90, 90)
         ).wrap());
-        return cameraUpdates.setZoom(blended, context, oldZoom + getZoomAdjustment(oldCenterLat, blended.center.lat));
+        return setZoom(blended, context, oldZoom + getZoomAdjustment(oldCenterLat, blended.center.lat));
     }
 
     /**
@@ -267,12 +267,12 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
         const latMid = latNorth + differenceOfAnglesDegrees(latNorth, latSouth) * 0.5;
 
         // Obtain a globe projection matrix that does not include pitch (unsupported)
-        let fitted = cameraUpdates.setCenter(view, context, result.center);
-        fitted = cameraUpdates.setPadding(fitted, context, mapPadding);
-        fitted = cameraUpdates.setBearing(fitted, result.bearing);
-        fitted = cameraUpdates.setPitch(fitted, 0);
-        fitted = cameraUpdates.setRoll(fitted, 0);
-        fitted = cameraUpdates.setZoom(fitted, context, result.zoom);
+        let fitted = setCenter(view, context, result.center);
+        fitted = setPadding(fitted, context, mapPadding);
+        fitted = setBearing(fitted, result.bearing);
+        fitted = setPitch(fitted, 0);
+        fitted = setRoll(fitted, 0);
+        fitted = setZoom(fitted, context, result.zoom);
         const matrix = projectCamera(fitted, context).modelViewProjectionMatrix;
 
         // Vectors to test - the bounds' corners and edge midpoints
@@ -303,7 +303,7 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
         }
 
         if (!Number.isFinite(smallestNeededScale) || smallestNeededScale === 0) {
-            cameraUpdates.warnBoundsCannotFit();
+            warnBoundsCannotFit();
             return undefined;
         }
 
@@ -319,13 +319,13 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
     jumpToCenterZoom(view: CameraViewState, context: CameraContext, options: { zoom?: number; center?: LngLatLike }): CameraViewState {
         const startingLat = view.center.lat;
         const center = options.center ? LngLat.convert(options.center) : view.center;
-        view = cameraUpdates.setCenter(view, context, applyConstrain(view, context, center, view.zoom).center.wrap());
+        view = setCenter(view, context, applyConstrain(view, context, center, view.zoom).center.wrap());
 
         // Make sure to compute correct target zoom level if no zoom is specified
         const targetZoom = options.zoom !== undefined ? +options.zoom : view.zoom + getZoomAdjustment(startingLat, view.center.lat);
         if (view.zoom === targetZoom) return view;
-        view = cameraUpdates.setZoom(view, context, targetZoom);
-        return cameraUpdates.setCenter(view, context, applyConstrain(view, context, center, view.zoom).center.wrap());
+        view = setZoom(view, context, targetZoom);
+        return setCenter(view, context, applyConstrain(view, context, center, view.zoom).center.wrap());
     }
 
     /**
@@ -358,13 +358,13 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
             preConstrainCenter,
             optionsZoom ? +options.zoom : startZoom
         ).center;
-        cameraUpdates.normalizeCenter(view, context.worldCoordinateHelper, constrainedCenter);
+        normalizeCenter(view, context.worldCoordinateHelper, constrainedCenter);
 
-        let end = cameraUpdates.setCenter(view, context, constrainedCenter);
-        end = cameraUpdates.setZoom(end, context, optionsZoom ?
+        let end = setCenter(view, context, constrainedCenter);
+        end = setZoom(end, context, optionsZoom ?
             +options.zoom :
             startZoom + getZoomAdjustment(startCenter.lat, preConstrainCenter.lat));
-        end = cameraUpdates.setBearing(end, options.bearing);
+        end = setBearing(end, options.bearing);
         const clampedPoint = new Point(
             clamp(start.centerPoint.x + options.offsetAsPoint.x, 0, view.width),
             clamp(start.centerPoint.y + options.offsetAsPoint.y, 0, view.height)
@@ -387,8 +387,8 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
         const isZooming = endZoomWithShift !== startZoom;
 
         const easeFunc = (frame: CameraViewState, frameContext: CameraContext, k: number): CameraViewState => {
-            if (rotating) frame = cameraUpdates.interpolateRotation(frame, startEulerAngles, endEulerAngles, k, startEulerAngles.roll !== endEulerAngles.roll);
-            if (doPadding) frame = cameraUpdates.interpolatePadding(frame, frameContext, startPadding, options.padding, k);
+            if (rotating) frame = interpolateRotation(frame, startEulerAngles, endEulerAngles, k, startEulerAngles.roll !== endEulerAngles.roll);
+            if (doPadding) frame = interpolatePadding(frame, frameContext, startPadding, options.padding, k);
 
             if (options.around) {
                 warnOnce('Easing around a point is not supported under globe projection.');
@@ -404,16 +404,16 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
                 // Instead we interpolate LngLat almost directly, but taking into account that
                 // one degree of longitude gets progressively smaller relative to latitude towards the poles.
                 const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
-                frame = cameraUpdates.setCenter(frame, frameContext, newCenter.wrap());
+                frame = setCenter(frame, frameContext, newCenter.wrap());
             }
 
             if (isZooming) {
                 const normalizedInterpolatedZoom = interpolates.number(normalizedStartZoom, normalizedEndZoom, k);
-                frame = cameraUpdates.setZoom(frame, frameContext, normalizedInterpolatedZoom + getZoomAdjustment(0, frame.center.lat));
+                frame = setZoom(frame, frameContext, normalizedInterpolatedZoom + getZoomAdjustment(0, frame.center.lat));
             }
 
             if (k === 1 && !options.around) {
-                frame = cameraUpdates.setCenter(frame, frameContext, endCenterWithShift.wrap());
+                frame = setCenter(frame, frameContext, endCenterWithShift.wrap());
             }
             return frame;
         };
@@ -448,16 +448,16 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
         const targetZoom = optionsZoom ? +options.zoom : startZoom + getZoomAdjustment(startCenter.lat, constrainedCenter.lat);
 
         // Compute the target center that respects the offset by placing the center at the offset point on the target camera.
-        let end = cameraUpdates.setCenter(view, context, constrainedCenter);
-        end = cameraUpdates.setZoom(end, context, targetZoom);
-        end = cameraUpdates.setBearing(end, options.bearing);
+        let end = setCenter(view, context, constrainedCenter);
+        end = setZoom(end, context, targetZoom);
+        end = setBearing(end, options.bearing);
         const clampedPoint = new Point(
             clamp(start.centerPoint.x + options.offsetAsPoint.x, 0, view.width),
             clamp(start.centerPoint.y + options.offsetAsPoint.y, 0, view.height)
         );
         const targetCenter = getCameraSolver(context).setLocationAtPoint(end, context, constrainedCenter, clampedPoint).center;
 
-        cameraUpdates.normalizeCenter(view, context.worldCoordinateHelper, targetCenter);
+        normalizeCenter(view, context.worldCoordinateHelper, targetCenter);
 
         const pixelPathLength = globeDistanceOfLocationsPixels(start, startCenter, targetCenter);
 
@@ -480,14 +480,14 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
         const easeFunc = (frame: CameraViewState, frameContext: CameraContext, k: number, scale: number, centerFactor: number, _pointAtOffset: Point): CameraViewState => {
             const interpolatedCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, centerFactor);
 
-            if (doPadding) frame = cameraUpdates.interpolatePadding(frame, frameContext, startPadding, options.padding, k);
+            if (doPadding) frame = interpolatePadding(frame, frameContext, startPadding, options.padding, k);
 
             const newCenter = k === 1 ? targetCenter : interpolatedCenter;
-            frame = cameraUpdates.setCenter(frame, frameContext, newCenter.wrap());
+            frame = setCenter(frame, frameContext, newCenter.wrap());
 
             const interpolatedZoom = normalizedStartZoom + scaleZoom(scale);
-            frame = cameraUpdates.setZoom(frame, frameContext, k === 1 ? targetZoom : (interpolatedZoom + getZoomAdjustment(0, newCenter.lat)));
-            if (k === 1) frame = cameraUpdates.setCenter(frame, frameContext, targetCenter.wrap());
+            frame = setZoom(frame, frameContext, k === 1 ? targetZoom : (interpolatedZoom + getZoomAdjustment(0, newCenter.lat)));
+            if (k === 1) frame = setCenter(frame, frameContext, targetCenter.wrap());
             return frame;
         };
 

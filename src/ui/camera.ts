@@ -14,7 +14,7 @@ import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
 import {projectCamera, getCameraMetrics} from '../geo/projection/project_camera.ts';
 import {isGlobeRendering} from '../geo/projected_camera.ts';
-import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {calculateCenterFromCameraLngLatAlt, constrainState, interpolatePadding, setBearing, setCenter, setElevation, setFov, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from '../geo/projection/camera_updates.ts';
 import {getCameraMotions} from '../geo/projection/camera_motions_factory.ts';
 import {getCameraSolver} from '../geo/projection/camera_solver_factory.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
@@ -475,11 +475,11 @@ export class Camera extends Evented<MapEventType> {
         this._constrainOverride = options.transformConstrain ?? null;
         const context = createCameraContext({constrainOverride: this._constrainOverride});
         let view = createCameraViewState();
-        if (options.minZoom !== undefined) view = cameraUpdates.setMinZoom(view, context, options.minZoom);
-        if (options.maxZoom !== undefined) view = cameraUpdates.setMaxZoom(view, context, options.maxZoom);
-        if (options.minPitch !== undefined) view = cameraUpdates.setMinPitch(view, options.minPitch);
-        if (options.maxPitch !== undefined) view = cameraUpdates.setMaxPitch(view, options.maxPitch);
-        if (options.renderWorldCopies !== undefined) view = cameraUpdates.setRenderWorldCopies(view, context.worldCoordinateHelper, options.renderWorldCopies);
+        if (options.minZoom !== undefined) view = setMinZoom(view, context, options.minZoom);
+        if (options.maxZoom !== undefined) view = setMaxZoom(view, context, options.maxZoom);
+        if (options.minPitch !== undefined) view = setMinPitch(view, options.minPitch);
+        if (options.maxPitch !== undefined) view = setMaxPitch(view, options.maxPitch);
+        if (options.renderWorldCopies !== undefined) view = setRenderWorldCopies(view, context.worldCoordinateHelper, options.renderWorldCopies);
         this._elevationHandedOut = view.elevation;
         this._store = createCameraStore(view);
         this._store.subscribe(this._onStateChange);
@@ -594,7 +594,7 @@ export class Camera extends Evented<MapEventType> {
     setConstrainOverride(constrain: TransformConstrainFunction | null): void {
         if (this._constrainOverride === constrain) return;
         this._constrainOverride = constrain;
-        this.applyStateChange(cameraUpdates.constrainState);
+        this.applyStateChange(constrainState);
     }
 
     /**
@@ -676,7 +676,7 @@ export class Camera extends Evented<MapEventType> {
 
     setVerticalFieldOfView(fov: number, eventData?: any): this {
         if (fov != this.getVerticalFieldOfView()) {
-            this.applyStateChange(view => cameraUpdates.setFov(view, fov));
+            this.applyStateChange(view => setFov(view, fov));
             this.fire(new MapMovementEvent('movestart', eventData))
                 .fire(new MapMovementEvent('move', eventData))
                 .fire(new MapMovementEvent('moveend', eventData));
@@ -871,7 +871,7 @@ export class Camera extends Evented<MapEventType> {
         if (this.terrain && this.getCenterClampedToGround()) {
             const center = options.center ? LngLat.convert(options.center) : view.center;
             const {elevation, demState} = this.terrain.getElevationAndDEMStateForLngLat(center, this._metricsOf(view).tileZoom);
-            if (demState !== 'loading') view = cameraUpdates.setElevation(view, context, elevation);
+            if (demState !== 'loading') view = setElevation(view, context, elevation);
         }
         view = getCameraMotions(context).jumpToCenterZoom(view, context, options);
 
@@ -881,13 +881,13 @@ export class Camera extends Evented<MapEventType> {
         const rollChanged = options.roll !== undefined && getRoll(view) !== +options.roll;
 
         if (options.elevation !== undefined && view.elevation !== +options.elevation) {
-            view = cameraUpdates.setElevation(view, context, +options.elevation);
+            view = setElevation(view, context, +options.elevation);
         }
-        if (bearingChanged) view = cameraUpdates.setBearing(view, +options.bearing);
-        if (pitchChanged) view = cameraUpdates.setPitch(view, +options.pitch);
-        if (rollChanged) view = cameraUpdates.setRoll(view, +options.roll);
+        if (bearingChanged) view = setBearing(view, +options.bearing);
+        if (pitchChanged) view = setPitch(view, +options.pitch);
+        if (rollChanged) view = setRoll(view, +options.roll);
         if (options.padding != null && !isPaddingEqual(view.padding, options.padding)) {
-            view = cameraUpdates.setPadding(view, context, options.padding);
+            view = setPadding(view, context, options.padding);
         }
         this.applyUpdatedState(view);
 
@@ -956,7 +956,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     calculateCameraOptionsFromCameraLngLatAltRotation(cameraLngLat: LngLatLike, cameraAlt: number, bearing: number, pitch: number, roll?: number): CameraOptions {
-        const centerInfo = cameraUpdates.calculateCenterFromCameraLngLatAlt(this.renderedState, this.context.worldCoordinateHelper, cameraLngLat, cameraAlt, bearing, pitch);
+        const centerInfo = calculateCenterFromCameraLngLatAlt(this.renderedState, this.context.worldCoordinateHelper, cameraLngLat, cameraAlt, bearing, pitch);
         return {
             center: centerInfo.center,
             elevation: centerInfo.elevation,
@@ -1089,7 +1089,7 @@ export class Camera extends Evented<MapEventType> {
                 target = elevation;
             }
             if (!this.getCenterClampedToGround()) return view;
-            return cameraUpdates.setElevation(view, this.context, interpolates.number(from, target, k));
+            return setElevation(view, this.context, interpolates.number(from, target, k));
         };
     }
 
@@ -1134,7 +1134,7 @@ export class Camera extends Evented<MapEventType> {
             if (this.getCenterClampedToGround()) {
                 view = this.terrain ?
                     this.putCenterBackOnTerrain(view, this.terrain, hold.dem === 'taken') :
-                    cameraUpdates.setElevation(view, this.context, 0);
+                    setElevation(view, this.context, 0);
             }
             this.applyUpdatedState(view);
         });
@@ -1155,7 +1155,7 @@ export class Camera extends Evented<MapEventType> {
             return getCameraSolver(this.context).recenterOnTerrain(view, this.context, terrain);
         }
         const elevation = terrain.getElevationForLngLat(view.center, this._metricsOf(view).tileZoom);
-        return this._raiseCameraByPitchAndZoom(cameraUpdates.setElevation(view, this.context, elevation));
+        return this._raiseCameraByPitchAndZoom(setElevation(view, this.context, elevation));
     }
 
     /**
@@ -1234,9 +1234,9 @@ export class Camera extends Evented<MapEventType> {
      */
     private _viewAsDrawn(): CameraViewState {
         const {view} = this._state;
-        const onTile = cameraUpdates.setMinElevationForCurrentTile(view, this._minElevationUnder(view));
+        const onTile = setMinElevationForCurrentTile(view, this._minElevationUnder(view));
         const elevation = this._drawnElevation(onTile);
-        return elevation === onTile.elevation ? onTile : cameraUpdates.setElevation(onTile, this.context, elevation);
+        return elevation === onTile.elevation ? onTile : setElevation(onTile, this.context, elevation);
     }
 
     /**
@@ -1318,7 +1318,7 @@ export class Camera extends Evented<MapEventType> {
             const correctedCamera = this._projectState(corrected);
             const altitude = getCameraMath(correctedCamera).getCameraAltitude(correctedCamera);
             const {zoom, pitch} = getCameraSolver(this.context).calculateCameraOptionsFromTo(corrected, this.context, cameraLngLat, altitude + height, corrected.center, corrected.elevation);
-            corrected = cameraUpdates.setPitch(cameraUpdates.setZoom(corrected, this.context, zoom), pitch);
+            corrected = setPitch(setZoom(corrected, this.context, zoom), pitch);
             height = this._heightAboveCamera(this._projectState(corrected));
         }
         return corrected;
@@ -1500,7 +1500,7 @@ export class Camera extends Evented<MapEventType> {
         const adjustment = motion.adjustment;
         if (!adjustment) return corrected;
         const adjusted = this._applyAdjustment(corrected, adjustment);
-        return cameraUpdates.setMinElevationForCurrentTile(adjusted, this._minElevationUnder(adjusted));
+        return setMinElevationForCurrentTile(adjusted, this._minElevationUnder(adjusted));
     }
 
     /**
@@ -1530,12 +1530,12 @@ export class Camera extends Evented<MapEventType> {
     private _applyAdjustment(camera: CameraViewState, {center, zoom, roll, pitch, bearing, elevation}: CameraAdjustment): CameraViewState {
         const context = this.context;
         let adjusted = camera;
-        if (center) adjusted = cameraUpdates.setCenter(adjusted, context, center);
-        if (elevation !== undefined) adjusted = cameraUpdates.setElevation(adjusted, context, elevation);
-        if (zoom !== undefined) adjusted = cameraUpdates.setZoom(adjusted, context, zoom);
-        if (roll !== undefined) adjusted = cameraUpdates.setRoll(adjusted, roll);
-        if (pitch !== undefined) adjusted = cameraUpdates.setPitch(adjusted, pitch);
-        if (bearing !== undefined) adjusted = cameraUpdates.setBearing(adjusted, bearing);
+        if (center) adjusted = setCenter(adjusted, context, center);
+        if (elevation !== undefined) adjusted = setElevation(adjusted, context, elevation);
+        if (zoom !== undefined) adjusted = setZoom(adjusted, context, zoom);
+        if (roll !== undefined) adjusted = setRoll(adjusted, roll);
+        if (pitch !== undefined) adjusted = setPitch(adjusted, pitch);
+        if (bearing !== undefined) adjusted = setBearing(adjusted, bearing);
         return elevation === undefined ? adjusted : this._raiseCameraByPitchAndZoom(adjusted);
     }
 
@@ -1705,11 +1705,11 @@ export class Camera extends Evented<MapEventType> {
                 const s = k * S;
                 const scale = 1 / w(s);
                 const centerFactor = u(s);
-                if (rotating) frame = cameraUpdates.setBearing(frame, interpolates.number(startBearing, bearing, k));
-                if (pitching) frame = cameraUpdates.setPitch(frame, interpolates.number(startPitch, pitch, k));
-                if (rolling) frame = cameraUpdates.setRoll(frame, interpolates.number(startRoll, roll, k));
+                if (rotating) frame = setBearing(frame, interpolates.number(startBearing, bearing, k));
+                if (pitching) frame = setPitch(frame, interpolates.number(startPitch, pitch, k));
+                if (rolling) frame = setRoll(frame, interpolates.number(startRoll, roll, k));
                 if (paddingChanging) {
-                    frame = cameraUpdates.interpolatePadding(frame, context, startPadding, padding, k);
+                    frame = interpolatePadding(frame, context, startPadding, padding, k);
                     // The center point moves with the padding, and the offset point with it.
                     pointAtOffset = getCenterPoint(frame).add(offsetAsPoint);
                 }
@@ -1778,7 +1778,7 @@ function holdPivot(view: CameraViewState, context: CameraContext, pivot: Rotatio
     for (let i = 0; i < MAX_PIVOT_ZOOM_CORRECTIONS && !isAtDistance(placed.distance, pivot); i++) {
         if (!Number.isFinite(nextSpan) || nextSpan <= 0) return null;
         const zoom = placed.state.zoom;
-        const zoomed = cameraUpdates.setZoom(placed.state, context, zoom + scaleZoom(span / nextSpan));
+        const zoomed = setZoom(placed.state, context, zoom + scaleZoom(span / nextSpan));
         const reachedSpan = span * zoomScale(zoom - zoomed.zoom);
         if (reachedSpan === span) return zoomed;
         const reached = placePivot(zoomed, context, pivot);

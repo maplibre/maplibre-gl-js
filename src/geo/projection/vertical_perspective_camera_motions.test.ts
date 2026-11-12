@@ -4,7 +4,7 @@ import {LngLat} from '../lng_lat.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {createCameraViewState, getCenterPoint} from '../camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
-import * as cameraUpdates from './camera_updates.ts';
+import {resize, setCenter, setMinZoom, setZoom} from './camera_updates.ts';
 import {getZoomAdjustment} from './globe_utils.ts';
 import {VerticalPerspectiveCameraMotions} from './vertical_perspective_camera_motions.ts';
 import {MercatorCameraMotions} from './mercator_camera_motions.ts';
@@ -39,10 +39,10 @@ describe('VerticalPerspectiveCameraMotions.pan', () => {
 
     test('does not zoom in when panning off the pole on the constrained min zoom', () => {
         const context = createCameraContext({projection: 'globe'});
-        let view = cameraUpdates.resize(createCameraViewState(), context, 512, 512);
-        view = cameraUpdates.setCenter(view, context, new LngLat(0, 80));
-        view = cameraUpdates.setMinZoom(view, context, 3);
-        view = cameraUpdates.setZoom(view, context, 0); // clamps to the latitude-compensated floor, minZoom + getZoomAdjustment(0, 80)
+        let view = resize(createCameraViewState(), context, 512, 512);
+        view = setCenter(view, context, new LngLat(0, 80));
+        view = setMinZoom(view, context, 3);
+        view = setZoom(view, context, 0); // clamps to the latitude-compensated floor, minZoom + getZoomAdjustment(0, 80)
         const zoomBefore = view.zoom;
         expect(zoomBefore).toBeCloseTo(3 + getZoomAdjustment(0, 80), 10);
 

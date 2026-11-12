@@ -7,7 +7,7 @@ import {FrameRenderContext} from '../../render/frame_render_context.ts';
 import {drawCustom} from './draw_custom.ts';
 import {CustomStyleLayer} from '../../style/style_layer/custom_style_layer.ts';
 import {projectCamera} from '../../geo/projection/project_camera.ts';
-import * as cameraUpdates from '../../geo/projection/camera_updates.ts';
+import {setMaxPitch, setMinPitch} from '../../geo/projection/camera_updates.ts';
 import {expectToBeCloseToArray, createFrameRenderData, createTestCamera} from '../../util/test/util.ts';
 
 import type {CustomRenderMethodInput} from '../../style/style_layer/custom_style_layer.ts';
@@ -28,7 +28,7 @@ describe('drawCustom', () => {
     test('should return custom render method inputs', () => {
         // same camera setup as in mercator_camera_math.test.ts, so its matrices should be the same
         const {state: view, context} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 500, height: 500});
-        const projectedCamera = projectCamera(cameraUpdates.setMaxPitch(cameraUpdates.setMinPitch(view, 10), 10), context);
+        const projectedCamera = projectCamera(setMaxPitch(setMinPitch(view, 10), 10), context);
         const mockPainter = new Painter(null);
         mockPainter.context = {
             gl: {},

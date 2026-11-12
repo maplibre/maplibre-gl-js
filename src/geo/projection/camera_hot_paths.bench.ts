@@ -5,7 +5,7 @@ import {MercatorCameraMotions} from './mercator_camera_motions.ts';
 import {coveringTiles} from './covering_tiles.ts';
 import {createTestCamera, type TestCamera} from '../../util/test/util.ts';
 import {getCameraMath} from './camera_math_factory.ts';
-import * as cameraUpdates from './camera_updates.ts';
+import {calculateCenterFromCameraLngLatAlt, setElevation} from './camera_updates.ts';
 import {getCameraSolver} from './camera_solver_factory.ts';
 
 function createCamera(): TestCamera {
@@ -25,12 +25,12 @@ test('camera hot paths', async ({bench}) => {
     await bench.compare(
         bench('recenterOnTerrain (per-frame terrain path)', () => {
             for (let i = 0; i < 100; i++) {
-                getCameraSolver(context).recenterOnTerrain(cameraUpdates.setElevation(view, context, i % 2 ? 250 : 0), context);
+                getCameraSolver(context).recenterOnTerrain(setElevation(view, context, i % 2 ? 250 : 0), context);
             }
         }),
         bench('calculateCenterFromCameraLngLatAlt (iterative)', () => {
             for (let i = 0; i < 100; i++) {
-                cameraUpdates.calculateCenterFromCameraLngLatAlt(view, worldCoordinateHelper, lngLats[i], 4000 + i, 30, 45);
+                calculateCenterFromCameraLngLatAlt(view, worldCoordinateHelper, lngLats[i], 4000 + i, 30, 45);
             }
         }),
         bench('getCameraLngLat', () => {

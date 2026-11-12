@@ -35,7 +35,7 @@ import {defaultLocale} from './default_locale.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {coveringTiles, type CoveringTilesOptions, createCalculateTileZoomFunction} from '../geo/projection/covering_tiles.ts';
 import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
-import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {setMaxBounds, setMaxPitch, setMaxZoom, setMinPitch, setMinZoom, setRenderWorldCopies} from '../geo/projection/camera_updates.ts';
 import {getCameraSolver} from '../geo/projection/camera_solver_factory.ts';
 import {applyConstrain} from '../geo/projection/camera_constrain.ts';
 import {getMaxBounds} from '../geo/camera_view_state.ts';
@@ -1825,7 +1825,7 @@ export class Map extends Evented<MapEventType> {
         const centerBefore = this.getCenter();
         const zoomBefore = this.getZoom();
 
-        this._camera.applyStateChange((view, context) => cameraUpdates.setMaxBounds(view, context, LngLatBounds.convert(bounds)));
+        this._camera.applyStateChange((view, context) => setMaxBounds(view, context, LngLatBounds.convert(bounds)));
         this._update();
 
         const center = this.getCenter();
@@ -1872,7 +1872,7 @@ export class Map extends Evented<MapEventType> {
 
         if (minZoom >= defaultMinZoom && minZoom <= this.getMaxZoom()) {
             const zoomBefore = this.getZoom();
-            this._camera.applyStateChange((view, context) => cameraUpdates.setMinZoom(view, context, minZoom));
+            this._camera.applyStateChange((view, context) => setMinZoom(view, context, minZoom));
             this._update();
             if (zoomBefore !== this.getZoom()) {
                 this.fire(new MapMovementEvent('zoomstart'))
@@ -1925,7 +1925,7 @@ export class Map extends Evented<MapEventType> {
 
         if (maxZoom >= this.getMinZoom()) {
             const zoomBefore = this.getZoom();
-            this._camera.applyStateChange((view, context) => cameraUpdates.setMaxZoom(view, context, maxZoom));
+            this._camera.applyStateChange((view, context) => setMaxZoom(view, context, maxZoom));
             this._update();
             if (zoomBefore !== this.getZoom()) {
                 this.fire(new MapMovementEvent('zoomstart'))
@@ -1973,7 +1973,7 @@ export class Map extends Evented<MapEventType> {
 
         if (minPitch >= defaultMinPitch && minPitch <= this.getMaxPitch()) {
             const pitchBefore = this.getPitch();
-            this._camera.applyStateChange(view => cameraUpdates.setMinPitch(view, minPitch));
+            this._camera.applyStateChange(view => setMinPitch(view, minPitch));
             this._update();
             if (pitchBefore !== this.getPitch()) {
                 this.fire(new MapMovementEvent('pitchstart'))
@@ -2017,7 +2017,7 @@ export class Map extends Evented<MapEventType> {
 
         if (maxPitch >= this.getMinPitch()) {
             const pitchBefore = this.getPitch();
-            this._camera.applyStateChange(view => cameraUpdates.setMaxPitch(view, maxPitch));
+            this._camera.applyStateChange(view => setMaxPitch(view, maxPitch));
             this._update();
             if (pitchBefore !== this.getPitch()) {
                 this.fire(new MapMovementEvent('pitchstart'))
@@ -2120,7 +2120,7 @@ export class Map extends Evented<MapEventType> {
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): this {
-        this._camera.applyStateChange((view, context) => cameraUpdates.setRenderWorldCopies(view, context.worldCoordinateHelper, renderWorldCopies));
+        this._camera.applyStateChange((view, context) => setRenderWorldCopies(view, context.worldCoordinateHelper, renderWorldCopies));
         return this._update();
     }
 

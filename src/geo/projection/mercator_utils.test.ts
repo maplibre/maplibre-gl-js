@@ -6,7 +6,7 @@ import {mercatorWorldCoordinateHelper} from '../mercator_coordinate.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from './crs.ts';
 import {createCameraContext} from './camera_context.ts';
 import {createCameraViewState} from '../camera_view_state.ts';
-import * as cameraUpdates from './camera_updates.ts';
+import {resize, setBearing, setCenter, setElevation, setPitch, setZoom} from './camera_updates.ts';
 import {altitudeFromMercatorZ} from '../mercator_coordinate.ts';
 import {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import {EXTENT} from '../../data/extent.ts';
@@ -68,12 +68,12 @@ describe('mercator utils', () => {
         test('places the camera above the ground', () => {
             const context = createCameraContext();
             let view = createCameraViewState({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 180, renderWorldCopies: true});
-            view = cameraUpdates.setElevation(view, context, 200);
-            view = cameraUpdates.setCenter(view, context, new LngLat(15.0, 55.0));
-            view = cameraUpdates.setZoom(view, context, 14);
-            view = cameraUpdates.setPitch(view, 55);
-            view = cameraUpdates.setBearing(view, 75);
-            view = cameraUpdates.resize(view, context, 512, 512);
+            view = setElevation(view, context, 200);
+            view = setCenter(view, context, new LngLat(15.0, 55.0));
+            view = setZoom(view, context, 14);
+            view = setPitch(view, 55);
+            view = setBearing(view, 75);
+            view = resize(view, context, 512, 512);
             const projectedCamera = projectCamera(view, context);
 
             const cameraCoord = cameraMercatorCoordinate(projectedCamera, context.worldCoordinateHelper);

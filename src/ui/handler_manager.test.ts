@@ -2,7 +2,7 @@ import {afterEach, beforeEach, describe, expect, vi, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
 import {getCameraMath} from '../geo/projection/camera_math_factory.ts';
-import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {setElevation} from '../geo/projection/camera_updates.ts';
 import {beforeMapTest, createMap, createTerrain, createCoverageIndex} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
 import * as timeControl from '../util/time_control.ts';
@@ -129,7 +129,7 @@ describe('terrain gesture anchoring', () => {
         } as any as Terrain;
         map._camera.setTerrain(map.terrain);
         vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(elevationAt, 300, 2000));
-        map._camera.applyStateChange((view, context) => cameraUpdates.setElevation(view, context, 300));
+        map._camera.applyStateChange((view, context) => setElevation(view, context, 300));
 
         const start = map.project(anchor);
         expect(start.x).toBeGreaterThan(20);

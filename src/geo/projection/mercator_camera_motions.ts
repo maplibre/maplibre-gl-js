@@ -8,7 +8,7 @@ import {applyConstrain} from './camera_constrain.ts';
 import {projectCamera, getCameraMetrics} from './project_camera.ts';
 import {getCameraMath} from './camera_math_factory.ts';
 import {getCameraSolver} from './camera_solver_factory.ts';
-import * as cameraUpdates from './camera_updates.ts';
+import {interpolatePadding, interpolateRotation, normalizeCenter, setBearing, setCenter, setPadding, setPitch, setRoll, setZoom, warnBoundsCannotFit} from './camera_updates.ts';
 
 import type {CameraForBoundsOptions} from '../../ui/camera.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
@@ -23,11 +23,11 @@ import type {CameraForBoxAndBearingResult, CameraMotions, EaseToMotion, EaseToMo
  * location is placed at its screen point.
  */
 function cameraAtAnimationEnd(view: CameraViewState, context: CameraContext, zoom: number, angles: {roll: number; pitch: number; bearing: number}, padding: PaddingOptions): CameraViewState {
-    view = cameraUpdates.setZoom(view, context, zoom);
-    view = cameraUpdates.setRoll(view, angles.roll);
-    view = cameraUpdates.setPitch(view, angles.pitch);
-    view = cameraUpdates.setBearing(view, angles.bearing);
-    return cameraUpdates.setPadding(view, context, padding);
+    view = setZoom(view, context, zoom);
+    view = setRoll(view, angles.roll);
+    view = setPitch(view, angles.pitch);
+    view = setBearing(view, angles.bearing);
+    return setPadding(view, context, padding);
 }
 
 /** @internal The {@link CameraMotions} of a camera drawn with mercator, which moves over the flat world. */
@@ -50,10 +50,10 @@ export class MercatorCameraMotions implements CameraMotions {
 
     rollPitchBearingZoom(view: CameraViewState, context: CameraContext, deltas: MapControlsDeltas): CameraViewState {
         const {bearing, pitch, roll} = getCameraMetrics(view, context.worldCoordinateHelper);
-        if (deltas.bearingDelta) view = cameraUpdates.setBearing(view, bearing + deltas.bearingDelta);
-        if (deltas.pitchDelta) view = cameraUpdates.setPitch(view, pitch + deltas.pitchDelta);
-        if (deltas.rollDelta) view = cameraUpdates.setRoll(view, roll + deltas.rollDelta);
-        if (deltas.zoomDelta) view = cameraUpdates.setZoom(view, context, view.zoom + deltas.zoomDelta);
+        if (deltas.bearingDelta) view = setBearing(view, bearing + deltas.bearingDelta);
+        if (deltas.pitchDelta) view = setPitch(view, pitch + deltas.pitchDelta);
+        if (deltas.rollDelta) view = setRoll(view, roll + deltas.rollDelta);
+        if (deltas.zoomDelta) view = setZoom(view, context, view.zoom + deltas.zoomDelta);
         return view;
     }
 
@@ -108,7 +108,7 @@ export class MercatorCameraMotions implements CameraMotions {
 
         // A box reaching a point the projection sends to infinity has no finite size to fit.
         if (scaleY < 0 || scaleX < 0 || !Number.isFinite(size.x) || !Number.isFinite(size.y)) {
-            cameraUpdates.warnBoundsCannotFit();
+            warnBoundsCannotFit();
             return undefined;
         }
 
@@ -142,10 +142,10 @@ export class MercatorCameraMotions implements CameraMotions {
 
     jumpToCenterZoom(view: CameraViewState, context: CameraContext, options: { zoom?: number; center?: LngLatLike }): CameraViewState {
         if (options.zoom !== undefined && view.zoom !== +options.zoom) {
-            view = cameraUpdates.setZoom(view, context, +options.zoom);
+            view = setZoom(view, context, +options.zoom);
         }
         if (options.center !== undefined) {
-            view = cameraUpdates.setCenter(view, context, LngLat.convert(options.center));
+            view = setCenter(view, context, LngLat.convert(options.center));
         }
         return view;
     }
@@ -167,7 +167,7 @@ export class MercatorCameraMotions implements CameraMotions {
         const projectedCamera = projectCamera(view, context);
         const locationAtOffset = getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, start.centerPoint.add(options.offsetAsPoint));
         const {center, zoom: endZoom} = applyConstrain(view, context, LngLat.convert(options.center || locationAtOffset), zoom);
-        cameraUpdates.normalizeCenter(view, context.worldCoordinateHelper, center);
+        normalizeCenter(view, context.worldCoordinateHelper, center);
 
         const worldCoordinateHelper = context.worldCoordinateHelper;
         const from = projectToWorldCoordinates(start.worldSize, locationAtOffset, worldCoordinateHelper);
@@ -177,9 +177,9 @@ export class MercatorCameraMotions implements CameraMotions {
         const isZooming = endZoom !== startZoom;
 
         const easeFunc = (frame: CameraViewState, frameContext: CameraContext, k: number): CameraViewState => {
-            if (isZooming) frame = cameraUpdates.setZoom(frame, frameContext, interpolates.number(startZoom, endZoom, k));
-            if (rotating) frame = cameraUpdates.interpolateRotation(frame, startEulerAngles, endEulerAngles, k, startEulerAngles.roll !== endEulerAngles.roll);
-            if (doPadding) frame = cameraUpdates.interpolatePadding(frame, frameContext, startPadding, options.padding, k);
+            if (isZooming) frame = setZoom(frame, frameContext, interpolates.number(startZoom, endZoom, k));
+            if (rotating) frame = interpolateRotation(frame, startEulerAngles, endEulerAngles, k, startEulerAngles.roll !== endEulerAngles.roll);
+            if (doPadding) frame = interpolatePadding(frame, frameContext, startPadding, options.padding, k);
             if (options.around) return getCameraSolver(frameContext).setLocationAtPoint(frame, frameContext, options.around, options.aroundPoint);
 
             const scale = zoomScale(frame.zoom - startZoom);
@@ -216,7 +216,7 @@ export class MercatorCameraMotions implements CameraMotions {
         const constrainedCenter = constrained.center;
         const targetZoom = constrained.zoom;
 
-        cameraUpdates.normalizeCenter(view, context.worldCoordinateHelper, constrainedCenter);
+        normalizeCenter(view, context.worldCoordinateHelper, constrainedCenter);
 
         const worldCoordinateHelper = context.worldCoordinateHelper;
         const startWorldSize = start.worldSize;
@@ -234,7 +234,7 @@ export class MercatorCameraMotions implements CameraMotions {
         const scaleOfMinZoom = zoomScale(minZoom - startZoom);
 
         const easeFunc = (frame: CameraViewState, frameContext: CameraContext, k: number, scale: number, centerFactor: number, pointAtOffset: Point): CameraViewState => {
-            frame = cameraUpdates.setZoom(frame, frameContext, k === 1 ? targetZoom : startZoom + scaleZoom(scale));
+            frame = setZoom(frame, frameContext, k === 1 ? targetZoom : startZoom + scaleZoom(scale));
             const newCenter = k === 1 ?
                 constrainedCenter :
                 unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)), worldCoordinateHelper);

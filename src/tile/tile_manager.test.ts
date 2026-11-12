@@ -14,7 +14,7 @@ import {now, restoreNow, setNow} from '../util/time_control.ts';
 import {createCameraContext} from '../geo/projection/camera_context.ts';
 import {createCameraViewState} from '../geo/camera_view_state.ts';
 import {projectCamera} from '../geo/projection/project_camera.ts';
-import * as cameraUpdates from '../geo/projection/camera_updates.ts';
+import {resize, setBearing, setCenter, setMaxPitch, setPitch, setZoom} from '../geo/projection/camera_updates.ts';
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 
@@ -181,7 +181,7 @@ describe('TileManager.addTile', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.updateCacheSize(projectCamera(view, context));
         tileManager._addTile(tileID);
         tileManager._removeTile(tileID.key);
@@ -202,7 +202,7 @@ describe('TileManager.addTile', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.updateCacheSize(projectCamera(view, context));
 
         const tile = tileManager._addTile(tileID);
@@ -232,7 +232,7 @@ describe('TileManager.addTile', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.updateCacheSize(projectCamera(view, context));
 
         const id = tileID.key;
@@ -321,7 +321,7 @@ describe('TileManager.removeTile', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.updateCacheSize(projectCamera(view, context));
 
         tileManager._addTile(tileID);
@@ -490,8 +490,8 @@ describe('TileManager / Source lifecycle', () => {
     test('loaded() true after tile error', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
         const tileManager = createTileManager();
         tileManager._source.loadTile = async () => {
             throw new Error('Error loading tile');
@@ -536,8 +536,8 @@ describe('TileManager / Source lifecycle', () => {
     test('reloads tiles after a data event where source is updated', () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
 
         const expected = [new OverscaledTileID(0, 0, 0, 0, 0).key, new OverscaledTileID(0, 0, 0, 0, 0).key];
         expect.assertions(expected.length);
@@ -561,8 +561,8 @@ describe('TileManager / Source lifecycle', () => {
     test('does not reload errored tiles', () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 1);
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -588,8 +588,8 @@ describe('TileManager / Source lifecycle', () => {
     test('does reload errored tiles, if event is source data change', () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 1);
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -616,8 +616,8 @@ describe('TileManager / Source lifecycle', () => {
     test('reloads errored tiles as loading, not expired, on source data change', () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 1);
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -645,8 +645,8 @@ describe('TileManager / Source lifecycle', () => {
     test('keeps the self fade timer when reloading a tile that has data', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
 
         const tileManager = createTileManager();
@@ -678,8 +678,8 @@ describe('TileManager / Source lifecycle', () => {
     test('bases the self fade timer on when tile data lands, even if a reload was requested prior to arrival', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
 
         const tileManager = createTileManager();
@@ -717,8 +717,8 @@ describe('TileManager.update', () => {
     test('loads no tiles if used is false', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 0);
 
         const tileManager = createTileManager({}, false);
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
@@ -732,8 +732,8 @@ describe('TileManager.update', () => {
     test('loads covering tiles', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
 
         const tileManager = createTileManager({});
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
@@ -746,9 +746,9 @@ describe('TileManager.update', () => {
     test('does not load tiles again when the center of a registered projection crosses 180°', async () => {
         const context = createCameraContext({worldCoordinateHelper: new CRSWorldCoordinateHelper(createPolarStereographicCrs())});
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 2);
-        view = cameraUpdates.setCenter(view, context, new LngLat(179.9, 72));
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 2);
+        view = setCenter(view, context, new LngLat(179.9, 72));
         const tileManager = createTileManager();
         const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile');
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
@@ -757,7 +757,7 @@ describe('TileManager.update', () => {
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         expect(loadTile).toHaveBeenCalledTimes(4);
 
-        view = cameraUpdates.setCenter(view, context, new LngLat(-179.9, 72));
+        view = setCenter(view, context, new LngLat(-179.9, 72));
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(loadTile).toHaveBeenCalledTimes(4);
@@ -766,8 +766,8 @@ describe('TileManager.update', () => {
     test('adds ideal (covering) tiles only once for zoom level on raster maps', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 1);
 
         const tileManager = createTileManager({raster: true});
         tileManager._source.loadTile = async (tile) => {
@@ -817,8 +817,8 @@ describe('TileManager.update', () => {
     test('respects Source.hasTile method if it is present', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 1);
 
         const tileManager = createTileManager({
             hasTile: (coord) => (coord.canonical.x !== 0)
@@ -837,8 +837,8 @@ describe('TileManager.update', () => {
     test('removes unused tiles', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -851,7 +851,7 @@ describe('TileManager.update', () => {
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         expect(tileManager.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
 
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = setZoom(view, context, 1);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getIds()).toEqual([
@@ -865,8 +865,8 @@ describe('TileManager.update', () => {
     test('retains parent tiles for pending children', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -880,7 +880,7 @@ describe('TileManager.update', () => {
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         expect(tileManager.getIds()).toEqual([new OverscaledTileID(0, 0, 0, 0, 0).key]);
 
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = setZoom(view, context, 1);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getIds()).toEqual([
@@ -895,9 +895,9 @@ describe('TileManager.update', () => {
     test('retains parent tiles for pending children (wrapped)', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
-        view = cameraUpdates.setCenter(view, context, new LngLat(360, 0));
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
+        view = setCenter(view, context, new LngLat(360, 0));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -910,7 +910,7 @@ describe('TileManager.update', () => {
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         expect(tileManager.getIds()).toEqual([new OverscaledTileID(0, 1, 0, 0, 0).key]);
 
-        view = cameraUpdates.setZoom(view, context, 1);
+        view = setZoom(view, context, 1);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getIds()).toEqual([
@@ -925,9 +925,9 @@ describe('TileManager.update', () => {
     test('retains children tiles for pending parents', async () => {
         const context = createCameraContext({projection: 'globe'});
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 1);
-        view = cameraUpdates.setCenter(view, context, new LngLat(360, 0));
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 1);
+        view = setCenter(view, context, new LngLat(360, 0));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -946,7 +946,7 @@ describe('TileManager.update', () => {
             new OverscaledTileID(1, 1, 1, 0, 0).key
         ]);
 
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = setZoom(view, context, 0);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getIds()).toEqual([
@@ -961,11 +961,11 @@ describe('TileManager.update', () => {
     test('retains overscaled loaded children', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 16);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 16);
 
         // use slightly offset center so that sort order is better defined
-        view = cameraUpdates.setCenter(view, context, new LngLat(-0.001, 0.001));
+        view = setCenter(view, context, new LngLat(-0.001, 0.001));
 
         const tileManager = createTileManager({reparseOverscaled: true});
         tileManager._source.loadTile = async (tile) => {
@@ -983,7 +983,7 @@ describe('TileManager.update', () => {
             new OverscaledTileID(16, 0, 14, 8191, 8191).key
         ]);
 
-        view = cameraUpdates.setZoom(view, context, 15);
+        view = setZoom(view, context, 15);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getRenderableIds()).toEqual([
@@ -998,20 +998,20 @@ describe('TileManager.update', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 0);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
 
         const tileManager = createTileManager({});
         const dataPromise = waitForEvent(tileManager, 'data', e => e.sourceDataType === 'metadata');
         tileManager.onAdd(undefined);
         await dataPromise;
-        view = cameraUpdates.setCenter(view, context, new LngLat(360, 0));
+        view = setCenter(view, context, new LngLat(360, 0));
         const tileID = new OverscaledTileID(0, 1, 0, 0, 0);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         expect(tileManager.getIds()).toEqual([tileID.key]);
         const tile = tileManager.getTile(tileID);
 
-        view = cameraUpdates.setCenter(view, context, new LngLat(0, 0));
+        view = setCenter(view, context, new LngLat(0, 0));
         const wrappedTileID = new OverscaledTileID(0, 0, 0, 0, 0);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         expect(tileManager.getIds()).toEqual([wrappedTileID.key]);
@@ -1021,8 +1021,8 @@ describe('TileManager.update', () => {
     test('retains fading children and applies fading logic when zooming out', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 1024, 1024);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 1024, 1024);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
@@ -1044,7 +1044,7 @@ describe('TileManager.update', () => {
         const children: Tile[] = Object.values(loadedTiles);
 
         // zoom out 1 level - ideal tiles (new children) should fade out
-        view = cameraUpdates.setZoom(view, context, 9);
+        view = setZoom(view, context, 9);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await sleep(0);
 
@@ -1060,8 +1060,8 @@ describe('TileManager.update', () => {
     test('retains fading children and applies fading logic when zooming out from the source maxzoom', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 1024, 1024);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 1024, 1024);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({raster: true, maxzoom: 10});
         const loadedTiles: Record<string, Tile> = {};
@@ -1080,7 +1080,7 @@ describe('TileManager.update', () => {
         await sleep(0);
         const children: Tile[] = Object.values(loadedTiles);
 
-        view = cameraUpdates.setZoom(view, context, 9);
+        view = setZoom(view, context, 9);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await sleep(0);
 
@@ -1095,8 +1095,8 @@ describe('TileManager.update', () => {
     test('retains fading grandchildren and applies fading logic when zooming out', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
@@ -1118,7 +1118,7 @@ describe('TileManager.update', () => {
         const grandChildren: Tile[] = Object.values(loadedTiles);
 
         // zoom out 2 levels - ideal tiles (new grandchildren) should fade out
-        view = cameraUpdates.setZoom(view, context, 8);
+        view = setZoom(view, context, 8);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await sleep(0);
 
@@ -1134,8 +1134,8 @@ describe('TileManager.update', () => {
     test('retains fading grandchildren and applies fading logic when zooming out from the source maxzoom', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({raster: true, maxzoom: 10});
         const loadedTiles: Record<string, Tile> = {};
@@ -1154,7 +1154,7 @@ describe('TileManager.update', () => {
         await sleep(0);
         const grandChildren: Tile[] = Object.values(loadedTiles);
 
-        view = cameraUpdates.setZoom(view, context, 8);
+        view = setZoom(view, context, 8);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await sleep(0);
 
@@ -1169,8 +1169,8 @@ describe('TileManager.update', () => {
     test('retains fading parent and applies fading logic when zooming in', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
@@ -1193,7 +1193,7 @@ describe('TileManager.update', () => {
         const parentKeys = new Set(parents.map(p => p.tileID.key));
 
         // zoom in 1 level - ideal tiles (new parent) should fade out
-        view = cameraUpdates.setZoom(view, context, 11);
+        view = setZoom(view, context, 11);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await sleep(0);
 
@@ -1216,8 +1216,8 @@ describe('TileManager.update', () => {
     test('retains fading grandparent and applies fading logic when zooming in', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({raster: true});
         const loadedTiles: Record<string, Tile> = {};
@@ -1240,7 +1240,7 @@ describe('TileManager.update', () => {
         const grandParentKeys = new Set(grandParents.map(p => p.tileID.key));
 
         // zoom in 2 levels - ideal tiles (new grandparent) should fade out
-        view = cameraUpdates.setZoom(view, context, 12);
+        view = setZoom(view, context, 12);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await sleep(0);
 
@@ -1349,10 +1349,10 @@ describe('TileManager._updateRetainedTiles', () => {
         test(`retains loaded children for pitch: ${pitch}`, () => {
             const context = createCameraContext();
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 512, 512);
-            view = cameraUpdates.setZoom(view, context, 10);
-            view = cameraUpdates.setMaxPitch(view, 90);
-            view = cameraUpdates.setPitch(view, pitch);
+            view = resize(view, context, 512, 512);
+            view = setZoom(view, context, 10);
+            view = setMaxPitch(view, 90);
+            view = setPitch(view, pitch);
 
             const tileManager = createTileManager();
             tileManager._source.loadTile = async (tile) => {
@@ -1929,9 +1929,9 @@ describe('TileManager.tilesIn', () => {
     test('regular tiles', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 1);
-        view = cameraUpdates.setCenter(view, context, new LngLat(0, 1));
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 1);
+        view = setCenter(view, context, new LngLat(0, 1));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -1988,9 +1988,9 @@ describe('TileManager.tilesIn', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 1024, 1024);
-        view = cameraUpdates.setZoom(view, context, 2);
-        view = cameraUpdates.setCenter(view, context, new LngLat(0, 1));
+        view = resize(view, context, 1024, 1024);
+        view = setZoom(view, context, 2);
+        view = setCenter(view, context, new LngLat(0, 1));
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getIds()).toEqual([
@@ -2037,8 +2037,8 @@ describe('TileManager.tilesIn', () => {
         await dataPromise;
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 2.0);
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 2.0);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getIds()).toEqual([
@@ -2052,9 +2052,9 @@ describe('TileManager.tilesIn', () => {
     test('globe wrap', async () => {
         const context = createCameraContext({projection: 'globe'});
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 1.05);
-        view = cameraUpdates.setCenter(view, context, new LngLat(179.9, 0.1));
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 1.05);
+        view = setCenter(view, context, new LngLat(179.9, 0.1));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2083,7 +2083,7 @@ describe('TileManager.tilesIn', () => {
         expect(tileManager.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
             .toEqual([new OverscaledTileID(1, 0, 1, 0, 1).key]);
 
-        view = cameraUpdates.setCenter(view, context, new LngLat(-179.9, 0.1));
+        view = setCenter(view, context, new LngLat(-179.9, 0.1));
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getIds()).toEqual([
@@ -2106,9 +2106,9 @@ describe('TileManager.tilesIn', () => {
     test('globe wrap bounding box spanning antimeridian from 179.9°E', async () => {
         const context = createCameraContext({projection: 'globe'});
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 1.05);
-        view = cameraUpdates.setCenter(view, context, new LngLat(179.9, 0.1));
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 1.05);
+        view = setCenter(view, context, new LngLat(179.9, 0.1));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2163,11 +2163,11 @@ describe('TileManager.tilesIn', () => {
     test('globe does not wrap a camera query line crossing the prime meridian', async () => {
         const context = createCameraContext({projection: 'globe'});
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 600, 400);
-        view = cameraUpdates.setZoom(view, context, 10);
-        view = cameraUpdates.setCenter(view, context, new LngLat(0.02, 0.02));
-        view = cameraUpdates.setPitch(view, 60);
-        view = cameraUpdates.setBearing(view, 30);
+        view = resize(view, context, 600, 400);
+        view = setZoom(view, context, 10);
+        view = setCenter(view, context, new LngLat(0.02, 0.02));
+        view = setPitch(view, 60);
+        view = setBearing(view, 30);
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2190,9 +2190,9 @@ describe('TileManager.tilesIn', () => {
     test('globe wrap bounding box spanning antimeridian from 179.9°W', async () => {
         const context = createCameraContext({projection: 'globe'});
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 1.05);
-        view = cameraUpdates.setCenter(view, context, new LngLat(-179.9, 0.1));
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 1.05);
+        view = setCenter(view, context, new LngLat(-179.9, 0.1));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2247,9 +2247,9 @@ describe('TileManager.tilesIn', () => {
     test('mercator wrap', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 1.05);
-        view = cameraUpdates.setCenter(view, context, new LngLat(179.9, 0.1));
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 1.05);
+        view = setCenter(view, context, new LngLat(179.9, 0.1));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2278,7 +2278,7 @@ describe('TileManager.tilesIn', () => {
         expect(tileManager.tilesIn([new Point(300, 300),], 1, false).map(tile => tile.tileID.key))
             .toEqual([new OverscaledTileID(1, 1, 1, 0, 1).key]);
 
-        view = cameraUpdates.setCenter(view, context, new LngLat(-179.9, 0.1));
+        view = setCenter(view, context, new LngLat(-179.9, 0.1));
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         expect(tileManager.getIds()).toEqual([
@@ -2301,9 +2301,9 @@ describe('TileManager.tilesIn', () => {
     test('mercator wrap bounding box spanning antimeridian from 179.9°E', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 1.05);
-        view = cameraUpdates.setCenter(view, context, new LngLat(179.9, 0.1));
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 1.05);
+        view = setCenter(view, context, new LngLat(179.9, 0.1));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2358,9 +2358,9 @@ describe('TileManager.tilesIn', () => {
     test('mercator wrap bounding box spanning antimeridian from 179.9°W', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
-        view = cameraUpdates.setZoom(view, context, 1.05);
-        view = cameraUpdates.setCenter(view, context, new LngLat(-179.9, 0.1));
+        view = resize(view, context, 512, 512);
+        view = setZoom(view, context, 1.05);
+        view = setCenter(view, context, new LngLat(-179.9, 0.1));
 
         const tileManager = createTileManager();
         tileManager._source.loadTile = async (tile) => {
@@ -2425,7 +2425,7 @@ describe('tile manager loaded', () => {
         await dataPromise;
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         const coord = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -2446,7 +2446,7 @@ describe('tile manager loaded', () => {
         await dataPromise;
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
 
         const coord = new OverscaledTileID(0, 0, 0, 0, 0);
@@ -2512,8 +2512,8 @@ describe('tile manager loaded', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.setZoom(view, context, 10);
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = setZoom(view, context, 10);
+        view = resize(view, context, 512, 512);
 
         const sourceLoadedPromise = waitForEvent(tileManager, 'data', () => tileManager.loaded());
         const spy = vi.fn();
@@ -2561,8 +2561,8 @@ describe('tile manager loaded', () => {
         tileManager.onAdd(undefined);
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.setZoom(view, context, 10);
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = setZoom(view, context, 10);
+        view = resize(view, context, 512, 512);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await sourceLoadedPromise;
     });
@@ -2631,7 +2631,7 @@ describe('TileManager sets max cache size correctly', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.updateCacheSize(projectCamera(view, context));
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
@@ -2645,7 +2645,7 @@ describe('TileManager sets max cache size correctly', () => {
 
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.updateCacheSize(projectCamera(view, context));
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
@@ -2680,8 +2680,8 @@ describe('TileManager.usedForTerrain', () => {
     test('loads covering tiles with usedForTerrain with source zoom 0-14', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({});
         tileManager.usedForTerrain = true;
@@ -2699,8 +2699,8 @@ describe('TileManager.usedForTerrain', () => {
     test('loads covering tiles with usedForTerrain with source zoom 8-14', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({minzoom: 8, maxzoom: 14});
         tileManager.usedForTerrain = true;
@@ -2717,8 +2717,8 @@ describe('TileManager.usedForTerrain', () => {
     test('loads covering tiles with usedForTerrain with source zoom 0-4', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({minzoom: 0, maxzoom: 4});
         tileManager.usedForTerrain = true;
@@ -2735,8 +2735,8 @@ describe('TileManager.usedForTerrain', () => {
     test('loads covering tiles with usedForTerrain with source zoom 4-4', async () => {
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 511, 511);
-        view = cameraUpdates.setZoom(view, context, 10);
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 10);
 
         const tileManager = createTileManager({minzoom: 4, maxzoom: 4});
         tileManager.usedForTerrain = true;
@@ -2890,7 +2890,7 @@ describe('TileManager content elevation', () => {
         tileManager.onAdd(map);
         const context = createCameraContext();
         let view = createCameraViewState();
-        view = cameraUpdates.resize(view, context, 512, 512);
+        view = resize(view, context, 512, 512);
         tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await vi.waitFor(() => expect(tileManager.loaded()).toBe(true));
 
@@ -2938,17 +2938,17 @@ describe('TileManager content elevation', () => {
 
             const context = createCameraContext({projection: 'globe'});
             let view = createCameraViewState();
-            view = cameraUpdates.resize(view, context, 1400, 800);
-            view = cameraUpdates.setZoom(view, context, 4.3);
-            view = cameraUpdates.setMaxPitch(view, 85);
-            view = cameraUpdates.setCenter(view, context, new LngLat(-170, -45));
+            view = resize(view, context, 1400, 800);
+            view = setZoom(view, context, 4.3);
+            view = setMaxPitch(view, 85);
+            view = setCenter(view, context, new LngLat(-170, -45));
             await updateTiles();
             const elevatedTile = tileManager.getLoadedTile(elevatedTileID);
             expect(elevatedTile).toBeInstanceOf(Tile);
 
-            view = cameraUpdates.setCenter(view, context, new LngLat(2.3522, 52.0566));
-            view = cameraUpdates.setPitch(view, 75);
-            view = cameraUpdates.setBearing(view, 180);
+            view = setCenter(view, context, new LngLat(2.3522, 52.0566));
+            view = setPitch(view, 75);
+            view = setBearing(view, 180);
             await updateTiles();
             setNow(now() + 1);
             await updateTiles();
