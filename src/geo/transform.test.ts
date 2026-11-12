@@ -21,6 +21,20 @@ describe('Transform', () => {
             expect(transform.getMaxBounds().toArray()).toEqual([[-Infinity, -50], [Infinity, 65]]);
         });
 
+        test('leaves longitude unbounded when the longitude bounds span 360 degrees', () => {
+            const transform = createMercatorTransform({renderWorldCopies: true});
+            transform.resize(200, 200);
+            transform.setZoom(10);
+
+            transform.setMaxBounds(new LngLatBounds([-180, -50], [180, 65]));
+            transform.setCenter(new LngLat(180, 80));
+
+            expect(transform.zoom).toBe(10);
+            expect(transform.center.lng).toBe(180);
+            expect(transform.center.lat).toBeLessThan(65);
+            expect(transform.getMaxBounds().toArray()).toEqual([[-180, -50], [180, 65]]);
+        });
+
         test('rejects one-sided infinite longitude bounds', () => {
             const transform = createMercatorTransform();
 

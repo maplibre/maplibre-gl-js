@@ -480,6 +480,10 @@ export class MercatorTransform implements IProjectionTransform {
 
         let lngRange = this._cameraState.lngRange;
 
+        if (lngRange && (lngRange[1] - lngRange[0]) % 360 === 0) {
+            lngRange = null;
+        }
+
         if (!this._cameraState.renderWorldCopies && lngRange === null) {
             const almost180 = 180 - 1e-10;
             lngRange = [-almost180, almost180];
