@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {LngLat, earthRadius} from '../lng_lat.ts';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed.ts';
-import {MercatorTransform, createMercatorTransform} from './mercator_transform.ts';
+import {createMercatorTransform} from './mercator_transform.ts';
 import {LngLatBounds} from '../lng_lat_bounds.ts';
 import {getMercatorHorizon} from './mercator_utils.ts';
 import {mat4} from 'gl-matrix';
@@ -14,6 +14,7 @@ import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorWorldCoordinateHelper, mercatorZfromAltitude} from '../mercator_coordinate.ts';
 import {createCameraViewState} from '../../camera/camera_view_state.ts';
 import {createCameraMetrics} from '../../camera/projected_camera.ts';
+import {createMercatorProjectedCamera, raycastTerrain} from '../../camera/mercator_camera_math.ts';
 
 import type {Tile} from '../../tile/tile.ts';
 import type {Transform} from '../transform.ts';
@@ -973,14 +974,6 @@ function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Tra
     return transform;
 }
 
-function createRayTransform(near: number[], far: number[]): MercatorTransform {
-    const cameraState = createCameraViewState();
-    const metrics = createCameraMetrics(cameraState, mercatorWorldCoordinateHelper);
-    const part = new MercatorTransform(cameraState, () => metrics);
-    Object.defineProperty(part, 'getRaySegmentFromPixel', {value: () => ({near, far})});
-    return part;
-}
-
 function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCoordinate, worldSize: number): void {
     expect(Math.abs(actual.x - expected.x) * worldSize).toBeLessThan(1e-3);
     expect(Math.abs(actual.y - expected.y) * worldSize).toBeLessThan(1e-3);
@@ -1224,11 +1217,11 @@ describe('MercatorTransform.screenTerrainPointToMercatorCoordinate', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const terrain = createDEMTerrain([tileID], createDEM((x) => x * 200));
 
-        const crossing = createRayTransform([0, 256, 500], [512, 256, 500]);
-        expect(crossing.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).not.toBeNull();
+        const metrics = createCameraMetrics(createCameraViewState(), mercatorWorldCoordinateHelper);
+        const projectedCamera = createMercatorProjectedCamera(metrics, mercatorWorldCoordinateHelper);
 
-        const aboveEverything = createRayTransform([0, 256, 5000], [512, 256, 5000]);
-        expect(aboveEverything.screenTerrainPointToMercatorCoordinate(new Point(0, 0), terrain)).toBeNull();
+        expect(raycastTerrain(projectedCamera, mercatorWorldCoordinateHelper, [0, 256, 500], [512, 256, 500], terrain)).not.toBeNull();
+        expect(raycastTerrain(projectedCamera, mercatorWorldCoordinateHelper, [0, 256, 5000], [512, 256, 5000], terrain)).toBeNull();
     });
 });
 
