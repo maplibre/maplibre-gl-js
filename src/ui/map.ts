@@ -18,6 +18,7 @@ import {HandlerManager} from './handler_manager.ts';
 import {MapEventFactory} from './map_event_factory.ts';
 import {createMapHandlers} from './handler/create_map_handlers.ts';
 import {Camera, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions} from './camera.ts';
+import {createMapStore, type MapStore} from './map_state.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -622,6 +623,8 @@ export class Map extends Evented<MapEventType> {
     style: Style;
     painter: Painter;
     _camera: Camera;
+    /** The map's state, which the camera and the other parts of the map keep theirs in, see {@link MapState}. */
+    private readonly _store: MapStore;
     private _handlerManager: HandlerManager;
     private _eventFactory: MapEventFactory;
     _container: HTMLElement;
@@ -796,7 +799,9 @@ export class Map extends Evented<MapEventType> {
             requestRenderFrame: (callback) => this._requestRenderFrame(callback),
             cancelRenderFrame: (id) => this._cancelRenderFrame(id)
         };
+        this._store = createMapStore();
         this._camera = new Camera({
+            store: this._store,
             minZoom: resolvedOptions.minZoom,
             maxZoom: resolvedOptions.maxZoom,
             minPitch: resolvedOptions.minPitch,

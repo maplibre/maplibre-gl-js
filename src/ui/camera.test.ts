@@ -19,6 +19,7 @@ import {resize, setCenter, setElevation, setMaxPitch, setMaxZoom, setMinZoom, se
 import {getCameraMotions} from '../camera/camera_motions_factory.ts';
 import {usesGlobeControls} from '../camera/camera_context.ts';
 import Point from '@mapbox/point-geometry';
+import {createMapStore} from './map_state.ts';
 
 import type {Terrain} from '../render/terrain.ts';
 import type {MapControlsDeltas} from '../camera/camera_motions.ts';
@@ -35,6 +36,7 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
     options ||= {};
     const queue = new TaskQueue();
     const camera = new Camera({
+        store: createMapStore(),
         minZoom: options.minZoom || 0,
         maxZoom: options.maxZoom || 20,
         minPitch: options.minPitch || 0,

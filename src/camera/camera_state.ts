@@ -7,8 +7,8 @@ import type {CenterElevationRule} from './center_elevation.ts';
 
 /**
  * @internal
- * The state of a {@link Camera}, as immutable plain data. Only the actions below change it, each through
- * {@link applyAction}, which leaves the state before it as it was.
+ * The state of a {@link Camera}, as immutable plain data, held in the `camera` field of the map's state. Only the
+ * actions below change it, each through {@link applyAction}, which leaves the state before it as it was.
  *
  * It holds what the camera the map is drawn with is derived from, not that camera itself, see `Camera.renderedState`.
  * What the camera works with but does not own, such as its projection, the constrain it was given and the terrain, is

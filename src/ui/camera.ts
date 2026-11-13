@@ -21,6 +21,7 @@ import {sampleAt} from '../render/terrain_coverage.ts';
 import {takeDrawnElevation} from '../camera/center_elevation.ts';
 import {adjustCamera, applyAction, combineActions, constrainView, createCameraState, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjection, setProjectionTransition, startMovement, terrainChanged} from '../camera/camera_state.ts';
 import {CameraMovementScheduler} from './camera_movement_scheduler.ts';
+import {subscribeToSlice, type MapStore} from './map_state.ts';
 
 import type {MapEventType} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
@@ -278,6 +279,8 @@ export type CameraInitOptions = {
     /** The map's render loop, on which the camera runs each frame of an animation. */
     renderLoop: RenderLoop;
     transformCameraUpdate: CameraUpdateTransformFunction | null;
+    /** The map's store, in whose `camera` field the camera keeps its state, see {@link MapState}. */
+    store: MapStore;
 };
 
 /** What {@link Camera.renderedState} was last derived from, and the camera it derived. */
@@ -363,7 +366,7 @@ export class Camera extends Evented<MapEventType> {
      * way, and what else the rendered camera is derived from. Only actions change it, see {@link Camera._onStateChange}
      * for what follows a change.
      */
-    private _state: CameraState;
+    private readonly _store: MapStore;
     /** How many {@link Camera._batch} calls are under way, during which the camera is adjusted once, at the end. */
     private _batching = 0;
     /** Whether the camera changed while {@link Camera._batch} held its adjustment back. */
@@ -401,7 +404,9 @@ export class Camera extends Evented<MapEventType> {
         if (options.maxPitch !== undefined) view = setMaxPitch(view, options.maxPitch);
         if (options.renderWorldCopies !== undefined) view = setRenderWorldCopies(view, context.worldCoordinateHelper, options.renderWorldCopies);
         this._elevationHandedOut = view.elevation;
-        this._state = createCameraState(view);
+        this._store = options.store;
+        this._store.setState({camera: createCameraState(view)});
+        subscribeToSlice(this._store, (state) => state.camera, this._onStateChange);
         this._bearingSnap = options.bearingSnap;
         this._zoomSnap = options.zoomSnap;
         this.terrain = options.terrain;
@@ -415,13 +420,22 @@ export class Camera extends Evented<MapEventType> {
         });
     }
 
-    /** Changes the camera's state, see {@link CameraAction}, and lets {@link Camera._onStateChange} follow the change. */
+    /** The camera's state, see {@link CameraState}. */
+    private get _state(): CameraState {
+        return this._store.getState().camera;
+    }
+
+    /**
+     * Changes the camera's state, see {@link CameraAction}, leaving the rest of the map's state as it is;
+     * {@link Camera._onStateChange} hears of the change.
+     */
     private _dispatch(action: CameraAction): void {
-        const previous = this._state;
-        const state = applyAction(previous, action);
-        if (state === previous) return;
-        this._state = state;
-        this._onStateChange(state, previous);
+        this._batch(() => {
+            this._store.setState((state) => {
+                const camera = applyAction(state.camera, action);
+                return camera === state.camera ? state : {camera};
+            });
+        });
     }
 
     /**
@@ -430,11 +444,7 @@ export class Camera extends Evented<MapEventType> {
      */
     private readonly _onStateChange = (state: CameraState, previous: CameraState): void => {
         if (state.view === previous.view && state.centerElevation === previous.centerElevation && state.terrainRevision === previous.terrainRevision) return;
-        if (this._batching) {
-            this._changedInBatch = true;
-            return;
-        }
-        this._adjustMovement();
+        this._changedInBatch = true;
     };
 
     /** Runs an update that dispatches several actions, adjusting the camera once at its end if they changed it. */
