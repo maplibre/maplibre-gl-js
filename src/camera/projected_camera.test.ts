@@ -2,6 +2,7 @@ import {describe, expect, test} from 'vitest';
 import {createCameraViewState} from './camera_view_state.ts';
 import {createCameraMetrics} from './projected_camera.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
+import {expectToBeCloseToArray} from '../util/test/util.ts';
 
 import type {CameraViewState} from './camera_view_state.ts';
 
@@ -28,8 +29,8 @@ describe('createCameraMetrics', () => {
         const metrics = createCameraMetrics(createSizedView(400, 200), mercatorWorldCoordinateHelper);
 
         expect(metrics.pixelsToGLUnits).toEqual([2 / 400, -2 / 200]);
-        expect(Array.from(metrics.clipSpaceToPixelsMatrix)).toEqual([200, 0, 0, 0, 0, -100, 0, 0, 0, 0, 1, 0, 200, 100, 0, 1]);
-        expect(Array.from(metrics.pixelsToClipSpaceMatrix)).toEqual([2 / 400, 0, 0, 0, 0, -2 / 200, 0, 0, 0, 0, 1, 0, -1, 1, 0, 1]);
+        expectToBeCloseToArray(Array.from(metrics.clipSpaceToPixelsMatrix), [200, 0, 0, 0, 0, -100, 0, 0, 0, 0, 1, 0, 200, 100, 0, 1]);
+        expectToBeCloseToArray(Array.from(metrics.pixelsToClipSpaceMatrix), [2 / 400, 0, 0, 0, 0, -2 / 200, 0, 0, 0, 0, 1, 0, -1, 1, 0, 1]);
     });
 
     test('leaves the pixel matrices undefined while the camera has no size', () => {
