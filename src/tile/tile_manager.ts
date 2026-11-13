@@ -209,6 +209,9 @@ export class TileManager extends Evented<SourceEventType> {
             } else {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
                 this.update(this.transform, this.terrain);
+                // Unlike a loaded tile or another error, a 404 fires no event that makes the map render again, and
+                // 'load' and 'idle' are only fired from a rendered frame (#8929).
+                this.map?.triggerRepaint();
             }
         }
     }
