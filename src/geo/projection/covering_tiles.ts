@@ -6,9 +6,11 @@ import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {earthRadius} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
+import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 
 import type {Terrain} from '../../render/terrain.ts';
 import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -164,13 +166,14 @@ const defaultTileCountMaxMinRatio = 3.0;
 const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
 
 /**
- * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
+ * Return what zoom level of a tile source would most closely cover the tiles displayed by this camera.
+ * @param projectedCamera - The camera, of which only the zoom and the tile size are read.
  * @param options - The options, most importantly the source's tile size.
  * @returns An integer zoom level at which all tiles will be visible.
  */
-export function coveringZoomLevel(transform: IReadonlyTransform, options: CoveringTilesOptions): number {
+export function coveringZoomLevel(projectedCamera: Pick<ProjectedCamera, 'zoom' | 'tileSize'>, options: CoveringTilesOptions): number {
     const z = (options.roundZoom ? Math.round : Math.floor)(
-        transform.zoom + scaleZoom(transform.tileSize / options.tileSize)
+        projectedCamera.zoom + scaleZoom(projectedCamera.tileSize / options.tileSize)
     );
     // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
     return Math.max(0, z);
@@ -289,12 +292,12 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     if (plane && options.maxContentElevation > 0) {
         ({frustum, plane} = expandCullingToContentElevation(frustum, plane, transform.cameraPosition, options.maxContentElevation));
     }
-    const detailsProvider = transform.getCoveringTilesDetailsProvider();
-    const center = detailsProvider.getCenter(transform);
+    const detailsProvider = getCoveringTilesDetailsProvider(transform.projectedCamera);
+    const center = detailsProvider.getCenter(transform.projectedCamera);
     const cameraCoord = cameraMercatorCoordinate(transform, center);
     const centerCoord = transform.worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, transform.elevation);
     const elevationForTileCulling = getElevationForTileCulling(transform, options.maxContentElevation);
-    const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
+    const allowVariableZoom = detailsProvider.allowVariableZoom(transform.projectedCamera, options);
     
     const desiredZ = coveringZoomLevel(transform, options);
     const minZoom = options.minzoom || 0;
