@@ -2,96 +2,86 @@ import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
 import {smartWrap} from './smart_wrap.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
-
-const transform = createMercatorTransform();
-transform.resize(100, 100);
-transform.isPointOnMapSurface = (p) => p.y > transform.height / 2; // any point below map center is considered to be on the map's surface
+import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {createTestCamera} from './test/util.ts';
 
 describe('smartWrap', () => {
     test('Shifts lng to -360 deg when such point is closer to the priorPos', () => {
-        transform.locationToScreenPoint = ((ll: LngLat) => {
-            if (ll.lng === -360) {
-                return new Point(90, 51); // close to priorPos & below horizon
-            } else {
-                return new Point(120, 51);
-            }
-        });
+        // A viewport wider than the world shows the copies at -360 and +360 deg on either side of the center.
+        const {projectedCamera, context} = createTestCamera({width: 1200, height: 100, zoom: 0, center: [0, 0]});
+        const priorPos = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(-360, 0)).add(new Point(2, 1));
 
         const result = smartWrap(
             new LngLat(0, 0),
-            new Point(100, 51),
-            transform);
+            priorPos,
+            projectedCamera,
+            context.worldCoordinateHelper);
         expect(result.lng).toBe(-360);
     });
 
     test('Shifts lng to +360 deg when such point is closer to the priorPos', () => {
-        transform.locationToScreenPoint = ((ll: LngLat) => {
-            if (ll.lng === 360) {
-                return new Point(90, 51); // close to priorPos & below horizon
-            } else {
-                return new Point(120, 51);
-            }
-        });
+        const {projectedCamera, context} = createTestCamera({width: 1200, height: 100, zoom: 0, center: [0, 0]});
+        const priorPos = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(360, 0)).add(new Point(-2, 1));
 
         const result = smartWrap(
             new LngLat(0, 0),
-            new Point(100, 51),
-            transform);
+            priorPos,
+            projectedCamera,
+            context.worldCoordinateHelper);
         expect(result.lng).toBe(360);
     });
 
     test('Does not change lng when there are no closer points at -360 and +360 deg', () => {
-        transform.locationToScreenPoint = ((ll: LngLat) => {
-            if (ll.lng === 15) {
-                return new Point(90, 51); // close to priorPos & below horizon
-            } else {
-                return new Point(12000, 51);
-            }
-        });
+        const {projectedCamera, context} = createTestCamera({width: 1200, height: 100, zoom: 0, center: [0, 0]});
+        const priorPos = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(15, 0)).add(new Point(2, 1));
 
         const result = smartWrap(
             new LngLat(15, 0),
-            new Point(100, 51),
-            transform);
+            priorPos,
+            projectedCamera,
+            context.worldCoordinateHelper);
         expect(result.lng).toBe(15);
     });
 
     test('Does not change lng to -360 deg when such point is above horizon', () => {
-        transform.locationToScreenPoint = ((ll: LngLat) => {
-            if (ll.lng === -360) {
-                return new Point(90, 49); // close to priorPos BUT above horizon
-            } else {
-                return new Point(120, 51);
-            }
-        });
+        // Looking west at a steep pitch, the copy at -360 deg is far ahead, beyond the horizon the map draws to.
+        const {projectedCamera, context} = createTestCamera({width: 1200, height: 600, zoom: 5, center: [0, 0], maxPitch: 85, pitch: 80, bearing: -90});
+        const priorPos = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, new LngLat(-360, 0));
+        expect(getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, context.worldCoordinateHelper, priorPos)).toBe(false);
 
         const result = smartWrap(
             new LngLat(0, 0),
-            new Point(100, 51),
-            transform);
+            priorPos,
+            projectedCamera,
+            context.worldCoordinateHelper);
         expect(result.lng).toBe(0);
     });
 
     test('Shifts lng to -360 if lng is outside viewport on the right and at least 180° from map center', () => {
-        transform.center.lng = 50;
-        transform.locationToScreenPoint = (() => new Point(110, 51)); // outside viewport
+        const {projectedCamera, context} = createTestCamera({width: 100, height: 100, zoom: 0, center: [50, 0]});
+        const lngLat = new LngLat(250, 0); // 200 from map center
+        const priorPos = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, lngLat);
+        expect(priorPos.x).toBeGreaterThan(projectedCamera.width);
 
         const result = smartWrap(
-            new LngLat(250, 0), // 200 from map center
-            new Point(0, 0), // priorPos doesn't matter in this case
-            transform);
+            lngLat,
+            priorPos,
+            projectedCamera,
+            context.worldCoordinateHelper);
         expect(result.lng).toBe(-110);
     });
 
     test('Shifts lng to +360 if lng is outside viewport on the left and at least 180° from map center', () => {
-        transform.center.lng = 50;
-        transform.locationToScreenPoint = (() => new Point(-10, 51)); // outside viewport
+        const {projectedCamera, context} = createTestCamera({width: 100, height: 100, zoom: 0, center: [50, 0]});
+        const lngLat = new LngLat(-150, 0); // 200 from map center
+        const priorPos = getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, lngLat);
+        expect(priorPos.x).toBeLessThan(0);
 
         const result = smartWrap(
-            new LngLat(-150, 0), // 200 from map center
-            new Point(0, 0), // priorPos doesn't matter in this case
-            transform);
+            lngLat,
+            priorPos,
+            projectedCamera,
+            context.worldCoordinateHelper);
         expect(result.lng).toBe(210);
     });
 });

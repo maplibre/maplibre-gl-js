@@ -5,7 +5,7 @@ import type {TileMatrixSet} from './projection/tile_matrix_set.ts';
 /**
  * @internal
  * Maps between geographic coordinates and the 0..1 world square that the tile
- * quad-tree subdivides. Transform and camera code goes through this seam instead of
+ * quad-tree subdivides. Camera code goes through this seam instead of
  * calling the mercator functions directly, so a projection with a different planar
  * mapping only has to supply this.
  *

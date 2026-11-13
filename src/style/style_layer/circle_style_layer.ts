@@ -42,7 +42,7 @@ export class CircleStyleLayer extends StyleLayer {
         feature,
         featureState,
         geometry,
-        transform,
+        projectedCamera,
         pixelsToTileUnits,
         unwrappedTileID,
         getElevation}: QueryIntersectsFeatureParams
@@ -50,7 +50,7 @@ export class CircleStyleLayer extends StyleLayer {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('circle-translate'),
             this.paint.get('circle-translate-anchor'),
-            -transform.bearingInRadians, pixelsToTileUnits);
+            -projectedCamera.bearingInRadians, pixelsToTileUnits);
         const radius = this.paint.get('circle-radius').evaluate(feature, featureState);
         const stroke = this.paint.get('circle-stroke-width').evaluate(feature, featureState);
         const size  = radius + stroke;
@@ -69,14 +69,14 @@ export class CircleStyleLayer extends StyleLayer {
             transformedPolygon = translatedPolygon;
             transformedSize = size * pixelsToTileUnits;
         } else {
-            transformedPolygon = projectQueryGeometry(translatedPolygon, transform, unwrappedTileID, getElevation);
+            transformedPolygon = projectQueryGeometry(translatedPolygon, projectedCamera, unwrappedTileID, getElevation);
             transformedSize = size;
         }
 
         return circleIntersection({
             queryGeometry: transformedPolygon,
             size: transformedSize,
-            transform,
+            projectedCamera,
             unwrappedTileID,
             getElevation,
             pitchAlignment,

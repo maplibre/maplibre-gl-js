@@ -44,13 +44,13 @@ export class FillStyleLayer extends StyleLayer {
     queryIntersectsFeature({
         queryGeometry,
         geometry,
-        transform,
+        projectedCamera,
         pixelsToTileUnits}: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('fill-translate'),
             this.paint.get('fill-translate-anchor'),
-            -transform.bearingInRadians, pixelsToTileUnits);
+            -projectedCamera.bearingInRadians, pixelsToTileUnits);
         return polygonIntersectsMultiPolygon(translatedPolygon, geometry);
     }
 

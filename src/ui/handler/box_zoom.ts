@@ -157,7 +157,7 @@ export class BoxZoomHandler extends Evented<MapEventType> implements Handler {
                 this._boxZoomEnd(p0, p1, e);
                 return;
             }
-            const easeTo = this._camera.cameraForScreenBox(p0, p1, this._camera.proposedTransform.bearing);
+            const easeTo = this._camera.cameraForScreenBox(p0, p1, this._camera.proposedProjectedCamera.bearing);
             if (easeTo) return {easeTo};
         }
     }
