@@ -1,5 +1,5 @@
-import {describe, test, expect, vi} from 'vitest';
-import {adjustCamera, applyAction, combineActions, constrainView, createCameraState, createCameraStore, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjectionTransition, startMovement, terrainChanged} from './camera_state.ts';
+import {describe, test, expect} from 'vitest';
+import {adjustCamera, applyAction, combineActions, constrainView, createCameraState, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjectionTransition, startMovement, terrainChanged} from './camera_state.ts';
 import {createCameraViewState} from './camera_view_state.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {createCameraContext} from './camera_context.ts';
@@ -113,31 +113,5 @@ describe('camera state', () => {
 
         state = applyAction(state, combineActions(startMovement(), adjustCamera({zoom: 3})));
         expect(state.motion).toEqual({moving: true, adjustment: {zoom: 3}});
-    });
-});
-
-describe('camera store', () => {
-    test('notifies its listeners of a change with the state before it', () => {
-        const store = createCameraStore(cameraAt(0));
-        const listener = vi.fn();
-        store.subscribe(listener);
-        const previous = store.getState();
-
-        store.setState(setViewElevation(100));
-
-        expect(listener).toHaveBeenCalledTimes(1);
-        expect(listener).toHaveBeenCalledWith(store.getState(), previous);
-        expect(store.getState().view.elevation).toBe(100);
-    });
-
-    test('notifies no listener of an action that changes nothing', () => {
-        const camera = cameraAt(0);
-        const store = createCameraStore(camera);
-        const listener = vi.fn();
-        store.subscribe(listener);
-
-        store.setState(setView(camera));
-
-        expect(listener).not.toHaveBeenCalled();
     });
 });

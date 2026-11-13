@@ -1,4 +1,3 @@
-import {createStore, type StoreApi} from 'zustand/vanilla';
 import {constrainState, resize} from './camera_updates.ts';
 
 import type {CameraViewState} from './camera_view_state.ts';
@@ -8,8 +7,8 @@ import type {CenterElevationRule} from './center_elevation.ts';
 
 /**
  * @internal
- * The state of a {@link Camera}, as immutable plain data, held in its {@link CameraStore}. Only the actions below
- * change it, each through {@link applyAction}, which leaves the state before it as it was.
+ * The state of a {@link Camera}, as immutable plain data, held in the `camera` field of the map's state. Only the
+ * actions below change it, each through {@link applyAction}, which leaves the state before it as it was.
  *
  * It holds what the camera the map is drawn with is derived from, not that camera itself, see `Camera.renderedState`.
  * What the camera works with but does not own, such as its projection, the constrain it was given and the terrain, is
@@ -72,14 +71,6 @@ export type CameraAdjustment = Readonly<{
 
 /**
  * @internal
- * The store that holds a camera's {@link CameraState}. Its `setState` applies an action as {@link applyAction} does,
- * and listeners subscribed to it hear of every change with the state before it; an action that changes nothing
- * notifies no listener.
- */
-export type CameraStore = StoreApi<CameraState>;
-
-/**
- * @internal
  * A change to the camera's state, applied with {@link applyAction}: a pure function of the state that returns the
  * fields it changes, or the state itself when it changes nothing.
  */
@@ -95,11 +86,6 @@ export function createCameraState(view: CameraViewState): CameraState {
         projection: 'mercator',
         projectionTransition: 1,
     };
-}
-
-/** @internal Creates the store of a camera at rest on the given view, see {@link createCameraState}. */
-export function createCameraStore(view: CameraViewState): CameraStore {
-    return createStore<CameraState>()(() => createCameraState(view));
 }
 
 /**
