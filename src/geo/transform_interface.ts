@@ -8,10 +8,10 @@ import type {PaddingOptions} from './edge_insets.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
-import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
 import type {WorldCoordinateHelper} from './world_types.ts';
 import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -241,6 +241,12 @@ export interface IReadonlyTransform extends ITransformGetters, IReadonlyProjecti
     clone(): ITransform;
 
     /**
+     * @internal
+     * The camera projected in the transform's projection, which its matrices and projected positions are computed from.
+     */
+    get projectedCamera(): ProjectedCamera;
+
+    /**
      * The near clipping plane of the projection matrix, computed by the projection unless overridden.
      */
     get nearZ(): number;
@@ -334,7 +340,7 @@ export interface IReadonlyTransform extends ITransformGetters, IReadonlyProjecti
 
 /**
  * @internal
- * The members of {@link IReadonlyTransform} that each projection implements.
+ * The members of {@link IReadonlyTransform} that depend on the projection.
  */
 export interface IReadonlyProjectionTransform {
     get modelViewProjectionMatrix(): mat4;
@@ -368,12 +374,6 @@ export interface IReadonlyProjectionTransform {
      * to describe the render geometry (additional clipping is not required), this may be null.
      */
     getClippingPlane(): vec4 | null;
-
-    /**
-     * @internal
-     * Returns this transform's CoveringTilesDetailsProvider.
-     */
-    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider;
 
     /**
      * @internal

@@ -1,7 +1,8 @@
 import Point from '@mapbox/point-geometry';
 import {cameraBoundsWarning, type CameraForBoxAndBearingHandlerResult, type EaseToHandlerResult, type EaseToHandlerOptions, type FlyToHandlerResult, type FlyToHandlerOptions, type ICameraHelper, type MapControlsDeltas, updateRotation, cameraForBoxAndBearing} from './camera_helper.ts';
 import {LngLat, type LngLatLike} from '../lng_lat.ts';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe, versorSetLocationAtPoint} from './globe_utils.ts';
+import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from './globe_utils.ts';
+import {versorSetLocationAtPoint} from '../../camera/vertical_perspective_camera_solver.ts';
 import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../../util/util.ts';
 import {type mat4, vec3} from 'gl-matrix';
 import {normalizeCenter} from '../transform.ts';
