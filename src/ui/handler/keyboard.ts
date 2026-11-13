@@ -1,7 +1,7 @@
 import {evaluateZoomSnap} from '../../util/util.ts';
 
 import type {Handler, HandlerResult} from '../handler_manager.ts';
-import type {TransformProvider} from './transform-provider.ts';
+import type {Camera} from '../camera.ts';
 
 const defaultOptions = {
     panStep: 100,
@@ -26,7 +26,7 @@ const defaultOptions = {
  * @group Handlers
  */
 export class KeyboardHandler implements Handler {
-    _tr: TransformProvider;
+    _camera: Camera;
     _enabled: boolean;
     _active: boolean;
     _panStep: number;
@@ -35,8 +35,8 @@ export class KeyboardHandler implements Handler {
     _rotationDisabled: boolean;
 
     /** @internal */
-    constructor(transformProvider: TransformProvider) {
-        this._tr = transformProvider;
+    constructor(camera: Camera) {
+        this._camera = camera;
         const stepOptions = defaultOptions;
         this._panStep = stepOptions.panStep;
         this._bearingStep = stepOptions.bearingStep;
@@ -116,18 +116,18 @@ export class KeyboardHandler implements Handler {
             pitchDir = 0;
         }
 
-        const tr = this._tr;
+        const {zoom, bearing, pitch, center} = this._camera.proposedTransform;
         return {
             easeTo: {
                 duration: 300,
                 easeId: 'keyboardHandler',
                 easing: easeOut,
 
-                zoom: zoomDir ? evaluateZoomSnap(tr.zoom + zoomDir * (e.shiftKey ? 2 : 1), tr.zoomSnap) : tr.zoom,
-                bearing: tr.bearing + bearingDir * this._bearingStep,
-                pitch: tr.pitch + pitchDir * this._pitchStep,
+                zoom: zoomDir ? evaluateZoomSnap(zoom + zoomDir * (e.shiftKey ? 2 : 1), this._camera.getZoomSnap()) : zoom,
+                bearing: bearing + bearingDir * this._bearingStep,
+                pitch: pitch + pitchDir * this._pitchStep,
                 offset: [-xDir * this._panStep, -yDir * this._panStep],
-                center: tr.center
+                center: {lng: center.lng, lat: center.lat}
             }
         };
     }

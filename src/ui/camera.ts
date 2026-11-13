@@ -276,6 +276,13 @@ export class Camera extends Evented<MapEventType> {
      * {@link Camera.getTransformForUpdate}.
      */
     get transform(): IReadonlyTransform { return this._transform; }
+
+    /**
+     * @internal
+     * The transform the camera has been asked for: while a movement runs, `transformCameraUpdate` or the terrain may
+     * draw a different one, and the handlers add their changes up on the one they asked for.
+     */
+    get proposedTransform(): IReadonlyTransform { return this._requestedCameraState || this._transform; }
     /**
      * @internal
      * Copy of the map's `terrain` (which the `Map` owns).
@@ -620,14 +627,19 @@ export class Camera extends Evented<MapEventType> {
     }
 
     fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this {
-        return this._fitInternal(
-            this._cameraForBoxAndBearing(
-                this.transform.screenPointToLocation(Point.convert(p0)),
-                this.transform.screenPointToLocation(Point.convert(p1)),
-                bearing,
-                options),
-            options,
-            eventData);
+        return this._fitInternal(this.cameraForScreenBox(p0, p1, bearing, options), options, eventData);
+    }
+
+    /**
+     * The camera that fits a box drawn on the screen with the map turned to `bearing`, which
+     * {@link Camera.fitScreenCoordinates} moves to, or undefined where no zoom fits the box.
+     */
+    cameraForScreenBox(p0: PointLike, p1: PointLike, bearing: number, options?: CameraForBoundsOptions): JumpToOptions | undefined {
+        return this._cameraForBoxAndBearing(
+            this.transform.screenPointToLocation(Point.convert(p0)),
+            this.transform.screenPointToLocation(Point.convert(p1)),
+            bearing,
+            options);
     }
 
     _fitInternal(calculatedOptions?: JumpToOptions, options?: FitBoundsOptions, eventData?: any): this {

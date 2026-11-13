@@ -13,7 +13,6 @@ import {DragPanHandler} from './shim/drag_pan.ts';
 import {DragRotateHandler} from './shim/drag_rotate.ts';
 import {TwoFingersTouchZoomRotateHandler} from './shim/two_fingers_touch.ts';
 import {CooperativeGesturesHandler} from './cooperative_gestures.ts';
-import {TransformProvider} from './transform-provider.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {Camera} from '../camera.ts';
@@ -63,7 +62,6 @@ export type MapHandlersContext = {
  */
 export function createMapHandlers(context: MapHandlersContext, options: CompleteMapOptions): {registrations: HandlerRegistration[]; mapHandlers: MapHandlers} {
     const {camera, canvas, canvasContainer: el} = context;
-    const transformProvider = new TransformProvider(camera);
 
     const registrations: HandlerRegistration[] = [];
     function add(handlerName: string, handler: Handler, allowed?: string[]): void {
@@ -72,7 +70,7 @@ export function createMapHandlers(context: MapHandlersContext, options: Complete
 
     add('mapEvent', new MapEventHandler(context.eventFactory, options));
 
-    const boxZoom = new BoxZoomHandler(el, context.container, options, transformProvider, context.boxZoomEnd);
+    const boxZoom = new BoxZoomHandler(el, context.container, options, camera, context.boxZoomEnd);
     add('boxZoom', boxZoom);
     if (options.interactive && options.boxZoom) {
         boxZoom.enable();
@@ -84,8 +82,8 @@ export function createMapHandlers(context: MapHandlersContext, options: Complete
         cooperativeGestures.enable();
     }
 
-    const tapZoom = new TapZoomHandler(transformProvider);
-    const clickZoom = new ClickZoomHandler(transformProvider);
+    const tapZoom = new TapZoomHandler(camera);
+    const clickZoom = new ClickZoomHandler(camera);
     const doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
     add('tapZoom', tapZoom);
     add('clickZoom', clickZoom);
@@ -136,13 +134,13 @@ export function createMapHandlers(context: MapHandlersContext, options: Complete
 
     add('blockableMapEvent', new BlockableMapEventHandler(context.eventFactory, options), ['touchPan']);
 
-    const scrollZoom = new ScrollZoomHandler(canvas, cooperativeGestures, transformProvider);
+    const scrollZoom = new ScrollZoomHandler(canvas, cooperativeGestures, camera);
     add('scrollZoom', scrollZoom, ['mousePan']);
     if (options.interactive && options.scrollZoom) {
         scrollZoom.enable(options.scrollZoom);
     }
 
-    const keyboard = new KeyboardHandler(transformProvider);
+    const keyboard = new KeyboardHandler(camera);
     add('keyboard', keyboard);
     if (options.interactive && options.keyboard) {
         keyboard.enable();
