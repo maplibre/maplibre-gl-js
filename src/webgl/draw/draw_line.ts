@@ -58,7 +58,8 @@ function updateGradientTexture(
         evaluationKey: 'lineProgress',
         resolution: textureResolution,
         image: layerGradient.gradient || undefined,
-        clips: bucket.lineClipsArray
+        clips: bucket.lineClipsArray,
+        displayP3: context.displayP3
     });
     if (layerGradient.texture) {
         layerGradient.texture.update(layerGradient.gradient);

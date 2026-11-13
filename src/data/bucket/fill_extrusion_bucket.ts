@@ -92,7 +92,7 @@ export class FillExtrusionBucket implements Bucket {
         this.layoutVertexArray = new FillExtrusionLayoutArray();
         this.centroidVertexArray = new PosArray();
         this.indexArray = new TriangleIndexArray();
-        this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
+        this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom, options.displayP3);
         this.segments = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);
     }

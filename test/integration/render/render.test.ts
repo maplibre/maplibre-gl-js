@@ -66,6 +66,8 @@ type TestData = {
     showOverdrawInspector: boolean;
     /** Turns on the canvas's multisample antialiasing. */
     antialias: boolean;
+    /** The color space the map draws in, read back as is. */
+    colorSpace: PredefinedColorSpace;
     showPadding: boolean;
     collisionDebug: boolean;
     localIdeographFontFamily: string;
@@ -699,6 +701,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             maxPitch: options.maxPitch,
             pixelRatio: options.pixelRatio,
             canvasContextAttributes: {preserveDrawingBuffer: true, powerPreference: 'default', antialias: options.antialias ?? false},
+            colorSpace: options.colorSpace,
             fadeDuration: options.fadeDuration || 0,
             localIdeographFontFamily: options.localIdeographFontFamily || false as any,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,

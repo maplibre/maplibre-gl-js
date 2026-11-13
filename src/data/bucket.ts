@@ -24,6 +24,8 @@ export type BucketParameters<Layer extends TypedStyleLayer> = {
     collisionBoxArray: CollisionBoxArray;
     sourceLayerIndex: number;
     sourceID: string;
+    /** Whether the map draws in Display P3, so colors are written in it rather than in sRGB. */
+    displayP3: boolean;
 };
 
 export type PopulateParameters = {

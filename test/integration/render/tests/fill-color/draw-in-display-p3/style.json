@@ -1,0 +1,77 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "A map drawing in Display P3 reads back P3 green and red as is, and sRGB green and red as their P3 values, both as constant and as data-driven fill colors",
+            "width": 256,
+            "height": 64,
+            "colorSpace": "display-p3",
+            "threshold": 0.01
+        }
+    },
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {"id": 0},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[-80, -10], [-80, 10], [-50, 10], [-50, -10], [-80, -10]]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": 1},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[-35, -10], [-35, 10], [-5, 10], [-5, -10], [-35, -10]]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": 2, "color": "color(display-p3 1 0 0)"},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[5, -10], [5, 10], [35, 10], [35, -10], [5, -10]]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": 3, "color": "#ff0000"},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[50, -10], [50, 10], [80, 10], [80, -10], [50, -10]]]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "fill_0",
+            "type": "fill",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], 0],
+            "paint": {"fill-antialias": false, "fill-color": "color(display-p3 0 1 0)"}
+        },
+        {
+            "id": "fill_1",
+            "type": "fill",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], 1],
+            "paint": {"fill-antialias": false, "fill-color": "#00ff00"}
+        },
+        {
+            "id": "fill_data_driven",
+            "type": "fill",
+            "source": "geojson",
+            "filter": [">=", ["get", "id"], 2],
+            "paint": {"fill-antialias": false, "fill-color": ["to-color", ["get", "color"]]}
+        }
+    ]
+}

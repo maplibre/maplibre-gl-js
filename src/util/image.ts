@@ -147,8 +147,16 @@ export class RGBAImage {
         copyImage(srcImg, dstImg, srcPt, dstPt, size, 4);
     }
 
-    setPixel(row: number, col: number, value: Color): void {
+    setPixel(row: number, col: number, value: Color, displayP3?: boolean): void {
         const rLocation = (row * this.width + col) * 4;
+        if (displayP3) {
+            const [r, g, b, alpha] = value.displayP3;
+            this.data[rLocation + 0] = Math.round(r * 255);
+            this.data[rLocation + 1] = Math.round(g * 255);
+            this.data[rLocation + 2] = Math.round(b * 255);
+            this.data[rLocation + 3] = Math.round(alpha * 255);
+            return;
+        }
         this.data[rLocation + 0] = Math.round(value.r * 255 / value.a);
         this.data[rLocation + 1] = Math.round(value.g * 255 / value.a);
         this.data[rLocation + 2] = Math.round(value.b * 255 / value.a);

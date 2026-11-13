@@ -46,6 +46,21 @@ describe('renderColorRamp', () => {
         expect(nearlyEquals(pixelAt(ramp, 255), [255, 0, 0, 255])).toBeTruthy();
     });
 
+    test('renderColorRamp writes Display P3 bytes for a map that draws in Display P3', () => {
+        const expression = createPropertyExpression([
+            'interpolate',
+            ['linear'],
+            ['line-progress'],
+            0, '#00ff00',
+            1, 'color(display-p3 0 1 0)'
+        ], 'line-gradient', spec).value as StylePropertyExpression;
+
+        const ramp = renderColorRamp({expression, evaluationKey: 'lineProgress', displayP3: true});
+
+        expect(Array.from(pixelAt(ramp, 0))).toEqual([117, 251, 76, 255]);
+        expect(Array.from(pixelAt(ramp, 255))).toEqual([0, 255, 0, 255]);
+    });
+
     test('renderColorRamp step', () => {
 
         const expression = createPropertyExpression([

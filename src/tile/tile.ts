@@ -6,6 +6,7 @@ import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
 import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {Texture} from '../webgl/texture.ts';
+import {srgbImageToDisplayP3} from '../util/display_p3.ts';
 import {now} from '../util/time_control.ts';
 import {toEvaluationFeature} from '../data/evaluation_feature.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -386,7 +387,8 @@ export class Tile {
 
         const gl = context.gl;
         if (this.imageAtlas && !this.imageAtlas.uploaded) {
-            this.imageAtlasTexture = new Texture(context, this.imageAtlas.image, gl.RGBA);
+            const {image} = this.imageAtlas;
+            this.imageAtlasTexture = new Texture(context, context.displayP3 ? srgbImageToDisplayP3(image) : image, gl.RGBA);
             this.imageAtlas.uploaded = true;
         }
 

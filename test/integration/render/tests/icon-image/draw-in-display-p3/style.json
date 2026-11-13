@@ -1,0 +1,36 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "A map drawing in Display P3 reads back an sRGB blue icon, from the image atlas, as its P3 value",
+            "width": 64,
+            "height": 64,
+            "colorSpace": "display-p3",
+            "threshold": 0.01,
+            "operations": [
+                ["addImage", "blue", "image/64x64.png"],
+                ["wait"]
+            ]
+        }
+    },
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "data": {
+                "type": "Point",
+                "coordinates": [0, 0]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "icon",
+            "type": "symbol",
+            "source": "geojson",
+            "layout": {
+                "icon-image": "blue",
+                "icon-size": 0.5
+            }
+        }
+    ]
+}

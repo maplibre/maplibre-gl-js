@@ -32,6 +32,7 @@ export class WorkerTile {
     showCollisionBoxes: boolean;
     collectResourceTiming: boolean;
     returnDependencies: boolean;
+    displayP3: boolean;
 
     data: VectorTileLike;
     collisionBoxArray: CollisionBoxArray;
@@ -56,6 +57,7 @@ export class WorkerTile {
         this.showCollisionBoxes = params.showCollisionBoxes;
         this.collectResourceTiming = !!params.collectResourceTiming;
         this.returnDependencies = !!params.returnDependencies;
+        this.displayP3 = !!params.displayP3;
         this.promoteId = params.promoteId;
         this.inFlightDependencies = [];
     }
@@ -118,7 +120,8 @@ export class WorkerTile {
                     overscaling: this.overscaling,
                     collisionBoxArray: this.collisionBoxArray,
                     sourceLayerIndex,
-                    sourceID: this.source
+                    sourceID: this.source,
+                    displayP3: this.displayP3
                 });
 
                 bucket.populate(features, options, this.tileID.canonical);

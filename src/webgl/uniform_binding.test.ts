@@ -1,4 +1,4 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import {
     Uniform1i,
     Uniform1f,
@@ -6,13 +6,15 @@ import {
     Uniform3f,
     Uniform4f,
     UniformFloatArray,
+    UniformColor,
     UniformColorArray,
     UniformMatrix4f
 } from './uniform_binding.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {Context} from './context.ts';
+import {createNullGL} from '../util/test/null_gl.ts';
 
 import type {mat4} from 'gl-matrix';
-import type {Context} from './context.ts';
 
 describe('Uniform Binding', () => {
     test('Uniform1i', () => {
@@ -140,6 +142,45 @@ describe('Uniform Binding', () => {
         expect(u.current).toEqual(v);
         u.set(v);
         u.set([new Color(0.3, 0.4, 0.5), new Color(0.4, 0.5, 0.6), new Color(0.5, 0.6, 0.7)]);
+    });
+
+    test('UniformColor sends sRGB green in Display P3 when the context draws in it', () => {
+        const gl = createNullGL();
+        gl.drawingBufferColorSpace = 'display-p3';
+        const u = new UniformColor(new Context(gl), 0);
+
+        u.set(Color.parse('#00ff00'));
+
+        const [, r, g, b, a] = vi.mocked(gl.uniform4f).mock.calls[0];
+        expect(r).toBeCloseTo(0.458402, 5);
+        expect(g).toBeCloseTo(0.985265, 5);
+        expect(b).toBeCloseTo(0.298295, 5);
+        expect(a).toBe(1);
+    });
+
+    test('UniformColor sends two colors that clip to the same sRGB color when the context draws in Display P3', () => {
+        const gl = createNullGL();
+        gl.drawingBufferColorSpace = 'display-p3';
+        const u = new UniformColor(new Context(gl), 0);
+
+        u.set(Color.parse('color(display-p3 0 1 0)'));
+        u.set(Color.parse('color(display-p3 0.1 1 0)'));
+
+        expect(gl.uniform4f).toHaveBeenCalledTimes(2);
+    });
+
+    test('UniformColorArray sends its colors in Display P3 when the context draws in it', () => {
+        const gl = createNullGL();
+        gl.drawingBufferColorSpace = 'display-p3';
+        const u = new UniformColorArray(new Context(gl), 0);
+
+        u.set([Color.parse('#00ff00')]);
+
+        const values = vi.mocked(gl.uniform4fv).mock.calls[0][1];
+        expect(values[0]).toBeCloseTo(0.458402, 5);
+        expect(values[1]).toBeCloseTo(0.985265, 5);
+        expect(values[2]).toBeCloseTo(0.298295, 5);
+        expect(values[3]).toBe(1);
     });
 
     test('UniformFloatArray', () => {

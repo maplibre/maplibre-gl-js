@@ -29,8 +29,11 @@ function createStyleImage(): StyleImage {
     };
 }
 
-function createTextureStub() {
-    return {update: vi.fn()} as any as Texture;
+function createTextureStub(): Texture {
+    const context = new Context(createNullGL());
+    const texture = new Texture(context, new RGBAImage({width: 16, height: 16}), context.gl.RGBA);
+    vi.spyOn(texture, 'update');
+    return texture;
 }
 
 /**

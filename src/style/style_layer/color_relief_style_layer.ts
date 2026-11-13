@@ -87,7 +87,7 @@ export class ColorReliefStyleLayer extends StyleLayer {
         for (let i = 0; i < colorRamp.elevationStops.length; i++) {
             const elevationPacked = packDEMData(colorRamp.elevationStops[i], unpackVector);
             elevationImage.setPixel(0, i, new Color(elevationPacked.r/255, elevationPacked.g/255, elevationPacked.b/255, 1));
-            colorImage.setPixel(0, i, colorRamp.colorStops[i]);
+            colorImage.setPixel(0, i, colorRamp.colorStops[i], context.displayP3);
         }
         this.colorRampTextures = {
             elevationTexture: new Texture(context, elevationImage, context.gl.RGBA),

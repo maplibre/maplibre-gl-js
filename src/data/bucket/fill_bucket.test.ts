@@ -6,6 +6,8 @@ import {FillBucket} from './fill_bucket.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
+import {Context} from '../../webgl/context.ts';
+import {createNullGL} from '../../util/test/null_gl.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
@@ -93,6 +95,27 @@ describe('FillBucket', () => {
             const feature = sourceLayer.feature(0);
             bucket.addFeature(feature as any, feature.loadGeometry(), undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
         }).not.toThrow();
+    });
+
+    test('packs a data-driven fill-color in Display P3 for a map that draws in it', () => {
+        const layer = new FillStyleLayer({id: 'test', type: 'fill', source: 'source', paint: {'fill-color': ['get', 'color']}}, {});
+        layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+        const bucket = new FillBucket({layers: [layer], zoom: 0, overscaling: 0, index: 0, displayP3: true} as BucketParameters<FillStyleLayer>);
+        const square = [[new Point(0, 0), new Point(16, 0), new Point(16, 16), new Point(0, 16)]];
+        const feature: BucketFeature = {index: 0, sourceLayerIndex: 0, geometry: square, properties: {color: '#00ff00'}, type: 3, patterns: {}};
+
+        bucket.addFeature(feature, square, 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+
+        const context = new Context(createNullGL());
+        const uploaded: number[] = [];
+        const createVertexBuffer = context.createVertexBuffer.bind(context);
+        vi.spyOn(context, 'createVertexBuffer').mockImplementation((array, attributes, dynamicDraw) => {
+            uploaded.push(...new Float32Array(array.arrayBuffer, 0, 2));
+            return createVertexBuffer(array, attributes, dynamicDraw);
+        });
+        bucket.programConfigurations.upload(context);
+
+        expect(uploaded.slice(0, 2)).toEqual([29947, 19711]);
     });
 
     test('FillBucket segmentation', () => {

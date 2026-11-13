@@ -2,6 +2,7 @@
 import {RGBAImage} from '../util/image.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {isStyleImageWebGLData} from '../style/style_image.ts';
+import {srgbImageToDisplayP3} from '../util/display_p3.ts';
 import potpack from 'potpack';
 
 import type {TextFit} from '../style/style_image.ts';
@@ -189,7 +190,7 @@ export class ImageAtlas {
         const [x, y] = position.tl;
         const data = image.userImage?.data;
         if (!isStyleImageWebGLData(data)) {
-            texture.update(image.data, undefined, {x, y});
+            texture.update(texture.context.displayP3 ? srgbImageToDisplayP3(image.data) : image.data, undefined, {x, y});
             return;
         }
 

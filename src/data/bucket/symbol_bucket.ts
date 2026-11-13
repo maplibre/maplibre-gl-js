@@ -364,6 +364,7 @@ export class SymbolBucket implements Bucket {
     writingModes: WritingMode[];
     allowVerticalPlacement: boolean;
     hasRTLText: boolean;
+    displayP3: boolean;
 
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
@@ -374,6 +375,7 @@ export class SymbolBucket implements Bucket {
         this.index = options.index;
         this.pixelRatio = options.pixelRatio;
         this.sourceLayerIndex = options.sourceLayerIndex;
+        this.displayP3 = options.displayP3;
         this.hasDependencies = true;
         this.hasRTLText = false;
         this.maxHeightOffset = 0;
@@ -410,8 +412,8 @@ export class SymbolBucket implements Bucket {
     }
 
     createArrays(): void {
-        this.text = new SymbolBuffers(new ProgramConfigurationSet(this.layers, this.zoom, property => property.startsWith('text')));
-        this.icon = new SymbolBuffers(new ProgramConfigurationSet(this.layers, this.zoom, property => property.startsWith('icon')));
+        this.text = new SymbolBuffers(new ProgramConfigurationSet(this.layers, this.zoom, this.displayP3, property => property.startsWith('text')));
+        this.icon = new SymbolBuffers(new ProgramConfigurationSet(this.layers, this.zoom, this.displayP3, property => property.startsWith('icon')));
 
         this.glyphOffsetArray = new GlyphOffsetArray();
         this.lineVertexArray = new SymbolLineVertexArray();

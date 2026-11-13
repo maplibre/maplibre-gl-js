@@ -11,6 +11,8 @@ export class NullWebGL2RenderingContext {
     private readonly canvas: HTMLCanvasElement;
     private _contextAttributes: WebGLContextAttributes | null;
     private static _idCounter = 1;
+    drawingBufferColorSpace: PredefinedColorSpace = 'srgb';
+    unpackColorSpace: PredefinedColorSpace = 'srgb';
     /**
      * WebGL1 constants
      */

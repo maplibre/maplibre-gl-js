@@ -152,6 +152,13 @@ export type MapOptions = {
      */
     canvasContextAttributes?: WebGLContextAttributesWithType;
     /**
+     * The color space the map draws in. With `'display-p3'`, a color outside sRGB but inside Display P3, such as a vivid
+     * `oklch()` or `color(display-p3 ...)` color, is drawn as the style gives it on a display that can show it, where
+     * `'srgb'` clips it to sRGB. A browser that can't draw WebGL in Display P3 draws the map in sRGB.
+     * @defaultValue 'srgb'
+     */
+    colorSpace?: PredefinedColorSpace;
+    /**
      * If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
      * @defaultValue true
      */
@@ -535,6 +542,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
         desynchronized: false,
         contextType: undefined
     },
+    colorSpace: 'srgb',
 
     scrollZoom: true,
     minZoom: defaultMinZoom,
@@ -654,6 +662,7 @@ export class Map extends Evented<MapEventType> {
     _trackResize: boolean;
     _resizeObserver: ResizeObserver;
     _canvasContextAttributes: WebGLContextAttributesWithType;
+    _colorSpace: PredefinedColorSpace;
     _refreshExpiredTiles: boolean;
     _hash: Hash;
     _delegatedListeners: Record<keyof MapEventType, DelegatedListener[]>;
@@ -821,6 +830,7 @@ export class Map extends Evented<MapEventType> {
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
         this._maxTileCacheZoomLevels = resolvedOptions.maxTileCacheZoomLevels;
         this._canvasContextAttributes = {...resolvedOptions.canvasContextAttributes};
+        this._colorSpace = resolvedOptions.colorSpace;
         this._trackResize = resolvedOptions.trackResize === true;
         this._terrainSkirtLength = resolvedOptions.terrainSkirtLength;
         this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
@@ -4333,6 +4343,16 @@ export class Map extends Evented<MapEventType> {
 
         if (!gl) {
             throw new GPUInitializationError(attributes, creationEvent);
+        }
+
+        if (this._colorSpace === 'display-p3') {
+            if ('drawingBufferColorSpace' in gl && 'unpackColorSpace' in gl) {
+                gl.drawingBufferColorSpace = 'display-p3';
+                gl.unpackColorSpace = 'display-p3';
+            } else {
+                warnOnce('This browser can\'t draw WebGL in Display P3, so the map draws in sRGB.');
+                this._colorSpace = 'srgb';
+            }
         }
 
         this.painter = new Painter(gl);
