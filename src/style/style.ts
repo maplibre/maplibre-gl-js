@@ -513,7 +513,7 @@ export class Style extends Evented<MapEventType> {
         this.stylesheet = nextState;
 
         this.setGlobalState(this.stylesheet.state ?? null);
-        const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', undefined, this._globalState);
+        const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', this._globalState);
         this.projection = projectionObjects.projection;
 
         for (const id in nextState.sources) {
@@ -1837,7 +1837,7 @@ export class Style extends Evented<MapEventType> {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        this._applyProjection(createProjectionFromName(name, undefined, this._globalState));
+        this._applyProjection(createProjectionFromName(name, this._globalState));
     }
 
     /**

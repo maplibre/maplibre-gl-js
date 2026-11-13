@@ -6,7 +6,10 @@ import {fakeServer, type FakeServer} from 'nise';
 import {RasterDEMTileSource} from '../source/raster_dem_tile_source.ts';
 import {OverscaledTileID} from './tile_id.ts';
 import {Tile} from './tile.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createCameraContext} from '../camera/camera_context.ts';
+import {createCameraViewState} from '../camera/camera_view_state.ts';
+import {projectCamera} from '../camera/project_camera.ts';
+import {resize, setCenter, setZoom} from '../camera/camera_updates.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {StubMap, beforeMapTest, createMap} from '../util/test/util.ts';
 import {TileManager} from './tile_manager.ts';
@@ -16,12 +19,9 @@ import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Painter, RTTObject} from '../render/painter.ts';
 import type {Map} from '../ui/map.ts';
 
-const transform = createMercatorTransform();
-
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, null);
     source.onAdd({
-        transform,
         _requestManager: new RequestManager(transformCallback),
         getPixelRatio() { return 1; }
     } as any);
@@ -90,7 +90,7 @@ describe('TerrainTileManager', () => {
         const terrainTileID = new OverscaledTileID(15, 0, 15, 19575, 13242);
         terrainTileManager.getSourceTile(terrainTileID);
         const zoomRangeLoaded = tileManager.once('data');
-        tileManager.onAdd({transform, _requestManager: new RequestManager(), getPixelRatio() { return 1; }} as any as Map);
+        tileManager.onAdd({_requestManager: new RequestManager(), getPixelRatio() { return 1; }} as any as Map);
         await zoomRangeLoaded;
         const demTile = new Tile(terrainTileID.scaledTo(11), 512);
         demTile.dem = {} as DEMData;
@@ -151,21 +151,22 @@ describe('TerrainTileManager', () => {
     describe('update', () => {
         test('reports whether the renderable tiles changed', () => {
             const manager = new TerrainTileManager(style.tileManagers.terrain);
-            const transform = createMercatorTransform();
-            transform.resize(512, 512);
-            transform.setCenter(new LngLat(-46, -6));
-            transform.setZoom(8);
+            const context = createCameraContext();
+            let view = createCameraViewState();
+            view = resize(view, context, 512, 512);
+            view = setCenter(view, context, new LngLat(-46, -6));
+            view = setZoom(view, context, 8);
             const renderableKeys = () => manager.getRenderableTiles().map(tile => tile.tileID.key);
 
-            expect(manager.update(transform.projectedCamera, transform.worldCoordinateHelper, null)).toBe(true);
+            expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(true);
             const keys = renderableKeys();
             expect(keys.length).toBeGreaterThan(0);
 
-            expect(manager.update(transform.projectedCamera, transform.worldCoordinateHelper, null)).toBe(false);
+            expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(false);
             expect(renderableKeys()).toEqual(keys);
 
-            transform.setZoom(9);
-            expect(manager.update(transform.projectedCamera, transform.worldCoordinateHelper, null)).toBe(true);
+            view = setZoom(view, context, 9);
+            expect(manager.update(projectCamera(view, context), context.worldCoordinateHelper, null)).toBe(true);
             expect(renderableKeys()).not.toEqual(keys);
         });
     });

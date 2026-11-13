@@ -11,8 +11,8 @@ import {createGlyphMap, createSymbolBucket, createSymbolIconBucket, createSymbol
 import {RGBAImage} from '../../util/image.ts';
 import {ImagePosition} from '../../render/image_atlas.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
-import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createPopulateOptions, loadVectorTile} from '../../../test/unit/lib/tile.ts';
+import {createTestCamera} from '../../util/test/util.ts';
 import {SymbolBucket} from './symbol_bucket.ts';
 
 import type {BucketParameters, IndexedFeature, PopulateParameters} from '../bucket.ts';
@@ -20,8 +20,7 @@ import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.
 import type {StyleImage} from '../../style/style_image.ts';
 
 const collisionBoxArray = new CollisionBoxArray();
-const transform = createMercatorTransform();
-transform.resize(100, 100);
+const {projectedCamera} = createTestCamera({width: 100, height: 100});
 
 const glyphsByCluster = createGlyphMap();
 
@@ -79,7 +78,7 @@ describe('SymbolBucket', () => {
         const bucketA = bucketSetup();
         const bucketB = bucketSetup();
         const options = createPopulateOptions([]);
-        const placement = new Placement(transform.projectedCamera, undefined, 0, true);
+        const placement = new Placement(projectedCamera, undefined, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 
