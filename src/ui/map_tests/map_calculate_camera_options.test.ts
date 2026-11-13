@@ -4,8 +4,8 @@ import {LngLat} from '../../geo/lng_lat.ts';
 import {mercatorZfromAltitude} from '../../geo/mercator_coordinate.ts';
 
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
-import type {CameraOptions} from '../camera.ts';
 import type {Terrain} from '../../render/terrain.ts';
+import type {CameraOptions} from '../../camera/camera_types.ts';
 
 beforeEach(() => {
     beforeMapTest();

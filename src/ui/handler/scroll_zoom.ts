@@ -2,9 +2,8 @@ import {DOM} from '../../util/dom.ts';
 import {defaultEasing, bezier, zoomScale, scaleZoom, evaluateZoomSnap} from '../../util/util.ts';
 import {now} from '../../util/time_control.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {LngLat} from '../../geo/lng_lat.ts';
 
-import type {TransformProvider} from './transform-provider.ts';
+import type {Camera} from '../camera.ts';
 import type {CooperativeGesturesHandler} from './cooperative_gestures.ts';
 import type {AroundCenterOptions} from './two_fingers_touch.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
@@ -42,7 +41,7 @@ type ScrollZoomWait = {reason: 'singleWheel'; event: WheelEvent} | {reason: 'fin
 export class ScrollZoomHandler implements Handler {
     private _canvas: HTMLElement;
     private _cooperativeGestures: CooperativeGesturesHandler;
-    private _tr: TransformProvider;
+    private _camera: Camera;
     private _enabled: boolean;
     private _active: boolean;
     private _zooming: boolean;
@@ -75,10 +74,10 @@ export class ScrollZoomHandler implements Handler {
     private _wheelZoomRate: number;
 
     /** @internal */
-    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, transformProvider: TransformProvider) {
+    constructor(canvas: HTMLElement, cooperativeGestures: CooperativeGesturesHandler, camera: Camera) {
         this._canvas = canvas;
         this._cooperativeGestures = cooperativeGestures;
-        this._tr = transformProvider;
+        this._camera = camera;
 
         this._delta = 0;
 
@@ -272,11 +271,11 @@ export class ScrollZoomHandler implements Handler {
         delete this._finishWait;
 
         const pos = DOM.mousePos(this._canvas, e);
-        const tr = this._tr;
 
         // Whether aroundPoint is actually unprojectable is not a problem to be solved here, but in handler_manager.ts instead.
         if (this._aroundCenter) {
-            this._aroundPoint = tr.transform.locationToScreenPoint(LngLat.convert(tr.center));
+            const transform = this._camera.proposedTransform;
+            this._aroundPoint = transform.locationToScreenPoint(transform.center);
         } else {
             this._aroundPoint = pos;
         }
@@ -292,7 +291,7 @@ export class ScrollZoomHandler implements Handler {
         this._needsRerender = false;
 
         if (!this.isActive()) return;
-        const tr = this._tr.transform;
+        const tr = this._camera.proposedTransform;
 
         // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)
         if (typeof this._lastExpectedZoom === 'number') {
@@ -319,7 +318,7 @@ export class ScrollZoomHandler implements Handler {
 
             const fromScale = typeof this._targetZoom !== 'number' ? tr.scale : zoomScale(this._targetZoom);
             const target = tr.applyConstrain(tr.getCameraLngLat(), scaleZoom(fromScale * scale)).zoom;
-            const zoomSnap = this._tr.zoomSnap;
+            const zoomSnap = this._camera.getZoomSnap();
 
             if (this._type === 'wheel' && zoomSnap > 0) {
                 const currentSnapped = evaluateZoomSnap(tr.zoom, zoomSnap);

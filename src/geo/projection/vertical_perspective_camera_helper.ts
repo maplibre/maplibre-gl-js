@@ -8,9 +8,9 @@ import {normalizeCenter} from '../transform.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
-import type {CameraForBoundsOptions} from '../../ui/camera.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
+import type {CameraForBoundsOptions} from '../../camera/camera_types.ts';
 
 /**
  * Zoom movement slowing starts when the mouse ray passes further than this above the planet surface,

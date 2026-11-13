@@ -10,28 +10,8 @@ import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
 import type {WorldCoordinateHelper} from './world_types.ts';
+import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
-
-/**
- * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
- * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
- */
-export type TransformConstrainFunction =  (
-    lngLat: LngLat,
-    zoom: number
-) => {
-    center: LngLat;
-    zoom: number;
-};
-
-/**
- * @internal
- * The depth range of a projection matrix, from the near to the far clipping plane.
- */
-export type NearFarZ = {
-    readonly nearZ: number;
-    readonly farZ: number;
-};
 
 export interface ITransformGetters {
     get tileSize(): number;
@@ -250,11 +230,6 @@ export interface IProjectionTransformMutators {
      */
     setTransitionState(value: number): void;
 }
-
-/**
- * The camera placement {@link IReadonlyTransform.calculateCameraOptionsFromTo} solves for.
- */
-export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};
 
 /**
  * @internal

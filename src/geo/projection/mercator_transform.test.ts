@@ -12,7 +12,7 @@ import {CRSWorldCoordinateHelper} from './crs.ts';
 import {Terrain} from '../../render/terrain.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {MercatorCoordinate, mercatorZfromAltitude} from '../mercator_coordinate.ts';
-import {createCameraState} from '../camera_state.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
 
 import type {Tile} from '../../tile/tile.ts';
 import type {Transform} from '../transform.ts';
@@ -973,7 +973,7 @@ function createTransformAt(center: LngLat, zoom: number, pitch: number = 0): Tra
 }
 
 function createRayTransform(near: number[], far: number[]): MercatorTransform {
-    const cameraState = createCameraState();
+    const cameraState = createCameraViewState();
     const part = new MercatorTransform(cameraState);
     Object.defineProperty(part, 'getRaySegmentFromPixel', {value: () => ({near, far})});
     return part;
