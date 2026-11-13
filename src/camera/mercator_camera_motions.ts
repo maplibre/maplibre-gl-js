@@ -186,9 +186,10 @@ export class MercatorCameraMotions implements CameraMotions {
             const base = endZoom > startZoom ? Math.min(2, finalScale) : Math.max(0.5, finalScale);
             const speedup = Math.pow(base, 1 - k);
             const worldSize = getCameraMetrics(frame, worldCoordinateHelper).worldSize;
-            const newCenter = unprojectFromWorldCoordinates(worldSize, from.add(delta.mult(k * speedup)).mult(scale), worldCoordinateHelper);
+            let newCenter = unprojectFromWorldCoordinates(worldSize, from.add(delta.mult(k * speedup)).mult(scale), worldCoordinateHelper);
+            if (frame.renderWorldCopies && worldCoordinateHelper.wraps) newCenter = newCenter.wrap();
             const pointAtOffset = getCenterPoint(frame).add(options.offsetAsPoint);
-            return getCameraSolver(frameContext).setLocationAtPoint(frame, frameContext, frame.renderWorldCopies && worldCoordinateHelper.wraps ? newCenter.wrap() : newCenter, pointAtOffset);
+            return setLocationAtPointKeepingZoom(frame, frameContext, newCenter, pointAtOffset);
         };
 
         const end = cameraAtAnimationEnd(view, context, endZoom, endEulerAngles, options.padding);
@@ -235,10 +236,11 @@ export class MercatorCameraMotions implements CameraMotions {
 
         const easeFunc = (frame: CameraViewState, frameContext: CameraContext, k: number, scale: number, centerFactor: number, pointAtOffset: Point): CameraViewState => {
             frame = setZoom(frame, frameContext, k === 1 ? targetZoom : startZoom + scaleZoom(scale));
-            const newCenter = k === 1 ?
+            let newCenter = k === 1 ?
                 constrainedCenter :
                 unprojectFromWorldCoordinates(startWorldSize, from.add(delta.mult(centerFactor)), worldCoordinateHelper);
-            return getCameraSolver(frameContext).setLocationAtPoint(frame, frameContext, frame.renderWorldCopies && worldCoordinateHelper.wraps ? newCenter.wrap() : newCenter, pointAtOffset);
+            if (frame.renderWorldCopies && worldCoordinateHelper.wraps) newCenter = newCenter.wrap();
+            return setLocationAtPointKeepingZoom(frame, frameContext, newCenter, pointAtOffset);
         };
 
         const end = cameraAtAnimationEnd(view, context, targetZoom, {roll: options.roll, pitch: options.pitch, bearing: options.bearing}, options.padding);
@@ -252,4 +254,12 @@ export class MercatorCameraMotions implements CameraMotions {
             pixelPathLength,
         };
     }
+}
+
+/**
+ * Like the solver's `setLocationAtPoint`, but keeps the frame's zoom, which the globe's solver changes with when passing between projections.
+ */
+function setLocationAtPointKeepingZoom(frame: CameraViewState, context: CameraContext, lngLat: LngLat, point: Point): CameraViewState {
+    const placed = getCameraSolver(context).setLocationAtPoint(frame, context, lngLat, point);
+    return placed.zoom === frame.zoom ? placed : setZoom(placed, context, frame.zoom);
 }

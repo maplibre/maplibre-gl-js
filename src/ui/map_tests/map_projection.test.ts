@@ -1,9 +1,10 @@
-import {afterEach, beforeEach, describe, test, expect} from 'vitest';
+import {afterEach, beforeEach, describe, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest, createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs, createWidePlateCarreeCrs} from '../../util/test/util.ts';
 import {addProjection, removeProjection} from '../../geo/projection/projection_crud.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import * as timeControl from '../../util/time_control.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -191,5 +192,37 @@ describe('Map in a CRS wider than ±180°', () => {
         map.flyTo({center: [200, 0], duration: 0});
 
         expect(map.getCenter().lng).toBeCloseTo(200, 6);
+    });
+});
+
+describe('Map changing its projection to globe during an animation', () => {
+    test('an easeTo ends at the zoom it was asked for', async () => {
+        const map = createMap({center: [10, 40], zoom: 2});
+        await map.once('style.load');
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.easeTo({center: [20, 50], zoom: 5, duration: 1000});
+        now.mockReturnValue(400);
+        map.redraw();
+
+        map.setProjection({type: 'globe'});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getZoom()).toBe(5);
+    });
+
+    test('a flyTo ends at the zoom it was asked for', async () => {
+        const map = createMap({center: [10, 40], zoom: 2});
+        await map.once('style.load');
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.flyTo({center: [20, 50], zoom: 5, duration: 1000});
+        now.mockReturnValue(400);
+        map.redraw();
+
+        map.setProjection({type: 'globe'});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getZoom()).toBe(5);
     });
 });
