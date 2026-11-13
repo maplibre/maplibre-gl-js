@@ -364,10 +364,12 @@ export class Marker extends Evented<MarkerEventType> {
         this._element.addEventListener('dragstart', (e: DragEvent) => {
             e.preventDefault();
         });
-        this._element.addEventListener('mousedown', (e: MouseEvent) => {
-            // prevent focusing on click
-            e.preventDefault();
-        });
+        if (this._defaultMarker) {
+            this._element.addEventListener('mousedown', (e: MouseEvent) => {
+                // prevent focusing on click
+                e.preventDefault();
+            });
+        }
         applyAnchorClass(this._element, this._anchor, 'marker');
 
         if (options?.className) {

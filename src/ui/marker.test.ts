@@ -105,6 +105,27 @@ describe('marker', () => {
         expect(marker.getElement()).toBe(element);
     });
 
+    test.each([false, true])('Marker with custom content preserves native mousedown behavior when draggable is %s', (draggable) => {
+        const element = window.document.createElement('div');
+        const input = window.document.createElement('input');
+        element.appendChild(input);
+        new Marker({element, draggable});
+        const event = new MouseEvent('mousedown', {bubbles: true, cancelable: true});
+
+        input.dispatchEvent(event);
+
+        expect(event.defaultPrevented).toBe(false);
+    });
+
+    test('Marker with a default element prevents native mousedown focus', () => {
+        const marker = new Marker();
+        const event = new MouseEvent('mousedown', {bubbles: true, cancelable: true});
+
+        marker.getElement().dispatchEvent(event);
+
+        expect(event.defaultPrevented).toBe(true);
+    });
+
     test('Marker.addTo adds the marker element to the canvas container', () => {
         const map = createMap();
         new Marker()
