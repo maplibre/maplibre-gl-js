@@ -4,8 +4,8 @@ import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {earthRadius} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
-import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 import {getCameraMath} from '../../camera/camera_math_factory.ts';
+import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
@@ -167,11 +167,10 @@ const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomL
 
 /**
  * Return what zoom level of a tile source would most closely cover the tiles displayed by this camera.
- * @param projectedCamera - The camera, of which only the zoom and the tile size are read.
  * @param options - The options, most importantly the source's tile size.
  * @returns An integer zoom level at which all tiles will be visible.
  */
-export function coveringZoomLevel(projectedCamera: Pick<ProjectedCamera, 'zoom' | 'tileSize'>, options: CoveringTilesOptions): number {
+export function coveringZoomLevel(projectedCamera: ProjectedCamera, options: CoveringTilesOptions): number {
     const z = (options.roundZoom ? Math.round : Math.floor)(
         projectedCamera.zoom + scaleZoom(projectedCamera.tileSize / options.tileSize)
     );

@@ -191,6 +191,6 @@ class MercatorWorldCoordinateHelper implements WorldCoordinateHelper {
 
 /**
  * @internal
- * The one mercator world mapping: it holds no state, so every mercator-based transform shares this instance.
+ * The one mercator world mapping: it holds no state, so every mercator-based camera shares this instance.
  */
 export const mercatorWorldCoordinateHelper: WorldCoordinateHelper = new MercatorWorldCoordinateHelper();

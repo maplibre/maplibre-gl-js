@@ -3,7 +3,7 @@ import type {LngLat, LngLatLike} from '../geo/lng_lat.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 
 /**
- * The callback defining how the transform constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
+ * The callback defining how the camera constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
  * @see [Customize the map transform constrain](https://maplibre.org/maplibre-gl-js/docs/examples/customize-the-map-transform-constrain/)
  */
 export type TransformConstrainFunction =  (
@@ -24,7 +24,8 @@ export type NearFarZ = {
 };
 
 /**
- * The camera placement {@link IReadonlyTransform.calculateCameraOptionsFromTo} solves for.
+ * @internal
+ * The camera placement `calculateCameraOptionsFromTo` of a `CameraSolver` solves for.
  */
 export type CameraOptionsFromTo = {center: LngLat; elevation: number; zoom: number; pitch: number; bearing: number};
 

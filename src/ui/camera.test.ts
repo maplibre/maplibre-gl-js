@@ -54,7 +54,7 @@ function createCamera(options?: Partial<CameraInitOptions>, globe?: boolean, jum
     camera.resize(512, 512, true);
 
     if (globe) {
-        const {projection, cameraProjection} = createProjectionFromName('globe', undefined, {});
+        const {projection, cameraProjection} = createProjectionFromName('globe', {});
         camera.migrateProjection(cameraProjection, projection.worldCoordinateHelper);
     }
 
@@ -2774,7 +2774,7 @@ describe('migrateProjection', () => {
         const zoomed = setZoom(stateBeforeMigration, camera.context, 5);
         camera.applyUpdatedState(setCenter(zoomed, camera.context, new LngLat(10, 20)));
 
-        const {projection, cameraProjection} = createProjectionFromName('globe', undefined, {});
+        const {projection, cameraProjection} = createProjectionFromName('globe', {});
         camera.migrateProjection(cameraProjection, projection.worldCoordinateHelper);
 
         const proposedState = camera.getStateForUpdate();
