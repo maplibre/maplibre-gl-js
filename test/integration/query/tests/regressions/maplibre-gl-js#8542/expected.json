@@ -1,0 +1,34 @@
+[
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -2.999267578125,
+        0
+      ]
+    },
+    "type": "Feature",
+    "properties": {
+      "id": "ak1"
+    },
+    "id": "ak1",
+    "source": "geojson",
+    "state": {}
+  },
+  {
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        0,
+        0
+      ]
+    },
+    "type": "Feature",
+    "properties": {
+      "id": "ak2"
+    },
+    "id": "ak2",
+    "source": "geojson",
+    "state": {}
+  }
+]

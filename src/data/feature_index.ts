@@ -227,6 +227,7 @@ export class FeatureIndex {
         const sourceLayerName = this.sourceLayerCoder.decode(sourceLayerIndex);
         const sourceLayer = this.vtLayers[sourceLayerName];
         const feature = sourceLayer.feature(featureIndex);
+        const id = this.getId(feature, sourceLayerName);
 
         if (filter.needGeometry) {
             const evaluationFeature = toEvaluationFeature(feature, true);
@@ -236,8 +237,6 @@ export class FeatureIndex {
         } else if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), feature)) {
             return;
         }
-
-        const id = this.getId(feature, sourceLayerName);
 
         for (const layerID of layerIDs) {
 
@@ -323,6 +322,12 @@ export class FeatureIndex {
         return false;
     }
 
+    /**
+     * Returns the id of a feature, read from the `promoteId` property when `promoteId` is set, else `feature.id`.
+     *
+     * On the GeoJSON tile layer a defined id is also written onto the feature, so that `["id"]` in a
+     * filter sees it.
+     */
     getId(feature: VectorTileFeatureLike, sourceLayerId: string): string | number {
         let id: string | number = feature.id;
         if (this.promoteId) {
@@ -333,6 +338,10 @@ export class FeatureIndex {
             // When cluster is true, the id is the cluster_id even though promoteId is set
             if (id === undefined && feature.properties?.cluster && this.promoteId) {
                 id = Number(feature.properties.cluster_id);
+            }
+
+            if (sourceLayerId === GEOJSON_TILE_LAYER_NAME && id !== undefined) {
+                (feature as {id: string | number}).id = id;
             }
         }
         return id;
