@@ -1163,7 +1163,7 @@ export class Style extends Evented<MapEventType> {
      * Add a layer to the map style. The layer will be inserted before the layer with
      * ID `before`, or appended if `before` is omitted.
      *
-     * A source given inline is added under the layer's ID and handed to {@link Style.addSource} as it is, without
+     * A source given inline is added under the layer's ID and handed to `addSource` as it is, without
      * being copied, because it can hold a DOM element such as the `canvas` of a canvas source.
      * @param layerObject - The style layer to add.
      * @param before - ID of an existing layer to insert before
