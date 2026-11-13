@@ -1,5 +1,4 @@
 import {beforeEach, describe, test, expect, vi} from 'vitest';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {FrameRenderContext} from '../render/frame_render_context.ts';
@@ -8,7 +7,7 @@ import {Terrain} from '../render/terrain.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
-import {createFrameRenderData} from '../util/test/util.ts';
+import {createFrameRenderData, createTestCamera} from '../util/test/util.ts';
 
 import type {Style} from '../style/style.ts';
 import type {Map} from '../ui/map.ts';
@@ -74,9 +73,7 @@ describe('render to texture', () => {
             size
         };
     }
-    const transform = createMercatorTransform();
-    transform.resize(512, 512);
-    transform.setZoom(10);
+    const {projectedCamera, context} = createTestCamera({width: 512, height: 512, zoom: 10});
     const painter = {
         context: new Context(gl),
         renderLayer: vi.fn(),
@@ -139,7 +136,7 @@ describe('render to texture', () => {
     });
 
     function createFrameRenderContext(): FrameRenderContext {
-        const frameRenderContext = new FrameRenderContext({projectedCamera: transform.projectedCamera, worldCoordinateHelper: transform.worldCoordinateHelper, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera, worldCoordinateHelper: context.worldCoordinateHelper, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
         vi.spyOn(frameRenderContext, 'renderTileClippingMasks').mockImplementation(() => {});
         return frameRenderContext;
     }

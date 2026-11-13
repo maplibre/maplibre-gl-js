@@ -4,7 +4,6 @@ import {NullWebGL2RenderingContext, createNullGL} from './null_gl.ts';
 import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
-import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
 import {createCameraViewState} from '../../camera/camera_view_state.ts';
 import {createCameraContext} from '../../camera/camera_context.ts';
 import {projectCamera} from '../../camera/project_camera.ts';
@@ -40,7 +39,6 @@ import type {Dispatcher} from '../../util/dispatcher.ts';
 import type {Framebuffer} from '../../webgl/framebuffer.ts';
 import type {Tile} from '../../tile/tile.ts';
 import type {TerrainCoverageIndex, TerrainElevationSampler} from '../../render/terrain_coverage.ts';
-import type {Transform} from '../../geo/transform.ts';
 
 export class StubMap extends Evented {
     style: Style;
@@ -321,7 +319,7 @@ export function createTestCameraFrustum(fovy: number, aspectRatio: number, zNear
     const invProj = new Float64Array(16) as any as mat4;
 
     // Note that left handed coordinate space is used where z goes towards the sky.
-    // Y has to be flipped as well because it's part of the projection/camera matrix used in transform.js
+    // Y has to be flipped as well because it's part of the projection/camera matrix used by the cameras
     mat4.perspective(proj, fovy, aspectRatio, zNear, zFar);
     mat4.scale(proj, proj, [1, -1, 1]);
     mat4.translate(proj, proj, [0, 0, elevation]);
@@ -480,23 +478,6 @@ export function createIdentityCrsCamera(width: number, height: number): TestCame
     return createTestCamera(
         {minZoom: -5, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width, height},
         {worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs)});
-}
-
-/**
- * A transform over the built-in identity CRS (the identity over lng/lat, with tile 0/0/0 spanning -90..90 on both
- * axes), sized to the given viewport.
- */
-export function createIdentityCrsTransform(width: number, height: number): Transform {
-    const transform = createMercatorTransform({
-        minZoom: -5,
-        maxZoom: 22,
-        minPitch: 0,
-        maxPitch: 85,
-        renderWorldCopies: true,
-        worldCoordinateHelper: new CRSWorldCoordinateHelper(identityCrs),
-    });
-    transform.resize(width, height);
-    return transform;
 }
 
 /**

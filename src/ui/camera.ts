@@ -75,7 +75,7 @@ const PIVOT_POINT_TOLERANCE = 1e-4;
 export type RotationPivot = {
     point: Point;
     location: LngLat;
-    /** The elevation of a pivot on mercator terrain. Without it the pivot lies on the ground the transform unprojects to. */
+    /** The elevation of a pivot on mercator terrain. Without it the pivot lies on the ground the camera unprojects to. */
     elevation?: number;
     distance: number;
 };
@@ -735,6 +735,7 @@ export class Camera extends Evented<MapEventType> {
     }
 
     /**
+     * @internal
      * The camera that fits a box drawn on the screen with the map turned to `bearing`, which
      * {@link Camera.fitScreenCoordinates} moves to, or undefined where no zoom fits the box.
      */
