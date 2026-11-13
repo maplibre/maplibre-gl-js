@@ -3,6 +3,7 @@ import {createProjectionFromName} from './projection_factory.ts';
 import {addProjection, removeProjection} from './projection_crud.ts';
 import {MercatorProjection} from './mercator_projection.ts';
 import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_details_provider.ts';
+import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 import {MercatorCameraHelper} from './mercator_camera_helper.ts';
 
 afterEach(() => {
@@ -19,7 +20,7 @@ describe('createProjectionFromName', () => {
 
     test('runs the identity projection on the mercator transform and camera helper over a non-wrapping world', () => {
         const {transform, cameraHelper} = createProjectionFromName('identity', undefined, {});
-        expect(transform.getCoveringTilesDetailsProvider()).toBeInstanceOf(MercatorCoveringTilesDetailsProvider);
+        expect(getCoveringTilesDetailsProvider(transform.projectedCamera)).toBeInstanceOf(MercatorCoveringTilesDetailsProvider);
         expect(transform.worldCoordinateHelper.wraps).toBe(false);
         expect(cameraHelper).toBeInstanceOf(MercatorCameraHelper);
     });
