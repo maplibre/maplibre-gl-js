@@ -1,4 +1,4 @@
-import {describe, test, expect, beforeEach} from 'vitest';
+import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {Context} from './context.ts';
 import {ProgramCache} from './program_cache.ts';
 import {shaders} from '../shaders/shaders.ts';
@@ -39,14 +39,32 @@ describe('ProgramCache', () => {
         expect(gl.createProgram).toHaveBeenCalledTimes(2);
     });
 
-    test('destroy deletes every program', () => {
-        const program = cache.getProgram(clippingMaskVariant);
+    test('compiles a program per shader, projection variant, overdraw switch and list of defines', () => {
+        const globeVariant = {name: 'globe', define: '#define GLOBE', prelude: shaders.projectionGlobe};
+        const variants = [
+            clippingMaskVariant,
+            {...clippingMaskVariant, name: 'background'},
+            {...clippingMaskVariant, projectionShaderVariant: globeVariant},
+            {...clippingMaskVariant, showOverdrawInspector: true},
+            {...clippingMaskVariant, showOverdrawInspector: true, useTerrain: true},
+            {...clippingMaskVariant, defines: ['#define A']},
+            {...clippingMaskVariant, defines: ['#define A', '#define B']},
+        ];
+
+        const programs = variants.map((variant) => cache.getProgram(variant));
+
+        expect(new Set(programs).size).toBe(variants.length);
+        expect(variants.map((variant) => cache.getProgram({...variant}))).toEqual(programs);
+        expect(gl.createProgram).toHaveBeenCalledTimes(variants.length);
+    });
+
+    test('destroy deletes every program in the order they were compiled', () => {
         const terrainProgram = cache.getProgram({...clippingMaskVariant, useTerrain: true});
+        const backgroundProgram = cache.getProgram({...clippingMaskVariant, name: 'background'});
+        const program = cache.getProgram(clippingMaskVariant);
 
         cache.destroy();
 
-        expect(gl.deleteProgram).toHaveBeenCalledTimes(2);
-        expect(gl.deleteProgram).toHaveBeenCalledWith(program.program);
-        expect(gl.deleteProgram).toHaveBeenCalledWith(terrainProgram.program);
+        expect(vi.mocked(gl.deleteProgram).mock.calls).toEqual([[terrainProgram.program], [backgroundProgram.program], [program.program]]);
     });
 });
