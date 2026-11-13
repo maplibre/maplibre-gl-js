@@ -5,7 +5,7 @@ import {MapBoxZoomEvent} from '../events.ts';
 import type {Map} from '../map.ts';
 import type {MapEventType} from '../events.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
-import type {TransformProvider} from './transform-provider.ts';
+import type {Camera} from '../camera.ts';
 import type Point from '@mapbox/point-geometry';
 
 /**
@@ -31,7 +31,7 @@ export type BoxZoomHandlerOptions = {
  * @group Handlers
  */
 export class BoxZoomHandler extends Evented<MapEventType> implements Handler {
-    _tr: TransformProvider;
+    _camera: Camera;
     _el: HTMLElement;
     _container: HTMLElement;
     _enabled: boolean;
@@ -46,9 +46,9 @@ export class BoxZoomHandler extends Evented<MapEventType> implements Handler {
     /** @internal */
     constructor(canvasContainer: HTMLElement, container: HTMLElement, options: {
         clickTolerance: number;
-    }, transformProvider: TransformProvider, boxZoomEnd?: (startPos: Point, endPos: Point, originalEvent: MouseEvent) => void) {
+    }, camera: Camera, boxZoomEnd?: (startPos: Point, endPos: Point, originalEvent: MouseEvent) => void) {
         super();
-        this._tr = transformProvider;
+        this._camera = camera;
         this._el = canvasContainer;
         this._container = container;
         this._clickTolerance = options.clickTolerance || 1;
@@ -157,7 +157,7 @@ export class BoxZoomHandler extends Evented<MapEventType> implements Handler {
                 this._boxZoomEnd(p0, p1, e);
                 return;
             }
-            const easeTo = this._tr.cameraForScreenBox(p0, p1, this._tr.bearing);
+            const easeTo = this._camera.cameraForScreenBox(p0, p1, this._camera.proposedTransform.bearing);
             if (easeTo) return {easeTo};
         }
     }

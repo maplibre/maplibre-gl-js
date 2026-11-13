@@ -5,7 +5,7 @@ import type {Mesh} from '../../render/mesh.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import type {WorldCoordinateHelper} from '../transform_interface.ts';
+import type {WorldCoordinateHelper} from '../world_types.ts';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,

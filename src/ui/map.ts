@@ -17,7 +17,7 @@ import {Hash} from './hash.ts';
 import {HandlerManager} from './handler_manager.ts';
 import {MapEventFactory} from './map_event_factory.ts';
 import {createMapHandlers} from './handler/create_map_handlers.ts';
-import {Camera, type CameraOptions, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions, type CameraForBoundsOptions} from './camera.ts';
+import {Camera, type CameraUpdateTransformFunction, type FitBoundsOptions, type EaseToOptions, type FlyToOptions, type JumpToOptions, type AnimationOptions, type AnchoredCameraOptions} from './camera.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import Point from '@mapbox/point-geometry';
@@ -46,7 +46,6 @@ import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image.ts';
-import type {PointLike} from './camera.ts';
 import type {RenderLoop} from './camera_movement_scheduler.ts';
 import type {ScrollZoomHandler} from './handler/scroll_zoom.ts';
 import type {BoxZoomHandler, BoxZoomHandlerOptions} from './handler/box_zoom.ts';
@@ -74,8 +73,9 @@ import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {ControlPosition, IControl} from './control/control.ts';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features.ts';
-import type {ITransform, TransformConstrainFunction} from '../geo/transform_interface.ts';
+import type {ITransform} from '../geo/transform_interface.ts';
 import type {ICameraHelper} from '../geo/projection/camera_helper.ts';
+import type {TransformConstrainFunction, CameraOptions, CameraForBoundsOptions, PointLike} from '../camera/camera_types.ts';
 
 const version = packageJSON.version;
 

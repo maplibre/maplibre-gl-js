@@ -1,8 +1,8 @@
 import {clamp} from './util.ts';
 
 import type {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
-import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
 import type {GeoJSONSourceDiff} from '../source/geojson_source_diff.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * A function mapping one GeoJSON position to another: the first two ordinates are the horizontal position, and any

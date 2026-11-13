@@ -3,12 +3,13 @@ import type Point from '@mapbox/point-geometry';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CollisionIndex} from '../symbol/collision_index.ts';
-import type {IReadonlyTransform, WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RetainedQueryData} from '../symbol/placement.ts';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {QueryResults, QueryResultsItem} from '../data/feature_index.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;

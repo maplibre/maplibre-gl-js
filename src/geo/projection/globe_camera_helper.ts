@@ -6,9 +6,9 @@ import type {CameraForBoxAndBearingHandlerResult, EaseToHandlerResult, EaseToHan
 import type {LngLat, LngLatLike} from '../lng_lat.ts';
 import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
 import type {GlobeProjection} from './globe_projection.ts';
-import type {CameraForBoundsOptions} from '../../ui/camera.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
+import type {CameraForBoundsOptions} from '../../camera/camera_types.ts';
 
 /**
  * @internal

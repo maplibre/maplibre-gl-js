@@ -1,11 +1,11 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat} from './lng_lat.ts';
-import {EdgeInsets} from './edge_insets.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {EdgeInsets} from '../geo/edge_insets.ts';
 import {MAX_VALID_LATITUDE, radiansToDegrees} from '../util/util.ts';
 
 import type {mat2, mat4} from 'gl-matrix';
-import type {TransformOptions} from './transform.ts';
-import type {NearFarZ, TransformConstrainFunction} from './transform_interface.ts';
+import type {TransformOptions} from '../geo/transform.ts';
+import type {NearFarZ, TransformConstrainFunction} from './camera_types.ts';
 
 /**
  * @internal
@@ -13,7 +13,7 @@ import type {NearFarZ, TransformConstrainFunction} from './transform_interface.t
  * them in every projection. It is plain data. The transform is the only one to change it, and its projection part
  * reads it.
  */
-export type CameraState = {
+export type CameraViewState = {
     readonly tileSize: number;
     width: number;
     height: number;
@@ -66,7 +66,7 @@ export type CameraState = {
  * The camera state of a new transform, which has no size yet and no bounds. The matrices and the values computed
  * with them start out `undefined` until the transform computes them.
  */
-export function createCameraState(options?: TransformOptions): CameraState {
+export function createCameraViewState(options?: TransformOptions): CameraViewState {
     return {
         tileSize: 512,
         width: 0,
@@ -104,56 +104,56 @@ export function createCameraState(options?: TransformOptions): CameraState {
  * The center of the screen in pixels with the top-left corner being (0,0) and +y axis pointing downwards.
  * This accounts for padding.
  */
-export function getCenterPoint(cameraState: Readonly<CameraState>): Point {
-    return cameraState.edgeInsets.getCenter(cameraState.width, cameraState.height);
+export function getCenterPoint(view: Readonly<CameraViewState>): Point {
+    return view.edgeInsets.getCenter(view.width, view.height);
 }
 
 /**
  * @internal
  * How far the padding moves the center point away from the middle of the screen, in pixels.
  */
-export function getCenterOffset(cameraState: Readonly<CameraState>): Point {
-    return getCenterPoint(cameraState)._sub(new Point(cameraState.width, cameraState.height)._div(2));
+export function getCenterOffset(view: Readonly<CameraViewState>): Point {
+    return getCenterPoint(view)._sub(new Point(view.width, view.height)._div(2));
 }
 
 /**
  * @internal
  * The size of the world in pixels at the zoom.
  */
-export function getWorldSize(cameraState: Readonly<CameraState>): number {
-    return cameraState.tileSize * cameraState.scale;
+export function getWorldSize(view: Readonly<CameraViewState>): number {
+    return view.tileSize * view.scale;
 }
 
 /**
  * @internal
  * The bearing in degrees.
  */
-export function getBearing(cameraState: Readonly<CameraState>): number {
-    return cameraState.bearingInRadians / Math.PI * 180;
+export function getBearing(view: Readonly<CameraViewState>): number {
+    return view.bearingInRadians / Math.PI * 180;
 }
 
 /**
  * @internal
  * The pitch in degrees.
  */
-export function getPitch(cameraState: Readonly<CameraState>): number {
-    return cameraState.pitchInRadians / Math.PI * 180;
+export function getPitch(view: Readonly<CameraViewState>): number {
+    return view.pitchInRadians / Math.PI * 180;
 }
 
 /**
  * @internal
  * The roll in degrees.
  */
-export function getRoll(cameraState: Readonly<CameraState>): number {
-    return cameraState.rollInRadians / Math.PI * 180;
+export function getRoll(view: Readonly<CameraViewState>): number {
+    return view.rollInRadians / Math.PI * 180;
 }
 
 /**
  * @internal
  * The vertical field of view in degrees.
  */
-export function getFov(cameraState: Readonly<CameraState>): number {
-    return radiansToDegrees(cameraState.fovInRadians);
+export function getFov(view: Readonly<CameraViewState>): number {
+    return radiansToDegrees(view.fovInRadians);
 }
 
 /**
@@ -162,8 +162,8 @@ export function getFov(cameraState: Readonly<CameraState>): number {
  * which is once and then the zoom again at the constrained center. A camera without a size is not constrained, so it
  * keeps the two as they are.
  */
-export function getConstrainedCamera(cameraState: Readonly<CameraState>, constrain: TransformConstrainFunction, center: LngLat, zoom: number): {center: LngLat; zoom: number} {
-    if (!cameraState.width || !cameraState.height) return {center, zoom};
+export function getConstrainedCamera(view: Readonly<CameraViewState>, constrain: TransformConstrainFunction, center: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    if (!view.width || !view.height) return {center, zoom};
     const constrained = constrain(center, zoom);
     return {center: constrained.center, zoom: constrain(constrained.center, constrained.zoom).zoom};
 }

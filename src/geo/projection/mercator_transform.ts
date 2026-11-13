@@ -13,15 +13,16 @@ import {MercatorCoveringTilesDetailsProvider} from './mercator_covering_tiles_de
 import {Frustum} from '../../util/primitives/frustum.ts';
 import {fastInvertProjMat4, xyTransformMat4} from '../../util/fast_maths.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../../render/terrain_coverage.ts';
-import {getBearing, getCenterOffset, getCenterPoint, getConstrainedCamera, getFov, getPitch, getRoll, getWorldSize} from '../camera_state.ts';
+import {getBearing, getCenterOffset, getCenterPoint, getConstrainedCamera, getFov, getPitch, getRoll, getWorldSize} from '../../camera/camera_view_state.ts';
 
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction, WorldCoordinateHelper} from '../transform_interface.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {CameraState} from '../camera_state.ts';
+import type {CameraViewState} from '../../camera/camera_view_state.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
+import type {WorldCoordinateHelper} from '../world_types.ts';
+import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../../camera/camera_types.ts';
 
 /**
  * @internal
@@ -63,7 +64,7 @@ type MercatorRay = {
  * The mercator part of a {@link Transform}.
  */
 export class MercatorTransform implements IProjectionTransform {
-    private readonly _cameraState: Readonly<CameraState>;
+    private readonly _cameraState: Readonly<CameraViewState>;
     /** The lng/lat to world coordinate mapping, mercator's unless the part is built for a registered CRS. */
     private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
@@ -94,7 +95,7 @@ export class MercatorTransform implements IProjectionTransform {
      * @param cameraState - The camera state this part derives its matrices from.
      * @param worldCoordinateHelper - The lng/lat to world coordinate mapping, mercator's by default.
      */
-    constructor(cameraState: Readonly<CameraState>, worldCoordinateHelper: WorldCoordinateHelper = mercatorWorldCoordinateHelper) {
+    constructor(cameraState: Readonly<CameraViewState>, worldCoordinateHelper: WorldCoordinateHelper = mercatorWorldCoordinateHelper) {
         this._cameraState = cameraState;
         this._worldCoordinateHelper = worldCoordinateHelper;
         this._coveringTilesDetailsProvider = new MercatorCoveringTilesDetailsProvider();
@@ -105,7 +106,7 @@ export class MercatorTransform implements IProjectionTransform {
         return getMercatorHorizon({pitch: getPitch(this._cameraState), cameraToCenterDistance: this._cameraState.cameraToCenterDistance});
     }
 
-    clone(cameraState: Readonly<CameraState>): MercatorTransform {
+    clone(cameraState: Readonly<CameraViewState>): MercatorTransform {
         return new MercatorTransform(cameraState, this._worldCoordinateHelper);
     }
 

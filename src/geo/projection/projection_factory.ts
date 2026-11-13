@@ -13,8 +13,9 @@ import {getRegisteredProjection} from './projection_crud.ts';
 
 import type {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Projection} from './projection.ts';
-import type {ITransform, TransformConstrainFunction} from '../transform_interface.ts';
+import type {ITransform} from '../transform_interface.ts';
 import type {ICameraHelper} from './camera_helper.ts';
+import type {TransformConstrainFunction} from '../../camera/camera_types.ts';
 
 export function createProjectionFromName(name: ProjectionSpecification['type'], transformConstrain: TransformConstrainFunction | undefined, globalState: Record<string, any>): {
     projection: Projection;

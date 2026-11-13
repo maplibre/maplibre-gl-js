@@ -7,9 +7,9 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type Point from '@mapbox/point-geometry';
 import type {IReadonlyTransform, ITransform} from '../transform_interface.ts';
-import type {CameraForBoundsOptions} from '../../ui/camera.ts';
 import type {PaddingOptions} from '../edge_insets.ts';
 import type {LngLatBounds} from '../lng_lat_bounds.ts';
+import type {CameraForBoundsOptions} from '../../camera/camera_types.ts';
 
 /**
  * @internal
