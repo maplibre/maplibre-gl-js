@@ -239,6 +239,20 @@ describe('SymbolBucket', () => {
         expect(ltrBucket.hasRTLText).toBeFalsy();
     });
 
+    test('SymbolBucket detects cursive text, whose joined letters overlap', () => {
+        const persianBucket = bucketSetup('سلام دنیا');
+        const hebrewBucket = bucketSetup('שלום');
+        const latinBucket = bucketSetup('hello');
+        const options = createPopulateOptions([]);
+        persianBucket.populate(features, options, undefined);
+        hebrewBucket.populate(features, options, undefined);
+        latinBucket.populate(features, options, undefined);
+
+        expect(persianBucket.hasCursiveText).toBe(true);
+        expect(hebrewBucket.hasCursiveText).toBe(false);
+        expect(latinBucket.hasCursiveText).toBe(false);
+    });
+
     test('SymbolBucket shapes rtl text', () => {
         expect(glyphsRequestedFor('مرحبا')).toEqual(['ﻣ', 'ﺮ', 'ﺣ', 'ﺒ', 'ﺎ']);
     });

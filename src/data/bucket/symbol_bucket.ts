@@ -23,7 +23,7 @@ import {transformText} from '../../symbol/transform_text.ts';
 import {mergeLines} from '../../symbol/merge_lines.ts';
 import {isCluster} from '../../util/graphemes.ts';
 import {TaggedString} from '../../symbol/tagged_string.ts';
-import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
+import {allowsLetterSpacing, allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
 import {mayUseVerticalGlyph, WritingMode} from '../../symbol/shaping.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
@@ -160,6 +160,10 @@ function containsRTLText(formattedText: Formatted): boolean {
         }
     }
     return false;
+}
+
+function containsCursiveText(formattedText: Formatted): boolean {
+    return formattedText.sections.some(section => !allowsLetterSpacing(section.text));
 }
 
 export class SymbolBuffers {
@@ -364,6 +368,8 @@ export class SymbolBucket implements Bucket {
     writingModes: WritingMode[];
     allowVerticalPlacement: boolean;
     hasRTLText: boolean;
+    /** Whether any label is in a cursive script, whose joined letters a single-pass halo would cut through. */
+    hasCursiveText: boolean;
 
     constructor(options: BucketParameters<SymbolStyleLayer>) {
         this.collisionBoxArray = options.collisionBoxArray;
@@ -376,6 +382,7 @@ export class SymbolBucket implements Bucket {
         this.sourceLayerIndex = options.sourceLayerIndex;
         this.hasDependencies = true;
         this.hasRTLText = false;
+        this.hasCursiveText = false;
         this.maxHeightOffset = 0;
         this.sortKeyRanges = [];
 
@@ -520,6 +527,7 @@ export class SymbolBucket implements Bucket {
                 const formattedText = Formatted.factory(resolvedTokens);
 
                 this.hasRTLText ||= containsRTLText(formattedText);
+                this.hasCursiveText ||= containsCursiveText(formattedText);
                 text = transformText(formattedText, layer, evaluationFeature);
             }
 

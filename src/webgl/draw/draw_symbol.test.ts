@@ -219,4 +219,83 @@ describe('drawSymbol', () => {
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });
+
+    describe('text halo passes', () => {
+        function drawTextWithHalo(haloWidth: number, hasCursiveText: boolean): Program<any> {
+            const painterMock = new Painter(null);
+            painterMock.context = {
+                gl: {},
+                activeTexture: {
+                    set: () => { }
+                }
+            } as any;
+            const frameRenderContext = new FrameRenderContext({transform: createMockTransform(), terrain: null, data: createFrameRenderData(), context: painterMock.context, programCache: null, currentPass: 'translucent', projection: null});
+
+            const layerSpec = {
+                id: 'mock-layer',
+                source: 'empty-source',
+                type: 'symbol',
+                layout: {
+                    'text-field': 'label'
+                },
+                paint: {
+                    'text-opacity': 1,
+                    'text-halo-color': '#fff',
+                    'text-halo-width': haloWidth
+                }
+            } as SymbolLayerSpecification;
+            const layer = new SymbolStyleLayer(layerSpec, {});
+            layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+
+            const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
+            tileId.terrainRttPosMatrix32f = createIdentityMat4f32();
+            const programMock = new Program(null, null, null, null, null, null, null, null);
+            vi.spyOn(frameRenderContext, 'useProgram').mockReturnValue(programMock);
+            const bucketMock = new SymbolBucket(null);
+            bucketMock.icon = {
+                segments: {
+                    get: () => []
+                }
+            } as any;
+            bucketMock.text = {
+                programConfigurations: {
+                    get: () => { }
+                },
+                segments: {
+                    get: () => [1]
+                },
+                hasVisibleVertices: true
+            } as any;
+            bucketMock.textSizeData = {
+                kind: 'constant',
+                layoutSize: 16
+            };
+            bucketMock.hasCursiveText = hasCursiveText;
+            const tile = new Tile(tileId, 256);
+            tile.tileID = tileId;
+            tile.glyphAtlasTexture = {
+                bind: () => { },
+                size: [1, 1]
+            } as any;
+            (vi.mocked(tile.getBucket)).mockReturnValue(bucketMock);
+            const tileManagerMock = new TileManager(null, null, null);
+            (vi.mocked(tileManagerMock.getTile)).mockReturnValue(tile);
+            tileManagerMock.map = {showCollisionBoxes: false} as any as Map;
+
+            drawSymbols(painterMock, tileManagerMock, layer, [tileId], frameRenderContext);
+            return programMock;
+        }
+
+        test('draws a thin halo in the same pass as the text', () => {
+            expect(drawTextWithHalo(1, false).draw).toHaveBeenCalledTimes(1);
+        });
+
+        test('draws the halo in its own pass for cursive text, so it does not cut through joined letters', () => {
+            expect(drawTextWithHalo(1, true).draw).toHaveBeenCalledTimes(2);
+        });
+
+        test('draws a wide halo in its own pass', () => {
+            expect(drawTextWithHalo(2, false).draw).toHaveBeenCalledTimes(2);
+        });
+    });
 });
