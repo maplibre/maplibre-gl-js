@@ -32,8 +32,8 @@ import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {MapControlsDeltas} from '../camera/camera_motions.ts';
-import type {ElevationHolder} from '../camera/center_elevation.ts';
-import type {CameraAction, CameraAdjustment, CameraState, CameraStore} from '../camera/camera_state.ts';
+import type {CenterElevationRule, ElevationHolder} from '../camera/center_elevation.ts';
+import type {CameraAction, CameraAdjustment, CameraMotionState, CameraState, CameraStore} from '../camera/camera_state.ts';
 import type {RenderLoop} from './camera_movement_scheduler.ts';
 import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
@@ -280,6 +280,18 @@ export type CameraInitOptions = {
     transformCameraUpdate: CameraUpdateTransformFunction | null;
 };
 
+/** What {@link Camera.renderedState} was last derived from, and the camera it derived. */
+type RenderedFrom = {
+    view: CameraViewState;
+    motion: CameraMotionState;
+    terrainRevision: number;
+    centerElevation: CenterElevationRule;
+    context: CameraContext;
+    terrain: Terrain;
+    centerClampedToGround: boolean;
+    rendered: CameraViewState;
+};
+
 export class Camera extends Evented<MapEventType> {
     /** The lng/lat to world coordinate mapping of the projection the style moved the camera onto, see {@link Camera.migrateProjection}. */
     private _worldCoordinateHelper: WorldCoordinateHelper;
@@ -292,7 +304,7 @@ export class Camera extends Evented<MapEventType> {
     private _context: CameraContext | null = null;
 
     /** The last camera {@link Camera.renderedState} derived and what it derived it from. */
-    private _renderedFrom: {inputs: readonly unknown[]; rendered: CameraViewState} | null = null;
+    private _renderedFrom: RenderedFrom | null = null;
 
     /**
      * @internal
@@ -300,10 +312,14 @@ export class Camera extends Evented<MapEventType> {
      * {@link Camera._renderedFromProposal}. It is derived again only when something it is derived from changes.
      */
     get renderedState(): CameraViewState {
-        const state = this._state;
-        const inputs = [state.view, state.motion, state.terrainRevision, state.centerElevation, this.context, this.terrain, this._centerClampedToGround];
-        if (!this._renderedFrom || inputs.some((input, i) => input !== this._renderedFrom.inputs[i])) {
-            this._renderedFrom = {inputs, rendered: this._renderedFromProposal()};
+        const {view, motion, terrainRevision, centerElevation} = this._state;
+        const context = this.context;
+        const terrain = this.terrain;
+        const centerClampedToGround = this._centerClampedToGround;
+        const from = this._renderedFrom;
+        if (from?.view !== view || from.motion !== motion || from.terrainRevision !== terrainRevision || from.centerElevation !== centerElevation ||
+            from.context !== context || from.terrain !== terrain || from.centerClampedToGround !== centerClampedToGround) {
+            this._renderedFrom = {view, motion, terrainRevision, centerElevation, context, terrain, centerClampedToGround, rendered: this._renderedFromProposal()};
         }
         return this._renderedFrom.rendered;
     }
@@ -522,7 +538,8 @@ export class Camera extends Evented<MapEventType> {
 
     /** Returns the location drawn at a point on the screen, on the terrain's surface when the map has terrain. */
     unproject(point: PointLike): LngLat {
-        return getCameraMath(this.projectedCamera).screenPointToLocation(this.projectedCamera, this.context.worldCoordinateHelper, Point.convert(point), this.terrain);
+        const projectedCamera = this.projectedCamera;
+        return getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, this.context.worldCoordinateHelper, Point.convert(point), this.terrain);
     }
 
     setCenter(center: LngLatLike, eventData?: Record<string, unknown>): this {
