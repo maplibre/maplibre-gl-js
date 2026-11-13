@@ -12,7 +12,7 @@ import type {LngLatBounds} from '../lng_lat_bounds.ts';
 import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
 import type {PointProjection} from '../../symbol/projection.ts';
-import type {CameraState} from '../camera_state.ts';
+import type {CameraViewState} from '../../camera/camera_view_state.ts';
 import type {IProjectionTransform, TransformOptions} from '../transform.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection_data.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
@@ -24,7 +24,7 @@ import type {CameraOptionsFromTo, TransformConstrainFunction} from '../../camera
  * Both child parts belong to the same {@link Transform}, and this part drives their `calcMatrices`.
  */
 export class GlobeTransform implements IProjectionTransform {
-    private readonly _cameraState: Readonly<CameraState>;
+    private readonly _cameraState: Readonly<CameraViewState>;
 
     /**
      * True when globe render path should be used instead of the old but simpler mercator rendering.
@@ -57,14 +57,14 @@ export class GlobeTransform implements IProjectionTransform {
     /**
      * @param cameraState - The camera state this part's children derive their matrices from.
      */
-    public constructor(cameraState: Readonly<CameraState>) {
+    public constructor(cameraState: Readonly<CameraViewState>) {
         this._cameraState = cameraState;
         this._globeness = 1; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._mercatorTransform = new MercatorTransform(cameraState);
         this._verticalPerspectiveTransform = new VerticalPerspectiveTransform(cameraState);
     }
 
-    clone(cameraState: Readonly<CameraState>): GlobeTransform {
+    clone(cameraState: Readonly<CameraViewState>): GlobeTransform {
         const clone = new GlobeTransform(cameraState);
         clone._globeness = this._globeness;
         return clone;
