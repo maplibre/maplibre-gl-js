@@ -23,7 +23,6 @@ import type {ImageManager} from '../render/image_manager.ts';
 import type {Context} from '../webgl/context.ts';
 import type {OverscaledTileID} from './tile_id.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
-import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {LayerFeatureStates} from '../source/source_state.ts';
 import type Point from '@mapbox/point-geometry';
 import type {mat4} from 'gl-matrix';
@@ -34,6 +33,8 @@ import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 import type {Painter, RTTObject} from '../render/painter.ts';
 import type {Style} from '../style/style.ts';
 import type {RTTFingerprint} from '../webgl/rtt_fingerprint.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {GetElevation, WorldCoordinateHelper} from '../geo/world_types.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -411,7 +412,8 @@ export class Tile {
         cameraQueryGeometry: Point[],
         scale: number,
         params: Pick<QueryRenderedFeaturesOptionsStrict, 'filter' | 'layers' | 'availableImages'> | undefined,
-        transform: IReadonlyTransform,
+        projectedCamera: ProjectedCamera,
+        worldCoordinateHelper: WorldCoordinateHelper,
         maxPitchScaleFactor: number,
         getElevation: GetElevation | undefined
     ): QueryResults {
@@ -423,7 +425,8 @@ export class Tile {
             cameraQueryGeometry,
             scale,
             tileSize: this.tileSize,
-            transform,
+            projectedCamera,
+            worldCoordinateHelper,
             params,
             queryPadding: this.queryPadding * maxPitchScaleFactor,
             getElevation

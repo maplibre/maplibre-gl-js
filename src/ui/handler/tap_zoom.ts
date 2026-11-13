@@ -1,22 +1,23 @@
 import {TapRecognizer} from './tap_recognizer.ts';
 import {evaluateZoomSnap} from '../../util/util.ts';
+import {locationOnMapAt} from './handler_util.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {TransformProvider} from './transform-provider.ts';
+import type {Camera} from '../camera.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
  * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping
  */
 export class TapZoomHandler implements Handler {
-    _tr: TransformProvider;
+    _camera: Camera;
     _enabled: boolean;
     _active: boolean;
     _zoomIn: TapRecognizer;
     _zoomOut: TapRecognizer;
 
-    constructor(transformProvider: TransformProvider) {
-        this._tr = transformProvider;
+    constructor(camera: Camera) {
+        this._camera = camera;
         this._zoomIn = new TapRecognizer({
             numTouches: 1,
             numTaps: 2
@@ -49,7 +50,8 @@ export class TapZoomHandler implements Handler {
     touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): HandlerResult | void {
         const zoomInPoint = this._zoomIn.touchend(e, points, mapTouches);
         const zoomOutPoint = this._zoomOut.touchend(e, points, mapTouches);
-        const tr = this._tr;
+        const {zoom} = this._camera.proposedProjectedCamera;
+        const zoomSnap = this._camera.getZoomSnap();
 
         if (zoomInPoint) {
             this._active = true;
@@ -58,8 +60,8 @@ export class TapZoomHandler implements Handler {
             return {
                 easeTo: {
                     duration: 300,
-                    zoom: evaluateZoomSnap(tr.zoom + 1, tr.zoomSnap),
-                    around: tr.transform.isPointOnMapSurface(zoomInPoint) ? tr.unproject(zoomInPoint) : undefined
+                    zoom: evaluateZoomSnap(zoom + 1, zoomSnap),
+                    around: locationOnMapAt(this._camera, zoomInPoint)
                 }
             };
         } else if (zoomOutPoint) {
@@ -69,8 +71,8 @@ export class TapZoomHandler implements Handler {
             return {
                 easeTo: {
                     duration: 300,
-                    zoom: evaluateZoomSnap(tr.zoom - 1, tr.zoomSnap),
-                    around: tr.transform.isPointOnMapSurface(zoomOutPoint) ? tr.unproject(zoomOutPoint) : undefined
+                    zoom: evaluateZoomSnap(zoom - 1, zoomSnap),
+                    around: locationOnMapAt(this._camera, zoomOutPoint)
                 }
             };
         }

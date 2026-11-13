@@ -1,44 +1,46 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {Painter} from './painter.ts';
 import {FrameRenderContext} from './frame_render_context.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {GlobeProjection} from '../geo/projection/globe_projection.ts';
 import {Style} from '../style/style.ts';
 import {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
-import {StubMap, createFrameRenderData} from '../util/test/util.ts';
+import {StubMap, createFrameRenderData, createTestCamera} from '../util/test/util.ts';
 import {Texture} from '../webgl/texture.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
 import {restoreNow, setNow} from '../util/time_control.ts';
 
-import type {Transform} from '../geo/transform.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 describe('render', () => {
     let painter: Painter;
     let map: any;
     let style: Style;
-    let transform: Transform;
+    let projectedCamera: ProjectedCamera;
+    let worldCoordinateHelper: WorldCoordinateHelper;
     const renderOptions = createFrameRenderData();
 
     beforeEach(() => {
         const gl = createNullGL();
-        transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-        transform.resize(512, 512);
+        const camera = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 512, height: 512});
+        projectedCamera = camera.projectedCamera;
+        worldCoordinateHelper = camera.context.worldCoordinateHelper;
         painter = new Painter(gl);
         map = new StubMap() as any;
         style = new Style(map);
         style._setProjectionInternal('mercator');
-        style._updatePlacement(transform, false, 0, false);
+        style._updatePlacement(projectedCamera, worldCoordinateHelper, false, 0, false);
     });
 
     test('must not fail with incompletely loaded style', () => {
-        expect(() => painter.render(style, transform, renderOptions)).not.toThrow();
+        expect(() => painter.render(style, projectedCamera, worldCoordinateHelper, renderOptions)).not.toThrow();
     });
 
     test('calls terrainDepth', () => {
         const terrainDepth = vi.spyOn(painter.drawFunctions, 'terrainDepth').mockImplementation(() => {});
         map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        painter.render(style, transform, renderOptions);
+        painter.render(style, projectedCamera, worldCoordinateHelper, renderOptions);
 
         expect(terrainDepth).toHaveBeenCalled();
     });
@@ -48,22 +50,22 @@ describe('render', () => {
         onTestFinished(() => terrainDepth.mockRestore());
         map.terrain = {tileManager: {anyTilesAfterTime: () => false}};
 
-        painter.render(style, transform, renderOptions);
+        painter.render(style, projectedCamera, worldCoordinateHelper, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(1);
-        painter.render(style, transform, renderOptions);
+        painter.render(style, projectedCamera, worldCoordinateHelper, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(1);
 
         painter.markTerrainDepthDirty();
         painter.markTerrainDepthDirty();
         expect(terrainDepth).toHaveBeenCalledTimes(1);
 
-        painter.render(style, transform, renderOptions);
+        painter.render(style, projectedCamera, worldCoordinateHelper, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(2);
-        painter.render(style, transform, renderOptions);
+        painter.render(style, projectedCamera, worldCoordinateHelper, renderOptions);
         expect(terrainDepth).toHaveBeenCalledTimes(2);
     });
 
-    test('builds frame render context from the transform, terrain and frame data', () => {
+    test('builds frame render context from the projected camera, terrain and frame data', () => {
         const terrain = {tileManager: {anyTilesAfterTime: () => false}};
         map.terrain = terrain;
         style.projection = new GlobeProjection({type: 'vertical-perspective'}, {});
@@ -72,16 +74,17 @@ describe('render', () => {
 
         const data = {...renderOptions, projectionTransition: 1, isRenderingGlobe: true};
 
-        painter.render(style, transform, data);
+        painter.render(style, projectedCamera, worldCoordinateHelper, data);
 
         const frameRenderContext = terrainDepth.mock.calls[0][2];
-        expect(frameRenderContext.transform).toBe(transform);
+        expect(frameRenderContext.projectedCamera).toBe(projectedCamera);
+        expect(frameRenderContext.worldCoordinateHelper).toBe(worldCoordinateHelper);
         expect(frameRenderContext.terrain).toBe(terrain);
         expect(frameRenderContext.data).toBe(data);
     });
 
     test('uses frame render context for depth and blending when drawing a custom layer', () => {
-        const frameRenderContext = new FrameRenderContext({transform, terrain: null, data: renderOptions, context: painter.context, programCache: painter.programCache, currentPass: 'translucent', projection: style.projection});
+        const frameRenderContext = new FrameRenderContext({projectedCamera, worldCoordinateHelper, terrain: null, data: renderOptions, context: painter.context, programCache: painter.programCache, currentPass: 'translucent', projection: style.projection});
         frameRenderContext.depthRangeFor3D = [0.1, 0.8];
         const render = vi.fn((gl: WebGL2RenderingContext) => {
             expect(painter.context.depthRange.get()).toEqual([0.1, 0.8]);
@@ -107,7 +110,7 @@ describe('render', () => {
 
         test('stores terrain render time using the controlled clock', () => {
             setNow(1234);
-            painter.render(style, transform, renderOptions);
+            painter.render(style, projectedCamera, worldCoordinateHelper, renderOptions);
 
             expect(painter.terrainFacilitator.renderTime).toBe(1234);
         });

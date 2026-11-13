@@ -1,71 +1,79 @@
 import {type mat4, vec3, vec4} from 'gl-matrix';
-import {Aabb} from './aabb.ts';
 import {pointPlaneSignedDistance, rayPlaneIntersection} from '../util.ts';
 
-export class Frustum {
+/**
+ * A view frustum as plain data: its eight corners, the six planes through them, and the box around them.
+ */
+export type Frustum = {
+    readonly points: readonly vec4[];
+    readonly planes: readonly vec4[];
+    readonly aabb: {readonly min: vec3; readonly max: vec3};
+};
 
-    constructor(public points: vec4[], public planes: vec4[], public aabb: Aabb) { }
+/**
+ * The frustum an inverse projection matrix unprojects clip space into.
+ * @param horizonPlane - a plane to bring the far plane in to, so that the frustum ends at the horizon
+ * @param flippedNearFar - whether the projection puts the far plane at clip z -1
+ */
+export function createFrustum(invProj: mat4, worldSize: number = 1, zoom: number = 0, horizonPlane?: vec4, flippedNearFar?: boolean): Frustum {
+    const clipSpaceCorners = [
+        [-1, 1, -1, 1],
+        [1, 1, -1, 1],
+        [1, -1, -1, 1],
+        [-1, -1, -1, 1],
+        [-1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, -1, 1, 1],
+        [-1, -1, 1, 1]
+    ];
 
-    public static fromInvProjectionMatrix(invProj: mat4, worldSize: number = 1, zoom: number = 0, horizonPlane?: vec4, flippedNearFar?: boolean): Frustum {
-        const clipSpaceCorners = [
-            [-1, 1, -1, 1],
-            [1, 1, -1, 1],
-            [1, -1, -1, 1],
-            [-1, -1, -1, 1],
-            [-1, 1, 1, 1],
-            [1, 1, 1, 1],
-            [1, -1, 1, 1],
-            [-1, -1, 1, 1]
-        ];
+    // Globe and mercator projection matrices have different Y directions, hence we need different sets of indices.
+    // This should be fixed in the future.
+    const frustumPlanePointIndices = flippedNearFar ? [
+        [6, 5, 4],  // near
+        [0, 1, 2],  // far
+        [0, 3, 7],  // left
+        [2, 1, 5],  // right
+        [3, 2, 6],  // bottom
+        [0, 4, 5]   // top
+    ] : [
+        [0, 1, 2],  // near
+        [6, 5, 4],  // far
+        [0, 3, 7],  // left
+        [2, 1, 5],  // right
+        [3, 2, 6],  // bottom
+        [0, 4, 5]   // top
+    ];
 
-        // Globe and mercator projection matrices have different Y directions, hence we need different sets of indices.
-        // This should be fixed in the future.
-        const frustumPlanePointIndices = flippedNearFar ? [
-            [6, 5, 4],  // near
-            [0, 1, 2],  // far
-            [0, 3, 7],  // left
-            [2, 1, 5],  // right
-            [3, 2, 6],  // bottom
-            [0, 4, 5]   // top
-        ] : [
-            [0, 1, 2],  // near
-            [6, 5, 4],  // far
-            [0, 3, 7],  // left
-            [2, 1, 5],  // right
-            [3, 2, 6],  // bottom
-            [0, 4, 5]   // top
-        ];
+    const scale = Math.pow(2, zoom);
 
-        const scale = Math.pow(2, zoom);
+    // Transform frustum corner points from clip space to tile space, Z to meters
+    const frustumCoords = clipSpaceCorners.map(v => unprojectClipSpacePoint(v, invProj, worldSize, scale));
 
-        // Transform frustum corner points from clip space to tile space, Z to meters
-        const frustumCoords = clipSpaceCorners.map(v => unprojectClipSpacePoint(v, invProj, worldSize, scale));
-
-        if (horizonPlane) {
-            // A horizon clipping plane was supplied.
-            adjustFarPlaneByHorizonPlane(frustumCoords, frustumPlanePointIndices[0], horizonPlane, flippedNearFar);
-        }
-
-        const frustumPlanes = frustumPlanePointIndices.map((p: number[]) => {
-            const a = vec3.sub([], frustumCoords[p[0]], frustumCoords[p[1]]);
-            const b = vec3.sub([], frustumCoords[p[2]], frustumCoords[p[1]]);
-            const n = vec3.normalize([], vec3.cross([], a, b)) as any;
-            const d = -vec3.dot(n, frustumCoords[p[1]]);
-            return n.concat(d);
-        });
-
-        const min: vec3 = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
-        const max: vec3 = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
-
-        for (const p of frustumCoords) {
-            for (let i = 0; i < 3; i++) {
-                min[i] = Math.min(min[i], p[i]);
-                max[i] = Math.max(max[i], p[i]);
-            }
-        }
-
-        return new Frustum(frustumCoords, frustumPlanes, new Aabb(min, max));
+    if (horizonPlane) {
+        // A horizon clipping plane was supplied.
+        adjustFarPlaneByHorizonPlane(frustumCoords, frustumPlanePointIndices[0], horizonPlane, flippedNearFar);
     }
+
+    const frustumPlanes = frustumPlanePointIndices.map((p: number[]) => {
+        const a = vec3.sub([], frustumCoords[p[0]], frustumCoords[p[1]]);
+        const b = vec3.sub([], frustumCoords[p[2]], frustumCoords[p[1]]);
+        const n = vec3.normalize([], vec3.cross([], a, b)) as any;
+        const d = -vec3.dot(n, frustumCoords[p[1]]);
+        return n.concat(d);
+    });
+
+    const min: vec3 = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+    const max: vec3 = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+
+    for (const p of frustumCoords) {
+        for (let i = 0; i < 3; i++) {
+            min[i] = Math.min(min[i], p[i]);
+            max[i] = Math.max(max[i], p[i]);
+        }
+    }
+
+    return {points: frustumCoords, planes: frustumPlanes, aabb: {min, max}};
 }
 
 function unprojectClipSpacePoint(point: vec4 | number[], invProj: mat4, worldSize: number, scale: number): vec4 {

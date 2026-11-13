@@ -128,6 +128,17 @@ Resist explaining the mechanism, listing every affected script, or narrating the
 that belongs in the PR description and the code's own doc comments. If a change genuinely needs two
 sentences to be understood, it is usually two entries, or one entry and a link.
 
+## Pull requests
+
+**Keep the title short and the description shorter than you think.** The title is the changelog
+entry, so the same rule applies: what changed, in a few words. The description says in a sentence or
+two what the PR does and, where it is not obvious, why. A reviewer reads it once, before the diff.
+
+Do not list the files the PR touches, or walk through the change one function at a time — the diff
+already shows both. Do not argue the design at length either: if the reasoning needs more than a
+short paragraph, it belongs in the issue the PR links to. A PR that is one step of a larger series
+says which step it is and links the tracking issue, and leaves the rest to that issue.
+
 ## Tests
 
 **Declare test helpers with `function`, not with a lambda assigned to a `const`.** A named function
@@ -143,11 +154,16 @@ meets the vocabulary before the tests that use it, and does not have to search t
 bottom of a `describe`, to find out what a helper does. A helper that more than one test file needs
 belongs in `src/util/test/`.
 
-**Do not open a `describe` that the tests do not need.** A `describe` earns its place when its tests
-share a `beforeEach`, or when the name it gives them says something the test names cannot. A block
-that only groups a few tests about one feature adds a level of nesting and, more often than not, a
-second copy of a helper the file already has. Add the tests to the existing `describe`, or at the
-top level of it, and let their names carry the subject.
+**Put every test in a top-level `describe` named after the unit under test.** Each test file has at
+least one, and the test names inside it read as sentences about that unit: `describe('createCameraMetrics')`
+holding `test('shares the pixel matrices between camera states of the same size')`. Do not leave
+tests at the top level of the file.
+
+**Below that, do not open a `describe` that the tests do not need.** A nested `describe` earns its
+place when its tests share a `beforeEach`, or when the name it gives them says something the test
+names cannot. A block that only groups a few tests about one feature adds a level of nesting and,
+more often than not, a second copy of a helper the file already has. Add the tests to the existing
+top-level `describe` and let their names carry the subject.
 
 **Cover the code, then stop.** Every branch worth a name deserves a test, but two tests that differ
 only in an input value are one test — consolidate them and pick the input that says the most. What

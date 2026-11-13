@@ -317,7 +317,7 @@ describe('frame render data', () => {
 
         map.redraw();
 
-        const data = render.mock.lastCall[2];
+        const data = render.mock.lastCall[3];
         expect(data.projectionTransition).toBe(1);
         expect(data.isRenderingGlobe).toBe(true);
         expect(data.projectionShaderVariant.name).toBe('globe');
@@ -331,7 +331,7 @@ describe('frame render data', () => {
 
         map.redraw();
 
-        const data = render.mock.lastCall[2];
+        const data = render.mock.lastCall[3];
         expect(data.pixelRatio).toBe(2);
         expect(data.light.intensity).toBe(0.2);
         expect(data.sky['fog-color']).toEqual(Color.red);

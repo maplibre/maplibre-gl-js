@@ -4,7 +4,7 @@ import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
 import type {TerrainTileManager} from '../tile/terrain_tile_manager.ts';
-import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 export type TerrainElevationSampler = (x: number, y: number, extent: number) => number;
 
@@ -13,7 +13,7 @@ const HIT_EPSILON_M = 1e-6;
 /**
  * @internal
  * The last fraction of the camera-to-location distance within which a terrain hit does not count for
- * {@link ITransform.isLocationOccluded}, so the terrain the location sits on never hides it.
+ * `isLocationOccluded` in `camera_math.ts`, so the terrain the location sits on never hides it.
  */
 export const TERRAIN_OCCLUSION_MARGIN = 0.01;
 /** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */
