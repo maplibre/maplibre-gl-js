@@ -2160,7 +2160,8 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     project(lnglat: LngLatLike): Point {
-        return getCameraMath(this._camera.projectedCamera).locationToScreenPoint(this._camera.projectedCamera, this._camera.context.worldCoordinateHelper, LngLat.convert(lnglat), this.style && this.terrain);
+        const projectedCamera = this._camera.projectedCamera;
+        return getCameraMath(projectedCamera).locationToScreenPoint(projectedCamera, this._camera.context.worldCoordinateHelper, LngLat.convert(lnglat), this.style && this.terrain);
     }
 
     /**
