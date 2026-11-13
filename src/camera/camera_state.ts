@@ -1,4 +1,3 @@
-import {createStore, type StoreApi} from 'zustand/vanilla';
 import {constrainState, resize} from './camera_updates.ts';
 
 import type {CameraViewState} from './camera_view_state.ts';
@@ -9,7 +8,7 @@ import type {CenterElevationRule} from './center_elevation.ts';
 /**
  * @internal
  * The state of a {@link Camera}, as immutable plain data. Only the actions below change it, each through
- * {@link CameraStore.setState}, and listeners subscribed to the store hear of every change with the state before it.
+ * {@link applyAction}, which leaves the state before it as it was.
  *
  * It holds what the camera the map is drawn with is derived from, not that camera itself, see `Camera.renderedState`.
  * What the camera works with but does not own, such as its projection, the constrain it was given and the terrain, is
@@ -28,7 +27,7 @@ export type CameraState = {
     readonly centerElevation: CenterElevationRule;
     /**
      * Counts the changes of the terrain the camera is drawn over: DEM data landing, terrain set or removed. The terrain
-     * is not data the store can hold, and the rendered camera depends on it, so it is derived again on every change of
+     * is not data the state can hold, and the rendered camera depends on it, so it is derived again on every change of
      * this count.
      */
     readonly terrainRevision: number;
@@ -70,34 +69,38 @@ export type CameraAdjustment = Readonly<{
     elevation?: number;
 }>;
 
-/** @internal The store that holds a camera's {@link CameraState}. */
-export type CameraStore = StoreApi<CameraState>;
-
 /**
  * @internal
- * A change to the camera's state, dispatched with `store.setState(action)`: a pure function of the state that returns
- * the fields it changes, or the state itself when it changes nothing, which notifies no listener.
+ * A change to the camera's state, applied with {@link applyAction}: a pure function of the state that returns the
+ * fields it changes, or the state itself when it changes nothing.
  */
 export type CameraAction = (state: CameraState) => Partial<CameraState> | CameraState;
 
-/** @internal Creates the store of a camera at rest on the given view, with a globe fully a globe. */
-export function createCameraStore(view: CameraViewState): CameraStore {
-    return createStore<CameraState>()(() => ({
+/** @internal Creates the state of a camera at rest on the given view, with a globe fully a globe. */
+export function createCameraState(view: CameraViewState): CameraState {
+    return {
         view,
         motion: AT_REST,
         centerElevation: {rule: 'ground'},
         terrainRevision: 0,
         projection: 'mercator',
         projectionTransition: 1,
-    }));
+    };
+}
+
+/**
+ * @internal
+ * The state an action leaves: the state itself where the action changes nothing, otherwise a new state with the fields
+ * the action returned.
+ */
+export function applyAction(state: CameraState, action: CameraAction): CameraState {
+    const changes = action(state);
+    return changes === state ? state : {...state, ...changes};
 }
 
 /** @internal Applies actions one after another, as one change of the state. */
 export function combineActions(...actions: CameraAction[]): CameraAction {
-    return (state) => actions.reduce<CameraState>((current, action) => {
-        const changes = action(current);
-        return changes === current ? current : {...current, ...changes};
-    }, state);
+    return (state) => actions.reduce<CameraState>(applyAction, state);
 }
 
 /** @internal An API call or the frame of a movement sets the camera's view. */
