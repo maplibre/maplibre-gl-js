@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent.ts';
-import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision.ts';
+import {addTileBorderStrips, scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine, TILE_BORDER_STRIP_WIDTH} from './subdivision.ts';
 import {CanonicalTileID} from '../tile/tile_id.ts';
 
 /**
@@ -924,6 +924,56 @@ describe('Fill subdivision', () => {
         expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
+    test('Strips extend each edge of a fill that ends at the tile border', () => {
+        const tileID = new CanonicalTileID(9, 255, 149);
+        const result = subdividePolygon(tileSquare(0, 0, EXTENT, EXTENT), tileID, 4);
+        addTileBorderStrips(result, tileID, TILE_BORDER_STRIP_WIDTH);
+
+        expect(result.indicesTriangles.length / 3).toBe(64);
+        expect(verticesOutsideBorder(result.verticesFlattened, TILE_BORDER_STRIP_WIDTH)).toBe(20);
+        expectWindingOrder(result.verticesFlattened, result.indicesTriangles);
+    });
+
+    test('No strips where the fill continues past the tile border', () => {
+        const tileID = new CanonicalTileID(9, 255, 149);
+        const result = subdividePolygon(tileSquare(-128, -128, EXTENT + 128, EXTENT + 128), tileID, 4);
+        const triangleCount = result.indicesTriangles.length;
+        addTileBorderStrips(result, tileID, TILE_BORDER_STRIP_WIDTH);
+
+        expect(result.indicesTriangles).toHaveLength(triangleCount);
+    });
+
+    test('No strips for a fill that stays inside the tile', () => {
+        const tileID = new CanonicalTileID(9, 255, 149);
+        const result = subdividePolygon(tileSquare(1000, 1000, 3000, 3000), tileID, 4);
+        const triangleCount = result.indicesTriangles.length;
+        addTileBorderStrips(result, tileID, TILE_BORDER_STRIP_WIDTH);
+
+        expect(result.indicesTriangles).toHaveLength(triangleCount);
+    });
+
+    test('No strips on the pole border of a pole tile', () => {
+        const northPoleTile = new CanonicalTileID(1, 0, 0);
+        const north = subdividePolygon(tileSquare(0, 0, EXTENT, EXTENT), northPoleTile, 4);
+        addTileBorderStrips(north, northPoleTile, TILE_BORDER_STRIP_WIDTH);
+        const southPoleTile = new CanonicalTileID(1, 1, 1);
+        const south = subdividePolygon(tileSquare(0, 0, EXTENT, EXTENT), southPoleTile, 4);
+        addTileBorderStrips(south, southPoleTile, TILE_BORDER_STRIP_WIDTH);
+
+        expect(yCoordinates(north.verticesFlattened)).not.toContain(-TILE_BORDER_STRIP_WIDTH);
+        expect(yCoordinates(north.verticesFlattened)).toContain(EXTENT + TILE_BORDER_STRIP_WIDTH);
+        expect(yCoordinates(south.verticesFlattened)).not.toContain(EXTENT + TILE_BORDER_STRIP_WIDTH);
+        expect(yCoordinates(south.verticesFlattened)).toContain(-TILE_BORDER_STRIP_WIDTH);
+    });
+
+    test('No strips on the zoom 0 tile, whose edges are the antimeridian and the poles', () => {
+        const worldTile = new CanonicalTileID(0, 0, 0);
+        const result = subdividePolygon(tileSquare(0, 0, EXTENT, EXTENT), worldTile, 4);
+        addTileBorderStrips(result, worldTile, TILE_BORDER_STRIP_WIDTH);
+
+        expect(verticesOutsideBorder(result.verticesFlattened, TILE_BORDER_STRIP_WIDTH)).toBe(0);
+    });
+
     test('Scanline subdivision ring generation case 1', () => {
         // Check ring generation on data where it was actually failing
         const vertices = [
@@ -963,6 +1013,26 @@ describe('Fill subdivision', () => {
         expectWindingOrder(vertices, finalIndices);
     });
 });
+
+function tileSquare(x0: number, y0: number, x1: number, y1: number): Point[][] {
+    return [[new Point(x0, y0), new Point(x1, y0), new Point(x1, y1), new Point(x0, y1), new Point(x0, y0)]];
+}
+
+function yCoordinates(flattened: number[]): number[] {
+    return flattened.filter((_, i) => i % 2 === 1);
+}
+
+function verticesOutsideBorder(flattened: number[], distance: number): number {
+    let count = 0;
+    for (let i = 0; i < flattened.length; i += 2) {
+        const x = flattened[i];
+        const y = flattened[i + 1];
+        if (x === -distance || x === EXTENT + distance || y === -distance || y === EXTENT + distance) {
+            count++;
+        }
+    }
+    return count;
+}
 
 /**
  * Converts an array of points into an array of simple \{x, y\} objects.

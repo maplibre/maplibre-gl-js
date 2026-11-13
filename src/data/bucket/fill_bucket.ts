@@ -10,7 +10,7 @@ import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
 import {loadGeometry} from '../load_geometry.ts';
 import {toEvaluationFeature} from '../evaluation_feature.ts';
 import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
-import {subdividePolygon} from '../../render/subdivision.ts';
+import {addTileBorderStrips, subdividePolygon, TILE_BORDER_STRIP_WIDTH} from '../../render/subdivision.ts';
 import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays.ts';
 import {warnOnce} from '../../util/util.ts';
 
@@ -210,7 +210,11 @@ export class FillBucket implements Bucket {
         [_: string]: ImagePosition;
     }, subdivisionGranularity: SubdivisionGranularitySetting): void {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
-            const subdivided = subdividePolygon(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
+            const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+            const subdivided = subdividePolygon(polygon, canonical, granularity);
+            if (granularity >= 2) {
+                addTileBorderStrips(subdivided, canonical, TILE_BORDER_STRIP_WIDTH);
+            }
 
             const vertexArray = this.layoutVertexArray;
 
