@@ -513,7 +513,7 @@ export class Style extends Evented<MapEventType> {
         this.stylesheet = nextState;
 
         this.setGlobalState(this.stylesheet.state ?? null);
-        const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', this.map._camera?.transform.constrainOverride, this._globalState);
+        const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', this._globalState);
         this.projection = projectionObjects.projection;
 
         for (const id in nextState.sources) {
@@ -1837,16 +1837,16 @@ export class Style extends Evented<MapEventType> {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        this._applyProjection(createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState));
+        this._applyProjection(createProjectionFromName(name, this._globalState));
     }
 
     /**
-     * Puts a projection in place and migrates the map to its transform, which fires `projectiontransition`, then
-     * reloads the tiles in it.
+     * Puts a projection in place and moves the map's camera onto it, which fires `projectiontransition`, then reloads
+     * the tiles in it.
      */
     private _applyProjection(projectionObjects: ReturnType<typeof createProjectionFromName>): void {
         this.projection = projectionObjects.projection;
-        this.map.migrateProjection(projectionObjects.transform);
+        this.map.migrateProjection(projectionObjects.cameraProjection, projectionObjects.projection.worldCoordinateHelper);
         for (const key in this.tileManagers) {
             this.tileManagers[key].reload();
         }

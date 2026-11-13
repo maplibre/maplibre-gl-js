@@ -150,10 +150,6 @@ export class MercatorCameraMotions implements CameraMotions {
         return view;
     }
 
-    /**
-     * The frames place the center at the offset from the center point of the camera the animation starts with, or,
-     * while the padding eases, from that of the frame.
-     */
     easeTo(view: CameraViewState, context: CameraContext, options: EaseToMotionOptions): EaseToMotion {
         const start = getCameraMetrics(view, context.worldCoordinateHelper);
         const startZoom = view.zoom;
@@ -168,9 +164,8 @@ export class MercatorCameraMotions implements CameraMotions {
         const doPadding = !isPaddingEqual(view.padding, options.padding);
         const zoom = options.zoom !== undefined ? +options.zoom : startZoom;
 
-        const startPointAtOffset = start.centerPoint.add(options.offsetAsPoint);
         const projectedCamera = projectCamera(view, context);
-        const locationAtOffset = getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, startPointAtOffset);
+        const locationAtOffset = getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, start.centerPoint.add(options.offsetAsPoint));
         const {center, zoom: endZoom} = applyConstrain(view, context, LngLat.convert(options.center || locationAtOffset), zoom);
         normalizeCenter(view, context.worldCoordinateHelper, center);
 
@@ -192,7 +187,7 @@ export class MercatorCameraMotions implements CameraMotions {
             const speedup = Math.pow(base, 1 - k);
             const worldSize = getCameraMetrics(frame, worldCoordinateHelper).worldSize;
             const newCenter = unprojectFromWorldCoordinates(worldSize, from.add(delta.mult(k * speedup)).mult(scale), worldCoordinateHelper);
-            const pointAtOffset = doPadding ? getCenterPoint(frame).add(options.offsetAsPoint) : startPointAtOffset;
+            const pointAtOffset = getCenterPoint(frame).add(options.offsetAsPoint);
             return getCameraSolver(frameContext).setLocationAtPoint(frame, frameContext, frame.renderWorldCopies && worldCoordinateHelper.wraps ? newCenter.wrap() : newCenter, pointAtOffset);
         };
 

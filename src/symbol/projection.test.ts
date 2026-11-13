@@ -3,30 +3,27 @@ import Point from '@mapbox/point-geometry';
 import {type SymbolProjectionContext, type ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane, getPitchedLabelPlaneMatrix, getGlCoordMatrix, getTileSkewVectors, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane} from './projection.ts';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {CanonicalTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
-import {expectToBeCloseToArray} from '../util/test/util.ts';
+import {expectToBeCloseToArray, createTestCamera} from '../util/test/util.ts';
 import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {projectCamera} from '../camera/project_camera.ts';
+import {setBearing, setPitch} from '../camera/camera_updates.ts';
 
-import type {Transform} from '../geo/transform.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 
 const TERRAIN_ELEVATION = 100;
 const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0));
 
-/**
- * Builds a {@link SymbolProjectionContext} backed by a real, sized mercator transform, so that
- * projections through it produce meaningful values. Pass `overrides` for whatever the test cares
- * about; everything else falls back to a pitched viewport over flat terrain at `TERRAIN_ELEVATION`.
- */
-function createDefaultTransform(): Transform {
-    const transform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true});
-    transform.resize(500, 500);
-    transform.setCenter(new LngLat(10.0, 50.0));
-    transform.setPitch(60);
-    return transform;
+/** A sized, pitched mercator camera, so that projections through it produce meaningful values. */
+function createDefaultCamera(): ProjectedCamera {
+    return createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 500, height: 500, center: new LngLat(10.0, 50.0), pitch: 60}).projectedCamera;
 }
 
+/**
+ * Builds a {@link SymbolProjectionContext} backed by {@link createDefaultCamera}. Pass `overrides` for whatever the
+ * test cares about; everything else falls back to a pitched viewport over flat terrain at `TERRAIN_ELEVATION`.
+ */
 function createProjectionContext(overrides: Partial<SymbolProjectionContext> = {}): SymbolProjectionContext {
     return {
         projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
@@ -36,7 +33,7 @@ function createProjectionContext(overrides: Partial<SymbolProjectionContext> = {
         tileAnchorPoint: new Point(0, 0),
         pitchWithMap: false,
         unwrappedTileID,
-        projectedCamera: overrides.projectedCamera ?? createDefaultTransform().projectedCamera,
+        projectedCamera: overrides.projectedCamera ?? createDefaultCamera(),
         width: 100,
         height: 100,
         translation: [0, 0],
@@ -58,7 +55,7 @@ describe('Vertex to viewport projection', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
-    const transform = createMercatorTransform();
+    const {projectedCamera} = createTestCamera();
 
     test('projecting with null matrix', () => {
         const projectionContext = createProjectionContext({
@@ -68,7 +65,7 @@ describe('Vertex to viewport projection', () => {
             tileAnchorPoint: new Point(0, 0),
             pitchWithMap: true,
             unwrappedTileID: null,
-            projectedCamera: transform.projectedCamera,
+            projectedCamera,
             width: 1,
             height: 1
         });
@@ -100,12 +97,12 @@ describe('Find offset line intersections', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
-    const transform = createMercatorTransform();
+    const {projectedCamera} = createTestCamera();
 
     const projectionContext = createProjectionContext({
         lineVertexArray,
         getElevation: (_x, _y) => 0,
-        projectedCamera: transform.projectedCamera,
+        projectedCamera,
         pitchWithMap: true,
         unwrappedTileID: null,
         width: 1,
@@ -204,147 +201,115 @@ describe('Find offset line intersections', () => {
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
-        const transform = createMercatorTransform();
-        transform.setBearing(0);
-        transform.setPitch(45);
-        transform.setRoll(45);
+        const {projectedCamera} = createTestCamera({bearing: 0, pitch: 45, roll: 45});
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform.projectedCamera, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, projectedCamera, 2)],
             [0.4330127239227295, -0.4330127239227295, 0, 0, 0.3061862289905548, 0.3061862289905548, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform.projectedCamera, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, projectedCamera, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
     test('getPitchedLabelPlaneMatrix: bearing and pitch', () => {
-        const transform = createMercatorTransform();
-        transform.setBearing(45);
-        transform.setPitch(45);
-        transform.setRoll(0);
+        const {projectedCamera} = createTestCamera({bearing: 45, pitch: 45, roll: 0});
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform.projectedCamera, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, projectedCamera, 2)],
             [0.3535533845424652, -0.3535533845424652, 0, 0, 0.3535533845424652, 0.3535533845424652, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform.projectedCamera, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, projectedCamera, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
     test('getPitchedLabelPlaneMatrix: bearing, pitch, and roll', () => {
-        const transform = createMercatorTransform();
-        transform.setBearing(45);
-        transform.setPitch(45);
-        transform.setRoll(45);
+        const {projectedCamera} = createTestCamera({bearing: 45, pitch: 45, roll: 45});
 
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, transform.projectedCamera, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(false, projectedCamera, 2)],
             [0.08967986702919006,  -0.5226925611495972, 0, 0, 0.5226925611495972, -0.08967986702919006, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, transform.projectedCamera, 2)],
+        expectToBeCloseToArray([...getPitchedLabelPlaneMatrix(true, projectedCamera, 2)],
             [0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
     test('getGlCoordMatrix: bearing, pitch, and roll', () => {
-        const transform = createMercatorTransform();
-        transform.resize(128, 128);
-        transform.setBearing(45);
-        transform.setPitch(45);
-        transform.setRoll(45);
+        const {projectedCamera} = createTestCamera({width: 128, height: 128, bearing: 45, pitch: 45, roll: 45});
 
-        expectToBeCloseToArray([...getGlCoordMatrix(false, false, transform.projectedCamera, 2)],
-            [...transform.pixelsToClipSpaceMatrix], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(false, true, transform.projectedCamera, 2)],
-            [...transform.pixelsToClipSpaceMatrix], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(true, false, transform.projectedCamera, 2)],
+        expectToBeCloseToArray([...getGlCoordMatrix(false, false, projectedCamera, 2)],
+            [...projectedCamera.pixelsToClipSpaceMatrix], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(false, true, projectedCamera, 2)],
+            [...projectedCamera.pixelsToClipSpaceMatrix], 9);
+        expectToBeCloseToArray([...getGlCoordMatrix(true, false, projectedCamera, 2)],
             [-0.33820396661758423, 1.9711971282958984, 0, 0, -1.9711971282958984, 0.33820396661758423, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
-        expectToBeCloseToArray([...getGlCoordMatrix(true, true, transform.projectedCamera, 2)],
+        expectToBeCloseToArray([...getGlCoordMatrix(true, true, projectedCamera, 2)],
             [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 9);
     });
 
     test('getTileSkewVectors: bearing', () => {
-        const transform = createMercatorTransform();
-        transform.setBearing(45);
-        transform.setPitch(0);
-        transform.setRoll(0);
+        const {projectedCamera} = createTestCamera({bearing: 45, pitch: 0, roll: 0});
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecEast],
             [0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
     test('getTileSkewVectors: roll', () => {
-        const transform = createMercatorTransform();
-        transform.setBearing(0);
-        transform.setPitch(0);
-        transform.setRoll(45);
+        const {projectedCamera} = createTestCamera({bearing: 0, pitch: 0, roll: 45});
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecEast],
             [0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 
     test('getTileSkewVectors: pitch', () => {
-        const transform = createMercatorTransform();
-        transform.setBearing(0);
-        transform.setPitch(45);
-        transform.setRoll(0);
+        const {projectedCamera} = createTestCamera({bearing: 0, pitch: 45, roll: 0});
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecEast],
             [1.0, 0.0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [0.0, 1.0], 9);
     });
 
     test('getTileSkewVectors: roll pitch bearing', () => {
-        const transform = createMercatorTransform();
-        transform.setBearing(45);
-        transform.setPitch(45);
-        transform.setRoll(45);
+        const {projectedCamera} = createTestCamera({bearing: 45, pitch: 45, roll: 45});
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecEast],
             [-0.16910198330879211, 0.9855985641479492]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [-0.9855985641479492, 0.16910198330879211], 9);
     });
 
     test('getTileSkewVectors: pitch 90 degrees', () => {
-        const transform = createMercatorTransform();
-        transform.setMaxPitch(180);
-        transform.setBearing(0);
-        transform.setPitch(89);
-        transform.setRoll(0);
+        const {state: view, context, projectedCamera} = createTestCamera({maxPitch: 180, bearing: 0, pitch: 89, roll: 0});
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecEast],
             [1, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [0, 1], 9);
 
-        transform.setPitch(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        const pitched = setPitch(view, 90);
+        const pitchedCamera = projectCamera(pitched, context);
+        expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecEast],
             [0, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecSouth],
             [0, 1], 9);
 
-        transform.setBearing(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        const turnedCamera = projectCamera(setBearing(pitched, 90), context);
+        expectToBeCloseToArray([...getTileSkewVectors(turnedCamera).vecEast],
             [0, 0]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(turnedCamera).vecSouth],
             [-1, 0], 9);
     });
 
     test('getTileSkewVectors: pitch 90 degrees with roll and bearing', () => {
-        const transform = createMercatorTransform();
-        transform.setMaxPitch(180);
-        transform.setBearing(45);
-        transform.setPitch(89);
-        transform.setRoll(45);
+        const {state: view, context, projectedCamera} = createTestCamera({maxPitch: 180, bearing: 45, pitch: 89, roll: 45});
 
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecEast],
             [-0.6946603059768677, 0.7193379402160645]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(projectedCamera).vecSouth],
             [-0.7193379402160645, 0.6946603059768677], 9);
 
-        transform.setPitch(90);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecEast],
+        const pitchedCamera = projectCamera(setPitch(view, 90), context);
+        expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecEast],
             [-0.7071067690849304, 0.7071067690849304]);
-        expectToBeCloseToArray([...getTileSkewVectors(transform.projectedCamera).vecSouth],
+        expectToBeCloseToArray([...getTileSkewVectors(pitchedCamera).vecSouth],
             [-0.7071067690849304, 0.7071067690849304], 9);
     });
 

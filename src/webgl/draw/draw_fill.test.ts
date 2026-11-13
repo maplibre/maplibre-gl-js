@@ -9,8 +9,7 @@ import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {drawFill} from './draw_fill.ts';
 import {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import {createIdentityMat4f32} from '../../util/util.ts';
-import {createFrameRenderData} from '../../util/test/util.ts';
-import {createMercatorTransform} from '../../geo/projection/mercator_transform.ts';
+import {createFrameRenderData, createTestCamera} from '../../util/test/util.ts';
 
 import type {ProgramConfiguration, ProgramConfigurationSet} from '../../data/program_configuration.ts';
 import type {FillLayerSpecification, AllPaintProperties} from '@maplibre/maplibre-gl-style-spec';
@@ -96,9 +95,8 @@ describe('drawFill', () => {
     }
 
     function constructFrameRenderContext(painter: Painter): FrameRenderContext {
-        const transform = createMercatorTransform();
-        transform.resize(512, 512);
-        return new FrameRenderContext({projectedCamera: transform.projectedCamera, worldCoordinateHelper: transform.worldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
+        const {projectedCamera, context} = createTestCamera({width: 512, height: 512});
+        return new FrameRenderContext({projectedCamera, worldCoordinateHelper: context.worldCoordinateHelper, terrain: null, data: createFrameRenderData(), context: painter.context, programCache: null, currentPass: 'translucent', projection: null});
     }
 
     function constructMockTile(layer: FillStyleLayer): Tile {
