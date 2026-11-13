@@ -640,9 +640,10 @@ export class Placement {
                             }
                         }
 
-                        if (showCollisionBoxes && !placedBox) {
+                        if (!placedBox && (showCollisionBoxes || alwaysShowText)) {
                             // No box was successfully placed
-                            // Generate bounds for a fake centered box, so that we can at least display something for collision debug.
+                            // Generate bounds for a fake centered box, so that we can at least display something for collision debug,
+                            // and so that text which is always shown is still hidden when the globe occludes it.
                             const placedFakeGlyphBox = this.collisionIndex.placeCollisionBox(
                                 textBox,
                                 'always', // Skips expensive collision check with already placed boxes
@@ -663,7 +664,7 @@ export class Placement {
                                 box: placedFakeGlyphBox.box,
                                 offscreen: false,
                                 placeable: false,
-                                occluded: false,
+                                occluded: placedFakeGlyphBox.occluded,
                             };
                         }
 
