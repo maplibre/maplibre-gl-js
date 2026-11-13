@@ -19,7 +19,7 @@ import {getCameraMotions} from '../camera/camera_motions_factory.ts';
 import {getCameraSolver} from '../camera/camera_solver_factory.ts';
 import {sampleAt} from '../render/terrain_coverage.ts';
 import {takeDrawnElevation} from '../camera/center_elevation.ts';
-import {adjustCamera, applyAction, combineActions, constrainView, createCameraState, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjection, setProjectionTransition, startMovement, terrainChanged} from '../camera/camera_state.ts';
+import {adjustCamera, combineActions, constrainView, createCameraStore, endMovement, resizeView, setView, setViewElevation, setCenterElevationRule, setProjection, setProjectionTransition, startMovement, terrainChanged} from '../camera/camera_state.ts';
 import {CameraMovementScheduler} from './camera_movement_scheduler.ts';
 
 import type {MapEventType} from './events.ts';
@@ -33,7 +33,7 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {MapControlsDeltas} from '../camera/camera_motions.ts';
 import type {ElevationHolder} from '../camera/center_elevation.ts';
-import type {CameraAction, CameraAdjustment, CameraState} from '../camera/camera_state.ts';
+import type {CameraAction, CameraAdjustment, CameraState, CameraStore} from '../camera/camera_state.ts';
 import type {RenderLoop} from './camera_movement_scheduler.ts';
 import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
@@ -347,7 +347,7 @@ export class Camera extends Evented<MapEventType> {
      * way, and what else the rendered camera is derived from. Only actions change it, see {@link Camera._onStateChange}
      * for what follows a change.
      */
-    private _state: CameraState;
+    private readonly _store: CameraStore;
     /** How many {@link Camera._batch} calls are under way, during which the camera is adjusted once, at the end. */
     private _batching = 0;
     /** Whether the camera changed while {@link Camera._batch} held its adjustment back. */
@@ -385,7 +385,8 @@ export class Camera extends Evented<MapEventType> {
         if (options.maxPitch !== undefined) view = setMaxPitch(view, options.maxPitch);
         if (options.renderWorldCopies !== undefined) view = setRenderWorldCopies(view, context.worldCoordinateHelper, options.renderWorldCopies);
         this._elevationHandedOut = view.elevation;
-        this._state = createCameraState(view);
+        this._store = createCameraStore(view);
+        this._store.subscribe(this._onStateChange);
         this._bearingSnap = options.bearingSnap;
         this._zoomSnap = options.zoomSnap;
         this.terrain = options.terrain;
@@ -399,13 +400,14 @@ export class Camera extends Evented<MapEventType> {
         });
     }
 
-    /** Changes the camera's state, see {@link CameraAction}, and lets {@link Camera._onStateChange} follow the change. */
+    /** The camera's state, see {@link CameraState}. */
+    private get _state(): CameraState {
+        return this._store.getState();
+    }
+
+    /** Changes the camera's state, see {@link CameraAction}; {@link Camera._onStateChange} hears of the change. */
     private _dispatch(action: CameraAction): void {
-        const previous = this._state;
-        const state = applyAction(previous, action);
-        if (state === previous) return;
-        this._state = state;
-        this._onStateChange(state, previous);
+        this._store.setState(action);
     }
 
     /**
