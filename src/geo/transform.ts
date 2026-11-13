@@ -1,23 +1,24 @@
 import Point from '@mapbox/point-geometry';
 import {type MercatorCoordinate, mercatorWorldCoordinateHelper} from './mercator_coordinate.ts';
-import {Bounds} from './bounds.ts';
 import {createCameraViewState, getBearing, getCenterPoint, getFov, getMaxBounds, getPitch, getRoll, interpolatePadding as interpolatePaddingValues, isPaddingEqual, type CameraViewState} from '../camera/camera_view_state.ts';
-import {getCameraMetrics} from '../camera/project_camera.ts';
-import {calculateCenterFromCameraLngLatAlt, constrainState, interpolatePadding, moveCenterToElevation, resize, setBearing, setCenter, setCenterAndZoom, setElevation, setFov, setMaxBounds, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setNearFarZOverride, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from '../camera/camera_updates.ts';
+import {projectCamera} from '../camera/project_camera.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {getCameraPoint} from '../camera/projected_camera.ts';
+import {calculateCenterFromCameraLngLatAlt, constrainState, interpolatePadding, resize, setBearing, setCenter, setCenterAndZoom, setElevation, setFov, setMaxBounds, setMaxPitch, setMaxZoom, setMinElevationForCurrentTile, setMinPitch, setMinZoom, setNearFarZOverride, setPadding, setPitch, setRenderWorldCopies, setRoll, setZoom} from '../camera/camera_updates.ts';
 import {createCameraContext, type CameraContext, type CameraProjectionKind} from '../camera/camera_context.ts';
 import {applyConstrain, defaultConstrain} from '../camera/camera_constrain.ts';
+import {getCameraSolver} from '../camera/camera_solver_factory.ts';
 
 import type {LngLatBounds} from './lng_lat_bounds.ts';
 import type {LngLat, LngLatLike} from './lng_lat.ts';
-import type {CameraMetrics} from '../camera/projected_camera.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 import type {mat4, mat2, vec3, vec4} from 'gl-matrix';
 import type {PaddingOptions} from './edge_insets.ts';
-import type {IProjectionTransformMutators, IReadonlyProjectionTransform, IReadonlyTransform, ITransform, ITransformGetters} from './transform_interface.ts';
+import type {IReadonlyTransform, ITransform, ITransformGetters} from './transform_interface.ts';
 import type {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {PointProjection} from '../symbol/projection.ts';
 import type {CustomLayerProjectionData, ProjectionDataParams, RendererProjectionData} from './projection/projection_data.ts';
-import type {CoveringTilesDetailsProvider} from './projection/covering_tiles_details_provider.ts';
 import type {Frustum} from '../util/primitives/frustum.ts';
 import type {WorldCoordinateHelper} from './world_types.ts';
 import type {CameraOptionsFromTo, NearFarZ, TransformConstrainFunction} from '../camera/camera_types.ts';
@@ -57,47 +58,6 @@ export type UnwrappedTileIDType = {
     };
 };
 
-/**
- * @internal
- * The part of a {@link Transform} that depends on the projection. It derives its matrices from the transform's
- * camera state, and implements the members of {@link ITransform} that depend on the projection.
- */
-export interface IProjectionTransform extends IReadonlyProjectionTransform, IProjectionTransformMutators, NearFarZ {
-    /**
-     * Updates the matrices after the transform's camera state changed.
-     */
-    calcMatrices(): void;
-
-    /** The projection this part projects the camera with, see {@link CameraContext.projection}. */
-    readonly cameraProjection: CameraProjectionKind;
-
-    /** How far a globe is between mercator and the vertical perspective, see {@link CameraContext.projectionTransition}. */
-    readonly projectionTransition: number;
-
-    /**
-     * Returns a part of the same projection for another camera, carrying over this part's own state.
-     */
-    clone(getMetrics: () => CameraMetrics): IProjectionTransform;
-
-    /**
-     * Returns the elevation of the ground the camera looks at, which {@link Transform.recalculateZoomAndCenter}
-     * moves the center to, or null where the center stays as it is.
-     */
-    getGroundElevationAtCenter(terrain?: Terrain): number | null;
-
-    /**
-     * Returns the center and zoom that {@link Transform.setLocationAtPoint} moves the camera to, or null where the
-     * camera does not move. See {@link Transform.setLocationAtPoint} for the parameters.
-     */
-    getCameraForLocationAtPoint(lnglat: LngLat, point: Point, elevation: number | undefined, constrain: TransformConstrainFunction): {center: LngLat; zoom: number} | null;
-
-    /**
-     * Returns the geometry {@link Transform.getCameraQueryGeometry} gives for a query where the projection has its own,
-     * or null where the transform's applies.
-     */
-    getCameraQueryGeometry(queryGeometry: Point[]): Point[] | null;
-}
-
 export type TransformOptions = {
     /**
      * The minimum zoom level of the map. Users cannot zoom out beyond this level. (0–24)
@@ -132,47 +92,43 @@ export type TransformOptions = {
 };
 
 /**
- * How many times {@link Transform.recalculateZoomAndCenter} picks the terrain under the center and moves the
- * center onto it, and how far above or below the terrain a center may stay. Each pass keeps the camera where it is,
- * so the center's latitude changes the mercator scale the next pass sees and the terrain pick moves with it; the
- * remainder shrinks by the scale difference each pass, from meters to under a millimeter on the second.
- */
-const CENTER_ON_TERRAIN_PASSES = 3;
-const CENTER_ON_TERRAIN_TOLERANCE_M = 0.0001;
-
-/**
  * @internal
  * This class stores all values that define a transform's state, such as center, zoom, minZoom, etc.,
- * and gets its matrices and projected positions from its {@link IProjectionTransform}.
+ * projects its camera with {@link projectCamera}, and computes matrices and projected positions from the projected
+ * camera with its projection's {@link CameraMath}.
  */
 export class Transform implements ITransform {
-    private _projection: IProjectionTransform;
+    /** The projection the transform projects its camera with, see {@link CameraContext.projection}. */
+    private readonly _projection: CameraProjectionKind;
+    /** How far a globe is between mercator and the vertical perspective, see {@link CameraContext.projectionTransition}. */
+    private _projectionTransition: number = 1;
 
     private _cameraState: CameraViewState;
-    /** The values that follow from {@link Transform._cameraState}. */
-    private _metrics: CameraMetrics;
+    /** {@link Transform._cameraState} projected in {@link Transform.context}. */
+    private _projectedCamera: ProjectedCamera;
 
     _constrainOverride: TransformConstrainFunction;
 
     private readonly _worldCoordinateHelper: WorldCoordinateHelper;
 
     /**
-     * @param createProjection - Creates the projection part for this transform, which reads the {@link CameraMetrics}
-     * of its camera state.
+     * @param projection - The projection the transform projects its camera with.
      * @param options - Initial state.
      */
-    constructor(createProjection: (getMetrics: () => CameraMetrics, worldCoordinateHelper: WorldCoordinateHelper) => IProjectionTransform, options?: TransformOptions) {
+    constructor(projection: CameraProjectionKind, options?: TransformOptions) {
+        this._projection = projection;
         this._cameraState = createCameraViewState(options);
         this._worldCoordinateHelper = options?.worldCoordinateHelper ?? mercatorWorldCoordinateHelper;
 
         this._constrainOverride = options?.constrainOverride ?? null;
 
-        this._metrics = getCameraMetrics(this._cameraState, this._worldCoordinateHelper);
-        this._projection = createProjection(() => this._metrics, this._worldCoordinateHelper);
+        this._projectCamera();
     }
 
+    /** A transform of the same projection and globe transition, with this one's state. */
     clone(): ITransform {
-        const clone = new Transform((getMetrics) => this._projection.clone(getMetrics), {worldCoordinateHelper: this._worldCoordinateHelper});
+        const clone = new Transform(this._projection, {worldCoordinateHelper: this._worldCoordinateHelper});
+        clone.setTransitionState(this._projectionTransition);
         clone.apply(this, false);
         return clone;
     }
@@ -205,15 +161,26 @@ export class Transform implements ITransform {
         this._setState(constrain ? constrainState(view, this.context) : view);
     }
 
-    /** Replaces the camera state, and derives the metrics and matrices of the new one. */
+    /** Replaces the camera state, and projects the new one. */
     private _setState(view: CameraViewState): void {
         if (view === this._cameraState) return;
         this._cameraState = view;
-        this._calcMatrices();
+        this._projectCamera();
     }
 
-    get pixelsToClipSpaceMatrix(): mat4 { return this._metrics.pixelsToClipSpaceMatrix; }
-    get clipSpaceToPixelsMatrix(): mat4 { return this._metrics.clipSpaceToPixelsMatrix; }
+    /** Projects the camera state in the context as they are now, see {@link Transform.projectedCamera}. */
+    private _projectCamera(): void {
+        this._projectedCamera = projectCamera(this._cameraState, this.context);
+    }
+
+    /**
+     * The camera state projected in {@link Transform.context}: what the transform's matrices and projected positions are
+     * computed from. A camera with no size has metrics but no matrices of its own.
+     */
+    get projectedCamera(): ProjectedCamera { return this._projectedCamera; }
+
+    get pixelsToClipSpaceMatrix(): mat4 { return this._projectedCamera.pixelsToClipSpaceMatrix; }
+    get clipSpaceToPixelsMatrix(): mat4 { return this._projectedCamera.clipSpaceToPixelsMatrix; }
 
     get minElevationForCurrentTile(): number { return this._cameraState.minElevationForCurrentTile; }
     setMinElevationForCurrentTile(ele: number): void {
@@ -221,8 +188,8 @@ export class Transform implements ITransform {
     }
 
     get tileSize(): number { return this._cameraState.tileSize; }
-    get tileZoom(): number { return this._metrics.tileZoom; }
-    get scale(): number { return this._metrics.scale; }
+    get tileZoom(): number { return this._projectedCamera.tileZoom; }
+    get scale(): number { return this._projectedCamera.scale; }
 
     /**
      * Gets the transform's width in pixels. Use {@link resize} to set the transform's size.
@@ -243,7 +210,7 @@ export class Transform implements ITransform {
     get latRange(): [number, number] { return this._cameraState.latRange; }
     get worldCoordinateHelper(): WorldCoordinateHelper { return this._worldCoordinateHelper; }
 
-    get pixelsToGLUnits(): [number, number] { return this._metrics.pixelsToGLUnits; }
+    get pixelsToGLUnits(): [number, number] { return this._projectedCamera.pixelsToGLUnits; }
 
     get minZoom(): number { return this._cameraState.minZoom; }
     setMinZoom(zoom: number): void {
@@ -279,7 +246,7 @@ export class Transform implements ITransform {
     }
 
     get worldSize(): number {
-        return this._metrics.worldSize;
+        return this._projectedCamera.worldSize;
     }
 
     /**
@@ -296,7 +263,7 @@ export class Transform implements ITransform {
         this._setState(setBearing(this._cameraState, bearing));
     }
 
-    get rotationMatrix(): mat2 { return this._metrics.rotationMatrix; }
+    get rotationMatrix(): mat2 { return this._projectedCamera.rotationMatrix; }
 
     get pitchInRadians(): number {
         return this._cameraState.pitchInRadians;
@@ -369,11 +336,11 @@ export class Transform implements ITransform {
     /**
      * @internal
      */
-    get pixelsPerMeter(): number { return this._metrics.pixelsPerMeter; }
+    get pixelsPerMeter(): number { return this._projectedCamera.pixelsPerMeter; }
 
     get unmodified(): boolean { return this._cameraState.unmodified; }
 
-    get cameraToCenterDistance(): number { return this._metrics.cameraToCenterDistance; }
+    get cameraToCenterDistance(): number { return this._projectedCamera.cameraToCenterDistance; }
 
     get autoCalculateNearFarZ(): boolean { return this._cameraState.nearFarZOverride === null; }
     /**
@@ -439,32 +406,17 @@ export class Transform implements ITransform {
      *
      */
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        const projectionGeometry = this._projection.getCameraQueryGeometry(queryGeometry);
-        if (projectionGeometry) return projectionGeometry;
-
-        const cameraPoint = this.getCameraPoint();
-        if (queryGeometry.length === 1) {
-            return [queryGeometry[0], cameraPoint];
-        } else {
-            const {minX, minY, maxX, maxY} = Bounds.fromPoints(queryGeometry).extend(cameraPoint);
-            return [
-                new Point(minX, minY),
-                new Point(maxX, minY),
-                new Point(maxX, maxY),
-                new Point(minX, maxY),
-                new Point(minX, minY)
-            ];
-        }
+        return getCameraMath(this._projectedCamera).getCameraQueryGeometry(this._projectedCamera, queryGeometry);
     }
 
     /**
-     * What the camera state is constrained with: the projection part's projection and transition, the world mapping and
-     * the constrain override.
+     * What the camera state is constrained and projected with: the projection and the globe's transition, the world
+     * mapping and the constrain override.
      */
     get context(): CameraContext {
         return createCameraContext({
-            projection: this._projection.cameraProjection,
-            projectionTransition: this._projection.projectionTransition,
+            projection: this._projection,
+            projectionTransition: this._projectionTransition,
             worldCoordinateHelper: this._worldCoordinateHelper,
             constrainOverride: this._constrainOverride,
         });
@@ -478,148 +430,123 @@ export class Transform implements ITransform {
         return applyConstrain(this._cameraState, this.context, lngLat, zoom);
     };
 
-    /**
-     * @internal
-     * Snaps the transform's center, zoom, etc. into the valid range.
-     */
-
-    /**
-     * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
-     * It updates the matrices that only depend on the `_width` and `_height` fields, then those of the projection part.
-     * While either dimension is zero there is no view to build, so the projection part is not called at all.
-     */
-    private _calcMatrices(): void {
-        this._metrics = getCameraMetrics(this._cameraState, this._worldCoordinateHelper);
-        if (!this._cameraState.width || !this._cameraState.height) {
-            return;
-        }
-        this._projection.calcMatrices();
-    }
-
-    /** Derives the {@link CameraMetrics} of the camera state again, after a change to it. */
-
     calculateCenterFromCameraLngLatAlt(lnglat: LngLatLike, alt: number, bearing?: number, pitch?: number): {center: LngLat; elevation: number; zoom: number} {
         return calculateCenterFromCameraLngLatAlt(this._cameraState, this._worldCoordinateHelper, lnglat, alt, bearing, pitch);
     }
 
     getCameraPoint(): Point {
-        const pitch = this.pitchInRadians;
-        const offset = Math.tan(pitch) * (this.cameraToCenterDistance || 1);
-        return this.centerPoint.add(new Point(offset * Math.sin(this.rollInRadians), offset * Math.cos(this.rollInRadians)));
+        return getCameraPoint(this._projectedCamera);
     }
 
     get modelViewProjectionMatrix(): mat4 {
-        return this._projection.modelViewProjectionMatrix;
+        return this._projectedCamera.modelViewProjectionMatrix;
     }
     get projectionMatrix(): mat4 {
-        return this._projection.projectionMatrix;
+        return this._projectedCamera.projectionMatrix;
     }
     get inverseProjectionMatrix(): mat4 {
-        return this._projection.inverseProjectionMatrix;
+        return this._projectedCamera.inverseProjectionMatrix;
     }
     get cameraPosition(): vec3 {
-        return this._projection.cameraPosition;
+        return this._projectedCamera.cameraPosition;
     }
     get nearZ(): number {
-        return this._projection.nearZ;
+        return this._projectedCamera.nearZ;
     }
     get farZ(): number {
-        return this._projection.farZ;
+        return this._projectedCamera.farZ;
     }
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
-        return this._projection.getVisibleUnwrappedCoordinates(tileID);
+        return getCameraMath(this._projectedCamera).getVisibleUnwrappedCoordinates(this._projectedCamera, this._worldCoordinateHelper, tileID);
     }
     getCameraFrustum(): Frustum {
-        return this._projection.getCameraFrustum();
+        return getCameraMath(this._projectedCamera).getCameraFrustum(this._projectedCamera);
     }
     getClippingPlane(): vec4 | null {
-        return this._projection.getClippingPlane();
-    }
-    getCoveringTilesDetailsProvider(): CoveringTilesDetailsProvider {
-        return this._projection.getCoveringTilesDetailsProvider();
+        return getCameraMath(this._projectedCamera).getClippingPlane(this._projectedCamera);
     }
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
-        return this._projection.locationToScreenPoint(lnglat, terrain);
+        return getCameraMath(this._projectedCamera).locationToScreenPoint(this._projectedCamera, this._worldCoordinateHelper, lnglat, terrain);
     }
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat {
-        return this._projection.screenPointToLocation(p, terrain);
+        return getCameraMath(this._projectedCamera).screenPointToLocation(this._projectedCamera, this._worldCoordinateHelper, p, terrain);
     }
     screenPointToLocationAtElevation(p: Point, elevation: number): LngLat {
-        return this._projection.screenPointToLocationAtElevation(p, elevation);
+        return getCameraMath(this._projectedCamera).screenPointToLocationAtElevation(this._projectedCamera, this._worldCoordinateHelper, p, elevation);
     }
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
-        return this._projection.screenPointToMercatorCoordinate(p, terrain);
+        return getCameraMath(this._projectedCamera).screenPointToMercatorCoordinate(this._projectedCamera, this._worldCoordinateHelper, p, terrain);
     }
     screenTerrainPointToMercatorCoordinate(p: Point, terrain: Terrain): MercatorCoordinate | null {
-        return this._projection.screenTerrainPointToMercatorCoordinate(p, terrain);
+        return getCameraMath(this._projectedCamera).screenTerrainPointToMercatorCoordinate(this._projectedCamera, this._worldCoordinateHelper, p, terrain);
     }
     getBounds(): LngLatBounds {
-        return this._projection.getBounds();
+        return getCameraMath(this._projectedCamera).getBounds(this._projectedCamera, this._worldCoordinateHelper);
     }
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
-        return this._projection.isPointOnMapSurface(p, terrain);
+        return getCameraMath(this._projectedCamera).isPointOnMapSurface(this._projectedCamera, this._worldCoordinateHelper, p, terrain);
     }
     maxPitchScaleFactor(): number {
-        return this._projection.maxPitchScaleFactor();
+        return getCameraMath(this._projectedCamera).maxPitchScaleFactor(this._projectedCamera);
     }
     getCameraAltitude(): number {
-        return this._projection.getCameraAltitude();
+        return getCameraMath(this._projectedCamera).getCameraAltitude(this._projectedCamera);
     }
     getCameraLngLat(): LngLat {
-        return this._projection.getCameraLngLat();
+        return getCameraMath(this._projectedCamera).getCameraLngLat(this._projectedCamera, this._worldCoordinateHelper);
     }
     calculateCameraOptionsFromTo(from: LngLatLike, altitudeFrom: number, to: LngLatLike, altitudeTo: number): CameraOptionsFromTo {
-        return this._projection.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
+        const context = this.context;
+        return getCameraSolver(context).calculateCameraOptionsFromTo(this._cameraState, context, from, altitudeFrom, to, altitudeTo);
     }
     getRayDirectionFromPixel(p: Point): vec3 {
-        return this._projection.getRayDirectionFromPixel(p);
+        return getCameraMath(this._projectedCamera).getRayDirectionFromPixel(this._projectedCamera, p);
     }
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
-        return this._projection.calculateFogMatrix(unwrappedTileID);
+        return getCameraMath(this._projectedCamera).calculateFogMatrix(this._projectedCamera, unwrappedTileID);
     }
     getProjectionData(params: ProjectionDataParams): RendererProjectionData {
-        return this._projection.getProjectionData(params);
+        return getCameraMath(this._projectedCamera).getProjectionData(this._projectedCamera, params);
     }
     isLocationOccluded(lngLat: LngLat, terrain?: Terrain, elevation?: number): boolean {
-        return this._projection.isLocationOccluded(lngLat, terrain, elevation);
+        return getCameraMath(this._projectedCamera).isLocationOccluded(this._projectedCamera, this._worldCoordinateHelper, lngLat, terrain, elevation);
     }
     getPixelScale(): number {
-        return this._projection.getPixelScale();
+        return getCameraMath(this._projectedCamera).getPixelScale(this._projectedCamera);
     }
     getCircleRadiusCorrection(): number {
-        return this._projection.getCircleRadiusCorrection();
+        return getCameraMath(this._projectedCamera).getCircleRadiusCorrection(this._projectedCamera);
     }
     getPitchedTextCorrection(textAnchorX: number, textAnchorY: number, tileID: UnwrappedTileID): number {
-        return this._projection.getPitchedTextCorrection(textAnchorX, textAnchorY, tileID);
+        return getCameraMath(this._projectedCamera).getPitchedTextCorrection(this._projectedCamera, textAnchorX, textAnchorY, tileID);
     }
     transformLightDirection(dir: vec3): vec3 {
-        return this._projection.transformLightDirection(dir);
+        return getCameraMath(this._projectedCamera).transformLightDirection(this._projectedCamera, dir);
     }
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, elevation?: number): PointProjection {
-        return this._projection.projectTileCoordinates(x, y, unwrappedTileID, elevation);
+        return getCameraMath(this._projectedCamera).projectTileCoordinates(this._projectedCamera, x, y, unwrappedTileID, elevation);
     }
     getProjectionDataForCustomLayer(applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
-        return this._projection.getProjectionDataForCustomLayer(applyGlobeMatrix);
+        return getCameraMath(this._projectedCamera).getProjectionDataForCustomLayer(this._projectedCamera, applyGlobeMatrix);
     }
     getFastPathSimpleProjectionMatrix(tileID: OverscaledTileID): mat4 {
-        return this._projection.getFastPathSimpleProjectionMatrix(tileID);
+        return getCameraMath(this._projectedCamera).getFastPathSimpleProjectionMatrix(this._projectedCamera, tileID);
     }
+    /** Sets how far a globe is between mercator and the vertical perspective; other projections ignore it. */
     setTransitionState(value: number): void {
-        this._projection.setTransitionState(value);
+        this._projectionTransition = value;
+        this._projectCamera();
     }
     recalculateZoomAndCenter(terrain?: Terrain): void {
-        for (let pass = 0; pass < CENTER_ON_TERRAIN_PASSES; pass++) {
-            const elevation = this._projection.getGroundElevationAtCenter(terrain);
-            if (elevation === null) return;
-            this._setState(moveCenterToElevation(this._cameraState, this.context, elevation));
-            if (!terrain || Math.abs(terrain.getElevationForLngLat(this._cameraState.center, this._metrics.tileZoom) - this._cameraState.elevation) <= CENTER_ON_TERRAIN_TOLERANCE_M) return;
-        }
+        const context = this.context;
+        this._setState(getCameraSolver(context).recenterOnTerrain(this._cameraState, context, terrain));
     }
     setLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): void {
-        const camera = this.getCameraForLocationAtPoint(lnglat, point, elevation);
-        if (camera) this.setCenterAndZoom(camera.center, camera.zoom);
+        const context = this.context;
+        this._setState(getCameraSolver(context).setLocationAtPoint(this._cameraState, context, lnglat, point, elevation));
     }
     getCameraForLocationAtPoint(lnglat: LngLat, point: Point, elevation?: number): {center: LngLat; zoom: number} | null {
-        return this._projection.getCameraForLocationAtPoint(lnglat, point, elevation, this.applyConstrain);
+        const context = this.context;
+        return getCameraSolver(context).getCameraForLocationAtPoint(this._cameraState, context, lnglat, point, elevation);
     }
 }

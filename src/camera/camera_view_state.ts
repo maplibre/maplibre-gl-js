@@ -5,7 +5,7 @@ import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {MAX_VALID_LATITUDE, radiansToDegrees} from '../util/util.ts';
 
 import type {PaddingOptions} from '../geo/edge_insets.ts';
-import type {NearFarZ, TransformConstrainFunction} from './camera_types.ts';
+import type {NearFarZ} from './camera_types.ts';
 
 /** @internal The limits a new camera view state starts with, see {@link createCameraViewState}. */
 export type CameraViewStateOptions = {
@@ -196,16 +196,4 @@ export function getMaxBounds(camera: Pick<CameraViewState, 'lngRange' | 'latRang
  */
 export function getFov(camera: Pick<CameraViewState, 'fovInRadians'>): number {
     return radiansToDegrees(camera.fovInRadians);
-}
-
-/**
- * @internal
- * Where `constrain` puts a camera moved to `center` and `zoom`, the way a {@link Transform} constrains its own camera,
- * which is once and then the zoom again at the constrained center. A camera without a size is not constrained, so it
- * keeps the two as they are.
- */
-export function getConstrainedCamera(view: Readonly<CameraViewState>, constrain: TransformConstrainFunction, center: LngLat, zoom: number): {center: LngLat; zoom: number} {
-    if (!view.width || !view.height) return {center, zoom};
-    const constrained = constrain(center, zoom);
-    return {center: constrained.center, zoom: constrain(constrained.center, constrained.zoom).zoom};
 }
