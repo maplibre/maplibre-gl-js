@@ -1,0 +1,126 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "The literal test with each width given as a zoom expression that equals literal's width at this zoom, so it shares literal's expected image.",
+      "width": 64,
+      "height": 64
+    }
+  },
+  "sources": {
+    "a": {
+      "type": "geojson",
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -10,
+            -10
+          ],
+          [
+            10,
+            -10
+          ]
+        ]
+      }
+    },
+    "b": {
+      "type": "geojson",
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -10,
+            0
+          ],
+          [
+            10,
+            0
+          ]
+        ]
+      }
+    },
+    "c": {
+      "type": "geojson",
+      "data": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -10,
+            10
+          ],
+          [
+            10,
+            10
+          ]
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/emerald",
+  "layers": [
+    {
+      "id": "a",
+      "type": "line",
+      "source": "a",
+      "paint": {
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          0,
+          2,
+          1,
+          4
+        ],
+        "line-pattern": "generic_icon"
+      }
+    },
+    {
+      "id": "b",
+      "type": "line",
+      "source": "b",
+      "paint": {
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          0,
+          4,
+          1,
+          8
+        ],
+        "line-pattern": "generic_icon"
+      }
+    },
+    {
+      "id": "c",
+      "type": "line",
+      "source": "c",
+      "paint": {
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          0,
+          8,
+          1,
+          16
+        ],
+        "line-pattern": "generic_icon"
+      }
+    }
+  ]
+}

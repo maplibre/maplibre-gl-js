@@ -1,0 +1,129 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 200,
+      "height": 200
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 2,
+  "bearing": 0,
+  "pitch": 60,
+  "sources": {
+    "polygon": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -10,
+                -10
+              ],
+              [
+                10,
+                -10
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                -10,
+                10
+              ],
+              [
+                -10,
+                -10
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    "line": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [
+            [
+              -14,
+              7
+            ],
+            [
+              14,
+              -7
+            ]
+          ]
+        }
+      }
+    },
+    "point": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            0,
+            0
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#D8F2FF"
+      }
+    },
+    {
+      "id": "polygon",
+      "type": "fill",
+      "source": "polygon",
+      "paint": {
+        "fill-color": "#2E8B57",
+        "fill-opacity": 1,
+        "fill-antialias": false
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "line",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#D7263D",
+        "line-width": 4
+      }
+    },
+    {
+      "id": "point",
+      "type": "circle",
+      "source": "point",
+      "paint": {
+        "circle-color": "#285DAA",
+        "circle-radius": 9,
+        "circle-stroke-color": "#FFFFFF",
+        "circle-stroke-width": 2
+      }
+    }
+  ]
+}
