@@ -430,9 +430,11 @@ export class Camera extends Evented<MapEventType> {
      * {@link Camera._onStateChange} hears of the change.
      */
     private _dispatch(action: CameraAction): void {
-        this._store.setState((state) => {
-            const camera = applyAction(state.camera, action);
-            return camera === state.camera ? state : {camera};
+        this._batch(() => {
+            this._store.setState((state) => {
+                const camera = applyAction(state.camera, action);
+                return camera === state.camera ? state : {camera};
+            });
         });
     }
 
@@ -442,11 +444,7 @@ export class Camera extends Evented<MapEventType> {
      */
     private readonly _onStateChange = (state: CameraState, previous: CameraState): void => {
         if (state.view === previous.view && state.centerElevation === previous.centerElevation && state.terrainRevision === previous.terrainRevision) return;
-        if (this._batching) {
-            this._changedInBatch = true;
-            return;
-        }
-        this._adjustMovement();
+        this._changedInBatch = true;
     };
 
     /** Runs an update that dispatches several actions, adjusting the camera once at its end if they changed it. */
