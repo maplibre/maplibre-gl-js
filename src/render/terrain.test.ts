@@ -197,6 +197,30 @@ describe('Terrain', () => {
         expect(minMaxNoDEM.maxElevation).toBeNull();
     });
 
+    test('getMinMaxElevation reads the DEM data of a tile once', () => {
+        const terrain = createDEMTerrain([], createDEM(() => 100));
+        const getSourceTile = vi.spyOn(terrain.tileManager, 'getSourceTile');
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+
+        terrain.getMinMaxElevation(tileID);
+        terrain.getMinMaxElevation(tileID);
+
+        expect(getSourceTile).toHaveBeenCalledTimes(1);
+    });
+
+    test('getMinMaxElevation returns the elevations of newly loaded DEM data after resetElevationCache', () => {
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        const tile = new Tile(tileID, 512);
+        const terrain = createDEMTerrain([], null);
+        terrain.tileManager.getSourceTile = () => tile;
+        expect(terrain.getMinMaxElevation(tileID)).toEqual({minElevation: null, maxElevation: null});
+
+        tile.dem = createDEM(() => 100);
+        terrain.resetElevationCache();
+
+        expect(terrain.getMinMaxElevation(tileID)).toEqual({minElevation: 100, maxElevation: 100});
+    });
+
     test('create mesh with border', () => {
         let actualIndexArray;
         let actualVertexArray;
