@@ -138,6 +138,7 @@ export function createCameraMetrics(view: CameraViewState, worldCoordinateHelper
     const scale = zoomScale(view.zoom);
     const worldSize = view.tileSize * scale;
     const sized = !!view.width && !!view.height;
+    const pixelValues = sized ? getPixelValues(view.width, view.height) : undefined;
     return {
         ...view,
         tileZoom: Math.max(0, Math.floor(view.zoom)),
@@ -146,9 +147,9 @@ export function createCameraMetrics(view: CameraViewState, worldCoordinateHelper
         pixelsPerMeter: worldCoordinateHelper.worldZFromAltitude(1, view.center) * worldSize,
         cameraToCenterDistance: sized ? 0.5 / Math.tan(view.fovInRadians / 2) * view.height : undefined,
         rotationMatrix: mat2.rotate(mat2.create(), mat2.create(), -view.bearingInRadians),
-        pixelsToGLUnits: sized ? [2 / view.width, -2 / view.height] : undefined,
-        pixelsToClipSpaceMatrix: sized ? pixelsToClipSpaceMatrix(view) : undefined,
-        clipSpaceToPixelsMatrix: sized ? clipSpaceToPixelsMatrix(view) : undefined,
+        pixelsToGLUnits: pixelValues?.pixelsToGLUnits,
+        pixelsToClipSpaceMatrix: pixelValues?.pixelsToClipSpaceMatrix,
+        clipSpaceToPixelsMatrix: pixelValues?.clipSpaceToPixelsMatrix,
         pitch: getPitch(view),
         bearing: getBearing(view),
         roll: getRoll(view),
@@ -157,18 +158,50 @@ export function createCameraMetrics(view: CameraViewState, worldCoordinateHelper
     };
 }
 
-function clipSpaceToPixelsMatrix(view: CameraViewState): mat4 {
+/** The values of {@link CameraMetrics} that depend only on the size of the camera, and the size they are for. */
+type PixelValues = {
+    readonly width: number;
+    readonly height: number;
+    readonly pixelsToGLUnits: [number, number];
+    readonly pixelsToClipSpaceMatrix: mat4;
+    readonly clipSpaceToPixelsMatrix: mat4;
+};
+
+/**
+ * The {@link PixelValues} computed last. A camera keeps its size while it moves, so every camera state of a movement
+ * shares them; a camera of another size computes its own.
+ */
+let lastPixelValues: PixelValues | undefined;
+
+/**
+ * Returns the {@link PixelValues} of a camera size. They are shared by every camera of that size, so nothing may write
+ * into them.
+ */
+function getPixelValues(width: number, height: number): PixelValues {
+    if (lastPixelValues?.width !== width || lastPixelValues.height !== height) {
+        lastPixelValues = {
+            width,
+            height,
+            pixelsToGLUnits: [2 / width, -2 / height],
+            pixelsToClipSpaceMatrix: pixelsToClipSpaceMatrix(width, height),
+            clipSpaceToPixelsMatrix: clipSpaceToPixelsMatrix(width, height),
+        };
+    }
+    return lastPixelValues;
+}
+
+function clipSpaceToPixelsMatrix(width: number, height: number): mat4 {
     const m = mat4.identity(new Float64Array(16));
-    mat4.scale(m, m, [view.width / 2, -view.height / 2, 1]);
+    mat4.scale(m, m, [width / 2, -height / 2, 1]);
     mat4.translate(m, m, [1, -1, 0]);
     return m;
 }
 
-function pixelsToClipSpaceMatrix(view: CameraViewState): mat4 {
+function pixelsToClipSpaceMatrix(width: number, height: number): mat4 {
     const m = mat4.identity(new Float64Array(16));
     mat4.scale(m, m, [1, -1, 1]);
     mat4.translate(m, m, [-1, -1, 0]);
-    mat4.scale(m, m, [2 / view.width, 2 / view.height, 1]);
+    mat4.scale(m, m, [2 / width, 2 / height, 1]);
     return m;
 }
 
