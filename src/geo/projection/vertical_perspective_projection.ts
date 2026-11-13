@@ -14,7 +14,7 @@ export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';
 
 const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
-    fill: new SubdivisionGranularityExpression(128, 2),
+    fill: new SubdivisionGranularityExpression(128, 2, 32),
     line: new SubdivisionGranularityExpression(512, 0),
     // Always keep at least some subdivision on raster tiles, etc,
     // otherwise they will be visibly warped at high zooms (before mercator transition).
@@ -24,7 +24,7 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     // Stencil granularity must never be higher than fill granularity,
     // otherwise we would get seams in the oceans at zoom levels where
     // stencil has higher granularity than fill.
-    stencil: new SubdivisionGranularityExpression(128, 1),
+    stencil: new SubdivisionGranularityExpression(128, 1, 32),
     circle: 3
 });
 

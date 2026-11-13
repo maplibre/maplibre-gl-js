@@ -1,0 +1,79 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that tiles without a buffer show no seams where tiles of two zoom levels meet. The coarser tile splits the shared edge at fewer points than the finer one, so each fill needs to reach a little past the tile edge, as a buffered tile's does.",
+      "width": 512,
+      "height": 512,
+      "pixelRatio": 2,
+      "allowed": 0
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    0,
+    60
+  ],
+  "zoom": 9,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "polygon": {
+      "type": "geojson",
+      "buffer": 0,
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60,
+                -50
+              ],
+              [
+                80,
+                -50
+              ],
+              [
+                80,
+                70
+              ],
+              [
+                -60,
+                70
+              ],
+              [
+                -60,
+                -50
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "polygon",
+      "type": "fill",
+      "source": "polygon",
+      "paint": {
+        "fill-color": "black"
+      }
+    }
+  ],
+  "bearing": 45,
+  "pitch": 20
+}

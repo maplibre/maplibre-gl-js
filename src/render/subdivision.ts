@@ -713,6 +713,88 @@ export function subdividePolygon(polygon: Point[][], canonical: CanonicalTileID,
 }
 
 /**
+ * How far past the tile border {@link addTileBorderStrips} reaches: several times the widest sliver between the meshes of
+ * neighboring zoom levels (about 2π units with the globe's granularities), and inside the stencil masks' border.
+ */
+export const TILE_BORDER_STRIP_WIDTH: number = EXTENT / 256;
+
+/**
+ * Extends every triangle edge that lies on the tile border with nothing beyond it by a strip `width` units outside the tile.
+ * Tiles of neighboring zoom levels split their shared edge at different points, and the slivers between the two meshes
+ * are covered only by the stencil masks' borders; the strip lets a fill that ends exactly at the tile border reach them,
+ * as the geometry of a tile with a buffer does. An edge with triangles on both sides of the border belongs to a tile with
+ * a buffer and gets none, and neither do pole borders or the zoom 0 tile's antimeridian edges.
+ * @param result - A subdivided polygon, extended in place.
+ * @param canonical - The canonical tile ID of the tile the polygon belongs to.
+ * @param width - How far the strips reach past the border, in tile units.
+ */
+export function addTileBorderStrips(result: SubdivisionResult, canonical: CanonicalTileID, width: number): void {
+    const vertices = result.verticesFlattened;
+    const triangles = result.indicesTriangles;
+    const northPoleTile = canonical.y === 0;
+    const southPoleTile = canonical.y === (1 << canonical.z) - 1;
+    const wrapsX = canonical.z === 0;
+
+    const edges: Array<{a: number; b: number; dx: number; dy: number; uses: number}> = [];
+    let edgeIndices: Map<number, number> | undefined;
+    for (let i = 0; i + 2 < triangles.length; i += 3) {
+        for (let e = 0; e < 3; e++) {
+            const a = triangles[i + e];
+            const b = triangles[i + (e + 1) % 3];
+            let dx = 0;
+            let dy = 0;
+            if (vertices[a * 2] === vertices[b * 2] && !wrapsX) {
+                if (vertices[a * 2] === 0) dx = -1;
+                if (vertices[a * 2] === EXTENT) dx = 1;
+            }
+            if (vertices[a * 2 + 1] === vertices[b * 2 + 1]) {
+                if (vertices[a * 2 + 1] === 0 && !northPoleTile) dy = -1;
+                if (vertices[a * 2 + 1] === EXTENT && !southPoleTile) dy = 1;
+            }
+            if (dx === 0 && dy === 0) {
+                continue;
+            }
+            const key = Math.min(a, b) * 4294967296 + Math.max(a, b);
+            edgeIndices ??= new Map<number, number>();
+            let index = edgeIndices.get(key);
+            if (index === undefined) {
+                index = edges.length;
+                edgeIndices.set(key, index);
+                edges.push({a, b, dx, dy, uses: 0});
+            }
+            edges[index].uses++;
+        }
+    }
+    if (edges.length === 0) {
+        return;
+    }
+
+    const outerVertices = new Map<number, number>();
+    const outer = (index: number, dx: number, dy: number): number => {
+        const key = index * 16 + (dx + 1) * 3 + (dy + 1);
+        let outerIndex = outerVertices.get(key);
+        if (outerIndex === undefined) {
+            outerIndex = vertices.length / 2;
+            vertices.push(vertices[index * 2] + dx * width, vertices[index * 2 + 1] + dy * width);
+            outerVertices.set(key, outerIndex);
+        }
+        return outerIndex;
+    };
+    const strips: number[] = [];
+    for (const edge of edges) {
+        if (edge.uses !== 1) {
+            continue;
+        }
+        const outerA = outer(edge.a, edge.dx, edge.dy);
+        const outerB = outer(edge.b, edge.dx, edge.dy);
+        strips.push(edge.a, edge.b, outerB, edge.a, outerB, outerA);
+    }
+    for (const index of fixWindingOrder(vertices, strips)) {
+        triangles.push(index);
+    }
+}
+
+/**
  * Subdivides a line represented by an array of points. Mainly intended for preprocessing geometry for the 'line' layer type.
  * Assumes a line segment between each two consecutive points in the array.
  * Does not assume a line segment from last point to first point, unless `isRing` is set to `true`.

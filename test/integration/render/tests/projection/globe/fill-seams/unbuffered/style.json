@@ -1,0 +1,75 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that tiles without a buffer show no seams. Their fill ends exactly at the tile edge, so any gap between it and the stencil mask shows through.",
+      "width": 512,
+      "height": 512
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    10,
+    45
+  ],
+  "zoom": 8,
+  "projection": {
+    "type": "globe"
+  },
+  "sources": {
+    "polygon": {
+      "type": "geojson",
+      "buffer": 0,
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60,
+                -50
+              ],
+              [
+                80,
+                -50
+              ],
+              [
+                80,
+                70
+              ],
+              [
+                -60,
+                70
+              ],
+              [
+                -60,
+                -50
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "polygon",
+      "type": "fill",
+      "source": "polygon",
+      "paint": {
+        "fill-color": "black"
+      }
+    }
+  ]
+}

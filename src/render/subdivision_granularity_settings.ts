@@ -24,18 +24,32 @@ export class SubdivisionGranularityExpression {
      */
     private readonly _minGranularity: number;
 
-    constructor(baseZoomGranularity: number, minGranularity: number) {
+    /**
+     * A tile of zoom level 0 will be subdivided to at least this granularity level, which halves every second zoom
+     * level: a chord's distance from the curved surface falls with the square of its length, so this keeps that
+     * distance about the same in pixels at every zoom level.
+     */
+    private readonly _surfaceGranularity: number;
+
+    constructor(baseZoomGranularity: number, minGranularity: number, surfaceGranularity: number = 0) {
         if (minGranularity > baseZoomGranularity) {
             throw new Error('Min granularity must not be greater than base granularity.');
         }
 
         this._baseZoomGranularity = baseZoomGranularity;
         this._minGranularity = minGranularity;
+        this._surfaceGranularity = surfaceGranularity;
     }
 
     public getGranularityForZoomLevel(zoomLevel: number): number {
         const divisor = 1 << zoomLevel;
-        return Math.max(Math.floor(this._baseZoomGranularity / divisor), this._minGranularity, 1);
+        const surfaceDivisor = 1 << Math.floor(zoomLevel / 2);
+        return Math.max(
+            Math.floor(this._baseZoomGranularity / divisor),
+            Math.floor(this._surfaceGranularity / surfaceDivisor),
+            this._minGranularity,
+            1
+        );
     }
 }
 
