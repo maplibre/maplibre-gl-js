@@ -191,6 +191,12 @@ jobs:
       - run: npm ci
       - run: npm run build-dist
       - run: npm run test-build-ci
+      - name: Upload the bundle to Codecov bundle analysis
+        if: matrix.os == 'ubuntu-latest'
+        continue-on-error: true
+        run: >-
+          npx bundle-analyzer ./dist --bundle-name=maplibre-gl
+          --ignore-patterns "*.map" "*-dev.mjs" "*-shared*.mjs" "*.d.ts" "*.json"
 
   bundle-size:
     name: Bundle size
@@ -270,5 +276,4 @@ jobs:
         with:
           files: ${{ github.workspace }}/coverage-merged/coverage-final.json
           verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
