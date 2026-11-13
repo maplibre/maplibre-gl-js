@@ -5,17 +5,17 @@ import {EXTENT} from '../../data/extent.ts';
 
 import type Point from '@mapbox/point-geometry';
 
-export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
-    const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+export function getGlobeCircumferencePixels(camera: {worldSize: number; center: {lat: number}}): number {
+    const radius = getGlobeRadiusPixels(camera.worldSize, camera.center.lat);
     return 2.0 * Math.PI * radius;
 }
 
-export function globeDistanceOfLocationsPixels(transform: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
+export function globeDistanceOfLocationsPixels(camera: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
     const vecA = angularCoordinatesToSurfaceVector(a);
     const vecB = angularCoordinatesToSurfaceVector(b);
     const dot = clamp(vec3.dot(vecA, vecB), -1, 1);
     const radians = Math.acos(dot);
-    const circumference = getGlobeCircumferencePixels(transform);
+    const circumference = getGlobeCircumferencePixels(camera);
     return radians / (2.0 * Math.PI) * circumference;
 }
 
@@ -91,9 +91,9 @@ export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number)
 /**
  * Returns the globe center in view space, in pixels: the camera is at the origin and looks down the negative Z axis.
  */
-export function getGlobeCenterInViewSpace(transform: {modelViewProjectionMatrix: mat4; inverseProjectionMatrix: mat4}): vec3 {
-    const position = vec4.transformMat4(createVec4f64(), [0, 0, 0, 1], transform.modelViewProjectionMatrix);
-    vec4.transformMat4(position, position, transform.inverseProjectionMatrix);
+export function getGlobeCenterInViewSpace(camera: {modelViewProjectionMatrix: mat4; inverseProjectionMatrix: mat4}): vec3 {
+    const position = vec4.transformMat4(createVec4f64(), [0, 0, 0, 1], camera.modelViewProjectionMatrix);
+    vec4.transformMat4(position, position, camera.inverseProjectionMatrix);
     return [position[0] / position[3], position[1] / position[3], position[2] / position[3]];
 }
 
@@ -187,7 +187,6 @@ export function planetScaleAtLatitude(latitudeDegrees: number): number {
 
 /**
  * Computes how much to modify zoom to keep the globe size constant when changing latitude.
- * @param transform - An instance of any transform. Does not have any relation on the computed values.
  * @param oldLat - Latitude before change, in degrees.
  * @param newLat - Latitude after change, in degrees.
  * @returns A value to add to zoom level used for old latitude to keep same planet radius at new latitude.
@@ -203,31 +202,31 @@ export function getDegreesPerPixel(worldSize: number, lat: number): number {
 }
 
 /**
- * Returns transform's new center rotation after applying panning.
+ * Returns the camera's new center after applying panning.
  * @param panDelta - Panning delta, in same units as what is supplied to {@link HandlerManager}.
- * @param tr - Current transform. This object is not modified by the function.
- * @returns New center location to set to the map's transform to apply the specified panning.
+ * @param projectedCamera - The camera to pan. This object is not modified by the function.
+ * @returns New center location to set to the map's camera to apply the specified panning.
  */
-export function computeGlobePanCenter(panDelta: Point, tr: {
+export function computeGlobePanCenter(panDelta: Point, projectedCamera: {
     readonly bearingInRadians: number;
     readonly worldSize: number;
     readonly center: LngLat;
     readonly zoom: number;
 }): LngLat {
     // Apply map bearing to the panning vector
-    const rotatedPanDelta = panDelta.rotate(tr.bearingInRadians);
-    // Compute what the current zoom would be if the transform center would be moved to latitude 0.
-    const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr.center.lat, 0);
+    const rotatedPanDelta = panDelta.rotate(projectedCamera.bearingInRadians);
+    // Compute what the current zoom would be if the camera center would be moved to latitude 0.
+    const normalizedGlobeZoom = projectedCamera.zoom + getZoomAdjustment(projectedCamera.center.lat, 0);
     // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.
     const lngSpeed = lerp(
-        1.0 / planetScaleAtLatitude(tr.center.lat), // speed adjusted by latitude
-        1.0 / planetScaleAtLatitude(Math.min(Math.abs(tr.center.lat), 60)), // also adjusted, but latitude is clamped to 60° to avoid too large speeds near poles
+        1.0 / planetScaleAtLatitude(projectedCamera.center.lat), // speed adjusted by latitude
+        1.0 / planetScaleAtLatitude(Math.min(Math.abs(projectedCamera.center.lat), 60)), // also adjusted, but latitude is clamped to 60° to avoid too large speeds near poles
         remapSaturate(normalizedGlobeZoom, 7, 3, 0, 1.0) // Values chosen so that globe interactions feel good. Not scientific by any means.
     );
-    const panningDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat);
+    const panningDegreesPerPixel = getDegreesPerPixel(projectedCamera.worldSize, projectedCamera.center.lat);
     return new LngLat(
-        tr.center.lng - rotatedPanDelta.x * panningDegreesPerPixel * lngSpeed,
-        clamp(tr.center.lat + rotatedPanDelta.y * panningDegreesPerPixel, -90, 90)
+        projectedCamera.center.lng - rotatedPanDelta.x * panningDegreesPerPixel * lngSpeed,
+        clamp(projectedCamera.center.lat + rotatedPanDelta.y * panningDegreesPerPixel, -90, 90)
     );
 }
 

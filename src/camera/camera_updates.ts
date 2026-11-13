@@ -5,12 +5,16 @@ import {cameraDirectionFromPitchBearing, maxMercatorHorizonAngle} from '../geo/p
 import {getBearing, getFov, getPitch, interpolatePadding as interpolatePaddingValues, isPaddingEqual} from './camera_view_state.ts';
 import {applyConstrain} from './camera_constrain.ts';
 import {getCameraMetrics} from './project_camera.ts';
+import {getRollPitchBearing, rollPitchBearingToQuat} from '../util/util.ts';
+import {quat} from 'gl-matrix';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 
 import type {CameraContext} from './camera_context.ts';
 import type {CameraViewState} from './camera_view_state.ts';
 import type {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {NearFarZ} from './camera_types.ts';
+import type {RollPitchBearing} from '../util/util.ts';
 import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /** The most passes {@link centerAlongView} takes to agree on the mercator scale at the center it finds. */
@@ -306,4 +310,49 @@ function distanceToCenterFromAltElevationPitch(alt: number, elevation: number, p
 function keepUnmodified(view: CameraViewState, changeCallback: (view: CameraViewState) => CameraViewState): CameraViewState {
     const next = changeCallback(view);
     return next.unmodified === view.unmodified ? next : {...next, unmodified: view.unmodified};
+}
+
+/**
+ * @internal
+ * If a path crossing the antimeridian would be shorter, extend the final coordinate so that
+ * interpolating between the two endpoints will cross it. A world that does not wrap has no antimeridian to cross.
+ * @param center - The LngLat object of the desired center. This object will be mutated.
+ */
+export function normalizeCenter(state: Pick<CameraViewState, 'renderWorldCopies' | 'lngRange' | 'center'>, worldCoordinateHelper: WorldCoordinateHelper, center: LngLat): void {
+    if (!state.renderWorldCopies || !worldCoordinateHelper.wraps || state.lngRange) return;
+    const delta = center.lng - state.center.lng;
+    center.lng +=
+        delta > 180 ? -360 :
+            delta < -180 ? 360 : 0;
+}
+
+/** @internal Warns that no camera fits the bounds, padding and offset asked for. */
+export function warnBoundsCannotFit(): void {
+    warnOnce(
+        'Map cannot fit within canvas with the given bounds, padding, and/or offset.'
+    );
+}
+
+/**
+ * @internal
+ * Returns the camera with its rotation `k` of the way between two sets of Euler angles.
+ * @param useSlerp - whether to interpolate the rotation spherically rather than each angle linearly
+ */
+export function interpolateRotation(view: CameraViewState, start: RollPitchBearing, end: RollPitchBearing, k: number, useSlerp: boolean): CameraViewState {
+    let angles: RollPitchBearing;
+    if (!useSlerp) {
+        angles = {
+            roll: interpolates.number(start.roll, end.roll, k),
+            pitch: interpolates.number(start.pitch, end.pitch, k),
+            bearing: interpolates.number(start.bearing, end.bearing, k),
+        };
+    } else if (k < 1) {
+        const rotation: quat = new Float64Array(4);
+        quat.slerp(rotation, rollPitchBearingToQuat(start.roll, start.pitch, start.bearing), rollPitchBearingToQuat(end.roll, end.pitch, end.bearing), k);
+        angles = getRollPitchBearing(rotation);
+    } else {
+        // At pitch 0 the Euler angles are ambiguous, so the animation ends on the ones it was asked for.
+        angles = end;
+    }
+    return setBearing(setPitch(setRoll(view, angles.roll), angles.pitch), angles.bearing);
 }

@@ -1,3 +1,5 @@
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
+
 import type Point from '@mapbox/point-geometry';
 import type {Camera} from '../camera.ts';
 import type {LngLat} from '../../geo/lng_lat.ts';
@@ -12,11 +14,13 @@ export function indexTouches(touches: Touch[], points: Point[]): Record<number, 
 }
 
 /**
- * The location under a screen point on the camera the handlers asked for, see {@link Camera.proposedTransform}, or
- * undefined where the point shows the sky or the space around the globe rather than the map.
+ * The location under a screen point on the camera the handlers asked for, see {@link Camera.proposedProjectedCamera},
+ * or undefined where the point shows the sky or the space around the globe rather than the map.
  */
 export function locationOnMapAt(camera: Camera, point: Point): LngLat | undefined {
-    const transform = camera.proposedTransform;
-    if (!transform.isPointOnMapSurface(point)) return undefined;
-    return transform.screenPointToLocation(point, camera.terrain);
+    const projectedCamera = camera.proposedProjectedCamera;
+    const cameraMath = getCameraMath(projectedCamera);
+    const {worldCoordinateHelper} = camera.context;
+    if (!cameraMath.isPointOnMapSurface(projectedCamera, worldCoordinateHelper, point)) return undefined;
+    return cameraMath.screenPointToLocation(projectedCamera, worldCoordinateHelper, point, camera.terrain);
 }

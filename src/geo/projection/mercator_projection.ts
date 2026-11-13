@@ -19,7 +19,7 @@ export const MercatorShaderVariantKey = 'mercator';
 /**
  * The flat projection. Mercator by default; the factory also builds one for a CRS registered with `addProjection`,
  * since such tiles already sit in their own quad grid and render exactly like mercator tiles do. The projection
- * takes its name from the lng/lat mapping of that grid, which the transform built alongside it runs on too.
+ * takes its name from the lng/lat mapping of that grid, which the camera projection built alongside it runs on too.
  * Every planar projection shares one shader variant.
  */
 export class MercatorProjection implements Projection {
