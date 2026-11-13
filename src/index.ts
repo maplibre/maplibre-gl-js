@@ -58,6 +58,7 @@ import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeatu
 import type {Handler, HandlerResult} from './ui/handler_manager.ts';
 import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
+import type {TransformConstrainFunction, CameraForBoundsOptions, CameraOptions, CenterZoomBearing, PointLike} from './camera/camera_types.ts';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, StyleImageWebGLData, StyleImageWebGLTarget, TextFit} from './style/style_image.ts';
 import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
 import type {Tile} from './tile/tile.ts';
@@ -82,7 +83,6 @@ import type {DashEntry} from './render/line_atlas.ts';
 import type {Painter} from './render/painter.ts';
 import type {WorkerGlobalScopeInterface} from './util/web_worker.ts';
 import type {TerrainHeightMapTarget} from './render/terrain.ts';
-import type {TransformConstrainFunction, CameraForBoundsOptions, CameraOptions, CenterZoomBearing, PointLike} from './camera/camera_types.ts';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';

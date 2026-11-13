@@ -2,9 +2,18 @@ import {describe, expect, test} from 'vitest';
 import {expectToBeCloseToArray} from '../../util/test/util.ts';
 import {GlobeCoveringTilesDetailsProvider} from './globe_covering_tiles_details_provider.ts';
 import {ConvexVolume} from '../../util/primitives/convex_volume.ts';
-import {createGlobeTransform} from './globe_transform.ts';
 import {coveringTiles} from './covering_tiles.ts';
 import {LngLat, earthRadius} from '../lng_lat.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
+import {createCameraContext} from '../../camera/camera_context.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
+import {resize, setBearing, setCenter, setPitch, setZoom} from '../../camera/camera_updates.ts';
+
+import type {OverscaledTileID} from '../../tile/tile_id.ts';
+
+function tileKey(tileID: OverscaledTileID): string {
+    return `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
+}
 
 describe('bounding volume creation', () => {
     test('z=0', () => {
@@ -121,30 +130,30 @@ describe('elevated content above terrain', () => {
 
 describe('elevated content tile retention', () => {
     test('far corner translation keeps ground tiles retained at moderate pitch', () => {
-        const transform = createGlobeTransform();
-        transform.resize(1400, 800);
-        transform.setCenter(new LngLat(2.3522, 52.0566));
-        transform.setZoom(4.3);
-        transform.setBearing(315);
-        transform.setMaxPitch(179);
-        transform.setPitch(75);
-        const key = (tileID) => `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
-        const without = coveringTiles(transform, {tileSize: 512}).map(key);
-        const withElevated = coveringTiles(transform, {tileSize: 512, maxContentElevation: 500000}).map(key);
+        const context = createCameraContext({projection: 'globe'});
+        let view = createCameraViewState({maxPitch: 179});
+        view = resize(view, context, 1400, 800);
+        view = setCenter(view, context, new LngLat(2.3522, 52.0566));
+        view = setZoom(view, context, 4.3);
+        view = setBearing(view, 315);
+        view = setPitch(view, 75);
+        const projectedCamera = projectCamera(view, context);
+        const without = coveringTiles(projectedCamera, context.worldCoordinateHelper, {tileSize: 512}).map(tileKey);
+        const withElevated = coveringTiles(projectedCamera, context.worldCoordinateHelper, {tileSize: 512, maxContentElevation: 500000}).map(tileKey);
         expect(without).toContain('4/9/4');
         expect(withElevated).toContain('4/9/4');
     });
 
     test('maxContentElevation keeps tiles that the horizon culling would drop', () => {
-        const transform = createGlobeTransform();
-        transform.resize(1400, 800);
-        transform.setCenter(new LngLat(2.35, 48.85));
-        transform.setZoom(4.3);
-        transform.setMaxPitch(179);
-        transform.setPitch(95);
-        const key = (tileID) => `${tileID.canonical.z}/${tileID.canonical.x}/${tileID.canonical.y}`;
-        const without = coveringTiles(transform, {tileSize: 512}).map(key);
-        const withElevated = new Set(coveringTiles(transform, {tileSize: 512, maxContentElevation: 500000}).map(key));
+        const context = createCameraContext({projection: 'globe'});
+        let view = createCameraViewState({maxPitch: 179});
+        view = resize(view, context, 1400, 800);
+        view = setCenter(view, context, new LngLat(2.35, 48.85));
+        view = setZoom(view, context, 4.3);
+        view = setPitch(view, 95);
+        const projectedCamera = projectCamera(view, context);
+        const without = coveringTiles(projectedCamera, context.worldCoordinateHelper, {tileSize: 512}).map(tileKey);
+        const withElevated = new Set(coveringTiles(projectedCamera, context.worldCoordinateHelper, {tileSize: 512, maxContentElevation: 500000}).map(tileKey));
         for (const tile of without) {
             expect(withElevated, `visible ground tile ${tile} must stay retained`).toContain(tile);
         }
@@ -155,11 +164,11 @@ describe('elevated content tile retention', () => {
 
 describe('poles', () => {
     test('covers the tiles around the south pole', () => {
-        const transform = createGlobeTransform();
-        transform.resize(512, 512);
-        transform.setCenter(new LngLat(0, -90));
-        transform.setZoom(1.6);
+        const context = createCameraContext({projection: 'globe'});
+        let view = resize(createCameraViewState(), context, 512, 512);
+        view = setCenter(view, context, new LngLat(0, -90));
+        view = setZoom(view, context, 1.6);
 
-        expect(coveringTiles(transform, {tileSize: 32})).toHaveLength(56);
+        expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {tileSize: 32})).toHaveLength(56);
     });
 });

@@ -5,6 +5,8 @@ import {HandlerInertia} from './handler_inertia.ts';
 import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {setCenter} from '../camera/camera_updates.ts';
 import {getCameraMotions} from '../camera/camera_motions_factory.ts';
 import {usesGlobeControls} from '../camera/camera_context.ts';
 
@@ -13,7 +15,8 @@ import type {DragPanHandler} from './handler/shim/drag_pan.ts';
 import type {Camera, EaseToOptions, RotationPivot} from './camera.ts';
 import type {MapControlsDeltas} from '../camera/camera_motions.ts';
 import type {LngLat} from '../geo/lng_lat.ts';
-import type {ITransform} from '../geo/transform_interface.ts';
+import type {CameraViewState} from '../camera/camera_view_state.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {TaskID} from '../util/task_queue.ts';
 import type {RenderLoop} from './camera_movement_scheduler.ts';
@@ -166,8 +169,8 @@ type EventsInProgress = {
 
 type MapControlsScenarioOptions = {
     terrain?: Terrain | null;
-    tr: ITransform;
-    deltasForHelper: MapControlsDeltas;
+    state: CameraViewState;
+    deltas: MapControlsDeltas;
     preZoomAroundLoc: LngLat;
     combinedEventsInProgress: EventsInProgress;
     panDelta?: Point;
@@ -228,11 +231,10 @@ export class HandlerManager extends Evented<MapEventType> {
     private _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
     /**
      * The gesture in flight over terrain, from its first handler frame to the `_fireEvents` call that sees the
-     * movement end. It holds the center elevation (see {@link Camera.holdElevation}), which
-     * {@link Camera._keepCameraAboveTerrain} may raise to keep the camera out of the terrain and lower again, and a
-     * frame that zooms in moves the held center onto the terrain the camera looks at, with the camera where it is
-     * (see {@link Camera.moveCenterOntoTerrain}); its end puts the center back onto the terrain, or at 0 keeping the
-     * zoom with the terrain off.
+     * movement end. It holds the center elevation (see {@link Camera.holdElevation}), which the camera lifts to keep
+     * the camera out of the terrain, and a frame that zooms in moves the held center onto the terrain the camera looks
+     * at, with the camera where it is (see {@link Camera.moveCenterOntoTerrain}); its end puts the center back onto
+     * the terrain, or at 0 keeping the zoom with the terrain off (see {@link Camera.releaseElevation}).
      */
     private _terrainGesture: TerrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
     /** The point a drag turns the camera around, picked on its first frame and kept until it ends or cannot be held. */
@@ -528,16 +530,16 @@ export class HandlerManager extends Evented<MapEventType> {
             extend(combinedDeactivatedHandlers, deactivatedHandlers);
         }
 
-        this._updateMapTransform(combined, combinedEventsInProgress, combinedDeactivatedHandlers);
+        this._updateMapCamera(combined, combinedEventsInProgress, combinedDeactivatedHandlers);
         this._changes = [];
     }
 
     /**
-     * Applies a frame's combined handler deltas to the requested camera state and fires the movement
-     * events. A frame without a change only fires the events and takes no requested camera state, so a
-     * trailing frame that merely ends a handler leaves none behind for the next gesture to start from.
+     * Applies a frame's combined handler deltas to the proposed camera and fires the movement events. A
+     * frame without a change only fires the events, so a trailing frame that merely ends a handler does not
+     * start a movement on the camera.
      */
-    private _updateMapTransform(combinedResult: HandlerResult,
+    private _updateMapCamera(combinedResult: HandlerResult,
         combinedEventsInProgress: EventsInProgress,
         deactivatedHandlers: {[handlerName: string]: Event}): void {
         const terrain = this._camera.terrain;
@@ -546,26 +548,24 @@ export class HandlerManager extends Evented<MapEventType> {
             this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true); return;
         }
 
-        const tr = this._camera.getTransformForUpdate();
-
-        // stop any ongoing camera animations (easeTo, flyTo)
         this._camera.stop();
+        let view = this._camera.getStateForUpdate();
 
         if (this._turnsAroundPivot(combinedResult, combinedEventsInProgress)) {
-            this._orbitRotationPivot(tr, combinedResult, terrain);
-            this._commitFrame(tr, combinedResult, combinedEventsInProgress, deactivatedHandlers);
+            this._commitFrame(this._orbitRotationPivot(view, combinedResult, terrain), combinedResult, combinedEventsInProgress, deactivatedHandlers);
             return;
         }
 
         const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta} = combinedResult;
         if (zoomDelta > 0 && this._terrainGesture.inFlight) {
-            this._camera.moveCenterOntoTerrain(tr, zoomDelta);
+            view = this._camera.moveCenterOntoTerrain(view, zoomDelta);
         }
 
-        let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, tr);
-        const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, tr, combinedEventsInProgress) : undefined;
+        const projectedCamera = this._camera._projectState(view);
+        let {around, aroundOnSurface} = this._resolveAround(combinedResult, terrain, projectedCamera);
+        const aroundElevation = terrain ? this._terrainGestureElevation(terrain, around, aroundOnSurface, projectedCamera, combinedEventsInProgress) : undefined;
 
-        const deltasForHelper: MapControlsDeltas = {
+        const deltas: MapControlsDeltas = {
             panDelta,
             zoomDelta,
             rollDelta,
@@ -576,29 +576,29 @@ export class HandlerManager extends Evented<MapEventType> {
         };
 
         // Pre-zoom location under the mouse cursor is required for accurate mercator panning and zooming
-        if (usesGlobeControls(this._camera.transform.context) && !tr.isPointOnMapSurface(around)) {
-            around = tr.centerPoint;
+        if (usesGlobeControls(this._camera.context) && !getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, around)) {
+            around = projectedCamera.centerPoint;
         }
-        const preZoomAroundLoc = this._computePreZoomAroundLoc(tr, around, panDelta, aroundElevation);
+        const preZoomAroundLoc = this._computePreZoomAroundLoc(projectedCamera, around, panDelta, aroundElevation);
 
-        this._handleMapControls({
+        view = this._handleMapControls({
             terrain,
-            tr,
-            deltasForHelper,
+            state: view,
+            deltas,
             preZoomAroundLoc,
             combinedEventsInProgress,
             panDelta,
         });
 
-        this._commitFrame(tr, combinedResult, combinedEventsInProgress, deactivatedHandlers);
+        this._commitFrame(view, combinedResult, combinedEventsInProgress, deactivatedHandlers);
     }
 
     /** Applies the frame's camera to the map, records the frame for inertia and fires its events. */
-    private _commitFrame(tr: ITransform,
+    private _commitFrame(view: CameraViewState,
         combinedResult: HandlerResult,
         combinedEventsInProgress: EventsInProgress,
         deactivatedHandlers: Record<string, Event>): void {
-        this._camera.applyUpdatedTransform(tr);
+        this._camera.applyUpdatedState(view);
 
         if (!combinedResult.noInertia) this._inertia.record(combinedResult);
         this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
@@ -611,26 +611,27 @@ export class HandlerManager extends Evented<MapEventType> {
     }
 
     /** Turns the camera around the drag's pivot, holding the center elevation over terrain until the drag ends like every gesture. */
-    private _orbitRotationPivot(tr: ITransform, combinedResult: HandlerResult, terrain: Terrain | null): void {
+    private _orbitRotationPivot(view: CameraViewState, combinedResult: HandlerResult, terrain: Terrain | null): CameraViewState {
         if (terrain && !this._terrainGesture.inFlight) {
             this._terrainGesture.inFlight = true;
-            this._camera.holdElevation(tr, 'gesture');
+            this._camera.holdElevation('gesture');
         }
         const {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around} = combinedResult;
-        this._rotationPivot ??= this._camera.captureRotationPivot(tr, around);
-        const held = this._camera.orbitRotationPivot(tr, this._rotationPivot, {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around});
-        if (!held) this._rotationPivot = null;
+        this._rotationPivot ??= this._camera.captureRotationPivot(this._camera._projectState(view), around);
+        const orbited = this._camera.orbitRotationPivot(view, this._rotationPivot, {panDelta, zoomDelta, bearingDelta, pitchDelta, rollDelta, around});
+        if (!orbited.held) this._rotationPivot = null;
+        return orbited.state;
     }
 
     /**
      * The gesture's anchor point: the pinch midpoint when pinching, otherwise the
      * pan's anchor, clamped to the center point when it does not lie on the map.
      */
-    private _resolveAround(combinedResult: HandlerResult, terrain: Terrain | null, tr: ITransform): {around: Point; aroundOnSurface: boolean} {
+    private _resolveAround(combinedResult: HandlerResult, terrain: Terrain | null, projectedCamera: ProjectedCamera): {around: Point; aroundOnSurface: boolean} {
         let around = combinedResult.pinchAround !== undefined ? combinedResult.pinchAround : combinedResult.around;
-        around ||= this._camera.transform.centerPoint;
-        if (terrain && !tr.isPointOnMapSurface(around)) {
-            return {around: tr.centerPoint, aroundOnSurface: false};
+        around ||= this._camera.projectedCamera.centerPoint;
+        if (terrain && !getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, around)) {
+            return {around: projectedCamera.centerPoint, aroundOnSurface: false};
         }
         return {around, aroundOnSurface: true};
     }
@@ -640,26 +641,26 @@ export class HandlerManager extends Evented<MapEventType> {
      * terrain point grabbed at gesture start, captured here on the gesture's first
      * frame. Undefined means the gesture is solved at the center's elevation instead —
      * when the grabbed terrain is not loaded, the anchor is the center point (a
-     * center-point anchor is skipped by the camera motion's pan and would lose the pan), or
+     * center-point anchor is skipped by `CameraMotions.pan` and would lose the pan), or
      * the anchor plane is too close to the camera for a stable ray-plane solve.
      */
-    private _terrainGestureElevation(terrain: Terrain, around: Point, aroundOnSurface: boolean, tr: ITransform, combinedEventsInProgress: EventsInProgress): number | undefined {
+    private _terrainGestureElevation(terrain: Terrain, around: Point, aroundOnSurface: boolean, projectedCamera: ProjectedCamera, combinedEventsInProgress: EventsInProgress): number | undefined {
         if (!aroundOnSurface) {
             return undefined;
         }
-        if (this._terrainGesture.anchorCenterElevation !== tr.elevation && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-            const anchor = tr.screenTerrainPointToMercatorCoordinate(around, terrain);
+        if (this._terrainGesture.anchorCenterElevation !== projectedCamera.elevation && (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+            const anchor = getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, this._camera.context.worldCoordinateHelper, around, terrain);
             this._terrainGesture.anchorElevation = anchor ? anchor.z : undefined;
-            this._terrainGesture.anchorCenterElevation = tr.elevation;
+            this._terrainGesture.anchorCenterElevation = projectedCamera.elevation;
         }
         const elevation = this._terrainGesture.anchorElevation;
         if (elevation === null || elevation === undefined) {
             return undefined;
         }
-        if (around.distSqr(tr.centerPoint) < 1.0e-2) {
+        if (around.distSqr(projectedCamera.centerPoint) < 1.0e-2) {
             return undefined;
         }
-        if (elevation - tr.elevation >= TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION * (tr.getCameraAltitude() - tr.elevation)) {
+        if (elevation - projectedCamera.elevation >= TERRAIN_ANCHOR_MAX_CAMERA_ALTITUDE_FRACTION * (getCameraMath(projectedCamera).getCameraAltitude(projectedCamera) - projectedCamera.elevation)) {
             return undefined;
         }
         return elevation;
@@ -667,59 +668,60 @@ export class HandlerManager extends Evented<MapEventType> {
 
     /**
      * The location that was under `around` before this frame's deltas — the point the
-     * camera motion's pan re-anchors after zooming — solved at `aroundElevation` when a
+     * pan re-anchors after zooming — solved at `aroundElevation` when a
      * terrain gesture provides one. When rotating about the center point, the
-     * transform's center is used directly to avoid numerical issues near the horizon.
+     * camera's center is used directly to avoid numerical issues near the horizon.
      */
-    private _computePreZoomAroundLoc(tr: ITransform, around: Point, panDelta: Point | undefined, aroundElevation: number | undefined): LngLat {
-        if (around.distSqr(tr.centerPoint) < 1.0e-2) {
-            return tr.center;
+    private _computePreZoomAroundLoc(projectedCamera: ProjectedCamera, around: Point, panDelta: Point | undefined, aroundElevation: number | undefined): LngLat {
+        if (around.distSqr(projectedCamera.centerPoint) < 1.0e-2) {
+            return projectedCamera.center;
         }
         const aroundPreviousPoint = panDelta ? around.sub(panDelta) : around;
         if (aroundElevation !== undefined) {
-            return tr.screenPointToLocationAtElevation(aroundPreviousPoint, aroundElevation);
+            return getCameraMath(projectedCamera).screenPointToLocationAtElevation(projectedCamera, this._camera.context.worldCoordinateHelper, aroundPreviousPoint, aroundElevation);
         }
-        return tr.screenPointToLocation(aroundPreviousPoint);
+        return getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, aroundPreviousPoint);
     }
 
     private _handleMapControls({
         terrain,
-        tr,
-        deltasForHelper,
+        state: view,
+        deltas,
         preZoomAroundLoc,
         combinedEventsInProgress,
-        panDelta}: MapControlsScenarioOptions): void {
+        panDelta}: MapControlsScenarioOptions): CameraViewState {
 
-        const motions = getCameraMotions(this._camera.transform.context);
-        const globeControls = usesGlobeControls(this._camera.transform.context);
+        const context = this._camera.context;
 
-        tr.setViewState(motions.rollPitchBearingZoom(tr.viewState, tr.context, deltasForHelper));
+        view = getCameraMotions(context).rollPitchBearingZoom(view, context, deltas);
+        const projectedCamera = this._camera._projectState(view);
 
-        if (!terrain && !globeControls && !tr.isPointOnMapSurface(deltasForHelper.around)) {
-            if (panDelta) tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
-            return;
+        if (!terrain && !usesGlobeControls(context) && !getCameraMath(projectedCamera).isPointOnMapSurface(projectedCamera, this._camera.context.worldCoordinateHelper, deltas.around)) {
+            return panDelta ? this._panByPixels(view, projectedCamera, panDelta) : view;
         }
 
         if (!terrain) {
-            tr.setViewState(motions.pan(tr.viewState, tr.context, deltasForHelper, preZoomAroundLoc));
-            return;
+            return getCameraMotions(context).pan(view, context, deltas, preZoomAroundLoc);
         }
 
         if (!this._terrainGesture.inFlight) {
             this._terrainGesture.inFlight = true;
-            this._camera.holdElevation(tr, 'gesture');
-            tr.setViewState(motions.pan(tr.viewState, tr.context, deltasForHelper, preZoomAroundLoc));
-            return;
+            this._camera.holdElevation('gesture');
+            return getCameraMotions(context).pan(view, context, deltas, preZoomAroundLoc);
         }
 
-        if (!globeControls && deltasForHelper.aroundElevation === undefined &&
+        if (!usesGlobeControls(context) && deltas.aroundElevation === undefined &&
             combinedEventsInProgress.drag && panDelta) {
             // no usable anchor: drag by pixel-delta on the center-elevation plane
-            tr.setCenter(tr.screenPointToLocation(tr.centerPoint.sub(panDelta)));
-            return;
+            return this._panByPixels(view, projectedCamera, panDelta);
         }
 
-        tr.setViewState(motions.pan(tr.viewState, tr.context, deltasForHelper, preZoomAroundLoc));
+        return getCameraMotions(context).pan(view, context, deltas, preZoomAroundLoc);
+    }
+
+    /** Moves the center to the location `panDelta` pixels against the drag from it, on the plane at the center's elevation. */
+    _panByPixels(view: CameraViewState, projectedCamera: ProjectedCamera, panDelta: Point): CameraViewState {
+        return setCenter(view, this._camera.context, getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, this._camera.context.worldCoordinateHelper, projectedCamera.centerPoint.sub(panDelta)));
     }
 
     private _fireEvents(newEventsInProgress: EventsInProgress, deactivatedHandlers: {[handlerName: string]: Event}, allowEndAnimation: boolean): void {
@@ -774,16 +776,8 @@ export class HandlerManager extends Evented<MapEventType> {
         const stillMoving = isMoving(this._eventsInProgress);
         const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
         if (finishedMoving && this._terrainGesture.inFlight) {
-            const tookDem = this._camera.releaseElevation();
             this._terrainGesture = {inFlight: false, anchorElevation: null, anchorCenterElevation: null};
-            this._camera.applyTransformChange(tr => {
-                if (!this._camera.getCenterClampedToGround()) return;
-                if (this._camera.terrain) {
-                    this._camera.putCenterBackOnTerrain(tr, this._camera.terrain, tookDem);
-                } else {
-                    tr.setElevation(0);
-                }
-            });
+            this._camera.releaseElevation();
         }
         if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
@@ -811,8 +805,8 @@ export class HandlerManager extends Evented<MapEventType> {
 
     /**
      * Fires a movement event through the camera, whose evented parent is the map: the map's listeners
-     * see the event as before, and the camera's own `moveend` listener drops the requested camera state,
-     * so the next gesture starts from the rendered transform instead of the state this one ended in.
+     * see the event as before, and the camera's own `moveend` listener ends the movement on the proposed
+     * camera, so the next gesture starts from the camera as it was rendered.
      */
     private _fireEvent(type: string, e?: Event): void {
         this._camera.fire(new MapMovementEvent(type, e ? {originalEvent: e} : {}));

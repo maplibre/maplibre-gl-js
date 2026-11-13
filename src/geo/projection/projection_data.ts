@@ -74,7 +74,7 @@ export type ProjectionData<MainMatrix extends mat4 = mat4, FallbackMatrix extend
 };
 
 /**
- * Parameters object for the transform's `getProjectionData` function.
+ * Parameters object for `getProjectionData` in `camera_math.ts`.
  * Contains the requested tile ID and more.
  */
 export type ProjectionDataParams = {

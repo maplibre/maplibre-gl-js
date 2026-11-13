@@ -1,5 +1,5 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {createMap as globalCreateMap, beforeMapTest, sleep, createTerrain} from '../util/test/util.ts';
+import {createMap as globalCreateMap, beforeMapTest, sleep, createTerrain, createCoverageIndex} from '../util/test/util.ts';
 import {Marker} from './marker.ts';
 import {Popup} from './popup.ts';
 import {LngLat} from '../geo/lng_lat.ts';
@@ -7,6 +7,7 @@ import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
 
 import type {defaultLocale} from './default_locale.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 type MapOptions = {
     locale?: Partial<typeof defaultLocale>;
@@ -20,6 +21,17 @@ type MapOptions = {
 
 // The pixel translate of a marker element: `translate(-50%, -50%) translate(10px, 20px) ...`
 const translateRegex = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/;
+
+/**
+ * A terrain stub that puts every location at 1000 m, see {@link createTerrain}, and draws its surface there, or, where
+ * it covers markers, 1000 km higher: far enough above a marker for the camera of a map at zoom 0, 60,000 km up, to see
+ * the surface in front of it, and below the center of a marker whose offset lifts it 20 pixels above its location.
+ */
+function createTerrainCovering(covers: boolean): Terrain {
+    const drawnHeight = covers ? 1e6 : 1000;
+    const coverage = createCoverageIndex(() => drawnHeight, drawnHeight, drawnHeight);
+    return {...createTerrain(), getCoverageIndex: () => coverage} as Terrain;
+}
 
 function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
@@ -1174,15 +1186,14 @@ describe('marker', () => {
     test('Marker runs the last terrain check a 100 ms window held back once the window closes', async () => {
         const map = createMap();
         await map.once('load');
-        map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        map.terrain = createTerrainCovering(true);
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
         await sleep(50);
         expect(marker.getElement().style.opacity).toBe('0.2');
 
-        map._camera.transform.isLocationOccluded = () => false;
+        map.terrain = createTerrainCovering(false);
         map.fire('move');
         await sleep(40);
         expect(marker.getElement().style.opacity).toBe('0.2');
@@ -1195,15 +1206,14 @@ describe('marker', () => {
     test('Marker that leaves the viewport while a terrain check waits for its window keeps its opacity once the window closes', async () => {
         const map = createMap();
         await map.once('load');
-        map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        map.terrain = createTerrainCovering(true);
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
         await sleep(50);
         expect(marker.getElement().style.opacity).toBe('0.2');
 
-        map._camera.transform.isLocationOccluded = () => false;
+        map.terrain = createTerrainCovering(false);
         map.fire('move');
         await sleep(40);
         map.jumpTo({center: [90, 0], zoom: 4});
@@ -1216,13 +1226,12 @@ describe('marker', () => {
     test('Marker removed while a terrain check waits for its window leaves its element alone once the window closes', async () => {
         const map = createMap();
         await map.once('load');
-        map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        map.terrain = createTerrainCovering(true);
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
         await sleep(50);
-        map._camera.transform.isLocationOccluded = () => false;
+        map.terrain = createTerrainCovering(false);
         map.fire('move');
         await sleep(40);
         marker.remove();
@@ -1255,14 +1264,13 @@ describe('marker', () => {
     test('Checks the terrain occlusion again once the map is idle', async () => {
         const map = createMap({width: 1024});
         await map.once('load');
-        map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = () => false;
+        map.terrain = createTerrainCovering(false);
         const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
             .setLngLat([0, 0])
             .addTo(map);
         expect(marker.getElement().style.opacity).toBe('0.7');
 
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain; // the terrain tiles that arrive cover the marker
+        map.terrain = createTerrainCovering(true); // the terrain tiles that arrive cover the marker
         map.fire('idle');
         await sleep(100);
         expect(marker.getElement().style.opacity).toBe('0.3');
@@ -1335,15 +1343,14 @@ describe('marker', () => {
         expect(marker.getElement().style.opacity).toMatch('');
 
         // Add terrain, not blocking marker
-        map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = () => false;
+        map.terrain = createTerrainCovering(false);
         map.fire('terrain');
         await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        map.terrain = createTerrainCovering(true);
         map.fire('moveend');
         await sleep(100);
 
@@ -1379,9 +1386,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain();
-        const locationElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform.tileZoom);
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain, elevation) => !!terrain && elevation === locationElevation;
+        map.terrain = createTerrainCovering(true);
         await sleep(100);
         map.fire('terrain');
 
@@ -1396,9 +1401,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain();
-        const locationElevation = map.terrain.getElevationForLngLat(marker.getLngLat(), map._camera.transform.tileZoom);
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain, elevation) => !!terrain && elevation === locationElevation;
+        map.terrain = createTerrainCovering(true);
         await sleep(100);
         map.fire('terrain');
 
@@ -1409,12 +1412,11 @@ describe('marker', () => {
     test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', async () => {
         const map = createMap();
         await map.once('load');
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
         const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain();
+        map.terrain = createTerrainCovering(true);
         await sleep(100);
         map.fire('terrain');
 
@@ -1425,14 +1427,14 @@ describe('marker', () => {
     test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', async () => {
         const map = createMap();
         await map.once('load');
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
         const marker = new Marker({opacityWhenCovered: '0.15'})
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain();
+        map.terrain = createTerrainCovering(true);
         map.fire('terrain');
-        await sleep(100); // the terrain check's 100 ms window closes
+        await map.once('idle');
+        await sleep(200); // the terrain check runs for the idle update when its 100 ms window closes, and opens one more
 
         marker.setOpacity(undefined, '0.35');
 
@@ -1465,7 +1467,7 @@ describe('marker', () => {
         await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.7');
 
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        map.terrain = createTerrainCovering(true);
         marker.setLngLat([0, 0]);
         await sleep(100); // Give marker change time to load
         expect(marker.getElement().style.opacity).toBe('0.3');
@@ -1486,9 +1488,7 @@ describe('marker', () => {
 
         expect(marker._popup.isOpen()).toBeTruthy();
 
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
-
-        map.terrain = createTerrain();
+        map.terrain = createTerrainCovering(true);
         map.fire('terrain');
 
         await sleep(100);
@@ -1505,9 +1505,7 @@ describe('marker', () => {
             .addTo(map)
             .setPopup(new Popup());
 
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
-
-        map.terrain = createTerrain();
+        map.terrain = createTerrainCovering(true);
         map.fire('terrain');
 
         await sleep(100);
@@ -1605,14 +1603,14 @@ describe('marker', () => {
     test('Applies new "opacityWhenCovered" provided by setOpacity when provided a number', async () => {
         const map = createMap();
         await map.once('load');
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
         const marker = new Marker({opacityWhenCovered: 0.15})
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain();
+        map.terrain = createTerrainCovering(true);
         map.fire('terrain');
-        await sleep(100); // the terrain check's 100 ms window closes
+        await map.once('idle');
+        await sleep(200); // the terrain check runs for the idle update when its 100 ms window closes, and opens one more
 
         marker.setOpacity(undefined, 0.35);
 
@@ -1627,8 +1625,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        map.terrain = createTerrainCovering(true);
         map.fire('terrain');
         await sleep(100);
 
@@ -1643,14 +1640,13 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
 
-        map.terrain = createTerrain();
-        map._camera.transform.isLocationOccluded = (_lngLat, terrain) => !!terrain;
+        map.terrain = createTerrainCovering(true);
         map.fire('terrain');
         await sleep(100);
 
         expect(marker.getElement().classList).toContain('maplibregl-marker-covered');
 
-        map._camera.transform.isLocationOccluded = () => false;
+        map.terrain = createTerrainCovering(false);
         map.fire('moveend');
         await sleep(100);
 
