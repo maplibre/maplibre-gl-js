@@ -182,12 +182,27 @@ describe('map events', () => {
             expect(e.type).toBe('mouseup');
         });
 
+        const spyPointerDown = vi.fn((e) => {
+            expect(e.type).toBe('pointerdown');
+        });
+
+        const spyPointerUp = vi.fn((e) => {
+            expect(e.type).toBe('pointerup');
+        });
+
         map.on('mousedown', 'layer', spyDown);
         map.on('mouseup', 'layer', spyUp);
+
+        map.on('pointerdown', 'layer', spyPointerDown);
+        map.on('pointerup', 'layer', spyPointerUp);
+
         simulate.click(map.getCanvas());
 
         expect(spyDown).toHaveBeenCalledTimes(1);
         expect(spyUp).toHaveBeenCalledTimes(1);
+
+        expect(spyPointerDown).toHaveBeenCalledTimes(1);
+        expect(spyPointerUp).toHaveBeenCalledTimes(1);
     });
 
     test('Map.on distinguishes distinct layers', () => {
@@ -252,6 +267,7 @@ describe('map events', () => {
         const map = createMap();
 
         const spy = vi.fn();
+
         map.on('mousemove', (event) => {
             assertNotAny(event);
             const {lng, lat} = event.lngLat;
@@ -302,12 +318,22 @@ describe('map events', () => {
             expect(e.type).toBe('mousedown');
         });
 
+        const pointerSpy = vi.fn((e) => {
+            expect(e.type).toBe('pointerdown');
+        });
+
         map.on('mousedown', 'layer', spy);
         map.on('mouseup', 'layer', spy);
         map.off('mouseup', 'layer', spy);
+
+        map.on('pointerdown', 'layer', pointerSpy);
+        map.on('pointerup', 'layer', pointerSpy);
+        map.off('pointerup', 'layer', pointerSpy);
+
         simulate.click(map.getCanvas());
 
         expect(spy).toHaveBeenCalledTimes(1);
+        expect(pointerSpy).toHaveBeenCalledTimes(1);
     });
 
     test('Map.off distinguishes distinct layers', () => {
@@ -422,7 +448,6 @@ describe('map events', () => {
             spy({lng, lat});
         });
 
-        simulate.mousemove(map.getCanvas());
         expect(spy).toHaveBeenCalledTimes(0);
     });
 

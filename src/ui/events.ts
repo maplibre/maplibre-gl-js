@@ -11,6 +11,13 @@ import type {GeoJSONSourceShouldReloadTileOptions} from '../source/geojson_sourc
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 
 /**
+ * An event from a pointer relevant to a specific layer.
+ *
+ * @group Event Related
+ */
+export type MapLayerPointerEvent = MapPointerEvent & { features?: MapGeoJSONFeature[] };
+
+/**
  * An event from the mouse relevant to a specific layer.
  *
  * @group Event Related
@@ -130,6 +137,52 @@ export type MapLayerEventType = {
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
      */
     touchcancel: MapLayerTouchEvent;
+    /**
+     * Fired when a [`pointercancel`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointercancel_event) event occurs within the visible portion of the specified layer.
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     */
+    pointercancel: MapLayerPointerEvent;
+    /**
+     * Fired when a pointing device is pressed while inside a visible portion of the specified layer.
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     */
+    pointerdown: MapLayerPointerEvent;
+    /**
+     * Fired when a pointing device enters a visible portion of a specified layer from
+     * outside that layer or outside the map canvas.
+     *
+     * @see [Similar `mouseenter` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/#mouseenter)
+     */
+    pointerenter: MapLayerPointerEvent;
+    /**
+     * Fired when a pointing device leaves a visible portion of a specified layer, or leaves
+     * the map canvas.
+     *
+     * @see [Similar `mouseleave` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/#mouseleave)
+     */
+    pointerleave: MapLayerPointerEvent;
+    /**
+     * Fired when a pointing device (usually a mouse) is moved while the cursor is inside a visible portion of the specified layer.
+     * As you move the cursor across the layer, the event will fire every time the cursor changes position within that layer.
+     *
+     * @see [Similar `mousemove` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/#mousemove)
+     */
+    pointermove: MapLayerPointerEvent;
+    /**
+     * Fired when a point device leaves the visible portion of the specified layer.
+     */
+    pointerout: MapLayerPointerEvent;
+    /**
+     * Fired when a pointing device is moved inside a visible portion of the specified layer.
+     *
+     * @see [Similar `mouseover` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/#mouseover)
+     */
+    pointerover: MapLayerPointerEvent;
+    /**
+     * Fired when a [`pointerup`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerup_event) event occurs within the visible portion of the specified layer.
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     */
+    pointerup: MapLayerPointerEvent;
 };
 
 /**
@@ -330,7 +383,7 @@ export type MapEventType = {
      */
     mousedown: MapMouseEvent;
     /**
-     * Fired when a point device (usually a mouse) leaves the map's canvas.
+     * Fired when a pointing device (usually a mouse) leaves the map's canvas.
      */
     mouseout: MapMouseEvent;
     /**
@@ -343,6 +396,37 @@ export type MapEventType = {
      * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/display-a-popup-on-hover/)
      */
     mouseover: MapMouseEvent;
+    /**
+     * Fired when a [`pointercancel`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointercancel_event) event occurs within the map.
+     */
+    pointercancel: MapPointerEvent;
+    /**
+     * Fired when a [`pointerdown`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerdown_event) event occurs within the map.
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     */
+    pointerdown: MapPointerEvent;
+    /**
+     * Fired when a [`pointermove`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointermove_event) event occurs within the map.
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     */
+    pointermove: MapPointerEvent;
+    /**
+     * Fired when a point device leaves the map's canvas.
+     */
+    pointerout: MapPointerEvent;
+    /**
+     * Fired when a point device is moved within the map.
+     * As you move the cursor across a web page containing a map,
+     * the event will fire each time it enters the map or any child elements.
+     *
+     * @see [Similar `mouseover` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/#mouseover)
+     */
+    pointerover: MapPointerEvent;
+    /**
+     * Fired when a [`pointerup`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerup_event) event occurs within the map.
+     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     */
+    pointerup: MapPointerEvent;
     /**
      * Fired just before the map begins a transition from one
      * view to another, as the result of either user interaction or methods such as {@link Map.jumpTo}.
@@ -599,6 +683,82 @@ export class MapSourceDataEvent extends MapLibreEvent {
         this.dataType = 'source';
     }
 };
+
+/**
+ * `MapMouseEvent` is the event type for mouse-related map events.
+ *
+ * @group Event Related
+ *
+ * @example
+ * ```ts
+ * // The `click` event is an example of a `MapMouseEvent`.
+ * // Set up an event listener on the map.
+ * map.on('click', (e) => {
+ *   // The event object (e) contains information like the
+ *   // coordinates of the point on the map that was clicked.
+ *   console.log('A click event has occurred at ' + e.lngLat);
+ * });
+ * ```
+ */
+export class MapPointerEvent extends MapLibreEvent<PointerEvent> {
+    /**
+     * The event type
+     */
+    type: 'pointerdown' | 'pointerup' | 'pointermove' | 'pointerover' | 'pointerenter' | 'pointerleave' | 'pointerout';
+
+    /**
+     * The `Map` object that fired the event.
+     */
+    target: Map;
+
+    /**
+     * The DOM event which caused the map event.
+     */
+    originalEvent: PointerEvent;
+
+    /**
+     * The pixel coordinates of the mouse cursor, relative to the map and measured from the top left corner.
+     */
+    point: Point;
+
+    /**
+     * The geographic location on the map of the mouse cursor.
+     */
+    lngLat: LngLat;
+
+    /**
+     * Prevents subsequent default processing of the event by the map.
+     *
+     * Calling this method will prevent the following default map behaviors:
+     *
+     *   * On `pointerdown` events, the behavior of {@link DragPanHandler}
+     *   * On `pointerdown` events, the behavior of {@link DragRotateHandler}
+     *   * On `pointerdown` events, the behavior of {@link BoxZoomHandler}
+     *
+     */
+    preventDefault(): void {
+        this._defaultPrevented = true;
+    }
+
+    /**
+     * `true` if `preventDefault` has been called.
+     */
+    get defaultPrevented(): boolean {
+        return this._defaultPrevented;
+    }
+
+    _defaultPrevented: boolean;
+
+    constructor(type: string, map: Map, originalEvent: PointerEvent, data: any = {}) {
+        originalEvent = originalEvent instanceof PointerEvent ? originalEvent : new PointerEvent(type, originalEvent);
+        const point = DOM.mousePos(map.getCanvas(), originalEvent);
+        const lngLat = map.unproject(point);
+        super(type, extend({point, lngLat, originalEvent}, data));
+        this._defaultPrevented = false;
+        this.target = map;
+    }
+}
+
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
  *

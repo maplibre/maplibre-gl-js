@@ -1,7 +1,7 @@
 import {Evented} from '../../util/evented.ts';
 
 import type {Handler, HandlerResult} from '../handler_manager.ts';
-import type {MapEventType, MapMouseEvent, MapTouchEvent, MapWheelEvent} from '../events.ts';
+import type {MapEventType, MapMouseEvent, MapTouchEvent, MapWheelEvent, MapPointerEvent} from '../events.ts';
 import type {MapEventFactory} from '../map_event_factory.ts';
 import type Point from '@mapbox/point-geometry';
 
@@ -39,8 +39,17 @@ export class MapEventHandler extends Evented<MapEventType> implements Handler {
         return this._firePreventable(this._eventFactory.createMouseEvent(e.type, e));
     }
 
+    pointerdown(e: PointerEvent, point: Point): HandlerResult | void {
+        this._mousedownPos = point;
+        return this._firePreventable(this._eventFactory.createPointerEvent(e.type, e));
+    }
+
     mouseup(e: MouseEvent): void {
         this.fire(this._eventFactory.createMouseEvent(e.type, e));
+    }
+
+    pointerup(e: PointerEvent): void {
+        this.fire(this._eventFactory.createPointerEvent(e.type, e));
     }
 
     click(e: MouseEvent, point: Point): void {
@@ -58,8 +67,16 @@ export class MapEventHandler extends Evented<MapEventType> implements Handler {
         this.fire(this._eventFactory.createMouseEvent(e.type, e));
     }
 
+    pointerover(e: PointerEvent): void {
+        this.fire(this._eventFactory.createPointerEvent(e.type, e));
+    }
+
     mouseout(e: MouseEvent): void {
         this.fire(this._eventFactory.createMouseEvent(e.type, e));
+    }
+
+    pointerout(e: PointerEvent): void {
+        this.fire(this._eventFactory.createPointerEvent(e.type, e));
     }
 
     touchstart(e: TouchEvent): HandlerResult | void {
@@ -85,7 +102,7 @@ export class MapEventHandler extends Evented<MapEventType> implements Handler {
         this.fire(this._eventFactory.createTouchEvent(e.type, e));
     }
 
-    _firePreventable(mapEvent: MapMouseEvent | MapTouchEvent | MapWheelEvent): HandlerResult | void {
+    _firePreventable(mapEvent: MapMouseEvent | MapTouchEvent | MapWheelEvent | MapPointerEvent): HandlerResult | void {
         this.fire(mapEvent);
         if (mapEvent.defaultPrevented) {
             // returning an object marks the handler as active and resets other handlers
@@ -138,6 +155,10 @@ export class BlockableMapEventHandler extends Evented<MapEventType> {
     mousemove(e: MouseEvent): void {
         // mousemove map events should not be fired when interaction handlers (pan, rotate, etc) are active
         this.fire(this._eventFactory.createMouseEvent(e.type, e));
+    }
+
+    pointermove(e: PointerEvent): void {
+        this.fire(this._eventFactory.createPointerEvent(e.type, e));
     }
 
     mousedown(): void {
