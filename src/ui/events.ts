@@ -139,12 +139,12 @@ export type MapLayerEventType = {
     touchcancel: MapLayerTouchEvent;
     /**
      * Fired when a [`pointercancel`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointercancel_event) event occurs within the visible portion of the specified layer.
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     * @see [Similar `touchcancel` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/#touchcancel)
      */
     pointercancel: MapLayerPointerEvent;
     /**
      * Fired when a pointing device is pressed while inside a visible portion of the specified layer.
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     * @see [Similar `mousedown` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/#mousedown)
      */
     pointerdown: MapLayerPointerEvent;
     /**
@@ -180,7 +180,7 @@ export type MapLayerEventType = {
     pointerover: MapLayerPointerEvent;
     /**
      * Fired when a [`pointerup`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerup_event) event occurs within the visible portion of the specified layer.
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     * @see [Similar `mouseup` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerEventType/#mouseup)
      */
     pointerup: MapLayerPointerEvent;
 };
@@ -402,12 +402,12 @@ export type MapEventType = {
     pointercancel: MapPointerEvent;
     /**
      * Fired when a [`pointerdown`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerdown_event) event occurs within the map.
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     * @see [Similar `mousedown` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/#mousedown)
      */
     pointerdown: MapPointerEvent;
     /**
      * Fired when a [`pointermove`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointermove_event) event occurs within the map.
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     * @see [Similar `mousemove` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/#mousemove)
      */
     pointermove: MapPointerEvent;
     /**
@@ -424,7 +424,7 @@ export type MapEventType = {
     pointerover: MapPointerEvent;
     /**
      * Fired when a [`pointerup`](https://developer.mozilla.org/en-US/docs/Web/API/Element/pointerup_event) event occurs within the map.
-     * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-draggable-point/)
+     * @see [Similar `mouseup` API](https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/#mouseup)
      */
     pointerup: MapPointerEvent;
     /**
