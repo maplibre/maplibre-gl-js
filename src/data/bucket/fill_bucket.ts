@@ -74,7 +74,7 @@ export class FillBucket implements Bucket {
         this.layoutVertexArray = new FillLayoutArray();
         this.indexArray = new TriangleIndexArray();
         this.indexArray2 = new LineIndexArray();
-        this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
+        this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom, options.displayP3);
         this.segments = new SegmentVector();
         this.segments2 = new SegmentVector();
         this.stateDependentLayerIds = this.layers.filter((l) => l.isStateDependent()).map((l) => l.id);

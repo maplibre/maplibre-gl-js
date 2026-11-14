@@ -31,6 +31,8 @@ type ClearArgs = {
  */
 export class Context {
     gl: WebGL2RenderingContext;
+    /** Whether the drawing buffer is in Display P3, so colors are drawn in it rather than in sRGB. */
+    displayP3: boolean;
 
     currentNumAttributes: number;
     maxTextureSize: number;
@@ -78,6 +80,7 @@ export class Context {
 
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
+        this.displayP3 = gl.drawingBufferColorSpace === 'display-p3';
         this.clearColor = new ClearColor(this);
         this.clearDepth = new ClearDepth(this);
         this.clearStencil = new ClearStencil(this);

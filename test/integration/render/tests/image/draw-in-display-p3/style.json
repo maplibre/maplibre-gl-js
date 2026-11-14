@@ -1,0 +1,28 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "A map drawing in Display P3 reads back a solid sRGB image source as its P3 value",
+            "width": 64,
+            "height": 64,
+            "colorSpace": "display-p3",
+            "threshold": 0.01
+        }
+    },
+    "zoom": 0,
+    "sources": {
+        "image": {
+            "type": "image",
+            "coordinates": [[-60, 40], [60, 40], [60, -40], [-60, -40]],
+            "url": "local://image/1.png"
+        }
+    },
+    "layers": [
+        {
+            "id": "image",
+            "type": "raster",
+            "source": "image",
+            "paint": {"raster-fade-duration": 0}
+        }
+    ]
+}

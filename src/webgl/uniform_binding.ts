@@ -1,4 +1,5 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {premultipliedDisplayP3} from '../util/display_p3.ts';
 
 import type {mat4, vec2, vec3, vec4} from 'gl-matrix';
 import type {Context} from './context.ts';
@@ -99,13 +100,26 @@ class Uniform4f extends Uniform<vec4> {
 }
 
 class UniformColor extends Uniform<Color> {
+    displayP3: boolean;
+    channels: vec4;
+
     constructor(context: Context, location: WebGLUniformLocation) {
         super(context, location);
         this.current = Color.transparent;
+        this.displayP3 = context.displayP3;
+        this.channels = [0, 0, 0, 0];
     }
 
     set(v: Color): void {
-        if (v.r !== this.current.r || v.g !== this.current.g ||
+        if (this.displayP3) {
+            const [r, g, b, a] = premultipliedDisplayP3(v);
+            const c = this.channels;
+            if (r !== c[0] || g !== c[1] || b !== c[2] || a !== c[3]) {
+                this.current = v;
+                this.channels = [r, g, b, a];
+                this.gl.uniform4f(this.location, r, g, b, a);
+            }
+        } else if (v.r !== this.current.r || v.g !== this.current.g ||
             v.b !== this.current.b || v.a !== this.current.a) {
             this.current = v;
             this.gl.uniform4f(this.location, v.r, v.g, v.b, v.a);
@@ -114,9 +128,12 @@ class UniformColor extends Uniform<Color> {
 }
 
 class UniformColorArray extends Uniform<Color[]> {
+    displayP3: boolean;
+
     constructor(context: Context, location: WebGLUniformLocation) {
         super(context, location);
         this.current = new Array<Color>();
+        this.displayP3 = context.displayP3;
     }
 
     set(v: Color[]): void {
@@ -124,6 +141,10 @@ class UniformColorArray extends Uniform<Color[]> {
             this.current = v;
             const values = new Float32Array(v.length*4);
             for( let i = 0; i < v.length; i++) {
+                if (this.displayP3) {
+                    values.set(premultipliedDisplayP3(v[i]), 4 * i);
+                    continue;
+                }
                 values[4*i] = v[i].r;
                 values[4*i+1] = v[i].g;
                 values[4*i+2] = v[i].b;

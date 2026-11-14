@@ -47,12 +47,13 @@ export class HeatmapStyleLayer extends StyleLayer {
         }
     }
 
-    _updateColorRamp(): void {
+    _updateColorRamp(displayP3 = false): void {
         const expression = this._transitionablePaint._values['heatmap-color'].value.expression;
         this.colorRamp = renderColorRamp({
             expression,
             evaluationKey: 'heatmapDensity',
-            image: this.colorRamp
+            image: this.colorRamp,
+            displayP3
         });
         this.colorRampTexture = null;
     }

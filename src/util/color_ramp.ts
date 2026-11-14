@@ -9,6 +9,7 @@ export type ColorRampParams = {
     resolution?: number;
     image?: RGBAImage;
     clips?: any[];
+    displayP3?: boolean;
 };
 
 /**
@@ -26,7 +27,7 @@ export function renderColorRamp(params: ColorRampParams): RGBAImage {
     const renderPixel = (stride, index, progress) => {
         evaluationGlobals[params.evaluationKey] = progress;
         const pxColor = params.expression.evaluate(evaluationGlobals as any);
-        image.setPixel(stride / 4 / width, index / 4, pxColor);
+        image.setPixel(stride / 4 / width, index / 4, pxColor, params.displayP3);
     };
 
     if (!params.clips) {

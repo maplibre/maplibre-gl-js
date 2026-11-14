@@ -42,6 +42,8 @@ export type WorkerTileParameters = TileParameters & {
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
     subdivisionGranularity: SubdivisionGranularitySetting;
+    /** Whether the map draws in Display P3, so the tile's colors are packed in it rather than in sRGB. */
+    displayP3?: boolean;
     encoding?: TileEncoding;
     /**
      * Provide this property when the requested tile has a higher canonical Z than source maxzoom.

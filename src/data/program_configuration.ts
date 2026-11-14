@@ -4,6 +4,7 @@ import {register} from '../util/web_worker_transfer.ts';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray, DashLayoutArray} from './array_types.g.ts';
 import {clamp} from '../util/util.ts';
+import {premultipliedDisplayP3} from '../util/display_p3.ts';
 import {patternAttributes} from './bucket/pattern_attributes.ts';
 import {dashAttributes} from './bucket/dash_attributes.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -36,7 +37,11 @@ export type BinderUniform = {
     binding: Uniform<any>;
 };
 
-function packColor(color: Color): [number, number] {
+function packColor(color: Color, displayP3: boolean): [number, number] {
+    if (displayP3) {
+        const [r, g, b, a] = premultipliedDisplayP3(color);
+        return [packUint8ToFloat(255 * r, 255 * g), packUint8ToFloat(255 * b, 255 * a)];
+    }
     return [
         packUint8ToFloat(255 * color.r, 255 * color.g),
         packUint8ToFloat(255 * color.b, 255 * color.a)
@@ -198,6 +203,7 @@ class SourceExpressionBinder implements AttributeBinder {
     expression: SourceExpression;
     type: string;
     maxValue: number;
+    displayP3: boolean;
 
     paintVertexArray: StructArray;
     paintVertexAttributes: StructArrayMember[];
@@ -205,10 +211,11 @@ class SourceExpressionBinder implements AttributeBinder {
 
     constructor(expression: SourceExpression, names: string[], type: string, PaintVertexArray: {
         new (...args: any): StructArray;
-    }) {
+    }, displayP3: boolean) {
         this.expression = expression;
         this.type = type;
         this.maxValue = 0;
+        this.displayP3 = displayP3;
         this.paintVertexAttributes = names.map((name) => ({
             name: `a_${name}`,
             type: 'Float32',
@@ -232,7 +239,7 @@ class SourceExpressionBinder implements AttributeBinder {
 
     _setPaintValue(start, end, value) {
         if (this.type === 'color') {
-            const color = packColor(value);
+            const color = packColor(value, this.displayP3);
             for (let i = start; i < end; i++) {
                 this.paintVertexArray.emplace(i, color[0], color[1]);
             }
@@ -268,6 +275,7 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
     useIntegerZoom: boolean;
     zoom: number;
     maxValue: number;
+    displayP3: boolean;
 
     paintVertexArray: StructArray;
     paintVertexAttributes: StructArrayMember[];
@@ -275,13 +283,14 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
 
     constructor(expression: CompositeExpression, names: string[], type: string, useIntegerZoom: boolean, zoom: number, PaintVertexArray: {
         new (...args: any): StructArray;
-    }) {
+    }, displayP3: boolean) {
         this.expression = expression;
         this.uniformNames = names.map(name => `u_${name}_t`);
         this.type = type;
         this.useIntegerZoom = useIntegerZoom;
         this.zoom = zoom;
         this.maxValue = 0;
+        this.displayP3 = displayP3;
         this.paintVertexAttributes = names.map((name) => ({
             name: `a_${name}`,
             type: 'Float32',
@@ -307,8 +316,8 @@ class CompositeExpressionBinder implements AttributeBinder, UniformBinder {
 
     _setPaintValue(start, end, min, max) {
         if (this.type === 'color') {
-            const minColor = packColor(min);
-            const maxColor = packColor(max);
+            const minColor = packColor(min, this.displayP3);
+            const maxColor = packColor(max, this.displayP3);
             for (let i = start; i < end; i++) {
                 this.paintVertexArray.emplace(i, minColor[0], minColor[1], maxColor[0], maxColor[1]);
             }
@@ -495,7 +504,7 @@ export class ProgramConfiguration {
 
     _buffers: VertexBuffer[];
 
-    constructor(layer: TypedStyleLayer, zoom: number, filterProperties: (_: string) => boolean) {
+    constructor(layer: TypedStyleLayer, zoom: number, displayP3: boolean, filterProperties: (_: string) => boolean) {
         this.binders = {};
         this._buffers = [];
 
@@ -526,12 +535,12 @@ export class ProgramConfiguration {
                     property === 'line-dasharray' ?
                         new CrossFadedDasharrayBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
                         new CrossFadedPatternBinder(expression as CompositeExpression, type, useIntegerZoom, zoom, StructArrayLayout, layer.id) :
-                    new SourceExpressionBinder(expression as SourceExpression, names, type, StructArrayLayout);
+                    new SourceExpressionBinder(expression as SourceExpression, names, type, StructArrayLayout, displayP3);
                 keys.push(`/a_${property}`);
 
             } else {
                 const StructArrayLayout = layoutType(property, type, 'composite');
-                this.binders[property] = new CompositeExpressionBinder(expression, names, type, useIntegerZoom, zoom, StructArrayLayout);
+                this.binders[property] = new CompositeExpressionBinder(expression, names, type, useIntegerZoom, zoom, StructArrayLayout, displayP3);
                 keys.push(`/z_${property}`);
             }
         }
@@ -711,10 +720,10 @@ export class ProgramConfigurationSet<Layer extends TypedStyleLayer> {
     _featureMap: FeaturePositionMap;
     _bufferOffset: number;
 
-    constructor(layers: readonly Layer[], zoom: number, filterProperties: (_: string) => boolean = () => true) {
+    constructor(layers: readonly Layer[], zoom: number, displayP3: boolean, filterProperties: (_: string) => boolean = () => true) {
         this.programConfigurations = {};
         for (const layer of layers) {
-            this.programConfigurations[layer.id] = new ProgramConfiguration(layer, zoom, filterProperties);
+            this.programConfigurations[layer.id] = new ProgramConfiguration(layer, zoom, displayP3, filterProperties);
         }
         this.needsUpload = false;
         this._featureMap = new FeaturePositionMap();

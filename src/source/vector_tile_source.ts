@@ -229,6 +229,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
             showCollisionBoxes: this.map.showCollisionBoxes,
             promoteId: this.promoteId,
             subdivisionGranularity: this.map.style.projection.subdivisionGranularity,
+            displayP3: this.map._colorSpace === 'display-p3',
             encoding: this.encoding,
             overzoomParameters: await this._getOverzoomParameters(tile),
             etag: tile.etag

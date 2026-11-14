@@ -4,6 +4,7 @@ import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {ImageRequest} from '../util/image_request.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {Texture} from '../webgl/texture.ts';
+import {srgbImageToDisplayP3} from '../util/display_p3.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
 import {Bounds} from '../geo/bounds.ts';
@@ -19,6 +20,7 @@ import type {Source} from './source.ts';
 import type {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import type {CanvasSourceSpecification} from './canvas_source.ts';
 import type {Map} from '../ui/map.ts';
+import type {RGBAImage} from '../util/image.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {
@@ -88,6 +90,10 @@ export type ImageSourceWarp = 'auto' | 'perspective' | 'flat';
  * without a network request.
  */
 export type ImageSourceImage = HTMLImageElement | HTMLCanvasElement | ImageBitmap | ImageData;
+
+function imageToUpload(image: ImageSourceImage, displayP3: boolean): ImageSourceImage | RGBAImage {
+    return displayP3 && image instanceof ImageData && image.colorSpace === 'srgb' ? srgbImageToDisplayP3(image) : image;
+}
 
 /**
  * The options object for the {@link ImageSource.updateImage} method.
@@ -471,10 +477,10 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
         const gl = context.gl;
 
         if (!this.texture) {
-            this.texture = new Texture(context, this.image, gl.RGBA);
+            this.texture = new Texture(context, imageToUpload(this.image, context.displayP3), gl.RGBA);
             this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         } else if (this._imageDirty) {
-            this.texture.update(this.image);
+            this.texture.update(imageToUpload(this.image, context.displayP3));
             this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
         this._imageDirty = false;
