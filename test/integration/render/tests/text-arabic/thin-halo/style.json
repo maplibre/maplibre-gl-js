@@ -1,0 +1,99 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 192
+    }
+  },
+  "center": [ 0, 0 ],
+  "zoom": 2,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "labels": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": { "name": "خیابان ولیعصر", "halo": 1 },
+            "geometry": { "type": "Point", "coordinates": [ -20, 10 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "مرحبا بالعالم", "halo": 1 },
+            "geometry": { "type": "Point", "coordinates": [ -20, 0 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "Cairo القاهرة", "halo": 1 },
+            "geometry": { "type": "Point", "coordinates": [ -20, -10 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "خیابان ولیعصر", "halo": 0.5 },
+            "geometry": { "type": "Point", "coordinates": [ 20, 10 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "مرحبا بالعالم", "halo": 0.5 },
+            "geometry": { "type": "Point", "coordinates": [ 20, 0 ] }
+          },
+          {
+            "type": "Feature",
+            "properties": { "name": "Cairo القاهرة", "halo": 0.5 },
+            "geometry": { "type": "Point", "coordinates": [ 20, -10 ] }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#bcd" }
+    },
+    {
+      "id": "halo-1",
+      "type": "symbol",
+      "source": "labels",
+      "filter": [ "==", [ "get", "halo" ], 1 ],
+      "layout": {
+        "text-allow-overlap": true,
+        "text-size": 24,
+        "text-field": [ "get", "name" ],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      },
+      "paint": {
+        "text-color": "black",
+        "text-halo-color": "white",
+        "text-halo-width": 1
+      }
+    },
+    {
+      "id": "halo-0.5",
+      "type": "symbol",
+      "source": "labels",
+      "filter": [ "==", [ "get", "halo" ], 0.5 ],
+      "layout": {
+        "text-allow-overlap": true,
+        "text-size": 24,
+        "text-field": [ "get", "name" ],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      },
+      "paint": {
+        "text-color": "black",
+        "text-halo-color": "white",
+        "text-halo-width": 0.5
+      }
+    }
+  ]
+}
