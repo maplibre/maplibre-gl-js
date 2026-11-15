@@ -53,7 +53,7 @@ MapLibre GL JS v1 is completely backward compatible with Mapbox GL JS v1. This c
 
 ### Migrating from Mapbox GL JS v2 or v3
 
-After swapping the package and namespace, run your app and check the browser console. If a method is missing (for example `map.setFog is not a function`), look it up in the [API reference](https://maplibre.org/maplibre-gl-js/docs/API/). MapLibre may offer the feature under a different name or a different implementation path, or may not offer it yet.
+After swapping the package and namespace, use TypeScript if you can: `maplibre-gl` ships its own types, so a missing method or a changed signature (for example a callback passed to `map.loadImage`, which returns a Promise) shows up as a compile error. Without TypeScript, run your app and check the browser console. Either way, if a method is missing (for example `map.setFog is not a function`), look it up in the [API reference](https://maplibre.org/maplibre-gl-js/docs/API/). MapLibre may offer the feature under a different name or a different implementation path, or may not offer it yet.
 
 ## Why migrate
 
@@ -63,13 +63,8 @@ After swapping the package and namespace, run your app and check the browser con
 - **Self-hosting.** Use your own tiles ([PMTiles](https://docs.protomaps.com/pmtiles/), [tileserver-gl](https://github.com/maptiler/tileserver-gl), [Martin](https://maplibre.org/martin/)) or any third-party source.
 - **Community governance.** The style spec and APIs evolve in the open, and the project is funded by donations and sponsorships from many companies and individuals.
 - **Open vector tile format.** [MapLibre Tile (MLT)](https://maplibre.org/maplibre-tile-spec/) is a newer alternative to Mapbox Vector Tiles with better compression and support for 3D coordinates. GL JS and MapLibre Native can both read it, by setting `encoding: mlt` on a source.
+- **Open-source ecosystem.** MapLibre GL JS is part of a wider ecosystem. Supported projects, roadmaps and news are at [maplibre.org/roadmap](https://maplibre.org/roadmap/) and [maplibre.org/news](https://maplibre.org/news/). Community-submitted projects are indexed at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre), and [Make with MapLibre](https://makewithmaplibre.com) has a myriad of implementations in production, plus SDKs, frameworks, and libraries to help you build and integrate your MapLibre project.
 
 ### What you give up
 
 Mapbox Studio integration, Mapbox-hosted tiles and styles, the Mapbox Search, Directions and Geocoding APIs, and official Mapbox support.
-
-### What you gain
-
-MapLibre GL JS is part of a wider open-source ecosystem. Supported projects, roadmaps and news are at [maplibre.org/roadmap](https://maplibre.org/roadmap/) and [maplibre.org/news](https://maplibre.org/news/). Community-submitted projects are indexed at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
-
-For more guidance, visit [Make with MapLibre](https://makewithmaplibre.com) for a myriad of implementations in production, plus SDKs, frameworks, and libraries to help you build out and integrate your MapLibre project.
