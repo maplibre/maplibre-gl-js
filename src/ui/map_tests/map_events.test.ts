@@ -898,6 +898,20 @@ describe('map events', () => {
         map.remove();
     });
 
+    test('Map.on pointerdown can have default behavior prevented and still fire subsequent click event', () => {
+        const map = createMap();
+
+        map.on('pointerdown', e => { e.preventDefault(); });
+
+        const click = vi.fn();
+        map.on('click', click);
+
+        simulate.click(map.getCanvas());
+        expect(click).toHaveBeenCalled();
+
+        map.remove();
+    });
+
     test('Map.on mousedown doesn\'t fire subsequent click event if mousepos changes', () => {
         const map = createMap();
 
