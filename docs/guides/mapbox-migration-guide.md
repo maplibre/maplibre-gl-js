@@ -35,7 +35,10 @@ The overall migration happens by uninstalling `mapbox-gl` and installing `maplib
 
 Replace `#.#.#` with a pinned version, for example `^6.0.0`.
 
-v6 ships as ES modules only, so there is no `<script src>` build: `maplibre-gl.js` returns a 404, and `maplibregl` is not a global. Put the code that uses it in the same `<script type="module">`, or in another module that imports it.
+If the map does not load after you swap the tags, you have probably hit one of these two errors:
+
+- **`404` for `maplibre-gl.js`.** v6 ships as ES modules only, so there is no `<script src>` build to point the old Mapbox tag at. Use the `<script type="module">` import above, which loads `maplibre-gl.mjs`.
+- **`Uncaught ReferenceError: maplibregl is not defined`.** Unlike the Mapbox script, the module import does not create a global, so a separate classic `<script>` that creates the map cannot see `maplibregl`. Put that code in the same `<script type="module">`, or in another module that imports it.
 
 ## Understanding the differences between MapLibre and Mapbox GL JS
 
