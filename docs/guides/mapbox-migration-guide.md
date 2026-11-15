@@ -70,6 +70,6 @@ Mapbox Studio integration, Mapbox-hosted tiles and styles, the Mapbox Search, Di
 
 ### What you gain
 
-MapLibre GL JS is part of a wider open-source ecosystem. Roadmaps and news are at [maplibre.org/roadmap](https://maplibre.org/roadmap/) and [maplibre.org/news](https://maplibre.org/news/). Community-submitted projects are indexed at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
+MapLibre GL JS is part of a wider open-source ecosystem. Supported projects, roadmaps and news are at [maplibre.org/roadmap](https://maplibre.org/roadmap/) and [maplibre.org/news](https://maplibre.org/news/). Community-submitted projects are indexed at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
 
 For more guidance, visit [Make with MapLibre](https://makewithmaplibre.com) for a myriad of implementations in production, plus SDKs, frameworks, and libraries to help you build out and integrate your MapLibre project.
