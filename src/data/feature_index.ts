@@ -227,23 +227,11 @@ export class FeatureIndex {
         const sourceLayer = this.vtLayers[sourceLayerName];
         const feature = sourceLayer.feature(featureIndex);
 
-        let geometry: Point[][] | undefined;
-        if (filter.needGeometry) {
-            const evaluationFeature = toEvaluationFeature(feature, true);
-            if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), evaluationFeature, this.tileID.canonical)) {
-                return;
-            }
-            geometry = evaluationFeature.geometry;
-        } else if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), feature)) {
+        const evaluationFeature = toEvaluationFeature(feature, filter.needGeometry);
+        if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), evaluationFeature, this.tileID.canonical)) {
             return;
         }
-        const getGeometry = () => geometry ||= loadGeometry(feature);
-        const featureWithGeometry: Feature = {
-            type: feature.type,
-            id: feature.id,
-            properties: feature.properties,
-            get geometry() { return getGeometry(); }
-        };
+        if (!filter.needGeometry) evaluationFeature.geometry = loadGeometry(feature);
 
         const id = this.getId(feature, sourceLayerName);
 
@@ -265,10 +253,10 @@ export class FeatureIndex {
 
             const serializedLayer = extend({}, serializedLayers[layerID]);
 
-            serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, featureWithGeometry, featureState, this.tileID.canonical, availableImages);
-            serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, featureWithGeometry, featureState, this.tileID.canonical, availableImages);
+            serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, evaluationFeature, featureState, this.tileID.canonical, availableImages);
+            serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, evaluationFeature, featureState, this.tileID.canonical, availableImages);
 
-            const intersectionZ = !intersectionTest || intersectionTest(feature, styleLayer, featureState, getGeometry());
+            const intersectionZ = !intersectionTest || intersectionTest(feature, styleLayer, featureState, evaluationFeature.geometry);
             if (!intersectionZ) {
                 // Only applied for non-symbol features
                 continue;
@@ -373,8 +361,7 @@ function needsEvaluating(value: unknown): value is PossiblyEvaluatedPropertyValu
  * value, is passed through as it is.
  *
  * The feature carries its geometry and the tile is passed as `canonical`, because `within` and
- * `distance` need both, as they do when the bucket evaluates the feature. The geometry is a getter,
- * so it is only decoded for expressions that read it.
+ * `distance` need both, as they do when the bucket evaluates the feature.
  */
 
 function evaluateProperties<Props, PossiblyEvaluatedProps>(

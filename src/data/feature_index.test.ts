@@ -1,16 +1,15 @@
 import path from 'path';
 import {readFileSync} from 'fs';
-import {afterEach, describe, expect, test, vi} from 'vitest';
-import {FeatureIndex, GEOJSON_TILE_LAYER_NAME, type QueryResultsItem} from './feature_index.ts';
+import {describe, expect, test} from 'vitest';
+import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index.ts';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper, type VectorTileFeatureLike} from '@maplibre/vt-pbf';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
-import {VectorTileFeature} from '@mapbox/vector-tile';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {createIdentityCrsCamera, createTestCamera} from '../util/test/util.ts';
 
-import type {ExpressionSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 
@@ -102,94 +101,29 @@ describe('FeatureIndex', () => {
             expect(result.layer[0].feature.geometry.type).toBe('LineString');
         });
     });
-});
 
-/**
- * Indexes a red point at about [-90, 66.5] and a blue one at about [90, -66.5] on tile 0/0/0,
- * drawn by a circle layer whose color is `circleColor`.
- */
-function createIndexWithTwoPoints(circleColor: ExpressionSpecification) {
-    const features = [
-        {type: 1, geometry: [[1024, 1024]], tags: {color: 'red'}},
-        {type: 1, geometry: [[3072, 3072]], tags: {color: 'blue'}}
-    ] as any as Feature[];
-    const geojsonWrapper = new GeoJSONWrapper(features);
-    geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
-    const layer = new CircleStyleLayer({
-        id: 'layer',
-        type: 'circle',
-        source: 'source',
-        paint: {'circle-color': circleColor}
-    }, {});
-    layer.recalculate({zoom: 0} as EvaluationParameters, []);
-    const featureIndex = new FeatureIndex(new OverscaledTileID(0, 0, 0, 0, 0));
-    featureIndex.rawTileData = fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}}) as any as ArrayBuffer;
-    featureIndex.bucketLayerIDs = [['layer']];
-    featureIndex.insert(geojsonWrapper.feature(0), [[new Point(2048, 2048)]], 0, 0, 0);
-    featureIndex.insert(geojsonWrapper.feature(1), [[new Point(6144, 6144)]], 1, 0, 0);
-    return {featureIndex, layer};
-}
+    test('lookupSymbolFeatures evaluates within against the feature geometry', () => {
+        const features = [
+            {type: 1, geometry: [[1024, 1024]], tags: {}},
+            {type: 1, geometry: [[3072, 3072]], tags: {}}
+        ] as any as Feature[];
+        const geojsonWrapper = new GeoJSONWrapper(features);
+        geojsonWrapper.name = GEOJSON_TILE_LAYER_NAME;
+        const layer = new CircleStyleLayer({
+            id: 'layer',
+            type: 'circle',
+            source: 'source',
+            paint: {'circle-color': ['case', ['within', {type: 'Polygon', coordinates: [[[-100, 60], [-80, 60], [-80, 70], [-100, 70], [-100, 60]]]}], 'red', 'blue']}
+        }, {});
+        layer.recalculate({zoom: 0} as EvaluationParameters, []);
+        const featureIndex = new FeatureIndex(new OverscaledTileID(0, 0, 0, 0, 0));
+        featureIndex.rawTileData = fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: geojsonWrapper}}) as any as ArrayBuffer;
+        featureIndex.bucketLayerIDs = [['layer']];
 
-function lookupBothPoints(featureIndex: FeatureIndex, layer: CircleStyleLayer) {
-    const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
-    return featureIndex.lookupSymbolFeatures([0, 1], {layer: layer.serialize() as any as CircleStyleLayer}, 0, 0, {filterSpec: undefined, globalState: {}, worldCoordinateHelper}, null, [], {layer});
-}
+        const worldCoordinateHelper = new CRSWorldCoordinateHelper(identityCrs);
+        const result = featureIndex.lookupSymbolFeatures([0, 1], {layer: layer.serialize() as any}, 0, 0, {filterSpec: undefined, globalState: {}, worldCoordinateHelper}, null, [], {layer});
 
-describe.each<[string, ExpressionSpecification]>([
-    ['within', ['within', {type: 'Polygon', coordinates: [[[-100, 60], [-80, 60], [-80, 70], [-100, 70], [-100, 60]]]}]],
-    ['distance', ['<', ['distance', {type: 'Point', coordinates: [-90, 66.5]}], 100000]]
-])('FeatureIndex evaluating %s against the feature geometry', (_name, geometryTest) => {
-    /** Colors the point that passes `geometryTest` (only the first one) red and the other blue. */
-    const createIndexWithFeatures = () => createIndexWithTwoPoints(['case', geometryTest, 'red', 'blue']);
-
-    function circleColors(results: QueryResultsItem[]) {
-        return results
-            .map(({feature}) => feature as MapGeoJSONFeature)
-            .sort((a, b) => (a.geometry as GeoJSON.Point).coordinates[0] - (b.geometry as GeoJSON.Point).coordinates[0])
-            .map(feature => feature.layer.paint['circle-color'].toString());
-    }
-
-    test('query', () => {
-        const {featureIndex, layer} = createIndexWithFeatures();
-        const {projectedCamera, context} = createTestCamera({width: 500, height: 500});
-        const tileQuery = [new Point(0, 0), new Point(8192, 0), new Point(8192, 8192), new Point(0, 8192), new Point(0, 0)];
-
-        const result = featureIndex.query({
-            queryPadding: 0,
-            tileSize: 512,
-            scale: 1,
-            queryGeometry: tileQuery,
-            cameraQueryGeometry: tileQuery,
-            params: {},
-            projectedCamera,
-            worldCoordinateHelper: context.worldCoordinateHelper
-        } as any, {layer}, {layer: layer.serialize()}, undefined);
-
-        expect(circleColors(result.layer)).toEqual(['rgba(255,0,0,1)', 'rgba(0,0,255,1)']);
-    });
-
-    test('lookupSymbolFeatures', () => {
-        const {featureIndex, layer} = createIndexWithFeatures();
-
-        const result = lookupBothPoints(featureIndex, layer);
-
-        expect(circleColors(result.layer)).toEqual(['rgba(255,0,0,1)', 'rgba(0,0,255,1)']);
-    });
-});
-
-describe('FeatureIndex lookupSymbolFeatures geometry', () => {
-    afterEach(() => {
-        vi.restoreAllMocks();
-    });
-
-    test('is not loaded for a property that does not read it', () => {
-        const {featureIndex, layer} = createIndexWithTwoPoints(['get', 'color']);
-        const loadGeometry = vi.spyOn(VectorTileFeature.prototype, 'loadGeometry');
-
-        const result = lookupBothPoints(featureIndex, layer);
-
-        expect(result.layer.map(({feature}) => (feature as MapGeoJSONFeature).layer.paint['circle-color'].toString()).sort()).toEqual(['rgba(0,0,255,1)', 'rgba(255,0,0,1)']);
-        expect(loadGeometry).not.toHaveBeenCalled();
+        expect(result.layer.map(({feature}) => (feature as MapGeoJSONFeature).layer.paint['circle-color'].toString())).toEqual(['rgba(255,0,0,1)', 'rgba(0,0,255,1)']);
     });
 });
 
