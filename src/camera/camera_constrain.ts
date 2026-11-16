@@ -54,6 +54,10 @@ function mercatorConstrain(view: CameraViewState, worldCoordinateHelper: WorldCo
 
     let lngRange = view.lngRange;
 
+    if (lngRange && (lngRange[1] - lngRange[0]) % 360 === 0) {
+        lngRange = null;
+    }
+
     if (!view.renderWorldCopies && lngRange === null) {
         const almost180 = 180 - 1e-10;
         lngRange = [-almost180, almost180];

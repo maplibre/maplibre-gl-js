@@ -17,6 +17,7 @@ import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate.ts';
 import {Evented, ErrorEvent, Event, type ErrorEventType, type EventedParentData, type EventTypeMap, type Listener} from './util/evented.ts';
 import {type AddProtocolAction, type AddProtocolResponseData, config} from './util/config.ts';
+import {setTrustedTypesPolicy, type TrustedTypesPolicy} from './util/trusted_types.ts';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
 import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
 import {WorkerPool} from './util/worker_pool.ts';
@@ -425,6 +426,7 @@ export {
     type DashEntry,
     type Painter,
     type WorkerGlobalScopeInterface,
+    type TrustedTypesPolicy,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
@@ -436,6 +438,7 @@ export {
     setMaxParallelImageRequests,
     getWorkerUrl,
     setWorkerUrl,
+    setTrustedTypesPolicy,
     addProtocol,
     removeProtocol,
     addProjection,
