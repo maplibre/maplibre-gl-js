@@ -1,5 +1,6 @@
-import {afterEach, describe, expect, test} from 'vitest';
+import {afterEach, describe, expect, test, vi} from 'vitest';
 import {DOM} from './dom.ts';
+import {setTrustedTypesPolicy} from './trusted_types.ts';
 
 function sanitizeToHTML(input: string): string {
     const container = document.createElement('div');
@@ -32,6 +33,7 @@ describe('DOM', () => {
         afterEach(() => {
             for (const property of clobberedProperties) delete HTMLFormElement.prototype[property];
             clobberedProperties.length = 0;
+            setTrustedTypesPolicy(undefined);
         });
 
         test('should not fail on empty string', () => {
@@ -194,6 +196,16 @@ describe('DOM', () => {
             const input = '<img src="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">';
             const output = sanitizeToHTML(input);
             expect(output).toBe('<img>');
+        });
+
+        test('should parse the HTML the Trusted Types policy returns', () => {
+            const createHTML = vi.fn().mockReturnValue('<b>from the policy</b>');
+            setTrustedTypesPolicy({createHTML, createScriptURL: vi.fn()});
+
+            const output = sanitizeToHTML('<i>attribution</i>');
+
+            expect(createHTML).toHaveBeenCalledWith('<i>attribution</i>');
+            expect(output).toBe('<b>from the policy</b>');
         });
 
         test('should remove a form whose named control shadows remove', () => {
