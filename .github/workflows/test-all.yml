@@ -195,7 +195,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         continue-on-error: true
         run: >-
-          npx bundle-analyzer ./dist --bundle-name=maplibre-gl
+          npx --yes @codecov/bundle-analyzer@2.0.1 ./dist --bundle-name=maplibre-gl
           --ignore-patterns "*.map" "*-dev.mjs" "*-shared*.mjs" "*.d.ts" "*.json"
 
   bundle-size:
