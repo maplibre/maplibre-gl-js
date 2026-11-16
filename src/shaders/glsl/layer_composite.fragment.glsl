@@ -30,6 +30,16 @@ vec3 setLum(vec3 c, float l) {
 }
 #endif
 
+#ifdef LAYER_BLEND_SOFT_LIGHT
+// Soft light, per the separable blend modes of the W3C compositing spec.
+vec3 softLight(vec3 cs, vec3 cb) {
+    vec3 d = mix(sqrt(cb), ((16.0 * cb - 12.0) * cb + 4.0) * cb, step(cb, vec3(0.25)));
+    vec3 darkened = cb - (1.0 - 2.0 * cs) * cb * (1.0 - cb);
+    vec3 lightened = cb + (2.0 * cs - 1.0) * (d - cb);
+    return mix(darkened, lightened, step(0.5, cs));
+}
+#endif
+
 // Blending in premultiplied space, for the modes no fixed-function blend function can express.
 vec4 composite(vec4 src, vec4 dst) {
     vec3 co = vec3(0.0);
@@ -40,21 +50,43 @@ vec4 composite(vec4 src, vec4 dst) {
     co = invDstA * src.rgb + invSrcA * dst.rgb + src.rgb * dst.rgb;
 #endif
 
+#if defined(LAYER_BLEND_OVERLAY) || defined(LAYER_BLEND_HARD_LIGHT)
+    // Overlay and hard light share the same multiply and screen cases: overlay picks one from the backdrop, hard light from the source.
 #ifdef LAYER_BLEND_OVERLAY
     vec3 cond = step(dst.a, 2.0 * dst.rgb);
+#else
+    vec3 cond = step(src.a, 2.0 * src.rgb);
+#endif
     vec3 case1 = invDstA * src.rgb + invSrcA * dst.rgb + 2.0 * dst.rgb * src.rgb;
     vec3 case2 = src.rgb + dst.rgb + dst.a * src.rgb + src.a * dst.rgb - vec3(src.a * dst.a) - 2.0 * dst.rgb * src.rgb;
     co = mix(case1, case2, cond);
 #endif
 
-#ifdef LAYER_BLEND_NONSEPARABLE
+#ifdef LAYER_BLEND_DIFFERENCE
+    co = src.rgb + dst.rgb - 2.0 * min(src.rgb * dst.a, dst.rgb * src.a);
+#endif
+
+#ifdef LAYER_BLEND_EXCLUSION
+    co = src.rgb + dst.rgb - 2.0 * src.rgb * dst.rgb;
+#endif
+
+#ifdef LAYER_BLEND_UNPREMULTIPLIED
+    // These blend functions take non-premultiplied colors.
     vec3 cs = src.rgb / src.a;
     vec3 cb = dst.a > 0.0 ? dst.rgb / dst.a : vec3(0.0);
 
+    vec3 blended = vec3(0.0);
+
+#ifdef LAYER_BLEND_SOFT_LIGHT
+    blended = softLight(cs, cb);
+#endif
+
 #ifdef LAYER_BLEND_COLOR
-    vec3 blended = setLum(cs, lum(cb));
-#else
-    vec3 blended = setLum(cb, lum(cs));
+    blended = setLum(cs, lum(cb));
+#endif
+
+#ifdef LAYER_BLEND_LUMINOSITY
+    blended = setLum(cb, lum(cs));
 #endif
 
     co = invDstA * src.rgb + invSrcA * dst.rgb + src.a * dst.a * blended;

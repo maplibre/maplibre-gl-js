@@ -24,8 +24,12 @@ type LayerBlend = FillPaintPropsPossiblyEvaluated['fill-layer-blend'];
 const shaderBlendDefines = {
     multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'],
     overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'],
-    color: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_COLOR;'],
-    luminosity: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;']
+    'hard-light': ['#define LAYER_BLEND;', '#define LAYER_BLEND_HARD_LIGHT;'],
+    difference: ['#define LAYER_BLEND;', '#define LAYER_BLEND_DIFFERENCE;'],
+    exclusion: ['#define LAYER_BLEND;', '#define LAYER_BLEND_EXCLUSION;'],
+    'soft-light': ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_SOFT_LIGHT;'],
+    color: ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_COLOR;'],
+    luminosity: ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_LUMINOSITY;']
 } satisfies Partial<Record<LayerBlend, string[]>>;
 
 type ShaderBlend = keyof typeof shaderBlendDefines;
