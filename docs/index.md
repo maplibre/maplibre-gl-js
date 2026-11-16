@@ -250,7 +250,7 @@ maplibregl.setTrustedTypesPolicy(trustedTypes.createPolicy('my-map', {
 
 `createScriptURL` receives the URL the workers start from. For a worker on another origin that is a `blob:` URL, which this example refuses. `createHTML` receives the attribution of each source, which is sanitized after it is parsed. `Popup.setHTML` assigns its argument as is, so it takes a `TrustedHTML` from your policy.
 
-A worker enforces Trusted Types as well when it starts from a `blob:` URL or when its file is served with the same CSP. A script loaded into such a worker with `importScriptInWorkers` or `setRTLTextPlugin` has to be an ES module.
+A worker enforces Trusted Types as well when it starts from a `blob:` URL or when its file is served with the same CSP. A script loaded into such a worker with `importScriptInWorkers` or the deprecated `setRTLTextPlugin` has to be an ES module. Right-to-left text is drawn without a plugin.
 
 ## MapLibre CSS
 
