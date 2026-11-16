@@ -64,6 +64,12 @@ export type TerrainData = {
  */
 export type DEMState = 'loaded' | 'loading' | 'none';
 
+/** The lowest and highest elevation in a tile, including the terrain's exaggeration, or null where no DEM data has loaded for it. */
+type MinMaxElevation = {
+    minElevation: number | null;
+    maxElevation: number | null;
+};
+
 /**
  * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
@@ -145,6 +151,8 @@ export class Terrain {
      * matrices to transform from vector-tile coords to raster-dem-tile coords.
      */
     _demMatrixCache: Map<string, mat4>;
+    /** The lowest and highest elevation of each tile asked for since the DEM data last changed, by tile key. */
+    _minMaxElevationCache: Map<string, MinMaxElevation>;
     /** The drawn tiles' DEM data as sampled on the CPU, see {@link TerrainCoverage}. */
     coverage: TerrainCoverage;
     /**
@@ -167,6 +175,7 @@ export class Terrain {
         this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = new Map();
+        this._minMaxElevationCache = new Map();
         this.coverage = new TerrainCoverage(this.tileManager, this.exaggeration, () => this._worldCoordinateHelper);
     }
 
@@ -297,11 +306,13 @@ export class Terrain {
     }
 
     /**
-     * Clear the CPU samplers of the drawn tiles' DEM data, which may retain a previously selected DEM tile.
+     * Clear what the terrain keeps of its DEM data: the CPU samplers of the drawn tiles, which may retain a previously
+     * selected DEM tile, and the lowest and highest elevation of each tile.
      * @internal
      */
     resetElevationCache(): void {
         this.coverage.reset();
+        this._minMaxElevationCache.clear();
     }
 
     /**
@@ -475,19 +486,23 @@ export class Terrain {
 
     /**
      * Get the minimum and maximum elevation contained in a tile. This includes any
-     * exaggeration included in the terrain.
+     * exaggeration included in the terrain. They are kept until {@link Terrain.resetElevationCache}.
      *
      * @param tileID - ID of the tile to be used as a source for the min/max elevation
      * @returns the minimum and maximum elevation found in the tile, including the terrain's
      * exaggeration
      */
-    getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
+    getMinMaxElevation(tileID: OverscaledTileID): MinMaxElevation {
+        let minMax = this._minMaxElevationCache.get(tileID.key);
+        if (minMax) return minMax;
+
         const tile = this.tileManager.getSourceTile(tileID, true);
-        const minMax: {minElevation: number | null; maxElevation: number | null} = {minElevation: null, maxElevation: null};
+        minMax = {minElevation: null, maxElevation: null};
         if (tile?.dem) {
             minMax.minElevation = tile.dem.min * this.exaggeration;
             minMax.maxElevation = tile.dem.max * this.exaggeration;
         }
+        this._minMaxElevationCache.set(tileID.key, minMax);
         return minMax;
     }
 

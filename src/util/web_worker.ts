@@ -1,5 +1,6 @@
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type AddProtocolAction, config} from './config.ts';
+import {createTrustedScriptURL} from './trusted_types.ts';
 
 import type {default as MaplibreWorker} from '../source/worker.ts';
 import type {WorkerSourceConstructor} from '../source/worker_source.ts';
@@ -51,14 +52,15 @@ function isClassicWorkerUrl(url: string): boolean {
 }
 
 function createWorker(url: string, asModule: boolean): Worker {
+    const scriptURL = createTrustedScriptURL(url);
     if (asModule) {
         try {
-            return new Worker(url, {type: 'module'});
+            return new Worker(scriptURL, {type: 'module'});
         } catch (e) {
             console.warn('Module worker not supported, falling back to classic worker', e);
         }
     }
-    return new Worker(url);
+    return new Worker(scriptURL);
 }
 
 async function fetchWorkerCode(url: string): Promise<string> {

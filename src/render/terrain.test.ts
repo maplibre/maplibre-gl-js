@@ -189,6 +189,20 @@ describe('Terrain', () => {
         expect(minMaxNoDEM.maxElevation).toBeNull();
     });
 
+    test('getMinMaxElevation keeps the elevations of a tile until resetElevationCache', () => {
+        const tileID = new OverscaledTileID(1, 0, 1, 0, 0);
+        const tile = new Tile(tileID, 512);
+        const terrain = createDEMTerrain([], null);
+        terrain.tileManager.getSourceTile = () => tile;
+        expect(terrain.getMinMaxElevation(tileID)).toEqual({minElevation: null, maxElevation: null});
+
+        tile.dem = createDEM(() => 100);
+        expect(terrain.getMinMaxElevation(tileID)).toEqual({minElevation: null, maxElevation: null});
+
+        terrain.resetElevationCache();
+        expect(terrain.getMinMaxElevation(tileID)).toEqual({minElevation: 100, maxElevation: 100});
+    });
+
     test('create mesh with border', () => {
         let actualIndexArray;
         let actualVertexArray;
