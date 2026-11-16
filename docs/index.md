@@ -242,13 +242,15 @@ On a page that enforces [Trusted Types](https://developer.mozilla.org/en-US/docs
 maplibregl.setTrustedTypesPolicy(trustedTypes.createPolicy('my-map', {
     createHTML: (html) => html,
     createScriptURL: (url) => {
-        if (new URL(url, location.href).origin !== location.origin) throw new TypeError(`Blocked script URL ${url}`);
+        if (!new URL(url, location.href).href.startsWith(`${location.origin}/`)) throw new TypeError(`Blocked script URL ${url}`);
         return url;
     }
 }));
 ```
 
-`createScriptURL` receives the URL the workers start from, and `createHTML` the attribution of each source, which is sanitized after it is parsed. `Popup.setHTML` assigns its argument as is, so it takes a `TrustedHTML` from your policy. A worker started from a `blob:` URL enforces Trusted Types as well, and a script loaded into it with `importScriptInWorkers` or `setRTLTextPlugin` has to be an ES module.
+`createScriptURL` receives the URL the workers start from. For a worker on another origin that is a `blob:` URL, which this example refuses. `createHTML` receives the attribution of each source, which is sanitized after it is parsed. `Popup.setHTML` assigns its argument as is, so it takes a `TrustedHTML` from your policy.
+
+A worker enforces Trusted Types as well when it starts from a `blob:` URL or when its file is served with the same CSP. A script loaded into such a worker with `importScriptInWorkers` or `setRTLTextPlugin` has to be an ES module.
 
 ## MapLibre CSS
 

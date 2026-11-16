@@ -21,7 +21,7 @@ let trustedTypesPolicy: TrustedTypesPolicy | undefined;
  * setTrustedTypesPolicy(trustedTypes.createPolicy('my-map', {
  *     createHTML: (html) => html,
  *     createScriptURL: (url) => {
- *         if (new URL(url, location.href).origin !== location.origin) throw new TypeError(`Blocked script URL ${url}`);
+ *         if (!new URL(url, location.href).href.startsWith(`${location.origin}/`)) throw new TypeError(`Blocked script URL ${url}`);
  *         return url;
  *     }
  * }));
