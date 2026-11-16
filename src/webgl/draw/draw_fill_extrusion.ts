@@ -128,7 +128,7 @@ function drawGroundOcclusionTiles(
     colorMode: Readonly<ColorMode>,
     frameRenderContext: FrameRenderContext) {
     const context = frameRenderContext.context;
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
     const intensity = layer.paint.get('fill-extrusion-ambient-occlusion-ground-intensity');
     const radius = layer.paint.get('fill-extrusion-ambient-occlusion-ground-radius');
     const opacity = layer.paint.get('fill-extrusion-opacity');
@@ -148,12 +148,12 @@ function drawGroundOcclusionTiles(
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = frameRenderContext.useProgram('fillExtrusionGroundOcclusion', programConfiguration);
-        const tileTranslate = translatePosition(transform, tile, translate, translateAnchor, false, groundOcclusionTranslate);
+        const tileTranslate = translatePosition(projectedCamera, tile, translate, translateAnchor, false, groundOcclusionTranslate);
         fillExtrusionGroundOcclusionUniformValues(groundOcclusionUniformValues, intensity, opacity, radius, tileTranslate, coord.canonical);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
             groundOcclusionUniformValues, frameRenderContext.getTerrainDataForTile(coord), frameRenderContext.getProjectionDataForTile(coord),
-            vertexArrayKey, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, transform.zoom, programConfiguration);
+            vertexArrayKey, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, projectedCamera.zoom, programConfiguration);
     }
 }
 
