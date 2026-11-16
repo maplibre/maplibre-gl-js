@@ -10,7 +10,7 @@ import {fastInvertProjMat4, xyTransformMat4} from '../util/fast_maths.ts';
 import {getCenterOffset} from './camera_view_state.ts';
 import {EXTENT} from '../data/extent.ts';
 import {cameraPointQueryGeometry} from './projected_camera.ts';
-import {Frustum} from '../util/primitives/frustum.ts';
+import {createFrustum, type Frustum} from '../util/primitives/frustum.ts';
 import {bisect, sampleAt, isBelowTerrainSample, TERRAIN_OCCLUSION_MARGIN, type TerrainCoverageIndex, type TerrainSample} from '../render/terrain_coverage.ts';
 
 import type {PointProjection} from '../symbol/projection.ts';
@@ -477,7 +477,7 @@ export class MercatorCameraMath implements CameraMath {
     }
 
     getCameraFrustum(projectedCamera: MercatorProjectedCamera): Frustum {
-        return Frustum.fromInvProjectionMatrix(projectedCamera.inverseModelViewProjectionMatrix, projectedCamera.worldSize);
+        return createFrustum(projectedCamera.inverseModelViewProjectionMatrix, projectedCamera.worldSize);
     }
 
     locationToScreenPoint(projectedCamera: MercatorProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, lnglat: LngLat, terrain?: Terrain): Point {

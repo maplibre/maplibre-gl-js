@@ -117,6 +117,17 @@ test('recalculate zoom is done on the camera update transform', async () => {
     expect(map.getZoom()).toBeCloseTo(0.20007702699730118, 10);
 });
 
+test('a camera change after transformCameraUpdate overrides the zoom a max zoom change sets starts from the zoom it rendered', async () => {
+    const map = createMap({zoom: 10});
+    await map.once('style.load');
+    map.setTransformCameraUpdate(vi.fn().mockReturnValueOnce({zoom: 7}).mockReturnValue({}));
+    map.setMaxZoom(8);
+
+    map.setBearing(10);
+
+    expect(map.getZoom()).toBe(7);
+});
+
 test('transformCameraUpdate is called after changing min or max zoom', async () => {
     const map = createMap({
         interactive: true,

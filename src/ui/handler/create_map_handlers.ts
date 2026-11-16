@@ -100,7 +100,7 @@ export function createMapHandlers(context: MapHandlersContext, options: Complete
         touchPitch.enable(options.touchPitch);
     }
 
-    const getCenter = () => camera.transform.centerPoint;
+    const getCenter = () => camera.projectedCamera.centerPoint;
     const getAround = () => dragRotate.around;
     const getMovement = () => dragRotate.movement;
     const mouseRotate = generateMouseRotationHandler(options, getCenter, getAround, getMovement);

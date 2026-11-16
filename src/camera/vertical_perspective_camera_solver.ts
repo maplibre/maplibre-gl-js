@@ -3,9 +3,10 @@ import {LngLat, earthRadius, type LngLatLike} from '../geo/lng_lat.ts';
 import {angleToRotateBetweenVectors2D, clamp, createVec3f64, createVec4f64, degreesToRadians, differenceOfAnglesDegrees, distanceOfAnglesRadians, MAX_VALID_LATITUDE, mod, radiansToDegrees, scaleZoom, warnOnce, wrap} from '../util/util.ts';
 import {angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, lngLatBearingFromOrientation, orientationFromLngLatBearing, sphereSurfacePointToCoordinates} from '../geo/projection/globe_utils.ts';
 import {applyConstrain} from './camera_constrain.ts';
-import {getConstrainedCamera, moveCenterToElevation, setCenterAndZoom} from './camera_updates.ts';
+import {getConstrainedCamera, moveCenterToElevation, setBearing, setCenter, setCenterAndZoom, setZoom} from './camera_updates.ts';
 import {projectCamera} from './project_camera.ts';
 import {renderedProjectedCamera} from './projected_camera.ts';
+import {getCameraMath} from './camera_math_factory.ts';
 import {unprojectScreenPoint} from './vertical_perspective_camera_math.ts';
 import {getBearing} from './camera_view_state.ts';
 
@@ -13,10 +14,10 @@ import type Point from '@mapbox/point-geometry';
 import type {CameraViewState} from './camera_view_state.ts';
 import type {CameraContext} from './camera_context.ts';
 import type {CameraOptionsFromTo} from './camera_types.ts';
-import type {VerticalPerspectiveProjectedCamera} from './projected_camera.ts';
+import type {ProjectedCamera, VerticalPerspectiveProjectedCamera} from './projected_camera.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {CameraSolver} from './camera_solver.ts';
-import type {ITransform} from '../geo/transform_interface.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /** Two points on the unit globe closer than this, a micrometre, are the same point. */
 const SAME_POINT_DISTANCE = 1e-12;
@@ -221,32 +222,33 @@ const PAN_MAX_ANGLE = Math.PI * 0.98;
  *
  * The angle comes from atan2, so a ray pointing away from the globe is a wide angle the falloff
  * saturates rather than a case to reject.
- * @param tr - The transform being dragged.
+ * @param rendered - The camera being dragged, as projected.
+ * @param worldCoordinateHelper - The camera's lng/lat to world coordinate mapping.
  * @param point - The cursor position.
  */
-function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
-    const origin = tr.cameraPosition;
+function panSurfaceLocation(rendered: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, point: Point): LngLat {
+    const origin = rendered.cameraPosition;
     const distance = vec3.length(origin);
     if (distance <= 1) {
-        return tr.screenPointToLocation(point);
+        return getCameraMath(rendered).screenPointToLocation(rendered, worldCoordinateHelper, point);
     }
 
     const u = createVec3f64();
     vec3.normalize(u, origin);
-    const direction = tr.getRayDirectionFromPixel(point);
+    const direction = getCameraMath(rendered).getRayDirectionFromPixel(rendered, point);
     const c = -vec3.dot(direction, u);
     const lateral = createVec3f64();
     vec3.scaleAndAdd(lateral, direction, u, c);
     const s = vec3.length(lateral);
     if (s < 1e-9) {
-        return tr.screenPointToLocation(point);
+        return getCameraMath(rendered).screenPointToLocation(rendered, worldCoordinateHelper, point);
     }
 
     const angle = Math.atan2(s, c);
     const horizonAngle = Math.asin(1 / distance);
     const handoverAngle = horizonAngle * (1 - PAN_FALLOFF_BAND);
     if (angle < handoverAngle) {
-        return tr.screenPointToLocation(point);
+        return getCameraMath(rendered).screenPointToLocation(rendered, worldCoordinateHelper, point);
     }
 
     const sinHandover = distance * Math.sin(handoverAngle);
@@ -275,7 +277,8 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
  * {@link angularCoordinatesToSurfaceVector}, while the orientation quaternion uses the Euler frame
  * of {@link orientationFromLngLatBearing}, hence the component swizzle where they combine. Zoom is
  * adjusted to keep the planet the same size, as `setLocationAtPoint` does.
- * @param tr - The transform to rotate.
+ * @param view - The camera to rotate.
+ * @param context - The projection and the constrain the camera is moved with.
  * @param lnglat - The location to bring under `point`.
  * @param point - The screen point that `lnglat` should appear at.
  * @param panDelta - The drag's pixel delta. Used to re-derive the previous cursor location through
@@ -284,18 +287,19 @@ function panSurfaceLocation(tr: ITransform, point: Point): LngLat {
  * the globe does. Pass `false` to apply the twist about the view axis as well, so that the grabbed
  * location tracks the cursor exactly and the bearing drifts with it.
  */
-export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, panDelta?: Point, fixedBearing = true): void {
-    const pointLngLat = panSurfaceLocation(tr, point);
+export function versorSetLocationAtPoint(view: CameraViewState, context: CameraContext, lnglat: LngLat, point: Point, panDelta?: Point, fixedBearing = true): CameraViewState {
+    const rendered = projectCamera(view, context);
+    const pointLngLat = panSurfaceLocation(rendered, context.worldCoordinateHelper, point);
     let sourceLngLat = lnglat;
     if (panDelta) {
-        sourceLngLat = panSurfaceLocation(tr, point.sub(panDelta));
-    } else if (!tr.isPointOnMapSurface(point)) {
-        return;
+        sourceLngLat = panSurfaceLocation(rendered, context.worldCoordinateHelper, point.sub(panDelta));
+    } else if (!getCameraMath(rendered).isPointOnMapSurface(rendered, context.worldCoordinateHelper, point)) {
+        return view;
     }
 
     const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
     const vecToTarget = angularCoordinatesToSurfaceVector(sourceLngLat);
-    const centerQuat = orientationFromLngLatBearing(tr.center, tr.bearing);
+    const centerQuat = orientationFromLngLatBearing(rendered.center, rendered.bearing);
     const w = vec3.cross(createVec3f64(), vecToTarget, vecToPixelCurrent);
     const l = Math.sqrt(vec3.dot(w, w));
     const t = Math.acos(clamp(vec3.dot(vecToTarget, vecToPixelCurrent), -1, 1)) / 2;
@@ -304,24 +308,20 @@ export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: 
     const newCenterQuat = quat.multiply(createVec4f64(), centerQuat, delta);
     const {lng: newCenterLng, lat: newCenterLat, bearing: newBearing} = lngLatBearingFromOrientation(newCenterQuat);
 
-    const oldLat = tr.center.lat;
-    const oldZoom = tr.zoom;
-    const finalLat = fixedBearing ? fixedBearingLatitude(tr, newCenterLat, newBearing) : newCenterLat;
-    const finalLng = fixedBearing ? fixedBearingLongitude(tr, point, panDelta, newCenterLng) : newCenterLng;
+    const finalLat = fixedBearing ? fixedBearingLatitude(rendered.bearing, newCenterLat, newBearing) : newCenterLat;
+    const finalLng = fixedBearing ? fixedBearingLongitude(rendered, context.worldCoordinateHelper, point, panDelta, newCenterLng) : newCenterLng;
 
-    tr.setCenter(new LngLat(wrap(finalLng, -180, 180), finalLat));
-    if (!fixedBearing) {
-        tr.setBearing(newBearing);
-    }
-    tr.setZoom(oldZoom + getZoomAdjustment(oldLat, tr.center.lat));
+    let moved = setCenter(view, context, new LngLat(wrap(finalLng, -180, 180), finalLat));
+    if (!fixedBearing) moved = setBearing(moved, newBearing);
+    return setZoom(moved, context, view.zoom + getZoomAdjustment(view.center.lat, moved.center.lat));
 }
 
 /**
  * Returns the center latitude for a bearing-preserving drag. A swing over a pole turns the bearing around,
  * so with the bearing held the center stops on that pole.
  */
-function fixedBearingLatitude(tr: ITransform, newCenterLat: number, newBearing: number): number {
-    if (Math.abs(differenceOfAnglesDegrees(tr.bearing, newBearing)) <= 90) {
+function fixedBearingLatitude(bearing: number, newCenterLat: number, newBearing: number): number {
+    if (Math.abs(differenceOfAnglesDegrees(bearing, newBearing)) <= 90) {
         return newCenterLat;
     }
     return newCenterLat > 0 ? 90 : -90;
@@ -337,17 +337,18 @@ function fixedBearingLatitude(tr: ITransform, newCenterLat: number, newBearing: 
  * round-tripped previous cursor position, which would lose its sign to cancellation at the pole,
  * and is damped within {@link DIAL_MIN_RADIUS_PIXELS} so it eases to nothing there instead of
  * being dropped, which would leave a spot where the drag could not move at all.
- * @param tr - The transform being dragged.
+ * @param rendered - The camera being dragged, as projected.
+ * @param worldCoordinateHelper - The camera's lng/lat to world coordinate mapping.
  * @param point - The cursor position.
  * @param panDelta - The drag's pixel delta, or undefined to use the swing longitude only.
  * @param newCenterLng - The swing target longitude.
  * @returns the center longitude to apply.
  */
-function fixedBearingLongitude(tr: ITransform, point: Point, panDelta: Point | undefined, newCenterLng: number): number {
-    const oldLng = tr.center.lng;
-    const oldLat = tr.center.lat;
+function fixedBearingLongitude(rendered: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, point: Point, panDelta: Point | undefined, newCenterLng: number): number {
+    const oldLng = rendered.center.lng;
+    const oldLat = rendered.center.lat;
     const poleLat = oldLat >= 0 ? 90 : -90;
-    const polePoint = tr.locationToScreenPoint(new LngLat(0, poleLat));
+    const polePoint = getCameraMath(rendered).locationToScreenPoint(rendered, worldCoordinateHelper, new LngLat(0, poleLat));
     const rx = point.x - polePoint.x, ry = point.y - polePoint.y;
     const r2 = rx * rx + ry * ry;
 

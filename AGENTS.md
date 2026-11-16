@@ -128,6 +128,17 @@ Resist explaining the mechanism, listing every affected script, or narrating the
 that belongs in the PR description and the code's own doc comments. If a change genuinely needs two
 sentences to be understood, it is usually two entries, or one entry and a link.
 
+## Pull requests
+
+**Keep the title short and the description shorter than you think.** The title is the changelog
+entry, so the same rule applies: what changed, in a few words. The description says in a sentence or
+two what the PR does and, where it is not obvious, why. A reviewer reads it once, before the diff.
+
+Do not list the files the PR touches, or walk through the change one function at a time — the diff
+already shows both. Do not argue the design at length either: if the reasoning needs more than a
+short paragraph, it belongs in the issue the PR links to. A PR that is one step of a larger series
+says which step it is and links the tracking issue, and leaves the rest to that issue.
+
 ## Tests
 
 **Declare test helpers with `function`, not with a lambda assigned to a `const`.** A named function

@@ -13,7 +13,7 @@ const HIT_EPSILON_M = 1e-6;
 /**
  * @internal
  * The last fraction of the camera-to-location distance within which a terrain hit does not count for
- * {@link ITransform.isLocationOccluded}, so the terrain the location sits on never hides it.
+ * `isLocationOccluded` in `camera_math.ts`, so the terrain the location sits on never hides it.
  */
 export const TERRAIN_OCCLUSION_MARGIN = 0.01;
 /** Keeps the elevation bracket non-degenerate when the terrain is entirely flat, such as unloaded DEMs. */

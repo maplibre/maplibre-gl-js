@@ -116,7 +116,7 @@ export class KeyboardHandler implements Handler {
             pitchDir = 0;
         }
 
-        const {zoom, bearing, pitch, center} = this._camera.proposedTransform;
+        const {zoom, bearing, pitch, center} = this._camera.proposedProjectedCamera;
         return {
             easeTo: {
                 duration: 300,

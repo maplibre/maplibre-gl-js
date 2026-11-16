@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {mat4, vec3} from 'gl-matrix';
-import {Frustum} from './frustum.ts';
+import {createFrustum} from './frustum.ts';
 import {IntersectionResult} from './bounding_volume.ts';
 import {createTestCameraFrustum, expectToBeCloseToArray} from '../test/util.ts';
 import {ConvexVolume} from './convex_volume.ts';
@@ -100,7 +100,7 @@ describe('convex bounding volume', () => {
         mat4.perspective(proj, Math.PI / 2, 1.0, 0.1, 100.0);
         mat4.invert(invProj, proj);
 
-        const frustum = Frustum.fromInvProjectionMatrix(invProj, 1.0, 0.0);
+        const frustum = createFrustum(invProj, 1.0, 0.0);
 
         expect(ConvexVolume.fromAabb([-400, 50, -40], [400, 500, 400]).intersectsFrustum(frustum)).toBe(IntersectionResult.None);
         expect(ConvexVolume.fromAabb([-400, 101, -400], [400, 500, 400]).intersectsFrustum(frustum)).toBe(IntersectionResult.None);

@@ -11,7 +11,7 @@ The actual projection is done in three steps:
 - project the 3D vector using a common perspective projection matrix
 
 So the globe is a unit sphere from the point of view of projection.
-This also simplifies a lot of math, and is used extensively in the globe transform class.
+This also simplifies a lot of math, and is used extensively in the vertical perspective camera math.
 
 Geometry is projected to the sphere in the vertex shader.
 
@@ -106,7 +106,7 @@ because globe and mercator projections converge at high zoom levels, and around 
 they are already very close.
 
 The transition animation is implemented in the shader's projection function,
-and is controlled by a "globeness" parameter passed from the transform.
+and is controlled by a "globeness" parameter that the globe's projected camera carries.
 
 ## GPU latitude precision
 
@@ -192,11 +192,11 @@ This is an approximation, but works well in practice.
 
 ## Transformations and unproject
 
-Most projection and unproject functions from the transform interface are adapted for globe,
+Most projection and unproject functions of `CameraMath` are adapted for globe,
 with some caveats.
 The `setLocationAtPoint`function may sometimes not find a valid solution
 for the given parameters.
-Globe transform currently does not support constraining the map's center.
+The globe projection currently does not support constraining the map's center.
 
 ## Controls
 

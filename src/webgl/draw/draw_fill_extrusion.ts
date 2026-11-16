@@ -61,7 +61,7 @@ function drawExtrusionTiles(
     const crossfade = layer.getCrossfadeParameters();
     const opacity = layer.paint.get('fill-extrusion-opacity');
     const constantPattern = patternProperty.constantOr(null);
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
@@ -82,7 +82,7 @@ function drawExtrusionTiles(
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const translate = translatePosition(
-            transform,
+            projectedCamera,
             tile,
             layer.paint.get('fill-extrusion-translate'),
             layer.paint.get('fill-extrusion-translate-anchor')
@@ -90,12 +90,12 @@ function drawExtrusionTiles(
 
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(transform, frameRenderContext.data.light, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) :
-            fillExtrusionUniformValues(transform, frameRenderContext.data.light, shouldUseVerticalGradient, opacity, translate);
+            fillExtrusionPatternUniformValues(projectedCamera, frameRenderContext.data.light, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) :
+            fillExtrusionUniformValues(projectedCamera, frameRenderContext.data.light, shouldUseVerticalGradient, opacity, translate);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
-            bucket.segments, layer.paint, frameRenderContext.transform.zoom,
+            bucket.segments, layer.paint, frameRenderContext.projectedCamera.zoom,
             programConfiguration, frameRenderContext.terrain && bucket.centroidVertexBuffer);
     }
 }

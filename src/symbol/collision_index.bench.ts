@@ -3,11 +3,11 @@ import Point from '@mapbox/point-geometry';
 import {CollisionIndex} from './collision_index.ts';
 import {EXTENT} from '../data/extent.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
-import {createGlobeTransform} from '../geo/projection/globe_transform.ts';
+import {calculatePosMatrix} from '../camera/mercator_camera_math.ts';
+import {createTestCamera} from '../util/test/util.ts';
 
 import type {mat4} from 'gl-matrix';
-import type {ITransform} from '../geo/transform_interface.ts';
+import type {MercatorProjectedCamera, ProjectedCamera} from '../camera/projected_camera.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
 import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';
@@ -40,9 +40,7 @@ function splitmix32(a: number): () => number {
 
 const symbolCount = 20000;
 
-function createSymbols(transform: ITransform, getSimpleProjectionMatrix: (tileID: OverscaledTileID) => mat4 | undefined): TestSymbol[] {
-    transform.resize(1024, 1024, true);
-
+function createSymbols(calculatePosMatrix: (tileID: UnwrappedTileID) => mat4 | undefined): TestSymbol[] {
     const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
     const unwrappedTileID = tileID.toUnwrapped();
     const rng = splitmix32(0xdeadbeef);
@@ -70,15 +68,15 @@ function createSymbols(transform: ITransform, getSimpleProjectionMatrix: (tileID
                 rndRange(-20, 20)
             ],
             shift: rng() > 0.5 ? new Point(rndRange(-20, 20), rndRange(-20, 20)) : undefined,
-            simpleProjectionMatrix: getSimpleProjectionMatrix(tileID),
+            simpleProjectionMatrix: calculatePosMatrix(unwrappedTileID),
         });
     }
 
     return symbols;
 }
 
-function placeAll(transform: ITransform, symbols: TestSymbol[]): void {
-    const collisionIndex = new CollisionIndex(transform);
+function placeAll(projectedCamera: ProjectedCamera, symbols: TestSymbol[]): void {
+    const collisionIndex = new CollisionIndex(projectedCamera);
     collisionIndex.grid.hitTest = () => true;
 
     for (const symbol of symbols) {
@@ -99,19 +97,19 @@ function placeAll(transform: ITransform, symbols: TestSymbol[]): void {
     }
 }
 
-const mercatorTransform = createMercatorTransform({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true});
-const mercatorSymbols = createSymbols(mercatorTransform, (tileID) => mercatorTransform.getFastPathSimpleProjectionMatrix(tileID));
+const mercatorCamera = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 60, renderWorldCopies: true, width: 1024, height: 1024}).projectedCamera as MercatorProjectedCamera;
+const mercatorSymbols = createSymbols((tileID) => calculatePosMatrix(mercatorCamera, tileID, false));
 
-const globeTransform = createGlobeTransform();
-const globeSymbols = createSymbols(globeTransform, () => undefined);
+const globeCamera = createTestCamera({width: 1024, height: 1024}, {projection: 'globe'}).projectedCamera;
+const globeSymbols = createSymbols(() => undefined);
 
 test('placeCollisionBox', async ({bench}) => {
     await bench.compare(
         bench('mercator', () => {
-            placeAll(mercatorTransform, mercatorSymbols);
+            placeAll(mercatorCamera, mercatorSymbols);
         }),
         bench('globe', () => {
-            placeAll(globeTransform, globeSymbols);
+            placeAll(globeCamera, globeSymbols);
         }),
     );
 });

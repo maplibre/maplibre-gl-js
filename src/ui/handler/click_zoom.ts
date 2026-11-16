@@ -30,7 +30,7 @@ export class ClickZoomHandler implements Handler {
         return {
             easeTo: {
                 duration: 300,
-                zoom: evaluateZoomSnap(this._camera.proposedTransform.zoom + (e.shiftKey ? -1 : 1), this._camera.getZoomSnap()),
+                zoom: evaluateZoomSnap(this._camera.proposedProjectedCamera.zoom + (e.shiftKey ? -1 : 1), this._camera.getZoomSnap()),
                 around: locationOnMapAt(this._camera, point)
             }
         };

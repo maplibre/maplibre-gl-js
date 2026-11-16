@@ -50,7 +50,7 @@ export class TapZoomHandler implements Handler {
     touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): HandlerResult | void {
         const zoomInPoint = this._zoomIn.touchend(e, points, mapTouches);
         const zoomOutPoint = this._zoomOut.touchend(e, points, mapTouches);
-        const {zoom} = this._camera.proposedTransform;
+        const {zoom} = this._camera.proposedProjectedCamera;
         const zoomSnap = this._camera.getZoomSnap();
 
         if (zoomInPoint) {

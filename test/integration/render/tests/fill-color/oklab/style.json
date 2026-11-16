@@ -1,0 +1,82 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "oklab() fill colors: in sRGB, outside sRGB (clipped), percentage a and b with alpha, and a missing a",
+            "width": 256,
+            "height": 64
+        }
+    },
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {"id": 0},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[-80, -10], [-80, 10], [-50, 10], [-50, -10], [-80, -10]]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": 1},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[-35, -10], [-35, 10], [-5, 10], [-5, -10], [-35, -10]]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": 2},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[5, -10], [5, 10], [35, 10], [35, -10], [5, -10]]]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": 3},
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[50, -10], [50, 10], [80, 10], [80, -10], [50, -10]]]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "fill_0",
+            "type": "fill",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], 0],
+            "paint": {"fill-antialias": false, "fill-color": "oklab(70% 0.1 0.05)"}
+        },
+        {
+            "id": "fill_1",
+            "type": "fill",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], 1],
+            "paint": {"fill-antialias": false, "fill-color": "oklab(0.7 -0.3 0.3)"}
+        },
+        {
+            "id": "fill_2",
+            "type": "fill",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], 2],
+            "paint": {"fill-antialias": false, "fill-color": "oklab(0.6 -25% 25% / 50%)"}
+        },
+        {
+            "id": "fill_3",
+            "type": "fill",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], 3],
+            "paint": {"fill-antialias": false, "fill-color": "oklab(0.6 none -0.1)"}
+        }
+    ]
+}
