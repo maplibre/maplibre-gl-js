@@ -1,14 +1,16 @@
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CollisionIndex} from '../symbol/collision_index.ts';
-import type {IReadonlyTransform, WorldCoordinateHelper} from '../geo/transform_interface.ts';
 import type {RetainedQueryData} from '../symbol/placement.ts';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONFeature, MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {QueryResults, QueryResultsItem} from '../data/feature_index.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 type RenderedFeatureLayer = {
     wrappedTileID: string;
@@ -110,13 +112,14 @@ export function queryRenderedFeatures(
     serializedLayers: {[_: string]: any},
     queryGeometry: Point[],
     params: QueryRenderedFeaturesOptionsStrict | undefined,
-    transform: IReadonlyTransform,
+    projectedCamera: ProjectedCamera,
+    worldCoordinateHelper: WorldCoordinateHelper,
     getElevation: undefined | ((id: OverscaledTileID, x: number, y: number) => number)
 ): QueryRenderedFeaturesResults {
 
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, tileManager.id);
-    const maxPitchScaleFactor = transform.maxPitchScaleFactor();
-    const tilesIn = tileManager.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer);
+    const maxPitchScaleFactor = getCameraMath(projectedCamera).maxPitchScaleFactor(projectedCamera);
+    const tilesIn = tileManager.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer, projectedCamera, worldCoordinateHelper);
 
     tilesIn.sort(sortTilesIn);
     const renderedFeatureLayers: RenderedFeatureLayer[] = [];
@@ -131,7 +134,8 @@ export function queryRenderedFeatures(
                 tileIn.cameraQueryGeometry,
                 tileIn.scale,
                 params,
-                transform,
+                projectedCamera,
+                worldCoordinateHelper,
                 maxPitchScaleFactor,
                 getElevation ? (x: number, y: number) => getElevation(tileIn.tileID, x, y) : undefined,
             )
@@ -151,7 +155,8 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     collisionIndex: CollisionIndex,
     retainedQueryData: {
         [_: number]: RetainedQueryData;
-    }): QueryRenderedFeaturesResults {
+    },
+    worldCoordinateHelper: WorldCoordinateHelper): QueryRenderedFeaturesResults {
     const result: QueryResults = {};
     const renderedSymbols = collisionIndex.queryRenderedSymbols(queryGeometry);
     const bucketQueryData: RetainedQueryData[] = [];
@@ -169,7 +174,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
             {
                 filterSpec: params.filter,
                 globalState: params.globalState,
-                worldCoordinateHelper: collisionIndex.transform.worldCoordinateHelper
+                worldCoordinateHelper
             },
             params.layers,
             params.availableImages,

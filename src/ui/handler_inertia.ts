@@ -1,6 +1,7 @@
 import {now} from '../util/time_control.ts';
 import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util.ts';
 import Point from '@mapbox/point-geometry';
+import {getCameraMotions} from '../camera/camera_motions_factory.ts';
 
 import type {DragPanOptions} from './handler/shim/drag_pan.ts';
 import type {HandlerResult} from './handler_manager.ts';
@@ -178,7 +179,7 @@ export class HandlerInertia {
         if (deltas.pan.mag()) {
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
             const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
-            const computedEaseOptions = this._camera.cameraHelper.handlePanInertia(finalPan, this._camera.transform);
+            const computedEaseOptions = getCameraMotions(this._camera.context).panInertia(this._camera.projectedCamera, finalPan);
             easeOptions.center = computedEaseOptions.easingCenter;
             easeOptions.offset = computedEaseOptions.easingOffset;
             extendDuration(easeOptions, result);

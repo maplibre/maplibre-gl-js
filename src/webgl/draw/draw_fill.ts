@@ -115,7 +115,7 @@ function drawFillTiles(
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
@@ -152,17 +152,17 @@ function drawFillTiles(
 
         const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
-        const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        const translateForUniforms = translatePosition(projectedCamera, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(transform, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
+            uniformValues = image ? fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(transform, crossfade, tile, translateForUniforms, isSdfPattern) :
+                fillOutlinePatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern) :
                 fillOutlineUniformValues(translateForUniforms);
         }
 
@@ -171,6 +171,6 @@ function drawFillTiles(
         program.draw(context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, frameRenderContext.transform.zoom, programConfiguration);
+            layer.paint, frameRenderContext.projectedCamera.zoom, programConfiguration);
     }
 }

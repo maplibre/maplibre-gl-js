@@ -8,7 +8,7 @@ import type {Mesh} from '../../render/mesh.ts';
 import type {Projection, TileMeshUsage} from './projection.ts';
 import type {CanonicalTileID} from '../../tile/tile_id.ts';
 import type {Context} from '../../webgl/context.ts';
-import type {WorldCoordinateHelper} from '../transform_interface.ts';
+import type {WorldCoordinateHelper} from '../world_types.ts';
 
 export const VerticalPerspectiveShaderDefine = '#define GLOBE';
 export const VerticalPerspectiveShaderVariantKey = 'globe';

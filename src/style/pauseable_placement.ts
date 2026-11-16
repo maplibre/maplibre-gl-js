@@ -2,11 +2,11 @@ import {now} from '../util/time_control.ts';
 import {Placement} from '../symbol/placement.ts';
 import {isSymbolStyleLayer, type SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {StyleLayer} from './style_layer.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {BucketPart} from '../symbol/placement.ts';
 import type {Terrain} from '../render/terrain.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;
@@ -68,7 +68,7 @@ export class PauseablePlacement {
     _inProgressLayer: LayerPlacement;
 
     constructor(
-        transform: IReadonlyTransform,
+        projectedCamera: ProjectedCamera,
         terrain: Terrain,
         order: string[],
         forceFullPlacement: boolean,
@@ -77,7 +77,7 @@ export class PauseablePlacement {
         crossSourceCollisions: boolean,
         prevPlacement?: Placement
     ) {
-        this.placement = new Placement(transform, terrain, fadeDuration, crossSourceCollisions, prevPlacement);
+        this.placement = new Placement(projectedCamera, terrain, fadeDuration, crossSourceCollisions, prevPlacement);
         this._currentPlacementIndex = order.length - 1;
         this._forceFullPlacement = forceFullPlacement;
         this._showCollisionBoxes = showCollisionBoxes;
@@ -102,7 +102,7 @@ export class PauseablePlacement {
         while (this._currentPlacementIndex >= 0) {
             const layerId = order[this._currentPlacementIndex];
             const layer = layers[layerId];
-            const placementZoom = this.placement.collisionIndex.transform.zoom;
+            const placementZoom = this.placement.collisionIndex.projectedCamera.zoom;
             if (isSymbolStyleLayer(layer) &&
                 layer.layout &&
                 (!layer.minzoom || layer.minzoom <= placementZoom) &&

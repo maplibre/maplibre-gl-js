@@ -6,8 +6,8 @@ import {StencilMode} from '../webgl/stencil_mode.ts';
 import {CullFaceMode} from '../webgl/cull_face_mode.ts';
 import {shaders} from '../shaders/shaders.ts';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator_projection.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Terrain, TerrainData} from './terrain.ts';
 import type {RendererProjectionData} from '../geo/projection/projection_data.ts';
 import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
@@ -23,6 +23,8 @@ import type {LightPropsPossiblyEvaluated} from '../style/light_properties.g.ts';
 import type {SkyPropsPossiblyEvaluated} from '../style/sky_properties.g.ts';
 import type {Projection, TileMeshUsage} from '../geo/projection/projection.ts';
 import type {CrossTileID, VariableOffset} from '../symbol/placement.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -62,7 +64,9 @@ export type FrameRenderData = {
 };
 
 type FrameRenderContextOptions = {
-    transform: IReadonlyTransform;
+    projectedCamera: ProjectedCamera;
+    /** The world mapping the camera was projected with. */
+    worldCoordinateHelper: WorldCoordinateHelper;
     terrain: Terrain | null;
     data: FrameRenderData;
     context: Context;
@@ -98,7 +102,9 @@ export class FrameRenderContext {
     isRenderingToTexture: boolean = false;
     /** Whether a layer composite has already sampled the shared scratch FBO in this frame. */
     layerCompositeSampled: boolean = false;
-    readonly transform: IReadonlyTransform;
+    readonly projectedCamera: ProjectedCamera;
+    /** The world mapping the camera was projected with. */
+    readonly worldCoordinateHelper: WorldCoordinateHelper;
     readonly terrain: Terrain | null;
     readonly data: FrameRenderData;
     readonly context: Context;
@@ -110,7 +116,8 @@ export class FrameRenderContext {
     private tileClippingMaskIDs: Record<string, number> = {};
 
     constructor(options: FrameRenderContextOptions) {
-        this.transform = options.transform;
+        this.projectedCamera = options.projectedCamera;
+        this.worldCoordinateHelper = options.worldCoordinateHelper;
         this.terrain = options.terrain;
         this.data = options.data;
         this.context = options.context;
@@ -120,7 +127,7 @@ export class FrameRenderContext {
     }
 
     getProjectionDataForTile(tileID: OverscaledTileID, options: {aligned?: boolean; applyTerrainMatrix?: boolean} = {}): RendererProjectionData {
-        const projectionData = this.transform.getProjectionData({
+        const projectionData = getCameraMath(this.projectedCamera).getProjectionData(this.projectedCamera, {
             overscaledTileID: tileID,
             aligned: options.aligned,
             applyGlobeMatrix: !this.isRenderingToTexture,

@@ -1,14 +1,16 @@
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {vec2, type vec3, type vec4} from 'gl-matrix';
-import {Frustum} from '../../util/primitives/frustum.ts';
-import {Aabb} from '../../util/primitives/aabb.ts';
 import {clamp, degreesToRadians, scaleZoom} from '../../util/util.ts';
 import {cameraMercatorCoordinate, maxMercatorHorizonAngle} from './mercator_utils.ts';
 import {earthRadius} from '../lng_lat.ts';
 import {type IBoundingVolume, IntersectionResult} from '../../util/primitives/bounding_volume.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
+import {getCoveringTilesDetailsProvider} from './covering_tiles_details_provider_factory.ts';
 
+import type {Frustum} from '../../util/primitives/frustum.ts';
 import type {Terrain} from '../../render/terrain.ts';
-import type {IReadonlyTransform} from '../transform_interface.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../world_types.ts';
 
 type CoveringTilesResult = {
     tileID: OverscaledTileID;
@@ -84,7 +86,7 @@ export type CalculateTileZoomFunction = (requestedCenterZoom: number,
     cameraVerticalFOV: number) => number;
 
 /**
- * A simple/heuristic function that returns whether the tile is visible under the current transform.
+ * A simple/heuristic function that returns whether the tile is visible under the current camera.
  * @returns an {@link IntersectionResult}.
  */
 export function isTileVisible(frustum: Frustum, tileBoundingVolume: IBoundingVolume, plane?: vec4): IntersectionResult {
@@ -164,13 +166,13 @@ const defaultTileCountMaxMinRatio = 3.0;
 const defaultCalculateTileZoom = createCalculateTileZoomFunction(defaultMaxZoomLevelsOnScreen, defaultTileCountMaxMinRatio);
 
 /**
- * Return what zoom level of a tile source would most closely cover the tiles displayed by this transform.
+ * Return what zoom level of a tile source would most closely cover the tiles displayed by this camera.
  * @param options - The options, most importantly the source's tile size.
  * @returns An integer zoom level at which all tiles will be visible.
  */
-export function coveringZoomLevel(transform: IReadonlyTransform, options: CoveringTilesOptions): number {
+export function coveringZoomLevel(projectedCamera: ProjectedCamera, options: CoveringTilesOptions): number {
     const z = (options.roundZoom ? Math.round : Math.floor)(
-        transform.zoom + scaleZoom(transform.tileSize / options.tileSize)
+        projectedCamera.zoom + scaleZoom(projectedCamera.tileSize / options.tileSize)
     );
     // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
     return Math.max(0, z);
@@ -198,18 +200,18 @@ const TILE_CULLING_HORIZON_ONSET_DEGREES = 15;
 
 /**
  * Returns the elevation to use when computing tile bounding volumes for culling:
- * `transform.elevation`, growing by up to the greater of
+ * `camera.elevation`, growing by up to the greater of
  * `ASSUMED_MAX_FEATURE_HEIGHT_METERS` and `maxContentElevation` (when provided)
  * as the frustum's bottom edge approaches the horizon, where a ground-level
  * bounding box would cull tiles whose extruded features are still visible.
  */
-function getElevationForTileCulling(transform: IReadonlyTransform, maxContentElevation?: number): number {
-    const bottomEdgeDegreesAboveHorizontal = maxMercatorHorizonAngle - transform.pitch - transform.fov / 2;
+function getElevationForTileCulling(projectedCamera: ProjectedCamera, maxContentElevation?: number): number {
+    const bottomEdgeDegreesAboveHorizontal = maxMercatorHorizonAngle - projectedCamera.pitch - projectedCamera.fov / 2;
     const proximityToHorizon = clamp(
         (TILE_CULLING_HORIZON_ONSET_DEGREES - bottomEdgeDegreesAboveHorizontal) / TILE_CULLING_HORIZON_ONSET_DEGREES,
         0, 1);
     const maxFeatureHeight = Math.max(ASSUMED_MAX_FEATURE_HEIGHT_METERS, maxContentElevation ?? 0);
-    return transform.elevation + proximityToHorizon * maxFeatureHeight;
+    return projectedCamera.elevation + proximityToHorizon * maxFeatureHeight;
 }
 
 /**
@@ -243,7 +245,7 @@ function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3
             max[i] = Math.max(max[i], p[i]);
         }
     }
-    return new Frustum(points, planes, new Aabb(min, max));
+    return {points, planes, aabb: {min, max}};
 }
 
 /**
@@ -253,7 +255,7 @@ function pushFrustumFarPlane(frustum: Frustum, distance: number, cameraPos: vec3
  * accordingly; without this, tiles under highly elevated symbols would be dropped while
  * the symbols are still in view.
  * @param frustum - The covering frustum, fitted to the surface horizon.
- * @param plane - The horizon culling plane used by globe transform.
+ * @param plane - The horizon culling plane of the globe camera.
  * @param cameraPos - The camera position, in the frustum's space.
  * @param maxContentElevation - The highest elevation the content may reach, in meters.
  */
@@ -274,31 +276,27 @@ export function expandCullingToContentElevation(frustum: Frustum, plane: vec4, c
 /**
  * Returns a list of tiles that optimally covers the screen. Adapted for globe projection.
  * Correctly handles LOD when moving over the antimeridian.
- * @param transform - The transform instance.
- * @param frustum - The covering frustum.
- * @param plane - The clipping plane used by globe transform, or null.
- * @param cameraCoord - The x, y, z position of the camera in MercatorCoordinates.
- * @param centerCoord - The x, y, z position of the center point in MercatorCoordinates.
+ * @param projectedCamera - The camera the tiles are seen with.
+ * @param worldCoordinateHelper - The world mapping the camera was projected with.
  * @param options - Additional coveringTiles options.
- * @param details - Interface to define required helper functions.
  * @returns A list of tile coordinates, ordered by ascending distance from camera.
  */
-export function coveringTiles(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
-    let frustum = transform.getCameraFrustum();
-    let plane = transform.getClippingPlane();
+export function coveringTiles(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, options: CoveringTilesOptionsInternal): OverscaledTileID[] {
+    let frustum = getCameraMath(projectedCamera).getCameraFrustum(projectedCamera);
+    let plane = getCameraMath(projectedCamera).getClippingPlane(projectedCamera);
     if (plane && options.maxContentElevation > 0) {
-        ({frustum, plane} = expandCullingToContentElevation(frustum, plane, transform.cameraPosition, options.maxContentElevation));
+        ({frustum, plane} = expandCullingToContentElevation(frustum, plane, projectedCamera.cameraPosition, options.maxContentElevation));
     }
-    const detailsProvider = transform.getCoveringTilesDetailsProvider();
-    const center = detailsProvider.getCenter(transform);
-    const cameraCoord = cameraMercatorCoordinate(transform, center);
-    const centerCoord = transform.worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, transform.elevation);
-    const elevationForTileCulling = getElevationForTileCulling(transform, options.maxContentElevation);
-    const allowVariableZoom = detailsProvider.allowVariableZoom(transform, options);
+    const detailsProvider = getCoveringTilesDetailsProvider(projectedCamera);
+    const center = detailsProvider.getCenter(projectedCamera);
+    const cameraCoord = cameraMercatorCoordinate(projectedCamera, worldCoordinateHelper, center);
+    const centerCoord = worldCoordinateHelper.worldFromLngLat(center.lng, center.lat, projectedCamera.elevation);
+    const elevationForTileCulling = getElevationForTileCulling(projectedCamera, options.maxContentElevation);
+    const allowVariableZoom = detailsProvider.allowVariableZoom(projectedCamera, options);
     
-    const desiredZ = coveringZoomLevel(transform, options);
+    const desiredZ = coveringZoomLevel(projectedCamera, options);
     const minZoom = options.minzoom || 0;
-    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : transform.maxZoom;
+    const maxZoom = options.maxzoom !== undefined ? options.maxzoom : projectedCamera.maxZoom;
     const nominalZ = Math.min(Math.max(0, desiredZ), maxZoom);
 
     const numTiles = Math.pow(2, nominalZ);
@@ -322,7 +320,7 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
     const stack: CoveringTilesStackEntry[] = [];
     const result: CoveringTilesResult[] = [];
 
-    if (transform.renderWorldCopies && transform.worldCoordinateHelper.wraps && detailsProvider.allowWorldCopies()) {
+    if (projectedCamera.renderWorldCopies && worldCoordinateHelper.wraps && detailsProvider.allowWorldCopies()) {
         // Render copy of the globe thrice on both sides
         for (let i = 1; i <= 3; i++) {
             stack.push(newRootTile(-i));
@@ -355,11 +353,11 @@ export function coveringTiles(transform: IReadonlyTransform, options: CoveringTi
         let thisTileDesiredZ = desiredZ;
         if (allowVariableZoom) {
             const tileZoomFunc = options.calculateTileZoom || defaultCalculateTileZoom;
-            thisTileDesiredZ = tileZoomFunc(transform.zoom + scaleZoom(transform.tileSize / options.tileSize),
+            thisTileDesiredZ = tileZoomFunc(projectedCamera.zoom + scaleZoom(projectedCamera.tileSize / options.tileSize),
                 distToTile2d,
                 distanceZ,
                 distanceToCenter3d,
-                transform.fov);
+                projectedCamera.fov);
         }
         thisTileDesiredZ = (options.roundZoom ? Math.round : Math.floor)(thisTileDesiredZ);
         thisTileDesiredZ = Math.max(0, thisTileDesiredZ);

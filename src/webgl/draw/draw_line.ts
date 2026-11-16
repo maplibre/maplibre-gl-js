@@ -12,6 +12,7 @@ import {clamp, nextPowerOfTwo} from '../../util/util.ts';
 import {renderColorRamp} from '../../util/color_ramp.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter} from '../../render/painter.ts';
@@ -44,7 +45,7 @@ function updateGradientTexture(
     if (layer.stepInterpolant) {
         const sourceMaxZoom = tileManager.getSource().maxzoom;
         const potentialOverzoom = coord.canonical.z === sourceMaxZoom ?
-            Math.ceil(1 << (frameRenderContext.transform.maxZoom - coord.canonical.z)) : 1;
+            Math.ceil(1 << (frameRenderContext.projectedCamera.maxZoom - coord.canonical.z)) : 1;
         const lineLength = bucket.maxLineLength / EXTENT;
         // Logical pixel tile size is 512px, and 1024px right before current zoom + 1
         const maxTilePixelSize = 1024;
@@ -187,7 +188,7 @@ function drawLineTiles(
 
     const context = frameRenderContext.context;
     const gl = context.gl;
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
     let firstTile = true;
 
@@ -222,23 +223,23 @@ function drawLineTiles(
 
         const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
-        const pixelRatio = transform.getPixelScale();
+        const pixelRatio = getCameraMath(projectedCamera).getPixelScale(projectedCamera);
 
         let uniformValues;
         if (image) {
-            uniformValues = linePatternUniformValues(transform, tile, layer, pixelRatio, crossfade);
+            uniformValues = linePatternUniformValues(projectedCamera, tile, layer, pixelRatio, crossfade);
             bindImagePatternTextures(context, gl, tile, programConfiguration, crossfade);
         } else if (dasharray && gradient) {
-            uniformValues = lineGradientSDFUniformValues(transform, painter.lineAtlas, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
+            uniformValues = lineGradientSDFUniformValues(projectedCamera, painter.lineAtlas, tile, layer, pixelRatio, crossfade, bucket.lineClipsArray.length);
             bindGradientAndDashTextures(painter, tileManager, context, gl, layer, bucket, coord, programConfiguration, crossfade, frameRenderContext);
         } else if (dasharray) {
-            uniformValues = lineSDFUniformValues(transform, painter.lineAtlas, tile, layer, pixelRatio, crossfade);
+            uniformValues = lineSDFUniformValues(projectedCamera, painter.lineAtlas, tile, layer, pixelRatio, crossfade);
             bindDasharrayTextures(painter, context, gl, programConfiguration, programChanged, crossfade);
         } else if (gradient) {
-            uniformValues = lineGradientUniformValues(transform, tile, layer, pixelRatio, bucket.lineClipsArray.length);
+            uniformValues = lineGradientUniformValues(projectedCamera, tile, layer, pixelRatio, bucket.lineClipsArray.length);
             bindGradientTextures(tileManager, context, gl, layer, bucket, coord, frameRenderContext);
         } else {
-            uniformValues = lineUniformValues(transform, tile, layer, pixelRatio);
+            uniformValues = lineUniformValues(projectedCamera, tile, layer, pixelRatio);
         }
 
         const stencil = frameRenderContext.stencilModeForClipping(coord);
@@ -246,7 +247,7 @@ function drawLineTiles(
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
-            layer.paint, frameRenderContext.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
+            layer.paint, frameRenderContext.projectedCamera.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic

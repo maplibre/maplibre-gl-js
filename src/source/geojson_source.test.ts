@@ -3,9 +3,7 @@ import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
 import {EXTENT} from '../data/extent.ts';
-import {LngLat} from '../geo/lng_lat.ts';
 import {extend} from '../util/util.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {beforeMapTest, createMap, createPolarStereographicCrs, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
@@ -13,7 +11,6 @@ import {identityCrs, type CRS} from '../geo/projection/crs.ts';
 import {addProjection, removeProjection} from '../geo/projection/projection_crud.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {RequestManager} from '../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 import type {GeoJSONSourceDiff, UpdateableGeoJSON} from './geojson_source_diff.ts';
@@ -483,13 +480,6 @@ describe('GeoJSONSource.onRemove', () => {
 });
 
 describe('GeoJSONSource.update', () => {
-    const transform = createMercatorTransform();
-    transform.resize(200, 200);
-    const lngLat = LngLat.convert([-122.486052, 37.830348]);
-    const point = transform.locationToScreenPoint(lngLat);
-    transform.setZoom(15);
-    transform.setLocationAtPoint(lngLat, point);
-
     test('sends initial loadData request to dispatcher', async () => {
         const spy = vi.fn();
         const mockDispatcher = wrapDispatcher({
@@ -909,7 +899,6 @@ describe('GeoJSONSource.update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = {
-            transform: {} as IReadonlyTransform,
             getPixelRatio() { return 1; },
             getGlobalState: () => ({}),
             style: {projection: new MercatorProjection()}
