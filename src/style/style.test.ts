@@ -24,6 +24,7 @@ import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from './styl
 import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from './style_layer/circle_style_layer_properties.g.ts';
 import type {Tile} from '../tile/tile.ts';
 import type {GeoJSONSource} from '../source/geojson_source.ts';
+import type {CanvasSource} from '../source/canvas_source.ts';
 import type {AJAXError} from '../util/ajax.ts';
 import type Point from '@mapbox/point-geometry';
 import type {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
@@ -2626,6 +2627,22 @@ describe('Style.addLayer', () => {
         const layer = {id: 'inline-source-layer', type: 'circle', source} as any as LayerSpecification;
         style.addLayer(layer);
         expect((layer as any).source).toEqual(source);
+    });
+
+    test('adds a layer whose inline source holds a canvas element', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+        const canvas = window.document.createElement('canvas');
+
+        style.addLayer({
+            id: 'canvas',
+            type: 'raster',
+            source: {type: 'canvas', canvas, animate: false, coordinates: [[-10, 10], [10, 10], [10, -10], [-10, -10]]} as any
+        });
+
+        expect(style.getLayer('canvas').source).toBe('canvas');
+        expect((style.getSource('canvas') as CanvasSource).getCanvas()).toBe(canvas);
     });
 
     test('reloads source', async () => {

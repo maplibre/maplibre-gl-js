@@ -30,6 +30,19 @@ describe('setMaxBounds', () => {
         expect(view.latRange).toEqual([-50, 65]);
     });
 
+    test('leaves longitude unbounded when the longitude bounds span 360 degrees', () => {
+        const context = createCameraContext();
+        let view = createSizedState(context);
+
+        view = setMaxBounds(view, context, new LngLatBounds([-180, -50], [180, 65]));
+        view = setCenter(view, context, new LngLat(180, 80));
+
+        expect(view.zoom).toBe(10);
+        expect(view.center.lng).toBe(180);
+        expect(view.center.lat).toBeLessThan(65);
+        expect(view.lngRange).toEqual([-180, 180]);
+    });
+
     test('rejects one-sided infinite longitude bounds', () => {
         const context = createCameraContext();
         const view = createCameraViewState();

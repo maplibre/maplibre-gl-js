@@ -1,6 +1,7 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {workerFactory} from './web_worker.ts';
 import {config} from './config.ts';
+import {setTrustedTypesPolicy} from './trusted_types.ts';
 
 describe('workerFactory', () => {
     const originalWorker = (globalThis as any).Worker;
@@ -13,6 +14,7 @@ describe('workerFactory', () => {
     afterEach(() => {
         (globalThis as any).Worker = originalWorker;
         config.WORKER_URL = originalWorkerUrl;
+        setTrustedTypesPolicy(undefined);
         vi.restoreAllMocks();
         vi.unstubAllGlobals();
     });
@@ -162,6 +164,20 @@ describe('workerFactory', () => {
 
         expect(fetchSpy).toHaveBeenCalledWith('https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs');
         expect(WorkerSpy).toHaveBeenCalledWith('data:text/javascript;charset=utf-8,self.worker%20%3D%201', {type: 'module'});
+    });
+
+    test('creates the worker from the script URL the Trusted Types policy returns', async () => {
+        const WorkerSpy = vi.fn();
+        (globalThis as any).Worker = WorkerSpy;
+        config.WORKER_URL = '/path/to/worker.mjs';
+        const trustedScriptURL = {};
+        const createScriptURL = vi.fn().mockReturnValue(trustedScriptURL);
+        setTrustedTypesPolicy({createHTML: vi.fn(), createScriptURL});
+
+        await workerFactory();
+
+        expect(createScriptURL).toHaveBeenCalledWith('/path/to/worker.mjs');
+        expect(WorkerSpy.mock.calls[0][0]).toBe(trustedScriptURL);
     });
 
     test('cross-origin fetch failure rejects the promise', async () => {
