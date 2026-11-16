@@ -28,6 +28,17 @@ vec3 clipColor(vec3 c) {
 vec3 setLum(vec3 c, float l) {
     return clipColor(c + (l - lum(c)));
 }
+
+float sat(vec3 c) {
+    return max(max(c.r, c.g), c.b) - min(min(c.r, c.g), c.b);
+}
+
+// Rescales a color to the given saturation, keeping its hue. A gray color has no hue and gives black.
+vec3 setSat(vec3 c, float s) {
+    float n = min(min(c.r, c.g), c.b);
+    float x = max(max(c.r, c.g), c.b);
+    return x > n ? (c - n) * s / (x - n) : vec3(0.0);
+}
 #endif
 
 #ifdef LAYER_BLEND_SOFT_LIGHT
@@ -37,6 +48,20 @@ vec3 softLight(vec3 cs, vec3 cb) {
     vec3 darkened = cb - (1.0 - 2.0 * cs) * cb * (1.0 - cb);
     vec3 lightened = cb + (2.0 * cs - 1.0) * (d - cb);
     return mix(darkened, lightened, step(0.5, cs));
+}
+#endif
+
+// Color dodge and color burn, per the separable blend modes of the W3C compositing spec.
+// The divisor is kept above zero, so the spec's special cases (cb at 0 or 1, cs at 0 or 1) fall out of the formula.
+#ifdef LAYER_BLEND_COLOR_DODGE
+vec3 colorDodge(vec3 cs, vec3 cb) {
+    return min(vec3(1.0), cb / max(1.0 - cs, 1e-3));
+}
+#endif
+
+#ifdef LAYER_BLEND_COLOR_BURN
+vec3 colorBurn(vec3 cs, vec3 cb) {
+    return 1.0 - min(vec3(1.0), (1.0 - cb) / max(cs, 1e-3));
 }
 #endif
 
@@ -70,6 +95,14 @@ vec4 composite(vec4 src, vec4 dst) {
     co = src.rgb + dst.rgb - 2.0 * src.rgb * dst.rgb;
 #endif
 
+#ifdef LAYER_BLEND_DARKEN
+    co = src.rgb + dst.rgb - max(src.rgb * dst.a, dst.rgb * src.a);
+#endif
+
+#ifdef LAYER_BLEND_LIGHTEN
+    co = src.rgb + dst.rgb - min(src.rgb * dst.a, dst.rgb * src.a);
+#endif
+
 #ifdef LAYER_BLEND_UNPREMULTIPLIED
     // These blend functions take non-premultiplied colors.
     vec3 cs = src.rgb / src.a;
@@ -79,6 +112,22 @@ vec4 composite(vec4 src, vec4 dst) {
 
 #ifdef LAYER_BLEND_SOFT_LIGHT
     blended = softLight(cs, cb);
+#endif
+
+#ifdef LAYER_BLEND_COLOR_DODGE
+    blended = colorDodge(cs, cb);
+#endif
+
+#ifdef LAYER_BLEND_COLOR_BURN
+    blended = colorBurn(cs, cb);
+#endif
+
+#ifdef LAYER_BLEND_HUE
+    blended = setLum(setSat(cs, sat(cb)), lum(cb));
+#endif
+
+#ifdef LAYER_BLEND_SATURATION
+    blended = setLum(setSat(cb, sat(cs)), lum(cb));
 #endif
 
 #ifdef LAYER_BLEND_COLOR
