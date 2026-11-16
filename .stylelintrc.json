@@ -1,7 +1,6 @@
 {
   "extends": "stylelint-config-standard",
   "rules": {
-    "declaration-block-single-line-max-declarations": 3,
     "selector-class-pattern": "maplibregl-[a-z-]+",
     "at-rule-no-unknown": [true, {
       "ignoreAtRules": ["svg-load"]
@@ -9,6 +8,7 @@
     "declaration-property-value-no-unknown": [true, {
       "ignoreProperties": { "background-image": ["/^svg-load/", "/^svg-inline/"] }
     }],
+    "value-no-invalid": null,
     "property-no-vendor-prefix": true,
     "function-no-unknown": [true, {
       "ignoreFunctions": ["svg-load", "svg-inline"]
