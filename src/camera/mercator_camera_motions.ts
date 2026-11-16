@@ -180,7 +180,7 @@ export class MercatorCameraMotions implements CameraMotions {
             if (isZooming) frame = setZoom(frame, frameContext, interpolates.number(startZoom, endZoom, k));
             if (rotating) frame = interpolateRotation(frame, startEulerAngles, endEulerAngles, k, startEulerAngles.roll !== endEulerAngles.roll);
             if (doPadding) frame = interpolatePadding(frame, frameContext, startPadding, options.padding, k);
-            if (options.around) return getCameraSolver(frameContext).setLocationAtPoint(frame, frameContext, options.around, options.aroundPoint);
+            if (options.around) return setLocationAtPointKeepingZoom(frame, frameContext, options.around, options.aroundPoint);
 
             const scale = zoomScale(frame.zoom - startZoom);
             const base = endZoom > startZoom ? Math.min(2, finalScale) : Math.max(0.5, finalScale);

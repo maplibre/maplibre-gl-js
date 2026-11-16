@@ -211,6 +211,21 @@ describe('Map changing its projection to globe during an animation', () => {
         expect(map.getZoom()).toBe(5);
     });
 
+    test('an easeTo around a point ends at the zoom it was asked for', async () => {
+        const map = createMap({center: [10, 40], zoom: 2});
+        await map.once('style.load');
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.easeTo({around: [20, 50], zoom: 5, duration: 1000});
+        now.mockReturnValue(400);
+        map.redraw();
+
+        map.setProjection({type: 'globe'});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getZoom()).toBe(5);
+    });
+
     test('a flyTo ends at the zoom it was asked for', async () => {
         const map = createMap({center: [10, 40], zoom: 2});
         await map.once('style.load');
