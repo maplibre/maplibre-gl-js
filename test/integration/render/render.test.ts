@@ -790,13 +790,8 @@ function getReportItem(test: TestData) {
 }
 
 function addConsoleLogging(page: Page) {
-    page.on('console', async (message) => {
-        if (message.text() !== 'JSHandle@error') {
-            console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`);
-            return;
-        }
-        const messages = await Promise.all(message.args().map((arg) => arg.getProperty('message')));
-        console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
+    page.on('console', (message) => {
+        console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`);
     });
 
     page.on('pageerror', (e) => { console.error(ensureError(e).message); });
