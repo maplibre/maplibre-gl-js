@@ -54,6 +54,7 @@ export type FillExtrusionPatternUniformsType = {
 export type FillExtrusionGroundOcclusionUniformsType = {
     'u_ao_ground_intensity': Uniform1f;
     'u_ao_ground_radius': Uniform1f;
+    'u_ao_depth_band': Uniform1f;
     'u_tile_units_per_meter': Uniform1f;
     'u_fill_translate': Uniform2f;
 };
@@ -93,6 +94,7 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
 const fillExtrusionGroundOcclusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionGroundOcclusionUniformsType => ({
     'u_ao_ground_intensity': new Uniform1f(context, locations.u_ao_ground_intensity),
     'u_ao_ground_radius': new Uniform1f(context, locations.u_ao_ground_radius),
+    'u_ao_depth_band': new Uniform1f(context, locations.u_ao_depth_band),
     'u_tile_units_per_meter': new Uniform1f(context, locations.u_tile_units_per_meter),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
 });

@@ -26,6 +26,7 @@ const WALL_AMBIENT_OCCLUSION_DEFINES = ['#define WALL_AMBIENT_OCCLUSION'];
 const groundOcclusionUniformValues: UniformValues<FillExtrusionGroundOcclusionUniformsType> = {
     'u_ao_ground_intensity': 0,
     'u_ao_ground_radius': 0,
+    'u_ao_depth_band': 0,
     'u_tile_units_per_meter': 0,
     'u_fill_translate': [0, 0]
 };
@@ -91,11 +92,17 @@ function depthModesForGroundOcclusion(gl: WebGLRenderingContextBase, range: Dept
 /** The strips need vertex array objects of their own; sharing the extrusions' key rebuilds them on every draw. */
 const groundOcclusionVertexArrayKeys = new WeakMap<FillExtrusionStyleLayer, string>();
 
+/** Layers drawing ground occlusion beyond this many in a frame share the nearest depth band. */
+const GROUND_OCCLUSION_DEPTH_BANDS = 4;
+
 /**
  * Darkens the ground around the foot of the walls, by the nearest wall within reach.
  *
  * Each wall quad is drawn again, laid flat on the ground and stretched past convex corners. Where
  * strips overlap, a depth-only draw keeps the strongest and a stencilled colour draw applies it once.
+ *
+ * Each layer's strips take a band of depths nearer than the bands of the layers drawn before it, so
+ * they pass over those layers' strips everywhere instead of tying with them, and darken on top.
  */
 function drawGroundOcclusion(
     tileManager: TileManager,
@@ -106,6 +113,7 @@ function drawGroundOcclusion(
     const radius = layer.paint.get('fill-extrusion-ambient-occlusion-ground-radius');
     if (!(intensity > 0 && radius > 0)) return;
 
+    groundOcclusionUniformValues['u_ao_depth_band'] = Math.max(GROUND_OCCLUSION_DEPTH_BANDS - 1 - frameRenderContext.groundOcclusionLayers++, 0);
     const depthModes = depthModesForGroundOcclusion(frameRenderContext.context.gl, frameRenderContext.depthRangeFor3D);
     drawGroundOcclusionTiles(tileManager, layer, coords, depthModes.strongest, StencilMode.disabled, ColorMode.disabled, frameRenderContext);
     drawGroundOcclusionTiles(tileManager, layer, coords, depthModes.darken, frameRenderContext.stencilModeFor3D(), frameRenderContext.colorModeForRenderPass(), frameRenderContext);
