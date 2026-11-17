@@ -40,13 +40,13 @@ void main() {
     float across = t > 0.0 ? reach : -0.01 * reach;
     vec2 groundPos = a_pos + along * (isFirstEnd ? -cap : cap) - inward * across;
     vec2 posInTile = groundPos + u_fill_translate;
-    float elevation = get_elevation(groundPos);
 
+    // No elevation: on terrain the strips are draped.
     #ifdef GLOBE
         vec3 spherePos = projectToSphere(posInTile, a_pos);
-        gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
+        gl_Position = interpolateProjectionFor3D(posInTile, spherePos, 0.0);
     #else
-        gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
+        gl_Position = u_projection_matrix * vec4(posInTile, 0.0, 1.0);
     #endif
 
     v_along = isFirstEnd ? -cap : wallLength + cap;

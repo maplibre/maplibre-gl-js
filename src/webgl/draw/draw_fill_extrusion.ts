@@ -38,7 +38,10 @@ export function drawFillExtrusion(tileManager: TileManager, layer: FillExtrusion
     }
 
     if (frameRenderContext.currentPass === 'translucent') {
-        drawGroundOcclusion(tileManager, layer, coords, frameRenderContext);
+        // Draped on terrain; under a pixel while the globe is shown.
+        if (!frameRenderContext.terrain && !frameRenderContext.data.isRenderingGlobe) {
+            drawFillExtrusionGroundOcclusion(tileManager, layer, coords, frameRenderContext);
+        }
 
         const depthMode = new DepthMode(frameRenderContext.context.gl.LEQUAL, DepthMode.ReadWrite, frameRenderContext.depthRangeFor3D);
 
@@ -103,15 +106,15 @@ const GROUND_OCCLUSION_DEPTH_BANDS = 4;
  *
  * Each layer's strips take a band of depths nearer than the bands of the layers drawn before it, so
  * they pass over those layers' strips everywhere instead of tying with them, and darken on top.
+ *
+ * The strips' depths only compare when they lie in one plane: the flat map or a terrain texture.
  */
-function drawGroundOcclusion(
+export function drawFillExtrusionGroundOcclusion(
     tileManager: TileManager,
     layer: FillExtrusionStyleLayer,
     coords: OverscaledTileID[],
-    frameRenderContext: FrameRenderContext) {
-    const intensity = layer.paint.get('fill-extrusion-ambient-occlusion-ground-intensity');
-    const radius = layer.paint.get('fill-extrusion-ambient-occlusion-ground-radius');
-    if (!(intensity > 0 && radius > 0)) return;
+    frameRenderContext: FrameRenderContext): void {
+    if (!layer.hasGroundOcclusion()) return;
 
     groundOcclusionUniformValues['u_ao_depth_band'] = Math.max(GROUND_OCCLUSION_DEPTH_BANDS - 1 - frameRenderContext.groundOcclusionLayers++, 0);
     const depthModes = depthModesForGroundOcclusion(frameRenderContext.context.gl, frameRenderContext.depthRangeFor3D);
