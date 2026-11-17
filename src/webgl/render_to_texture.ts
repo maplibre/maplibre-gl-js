@@ -151,7 +151,7 @@ export class RenderToTexture {
         const visibleLayerIds = this._renderableLayerIds.join();
 
         const transitioningLayerIds = new Set(stacks.flat().filter(layerId => style._layers[layerId].hasTransition()));
-        const repaintedStacks = stacks.map(layerIds => layerIds.some(layerId => transitioningLayerIds.has(layerId) || this._lastTransitioningLayerIds.has(layerId)));
+        const repaintedStacks = stacks.filter(layerIds => layerIds.some(layerId => transitioningLayerIds.has(layerId) || this._lastTransitioningLayerIds.has(layerId)));
         this._lastTransitioningLayerIds = transitioningLayerIds;
 
         const rttSourceIds = new Set<string>();
@@ -215,20 +215,20 @@ export class RenderToTexture {
             }
         }
 
-        if (repaintedStacks.includes(true)) this._releaseRepaintedStacks(style, stacks, repaintedStacks);
+        if (repaintedStacks.length > 0) this._releaseRepaintedStacks(style, stacks, repaintedStacks);
     }
 
     /**
-     * Releases, on every tile, the textures of the stacks flagged in `repaintedStacks`. A tile records one
+     * Releases, on every tile, the textures of the `repaintedStacks`. A tile records one
      * fingerprint per source for all of its stacks, so re-rendering a stack marks the other stacks that draw one of
      * its sources as up to date for that source: those of them whose textures are stale for such a source are
      * released along with it.
      */
-    _releaseRepaintedStacks(style: Style, stacks: string[][], repaintedStacks: boolean[]): void {
-        const repaintedKeys = new Set(stacks.filter((_, stack) => repaintedStacks[stack]).flat().map(layerId => rttFingerprintKey(style._layers[layerId])));
+    _releaseRepaintedStacks(style: Style, stacks: string[][], repaintedStacks: string[][]): void {
+        const repaintedKeys = new Set(repaintedStacks.flat().map(layerId => rttFingerprintKey(style._layers[layerId])));
         repaintedKeys.delete(undefined);
         for (const tile of this._renderableTiles) {
-            this._releaseStacks(tile, stacks.map((layerIds, stack) => repaintedStacks[stack] || layerIds.some(layerId => {
+            this._releaseStacks(tile, stacks.map(layerIds => repaintedStacks.includes(layerIds) || layerIds.some(layerId => {
                 const fingerprintKey = rttFingerprintKey(style._layers[layerId]);
                 if (!repaintedKeys.has(fingerprintKey)) return false;
                 const frameFingerprint = this._rttFingerprints[fingerprintKey]?.[tile.tileID.key];
