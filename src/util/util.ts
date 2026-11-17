@@ -68,7 +68,7 @@ export function createIdentityMat4f32(): Mat4f32 {
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: { bearingInRadians: number; zoom: number },
+    camera: { bearingInRadians: number; zoom: number },
     tile: { tileID: OverscaledTileID; tileSize: number },
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
@@ -77,8 +77,8 @@ export function translatePosition(
     if (!translate[0] && !translate[1]) return [0, 0];
 
     const angle = inViewportPixelUnitsUnits ?
-        (translateAnchor === 'map' ? -transform.bearingInRadians : 0) :
-        (translateAnchor === 'viewport' ? transform.bearingInRadians : 0);
+        (translateAnchor === 'map' ? -camera.bearingInRadians : 0) :
+        (translateAnchor === 'viewport' ? camera.bearingInRadians : 0);
 
     if (angle) {
         const sinA = Math.sin(angle);
@@ -90,8 +90,8 @@ export function translatePosition(
     }
 
     return [
-        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], transform.zoom),
-        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
+        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], camera.zoom),
+        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], camera.zoom)];
 }
 
 /**
@@ -1128,6 +1128,7 @@ export type TileJSON = {
     bounds?: [number, number, number, number];
     center?: [number, number, number];
     vector_layers: [{id: string}]; // this is partial but enough for what we need
+    sparse?: boolean; // not in the TileJSON spec, read by a vector source as its sparse option
 };
 
 /**

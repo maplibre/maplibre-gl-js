@@ -722,7 +722,7 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
 
         const moveStartPromise = map.once('movestart');
-        map._camera._moving = false;
+        map.stop();
         map.resize([new ResizeObserverEntry()]);
         await moveStartPromise;
         expect(geolocate._watchState).toBe('ACTIVE_LOCK');
@@ -871,7 +871,7 @@ describe('GeolocateControl with no options', () => {
         geolocation.send({latitude: 10, longitude: 20, accuracy: 20});
         map.zoomTo(20, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('19063.56px');
+        expect(geolocate._circleElement.style.width).toBe('19063.6px');
         zoomendPromise = map.once('zoomend');
         map.zoomTo(18, {duration: 0});
         await zoomendPromise;

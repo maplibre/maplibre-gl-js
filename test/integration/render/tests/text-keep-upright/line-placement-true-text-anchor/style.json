@@ -2,15 +2,12 @@
   "version": 8,
   "metadata": {
     "test": {
-      "height": 64,
-      "operations": [
-          [ "setBearing", 20 ],
-          [ "wait" ]
-      ]
+      "height": 64
     }
   },
   "center": [ 0, 0 ],
   "zoom": 0,
+  "bearing": 20,
   "sources": {
     "geojson": {
       "type": "geojson",

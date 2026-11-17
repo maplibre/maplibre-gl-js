@@ -50,7 +50,7 @@ describe('BoxZoomHandler', () => {
     test('runs custom box zoom end callback and skips default zoom animation', () => {
         const boxZoomEnd = vi.fn();
         const map = createMap(undefined, {boxZoomEnd});
-        const fitScreenCoordinatesSpy = vi.spyOn(map, 'fitScreenCoordinates');
+        const easeTo = vi.spyOn(map._camera, 'easeTo');
 
         simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
@@ -68,14 +68,14 @@ describe('BoxZoomHandler', () => {
             expect.objectContaining({x: 5, y: 5}),
             expect.any(MouseEvent)
         );
-        expect(fitScreenCoordinatesSpy).not.toHaveBeenCalled();
+        expect(easeTo).not.toHaveBeenCalled();
 
         map.remove();
     });
 
     test('keeps default zoom behavior when box zoom options object has no callback', () => {
         const map = createMap(undefined, {});
-        const fitScreenCoordinatesSpy = vi.spyOn(map, 'fitScreenCoordinates');
+        const easeTo = vi.spyOn(map._camera, 'easeTo');
 
         simulate.mousedown(map.getCanvas(), {shiftKey: true, clientX: 0, clientY: 0});
         map._renderTaskQueue.run();
@@ -86,7 +86,9 @@ describe('BoxZoomHandler', () => {
         simulate.mouseup(map.getCanvas(), {shiftKey: true, clientX: 5, clientY: 5});
         map._renderTaskQueue.run();
 
-        expect(fitScreenCoordinatesSpy).toHaveBeenCalledTimes(1);
+        expect(easeTo).toHaveBeenCalledExactlyOnceWith(
+            expect.objectContaining({center: expect.anything(), zoom: expect.any(Number)}),
+            {originalEvent: expect.any(MouseEvent)});
 
         map.remove();
     });

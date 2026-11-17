@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {PACKED_HIDDEN_OPACITY, PACKED_VISIBLE_OPACITY, Placement, RetainedQueryData} from './placement.ts';
-import {type MercatorTransform, createMercatorTransform} from '../geo/projection/mercator_transform.ts';
+import {createTestCamera} from '../util/test/util.ts';
 import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -37,11 +37,8 @@ const SENTINEL = 12345;
 
 describe('placement', () => {
     let placement: Placement;
-    let transform: MercatorTransform;
     beforeEach(() => {
-        transform = createMercatorTransform();
-        transform.resize(512, 512);
-        placement = new Placement(transform, undefined, 0, true);
+        placement = new Placement(createTestCamera({width: 512, height: 512}).projectedCamera, undefined, 0, true);
     });
 
     test('should not throw on integer overflow', () => {
@@ -148,8 +145,7 @@ describe('placement', () => {
         const tile = createSymbolTile(new OverscaledTileID(0, 0, 0, 0, 0), features, new CollisionBoxArray(), {'text-size': textSize});
         const layer = (tile.buckets.test as SymbolBucket).layers[0];
         new CrossTileSymbolIndex().addLayer(layer, [tile], 0);
-        transform.setZoom(zoom);
-        placement = new Placement(transform, undefined, 0, true);
+        placement = new Placement(createTestCamera({width: 512, height: 512, zoom}).projectedCamera, undefined, 0, true);
 
         const parts = [];
         placement.getBucketParts(parts, layer, tile, false);
@@ -200,8 +196,7 @@ describe('placement', () => {
         const bucket = tile.buckets.test as SymbolBucket;
         const layer = bucket.layers[0];
         new CrossTileSymbolIndex().addLayer(layer, [tile], 0);
-        transform.setZoom(1);
-        placement = new Placement(transform, undefined, 0, true);
+        placement = new Placement(createTestCamera({width: 512, height: 512, zoom: 1}).projectedCamera, undefined, 0, true);
 
         const parts = [];
         placement.getBucketParts(parts, layer, tile, false);

@@ -1,0 +1,44 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64
+    }
+  },
+  "center": [0, 0],
+  "zoom": 1,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {"kind": "square"},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[-5, -5], [5, -5], [5, 5], [-5, 5], [-5, -5]]]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "#ffffff"}
+    },
+    {
+      "id": "blend-without-features",
+      "type": "fill",
+      "source": "geojson",
+      "filter": ["==", ["get", "kind"], "none"],
+      "paint": {"fill-color": "#ff0000", "fill-layer-blend": "multiply"}
+    },
+    {
+      "id": "translucent-fill-above",
+      "type": "fill",
+      "source": "geojson",
+      "paint": {"fill-color": "#0000ff", "fill-opacity": 0.5}
+    }
+  ]
+}

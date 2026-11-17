@@ -70,6 +70,16 @@ Each example should have a title, og:description, og:category and og:created.
 * `created`: YYYY-MM-DD date format to when this example was created, this allow the docs to show what's new
 * `order` (optional): A number used to sort examples within their category on the overview page. Lower numbers come first, falling back to alphabetically after those that have one.
 
+### Writing titles and descriptions for search
+
+Use the title to name the task a developer wants to accomplish. In the `og:description` tag, describe what the example shows in words a developer might search for before they know the MapLibre API. Include technical terms where they help readers connect the example to the API or style specification. Check that each detail describes behavior the example demonstrates.
+
+For example, “Display buildings in 3D” names the task. The description can mention showing building heights and coloring buildings by height. For a line styling example, describing how it colors lines by a data value in their GeoJSON properties helps someone searching for “color by data value.”
+
+When changing metadata to improve search, pick a plain-language query and an existing query for the same example. Run them in the docs search before and after the edit using the same build setup. Use the local setup above and regenerate the docs after editing the HTML source. In the pull request, record the queries and where the direct result for the example page appeared. If the example is absent, say so.
+
+### Adding an image
+
 When you create a new example, you **must** make an accompanying image.
 
 1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`.

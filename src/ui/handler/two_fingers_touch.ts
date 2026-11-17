@@ -1,7 +1,7 @@
 import {DOM} from '../../util/dom.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {Map} from '../map.ts';
+import type {CooperativeGesturesHandler} from './cooperative_gestures.ts';
 import type {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
@@ -291,12 +291,13 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
     _valid?: boolean;
     _firstMove?: number;
     _lastPoints?: [Point, Point];
-    _map: Map;
+    _cooperativeGestures: CooperativeGesturesHandler;
     _currentTouchCount: number = 0;
 
-    constructor(map: Map) {
+    /** @internal */
+    constructor(cooperativeGestures: CooperativeGesturesHandler) {
         super();
-        this._map = map;
+        this._cooperativeGestures = cooperativeGestures;
     }
 
     reset(): void {
@@ -321,7 +322,7 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
 
     _move(points: [Point, Point], center: Point | null, e: TouchEvent): HandlerResult | void {
         // If cooperative gestures is enabled, we need a 3-finger minimum for this gesture to register
-        if (this._map.cooperativeGestures.isEnabled() && this._currentTouchCount < 3) {
+        if (this._cooperativeGestures.isEnabled() && this._currentTouchCount < 3) {
             return;
         }
 

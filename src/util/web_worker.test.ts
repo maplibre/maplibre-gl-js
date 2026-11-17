@@ -1,6 +1,7 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {workerFactory} from './web_worker.ts';
 import {config} from './config.ts';
+import {setTrustedTypesPolicy} from './trusted_types.ts';
 
 describe('workerFactory', () => {
     const originalWorker = (globalThis as any).Worker;
@@ -13,7 +14,9 @@ describe('workerFactory', () => {
     afterEach(() => {
         (globalThis as any).Worker = originalWorker;
         config.WORKER_URL = originalWorkerUrl;
+        setTrustedTypesPolicy(undefined);
         vi.restoreAllMocks();
+        vi.unstubAllGlobals();
     });
 
     test('creates a module worker when WORKER_URL is empty', async () => {
@@ -148,6 +151,33 @@ describe('workerFactory', () => {
         expect(WorkerSpy).toHaveBeenCalledTimes(1);
         expect(WorkerSpy.mock.calls[0]).toEqual(['blob:http://localhost/abc']);
         expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:http://localhost/abc');
+    });
+
+    test('a page with an opaque origin starts the module worker from a data URL holding the fetched code', async () => {
+        vi.stubGlobal('origin', 'null');
+        const WorkerSpy = vi.fn();
+        vi.stubGlobal('Worker', WorkerSpy);
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('self.worker = 1'));
+        config.WORKER_URL = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs';
+
+        await workerFactory();
+
+        expect(fetchSpy).toHaveBeenCalledWith('https://unpkg.com/maplibre-gl/dist/maplibre-gl-worker.mjs');
+        expect(WorkerSpy).toHaveBeenCalledWith('data:text/javascript;charset=utf-8,self.worker%20%3D%201', {type: 'module'});
+    });
+
+    test('creates the worker from the script URL the Trusted Types policy returns', async () => {
+        const WorkerSpy = vi.fn();
+        (globalThis as any).Worker = WorkerSpy;
+        config.WORKER_URL = '/path/to/worker.mjs';
+        const trustedScriptURL = {};
+        const createScriptURL = vi.fn().mockReturnValue(trustedScriptURL);
+        setTrustedTypesPolicy({createHTML: vi.fn(), createScriptURL});
+
+        await workerFactory();
+
+        expect(createScriptURL).toHaveBeenCalledWith('/path/to/worker.mjs');
+        expect(WorkerSpy.mock.calls[0][0]).toBe(trustedScriptURL);
     });
 
     test('cross-origin fetch failure rejects the promise', async () => {

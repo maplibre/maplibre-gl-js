@@ -72,7 +72,7 @@ export class HeatmapStyleLayer extends StyleLayer {
         feature,
         featureState,
         geometry,
-        transform,
+        projectedCamera,
         pixelsToTileUnits,
         unwrappedTileID,
         getElevation}: QueryIntersectsFeatureParams
@@ -80,7 +80,7 @@ export class HeatmapStyleLayer extends StyleLayer {
         return circleIntersection({
             queryGeometry,
             size: this.paint.get('heatmap-radius').evaluate(feature, featureState) * pixelsToTileUnits,
-            transform,
+            projectedCamera,
             unwrappedTileID,
             getElevation
         }, geometry);

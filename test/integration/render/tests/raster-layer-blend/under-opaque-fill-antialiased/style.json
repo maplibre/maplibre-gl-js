@@ -1,0 +1,50 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "antialias": true
+    }
+  },
+  "center": [-113.26903, 35.9654],
+  "zoom": 12,
+  "sources": {
+    "satellite": {
+      "type": "raster",
+      "tiles": ["local://tiles/{z}-{x}-{y}.satellite.png"],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "over": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [[[-113.268982, 35.9615], [-113.268903, 35.9615], [-113.268903, 35.9693], [-113.268982, 35.9693], [-113.268982, 35.9615]]]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "#ffffff"}
+    },
+    {
+      "id": "blended-raster-below",
+      "type": "raster",
+      "source": "satellite",
+      "paint": {"raster-fade-duration": 0, "raster-layer-blend": "multiply"}
+    },
+    {
+      "id": "opaque-fill-above",
+      "type": "fill",
+      "source": "over",
+      "paint": {"fill-color": "#0000ff", "fill-antialias": false}
+    }
+  ]
+}

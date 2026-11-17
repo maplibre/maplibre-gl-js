@@ -15,6 +15,7 @@ export type LoadTileJsonResponse = {
     scheme: RasterSourceSpecification['scheme'];
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
+    sparse?: boolean;
     vectorLayerIds?: string[];
 };
 
@@ -37,7 +38,7 @@ export async function loadTileJson(
     const result = pick(
         // explicit source options take precedence over TileJSON
         extend(tileJSON, options),
-        ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
+        ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding', 'sparse']
     ) as LoadTileJsonResponse;
 
     if ('vector_layers' in tileJSON && tileJSON.vector_layers) {

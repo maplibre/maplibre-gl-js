@@ -11,10 +11,10 @@ import {TextAnchorEnum, type TextAnchor} from '../style/style_layer/variable_tex
 import {translatePosition, warnOnce} from '../util/util.ts';
 import {symbolInstance as symbolInstanceLayout, placement as placedSymbolLayout} from '../data/bucket/symbol_attributes.ts';
 import ONE_EM from './one_em.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
-import type {IReadonlyTransform, GetElevation} from '../geo/transform_interface.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {PossiblyEvaluated} from '../style/properties.ts';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
@@ -24,6 +24,8 @@ import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchor
 import type {FeatureIndex} from '../data/feature_index.ts';
 import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import type {Terrain} from '../render/terrain.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {GetElevation} from '../geo/world_types.ts';
 
 class OpacityState {
     opacity: number;
@@ -248,7 +250,7 @@ type OpacityInputs = {
 };
 
 export class Placement {
-    transform: IReadonlyTransform;
+    projectedCamera: ProjectedCamera;
     terrain: Terrain;
     collisionIndex: CollisionIndex;
     placements: {
@@ -283,10 +285,10 @@ export class Placement {
     }>>;
     lastOpacityInputs: WeakMap<SymbolBucket, OpacityInputs>;
 
-    constructor(transform: IReadonlyTransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
-        this.transform = transform.clone();
+    constructor(projectedCamera: ProjectedCamera, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+        this.projectedCamera = projectedCamera;
         this.terrain = terrain;
-        this.collisionIndex = new CollisionIndex(this.transform);
+        this.collisionIndex = new CollisionIndex(this.projectedCamera);
         this.placements = {};
         this.opacities = {};
         this.variableOffsets = {};
@@ -327,27 +329,27 @@ export class Placement {
         const layout = symbolBucket.layers[0].layout;
         const paint = symbolBucket.layers[0].paint;
 
-        const scale = Math.pow(2, this.transform.zoom - tile.tileID.overscaledZ);
+        const scale = Math.pow(2, this.projectedCamera.zoom - tile.tileID.overscaledZ);
         const textPixelRatio = tile.tileSize / EXTENT;
 
         const unwrappedTileID = tile.tileID.toUnwrapped();
 
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
-        const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
+        const pixelsToTiles = pixelsToTileUnits(tile, 1, this.projectedCamera.zoom);
 
         const translationText = translatePosition(
-            this.collisionIndex.transform,
+            this.collisionIndex.projectedCamera,
             tile,
             paint.get('text-translate'),
             paint.get('text-translate-anchor'),);
 
         const translationIcon = translatePosition(
-            this.collisionIndex.transform,
+            this.collisionIndex.projectedCamera,
             tile,
             paint.get('icon-translate'),
             paint.get('icon-translate-anchor'),);
 
-        const pitchedLabelPlaneMatrix = projection.getPitchedLabelPlaneMatrix(rotateWithMap, this.transform, pixelsToTiles);
+        const pitchedLabelPlaneMatrix = projection.getPitchedLabelPlaneMatrix(rotateWithMap, this.projectedCamera, pixelsToTiles);
 
         // As long as this placement lives, we have to hold onto this bucket's
         // matching FeatureIndex/data for querying purposes
@@ -370,7 +372,7 @@ export class Placement {
             textPixelRatio,
             holdingForFade: tile.holdingForSymbolFade(),
             collisionBoxArray,
-            partiallyEvaluatedTextSize: symbolSize.evaluateSizeForZoom(symbolBucket.textSizeData, this.transform.zoom),
+            partiallyEvaluatedTextSize: symbolSize.evaluateSizeForZoom(symbolBucket.textSizeData, this.projectedCamera.zoom),
             collisionGroup: this.collisionGroups.get(symbolBucket.sourceID)
         };
 
@@ -539,7 +541,7 @@ export class Placement {
 
         const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
         const getElevation = this._getTerrainElevationFunc(tileID);
-        const simpleProjectionMatrix = this.transform.getFastPathSimpleProjectionMatrix(tileID);
+        const simpleProjectionMatrix = getCameraMath(this.projectedCamera).getFastPathSimpleProjectionMatrix(this.projectedCamera, tileID);
 
         const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays, symbolIndex: number) => {
             if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
@@ -702,9 +704,10 @@ export class Placement {
                             }
                         }
 
-                        if (showCollisionBoxes && !placedBox) {
+                        if (!placedBox && (showCollisionBoxes || alwaysShowText)) {
                             // No box was successfully placed
-                            // Generate bounds for a fake centered box, so that we can at least display something for collision debug.
+                            // Generate bounds for a fake centered box, so that we can at least display something for collision debug,
+                            // and so that text which is always shown is still hidden when the globe occludes it.
                             const placedFakeGlyphBox = this.collisionIndex.placeCollisionBox(
                                 textBox,
                                 'always', // Skips expensive collision check with already placed boxes
@@ -725,7 +728,7 @@ export class Placement {
                                 box: placedFakeGlyphBox.box,
                                 offscreen: false,
                                 placeable: false,
-                                occluded: false,
+                                occluded: placedFakeGlyphBox.occluded,
                             };
                         }
 
@@ -913,7 +916,7 @@ export class Placement {
 
         if (zOrderByViewportY) {
             if (bucketPart.symbolInstanceStart !== 0) throw new Error('bucket.bucketInstanceId should be 0');
-            const symbolIndexes = bucket.getSortedSymbolIndexes(-this.transform.bearingInRadians);
+            const symbolIndexes = bucket.getSortedSymbolIndexes(-this.projectedCamera.bearingInRadians);
             for (let i = symbolIndexes.length - 1; i >= 0; --i) {
                 const symbolIndex = symbolIndexes[i];
                 placeSymbol(bucket.symbolInstances.get(symbolIndex), bucket.collisionArrays[symbolIndex], symbolIndex);
@@ -1039,12 +1042,12 @@ export class Placement {
 
     commit(now: number): void {
         this.commitTime = now;
-        this.zoomAtLastRecencyCheck = this.transform.zoom;
+        this.zoomAtLastRecencyCheck = this.projectedCamera.zoom;
 
         const prevPlacement = this.prevPlacement;
         let placementChanged = false;
 
-        this.prevZoomAdjustment = prevPlacement ? prevPlacement.zoomAdjustment(this.transform.zoom) : 0;
+        this.prevZoomAdjustment = prevPlacement ? prevPlacement.zoomAdjustment(this.projectedCamera.zoom) : 0;
         const increment = prevPlacement ? prevPlacement.symbolFadeChange(now) : 1;
 
         const prevOpacities = prevPlacement ? prevPlacement.opacities : {};
@@ -1116,7 +1119,7 @@ export class Placement {
                 this.updateBucketOpacities(symbolBucket, tile.tileID, duplicates, tile.collisionBoxArray);
             }
 
-            symbolBucket.sortFeatures(-this.transform.bearingInRadians);
+            symbolBucket.sortFeatures(-this.projectedCamera.bearingInRadians);
             if (this.retainedQueryData[symbolBucket.bucketInstanceId]) {
                 this.retainedQueryData[symbolBucket.bucketInstanceId].featureSortOrder = symbolBucket.featureSortOrder;
             }
@@ -1308,7 +1311,7 @@ export class Placement {
                                     variableOffset.textOffset,
                                     variableOffset.textBoxScale);
                                 if (rotateWithMap) {
-                                    shift._rotate(pitchWithMap ? -this.transform.bearingInRadians : this.transform.bearingInRadians);
+                                    shift._rotate(pitchWithMap ? -this.projectedCamera.bearingInRadians : this.projectedCamera.bearingInRadians);
                                 }
                             } else {
                                 // No offset -> this symbol hasn't been placed since coming on-screen
@@ -1381,7 +1384,7 @@ export class Placement {
         // adjustment is used to reduce the interval between placement calculations
         // and to reduce the fade duration when zooming out quickly. Discovering the
         // collisions more quickly and fading them more quickly reduces the unwanted effect.
-        return Math.max(0, (this.transform.zoom - zoom) / 1.5);
+        return Math.max(0, (this.projectedCamera.zoom - zoom) / 1.5);
     }
 
     hasTransitions(now: number): boolean {

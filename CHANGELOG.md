@@ -3,8 +3,40 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 - _...Add new stuff here..._
+
+## 6.18.0
+
+### ✨ Features and improvements
+
+- Add `raster-layer-blend` support ([#8986](https://github.com/maplibre/maplibre-gl-js/pull/8986)) (by [@birkskyum](https://github.com/birkskyum))
+- Add `{line,fill}-layer-blend` support ([#8073](https://github.com/maplibre/maplibre-gl-js/pull/8073)) (by [@CommanderStorm](https://github.com/CommanderStorm))
+- Change rotation inertia to match maplibre-native ([#8970](https://github.com/maplibre/maplibre-gl-js/pull/8970)) (by [@HarelM](https://github.com/HarelM))
+- Speed up loading of tiles whose layers list the same feature ids twice in ascending order ([#8965](https://github.com/maplibre/maplibre-gl-js/pull/8965)) (by [@DoFabien](https://github.com/DoFabien))
+- Improve search descriptions for three map examples ([#9002](https://github.com/maplibre/maplibre-gl-js/pull/9002)) (by [@Harshinit01312](https://github.com/Harshinit01312))
+
+### 🐞 Bug fixes
+
+- Fix glitches between consecutive `-layer-opacity` or `-layer-blend` layers on Intel Gen12 with Mesa 24.3 to 25.3.1 ([#9006](https://github.com/maplibre/maplibre-gl-js/pull/9006)) (by [@gravitystorm](https://github.com/gravitystorm))
+- Fix fire move and zoom events from setMaxBounds when the new bounds change the camera ([#8998](https://github.com/maplibre/maplibre-gl-js/pull/8998)) (by [@kkokkojeong](https://github.com/kkokkojeong))
+- Fix scale an icon fitted to its text by icon-size without growing the padding ([#8952](https://github.com/maplibre/maplibre-gl-js/pull/8952)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- Fix queryRenderedFeatures missing fill-extrusion walls and roofs on the globe ([#8926](https://github.com/maplibre/maplibre-gl-js/pull/8926)) (by [@mfaeezshabbir](https://github.com/mfaeezshabbir))
+- Fix map jumping when dragging or zooming above or below the identity projection ([#8964](https://github.com/maplibre/maplibre-gl-js/pull/8964)) (by [@birkskyum](https://github.com/birkskyum))
+
+
+## 6.17.0
+
+### ✨ Features and improvements
+
+- Add experimental `sparse` vector source option so a missing tile is sliced from an ancestor ([#8335](https://github.com/maplibre/maplibre-gl-js/pull/8335)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+
+### 🐞 Bug fixes
+
+- Fix a layer added with addLayer drawing nothing beyond its source's m… ([#8919](https://github.com/maplibre/maplibre-gl-js/pull/8919)) (by [@igor-suhorukov](https://github.com/igor-suhorukov))
+- Fix keep offset line labels in order where the line doubles back ([#8892](https://github.com/maplibre/maplibre-gl-js/pull/8892)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- Fix camera movement bugs by using task scheduling ([#8961](https://github.com/maplibre/maplibre-gl-js/pull/8961)) (by [@HarelM](https://github.com/HarelM))
+- Fix map not loading from a file or in a sandboxed iframe ([#8912](https://github.com/maplibre/maplibre-gl-js/pull/8912)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix symbol text and icons not rendering on iOS 15 due to an ANGLE shader compiler bug ([#8840](https://github.com/maplibre/maplibre-gl-js/issues/8840)) (by [@peter-alexander](https://github.com/peter-alexander))
 
 ## 6.16.0
 
@@ -15,6 +47,7 @@
 - Add accept headers for MLT according to the current capabilities ([#7483](https://github.com/maplibre/maplibre-gl-js/pull/7483)) (by [@CommanderStorm](https://github.com/CommanderStorm))
 
 ### 🐞 Bug fixes
+
 - Fix expired vector tiles erroring on their next reload, e.g. after `setFilter()`, when the server returns an unchanged ETag ([#8771](https://github.com/maplibre/maplibre-gl-js/pull/8771)) (by [@DoFabien](https://github.com/DoFabien))
 - Fix `GeoJSONSource.getBounds` throwing when a feature has a `null` geometry ([#8814](https://github.com/maplibre/maplibre-gl-js/pull/8814)) (by [@auraseb](https://github.com/auraseb))
 - Fix characters covered by `font-faces` switching to glyphs from the glyphs URL once their PBF range is downloaded ([#8490](https://github.com/maplibre/maplibre-gl-js/pull/8490)) (by [@NEKOYASAN](https://github.com/NEKOYASAN))

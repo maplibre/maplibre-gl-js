@@ -1,0 +1,100 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "description": "Color ramps interpolated in sRGB and in OKLCH: blue to yellow, then from oklch() blue to oklch() red, whose shorter hue arc runs through purple",
+            "width": 512,
+            "height": 256
+        }
+    },
+    "zoom": 0,
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "lineMetrics": true,
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {"id": "0_rgb"},
+                        "geometry": {"type": "LineString", "coordinates": [[-180, 52], [180, 52]]}
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": "1_oklch"},
+                        "geometry": {"type": "LineString", "coordinates": [[-180, 20], [180, 20]]}
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": "2_rgb"},
+                        "geometry": {"type": "LineString", "coordinates": [[-180, -20], [180, -20]]}
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": {"id": "3_oklch"},
+                        "geometry": {"type": "LineString", "coordinates": [[-180, -52], [180, -52]]}
+                    }
+                ]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "test_0_rgb",
+            "type": "line",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], "0_rgb"],
+            "paint": {
+                "line-width": 40,
+                "line-gradient": ["interpolate", ["linear"], ["line-progress"], 0, "blue", 1, "yellow"]
+            }
+        },
+        {
+            "id": "test_1_oklch",
+            "type": "line",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], "1_oklch"],
+            "paint": {
+                "line-width": 40,
+                "line-gradient": ["interpolate-oklch", ["linear"], ["line-progress"], 0, "blue", 1, "yellow"]
+            }
+        },
+        {
+            "id": "test_2_rgb",
+            "type": "line",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], "2_rgb"],
+            "paint": {
+                "line-width": 40,
+                "line-gradient": [
+                    "interpolate",
+                    ["linear"],
+                    ["line-progress"],
+                    0,
+                    "oklch(0.7 0.12 250)",
+                    1,
+                    "oklch(0.7 0.12 20)"
+                ]
+            }
+        },
+        {
+            "id": "test_3_oklch",
+            "type": "line",
+            "source": "geojson",
+            "filter": ["==", ["get", "id"], "3_oklch"],
+            "paint": {
+                "line-width": 40,
+                "line-gradient": [
+                    "interpolate-oklch",
+                    ["linear"],
+                    ["line-progress"],
+                    0,
+                    "oklch(0.7 0.12 250)",
+                    1,
+                    "oklch(0.7 0.12 20)"
+                ]
+            }
+        }
+    ]
+}
