@@ -179,7 +179,7 @@ describe('drag_pan', () => {
 
     test('DragPanHandler requests a new render frame after each mousemove event', () => {
         const map = createMap();
-        const requestFrame = vi.spyOn(map._handlers, '_requestFrame');
+        const requestFrame = vi.spyOn(map, '_requestRenderFrame');
 
         simulate.mousedown(map.getCanvas());
         simulate.mousemove(map.getCanvas(), {buttons, clientX: 10, clientY: 10});
@@ -236,6 +236,34 @@ describe('drag_pan', () => {
         map._renderTaskQueue.run();
         expect(dragstart).toHaveBeenCalledTimes(1);
         expect(drag).toHaveBeenCalledTimes(2);
+        expect(dragend).toHaveBeenCalledTimes(1);
+
+        map.remove();
+    });
+
+    test('DragPanHandler begins a drag with the ctrl key down when dragRotate is disabled', () => {
+        const map = new Map({
+            container: DOM.create('div', '', window.document.body),
+            clickTolerance: 0,
+            cooperativeGestures: true,
+            dragRotate: false,
+        });
+
+        const dragstart = vi.fn();
+        const dragend = vi.fn();
+        map.on('dragstart', dragstart);
+        map.on('dragend', dragend);
+
+        simulate.mousedown(map.getCanvas(), {buttons, ctrlKey: true});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(0);
+
+        simulate.mousemove(map.getCanvas(), {buttons, ctrlKey: true, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+        expect(dragstart).toHaveBeenCalledTimes(1);
+
+        simulate.mouseup(map.getCanvas(), {ctrlKey: true});
+        map._renderTaskQueue.run();
         expect(dragend).toHaveBeenCalledTimes(1);
 
         map.remove();

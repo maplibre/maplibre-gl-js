@@ -2,11 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
-      "height": 256,
-      "operations": [
-          [ "setBearing", 180 ],
-          [ "wait" ]
-        ]
+      "height": 256
     }
   },
   "center": [
@@ -14,6 +10,7 @@
     52.499167
   ],
   "zoom": 14,
+  "bearing": 180,
   "sources": {
     "maplibre": {
       "type": "vector",

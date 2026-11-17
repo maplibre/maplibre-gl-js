@@ -1,0 +1,92 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "The literal test with each line's width read from its feature, so it shares literal's expected image.",
+      "width": 64,
+      "height": 64
+    }
+  },
+  "sprite": "local://sprites/emerald",
+  "sources": {
+    "lines": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "w": 2
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -10,
+                  -10
+                ],
+                [
+                  10,
+                  -10
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "w": 4
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -10,
+                  0
+                ],
+                [
+                  10,
+                  0
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "w": 8
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -10,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "lines",
+      "type": "line",
+      "source": "lines",
+      "paint": {
+        "line-width": [
+          "get",
+          "w"
+        ],
+        "line-pattern": "generic_icon"
+      }
+    }
+  ]
+}

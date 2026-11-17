@@ -3,12 +3,11 @@ import {readFileSync} from 'fs';
 import {describe, expect, test} from 'vitest';
 import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from './feature_index.ts';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper, type VectorTileFeatureLike} from '@maplibre/vt-pbf';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
 import Point from '@mapbox/point-geometry';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
-import {createIdentityCrsTransform} from '../util/test/util.ts';
+import {createIdentityCrsCamera, createTestCamera} from '../util/test/util.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -38,8 +37,7 @@ describe('FeatureIndex', () => {
 
     describe('query', () => {
         const tileID = new OverscaledTileID(3, 0, 2, 1, 2);
-        const transform = createMercatorTransform();
-        transform.resize(500, 500);
+        const {projectedCamera, context} = createTestCamera({width: 500, height: 500});
 
         test('filter with global-state', () => {
             const features = [
@@ -70,7 +68,8 @@ describe('FeatureIndex', () => {
                     filter: ['==', ['get', 'cluster'], ['global-state', 'isCluster']],
                     globalState
                 },
-                transform
+                projectedCamera,
+                worldCoordinateHelper: context.worldCoordinateHelper
             } as any, {
                 layer,
             }, [], undefined);
@@ -92,7 +91,8 @@ describe('FeatureIndex', () => {
                 queryGeometry: [new Point(0, 0), new Point(0, 2000), new Point(2000, 2000), new Point(2000, 0), new Point(0 ,0)],
                 cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
                 params: {},
-                transform
+                projectedCamera,
+                worldCoordinateHelper: context.worldCoordinateHelper
             } as any, {
                 layer,
             }, [], undefined);
@@ -118,7 +118,7 @@ describe('FeatureIndex in a planar projection', () => {
 
     test('query returns geometry through the transform projection', () => {
         const {featureIndex, layer} = createIndexWithFeature();
-        const transform = createIdentityCrsTransform(500, 500);
+        const {projectedCamera, context} = createIdentityCrsCamera(500, 500);
 
         const result = featureIndex.query({
             queryPadding: 0,
@@ -127,7 +127,8 @@ describe('FeatureIndex in a planar projection', () => {
             queryGeometry: [new Point(0, 0), new Point(10, 10)],
             cameraQueryGeometry: [new Point(0, 0), new Point(10, 10)],
             params: {},
-            transform
+            projectedCamera,
+            worldCoordinateHelper: context.worldCoordinateHelper
         } as any, {layer}, [], undefined);
         expect((result.layer[0].feature.geometry as GeoJSON.MultiPoint).coordinates[0]).toEqual([-45, 0]);
     });

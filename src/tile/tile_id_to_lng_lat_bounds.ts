@@ -1,8 +1,8 @@
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {worldBoxToLngLatBox} from '../geo/projection/mercator_utils.ts';
 
-import type {WorldCoordinateHelper} from '../geo/transform_interface.ts';
 import type {CanonicalTileID} from './tile_id.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * The lng/lat box of a tile, grown by `buffer` tile units (0 for the bare tile), in the given world mapping.

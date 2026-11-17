@@ -1,0 +1,59 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 160,
+      "height": 80
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 0,
+  "sources": {
+    "a": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [
+          -40,
+          0
+        ]
+      }
+    },
+    "b": {
+      "type": "geojson",
+      "data": {
+        "type": "Point",
+        "coordinates": [
+          40,
+          0
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/stretch",
+  "layers": [
+    {
+      "id": "a",
+      "type": "symbol",
+      "source": "a",
+      "layout": {
+        "icon-image": "nine-part-content",
+        "icon-size": 1,
+        "icon-allow-overlap": true
+      }
+    },
+    {
+      "id": "b",
+      "type": "symbol",
+      "source": "b",
+      "layout": {
+        "icon-image": "nine-part-content",
+        "icon-size": 2,
+        "icon-allow-overlap": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 512
+    }
+  },
+  "zoom": 2,
+  "sprite": "local://sprites/emerald",
+  "sources": {
+    "a": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "class": "trunk"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  50,
+                  -30
+                ],
+                [
+                  -50,
+                  -30
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "class": "path"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -50,
+                  -20
+                ],
+                [
+                  50,
+                  -20
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "class": "street"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -50,
+                  -10
+                ],
+                [
+                  50,
+                  -10
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "class": "trunk"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  50,
+                  10
+                ],
+                [
+                  -50,
+                  10
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "class": "path"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -50,
+                  20
+                ],
+                [
+                  50,
+                  20
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "class": "street"
+            },
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [
+                [
+                  -50,
+                  30
+                ],
+                [
+                  50,
+                  30
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "road",
+      "type": "line",
+      "source": "a",
+      "paint": {
+        "line-width": 10,
+        "line-pattern": [
+          "match", ["string", ["get", "class"]],
+            "street", "generic_icon",
+            "path", "generic_metro",
+            "school_icon"
+        ]
+      }
+    }
+  ]
+}

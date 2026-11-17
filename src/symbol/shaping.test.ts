@@ -307,6 +307,30 @@ describe('fitIconToText', () => {
 
     });
 
+    test('icon-text-fit lays the icon out so that it covers the text once scaled by icon-size', () => {
+        expect(
+            fitIconToText(shapedIcon, shapedText, 'both', [10, 10, 10, 10], [3, 7], 24 / glyphSize, 2)
+        ).toEqual({
+            image: shapedIcon.image,
+            collisionPadding: undefined,
+            top: -3,
+            right: 18,
+            bottom: 27,
+            left: -32
+        });
+
+        expect(
+            fitIconToText(shapedIcon, shapedText, 'width', [10, 10, 10, 10], [3, 7], 24 / glyphSize, 2)
+        ).toEqual({
+            image: shapedIcon.image,
+            collisionPadding: undefined,
+            top: 2,
+            right: 18,
+            bottom: 22,
+            left: -32
+        });
+    });
+
     test('icon-text-fit: both', () => {
         expect(
             fitIconToText(shapedIcon, shapedText, 'both', [0, 0, 0, 0], [0, 0], 24 / glyphSize)

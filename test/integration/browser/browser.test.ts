@@ -155,6 +155,7 @@ describe('Browser tests', () => {
         const finalZoom = await page.evaluate(() => {
             return new Promise<number>((resolve, _reject) => {
                 map.once('zoom', () => {
+                    map.stop();
                     map.flyTo({
                         zoom: 9
                     });
@@ -447,6 +448,16 @@ describe('Browser tests', () => {
         expect(errorMessage).toMatch(/badURL|dynamically imported module/);
 
     }, 5000);
+
+    test('Map loads on a page that enforces Trusted Types', {timeout: 20000}, async () => {
+        const port = (server.address() as AddressInfo).port;
+        await page.goto(`http://localhost:${port}/test/integration/browser/fixtures/trusted-types.html`, {waitUntil: 'domcontentloaded'});
+        await page.waitForFunction(() => map.loaded());
+
+        const attribution = await page.evaluate(() => map.getContainer().querySelector('.maplibregl-ctrl-attrib-inner').textContent);
+
+        expect(attribution).toBe('Land | MapLibre');
+    });
 
     test('Movement with transformCameraUpdate and terrain', {retry: 3, timeout: 20000}, async () => {
         await page.evaluate(async () => {

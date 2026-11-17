@@ -82,7 +82,7 @@ describe('dbclick_zoom', () => {
             zoomSnap: 1.0,
             zoom: 9.7
         });
-        const spy = vi.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map._camera, 'easeTo');
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();
@@ -98,7 +98,7 @@ describe('dbclick_zoom', () => {
             zoomSnap: 1.0,
             zoom: 9.7
         });
-        const spy = vi.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map._camera, 'easeTo');
 
         const canvas = map.getCanvas();
         simulate.touchstart(canvas, {touches: [{target: canvas, clientX: 0, clientY: 0}]});
@@ -228,7 +228,7 @@ describe('dbclick_zoom', () => {
 
     test('DoubleClickZoomHandler snaps to nearest zoomSnap on a non-interactive map', () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
-        const spy = vi.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map._camera, 'easeTo');
 
         simulate.dblclick(map.getCanvas());
         map._renderTaskQueue.run();
@@ -240,7 +240,7 @@ describe('dbclick_zoom', () => {
 
     test('DoubleClickZoomHandler double-tap snaps to nearest zoomSnap on a non-interactive map', async () => {
         const map = createMap({zoom: 9.7, zoomSnap: 1.0});
-        const spy = vi.spyOn(map, 'easeTo');
+        const spy = vi.spyOn(map._camera, 'easeTo');
 
         await simulateDoubleTap(map, 100);
 

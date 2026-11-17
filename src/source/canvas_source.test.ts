@@ -4,11 +4,9 @@ import {Event, Evented} from '../util/evented.ts';
 import {extend} from '../util/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
-import {createMercatorTransform} from '../geo/projection/mercator_transform.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
 import {waitForEvent} from '../util/test/util.ts';
 
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {MapSourceDataEvent} from '../ui/events.ts';
 
@@ -32,13 +30,11 @@ function createSource(options?: { canvas?: any; eventedParent?: any} & Partial<C
 }
 
 class StubMap extends Evented {
-    transform: IReadonlyTransform;
     style: any;
     painter: any;
 
     constructor() {
         super();
-        this.transform = createMercatorTransform();
         this.style = {projection: new MercatorProjection()};
         this.painter = {
             context: {

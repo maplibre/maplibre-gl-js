@@ -1,4 +1,5 @@
 import Point from '@mapbox/point-geometry';
+import {createTrustedHTML} from './trusted_types.ts';
 
 type ScaleReturnValue = {
     x: number;
@@ -153,7 +154,7 @@ export class DOM {
      */
     public static sanitize(str: string): DocumentFragment {
         const parser = new DOMParser();
-        const doc = parser.parseFromString(str, 'text/html');
+        const doc = parser.parseFromString(createTrustedHTML(str), 'text/html');
         const body = doc.body;
 
         const {querySelectorAll, remove} = getElementInternals();

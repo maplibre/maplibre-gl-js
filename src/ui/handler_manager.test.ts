@@ -1,20 +1,16 @@
 import {afterEach, beforeEach, describe, expect, vi, test} from 'vitest';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat.ts';
-import {Event as MapEvent} from '../util/evented.ts';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
-import {beforeMapTest, createMap, createTerrain} from '../util/test/util.ts';
+import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {setElevation} from '../camera/camera_updates.ts';
+import {beforeMapTest, createMap, createTerrain, createCoverageIndex} from '../util/test/util.ts';
 import simulate from '../../test/unit/lib/simulate_interaction.ts';
 import * as timeControl from '../util/time_control.ts';
 
-import type {HandlerManager, MapControlsScenarioOptions, EventInProgress, EventsInProgress} from './handler_manager.ts';
 import type {Map} from './map.ts';
-import type {ICameraHelper, MapControlsDeltas} from '../geo/projection/camera_helper.ts';
 import type {Terrain} from '../render/terrain.ts';
-import type {ITransform} from '../geo/transform_interface.ts';
 
 let map: Map;
-let manager: HandlerManager;
 
 beforeEach(() => {
     beforeMapTest();
@@ -25,285 +21,11 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-describe('HandlerManager terrain scenarios', () => {
-    beforeEach(() => {
-        map = createMap();
-        manager = map._handlers;
-    });
-
-    test('_handleMapControls pans through the camera helper when terrain is not enabled and the pointer is on the map', () => {
-        const handleZoom = vi.fn();
-        const handlePan = vi.fn();
-        map._camera.cameraHelper = {
-            handleMapControlsRollPitchBearingZoom: handleZoom,
-            handleMapControlsPan: handlePan,
-            useGlobeControls: false,
-        } as unknown as ICameraHelper;
-
-        const setCenterMock = vi.fn();
-        const transform = {
-            centerPoint: new Point(0, 0),
-            center: new LngLat(0, 0),
-            screenPointToLocation: vi.fn(() => new LngLat(1, 1)),
-            setCenter: setCenterMock,
-            isPointOnMapSurface: () => true,
-        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter' | 'isPointOnMapSurface'>;
-        const deltas: MapControlsDeltas = {
-            panDelta: new Point(0, 0),
-            zoomDelta: 0,
-            rollDelta: 0,
-            pitchDelta: 0,
-            bearingDelta: 0,
-            around: new Point(0, 0),
-        };
-        const combinedEvents: EventsInProgress = {
-            drag: createEventInProgress('drag'),
-        };
-        const options: MapControlsScenarioOptions = {
-            terrain: null,
-            tr: transform as unknown as ITransform,
-            deltasForHelper: deltas,
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: combinedEvents,
-            panDelta: deltas.panDelta,
-        };
-
-        manager._terrainGesture.inFlight = false;
-        map._camera.elevationFreeze = false;
-
-        manager._handleMapControls(options);
-
-        expect(handleZoom).toHaveBeenCalledWith(options.deltasForHelper, options.tr);
-        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-        expect(map._camera.elevationFreeze).toBe(false);
-        expect(manager._terrainGesture.inFlight).toBe(false);
-        expect(setCenterMock).not.toHaveBeenCalled();
-    });
-
-    test('_handleMapControls enables terrain movement for globe terrain handling', () => {
-        const handleZoom = vi.fn();
-        const handlePan = vi.fn();
-        map._camera.cameraHelper = {
-            handleMapControlsRollPitchBearingZoom: handleZoom,
-            handleMapControlsPan: handlePan,
-            useGlobeControls: true,
-        } as unknown as ICameraHelper;
-
-        const transform = {
-            centerPoint: new Point(0, 0),
-            center: new LngLat(0, 0),
-            screenPointToLocation: vi.fn(() => new LngLat(0, 0)),
-            setCenter: vi.fn(),
-        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            tr: transform as unknown as ITransform,
-            deltasForHelper: {
-                panDelta: new Point(1, 1),
-                zoomDelta: 0,
-                rollDelta: 0,
-                pitchDelta: 0,
-                bearingDelta: 0,
-                around: new Point(0, 0),
-            },
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {drag: createEventInProgress('drag')},
-            panDelta: new Point(1, 1),
-        };
-
-        manager._terrainGesture.inFlight = false;
-        map._camera.elevationFreeze = false;
-
-        manager._handleMapControls(options);
-
-        expect(manager._terrainGesture.inFlight).toBe(true);
-        expect(map._camera.elevationFreeze).toBe(true);
-        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-    });
-
-    test('_handleMapControls keeps terrain movement state when globe terrain is already active', () => {
-        const handleZoom = vi.fn();
-        const handlePan = vi.fn();
-        map._camera.cameraHelper = {
-            handleMapControlsRollPitchBearingZoom: handleZoom,
-            handleMapControlsPan: handlePan,
-            useGlobeControls: true,
-        } as unknown as ICameraHelper;
-
-        const transform = {
-            centerPoint: new Point(0, 0),
-            center: new LngLat(0, 0),
-            screenPointToLocation: vi.fn(() => new LngLat(0, 0)),
-            setCenter: vi.fn(),
-        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            tr: transform as unknown as ITransform,
-            deltasForHelper: {
-                panDelta: new Point(0, 0),
-                zoomDelta: 0,
-                rollDelta: 0,
-                pitchDelta: 0,
-                bearingDelta: 0,
-                around: new Point(0, 0),
-            },
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {},
-            panDelta: undefined,
-        };
-
-        manager._terrainGesture.inFlight = true;
-        map._camera.elevationFreeze = true;
-
-        manager._handleMapControls(options);
-
-        expect(manager._terrainGesture.inFlight).toBe(true);
-        expect(map._camera.elevationFreeze).toBe(true);
-        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-    });
-
-    test('_handleMapControls activates terrain movement on first drag in mercator terrain', () => {
-        const handleZoom = vi.fn();
-        const handlePan = vi.fn();
-        map._camera.cameraHelper = {
-            handleMapControlsRollPitchBearingZoom: handleZoom,
-            handleMapControlsPan: handlePan,
-            useGlobeControls: false,
-        } as unknown as ICameraHelper;
-
-        const setCenterMock = vi.fn();
-        const transform = {
-            centerPoint: new Point(0, 0),
-            center: new LngLat(0, 0),
-            screenPointToLocation: vi.fn(() => new LngLat(5, 5)),
-            setCenter: setCenterMock,
-        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
-        const deltas: MapControlsDeltas = {
-            panDelta: new Point(2, 3),
-            zoomDelta: 0,
-            rollDelta: 0,
-            pitchDelta: 0,
-            bearingDelta: 0,
-            around: new Point(0, 0),
-        };
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            tr: transform as unknown as ITransform,
-            deltasForHelper: deltas,
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {drag: createEventInProgress('drag')},
-            panDelta: deltas.panDelta,
-        };
-
-        manager._terrainGesture.inFlight = false;
-        map._camera.elevationFreeze = false;
-
-        manager._handleMapControls(options);
-
-        expect(manager._terrainGesture.inFlight).toBe(true);
-        expect(map._camera.elevationFreeze).toBe(true);
-        expect(handlePan).toHaveBeenCalledTimes(1);
-        expect(setCenterMock).not.toHaveBeenCalled();
-    });
-
-    test('_handleMapControls drags using transform when already moving in mercator terrain', () => {
-        const handleZoom = vi.fn();
-        const handlePan = vi.fn();
-        map._camera.cameraHelper = {
-            handleMapControlsRollPitchBearingZoom: handleZoom,
-            handleMapControlsPan: handlePan,
-            useGlobeControls: false,
-        } as unknown as ICameraHelper;
-
-        const setCenterMock = vi.fn();
-        const screenPointToLocation = vi.fn(() => new LngLat(7, 8));
-        const transform = {
-            centerPoint: new Point(10, 12),
-            center: new LngLat(0, 0),
-            screenPointToLocation,
-            setCenter: setCenterMock,
-        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            tr: transform as unknown as ITransform,
-            deltasForHelper: {
-                panDelta: new Point(4, 6),
-                zoomDelta: 0,
-                rollDelta: 0,
-                pitchDelta: 0,
-                bearingDelta: 0,
-                around: new Point(0, 0),
-            },
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {drag: createEventInProgress('drag')},
-            panDelta: new Point(4, 6),
-        };
-
-        manager._terrainGesture.inFlight = true;
-        map._camera.elevationFreeze = true;
-
-        manager._handleMapControls(options);
-
-        expect(screenPointToLocation).toHaveBeenCalled();
-        expect(setCenterMock).toHaveBeenCalledTimes(1);
-        const centerArg = setCenterMock.mock.calls[0][0] as LngLat;
-        expect(centerArg.lng).toBeCloseTo(7);
-        expect(centerArg.lat).toBeCloseTo(8);
-        expect(handlePan).not.toHaveBeenCalled();
-    });
-
-    test('_handleMapControls falls back to helper panning when not dragging in mercator terrain', () => {
-        const handleZoom = vi.fn();
-        const handlePan = vi.fn();
-        map._camera.cameraHelper = {
-            handleMapControlsRollPitchBearingZoom: handleZoom,
-            handleMapControlsPan: handlePan,
-            useGlobeControls: false,
-        } as unknown as ICameraHelper;
-
-        const transform = {
-            centerPoint: new Point(0, 0),
-            center: new LngLat(0, 0),
-            screenPointToLocation: vi.fn(() => new LngLat(0, 0)),
-            setCenter: vi.fn(),
-        } satisfies Pick<ITransform, 'centerPoint' | 'center' | 'screenPointToLocation' | 'setCenter'>;
-        const options: MapControlsScenarioOptions = {
-            terrain: {} as Terrain,
-            tr: transform as unknown as ITransform,
-            deltasForHelper: {
-                panDelta: new Point(0, 0),
-                zoomDelta: 0,
-                rollDelta: 0,
-                pitchDelta: 0,
-                bearingDelta: 0,
-                around: new Point(0, 0),
-            },
-            preZoomAroundLoc: new LngLat(0, 0),
-            combinedEventsInProgress: {},
-            panDelta: undefined,
-        };
-
-        manager._terrainGesture.inFlight = true;
-        map._camera.elevationFreeze = true;
-
-        manager._handleMapControls(options);
-
-        expect(handlePan).toHaveBeenCalledWith(options.deltasForHelper, options.tr, options.preZoomAroundLoc);
-    });
-});
-
-function createEventInProgress(name: keyof EventsInProgress): EventInProgress {
-    return {
-        handlerName: name,
-        originalEvent: new MapEvent(`${String(name)}start`),
-    };
-}
-
 describe('terrain gesture anchoring', () => {
     async function setupGestureMap(pitch: number = 0): Promise<HTMLElement> {
         map = createMap({interactive: true, zoom: 11, center: [7.5, 45.9], pitch, bearing: 0});
         map.touchZoomRotate.disableRotation();
-        map._handlers._handlersById.tapZoom.disable();
+        map.doubleClickZoom.disable();
         map.touchPitch.disable();
         await map.once('style.load');
         return map.getCanvas();
@@ -335,9 +57,9 @@ describe('terrain gesture anchoring', () => {
     test('moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
         const target = await setupGestureMap();
         const anchor = new LngLat(7.49, 45.905);
-        const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
         map.terrain = createTerrain();
-        const raycastSpy = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
+        map._camera.setTerrain(map.terrain);
+        const coverage = vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(() => 1000, 1000, 1000));
 
         // Start the pinch with the finger midpoint exactly where the grabbed point renders
         const start = map.project(anchor);
@@ -354,24 +76,22 @@ describe('terrain gesture anchoring', () => {
             halfSpread += 10;
             gestureStep('touchmove', target, pinchTouches(mid, halfSpread));
             // terrain "loading" mid-gesture must not move the anchor plane
-            raycastSpy.mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 4000));
+            coverage.mockReturnValue(createCoverageIndex(() => 4000, 4000, 4000));
         }
 
         expect(map.getZoom()).toBeGreaterThan(11.5);
-        expect(map._handlers._terrainGesture.anchorElevation).toBe(1000);
 
         const slip = slipOf(anchor, mid);
         endGesture(target);
         expect(slip).toBeLessThan(0.5);
-        expect(map._handlers._terrainGesture.anchorElevation).toBeNull();
     });
 
     test('pitched moving-centroid pinch with terrain keeps the grabbed terrain point under the fingers', async () => {
         const target = await setupGestureMap(60);
         const anchor = new LngLat(7.494, 45.904);
-        const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
         map.terrain = createTerrain();
-        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
+        map._camera.setTerrain(map.terrain);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(() => 1000, 1000, 1000));
 
         const start = map.project(anchor);
         expect(start.x).toBeGreaterThan(20);
@@ -399,15 +119,17 @@ describe('terrain gesture anchoring', () => {
         const target = await setupGestureMap();
         // a 2000 m ridge east of the center, with the center itself at 300 m
         const ridgeStartLng = map.getCenter().lng + 0.003;
-        const elevationAt = (lngLat: LngLat) => lngLat.lng > ridgeStartLng ? 2000 : 300;
+        const elevationAt = (lng: number) => lng > ridgeStartLng ? 2000 : 300;
         const anchor = new LngLat(map.getCenter().lng + 0.012, map.getCenter().lat);
-        const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
         map.terrain = {
             ...createTerrain(),
-            getElevationForLngLat: (lngLat: LngLat) => elevationAt(lngLat),
+            exaggeration: 1,
+            getElevationForLngLat: (lngLat: LngLat) => elevationAt(lngLat.lng),
+            getElevationAndDEMStateForLngLat: (lngLat: LngLat) => ({elevation: elevationAt(lngLat.lng), demState: 'loaded'}),
         } as any as Terrain;
-        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 2000));
-        map._camera.applyTransformChange(tr => tr.setElevation(300));
+        map._camera.setTerrain(map.terrain);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(elevationAt, 300, 2000));
+        map._camera.applyStateChange((view, context) => setElevation(view, context, 300));
 
         const start = map.project(anchor);
         expect(start.x).toBeGreaterThan(20);
@@ -430,10 +152,9 @@ describe('terrain gesture anchoring', () => {
     test('center-anchored pinch over terrain still pans with the centroid', async () => {
         const target = await setupGestureMap();
         map.touchZoomRotate.enable({around: 'center'});
-        const anchor = new LngLat(7.49, 45.905);
-        const anchorCoordinate = MercatorCoordinate.fromLngLat(anchor);
         map.terrain = createTerrain();
-        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(anchorCoordinate.x, anchorCoordinate.y, 1000));
+        map._camera.setTerrain(map.terrain);
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(() => 1000, 1000, 1000));
 
         const startCenter = map.getCenter();
         const start = new Point(80, 90);
@@ -456,6 +177,7 @@ describe('terrain gesture anchoring', () => {
     test('falls back to the center-elevation behavior when the terrain under the gesture is not loaded', async () => {
         const target = await setupGestureMap();
         map.terrain = createTerrain();
+        map._camera.setTerrain(map.terrain);
 
         const startCenter = map.getCenter();
         const start = new Point(80, 90);
@@ -478,14 +200,15 @@ describe('terrain gesture anchoring', () => {
     test('a drag that starts over terrain that is not loaded moves the map the same distance per pixel when that terrain loads mid-drag', async () => {
         const target = await setupGestureMap(45);
         map.terrain = createTerrain();
-        const grabbedTerrain = vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(null);
+        map._camera.setTerrain(map.terrain);
+        const coverage = vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(null);
 
         gestureStep('touchstart', target, [new Point(100, 150)]);
         gestureStep('touchmove', target, [new Point(100, 140)]);
         const latitudeAfterFirstMove = map.getCenter().lat;
         gestureStep('touchmove', target, [new Point(100, 130)]);
         const latitudeAfterSecondMove = map.getCenter().lat;
-        grabbedTerrain.mockReturnValue(new MercatorCoordinate(0.5, 0.35, 3000));
+        coverage.mockReturnValue(createCoverageIndex(() => 3000, 3000, 3000));
         gestureStep('touchmove', target, [new Point(100, 120)]);
         const latitudeAfterThirdMove = map.getCenter().lat;
         endGesture(target);
@@ -493,13 +216,22 @@ describe('terrain gesture anchoring', () => {
         expect(latitudeAfterThirdMove - latitudeAfterSecondMove).toBeCloseTo(latitudeAfterSecondMove - latitudeAfterFirstMove, 5);
     });
 
-    test('falls back to the center-elevation behavior when the grabbed terrain point is above the camera altitude', async () => {
+    test('falls back to the center-elevation behavior when the grabbed terrain point is nearly as high as the camera', async () => {
         const target = await setupGestureMap();
         map.terrain = createTerrain();
-        vi.spyOn(map._camera.transform, 'screenTerrainPointToMercatorCoordinate').mockReturnValue(new MercatorCoordinate(0.5, 0.35, 1e6));
+        map._camera.setTerrain(map.terrain);
+        const start = new Point(80, 90);
+        const {projectedCamera, context} = map._camera;
+        const centerElevation = map.getCameraTargetElevation();
+        // a plateau just under the camera, whose edge is where the ray through the pinch's first midpoint meets it
+        const firstMid = start.add(new Point(15, 10));
+        const plateauTop = centerElevation + 0.95 * (getCameraMath(projectedCamera).getCameraAltitude(projectedCamera) - centerElevation);
+        const edge = getCameraMath(projectedCamera).screenPointToLocationAtElevation(projectedCamera, context.worldCoordinateHelper, firstMid, plateauTop);
+        const height = (lng: number, lat: number) => lng < edge.lng + 1e-5 && lat > edge.lat - 1e-5 ? plateauTop : centerElevation;
+        vi.spyOn(map.terrain, 'getCoverageIndex').mockReturnValue(createCoverageIndex(height, centerElevation, plateauTop));
+        expect(getCameraMath(projectedCamera).screenTerrainPointToMercatorCoordinate(projectedCamera, context.worldCoordinateHelper, firstMid, map.terrain).z).toBeCloseTo(plateauTop, 0);
 
         const startCenter = map.getCenter();
-        const start = new Point(80, 90);
         gestureStep('touchstart', target, pinchTouches(start, 30));
         let mid = start;
         let halfSpread = 30;

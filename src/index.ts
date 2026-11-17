@@ -17,6 +17,7 @@ import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate.ts';
 import {Evented, ErrorEvent, Event, type ErrorEventType, type EventedParentData, type EventTypeMap, type Listener} from './util/evented.ts';
 import {type AddProtocolAction, type AddProtocolResponseData, config} from './util/config.ts';
+import {setTrustedTypesPolicy, type TrustedTypesPolicy} from './util/trusted_types.ts';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread.ts';
 import {now, setNow, restoreNow, isTimeFrozen} from './util/time_control.ts';
 import {WorkerPool} from './util/worker_pool.ts';
@@ -53,12 +54,12 @@ import type {Dispatcher} from './util/dispatcher.ts';
 import type {MessageType, ActorMessage, RequestResponseMessageMap} from './util/actor_messages.ts';
 import type {ControlPosition, IControl} from './ui/control/control.ts';
 import type {CustomRenderMethod, CustomLayerInterface, CustomRenderMethodInput, CustomLayerProjectionDataParams, CustomTerrainRenderInput, UnwrappedTileIDLiteral} from './style/style_layer/custom_style_layer.ts';
-import type {AnchoredCameraOptions, AnimationOptions, CameraForBoundsOptions, CameraOptions, CameraUpdateTransformFunction, CenterZoomBearing, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions, PointLike} from './ui/camera.ts';
+import type {AnchoredCameraOptions, AnimationOptions, CameraUpdateTransformFunction, EaseToOptions, FitBoundsOptions, FlyToOptions, JumpToOptions} from './ui/camera.ts';
 import type {DistributiveKeys, DistributiveOmit, GeoJSONFeature, MapGeoJSONFeature} from './util/vectortile_to_geojson.ts';
 import type {Handler, HandlerResult} from './ui/handler_manager.ts';
 import type {Complete, Mat4f32, Mat4f64, RequireAtLeastOne, Subscription} from './util/util.ts';
 import type {CalculateTileZoomFunction, CoveringTilesOptions} from './geo/projection/covering_tiles.ts';
-import type {TransformConstrainFunction} from './geo/transform_interface.ts';
+import type {TransformConstrainFunction, CameraForBoundsOptions, CameraOptions, CenterZoomBearing, PointLike} from './camera/camera_types.ts';
 import type {StyleImage, StyleImageData, StyleImageInterface, StyleImageMetadata, StyleImageWebGLData, StyleImageWebGLTarget, TextFit} from './style/style_image.ts';
 import type {StyleLayer, PaintPropertyEntry} from './style/style_layer.ts';
 import type {Tile} from './tile/tile.ts';
@@ -425,6 +426,7 @@ export {
     type DashEntry,
     type Painter,
     type WorkerGlobalScopeInterface,
+    type TrustedTypesPolicy,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
@@ -436,6 +438,7 @@ export {
     setMaxParallelImageRequests,
     getWorkerUrl,
     setWorkerUrl,
+    setTrustedTypesPolicy,
     addProtocol,
     removeProtocol,
     addProjection,

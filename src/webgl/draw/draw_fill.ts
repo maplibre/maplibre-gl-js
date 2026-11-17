@@ -9,7 +9,7 @@ import {
 } from '../program/fill_program.ts';
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
-import {drawLayerOpacity, prepareDrawLayerOpacity} from './draw_layer_opacity.ts';
+import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {ColorMode} from '../color_mode.ts';
@@ -25,11 +25,12 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     const layerOpacity = layer.paint.get('fill-layer-opacity');
     if (opacity.constantOr(1) === 0 || layerOpacity === 0) return;
 
-    if (layerOpacity < 1) {
+    const layerBlend = layer.paint.get('fill-layer-blend');
+    if (layerOpacity < 1 || layerBlend !== 'normal') {
         if (frameRenderContext.currentPass !== 'translucent') return;
-        const results = prepareDrawLayerOpacity(painter, layer, coords, frameRenderContext);
+        const results = prepareDrawLayerComposite(painter, tileManager, layer, coords, frameRenderContext);
         drawFillAndOutline(tileManager, layer, coords, frameRenderContext);
-        drawLayerOpacity(painter, layerOpacity, results, layer, frameRenderContext);
+        drawLayerComposite(painter, layerOpacity, layerBlend, results, layer, frameRenderContext);
         return;
     }
 
@@ -114,7 +115,7 @@ function drawFillTiles(
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
@@ -151,17 +152,17 @@ function drawFillTiles(
 
         const projectionData = frameRenderContext.getProjectionDataForTile(coord);
 
-        const translateForUniforms = translatePosition(transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        const translateForUniforms = translatePosition(projectedCamera, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(transform, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
+            uniformValues = image ? fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(transform, crossfade, tile, translateForUniforms, isSdfPattern) :
+                fillOutlinePatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern) :
                 fillOutlineUniformValues(translateForUniforms);
         }
 
@@ -170,6 +171,6 @@ function drawFillTiles(
         program.draw(context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, frameRenderContext.transform.zoom, programConfiguration);
+            layer.paint, frameRenderContext.projectedCamera.zoom, programConfiguration);
     }
 }

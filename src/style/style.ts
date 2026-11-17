@@ -45,7 +45,6 @@ import type {StyleLayer} from './style_layer.ts';
 import type {MapGeoJSONFeature, GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
 import type {Map} from '../ui/map.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {StyleImage} from './style_image.ts';
 import type {GlyphMap} from './style_glyph.ts';
 import type {EvaluationParameters} from './evaluation_parameters.ts';
@@ -71,6 +70,8 @@ import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Validator} from './validate_style.ts';
 import type {Projection} from '../geo/projection/projection.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 const empty = emptyStyle();
 /**
@@ -512,7 +513,7 @@ export class Style extends Evented<MapEventType> {
         this.stylesheet = nextState;
 
         this.setGlobalState(this.stylesheet.state ?? null);
-        const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', this.map._camera?.transform.constrainOverride, this._globalState);
+        const projectionObjects = createProjectionFromName(this.stylesheet.projection?.type || 'mercator', this._globalState);
         this.projection = projectionObjects.projection;
 
         for (const id in nextState.sources) {
@@ -1162,6 +1163,10 @@ export class Style extends Evented<MapEventType> {
     /**
      * Add a layer to the map style. The layer will be inserted before the layer with
      * ID `before`, or appended if `before` is omitted.
+     *
+     * A source given inline is added under the layer's ID and handed to `addSource` as it is, without
+     * being copied, because it can hold a DOM element such as the `canvas` of a canvas source. The layer is
+     * copied shallowly to point it at that ID, so the object the caller passed in is left as it was.
      * @param layerObject - The style layer to add.
      * @param before - ID of an existing layer to insert before
      * @param options - Style setter options.
@@ -1186,8 +1191,7 @@ export class Style extends Evented<MapEventType> {
         } else {
             if ('source' in layerObject && typeof layerObject.source === 'object') {
                 this.addSource(id, layerObject.source);
-                layerObject = clone(layerObject);
-                layerObject = extend(layerObject, {source: id});
+                layerObject = {...layerObject, source: id} as LayerSpecification;
             }
 
             // this layer is not in the style.layers array, so we pass an impossible array index
@@ -1662,7 +1666,7 @@ export class Style extends Evented<MapEventType> {
         return features;
     }
 
-    queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, transform: IReadonlyTransform): MapGeoJSONFeature[] {
+    queryRenderedFeatures(queryGeometry: Point[], params: QueryRenderedFeaturesOptions, projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper): MapGeoJSONFeature[] {
         if (params?.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
@@ -1708,7 +1712,8 @@ export class Style extends Evented<MapEventType> {
                     serializedLayers,
                     queryGeometry,
                     paramsStrict,
-                    transform,
+                    projectedCamera,
+                    worldCoordinateHelper,
                     this.map.terrain ?
                         (id: OverscaledTileID, x: number, y: number) =>
                             this.map.terrain.getElevation(id, x, y) :
@@ -1727,7 +1732,8 @@ export class Style extends Evented<MapEventType> {
                     queryGeometry,
                     paramsStrict,
                     this.placement.collisionIndex,
-                    this.placement.retainedQueryData)
+                    this.placement.retainedQueryData,
+                    worldCoordinateHelper)
             );
         }
 
@@ -1834,16 +1840,16 @@ export class Style extends Evented<MapEventType> {
     }
 
     _setProjectionInternal(name: ProjectionSpecification['type']): void {
-        this._applyProjection(createProjectionFromName(name, this.map._camera?.transform.constrainOverride, this._globalState));
+        this._applyProjection(createProjectionFromName(name, this._globalState));
     }
 
     /**
-     * Puts a projection in place and migrates the map to its transform, which fires `projectiontransition`, then
-     * reloads the tiles in it.
+     * Puts a projection in place and moves the map's camera onto it, which fires `projectiontransition`, then reloads
+     * the tiles in it.
      */
     private _applyProjection(projectionObjects: ReturnType<typeof createProjectionFromName>): void {
         this.projection = projectionObjects.projection;
-        this.map.migrateProjection(projectionObjects.transform, projectionObjects.cameraHelper);
+        this.map.migrateProjection(projectionObjects.cameraProjection, projectionObjects.projection.worldCoordinateHelper);
         for (const key in this.tileManagers) {
             this.tileManagers[key].reload();
         }
@@ -1900,9 +1906,9 @@ export class Style extends Evented<MapEventType> {
         this.tileManagers[id].reload();
     }
 
-    _updateSources(transform: IReadonlyTransform): void {
+    _updateSources(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper): void {
         for (const id in this.tileManagers) {
-            this.tileManagers[id].update(transform, this.map.terrain);
+            this.tileManagers[id].update(projectedCamera, worldCoordinateHelper, this.map.terrain);
         }
     }
 
@@ -1929,18 +1935,18 @@ export class Style extends Evented<MapEventType> {
      *
      * @internal
      */
-    _placementInputsChanged(transform: IReadonlyTransform, showCollisionBoxes: boolean, crossSourceCollisions: boolean): boolean {
+    _placementInputsChanged(projectedCamera: ProjectedCamera, showCollisionBoxes: boolean, crossSourceCollisions: boolean): boolean {
         const lastPlacement = this.pauseablePlacement;
         return !lastPlacement ||
             this._symbolPlacementTriggered ||
             this._placedProjectionTransition !== this.projection?.transitionState ||
             lastPlacement._showCollisionBoxes !== showCollisionBoxes ||
             lastPlacement.placement.collisionGroups.crossSourceCollisions !== crossSourceCollisions ||
-            lastPlacement.placement.transform.renderWorldCopies !== transform.renderWorldCopies ||
-            !mat4.exactEquals(lastPlacement.placement.transform.modelViewProjectionMatrix, transform.modelViewProjectionMatrix);
+            lastPlacement.placement.projectedCamera.renderWorldCopies !== projectedCamera.renderWorldCopies ||
+            !mat4.exactEquals(lastPlacement.placement.projectedCamera.modelViewProjectionMatrix, projectedCamera.modelViewProjectionMatrix);
     }
 
-    _updatePlacement(transform: IReadonlyTransform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
+    _updatePlacement(projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false): boolean {
         let symbolBucketsChanged = false;
         let placementCommitted = false;
 
@@ -1957,7 +1963,7 @@ export class Style extends Evented<MapEventType> {
                     .sort((a, b) => (b.tileID.overscaledZ - a.tileID.overscaledZ) || (a.tileID.isLessThan(b.tileID) ? -1 : 1));
             }
 
-            const layerBucketsChanged = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], transform.worldCoordinateHelper.wraps ? transform.center.lng : 0);
+            const layerBucketsChanged = this.crossTileSymbolIndex.addLayer(styleLayer, layerTiles[styleLayer.source], worldCoordinateHelper.wraps ? projectedCamera.center.lng : 0);
             symbolBucketsChanged ||= layerBucketsChanged;
         }
         this.crossTileSymbolIndex.pruneUnusedLayers(this._order);
@@ -1970,14 +1976,14 @@ export class Style extends Evented<MapEventType> {
         // tiles will fully display symbols in their first frame
         forceFullPlacement ||= this._layerOrderChanged || fadeDuration === 0;
 
-        const placementInputsChanged = symbolBucketsChanged || this._placementInputsChanged(transform, showCollisionBoxes, crossSourceCollisions);
+        const placementInputsChanged = symbolBucketsChanged || this._placementInputsChanged(projectedCamera, showCollisionBoxes, crossSourceCollisions);
 
-        const placementSettled = this.pauseablePlacement?.isDone() && !this.placement.stillRecent(now(), transform.zoom);
+        const placementSettled = this.pauseablePlacement?.isDone() && !this.placement.stillRecent(now(), projectedCamera.zoom);
 
         if (forceFullPlacement || !this.pauseablePlacement || (placementSettled && (placementInputsChanged || this.placement.stale))) {
             this._symbolPlacementTriggered = false;
             this._placedProjectionTransition = this.projection?.transitionState;
-            this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(projectedCamera, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 

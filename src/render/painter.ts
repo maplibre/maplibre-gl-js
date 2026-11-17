@@ -13,6 +13,7 @@ import {CullFaceMode} from '../webgl/cull_face_mode.ts';
 import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
+import {layerBlendsInShader} from '../webgl/draw/draw_layer_composite.ts';
 import {Mesh} from './mesh.ts';
 import {FrameRenderContext, type FrameRenderData} from './frame_render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
@@ -32,7 +33,6 @@ import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Style} from '../style/style.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {LineAtlas} from './line_atlas.ts';
@@ -41,6 +41,8 @@ import type {VertexBuffer} from '../webgl/vertex_buffer.ts';
 import type {IndexBuffer} from '../webgl/index_buffer.ts';
 import type {IRenderToTexture} from './render_to_texture_interface.ts';
 import type {Framebuffer} from '../webgl/framebuffer.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 /**
  * Holds the texture used to render a 2D tile so it can be draped over 3D
@@ -80,12 +82,14 @@ export class Painter {
         size: number;
     } | null;
     /**
-     * Shared scratch FBO (color + depth-stencil) used by `{line,fill}-layer-opacity`.
+     * Shared scratch FBO (color + depth-stencil) used by `{line,fill}-layer-opacity` and `{line,fill}-layer-blend`.
      * The layer is rendered into this FBO, then composited into whatever framebuffer was previously bound
      * The canvas in the flat case, the per-terrain-tile RTT texture in the terrain case.
      * Resized in place to match the target dimensions.
      */
-    layerOpacityFbo: Framebuffer | null;
+    layerCompositeFbo: Framebuffer | null;
+    /** Copy of the composite target's scissor box, sampled as the backdrop by shader-evaluated `{line,fill}-layer-blend`. */
+    layerCompositeBackdrop: {texture: WebGLTexture; width: number; height: number} | null;
     width: number;
     height: number;
     tileExtentBuffer: VertexBuffer;
@@ -116,7 +120,8 @@ export class Painter {
         this.drawFunctions = webglDrawFunctions;
         this.context = new Context(gl);
         this.programCache = new ProgramCache(this.context);
-        this.layerOpacityFbo = null;
+        this.layerCompositeFbo = null;
+        this.layerCompositeBackdrop = null;
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
         this._rttSharedFbo = null;
@@ -211,11 +216,11 @@ export class Painter {
     _renderTilesDepthBuffer(frameRenderContext: FrameRenderContext): void {
         const context = this.context;
         const gl = context.gl;
-        const transform = frameRenderContext.transform;
+        const projectedCamera = frameRenderContext.projectedCamera;
 
         const program = frameRenderContext.useProgram('depth');
         const depthMode = frameRenderContext.getDepthModeFor3D();
-        const tileIDs = coveringTiles(transform, {tileSize: transform.tileSize});
+        const tileIDs = coveringTiles(projectedCamera, frameRenderContext.worldCoordinateHelper, {tileSize: projectedCamera.tileSize});
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
@@ -231,11 +236,12 @@ export class Painter {
         }
     }
 
-    render(style: Style, transform: IReadonlyTransform, data: FrameRenderData): void {
+    render(style: Style, projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, data: FrameRenderData): void {
         if (this.context.gl.isContextLost()) return;
 
         const frameRenderContext = new FrameRenderContext({
-            transform,
+            projectedCamera,
+            worldCoordinateHelper,
             terrain: style.map.terrain ?? null,
             data,
             context: this.context,
@@ -247,7 +253,7 @@ export class Painter {
         this.lineAtlas = style.lineAtlas;
         this.patternAtlas = style.patternAtlas;
 
-        updateFrameUniformBuffer(this.context.frameUniformBuffer, transform, data);
+        updateFrameUniformBuffer(this.context.frameUniformBuffer, projectedCamera, data);
 
         style.imageManager.beginFrame();
         releaseProjectionUniformBuffers(this.context);
@@ -272,8 +278,8 @@ export class Painter {
 
         frameRenderContext.opaquePassCutoff = Infinity;
         for (let i = 0; i < layerIds.length; i++) {
-            const layerId = layerIds[i];
-            if (style._layers[layerId].is3D()) {
+            const layer = style._layers[layerIds[i]];
+            if (layer.is3D() || layerBlendsInShader(layer)) {
                 frameRenderContext.opaquePassCutoff = i;
                 break;
             }
@@ -282,7 +288,7 @@ export class Painter {
         this.maybeDrawDepth(frameRenderContext);
 
         if (this.renderToTexture) {
-            this.renderToTexture.prepareForRender(style, transform.zoom, data.moving);
+            this.renderToTexture.prepareForRender(style, projectedCamera.zoom, data.moving);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             frameRenderContext.opaquePassCutoff = 0;
         }
@@ -295,7 +301,7 @@ export class Painter {
 
         for (const layerId of layerIds) {
             const layer = style._layers[layerId];
-            if (!layer.hasOffscreenPass() || layer.isHidden(transform.zoom)) continue;
+            if (!layer.hasOffscreenPass() || layer.isHidden(projectedCamera.zoom)) continue;
 
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
@@ -323,7 +329,7 @@ export class Painter {
 
             for (frameRenderContext.currentLayer = layerIds.length - 1; frameRenderContext.currentLayer >= 0; frameRenderContext.currentLayer--) {
                 const layer = style._layers[layerIds[frameRenderContext.currentLayer]];
-                if (layer.isHidden(transform.zoom)) continue;
+                if (layer.isHidden(projectedCamera.zoom)) continue;
                 const tileManager = tileManagers[layer.source];
                 const coords = coordsAscending[layer.source];
 
@@ -340,7 +346,7 @@ export class Painter {
 
         for (frameRenderContext.currentLayer = 0; frameRenderContext.currentLayer < layerIds.length; frameRenderContext.currentLayer++) {
             const layer = style._layers[layerIds[frameRenderContext.currentLayer]];
-            if (layer.isHidden(transform.zoom)) continue;
+            if (layer.isHidden(projectedCamera.zoom)) continue;
             const tileManager = tileManagers[layer.source];
 
             if (this.renderToTexture?.renderLayer(layer, style, frameRenderContext)) continue;
@@ -369,7 +375,7 @@ export class Painter {
         }
 
         if (data.showTileBoundaries) {
-            const selectedSource = selectDebugSource(style, transform.zoom);
+            const selectedSource = selectDebugSource(style, projectedCamera.zoom);
             if (selectedSource) {
                 this.drawFunctions.debug(this, selectedSource, selectedSource.getVisibleCoordinates(), frameRenderContext);
             }
@@ -404,7 +410,7 @@ export class Painter {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
-        const currMatrix = frameRenderContext.transform.modelViewProjectionMatrix;
+        const currMatrix = frameRenderContext.projectedCamera.modelViewProjectionMatrix;
 
         // Update depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.depthDirty;
@@ -422,7 +428,7 @@ export class Painter {
     }
 
     renderLayer(painter: Painter, tileManager: TileManager, layer: StyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
-        if (layer.isHidden(frameRenderContext.transform.zoom)) return;
+        if (layer.isHidden(frameRenderContext.projectedCamera.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
 
         const draw = this.drawFunctions;
@@ -443,7 +449,7 @@ export class Painter {
         } else if (isColorReliefStyleLayer(layer)) {
             draw.colorRelief(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isRasterStyleLayer(layer)) {
-            draw.raster(tileManager, layer, coords, frameRenderContext);
+            draw.raster(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isBackgroundStyleLayer(layer)) {
             draw.background(painter, tileManager, layer, coords, frameRenderContext);
         } else if (isCustomStyleLayer(layer)) {
@@ -590,8 +596,13 @@ export class Painter {
 
         this.destroyRTTResources();
 
-        this.layerOpacityFbo?.destroy();
-        this.layerOpacityFbo = null;
+        this.layerCompositeFbo?.destroy();
+        this.layerCompositeFbo = null;
+
+        if (this.layerCompositeBackdrop) {
+            this.context.gl.deleteTexture(this.layerCompositeBackdrop.texture);
+            this.layerCompositeBackdrop = null;
+        }
 
         if (this.tileExtentBuffer) this.tileExtentBuffer.destroy();
         if (this.debugBuffer) this.debugBuffer.destroy();

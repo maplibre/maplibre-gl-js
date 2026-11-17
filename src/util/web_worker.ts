@@ -1,5 +1,6 @@
 import packageJSON from '../../package.json' with {type: 'json'};
 import {type AddProtocolAction, config} from './config.ts';
+import {createTrustedScriptURL} from './trusted_types.ts';
 
 import type {default as MaplibreWorker} from '../source/worker.ts';
 import type {WorkerSourceConstructor} from '../source/worker_source.ts';
@@ -51,24 +52,39 @@ function isClassicWorkerUrl(url: string): boolean {
 }
 
 function createWorker(url: string, asModule: boolean): Worker {
+    const scriptURL = createTrustedScriptURL(url);
     if (asModule) {
         try {
-            return new Worker(url, {type: 'module'});
+            return new Worker(scriptURL, {type: 'module'});
         } catch (e) {
             console.warn('Module worker not supported, falling back to classic worker', e);
         }
     }
-    return new Worker(url);
+    return new Worker(scriptURL);
 }
 
-async function fetchAsBlobUrl(url: string): Promise<string> {
+async function fetchWorkerCode(url: string): Promise<string> {
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Failed to fetch worker script (${response.status}): ${url}`);
     }
-    const code = await response.text();
-    const blob = new Blob([code], {type: 'text/javascript'});
+    return response.text();
+}
+
+async function fetchAsBlobUrl(url: string): Promise<string> {
+    const blob = new Blob([await fetchWorkerCode(url)], {type: 'text/javascript'});
     return URL.createObjectURL(blob);
+}
+
+function hasOpaqueOrigin(): boolean {
+    return globalThis.origin === 'null';
+}
+
+/**
+ * On a page with an opaque origin, Chrome doesn't start a module worker from a `blob:` URL, https://issues.chromium.org/issues/40067939
+ */
+async function fetchAsDataUrl(url: string): Promise<string> {
+    return `data:text/javascript;charset=utf-8,${encodeURIComponent(await fetchWorkerCode(url))}`;
 }
 
 function importAsBlobUrl(url: string): string {
@@ -79,6 +95,10 @@ function importAsBlobUrl(url: string): string {
 export async function workerFactory(): Promise<Worker> {
     const url = config.WORKER_URL || defaultWorkerUrl();
     const asModule = !isClassicWorkerUrl(url);
+
+    if (asModule && hasOpaqueOrigin()) {
+        return createWorker(await fetchAsDataUrl(url), asModule);
+    }
 
     if (!isCrossOrigin(url)) {
         return createWorker(url, asModule);
