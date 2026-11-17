@@ -4,12 +4,7 @@
     "test": {
       "height": 256,
       "width": 512,
-      "maxPitch": 85,
-      "operations": [
-        [
-          "wait"
-        ]
-      ]
+      "maxPitch": 85
     }
   },
   "center": [
