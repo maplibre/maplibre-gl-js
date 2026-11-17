@@ -1,6 +1,6 @@
 # Event\<TType *extends* `string` = `string`\>
 
-Defined in: [util/evented.ts:45](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L45>)
+Defined in: [util/evented.ts:45](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L45>)
 
 The event class
 
@@ -28,6 +28,6 @@ The event class
 
 > `optional` **target?**: `unknown`
 
-Defined in: [util/evented.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L51>)
+Defined in: [util/evented.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L51>)
 
 The object that fired the event. Set when the event is fired, and narrowed to a more specific type (e.g. `Map`, `Marker`) by the event subclasses.

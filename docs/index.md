@@ -5,10 +5,10 @@ MapLibre GL JS is a TypeScript library that uses WebGL to render interactive map
 ## Quickstart
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.18.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.19.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.18.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.19.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map', // container id
@@ -27,11 +27,11 @@ This documentation is divided into several sections:
 
   - [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>) object is the map on your page. It lets you access methods and properties for interacting with the map's style and layers, respond to events, and manipulate the user's perspective with the camera.
   - [`Global Functions`](<https://maplibre.org/maplibre-gl-js/docs/API/functions/addProtocol/index.md>) let you set global properties and options that you might want to access while initializing your map or accessing information about its status.
-- [**Markers and Controls**](<https://maplibre.org/maplibre-gl-js/docs/API/#markers-and-controls>) - This section describes the user interface elements that you can add to your map. The items in this section exist outside of the map's `canvas` element. This consists of `Marker`, `Popup` and all the controls.
-- [**Geography and geometry**](<https://maplibre.org/maplibre-gl-js/docs/API/#geography-and-geometry>) - This section includes general utilities and types that relate to working with and manipulating geographic information or geometries.
-- [**User interaction handlers**](<https://maplibre.org/maplibre-gl-js/docs/API/#handlers>) - The items in this section relate to the ways in which the map responds to user input.
-- [**Sources**](<https://maplibre.org/maplibre-gl-js/docs/API/#sources>) - This section describes the source types MapLibre GL JS can handle besides the ones described in the [MapLibre Style Specification](<https://maplibre.org/maplibre-style-spec/>).
-- [**Event Related**](<https://maplibre.org/maplibre-gl-js/docs/API/#event-related>) - This section describes the different types of events that MapLibre GL JS can raise.
+- [**Markers and Controls**](<https://maplibre.org/maplibre-gl-js/docs/API/index.md#markers-and-controls>) - This section describes the user interface elements that you can add to your map. The items in this section exist outside of the map's `canvas` element. This consists of `Marker`, `Popup` and all the controls.
+- [**Geography and geometry**](<https://maplibre.org/maplibre-gl-js/docs/API/index.md#geography-and-geometry>) - This section includes general utilities and types that relate to working with and manipulating geographic information or geometries.
+- [**User interaction handlers**](<https://maplibre.org/maplibre-gl-js/docs/API/index.md#handlers>) - The items in this section relate to the ways in which the map responds to user input.
+- [**Sources**](<https://maplibre.org/maplibre-gl-js/docs/API/index.md#sources>) - This section describes the source types MapLibre GL JS can handle besides the ones described in the [MapLibre Style Specification](<https://maplibre.org/maplibre-style-spec/>).
+- [**Event Related**](<https://maplibre.org/maplibre-gl-js/docs/API/index.md#event-related>) - This section describes the different types of events that MapLibre GL JS can raise.
 
 Each section describes classes or objects as well as their **properties**, **parameters**, **instance members**, and associated **events**. Many sections also include inline code examples and related resources.
 
@@ -198,10 +198,10 @@ This needs Next.js 15 or later. In Next.js 14, `next build` fails to minify the 
 Load MapLibre directly from UNPKG as an ES module via a `<script type="module">` tag. See [unpkg.com](<https://unpkg.com>) for instructions on selecting specific versions and semver ranges.
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.18.0/dist/maplibre-gl.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@^6.19.0/dist/maplibre-gl.css" />
 <div id="map" style="height: 400px"></div>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.18.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@^6.19.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',
@@ -232,6 +232,22 @@ img-src data: blob: 'self' ;
 ```
 
 A page with an opaque origin, like one opened from a file or in a sandboxed iframe, downloads the worker and starts it from a `data:` URL, so it also needs `data:` in `worker-src` and the worker's host in `connect-src`, or `blob:` when `setWorkerUrl` is given a `blob:` URL.
+
+On a page that enforces [Trusted Types](<https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API>) with `require-trusted-types-for 'script'`, pass a policy of yours to `setTrustedTypesPolicy` before creating a map:
+
+```js
+maplibregl.setTrustedTypesPolicy(trustedTypes.createPolicy('my-map', {
+    createHTML: (html) => html,
+    createScriptURL: (url) => {
+        if (!new URL(url, location.href).href.startsWith(`${location.origin}/`)) throw new TypeError(`Blocked script URL ${url}`);
+        return url;
+    }
+}));
+```
+
+`createScriptURL` receives the URL the workers start from. For a worker on another origin that is a `blob:` URL, which this example refuses. `createHTML` receives the attribution of each source, which is sanitized after it is parsed. `Popup.setHTML` assigns its argument as is, so it takes a `TrustedHTML` from your policy.
+
+A worker enforces Trusted Types as well when it starts from a `blob:` URL or when its file is served with the same CSP. A script loaded into such a worker with `importScriptInWorkers` or the deprecated `setRTLTextPlugin` has to be an ES module. Right-to-left text is drawn without a plugin.
 
 ## MapLibre CSS
 

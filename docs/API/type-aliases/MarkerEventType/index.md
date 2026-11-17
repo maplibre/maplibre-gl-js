@@ -2,9 +2,9 @@
 
 > **MarkerEventType** = `object`
 
-Defined in: [ui/marker.ts:218](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L218>)
+Defined in: [ui/marker.ts:219](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/marker.ts#L219>)
 
-`MarkerEventType` - a mapping between the marker event name and the event value. These events are used with the [Marker.on](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Marker/#on>) method.
+`MarkerEventType` - a mapping between the marker event name and the event value. These events are used with the [Marker.on](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Marker/index.md#on>) method.
 
 ## Properties
 
@@ -12,7 +12,7 @@ Defined in: [ui/marker.ts:218](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **click**: [`MarkerClickEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MarkerClickEvent/index.md>)
 
-Defined in: [ui/marker.ts:234](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L234>)
+Defined in: [ui/marker.ts:235](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/marker.ts#L235>)
 
 Fired when the marker is clicked.
 
@@ -22,7 +22,7 @@ Fired when the marker is clicked.
 
 > **drag**: [`MarkerDragEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MarkerDragEvent/index.md>)
 
-Defined in: [ui/marker.ts:226](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L226>)
+Defined in: [ui/marker.ts:227](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/marker.ts#L227>)
 
 Fired while dragging.
 
@@ -32,7 +32,7 @@ Fired while dragging.
 
 > **dragend**: [`MarkerDragEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MarkerDragEvent/index.md>)
 
-Defined in: [ui/marker.ts:230](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L230>)
+Defined in: [ui/marker.ts:231](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/marker.ts#L231>)
 
 Fired when the marker is finished being dragged.
 
@@ -42,6 +42,6 @@ Fired when the marker is finished being dragged.
 
 > **dragstart**: [`MarkerDragEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MarkerDragEvent/index.md>)
 
-Defined in: [ui/marker.ts:222](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/marker.ts#L222>)
+Defined in: [ui/marker.ts:223](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/marker.ts#L223>)
 
 Fired when dragging starts.

@@ -2,7 +2,7 @@
 
 > **StyleImageWebGLData** = `object`
 
-Defined in: [style/style\_image.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style_image.ts#L116>)
+Defined in: [style/style\_image.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_image.ts#L116>)
 
 What a [StyleImageInterface](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/StyleImageInterface/index.md>) gives as its `data` when it renders itself with WebGL rather than handing over an array of pixels.
 
@@ -16,13 +16,13 @@ What a [StyleImageInterface](<https://maplibre.org/maplibre-gl-js/docs/API/inter
 
 > **renderWithWebGL**: (`target`: [`StyleImageWebGLTarget`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleImageWebGLTarget/index.md>)) =\> `void`
 
-Defined in: [style/style\_image.ts:134](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style_image.ts#L134>)
+Defined in: [style/style\_image.ts:134](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_image.ts#L134>)
 
 Render exactly `width` x `height` premultiplied-alpha pixels at (`x`, `y`) of `target.texture`. That rectangle is the only part of the shared atlas that belongs to this image; drawing outside it corrupts the others.
 
-This is the image's counterpart to [CustomLayerInterface.render](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/CustomLayerInterface/#render>), and the context arrives in the same state a custom layer's is given: cull face, active texture and the pixel store settings at their WebGL defaults, and no vertex array bound. Everything is yours to change, and MapLibre restores its own state afterwards. The scissor test is the one exception: MapLibre leaves it disabled rather than restoring it, so an image that enables it has to disable it again.
+This is the image's counterpart to [CustomLayerInterface.render](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/CustomLayerInterface/index.md#render>), and the context arrives in the same state a custom layer's is given: cull face, active texture and the pixel store settings at their WebGL defaults, and no vertex array bound. Everything is yours to change, and MapLibre restores its own state afterwards. The scissor test is the one exception: MapLibre leaves it disabled rather than restoring it, so an image that enables it has to disable it again.
 
-Called before the first frame the image is used in, again whenever [StyleImageInterface.render](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/StyleImageInterface/#render>) returns `true`, and again for each atlas holding a slot this image has never rendered into, so one change may mean several calls with different targets.
+Called before the first frame the image is used in, again whenever [StyleImageInterface.render](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/StyleImageInterface/index.md#render>) returns `true`, and again for each atlas holding a slot this image has never rendered into, so one change may mean several calls with different targets.
 
 #### Parameters
 

@@ -1,6 +1,6 @@
 # Style
 
-Defined in: [style/style.ts:212](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L212>)
+Defined in: [style/style.ts:213](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L213>)
 
 The Style base class
 
@@ -14,7 +14,7 @@ The Style base class
 
 > **\_getOperationsToPerform**(`diff`: `DiffCommand`\[\]): `object`
 
-Defined in: [style/style.ts:925](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L925>)
+Defined in: [style/style.ts:926](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L926>)
 
 Translates a style diff into the calls that apply it to this style.
 
@@ -48,7 +48,7 @@ the operations to run, and the names of the commands that are not supported
 
 > **\_load**(`json`: `StyleSpecification`, `options`: [`StyleSwapOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSwapOptions/index.md>) &amp; [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>), `previousStyle?`: `StyleSpecification`): `void`
 
-Defined in: [style/style.ts:503](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L503>)
+Defined in: [style/style.ts:504](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L504>)
 
 Loads a style. The global state is set first, since the projection and the layers read it. The projection is created before the sources, which read it as they are added, and the map migrates to it once the layers and the light exist, so `projectiontransition` handlers can read them.
 
@@ -70,7 +70,7 @@ Loads a style. The global state is set first, since the projection and the layer
 
 > **\_markImagesChanged**(`ids`: `string`\[\]): `void`
 
-Defined in: [style/style.ts:1066](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1066>)
+Defined in: [style/style.ts:1067](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1067>)
 
 Queues the tiles that depend on these images to be reloaded on the next update, which is needed whenever an image appears, disappears or changes size.
 
@@ -90,7 +90,7 @@ Queues the tiles that depend on these images to be reloaded on the next update, 
 
 > **\_setGlobalStateValues**(`values`: `Record`\<`string`, `any`\>): `void`
 
-Defined in: [style/style.ts:379](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L379>)
+Defined in: [style/style.ts:380](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L380>)
 
 Sets the keys in `values` that differ, keeping a copy of the state from before so readers transition from it.
 
@@ -110,9 +110,11 @@ Sets the keys in `values` that differ, keeping a copy of the state from before s
 
 > **addLayer**(`layerObject`: [`AddLayerObject`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AddLayerObject/index.md>), `before?`: `string`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `this`
 
-Defined in: [style/style.ts:1169](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1169>)
+Defined in: [style/style.ts:1174](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1174>)
 
 Add a layer to the map style. The layer will be inserted before the layer with ID `before`, or appended if `before` is omitted.
+
+A source given inline is added under the layer's ID and handed to `addSource` as it is, without being copied, because it can hold a DOM element such as the `canvas` of a canvas source. The layer is copied shallowly to point it at that ID, so the object the caller passed in is left as it was.
 
 #### Parameters
 
@@ -132,7 +134,7 @@ Add a layer to the map style. The layer will be inserted before the layer with I
 
 > **addSprite**(`id`: `string`, `url`: `string`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>), `completion?`: (`err`: `Error`) =\> `void`): `void`
 
-Defined in: [style/style.ts:2104](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L2104>)
+Defined in: [style/style.ts:2110](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L2110>)
 
 Add a sprite.
 
@@ -155,7 +157,7 @@ Add a sprite.
 
 > **destroy**(): `void`
 
-Defined in: [style/style.ts:2184](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L2184>)
+Defined in: [style/style.ts:2190](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L2190>)
 
 Destroys all internal resources of the style (sources, images, layers, etc.)
 
@@ -171,7 +173,7 @@ Destroys all internal resources of the style (sources, images, layers, etc.)
 
 > **fire**(`event`: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) | [`MapStyleImageMissingEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleImageMissingEvent/index.md>) | [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`unknown`\> | [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>) | [`MapMovementEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMovementEvent/index.md>) | [`MapContextEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapContextEvent/index.md>) | [`MapStyleDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleDataEvent/index.md>) | [`MapStyleLoadEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapStyleLoadEvent/index.md>) | [`MapBoxZoomEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapBoxZoomEvent/index.md>) | [`MapTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTouchEvent/index.md>) | [`MapMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMouseEvent/index.md>) | [`MapWheelEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapWheelEvent/index.md>) | [`MapTerrainEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapTerrainEvent/index.md>) | [`MapLibreEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapLibreEvent/index.md>)\<`TouchEvent` | `WheelEvent`\> &amp; `object` | [`MapProjectionEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapProjectionEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -187,13 +189,13 @@ Calls every listener registered for the event's type.
 
 ##### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#fire>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#fire>)
 
 #### Call Signature
 
 > **fire**(`type`: keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -210,7 +212,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 ##### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#fire>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#fire>)
 
 ---
 
@@ -218,7 +220,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **getFilter**(`layer`: `string`): `void` | `FilterSpecification`
 
-Defined in: [style/style.ts:1393](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1393>)
+Defined in: [style/style.ts:1397](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1397>)
 
 Get a layer's filter object
 
@@ -240,7 +242,7 @@ the layer's filter, if any
 
 > **getLayer**(`id`: `string`): [`StyleLayer`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/StyleLayer/index.md>)
 
-Defined in: [style/style.ts:1318](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1318>)
+Defined in: [style/style.ts:1322](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1322>)
 
 Return the style layer object with the given `id`.
 
@@ -262,7 +264,7 @@ a layer, if one with the given `id` exists
 
 > **getLayersOrder**(): `string`\[\]
 
-Defined in: [style/style.ts:1327](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1327>)
+Defined in: [style/style.ts:1331](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1331>)
 
 Return the ids of all layers currently in the style, including custom layers, in order.
 
@@ -278,7 +280,7 @@ ids of layers, in order
 
 > **getLayoutProperty**\<`K` *extends* keyof `AllLayoutProperties`\>(`layerId`: `string`, `name`: `K`): `AllLayoutProperties`\[`K`\]
 
-Defined in: [style/style.ts:1418](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1418>)
+Defined in: [style/style.ts:1422](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1422>)
 
 Get a layout property's value from a given layer
 
@@ -307,7 +309,7 @@ the property value
 
 > **getSource**(`id`: `string`): [`Source`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Source/index.md>)
 
-Defined in: [style/style.ts:1158](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1158>)
+Defined in: [style/style.ts:1159](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1159>)
 
 Get a source by ID.
 
@@ -329,7 +331,7 @@ source
 
 > **getSprite**(): `object`\[\]
 
-Defined in: [style/style.ts:2151](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L2151>)
+Defined in: [style/style.ts:2157](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L2157>)
 
 Get the current sprite value.
 
@@ -345,7 +347,7 @@ empty array when no sprite is set; id-url pairs otherwise
 
 > **hasLayer**(`id`: `string`): `boolean`
 
-Defined in: [style/style.ts:1337](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1337>)
+Defined in: [style/style.ts:1341](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1341>)
 
 Checks if a specific layer is present within the style.
 
@@ -367,7 +369,7 @@ a boolean specifying if the given layer is present
 
 > **listens**(`type`: keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -385,7 +387,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 #### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`listens`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#listens>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`listens`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#listens>)
 
 ---
 
@@ -393,7 +395,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **moveLayer**(`id`: `string`, `before?`: `string`): `void`
 
-Defined in: [style/style.ts:1244](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1244>)
+Defined in: [style/style.ts:1248](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1248>)
 
 Moves a layer to a different z-position. The layer will be inserted before the layer with ID `before`, or appended if `before` is omitted.
 
@@ -414,7 +416,7 @@ Moves a layer to a different z-position. The layer will be inserted before the l
 
 > **off**\<`T` *extends* keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -437,7 +439,7 @@ Removes a previously registered event listener.
 
 #### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`off`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#off>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`off`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#off>)
 
 ---
 
@@ -445,7 +447,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -468,7 +470,7 @@ Adds a listener to a specified event type.
 
 #### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`on`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#on>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`on`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#on>)
 
 ---
 
@@ -478,7 +480,7 @@ Adds a listener to a specified event type.
 
 > **once**\<`T` *extends* keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\>(`type`: `T`): `Promise`\<[`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -504,13 +506,13 @@ a promise that resolves with the event
 
 ##### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#once>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#once>)
 
 #### Call Signature
 
 > **once**\<`T` *extends* keyof [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`MapEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -537,7 +539,7 @@ The listener will be called first time the event fires after the listener is reg
 
 ##### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#once>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#once>)
 
 ---
 
@@ -545,7 +547,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **removeLayer**(`id`: `string`): `void`
 
-Defined in: [style/style.ts:1278](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1278>)
+Defined in: [style/style.ts:1282](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1282>)
 
 Remove the layer with the given id from the style. A [ErrorEvent](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) event will be fired if no such layer exists.
 
@@ -565,7 +567,7 @@ Remove the layer with the given id from the style. A [ErrorEvent](<https://mapli
 
 > **removeSource**(`id`: `string`): `this`
 
-Defined in: [style/style.ts:1116](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1116>)
+Defined in: [style/style.ts:1117](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1117>)
 
 Remove a source from this stylesheet, given its id.
 
@@ -589,7 +591,7 @@ if no source is found with the given ID
 
 > **removeSprite**(`id`: `string`): `void`
 
-Defined in: [style/style.ts:2125](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L2125>)
+Defined in: [style/style.ts:2131](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L2131>)
 
 Remove a sprite by its id. When the last sprite is removed, the whole `this.stylesheet.sprite` object becomes `undefined`. This falsy `undefined` value later prevents attempts to load the sprite when it's absent.
 
@@ -609,7 +611,7 @@ Remove a sprite by its id. When the last sprite is removed, the whole `this.styl
 
 > **resize**(): `void`
 
-Defined in: [style/style.ts:855](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L855>)
+Defined in: [style/style.ts:856](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L856>)
 
 Tells the layers that the canvas was resized.
 
@@ -623,7 +625,7 @@ Tells the layers that the canvas was resized.
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -640,7 +642,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 #### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`setEventedParent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#seteventedparent>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`setEventedParent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#seteventedparent>)
 
 ---
 
@@ -648,7 +650,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **setGeoJSONSourceData**(`id`: `string`, `data`: `string` | `GeoJSON`\<`Geometry`, {\[`name`: `string`\]: `any`; }\>): `void`
 
-Defined in: [style/style.ts:1142](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1142>)
+Defined in: [style/style.ts:1143](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1143>)
 
 Set the data of a GeoJSON source, given its id.
 
@@ -669,7 +671,7 @@ Set the data of a GeoJSON source, given its id.
 
 > **setSprite**(`sprite`: `SpriteSpecification`, `options?`: [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>), `completion?`: (`err`: `Error`) =\> `void`): `void`
 
-Defined in: [style/style.ts:2162](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L2162>)
+Defined in: [style/style.ts:2168](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L2168>)
 
 Set a new value for the style's sprite.
 
@@ -691,7 +693,7 @@ Set a new value for the style's sprite.
 
 > **setState**(`nextState`: `StyleSpecification`, `options?`: [`StyleSwapOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSwapOptions/index.md>) &amp; [`StyleSetterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSetterOptions/index.md>)): `boolean`
 
-Defined in: [style/style.ts:883](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L883>)
+Defined in: [style/style.ts:884](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L884>)
 
 Update this style's state to match the given style JSON, performing only the necessary mutations.
 
@@ -716,7 +718,7 @@ true if any changes were made; false otherwise
 
 > **triggerSymbolPlacement**(): `void`
 
-Defined in: [style/style.ts:1920](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L1920>)
+Defined in: [style/style.ts:1926](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L1926>)
 
 Re-places symbols on the next frame. Placement is skipped while its inputs look unchanged, so call this when something the map cannot see for itself has moved symbols.
 

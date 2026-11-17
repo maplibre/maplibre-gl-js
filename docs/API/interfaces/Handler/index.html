@@ -29,7 +29,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.1.0">
+      <meta name="generator" content="zensical-0.1.1">
     
     
       
@@ -40,7 +40,7 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ebb7f775.min.css">
       
         
           
@@ -2982,6 +2982,33 @@
     
   
   ~~setRTLTextPlugin()~~
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../functions/setTrustedTypesPolicy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  setTrustedTypesPolicy()
 
     
   </span>
@@ -6702,6 +6729,33 @@
     
   
   TransformStyleFunction
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/TrustedTypesPolicy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  TrustedTypesPolicy
 
     
   </span>
@@ -11340,7 +11394,7 @@
 
 
 <h1 id="handler">Handler</h1>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L59">ui/handler_manager.ts:59</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L64">ui/handler_manager.ts:64</a></p>
 <p>Handlers interpret dom events and return camera changes that should be
 applied to the map (<code>HandlerResult</code>s). The camera changes are all deltas.
 The handler itself should have no knowledge of the map's current state.
@@ -11352,7 +11406,7 @@ would return a <code>panDelta</code> on the mousemove.</p>
 <blockquote>
 <p><strong>isActive</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L68">ui/handler_manager.ts:68</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L73">ui/handler_manager.ts:73</a></p>
 <p>This is used to indicate if the handler is currently active or not.
 In case a handler is active, it will block other handlers from getting the relevant events.
 There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.</p>
@@ -11363,7 +11417,7 @@ There is an allow list of handlers that can be active at the same time, which is
 <blockquote>
 <p><code>optional</code> <strong>isZooming</strong>(): <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L99">ui/handler_manager.ts:99</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L104">ui/handler_manager.ts:104</a></p>
 <p>Whether the handler is zooming the map apart from the zoom deltas it returns, such as a wheel zoom between a
 wheel event and its first frame.</p>
 <h4 id="returns_1">Returns</h4>
@@ -11373,7 +11427,7 @@ wheel event and its first frame.</p>
 <blockquote>
 <p><code>optional</code> <strong>onTimeout</strong>(<code>token</code>: <code>unknown</code>): <code>void</code> | <a href="../../type-aliases/HandlerResult/"><code>HandlerResult</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L105">ui/handler_manager.ts:105</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L110">ui/handler_manager.ts:110</a></p>
 <p>Called by the manager when a timeout the handler asked for runs out, see <a href="../../type-aliases/HandlerResult/#timeout">HandlerResult.timeout</a>. The
 manager runs a render frame when the result asks for one. The token is opaque to the manager, so a handler
 declares the parameter as the type of the tokens it hands out.</p>
@@ -11399,7 +11453,7 @@ declares the parameter as the type of the tokens it hands out.</p>
 <blockquote>
 <p><strong>reset</strong>(): <code>void</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L72">ui/handler_manager.ts:72</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L77">ui/handler_manager.ts:77</a></p>
 <p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
 <h4 id="returns_3">Returns</h4>
 <p><code>void</code></p>
@@ -11408,7 +11462,7 @@ declares the parameter as the type of the tokens it hands out.</p>
 <blockquote>
 <p><code>readonly</code> <code>optional</code> <strong>renderFrame?</strong>: () =&gt; <code>void</code> | <a href="../../type-aliases/HandlerResult/"><code>HandlerResult</code></a></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler_manager.ts#L94">ui/handler_manager.ts:94</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L99">ui/handler_manager.ts:99</a></p>
 <p><code>renderFrame</code> is the only non-dom event. It is called during render
 frames and can be used to smooth camera changes (see scroll handler).</p>
 <h4 id="returns_4">Returns</h4>
@@ -11550,7 +11604,7 @@ frames and can be used to smooth camera changes (see scroll handler).</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.d31f0ffa.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.3cb411a8.min.js"></script>
       
     
   </body>

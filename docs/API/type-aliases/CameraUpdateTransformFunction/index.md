@@ -2,7 +2,7 @@
 
 > **CameraUpdateTransformFunction** = (`next`: `object`) =\> `object`
 
-Defined in: [ui/camera.ts:335](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L335>)
+Defined in: [ui/camera.ts:252](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/camera.ts#L252>)
 
 A callback hook that allows manipulating the camera and being notified about camera updates before they happen
 

@@ -1,6 +1,6 @@
 # KeyboardHandler
 
-Defined in: [ui/handler/keyboard.ts:28](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/keyboard.ts#L28>)
+Defined in: [ui/handler/keyboard.ts:28](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/keyboard.ts#L28>)
 
 The `KeyboardHandler` allows the user to zoom, rotate, and pan the map using the following keyboard shortcuts:
 
@@ -24,7 +24,7 @@ The `KeyboardHandler` allows the user to zoom, rotate, and pan the map using the
 
 > **disable**(): `void`
 
-Defined in: [ui/handler/keyboard.ts:155](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/keyboard.ts#L155>)
+Defined in: [ui/handler/keyboard.ts:155](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/keyboard.ts#L155>)
 
 Disables the "keyboard rotate and zoom" interaction.
 
@@ -48,7 +48,7 @@ map.keyboard.disable();
 
 > **disableRotation**(): `void`
 
-Defined in: [ui/handler/keyboard.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/keyboard.ts#L191>)
+Defined in: [ui/handler/keyboard.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/keyboard.ts#L191>)
 
 Disables the "keyboard pan/rotate" interaction, leaving the "keyboard zoom" interaction enabled.
 
@@ -68,7 +68,7 @@ map.keyboard.disableRotation();
 
 > **enable**(): `void`
 
-Defined in: [ui/handler/keyboard.ts:143](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/keyboard.ts#L143>)
+Defined in: [ui/handler/keyboard.ts:143](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/keyboard.ts#L143>)
 
 Enables the "keyboard rotate and zoom" interaction.
 
@@ -92,7 +92,7 @@ map.keyboard.enable();
 
 > **enableRotation**(): `void`
 
-Defined in: [ui/handler/keyboard.ts:204](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/keyboard.ts#L204>)
+Defined in: [ui/handler/keyboard.ts:204](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/keyboard.ts#L204>)
 
 Enables the "keyboard pan/rotate" interaction.
 
@@ -113,7 +113,7 @@ map.keyboard.enableRotation();
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler/keyboard.ts:178](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/keyboard.ts#L178>)
+Defined in: [ui/handler/keyboard.ts:178](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/keyboard.ts#L178>)
 
 Returns true if the handler is enabled and has detected the start of a zoom/rotate gesture.
 
@@ -125,7 +125,7 @@ Returns true if the handler is enabled and has detected the start of a zoom/rota
 
 #### Implementation of
 
-[`Handler`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/index.md>).[`isActive`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/#isactive>)
+[`Handler`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/index.md>).[`isActive`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/index.md#isactive>)
 
 ---
 
@@ -133,7 +133,7 @@ Returns true if the handler is enabled and has detected the start of a zoom/rota
 
 > **isEnabled**(): `boolean`
 
-Defined in: [ui/handler/keyboard.ts:167](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/keyboard.ts#L167>)
+Defined in: [ui/handler/keyboard.ts:167](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/keyboard.ts#L167>)
 
 Returns a Boolean indicating whether the "keyboard rotate and zoom" interaction is enabled.
 
@@ -153,7 +153,7 @@ Returns a Boolean indicating whether the "keyboard rotate and zoom" interaction 
 
 > **reset**(): `void`
 
-Defined in: [ui/handler/keyboard.ts:47](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/handler/keyboard.ts#L47>)
+Defined in: [ui/handler/keyboard.ts:47](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/keyboard.ts#L47>)
 
 `reset` can be called by the manager at any time and must reset everything to it's original state
 
@@ -163,4 +163,4 @@ Defined in: [ui/handler/keyboard.ts:47](<https://github.com/maplibre/maplibre-gl
 
 #### Implementation of
 
-[`Handler`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/index.md>).[`reset`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/#reset>)
+[`Handler`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/index.md>).[`reset`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Handler/index.md#reset>)

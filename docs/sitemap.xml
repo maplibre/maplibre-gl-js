@@ -259,6 +259,9 @@
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/setRTLTextPlugin/</loc>
       </url>
       <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/setTrustedTypesPolicy/</loc>
+      </url>
+      <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/functions/setWorkerCount/</loc>
       </url>
       <url>
@@ -641,6 +644,9 @@
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/TransformStyleFunction/</loc>
+      </url>
+      <url>
+        <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/TrustedTypesPolicy/</loc>
       </url>
       <url>
         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/Unit/</loc>

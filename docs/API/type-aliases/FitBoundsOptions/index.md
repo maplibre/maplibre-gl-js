@@ -2,9 +2,9 @@
 
 > **FitBoundsOptions** = [`FlyToOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FlyToOptions/index.md>) &amp; `object`
 
-Defined in: [ui/camera.ts:271](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L271>)
+Defined in: [ui/camera.ts:188](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/camera.ts#L188>)
 
-Options for [Map.fitBounds](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#fitbounds>) method
+Options for [Map.fitBounds](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#fitbounds>) method
 
 ## Type Declaration
 
@@ -24,7 +24,7 @@ false
 
 > `optional` **linear?**: `boolean`
 
-If `true`, the map transitions using [Map.easeTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#easeto>). If `false`, the map transitions using [Map.flyTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#flyto>). See those functions and [AnimationOptions](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>) for information about options available.
+If `true`, the map transitions using [Map.easeTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#easeto>). If `false`, the map transitions using [Map.flyTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#flyto>). See those functions and [AnimationOptions](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>) for information about options available.
 
 #### Default Value
 

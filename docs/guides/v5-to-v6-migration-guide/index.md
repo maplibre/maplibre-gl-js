@@ -38,7 +38,7 @@ Pin an explicit major version (e.g. ^6.0.0) rather than `@latest` or an unversio
 
 For direct browser ESM (loading from a CDN like unpkg via a `<script type="module">` tag), the worker URL is auto-detected from `import.meta.url` and laundered through a same-origin Blob URL when needed, so no [`setWorkerUrl()`](<https://maplibre.org/maplibre-gl-js/docs/API/functions/setWorkerUrl/index.md>) call is required.
 
-For bundlers (Vite, webpack, esbuild, rspack, Rollup), `import.meta.url` doesn't reliably resolve to the worker file inside the bundler's module graph, so each consumer still needs a one-time `setWorkerUrl()` call. See [Installation](<https://maplibre.org/maplibre-gl-js/docs/#installation>) for per-bundler snippets.
+For bundlers (Vite, webpack, esbuild, rspack, Rollup), `import.meta.url` doesn't reliably resolve to the worker file inside the bundler's module graph, so each consumer still needs a one-time `setWorkerUrl()` call. See [Installation](<https://maplibre.org/maplibre-gl-js/docs/index.md#installation>) for per-bundler snippets.
 
 ## CSP directives
 
@@ -86,7 +86,7 @@ All events are now classes, it is advised not to use `instanceof` but instead ch
 
 ### styleimagemissing
 
-In v6, `styleimagemissing` listeners can no longer resolve the current image request by calling `Map#addImage`. To migrate a listener that supplies missing images, replace it with [`Map#setMissingStyleImageResolver`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setmissingstyleimageresolver>):
+In v6, `styleimagemissing` listeners can no longer resolve the current image request by calling `Map#addImage`. To migrate a listener that supplies missing images, replace it with [`Map#setMissingStyleImageResolver`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#setmissingstyleimageresolver>):
 
 ```diff
 -map.on('styleimagemissing', ({id}) => {

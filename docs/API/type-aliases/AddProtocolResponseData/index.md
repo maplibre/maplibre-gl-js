@@ -2,7 +2,7 @@
 
 > **AddProtocolResponseData** = `ArrayBuffer` | `ImageBitmap` | `HTMLImageElement` | `string` | `object`
 
-Defined in: [util/config.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/config.ts#L13>)
+Defined in: [util/config.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/config.ts#L13>)
 
 The `data` a protocol handler resolves with. Which member is expected follows `RequestParameters.type`:
 

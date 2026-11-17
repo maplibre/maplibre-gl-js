@@ -2,7 +2,7 @@
 
 > **AnchoredCameraOptions** = `object`
 
-Defined in: [ui/camera.ts:153](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L153>)
+Defined in: [ui/camera.ts:95](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/camera.ts#L95>)
 
 Options for calculating an anchored camera.
 
@@ -12,7 +12,7 @@ Options for calculating an anchored camera.
 
 > **anchorLocation**: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)
 
-Defined in: [ui/camera.ts:155](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L155>)
+Defined in: [ui/camera.ts:97](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/camera.ts#L97>)
 
 Geographic location to anchor.
 
@@ -22,7 +22,7 @@ Geographic location to anchor.
 
 > **anchorScreenPoint**: [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>)
 
-Defined in: [ui/camera.ts:157](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L157>)
+Defined in: [ui/camera.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/camera.ts#L99>)
 
 Screen position for the anchor.
 
@@ -32,6 +32,6 @@ Screen position for the anchor.
 
 > `optional` **zoom?**: `number`
 
-Defined in: [ui/camera.ts:159](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L159>)
+Defined in: [ui/camera.ts:101](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/camera.ts#L101>)
 
 Desired zoom level.

@@ -1,6 +1,6 @@
 # NavigationControl
 
-Defined in: [ui/control/navigation\_control.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L51>)
+Defined in: [ui/control/navigation\_control.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/navigation_control.ts#L51>)
 
 A `NavigationControl` control contains zoom buttons and a compass.
 
@@ -25,7 +25,7 @@ map.addControl(nav, 'top-left');
 
 > **new NavigationControl**(`options?`: [`NavigationControlOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/NavigationControlOptions/index.md>)): `NavigationControl`
 
-Defined in: [ui/control/navigation\_control.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L64>)
+Defined in: [ui/control/navigation\_control.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/navigation_control.ts#L64>)
 
 #### Parameters
 
@@ -43,9 +43,9 @@ Defined in: [ui/control/navigation\_control.ts:64](<https://github.com/maplibre/
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `HTMLElement`
 
-Defined in: [ui/control/navigation\_control.ts:120](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L120>)
+Defined in: [ui/control/navigation\_control.ts:120](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/navigation_control.ts#L120>)
 
-Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) internally.
+Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#addcontrol>) internally.
 
 #### Parameters
 
@@ -61,7 +61,7 @@ The control's container element. This should be created by the control and retur
 
 #### Implementation of
 
-[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onAdd`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/#onadd>)
+[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onAdd`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md#onadd>)
 
 ---
 
@@ -69,9 +69,9 @@ The control's container element. This should be created by the control and retur
 
 > **onRemove**(): `void`
 
-Defined in: [ui/control/navigation\_control.ts:144](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/navigation_control.ts#L144>)
+Defined in: [ui/control/navigation\_control.ts:144](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/navigation_control.ts#L144>)
 
-Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removecontrol>) internally.
+Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#removecontrol>) internally.
 
 #### Returns
 
@@ -79,4 +79,4 @@ Unregister a control on the map and give it a chance to detach event listeners a
 
 #### Implementation of
 
-[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onRemove`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/#onremove>)
+[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onRemove`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md#onremove>)

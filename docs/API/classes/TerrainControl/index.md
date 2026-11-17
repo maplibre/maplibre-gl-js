@@ -1,6 +1,6 @@
 # TerrainControl
 
-Defined in: [ui/control/terrain\_control.ts:24](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/terrain_control.ts#L24>)
+Defined in: [ui/control/terrain\_control.ts:24](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/terrain_control.ts#L24>)
 
 A `TerrainControl` control contains a button for turning the terrain on and off.
 
@@ -30,7 +30,7 @@ let map = new Map({TerrainControl: false})
 
 > **new TerrainControl**(`options`: `TerrainSpecification`): `TerrainControl`
 
-Defined in: [ui/control/terrain\_control.ts:33](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/terrain_control.ts#L33>)
+Defined in: [ui/control/terrain\_control.ts:33](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/terrain_control.ts#L33>)
 
 #### Parameters
 
@@ -48,9 +48,9 @@ Defined in: [ui/control/terrain\_control.ts:33](<https://github.com/maplibre/map
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `HTMLElement`
 
-Defined in: [ui/control/terrain\_control.ts:38](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/terrain_control.ts#L38>)
+Defined in: [ui/control/terrain\_control.ts:38](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/terrain_control.ts#L38>)
 
-Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) internally.
+Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#addcontrol>) internally.
 
 #### Parameters
 
@@ -66,7 +66,7 @@ The control's container element. This should be created by the control and retur
 
 #### Implementation of
 
-[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onAdd`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/#onadd>)
+[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onAdd`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md#onadd>)
 
 ---
 
@@ -74,9 +74,9 @@ The control's container element. This should be created by the control and retur
 
 > **onRemove**(): `void`
 
-Defined in: [ui/control/terrain\_control.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/terrain_control.ts#L52>)
+Defined in: [ui/control/terrain\_control.ts:52](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/terrain_control.ts#L52>)
 
-Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removecontrol>) internally.
+Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#removecontrol>) internally.
 
 #### Returns
 
@@ -84,4 +84,4 @@ Unregister a control on the map and give it a chance to detach event listeners a
 
 #### Implementation of
 
-[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onRemove`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/#onremove>)
+[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onRemove`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md#onremove>)

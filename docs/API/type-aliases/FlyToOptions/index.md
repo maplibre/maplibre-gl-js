@@ -2,9 +2,9 @@
 
 > **FlyToOptions** = [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>) &amp; [`CameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>) &amp; `object`
 
-Defined in: [ui/camera.ts:190](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/camera.ts#L190>)
+Defined in: [ui/camera.ts:107](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/camera.ts#L107>)
 
-The [Map.flyTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#flyto>) options object
+The [Map.flyTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#flyto>) options object
 
 ## Type Declaration
 
@@ -12,7 +12,7 @@ The [Map.flyTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#flyto
 
 > `optional` **curve?**: `number`
 
-The zooming "curve" that will occur along the flight path. A high value maximizes zooming for an exaggerated animation, while a low value minimizes zooming for an effect closer to [Map.easeTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#easeto>). 1.42 is the average value selected by participants in the user study discussed in [van Wijk (2003)](<https://www.win.tue.nl/~vanwijk/zoompan.pdf>). A value of `Math.pow(6, 0.25)` would be equivalent to the root mean squared average velocity. A value of 1 would produce a circular motion.
+The zooming "curve" that will occur along the flight path. A high value maximizes zooming for an exaggerated animation, while a low value minimizes zooming for an effect closer to [Map.easeTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#easeto>). 1.42 is the average value selected by participants in the user study discussed in [van Wijk (2003)](<https://www.win.tue.nl/~vanwijk/zoompan.pdf>). A value of `Math.pow(6, 0.25)` would be equivalent to the root mean squared average velocity. A value of 1 would produce a circular motion.
 
 #### Default Value
 

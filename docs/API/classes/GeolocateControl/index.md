@@ -1,6 +1,6 @@
 # GeolocateControl
 
-Defined in: [ui/control/geolocate\_control.ts:342](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L342>)
+Defined in: [ui/control/geolocate\_control.ts:342](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L342>)
 
 A `GeolocateControl` control provides a button that uses the browser's geolocation API to locate the user on the map.
 
@@ -180,7 +180,7 @@ geolocate.on('outofmaxbounds', () => {
 
 > **new GeolocateControl**(`options`: [`GeolocateControlOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlOptions/index.md>)): `GeolocateControl`
 
-Defined in: [ui/control/geolocate\_control.ts:377](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L377>)
+Defined in: [ui/control/geolocate\_control.ts:377](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L377>)
 
 #### Parameters
 
@@ -202,7 +202,7 @@ Defined in: [ui/control/geolocate\_control.ts:377](<https://github.com/maplibre/
 
 > **\_isOutOfMapMaxBounds**(`position`: `GeolocationPosition`): `boolean`
 
-Defined in: [ui/control/geolocate\_control.ts:424](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L424>)
+Defined in: [ui/control/geolocate\_control.ts:424](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L424>)
 
 Check if the Geolocation API Position is outside the map's `maxBounds`.
 
@@ -224,7 +224,7 @@ Check if the Geolocation API Position is outside the map's `maxBounds`.
 
 > **\_onSuccess**(`position`: `GeolocationPosition`): `void`
 
-Defined in: [ui/control/geolocate\_control.ts:477](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L477>)
+Defined in: [ui/control/geolocate\_control.ts:477](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L477>)
 
 When the Geolocation API returns a new location, update the `GeolocateControl`.
 
@@ -244,7 +244,7 @@ When the Geolocation API returns a new location, update the `GeolocateControl`.
 
 > **\_updateCamera**(`position`: `GeolocationPosition`): `void`
 
-Defined in: [ui/control/geolocate\_control.ts:545](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L545>)
+Defined in: [ui/control/geolocate\_control.ts:545](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L545>)
 
 Update the camera location to center on the current position. The camera change is tagged with `geolocateSource` so it does not switch the control to the background state.
 
@@ -264,7 +264,7 @@ Update the camera location to center on the current position. The camera change 
 
 > **\_updateMarker**(`position?`: `GeolocationPosition`): `void`
 
-Defined in: [ui/control/geolocate\_control.ts:572](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L572>)
+Defined in: [ui/control/geolocate\_control.ts:572](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L572>)
 
 Update the user location dot Marker to the current position
 
@@ -286,7 +286,7 @@ Update the user location dot Marker to the current position
 
 > **fire**(`event`: [`GeolocateEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/GeolocateEvent/index.md>) | [`GeolocatePositionEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/GeolocatePositionEvent/index.md>) | [`GeolocateErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/GeolocateErrorEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -302,13 +302,13 @@ Calls every listener registered for the event's type.
 
 ##### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#fire>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#fire>)
 
 #### Call Signature
 
 > **fire**(`type`: keyof [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -325,7 +325,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 ##### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#fire>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#fire>)
 
 ---
 
@@ -333,7 +333,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **listens**(`type`: keyof [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -351,7 +351,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 #### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`listens`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#listens>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`listens`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#listens>)
 
 ---
 
@@ -359,7 +359,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **off**\<`T` *extends* keyof [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -382,7 +382,7 @@ Removes a previously registered event listener.
 
 #### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`off`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#off>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`off`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#off>)
 
 ---
 
@@ -390,7 +390,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -413,7 +413,7 @@ Adds a listener to a specified event type.
 
 #### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`on`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#on>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`on`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#on>)
 
 ---
 
@@ -421,9 +421,9 @@ Adds a listener to a specified event type.
 
 > **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)): `HTMLElement`
 
-Defined in: [ui/control/geolocate\_control.ts:383](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L383>)
+Defined in: [ui/control/geolocate\_control.ts:383](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L383>)
 
-Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addcontrol>) internally.
+Register a control on the map and give it a chance to register event listeners and resources. This method is called by [Map.addControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#addcontrol>) internally.
 
 #### Parameters
 
@@ -439,7 +439,7 @@ The control's container element. This should be created by the control and retur
 
 #### Implementation of
 
-[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onAdd`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/#onadd>)
+[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onAdd`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md#onadd>)
 
 ---
 
@@ -449,7 +449,7 @@ The control's container element. This should be created by the control and retur
 
 > **once**\<`T` *extends* keyof [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)\>(`type`: `T`): `Promise`\<[`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -475,13 +475,13 @@ a promise that resolves with the event
 
 ##### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#once>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#once>)
 
 #### Call Signature
 
 > **once**\<`T` *extends* keyof [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`GeolocateControlEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GeolocateControlEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -508,7 +508,7 @@ The listener will be called first time the event fires after the listener is reg
 
 ##### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#once>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#once>)
 
 ---
 
@@ -516,9 +516,9 @@ The listener will be called first time the event fires after the listener is reg
 
 > **onRemove**(): `void`
 
-Defined in: [ui/control/geolocate\_control.ts:392](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L392>)
+Defined in: [ui/control/geolocate\_control.ts:392](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L392>)
 
-Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#removecontrol>) internally.
+Unregister a control on the map and give it a chance to detach event listeners and resources. This method is called by [Map.removeControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#removecontrol>) internally.
 
 #### Returns
 
@@ -526,7 +526,7 @@ Unregister a control on the map and give it a chance to detach event listeners a
 
 #### Implementation of
 
-[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onRemove`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/#onremove>)
+[`IControl`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md>).[`onRemove`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/IControl/index.md#onremove>)
 
 ---
 
@@ -534,7 +534,7 @@ Unregister a control on the map and give it a chance to detach event listeners a
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -551,7 +551,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 #### Inherited from
 
-[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`setEventedParent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/#seteventedparent>)
+[`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>).[`setEventedParent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md#seteventedparent>)
 
 ---
 
@@ -559,7 +559,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **trigger**(): `boolean`
 
-Defined in: [ui/control/geolocate\_control.ts:747](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/control/geolocate_control.ts#L747>)
+Defined in: [ui/control/geolocate\_control.ts:747](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L747>)
 
 Programmatically request and move the map to the user's location.
 

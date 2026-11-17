@@ -2,9 +2,9 @@
 
 > **addSourceType**(`name`: `string`, `SourceType`: [`SourceClass`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceClass/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/source.ts:193](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/source.ts#L193>)
+Defined in: [source/source.ts:193](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/source.ts#L193>)
 
-Adds a custom source type, making it available for use with [Map.addSource](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#addsource>).
+Adds a custom source type, making it available for use with [Map.addSource](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#addsource>).
 
 ## Parameters
 

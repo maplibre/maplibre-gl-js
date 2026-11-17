@@ -2,7 +2,7 @@
 
 > **PopupOptions** = `object`
 
-Defined in: [ui/popup.ts:43](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L43>)
+Defined in: [ui/popup.ts:44](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L44>)
 
 The [Popup](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md>) options object
 
@@ -12,9 +12,9 @@ The [Popup](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md
 
 > `optional` **anchor?**: [`PositionAnchor`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PositionAnchor/index.md>)
 
-Defined in: [ui/popup.ts:72](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L72>)
+Defined in: [ui/popup.ts:73](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L73>)
 
-A string indicating the part of the Popup that should be positioned closest to the coordinate set via [Popup.setLngLat](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/#setlnglat>). Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. If unset the anchor will be dynamically set to ensure the popup falls within the map container with a preference for `'bottom'`.
+A string indicating the part of the Popup that should be positioned closest to the coordinate set via [Popup.setLngLat](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Popup/index.md#setlnglat>). Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. If unset the anchor will be dynamically set to ensure the popup falls within the map container with a preference for `'bottom'`.
 
 ---
 
@@ -22,7 +22,7 @@ A string indicating the part of the Popup that should be positioned closest to t
 
 > `optional` **className?**: `string`
 
-Defined in: [ui/popup.ts:80](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L80>)
+Defined in: [ui/popup.ts:81](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L81>)
 
 Space-separated CSS class names to add to popup container
 
@@ -32,7 +32,7 @@ Space-separated CSS class names to add to popup container
 
 > `optional` **closeButton?**: `boolean`
 
-Defined in: [ui/popup.ts:48](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L48>)
+Defined in: [ui/popup.ts:49](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L49>)
 
 If `true`, a close button will appear in the top right corner of the popup.
 
@@ -48,7 +48,7 @@ true
 
 > `optional` **closeOnClick?**: `boolean`
 
-Defined in: [ui/popup.ts:53](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L53>)
+Defined in: [ui/popup.ts:54](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L54>)
 
 If `true`, the popup will closed when the map is clicked.
 
@@ -64,7 +64,7 @@ true
 
 > `optional` **closeOnMove?**: `boolean`
 
-Defined in: [ui/popup.ts:58](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L58>)
+Defined in: [ui/popup.ts:59](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L59>)
 
 If `true`, the popup will closed when the map moves.
 
@@ -80,7 +80,7 @@ false
 
 > `optional` **focusAfterOpen?**: `boolean`
 
-Defined in: [ui/popup.ts:63](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L63>)
+Defined in: [ui/popup.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L64>)
 
 If `true`, the popup will try to focus the first focusable element inside the popup.
 
@@ -96,7 +96,7 @@ true
 
 > `optional` **locationOccludedOpacity?**: `number` | `string`
 
-Defined in: [ui/popup.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L99>)
+Defined in: [ui/popup.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L100>)
 
 Optional opacity when the location is behind the globe. Note that if a number is provided, it will be converted to a string.
 
@@ -112,7 +112,7 @@ undefined
 
 > `optional` **maxWidth?**: `string`
 
-Defined in: [ui/popup.ts:87](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L87>)
+Defined in: [ui/popup.ts:88](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L88>)
 
 A string that sets the CSS property of the popup's maximum width, eg `'300px'`. To ensure the popup resizes to fit its content, set this property to `'none'`. Available values can be found here: https://developer.mozilla.org/en-US/docs/Web/CSS/max-width
 
@@ -128,7 +128,7 @@ A string that sets the CSS property of the popup's maximum width, eg `'300px'`. 
 
 > `optional` **offset?**: [`Offset`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Offset/index.md>)
 
-Defined in: [ui/popup.ts:76](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L76>)
+Defined in: [ui/popup.ts:77](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L77>)
 
 A pixel offset applied to the popup's location
 
@@ -138,7 +138,7 @@ A pixel offset applied to the popup's location
 
 > `optional` **padding?**: [`PaddingOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PaddingOptions/index.md>)
 
-Defined in: [ui/popup.ts:106](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L106>)
+Defined in: [ui/popup.ts:107](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L107>)
 
 A pixel padding applied to the popup's positioning constraints. The popup will be positioned to avoid being placed within this padding area from the edges of the map container.
 
@@ -154,7 +154,7 @@ undefined
 
 > `optional` **subpixelPositioning?**: `boolean`
 
-Defined in: [ui/popup.ts:93](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/popup.ts#L93>)
+Defined in: [ui/popup.ts:94](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L94>)
 
 If `true`, rounding is disabled for placement of the popup, allowing for subpixel positioning and smoother movement when the popup is translated.
 

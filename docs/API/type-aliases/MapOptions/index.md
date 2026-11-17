@@ -2,7 +2,7 @@
 
 > **MapOptions** = `object`
 
-Defined in: [ui/map.ts:90](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L90>)
+Defined in: [ui/map.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L96>)
 
 The [Map](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>) options object.
 
@@ -12,7 +12,7 @@ The [Map](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>) o
 
 > `optional` **anisotropicFilterPitch?**: `number` | `null`
 
-Defined in: [ui/map.ts:190](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L190>)
+Defined in: [ui/map.ts:196](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L196>)
 
 The pitch above which to apply anisotropic filtering to the map's raster layers (0-180).
 
@@ -28,7 +28,7 @@ The pitch above which to apply anisotropic filtering to the map's raster layers 
 
 > `optional` **aroundCenter?**: `boolean`
 
-Defined in: [ui/map.ts:465](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L465>)
+Defined in: [ui/map.ts:471](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L471>)
 
 Determines the rotation interaction model: - When true: Uses "Orbital" logic where rotation is relative to the pivot center. Dragging right at the top rotates clockwise, while dragging right at the bottom rotates counter-clockwise (like spinning a physical globe). - When false: Uses "Linear" logic where horizontal mouse movement translates directly to bearing change regardless of cursor position.
 
@@ -42,7 +42,7 @@ Use [MapOptions.dragRotate](<#dragrotate>) instead, with `{around: 'center', mov
 
 > `optional` **attributionControl?**: `false` | [`AttributionControlOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AttributionControlOptions/index.md>)
 
-Defined in: [ui/map.ts:131](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L131>)
+Defined in: [ui/map.ts:137](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L137>)
 
 If set, an [AttributionControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/AttributionControl/index.md>) will be added to the map with the provided options. To disable the attribution control, pass `false`.
 
@@ -62,7 +62,7 @@ compact: true, customAttribution: "MapLibre ...".
 
 > `optional` **bearing?**: `number`
 
-Defined in: [ui/map.ts:259](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L259>)
+Defined in: [ui/map.ts:265](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L265>)
 
 The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
 
@@ -78,7 +78,7 @@ The initial bearing (rotation) of the map, measured in degrees counter-clockwise
 
 > `optional` **bearingSnap?**: `number`
 
-Defined in: [ui/map.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L116>)
+Defined in: [ui/map.ts:122](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L122>)
 
 The threshold, measured in degrees, that determines when the map's bearing will snap to north. For example, with a `bearingSnap` of 7, if the user rotates the map within 7 degrees of north, the map will automatically snap to exact north.
 
@@ -94,7 +94,7 @@ The threshold, measured in degrees, that determines when the map's bearing will 
 
 > `optional` **bounds?**: [`LngLatBoundsLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatBoundsLike/index.md>)
 
-Defined in: [ui/map.ts:339](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L339>)
+Defined in: [ui/map.ts:345](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L345>)
 
 The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
 
@@ -104,7 +104,7 @@ The initial bounds of the map. If `bounds` is specified, it overrides `center` a
 
 > `optional` **boxZoom?**: `boolean` | [`BoxZoomHandlerOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/BoxZoomHandlerOptions/index.md>)
 
-Defined in: [ui/map.ts:197](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L197>)
+Defined in: [ui/map.ts:203](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L203>)
 
 If `true`, the "box zoom" interaction is enabled (see [BoxZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/BoxZoomHandler/index.md>)). An `Object` value configures [BoxZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/BoxZoomHandler/index.md>) options. If `boxZoomEnd` is provided, the callback runs instead of the default fit-to-box zoom.
 
@@ -120,7 +120,7 @@ true
 
 > `optional` **cancelPendingTileRequestsWhileZooming?**: `boolean`
 
-Defined in: [ui/map.ts:420](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L420>)
+Defined in: [ui/map.ts:426](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L426>)
 
 Determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one. \* If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom. \* If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
 
@@ -136,7 +136,7 @@ true
 
 > `optional` **canvasContextAttributes?**: `WebGLContextAttributesWithType`
 
-Defined in: [ui/map.ts:147](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L147>)
+Defined in: [ui/map.ts:153](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L153>)
 
 Set of WebGLContextAttributes that are applied to the WebGL context of the map. See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext for more details. `contextType` is restricted to `'webgl2'`. This option is kept as a forward-looking API for future WebGPU support.
 
@@ -152,7 +152,7 @@ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: fa
 
 > `optional` **center?**: [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)
 
-Defined in: [ui/map.ts:244](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L244>)
+Defined in: [ui/map.ts:250](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L250>)
 
 The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]`
 
@@ -172,7 +172,7 @@ The initial geographical centerpoint of the map. If `center` is not specified in
 
 > `optional` **centerClampedToGround?**: `boolean`
 
-Defined in: [ui/map.ts:427](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L427>)
+Defined in: [ui/map.ts:433](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L433>)
 
 If true, the elevation of the center point will automatically be set to the terrain elevation (or zero if terrain is not enabled). If false, the elevation of the center point will default to sea level and will not automatically update. Defaults to true. Needs to be set to false to keep the camera above ground when pitch \> 90 degrees.
 
@@ -182,7 +182,7 @@ If true, the elevation of the center point will automatically be set to the terr
 
 > `optional` **clickTolerance?**: `number`
 
-Defined in: [ui/map.ts:335](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L335>)
+Defined in: [ui/map.ts:341](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L341>)
 
 The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).
 
@@ -198,7 +198,7 @@ The max number of pixels a user can shift the mouse pointer during a click for i
 
 > `optional` **collectResourceTiming?**: `boolean`
 
-Defined in: [ui/map.ts:330](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L330>)
+Defined in: [ui/map.ts:336](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L336>)
 
 If `true`, Resource Timing API information will be collected for requests made by GeoJSON and Vector Tile web workers (this information is normally inaccessible from the main Javascript thread). Information will be returned in a `resourceTiming` property of relevant `data` events.
 
@@ -214,7 +214,7 @@ false
 
 > **container**: `HTMLElement` | `string`
 
-Defined in: [ui/map.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L109>)
+Defined in: [ui/map.ts:115](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L115>)
 
 The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
 
@@ -224,7 +224,7 @@ The HTML element in which MapLibre GL JS will render the map, or the element's s
 
 > `optional` **cooperativeGestures?**: [`GestureOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/GestureOptions/index.md>)
 
-Defined in: [ui/map.ts:232](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L232>)
+Defined in: [ui/map.ts:238](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L238>)
 
 If `true` or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using [FullscreenControl](<https://maplibre.org/maplibre-gl-js/docs/API/classes/FullscreenControl/index.md>).
 
@@ -240,7 +240,7 @@ false
 
 > `optional` **crossSourceCollisions?**: `boolean`
 
-Defined in: [ui/map.ts:325](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L325>)
+Defined in: [ui/map.ts:331](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L331>)
 
 If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
 
@@ -256,7 +256,7 @@ true
 
 > `optional` **doubleClickZoom?**: `boolean`
 
-Defined in: [ui/map.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L217>)
+Defined in: [ui/map.ts:223](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L223>)
 
 If `true`, the "double click to zoom" interaction is enabled (see [DoubleClickZoomHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DoubleClickZoomHandler/index.md>)).
 
@@ -272,9 +272,9 @@ true
 
 > `optional` **dragPan?**: `boolean` | [`DragPanOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/DragPanOptions/index.md>)
 
-Defined in: [ui/map.ts:207](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L207>)
+Defined in: [ui/map.ts:213](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L213>)
 
-If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to [DragPanHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragPanHandler/#enable>).
+If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to [DragPanHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragPanHandler/index.md#enable>).
 
 #### Default Value
 
@@ -288,9 +288,9 @@ true
 
 > `optional` **dragRotate?**: `boolean` | [`DragRotateOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/DragRotateOptions/index.md>)
 
-Defined in: [ui/map.ts:202](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L202>)
+Defined in: [ui/map.ts:208](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L208>)
 
-If `true`, the "drag to rotate" interaction is enabled (see [DragRotateHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/index.md>)). An `Object` value is passed as options to [DragRotateHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/#enable>).
+If `true`, the "drag to rotate" interaction is enabled (see [DragRotateHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/index.md>)). An `Object` value is passed as options to [DragRotateHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/index.md#enable>).
 
 #### Default Value
 
@@ -304,7 +304,7 @@ true
 
 > `optional` **elevation?**: `number`
 
-Defined in: [ui/map.ts:249](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L249>)
+Defined in: [ui/map.ts:255](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L255>)
 
 The elevation of the initial geographical centerpoint of the map, in meters above sea level. If `elevation` is not specified in the constructor options, it will default to `0`.
 
@@ -320,7 +320,7 @@ The elevation of the initial geographical centerpoint of the map, in meters abov
 
 > `optional` **fadeDuration?**: `number`
 
-Defined in: [ui/map.ts:320](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L320>)
+Defined in: [ui/map.ts:326](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L326>)
 
 Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
 
@@ -336,7 +336,7 @@ Controls the duration of the fade-in/fade-out animation for label collisions aft
 
 > `optional` **fitBoundsOptions?**: [`FitBoundsOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FitBoundsOptions/index.md>)
 
-Defined in: [ui/map.ts:343](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L343>)
+Defined in: [ui/map.ts:349](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L349>)
 
 A [FitBoundsOptions](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/FitBoundsOptions/index.md>) options object to use *only* when fitting the initial `bounds` provided above.
 
@@ -346,9 +346,9 @@ A [FitBoundsOptions](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/
 
 > `optional` **globalState?**: `Record`\<`string`, `any`\>
 
-Defined in: [ui/map.ts:402](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L402>)
+Defined in: [ui/map.ts:408](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L408>)
 
-Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if [Map.setGlobalStateProperty](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setglobalstateproperty>) was called after loading the map. Subsequent calls to [Map.setStyle](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setstyle>) will use the same defaults if the [StyleOptions.globalState](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleOptions/#globalstate>) option is not set.
+Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if [Map.setGlobalStateProperty](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#setglobalstateproperty>) was called after loading the map. Subsequent calls to [Map.setStyle](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#setstyle>) will use the same defaults if the [StyleOptions.globalState](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleOptions/index.md#globalstate>) option is not set.
 
 ---
 
@@ -356,7 +356,7 @@ Defines an initial global state for the map style. It overrides the defaults def
 
 > `optional` **hash?**: `boolean` | `string`
 
-Defined in: [ui/map.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L100>)
+Defined in: [ui/map.ts:106](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L106>)
 
 If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL. For example, `https://example.com#2.59/39.26/53.07/-24.1/60`.
 
@@ -374,7 +374,7 @@ false
 
 > `optional` **interactive?**: `boolean`
 
-Defined in: [ui/map.ts:105](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L105>)
+Defined in: [ui/map.ts:111](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L111>)
 
 If `false`, no mouse, touch, or keyboard listeners will be attached to the map, so it will not respond to interaction.
 
@@ -390,7 +390,7 @@ true
 
 > `optional` **keyboard?**: `boolean`
 
-Defined in: [ui/map.ts:212](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L212>)
+Defined in: [ui/map.ts:218](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L218>)
 
 If `true`, keyboard shortcuts are enabled (see [KeyboardHandler](<https://maplibre.org/maplibre-gl-js/docs/API/classes/KeyboardHandler/index.md>)).
 
@@ -406,7 +406,7 @@ true
 
 > `optional` **locale?**: `Record`\<`string`, `string`\>
 
-Defined in: [ui/map.ts:315](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L315>)
+Defined in: [ui/map.ts:321](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L321>)
 
 A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table). For an example, see https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/ Alternatively, search the official plugins page for plugins related to localization.
 
@@ -422,7 +422,7 @@ null
 
 > `optional` **localIdeographFontFamily?**: `string` | `false`
 
-Defined in: [ui/map.ts:353](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L353>)
+Defined in: [ui/map.ts:359](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L359>)
 
 Defines a CSS font-family for locally overriding generation of Chinese, Japanese, and Korean characters. For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold). Set to `false`, to enable font settings from the map's style for these glyph ranges. The purpose of this option is to avoid bandwidth-intensive glyph server requests.
 
@@ -442,7 +442,7 @@ Defines a CSS font-family for locally overriding generation of Chinese, Japanese
 
 > `optional` **logoPosition?**: [`ControlPosition`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ControlPosition/index.md>)
 
-Defined in: [ui/map.ts:140](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L140>)
+Defined in: [ui/map.ts:146](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L146>)
 
 A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, or `bottom-right`.
 
@@ -458,7 +458,7 @@ A string representing the position of the MapLibre wordmark on the map. Valid op
 
 > `optional` **maplibreLogo?**: `boolean`
 
-Defined in: [ui/map.ts:135](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L135>)
+Defined in: [ui/map.ts:141](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L141>)
 
 If `true`, the MapLibre logo will be shown.
 
@@ -468,7 +468,7 @@ If `true`, the MapLibre logo will be shown.
 
 > `optional` **maxBounds?**: [`LngLatBoundsLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatBoundsLike/index.md>)
 
-Defined in: [ui/map.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L156>)
+Defined in: [ui/map.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L162>)
 
 If set, the map will be constrained to the given bounds.
 
@@ -478,7 +478,7 @@ If set, the map will be constrained to the given bounds.
 
 > `optional` **maxCanvasSize?**: \[`number`, `number`\]
 
-Defined in: [ui/map.ts:413](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L413>)
+Defined in: [ui/map.ts:419](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L419>)
 
 The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height. You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. A larger canvas is not refused: the pixel ratio is lowered to fit and a warning is logged once.
 
@@ -494,7 +494,7 @@ The canvas' `width` and `height` max size. The values are passed as an array whe
 
 > `optional` **maxPitch?**: `number` | `null`
 
-Defined in: [ui/map.ts:185](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L185>)
+Defined in: [ui/map.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L191>)
 
 The maximum pitch of the map (0-180).
 
@@ -510,7 +510,7 @@ The maximum pitch of the map (0-180).
 
 > `optional` **maxTileCacheSize?**: `number` | `null`
 
-Defined in: [ui/map.ts:284](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L284>)
+Defined in: [ui/map.ts:290](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L290>)
 
 The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
 
@@ -526,7 +526,7 @@ null
 
 > `optional` **maxTileCacheZoomLevels?**: `number`
 
-Defined in: [ui/map.ts:289](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L289>)
+Defined in: [ui/map.ts:295](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L295>)
 
 The maximum number of zoom levels for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying `maxTileCacheZoomLevels` with the approximate number of tiles in the viewport for a given source.
 
@@ -542,7 +542,7 @@ The maximum number of zoom levels for which to store tiles for a given source. T
 
 > `optional` **maxZoom?**: `number` | `null`
 
-Defined in: [ui/map.ts:175](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L175>)
+Defined in: [ui/map.ts:181](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L181>)
 
 The maximum zoom level of the map. Users cannot zoom in beyond this level. (0–24)
 
@@ -558,7 +558,7 @@ The maximum zoom level of the map. Users cannot zoom in beyond this level. (0–
 
 > `optional` **minPitch?**: `number` | `null`
 
-Defined in: [ui/map.ts:180](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L180>)
+Defined in: [ui/map.ts:186](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L186>)
 
 The minimum pitch of the map (0-180).
 
@@ -574,11 +574,11 @@ The minimum pitch of the map (0-180).
 
 > `optional` **minZoom?**: `number` | `null`
 
-Defined in: [ui/map.ts:170](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L170>)
+Defined in: [ui/map.ts:176](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L176>)
 
 The minimum zoom level of the map. Users cannot zoom out beyond this level. (-2 – 24)
 
-With the mercator projection, the map may stop zooming out before it reaches this level, because the world has to cover the height of the map: a map 512px tall cannot zoom out below zoom 0. [Map.getMinZoom](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#getminzoom>) with `constrained` set to `true` returns the level the map can actually reach.
+With the mercator projection, the map may stop zooming out before it reaches this level, because the world has to cover the height of the map: a map 512px tall cannot zoom out below zoom 0. [Map.getMinZoom](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#getminzoom>) with `constrained` set to `true` returns the level the map can actually reach.
 
 #### Default Value
 
@@ -592,7 +592,7 @@ With the mercator projection, the map may stop zooming out before it reaches thi
 
 > `optional` **pitch?**: `number`
 
-Defined in: [ui/map.ts:264](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L264>)
+Defined in: [ui/map.ts:270](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L270>)
 
 The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-85). If `pitch` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`. Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
 
@@ -608,7 +608,7 @@ The initial pitch (tilt) of the map, measured in degrees away from the plane of 
 
 > `optional` **pitchSpeed?**: `number`
 
-Defined in: [ui/map.ts:381](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L381>)
+Defined in: [ui/map.ts:387](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L387>)
 
 Degrees the map's pitch changes per pixel of vertical drag. Negative, so that dragging up pitches the map toward the horizon.
 
@@ -624,7 +624,7 @@ Degrees the map's pitch changes per pixel of vertical drag. Negative, so that dr
 
 > `optional` **pitchWithRotate?**: `boolean`
 
-Defined in: [ui/map.ts:365](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L365>)
+Defined in: [ui/map.ts:371](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L371>)
 
 If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
 
@@ -640,7 +640,7 @@ true
 
 > `optional` **pixelRatio?**: `number`
 
-Defined in: [ui/map.ts:391](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L391>)
+Defined in: [ui/map.ts:397](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L397>)
 
 The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
 
@@ -650,7 +650,7 @@ The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * 
 
 > `optional` **reduceMotion?**: `boolean`
 
-Defined in: [ui/map.ts:386](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L386>)
+Defined in: [ui/map.ts:392](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L392>)
 
 If `true`, gesture inertia (such as panning) is disabled. If not provided, gesture inertia defaults to the user's device settings.
 
@@ -666,7 +666,7 @@ undefined
 
 > `optional` **refreshExpiredTiles?**: `boolean`
 
-Defined in: [ui/map.ts:152](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L152>)
+Defined in: [ui/map.ts:158](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L158>)
 
 If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
 
@@ -682,7 +682,7 @@ true
 
 > `optional` **renderWorldCopies?**: `boolean`
 
-Defined in: [ui/map.ts:279](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L279>)
+Defined in: [ui/map.ts:285](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L285>)
 
 If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
 
@@ -701,7 +701,7 @@ true
 
 > `optional` **roll?**: `number`
 
-Defined in: [ui/map.ts:269](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L269>)
+Defined in: [ui/map.ts:275](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L275>)
 
 The initial roll angle of the map, measured in degrees counter-clockwise about the camera boresight. If `roll` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
 
@@ -717,7 +717,7 @@ The initial roll angle of the map, measured in degrees counter-clockwise about t
 
 > `optional` **rollEnabled?**: `boolean`
 
-Defined in: [ui/map.ts:370](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L370>)
+Defined in: [ui/map.ts:376](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L376>)
 
 If `false`, the map's roll control with "drag to rotate" interaction will be disabled.
 
@@ -733,7 +733,7 @@ false
 
 > `optional` **rotateSpeed?**: `number`
 
-Defined in: [ui/map.ts:375](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L375>)
+Defined in: [ui/map.ts:381](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L381>)
 
 Degrees the map's bearing changes per pixel of horizontal drag when rotating.
 
@@ -749,9 +749,9 @@ Degrees the map's bearing changes per pixel of horizontal drag when rotating.
 
 > `optional` **scrollZoom?**: `boolean` | [`AroundCenterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>)
 
-Defined in: [ui/map.ts:161](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L161>)
+Defined in: [ui/map.ts:167](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L167>)
 
-If `true`, the "scroll to zoom" interaction is enabled. [AroundCenterOptions](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>) are passed as options to [ScrollZoomHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ScrollZoomHandler/#enable>).
+If `true`, the "scroll to zoom" interaction is enabled. [AroundCenterOptions](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>) are passed as options to [ScrollZoomHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ScrollZoomHandler/index.md#enable>).
 
 #### Default Value
 
@@ -765,9 +765,9 @@ true
 
 > `optional` **style?**: `StyleSpecification` | `string`
 
-Defined in: [ui/map.ts:360](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L360>)
+Defined in: [ui/map.ts:366](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L366>)
 
-The map's MapLibre style. This must be a JSON object conforming to the schema described in the [MapLibre Style Specification](<https://maplibre.org/maplibre-style-spec/>), or a URL to such JSON. When the style is not specified, calling [Map.setStyle](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setstyle>) is required to render the map.
+The map's MapLibre style. This must be a JSON object conforming to the schema described in the [MapLibre Style Specification](<https://maplibre.org/maplibre-style-spec/>), or a URL to such JSON. When the style is not specified, calling [Map.setStyle](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#setstyle>) is required to render the map.
 
 ---
 
@@ -775,7 +775,7 @@ The map's MapLibre style. This must be a JSON object conforming to the schema de
 
 > `optional` **terrainSkirtLength?**: `"none"` | `"auto"`
 
-Defined in: [ui/map.ts:440](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L440>)
+Defined in: [ui/map.ts:446](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L446>)
 
 Controls the length of the vertical extensions which are added to the edges of terrain tiles.
 
@@ -796,9 +796,9 @@ If the skirts are introducing visually unappealing vertical artifacts, consider 
 
 > `optional` **touchPitch?**: `boolean` | [`AroundCenterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>)
 
-Defined in: [ui/map.ts:227](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L227>)
+Defined in: [ui/map.ts:233](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L233>)
 
-If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to [TwoFingersTouchPitchHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchPitchHandler/#enable>).
+If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to [TwoFingersTouchPitchHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchPitchHandler/index.md#enable>).
 
 #### Default Value
 
@@ -812,9 +812,9 @@ true
 
 > `optional` **touchZoomRotate?**: `boolean` | [`AroundCenterOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AroundCenterOptions/index.md>)
 
-Defined in: [ui/map.ts:222](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L222>)
+Defined in: [ui/map.ts:228](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L228>)
 
-If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to [TwoFingersTouchZoomRotateHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchZoomRotateHandler/#enable>).
+If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to [TwoFingersTouchZoomRotateHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/TwoFingersTouchZoomRotateHandler/index.md#enable>).
 
 #### Default Value
 
@@ -828,7 +828,7 @@ true
 
 > `optional` **trackResize?**: `boolean`
 
-Defined in: [ui/map.ts:237](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L237>)
+Defined in: [ui/map.ts:243](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L243>)
 
 If `true`, the map will automatically resize when the browser window resizes.
 
@@ -844,7 +844,7 @@ true
 
 > `optional` **transformCameraUpdate?**: [`CameraUpdateTransformFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraUpdateTransformFunction/index.md>) | `null`
 
-Defined in: [ui/map.ts:301](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L301>)
+Defined in: [ui/map.ts:307](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L307>)
 
 A callback run before the map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing. Expected to return an object containing center, zoom, pitch or bearing values to overwrite.
 
@@ -860,7 +860,7 @@ null
 
 > `optional` **transformConstrain?**: [`TransformConstrainFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TransformConstrainFunction/index.md>) | `null`
 
-Defined in: [ui/map.ts:308](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L308>)
+Defined in: [ui/map.ts:314](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L314>)
 
 A callback that overrides how the map constrains the viewport's lnglat and zoom to respect the longitude and latitude bounds.
 
@@ -880,7 +880,7 @@ null
 
 > `optional` **transformRequest?**: [`RequestTransformFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/RequestTransformFunction/index.md>) | `null`
 
-Defined in: [ui/map.ts:295](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L295>)
+Defined in: [ui/map.ts:301](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L301>)
 
 A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests. Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
 
@@ -896,9 +896,9 @@ null
 
 > `optional` **transformStyle?**: [`TransformStyleFunction`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TransformStyleFunction/index.md>)
 
-Defined in: [ui/map.ts:406](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L406>)
+Defined in: [ui/map.ts:412](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L412>)
 
-TransformStyleFunction is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state. Refer to [TransformStyleFunction](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TransformStyleFunction/index.md>). Subsequent calls to [Map.setStyle](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setstyle>) will use the same transform if the [StyleSwapOptions.transformStyle](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSwapOptions/#transformstyle>) option is not set.
+TransformStyleFunction is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state. Refer to [TransformStyleFunction](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/TransformStyleFunction/index.md>). Subsequent calls to [Map.setStyle](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#setstyle>) will use the same transform if the [StyleSwapOptions.transformStyle](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/StyleSwapOptions/index.md#transformstyle>) option is not set.
 
 ---
 
@@ -906,7 +906,7 @@ TransformStyleFunction is a convenience function that allows to modify a style a
 
 > `optional` **validateStyle?**: `boolean`
 
-Defined in: [ui/map.ts:398](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L398>)
+Defined in: [ui/map.ts:404](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L404>)
 
 If false, style validation will be skipped. Useful in production environments due to enabling tree-shaking of the validation code in some environments and minor performance improvements. Disabling this option comes at the cost of less clear error messages
 
@@ -922,7 +922,7 @@ true
 
 > `optional` **zoom?**: `number`
 
-Defined in: [ui/map.ts:254](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L254>)
+Defined in: [ui/map.ts:260](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L260>)
 
 The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
 
@@ -938,7 +938,7 @@ The initial zoom level of the map. If `zoom` is not specified in the constructor
 
 > `optional` **zoomLevelsToOverscale?**: `number`
 
-Defined in: [ui/map.ts:453](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L453>)
+Defined in: [ui/map.ts:459](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L459>)
 
 Defines the number of zoom level that will overscale instead of split tiles below (inclusive) a map's `maxZoom`. When `undefined`, all zoom levels after source's max zoom will be overscaled.
 
@@ -958,7 +958,7 @@ For example if map's `maxZoom` is 20, the source's `maxzoom` is 10 (tiles are av
 
 > `optional` **zoomSnap?**: `number`
 
-Defined in: [ui/map.ts:123](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/ui/map.ts#L123>)
+Defined in: [ui/map.ts:129](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/map.ts#L129>)
 
 The step increment the zoom level will snap to. For example, if `zoomSnap` is 1, the map will snap to whole integers during discrete zoom operations. If set to 0, zooming is continuous.
 

@@ -2,7 +2,7 @@
 
 > **StyleOptions** = `object`
 
-Defined in: [style/style.ts:97](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L97>)
+Defined in: [style/style.ts:98](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L98>)
 
 The options object related to the [Map](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)'s style related methods
 
@@ -12,9 +12,9 @@ The options object related to the [Map](<https://maplibre.org/maplibre-gl-js/doc
 
 > `optional` **globalState?**: `Record`\<`string`, `any`\>
 
-Defined in: [style/style.ts:113](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L113>)
+Defined in: [style/style.ts:114](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L114>)
 
-Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if [Map.setGlobalStateProperty](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setglobalstateproperty>) was called after loading the style.
+Defines an initial global state for the map style. It overrides the defaults defined in the map style, as if [Map.setGlobalStateProperty](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#setglobalstateproperty>) was called after loading the style.
 
 ---
 
@@ -22,7 +22,7 @@ Defines an initial global state for the map style. It overrides the defaults def
 
 > `optional` **localIdeographFontFamily?**: `string` | `false`
 
-Defined in: [style/style.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L109>)
+Defined in: [style/style.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L110>)
 
 Defines a CSS font-family for locally overriding generation of Chinese, Japanese, and Korean characters. For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold). Set to `false`, to enable font settings from the map's style for these glyph ranges. Forces a full update.
 
@@ -32,6 +32,6 @@ Defines a CSS font-family for locally overriding generation of Chinese, Japanese
 
 > `optional` **validate?**: `boolean`
 
-Defined in: [style/style.ts:101](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/style/style.ts#L101>)
+Defined in: [style/style.ts:102](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style.ts#L102>)
 
 If false, style validation will be skipped. Useful in production environment.

@@ -2,7 +2,7 @@
 
 > **now**(): `number`
 
-Defined in: [util/time\_control.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/time_control.ts#L61>)
+Defined in: [util/time\_control.ts:61](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/time_control.ts#L61>)
 
 Returns the current time in milliseconds. When time is frozen via setNow(), returns the frozen timestamp. Otherwise returns real browser time via performance.now().
 

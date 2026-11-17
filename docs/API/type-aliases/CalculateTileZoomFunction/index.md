@@ -2,7 +2,7 @@
 
 > **CalculateTileZoomFunction** = (`requestedCenterZoom`: `number`, `distanceToTile2D`: `number`, `distanceToTileZ`: `number`, `distanceToCenter3D`: `number`, `cameraVerticalFOV`: `number`) =\> `number`
 
-Defined in: [geo/projection/covering\_tiles.ts:80](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/geo/projection/covering_tiles.ts#L80>)
+Defined in: [geo/projection/covering\_tiles.ts:82](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/projection/covering_tiles.ts#L82>)
 
 Function to define how tiles are loaded at high pitch angles
 

@@ -2,7 +2,7 @@
 
 > **Listener**\<`E` *extends* [`Event`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Event/index.md>) = [`Event`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Event/index.md>)\> = (`event`: `E`) =\> `any`
 
-Defined in: [util/evented.ts:6](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L6>)
+Defined in: [util/evented.ts:6](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L6>)
 
 A listener method used as a callback to events
 

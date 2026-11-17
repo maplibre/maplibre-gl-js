@@ -2,7 +2,7 @@
 
 > **DistributiveOmit**\<`T`, `K` *extends* [`DistributiveKeys`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/DistributiveKeys/index.md>)\<`T`\>\> = `T` *extends* `unknown` ? `Omit`\<`T`, `K`\> : `never`
 
-Defined in: [util/vectortile\_to\_geojson.ts:17](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/vectortile_to_geojson.ts#L17>)
+Defined in: [util/vectortile\_to\_geojson.ts:17](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/vectortile_to_geojson.ts#L17>)
 
 A helper for type to omit a property from a type
 

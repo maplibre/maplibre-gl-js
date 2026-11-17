@@ -1,6 +1,6 @@
 # CanvasSource
 
-Defined in: [source/canvas\_source.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/canvas_source.ts#L66>)
+Defined in: [source/canvas\_source.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/canvas_source.ts#L66>)
 
 A data source containing the contents of an HTML canvas. See [CanvasSourceSpecification](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CanvasSourceSpecification/index.md>) for detailed documentation of options.
 
@@ -44,7 +44,7 @@ map.removeSource('some id');  // remove
 
 > **fire**(`event`: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>) | [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>)): `this`
 
-Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L156>)
+Defined in: [util/evented.ts:156](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L156>)
 
 Calls every listener registered for the event's type.
 
@@ -60,13 +60,13 @@ Calls every listener registered for the event's type.
 
 ##### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#fire>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#fire>)
 
 #### Call Signature
 
 > **fire**(`type`: keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>), `properties?`: `object`): `this`
 
-Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L162>)
+Defined in: [util/evented.ts:162](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L162>)
 
 Compatibility with the (type: string, properties: Object) signature from previous versions. See https://github.com/mapbox/mapbox-gl-js/issues/6522, https://github.com/mapbox/mapbox-gl-draw/issues/766
 
@@ -83,7 +83,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 ##### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#fire>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`fire`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#fire>)
 
 ---
 
@@ -91,7 +91,7 @@ Compatibility with the (type: string, properties: Object) signature from previou
 
 > **getCanvas**(): `HTMLCanvasElement`
 
-Defined in: [source/canvas\_source.ts:143](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/canvas_source.ts#L143>)
+Defined in: [source/canvas\_source.ts:143](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/canvas_source.ts#L143>)
 
 Returns the HTML `canvas` element.
 
@@ -107,7 +107,7 @@ The HTML `canvas` element.
 
 > **getWarp**(): [`ImageSourceWarp`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ImageSourceWarp/index.md>)
 
-Defined in: [source/image\_source.ts:412](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L412>)
+Defined in: [source/image\_source.ts:412](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L412>)
 
 **`Experimental`**
 
@@ -121,7 +121,7 @@ The warp in use, see [ImageSourceWarp](<https://maplibre.org/maplibre-gl-js/docs
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`getWarp`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#getwarp>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`getWarp`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#getwarp>)
 
 ---
 
@@ -129,7 +129,7 @@ The warp in use, see [ImageSourceWarp](<https://maplibre.org/maplibre-gl-js/docs
 
 > **listens**(`type`: keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)): `boolean`
 
-Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L206>)
+Defined in: [util/evented.ts:206](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L206>)
 
 Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
 
@@ -147,7 +147,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`listens`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#listens>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`listens`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#listens>)
 
 ---
 
@@ -155,7 +155,7 @@ Returns a true if this instance of Evented or any forwardeed instances of Evente
 
 > **loaded**(): `boolean`
 
-Defined in: [source/image\_source.ts:280](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L280>)
+Defined in: [source/image\_source.ts:280](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L280>)
 
 True if the source is loaded, false otherwise.
 
@@ -165,7 +165,7 @@ True if the source is loaded, false otherwise.
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`loaded`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#loaded>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`loaded`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#loaded>)
 
 ---
 
@@ -173,7 +173,7 @@ True if the source is loaded, false otherwise.
 
 > **loadTile**(`tile`: [`Tile`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Tile/index.md>)): `Promise`\<`void`\>
 
-Defined in: [source/image\_source.ts:497](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L497>)
+Defined in: [source/image\_source.ts:497](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L497>)
 
 This method does the heavy lifting of loading a tile. In most cases it will defer the work to the relevant worker source.
 
@@ -189,7 +189,7 @@ This method does the heavy lifting of loading a tile. In most cases it will defe
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`loadTile`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#loadtile>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`loadTile`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#loadtile>)
 
 ---
 
@@ -197,7 +197,7 @@ This method does the heavy lifting of loading a tile. In most cases it will defe
 
 > **off**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L117>)
+Defined in: [util/evented.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L117>)
 
 Removes a previously registered event listener.
 
@@ -220,7 +220,7 @@ Removes a previously registered event listener.
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`off`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#off>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`off`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#off>)
 
 ---
 
@@ -228,7 +228,7 @@ Removes a previously registered event listener.
 
 > **on**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): [`Subscription`](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Subscription/index.md>)
 
-Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L100>)
+Defined in: [util/evented.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L100>)
 
 Adds a listener to a specified event type.
 
@@ -251,7 +251,7 @@ Adds a listener to a specified event type.
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`on`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#on>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`on`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#on>)
 
 ---
 
@@ -261,7 +261,7 @@ Adds a listener to a specified event type.
 
 > **once**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`): `Promise`\<[`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]\>
 
-Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L132>)
+Defined in: [util/evented.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L132>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -287,13 +287,13 @@ a promise that resolves with the event
 
 ##### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#once>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#once>)
 
 #### Call Signature
 
 > **once**\<`T` *extends* keyof [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\>(`type`: `T`, `listener`: (`event`: [`SourceEventType`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/SourceEventType/index.md>)\[`T`\]) =\> `void`): `this`
 
-Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L142>)
+Defined in: [util/evented.ts:142](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L142>)
 
 Adds a listener that will be called only once to a specified event type.
 
@@ -320,7 +320,7 @@ The listener will be called first time the event fires after the listener is reg
 
 ##### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#once>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`once`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#once>)
 
 ---
 
@@ -328,7 +328,7 @@ The listener will be called first time the event fires after the listener is reg
 
 > **setCoordinates**(`coordinates`: [`Coordinates`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/Coordinates/index.md>)): `this`
 
-Defined in: [source/image\_source.ts:424](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L424>)
+Defined in: [source/image\_source.ts:424](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L424>)
 
 Sets the image's coordinates and re-renders the map.
 
@@ -344,7 +344,7 @@ Sets the image's coordinates and re-renders the map.
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`setCoordinates`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#setcoordinates>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`setCoordinates`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#setcoordinates>)
 
 ---
 
@@ -352,7 +352,7 @@ Sets the image's coordinates and re-renders the map.
 
 > **setEventedParent**(`parent?`: [`Evented`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Evented/index.md>)\<[`EventTypeMap`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventTypeMap/index.md>)\>, `data?`: [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>) | (() =\> [`EventedParentData`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/EventedParentData/index.md>))): `this`
 
-Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/util/evented.ts#L217>)
+Defined in: [util/evented.ts:217](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/evented.ts#L217>)
 
 Bubble all events fired by this instance of Evented to this parent instance of Evented.
 
@@ -369,7 +369,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`setEventedParent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#seteventedparent>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`setEventedParent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#seteventedparent>)
 
 ---
 
@@ -377,7 +377,7 @@ Bubble all events fired by this instance of Evented to this parent instance of E
 
 > **setWarp**(`warp`: [`ImageSourceWarp`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ImageSourceWarp/index.md>)): `this`
 
-Defined in: [source/image\_source.ts:395](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L395>)
+Defined in: [source/image\_source.ts:395](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L395>)
 
 **`Experimental`**
 
@@ -404,7 +404,7 @@ map.getSource('some id').setWarp('flat');
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`setWarp`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#setwarp>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`setWarp`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#setwarp>)
 
 ---
 
@@ -412,7 +412,7 @@ map.getSource('some id').setWarp('flat');
 
 > **updateImage**(`options`: [`UpdateImageOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/UpdateImageOptions/index.md>)): `this`
 
-Defined in: [source/image\_source.ts:294](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L294>)
+Defined in: [source/image\_source.ts:294](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L294>)
 
 Updates the image and, optionally, the coordinates. To avoid having the image flash after changing, set the `raster-fade-duration` paint property on the raster layer to 0.
 
@@ -430,7 +430,7 @@ Provide exactly one of `url` (to fetch a new image over the network) or `image` 
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`updateImage`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#updateimage>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`updateImage`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#updateimage>)
 
 ## Properties
 
@@ -438,13 +438,13 @@ Provide exactly one of `url` (to fetch a new image over the network) or `image` 
 
 > **id**: `string`
 
-Defined in: [source/image\_source.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L191>)
+Defined in: [source/image\_source.ts:191](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L191>)
 
 The id for the source. Must not be used by any existing source.
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`id`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#id>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`id`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#id>)
 
 ---
 
@@ -452,13 +452,13 @@ The id for the source. Must not be used by any existing source.
 
 > **maxzoom**: `number`
 
-Defined in: [source/image\_source.ts:193](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L193>)
+Defined in: [source/image\_source.ts:193](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L193>)
 
 The maximum zoom level for the source.
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`maxzoom`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#maxzoom>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`maxzoom`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#maxzoom>)
 
 ---
 
@@ -466,13 +466,13 @@ The maximum zoom level for the source.
 
 > **minzoom**: `number`
 
-Defined in: [source/image\_source.ts:192](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L192>)
+Defined in: [source/image\_source.ts:192](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L192>)
 
 The minimum zoom level for the source.
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`minzoom`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#minzoom>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`minzoom`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#minzoom>)
 
 ---
 
@@ -480,7 +480,7 @@ The minimum zoom level for the source.
 
 > **pause**: () =\> `void`
 
-Defined in: [source/canvas\_source.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/canvas_source.ts#L79>)
+Defined in: [source/canvas\_source.ts:79](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/canvas_source.ts#L79>)
 
 Disables animation. The map will display a static copy of the canvas image.
 
@@ -494,7 +494,7 @@ Disables animation. The map will display a static copy of the canvas image.
 
 > **play**: () =\> `void`
 
-Defined in: [source/canvas\_source.ts:75](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/canvas_source.ts#L75>)
+Defined in: [source/canvas\_source.ts:75](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/canvas_source.ts#L75>)
 
 Enables animation. The image will be copied from the canvas to the map on each frame.
 
@@ -508,7 +508,7 @@ Enables animation. The image will be copied from the canvas to the map on each f
 
 > **terrainTileRanges**: `object`
 
-Defined in: [source/image\_source.ts:200](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L200>)
+Defined in: [source/image\_source.ts:200](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L200>)
 
 This object is used to store the range of terrain tiles that overlap with this tile. It is relevant for image tiles, as the image exceeds single tile boundaries.
 
@@ -518,7 +518,7 @@ This object is used to store the range of terrain tiles that overlap with this t
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`terrainTileRanges`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#terraintileranges>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`terrainTileRanges`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#terraintileranges>)
 
 ---
 
@@ -526,10 +526,10 @@ This object is used to store the range of terrain tiles that overlap with this t
 
 > **tileSize**: `number`
 
-Defined in: [source/image\_source.ts:194](<https://github.com/maplibre/maplibre-gl-js/blob/7ff68855dcea2c37ffa2f02932073613714692cd/src/source/image_source.ts#L194>)
+Defined in: [source/image\_source.ts:194](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L194>)
 
 The tile size for the source.
 
 #### Inherited from
 
-[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`tileSize`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/#tilesize>)
+[`ImageSource`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md>).[`tileSize`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#tilesize>)
