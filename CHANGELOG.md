@@ -5,6 +5,26 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 6.19.0
+
+### ✨ Features and improvements
+
+- Add `oklab()` colors and the `interpolate-oklab` expression ([#9051](https://github.com/maplibre/maplibre-gl-js/pull/9051)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Add `oklch()` colors and the `interpolate-oklch` expression ([#9011](https://github.com/maplibre/maplibre-gl-js/pull/9011)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- Pan on Ctrl + drag when dragRotate is disabled ([#9038](https://github.com/maplibre/maplibre-gl-js/pull/9038)) (by [@rowmanempire](https://github.com/rowmanempire))
+- Add `setTrustedTypesPolicy` for pages that enforce Trusted Types ([#9068](https://github.com/maplibre/maplibre-gl-js/pull/9068)) (by [@birkskyum](https://github.com/birkskyum))
+- Add `getTransformRequest` to go with `setTransformRequest` ([#9048](https://github.com/maplibre/maplibre-gl-js/pull/9048)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- Consolidate the camera's state into one place, kept in a Zustand store, and remove the internal `Transform` classes ([#8694](https://github.com/maplibre/maplibre-gl-js/issues/8694)) (by [@HarelM](https://github.com/HarelM))
+- Docs: update and add content to mapbox migration guide ([#9057](https://github.com/maplibre/maplibre-gl-js/pull/9057)) (by [@mizmay](https://github.com/mizmay))
+
+### 🐞 Bug fixes
+
+- Fix add a layer whose inline source holds a DOM element such as a canvas ([#9047](https://github.com/maplibre/maplibre-gl-js/pull/9047)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- Fix `variable-anchor` text with `text-overlap: always` showing through the globe ([#9049](https://github.com/maplibre/maplibre-gl-js/pull/9049)) (by [@michal-pomirski-airspace-intelligence](https://github.com/michal-pomirski-airspace-intelligence))
+- Fix `setMaxBounds` throwing when the longitude bounds span 360 degrees ([#9022](https://github.com/maplibre/maplibre-gl-js/pull/9022)) (by [@lazerg](https://github.com/lazerg))
+- Fix draw the text halo in a separate pass for cursive scripts ([#9009](https://github.com/maplibre/maplibre-gl-js/pull/9009)) (by [@JROtto5](https://github.com/JROtto5))
+- Fix a pitch drag jumping when terrain is turned off during the drag ([#9036](https://github.com/maplibre/maplibre-gl-js/pull/9036)) (by [@HarelM](https://github.com/HarelM))
+
 ## 6.18.0
 
 ### ✨ Features and improvements
