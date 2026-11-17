@@ -97,14 +97,19 @@ function measureInPage(page: Page, bundleUrl: string): Promise<{version: string;
 
 async function measureOnce(page: Page, artifact: Artifact): Promise<{version: string; metrics: Record<string, number>}> {
     await page.goto(`http://localhost:${PORT}/e2e/index.html`, {waitUntil: 'load'});
+    let timeout: ReturnType<typeof setTimeout>;
     try {
         await page.addStyleTag({url: new URL('maplibre-gl.css', artifact.url).href});
         return await Promise.race([
             measureInPage(page, artifact.url),
-            new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timed out after 60s')), 60_000)),
+            new Promise<never>((_, reject) => {
+                timeout = setTimeout(() => reject(new Error('timed out after 60s')), 60_000);
+            }),
         ]);
     } catch (error) {
         throw new Error(`benchmark page failed for ${artifact.url}: ${(error as Error).message}`);
+    } finally {
+        clearTimeout(timeout);
     }
 }
 
