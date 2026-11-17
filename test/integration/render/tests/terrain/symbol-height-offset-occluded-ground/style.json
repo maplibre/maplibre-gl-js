@@ -7,8 +7,7 @@
       "height": 512,
       "width": 512,
       "maxPitch": 85,
-      "timeout": 90000,
-      "operations": [["wait"]]
+      "timeout": 90000
     }
   },
   "center": [11.52517, 47.34487],
