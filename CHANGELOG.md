@@ -5,6 +5,29 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+- chore: clear the e2e measurement timeout ([#9070](https://github.com/maplibre/maplibre-gl-js/pull/9070)) (by [@kkokkojeong](https://github.com/kkokkojeong))
+- feat: pan on Ctrl + drag when dragRotate is disabled ([#9038](https://github.com/maplibre/maplibre-gl-js/pull/9038)) (by [@rowmanempire](https://github.com/rowmanempire))
+- chore: add Codecov bundle analyzer to workflow and package dependencies ([#9053](https://github.com/maplibre/maplibre-gl-js/pull/9053)) (by [@HarelM](https://github.com/HarelM))
+- feat: add getTransformRequest to go with setTransformReques ([#9048](https://github.com/maplibre/maplibre-gl-js/pull/9048)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- fix: variable-anchor text with `text-overlap: always` showing through the globe ([#9049](https://github.com/maplibre/maplibre-gl-js/pull/9049)) (by [@michal-pomirski-airspace-intelligence](https://github.com/michal-pomirski-airspace-intelligence))
+- fix: setMaxBounds throwing when the longitude bounds span 360 degrees ([#9022](https://github.com/maplibre/maplibre-gl-js/pull/9022)) (by [@lazerg](https://github.com/lazerg))
+- fix: draw the text halo in a separate pass for cursive scripts ([#9009](https://github.com/maplibre/maplibre-gl-js/pull/9009)) (by [@JROtto5](https://github.com/JROtto5))
+- feat: add `setTrustedTypesPolicy` for pages that enforce Trusted Types ([#9068](https://github.com/maplibre/maplibre-gl-js/pull/9068)) (by [@birkskyum](https://github.com/birkskyum))
+- chore: update spellcheck, remove puppeteer workaround ([#9066](https://github.com/maplibre/maplibre-gl-js/pull/9066)) (by [@HarelM](https://github.com/HarelM))
+- fix: add a layer whose inline source holds a DOM element such as a canvas ([#9047](https://github.com/maplibre/maplibre-gl-js/pull/9047)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- docs: update and add content to mapbox migration guide ([#9057](https://github.com/maplibre/maplibre-gl-js/pull/9057)) (by [@mizmay](https://github.com/mizmay))
+- feat: add `oklab()` colors and the `interpolate-oklab` expression ([#9051](https://github.com/maplibre/maplibre-gl-js/pull/9051)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- feat: add `oklch()` colors and the `interpolate-oklch` expression ([#9011](https://github.com/maplibre/maplibre-gl-js/pull/9011)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+- refactor: CSC-4.1 keep the camera's state in the map's Zustand store ([#9046](https://github.com/maplibre/maplibre-gl-js/pull/9046)) (by [@HarelM](https://github.com/HarelM))
+- refactor: CSC-3.14-3.19 move the camera helpers to CameraMotions ([#9034](https://github.com/maplibre/maplibre-gl-js/pull/9034)) (by [@HarelM](https://github.com/HarelM))
+- refactor: CSC-3.6-3.13 compute the camera's derived values from its view state ([#9026](https://github.com/maplibre/maplibre-gl-js/pull/9026)) (by [@HarelM](https://github.com/HarelM))
+- refactor: CSC-3.1 move xyTransformMat4 to fast_maths ([#9020](https://github.com/maplibre/maplibre-gl-js/pull/9020)) (by [@HarelM](https://github.com/HarelM))
+- ci: give the bundle size job a read-only token ([#9010](https://github.com/maplibre/maplibre-gl-js/pull/9010)) (by [@johncarmack1984](https://github.com/johncarmack1984))
+## 6.19.0
+### ✨ Features and improvements
+
+### 🐞 Bug fixes
+
 ## 6.18.0
 
 ### ✨ Features and improvements
