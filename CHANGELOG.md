@@ -5,6 +5,12 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 6.19.1
+
+### Bug fixes
+
+- Stop drawing and counting clusters on the antimeridian twice (geojson-vt 7.0.1) ([#9080](https://github.com/maplibre/maplibre-gl-js/pull/9080)) (by [@birkskyum](https://github.com/birkskyum))
+
 ## 6.19.0
 
 ### ✨ Features and improvements
