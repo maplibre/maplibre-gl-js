@@ -1,7 +1,6 @@
 import {evaluateZoomSnap} from '../../util/util.ts';
 
-import type {Handler} from '../handler_manager.ts';
-import type {Map} from '../map.ts';
+import type {Handler, HandlerResult} from '../handler_manager.ts';
 import type {TransformProvider} from './transform-provider.ts';
 
 const defaultOptions = {
@@ -36,7 +35,7 @@ export class KeyboardHandler implements Handler {
     _rotationDisabled: boolean;
 
     /** @internal */
-    constructor(map: Map, transformProvider: TransformProvider) {
+    constructor(transformProvider: TransformProvider) {
         this._tr = transformProvider;
         const stepOptions = defaultOptions;
         this._panStep = stepOptions.panStep;
@@ -49,7 +48,7 @@ export class KeyboardHandler implements Handler {
         this._active = false;
     }
 
-    keydown(e: KeyboardEvent): {cameraAnimation: (map: Map) => void} | void {
+    keydown(e: KeyboardEvent): HandlerResult | void {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
 
         let zoomDir = 0;
@@ -117,20 +116,18 @@ export class KeyboardHandler implements Handler {
             pitchDir = 0;
         }
 
+        const tr = this._tr;
         return {
-            cameraAnimation: (map: Map) => {
-                const tr = this._tr;
-                map.easeTo({
-                    duration: 300,
-                    easeId: 'keyboardHandler',
-                    easing: easeOut,
+            easeTo: {
+                duration: 300,
+                easeId: 'keyboardHandler',
+                easing: easeOut,
 
-                    zoom: zoomDir ? evaluateZoomSnap(tr.zoom + zoomDir * (e.shiftKey ? 2 : 1), map.getZoomSnap()) : tr.zoom,
-                    bearing: tr.bearing + bearingDir * this._bearingStep,
-                    pitch: tr.pitch + pitchDir * this._pitchStep,
-                    offset: [-xDir * this._panStep, -yDir * this._panStep],
-                    center: tr.center
-                }, {originalEvent: e});
+                zoom: zoomDir ? evaluateZoomSnap(tr.zoom + zoomDir * (e.shiftKey ? 2 : 1), tr.zoomSnap) : tr.zoom,
+                bearing: tr.bearing + bearingDir * this._bearingStep,
+                pitch: tr.pitch + pitchDir * this._pitchStep,
+                offset: [-xDir * this._panStep, -yDir * this._panStep],
+                center: tr.center
             }
         };
     }

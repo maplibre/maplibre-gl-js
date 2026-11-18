@@ -4,7 +4,6 @@ import {validateStyle, validateAndEmit, type Validator} from './validate_style.t
 import {Evented, ErrorEvent, type ErrorEventType} from '../util/evented.ts';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
-import type {mat4} from 'gl-matrix';
 import type {Bucket, BucketParameters} from '../data/bucket.ts';
 import type Point from '@mapbox/point-geometry';
 import type {
@@ -60,11 +59,6 @@ export type QueryIntersectsFeatureParams = {
      * The number of pixels per tile unit.
      */
     pixelsToTileUnits: number;
-    /**
-     * The matrix to convert from tile coordinates to pixel coordinates.
-     * The pixel coordinates are relative to the center of the screen.
-     */
-    pixelPosMatrix: mat4;
     /**
      * The unwrapped tile ID for the tile being queried.
      */

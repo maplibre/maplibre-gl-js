@@ -89,7 +89,9 @@ async function isInComplexShapingScript(): Promise<string> {
  * A script is one of them when the bidirectional algorithm reads its letters from right to left. The
  * whole script is taken, the marks and digits written with it included, so that a word keeps all its
  * parts. `Common` is left out: it holds the characters every script shares, a handful of which are
- * read right to left while the rest of it is not.
+ * read right to left while the rest of it is not. `Unknown` is left out too: it holds every unassigned
+ * code point, and those in the blocks reserved for right-to-left scripts default to a right-to-left
+ * bidirectional class, which would otherwise bring in every unassigned code point in the standard.
  */
 async function isInRTLScript(): Promise<string> {
     const readRightToLeft = new Set<number>();
@@ -101,7 +103,7 @@ async function isInRTLScript(): Promise<string> {
     const scripts = (await import(`@unicode/unicode-${unicodeVersion}/index.mjs`)).default.Script;
     const set = regenerate.default();
     for (const script of scripts) {
-        if (script === 'Common') continue;
+        if (script === 'Common' || script === 'Unknown') continue;
         const codePoints = (await import(`@unicode/unicode-${unicodeVersion}/Script/${script}/code-points.mjs`)).default;
         if (codePoints.some((codePoint: number) => readRightToLeft.has(codePoint))) set.add(codePoints);
     }

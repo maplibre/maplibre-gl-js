@@ -11,7 +11,7 @@ import type {CanonicalTileRange} from '../source/image_source.ts';
 import type {Source} from '../source/source.ts';
 import type {TileManager} from './tile_manager.ts';
 import type {OverscaledTileID} from './tile_id.ts';
-import type {ITransform} from '../geo/transform_interface.ts';
+import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 
 /**
  * @internal
@@ -92,7 +92,7 @@ export class TerrainTileManager extends Evented {
      * @param terrain - the terrain
      * @returns true when the set of renderable tiles changed
      */
-    update(transform: ITransform, terrain: Terrain): boolean {
+    update(transform: IReadonlyTransform, terrain: Terrain): boolean {
         // load raster-dem tiles for the current scene.
         this.tileManager.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.

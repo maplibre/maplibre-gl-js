@@ -1,9 +1,8 @@
 import {evaluateZoomSnap} from '../../util/util.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {Map} from '../map.ts';
 import type {TransformProvider} from './transform-provider.ts';
-import type {Handler} from '../handler_manager.ts';
+import type {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
  * The `ClickZoomHandler` allows the user to zoom the map at a point by double clicking
@@ -16,7 +15,7 @@ export class ClickZoomHandler implements Handler {
     _active: boolean;
 
     /** @internal */
-    constructor(map: Map, transformProvider: TransformProvider) {
+    constructor(transformProvider: TransformProvider) {
         this._tr = transformProvider;
         this.reset();
     }
@@ -25,15 +24,13 @@ export class ClickZoomHandler implements Handler {
         this._active = false;
     }
 
-    dblclick(e: MouseEvent, point: Point): {cameraAnimation: (map: Map) => void} {
+    dblclick(e: MouseEvent, point: Point): HandlerResult | void {
         e.preventDefault();
         return {
-            cameraAnimation: (map: Map): void => {
-                map.easeTo({
-                    duration: 300,
-                    zoom: evaluateZoomSnap(this._tr.zoom + (e.shiftKey ? -1 : 1), map.getZoomSnap()),
-                    around: this._tr.transform.isPointOnMapSurface(point) ? this._tr.unproject(point) : undefined
-                }, {originalEvent: e});
+            easeTo: {
+                duration: 300,
+                zoom: evaluateZoomSnap(this._tr.zoom + (e.shiftKey ? -1 : 1), this._tr.zoomSnap),
+                around: this._tr.transform.isPointOnMapSurface(point) ? this._tr.unproject(point) : undefined
             }
         };
     }

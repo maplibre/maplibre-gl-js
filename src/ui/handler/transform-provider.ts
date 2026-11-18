@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 
 import type {Camera} from '../camera.ts';
-import type {PointLike} from '../camera.ts';
+import type {JumpToOptions, PointLike} from '../camera.ts';
 import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {LngLat} from '../../geo/lng_lat.ts';
 
@@ -41,5 +41,19 @@ export class TransformProvider {
 
     unproject(point: PointLike): LngLat {
         return this.transform.screenPointToLocation(Point.convert(point), this._camera.terrain);
+    }
+
+    /** The step zoom levels snap to, see {@link Camera.getZoomSnap}. */
+    get zoomSnap(): number {
+        return this._camera.getZoomSnap();
+    }
+
+    /**
+     * The camera that fits a box drawn on the screen with the map turned to `bearing`, as the camera's
+     * `fitScreenCoordinates` finds it, or undefined where no zoom fits the box.
+     */
+    cameraForScreenBox(p0: PointLike, p1: PointLike, bearing: number): JumpToOptions | undefined {
+        const tr = this._camera.transform;
+        return this._camera._cameraForBoxAndBearing(tr.screenPointToLocation(Point.convert(p0)), tr.screenPointToLocation(Point.convert(p1)), bearing);
     }
 }

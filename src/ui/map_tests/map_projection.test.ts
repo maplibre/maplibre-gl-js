@@ -3,6 +3,7 @@ import {createMap, beforeMapTest, createIdentityCrsAnsweringInside, createPolarS
 import {addProjection, removeProjection} from '../../geo/projection/projection_crud.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -55,6 +56,19 @@ describe('Map in the identity projection', () => {
         map.setCenter([170, 0]);
 
         expect(map.getCenter().lng).toBeCloseTo(90, 6);
+    });
+
+    test('pans by the distance dragged from north of the world square', async () => {
+        const map = createMap({interactive: true, style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, center: [0, 90], zoom: -1});
+        await map.once('style.load');
+        expect(map.project([0, 90]).y).toBeCloseTo(100, 6);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 1, clientX: 100, clientY: 40});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 100, clientY: 30});
+        map.redraw();
+        simulate.mouseup(window.document.body);
+
+        expect(map.project([0, 90]).y).toBeCloseTo(90, 6);
     });
 });
 

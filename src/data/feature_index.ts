@@ -21,7 +21,6 @@ import type Point from '@mapbox/point-geometry';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {SourceFeatureState} from '../source/source_state.ts';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
-import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -32,7 +31,6 @@ export {GEOJSON_TILE_LAYER_NAME};
 
 type QueryParameters = {
     scale: number;
-    pixelPosMatrix: mat4;
     transform: IReadonlyTransform;
     tileSize: number;
     queryGeometry: Point[];
@@ -192,7 +190,6 @@ export class FeatureIndex {
                         zoom: this.z,
                         transform: args.transform,
                         pixelsToTileUnits,
-                        pixelPosMatrix: args.pixelPosMatrix,
                         unwrappedTileID: this.tileID.toUnwrapped(),
                         getElevation: args.getElevation
                     });

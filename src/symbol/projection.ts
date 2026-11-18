@@ -737,6 +737,11 @@ export function transformToOffsetNormal(segmentVector: Point, offset: number, di
  * Construct offset line segments for the current segment and the next segment, then extend/shrink
  * the segments until they intersect. If the segments are parallel, then they will touch with no modification.
  *
+ * Where the line doubles back on itself, the two offset segments are parallel but for rounding error, so their
+ * intersection lands arbitrarily far away, possibly behind the start of the current segment, which would lay the
+ * glyphs out backwards; they are joined at the offset current vertex instead. Features with the same label are merged
+ * end to end, so two features running in opposite directions form such a line.
+ *
  * @param index - Index of the current vertex
  * @param prevToCurrentOffsetNormal - Normal vector of the line segment from the previous vertex to the current vertex
  * @param currentVertex - Current (non-offset) vertex projected to the label plane
@@ -776,9 +781,32 @@ export function findOffsetIntersectionPoint(
 
     // find the intersection of these two lines
     // if the lines are parallel, offsetCurrent/offsetNextBegin will touch
-    projectionContext.projectionCache.offsets[index] = findLineIntersection(offsetPreviousVertex, offsetCurrentVertex, offsetNextSegmentBegin, offsetNextSegmentEnd) || offsetCurrentVertex;
+    const doublesBack = isLineDoublingBack(index, syntheticVertexArgs.direction, lineStartIndex, lineEndIndex, projectionContext.lineVertexArray);
+    projectionContext.projectionCache.offsets[index] = doublesBack ? offsetCurrentVertex :
+        findLineIntersection(offsetPreviousVertex, offsetCurrentVertex, offsetNextSegmentBegin, offsetNextSegmentEnd) || offsetCurrentVertex;
 
     return projectionContext.projectionCache.offsets[index];
+}
+
+/**
+ * Whether the line turns straight back on itself at the vertex `index`, reached by walking it in `direction`: the
+ * segment after the vertex runs along the segment before it, the other way. Tile coordinates are integers, so the test
+ * is exact.
+ *
+ * A vertex without a neighbour on both sides within `[lineStartIndex, lineEndIndex)` is not a turn at all, so a line
+ * end, or a line of a single point, never doubles back. A zero-length segment from a repeated vertex has no direction
+ * and does not count either.
+ */
+function isLineDoublingBack(index: number, direction: number, lineStartIndex: number, lineEndIndex: number, lineVertexArray: SymbolLineVertexArray): boolean {
+    const previous = index - direction;
+    const next = index + direction;
+    if (Math.min(previous, next) < lineStartIndex || Math.max(previous, next) >= lineEndIndex) return false;
+
+    const inX = lineVertexArray.getx(index) - lineVertexArray.getx(previous);
+    const inY = lineVertexArray.gety(index) - lineVertexArray.gety(previous);
+    const outX = lineVertexArray.getx(next) - lineVertexArray.getx(index);
+    const outY = lineVertexArray.gety(next) - lineVertexArray.gety(index);
+    return inX * outY - inY * outX === 0 && inX * outX + inY * outY < 0;
 }
 
 /**

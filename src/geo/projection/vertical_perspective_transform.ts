@@ -48,6 +48,11 @@ type GlobeRay = {
     direction: vec3;
 };
 
+/**
+ * The number of segments a point query's path to the camera is sampled with to follow the curve of the globe.
+ */
+const CAMERA_QUERY_ARC_SEGMENTS = 8;
+
 export class VerticalPerspectiveTransform implements ITransform {
     private _helper: TransformHelper;
 
@@ -142,8 +147,23 @@ export class VerticalPerspectiveTransform implements ITransform {
     clearNearFarZOverride(): void {
         this._helper.clearNearFarZOverride();
     }
+    /**
+     * For a point query on the globe, returns the path from the query point to the point on the globe below the camera,
+     * sampled along the arc it follows on the sphere. An extrusion visible at the query point stands on that path.
+     * Box queries and points off the globe get the geometry of {@link TransformHelper.getCameraQueryGeometry}.
+     */
     getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
-        return this._helper.getCameraQueryGeometry(queryGeometry);
+        if (queryGeometry.length !== 1 || !this.isPointOnMapSurface(queryGeometry[0])) {
+            return this._helper.getCameraQueryGeometry(queryGeometry);
+        }
+        const query = angularCoordinatesToSurfaceVector(this.unprojectScreenPoint(queryGeometry[0]));
+        const nadir = vec3.normalize(createVec3f64(), this._cameraPosition);
+        const geometry = [queryGeometry[0]];
+        for (let i = 1; i <= CAMERA_QUERY_ARC_SEGMENTS; i++) {
+            const point = vec3.lerp(createVec3f64(), query, nadir, i / CAMERA_QUERY_ARC_SEGMENTS);
+            geometry.push(this._projectSurfacePointToScreen(vec3.normalize(point, point)));
+        }
+        return geometry;
     }
 
     get tileSize(): number {
@@ -614,10 +634,6 @@ export class VerticalPerspectiveTransform implements ITransform {
 
     get worldCoordinateHelper(): WorldCoordinateHelper {
         return this._helper.worldCoordinateHelper;
-    }
-
-    populateCache(_coords: OverscaledTileID[]): void {
-        // Do nothing
     }
 
     getBounds(): LngLatBounds {

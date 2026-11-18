@@ -122,9 +122,27 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v4
         with:
           node-version-file: '.nvmrc'
-      - name: install fonts for the render tests that draw text locally
+      - name: Restore fonts for the render tests that draw text locally
         if: runner.os == 'Linux'
-        run: sudo apt install fonts-noto-cjk fonts-noto-core
+        id: fonts-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/fonts-debs
+          key: fonts-noto-cjk-core-v1
+      - name: Download fonts for the render tests that draw text locally
+        if: runner.os == 'Linux' && steps.fonts-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 30
+        run: mkdir -p ~/fonts-debs && cd ~/fonts-debs && apt-get download fonts-noto-cjk fonts-noto-core fonts-noto-mono
+      - name: Cache fonts for the render tests that draw text locally
+        if: runner.os == 'Linux' && steps.fonts-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/fonts-debs
+          key: fonts-noto-cjk-core-v1
+      - name: Install fonts for the render tests that draw text locally
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        run: sudo dpkg -i ~/fonts-debs/*.deb
       - name: Disable AppArmor
         if: runner.os == 'Linux'
         run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
@@ -173,6 +191,26 @@ jobs:
       - run: npm ci
       - run: npm run build-dist
       - run: npm run test-build-ci
+
+  bundle-size:
+    name: Bundle size
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: preactjs/compressed-size-action@f322c295dde06a1cb7ccaef105732dd8a726d1d9 # 2.10.0
+        id: compressed-size
+        with:
+          build-script: build-dist
+          pattern: 'dist/maplibre-gl{,-worker}.mjs'
+      - run: printf '%s\n' "$COMMENT_BODY" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          COMMENT_BODY: ${{ steps.compressed-size.outputs.comment-body }}
 
   benchmarks:
     name: Benchmarks
