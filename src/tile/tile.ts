@@ -439,8 +439,7 @@ export class Tile {
         const vtLayers = featureIndex.loadVTLayers();
 
         const sourceLayer = params.sourceLayer ? params.sourceLayer : '';
-        const sourceLayerId = vtLayers[GEOJSON_TILE_LAYER_NAME] ? GEOJSON_TILE_LAYER_NAME : sourceLayer;
-        const layer = vtLayers[sourceLayerId];
+        const layer = vtLayers[GEOJSON_TILE_LAYER_NAME] || vtLayers[sourceLayer];
 
         if (!layer) return;
 
@@ -450,7 +449,8 @@ export class Tile {
 
         for (let i = 0; i < layer.length; i++) {
             const feature = layer.feature(i);
-            const id = featureIndex.getId(feature, sourceLayerId);
+            const id = featureIndex.getId(feature, sourceLayer);
+            featureIndex.setPromotedId(feature, layer.name, id);
             if (filter.needGeometry) {
                 const evaluationFeature = toEvaluationFeature(feature, true);
                 if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), evaluationFeature, this.tileID.canonical)) continue;
