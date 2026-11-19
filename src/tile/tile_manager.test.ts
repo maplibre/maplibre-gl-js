@@ -2674,6 +2674,40 @@ describe('TileManager.onRemove', () => {
 
         expect(sourceOnRemove).toHaveBeenCalled();
     });
+
+    test('does not leave a reload timer for a tile that finishes reloading after removal', async () => {
+        vi.useFakeTimers();
+        const transform = createMercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+
+        const tileManager = createTileManager();
+        const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
+            tile.state = 'loaded';
+            tile.setExpiryData({cacheControl: 'max-age=60'});
+        });
+        tileManager.onAdd(undefined);
+        tileManager.update(transform);
+        await vi.advanceTimersByTimeAsync(0);
+
+        let finishReload: () => void;
+        loadTile.mockImplementationOnce((tile) => new Promise<void>((resolve) => {
+            finishReload = () => {
+                tile.state = 'loaded';
+                tile.setExpiryData({cacheControl: 'max-age=60'});
+                resolve();
+            };
+        }));
+        await vi.advanceTimersByTimeAsync(60 * 1000);
+        expect(loadTile).toHaveBeenCalledTimes(2);
+
+        tileManager.onRemove(undefined);
+        finishReload();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(vi.getTimerCount()).toBe(0);
+        vi.useRealTimers();
+    });
 });
 
 describe('TileManager.usedForTerrain', () => {
