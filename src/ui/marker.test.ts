@@ -8,6 +8,7 @@ import simulate from '../../test/unit/lib/simulate_interaction.ts';
 
 import type {defaultLocale} from './default_locale.ts';
 import type {Terrain} from '../render/terrain.ts';
+import type {TransformConstrainFunction} from '../camera/camera_types.ts';
 
 type MapOptions = {
     locale?: Partial<typeof defaultLocale>;
@@ -17,6 +18,7 @@ type MapOptions = {
     zoom?: number;
     pitch?: number;
     centerClampedToGround?: boolean;
+    transformConstrain?: TransformConstrainFunction;
 };
 
 // The pixel translate of a marker element: `translate(-50%, -50%) translate(10px, 20px) ...`
@@ -1526,6 +1528,31 @@ describe('marker', () => {
         marker.setLngLat([181, 0]);
 
         expect(marker._lngLat.lng).toBe(-179);
+    });
+
+    test('Marker keeps its lng when the view moves past the edge of the world with {renderWorldCopies: false}', () => {
+        const map = createMap({width: 800, renderWorldCopies: false, transformConstrain: (lngLat, zoom) => ({center: lngLat, zoom})});
+        const marker = new Marker()
+            .setLngLat([170, 0])
+            .addTo(map);
+
+        map.jumpTo({center: [-150, 0], zoom: 1});
+
+        expect(marker.getLngLat().lng).toBe(170);
+    });
+
+    test('Popup stays on its marker when the view moves past the edge of the world with {renderWorldCopies: false}', () => {
+        const map = createMap({width: 800, renderWorldCopies: false, transformConstrain: (lngLat, zoom) => ({center: lngLat, zoom})});
+        const marker = new Marker()
+            .setLngLat([170, 0])
+            .setPopup(new Popup())
+            .addTo(map);
+        marker.togglePopup();
+
+        map.jumpTo({center: [-150, 0], zoom: 1});
+
+        expect(marker.getLngLat().lng).toBe(170);
+        expect(marker.getPopup().getLngLat().lng).toBe(170);
     });
 
     test('Marker\'s lng is wrapped when slightly crossing 180 with zoomed out globe', async () => {

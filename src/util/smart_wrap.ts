@@ -18,10 +18,19 @@ import type {WorldCoordinateHelper} from '../geo/world_types.ts';
  * possible; they should avoid shifting large distances across the screen, even when the
  * map center changes by ±360° due to automatic wrapping, and when about to go off screen,
  * should wrap just enough to avoid doing so.
+ *
+ * A map without world copies has no copy to shift to: a location on its single world stays where it is, and one past
+ * the world's edge is wrapped back onto it. A projection whose world does not wrap never shifts a location.
  */
 export function smartWrap(lngLat: LngLat, priorPos: Point, projectedCamera: ProjectedCamera, worldCoordinateHelper: WorldCoordinateHelper, useNormalWrap: boolean = false): LngLat {
     if (useNormalWrap || !getCoveringTilesDetailsProvider(projectedCamera).allowWorldCopies()) {
         return lngLat?.wrap();
+    }
+    if (!worldCoordinateHelper.wraps) {
+        return lngLat;
+    }
+    if (!projectedCamera.renderWorldCopies) {
+        return Math.abs(lngLat?.lng) <= 180 ? lngLat : lngLat?.wrap();
     }
     const originalLngLat = new LngLat(lngLat.lng, lngLat.lat);
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
