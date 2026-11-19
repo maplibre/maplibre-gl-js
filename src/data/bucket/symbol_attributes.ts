@@ -59,7 +59,7 @@ export const quadTriangle: StructArrayLayout = createLayout([
 export const placement: StructArrayLayout = createLayout([
     {type: 'Int16', name: 'anchorX'},
     {type: 'Int16', name: 'anchorY'},
-    {type: 'Uint16', name: 'glyphStartIndex'},
+    {type: 'Uint32', name: 'glyphStartIndex'},
     {type: 'Uint16', name: 'numGlyphs'},
     {type: 'Uint32', name: 'vertexStartIndex'},
     {type: 'Uint32', name: 'lineStartIndex'},
