@@ -1647,6 +1647,48 @@ describe('TileManager._updateRetainedTiles', () => {
 
     });
 
+    test('retains a loaded parent from the out-of-view cache while the ideal tile loads', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        tileManager._outOfViewCache.setMaxSize(10);
+
+        const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
+        const cachedParentId = new OverscaledTileID(1, 0, 1, 0, 0);
+        const cachedParent = new Tile(cachedParentId, undefined);
+        cachedParent.state = 'loaded';
+        tileManager._outOfViewCache.add(cachedParentId, cachedParent);
+
+        const retained = tileManager._updateRetainedTiles([idealTile], 2);
+
+        expect(retained).toEqual({
+            [idealTile.key]: idealTile,
+            [cachedParentId.key]: cachedParentId
+        });
+        expect(tileManager.getTile(cachedParentId)).toBe(cachedParent);
+        expect(tileManager._outOfViewCache.has(cachedParentId)).toBe(false);
+    });
+
+    test('does not retain a parent from the out-of-view cache that has no data', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        tileManager._outOfViewCache.setMaxSize(10);
+
+        const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
+        const cachedParentId = new OverscaledTileID(1, 0, 1, 0, 0);
+        const cachedParent = new Tile(cachedParentId, undefined);
+        cachedParent.state = 'unloaded';
+        tileManager._outOfViewCache.add(cachedParentId, cachedParent);
+
+        const retained = tileManager._updateRetainedTiles([idealTile], 2);
+
+        expect(retained).toEqual({[idealTile.key]: idealTile});
+        expect(tileManager._outOfViewCache.has(cachedParentId)).toBe(true);
+    });
+
     test('don\'t use tiles below minzoom', () => {
         const tileManager = createTileManager({minzoom: 2});
         tileManager._source.loadTile = async (tile) => {
