@@ -130,6 +130,81 @@ describe('GlyphManager', () => {
         expect(returnedGlyphs['Arial Unicode MS'].default[char(0x5e73)].metrics.advance).toBe(0.5);
     });
 
+    test('appends the ideograph family after the default layer fonts', async () => {
+        const stack = 'Open Sans Regular,Arial Unicode MS Regular';
+        const createRasterizer = fakeRasterizer();
+        const manager = createGlyphManager(true, 'serif', undefined, createRasterizer);
+
+        await manager.getGlyphs({[stack]: {default: ['地']}});
+
+        expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
+            fontFamily: `${stack},serif,sans-serif`
+        }), expect.any(Number));
+        expect(glyphRangeRequests()).toHaveLength(0);
+    });
+
+    test('appends the ideograph family after custom layer fonts without applying it to Latin', async () => {
+        const stack = 'Open Sans Semibold,Arial Unicode MS Bold';
+        const createRasterizer = fakeRasterizer();
+        const manager = createGlyphManager(true, 'CJK Font,serif', undefined, createRasterizer);
+
+        await manager.getGlyphs({[stack]: {default: ['地']}});
+        manager.setURL(null);
+        await manager.getGlyphs({[stack]: {default: ['A']}});
+        const returned = await manager.getGlyphs({[stack]: {default: ['图', 'B']}});
+
+        expect(createRasterizer).toHaveBeenNthCalledWith(1, expect.objectContaining({
+            fontFamily: `${stack},CJK Font,serif,sans-serif`,
+            fontWeight: '600'
+        }), expect.any(Number));
+        expect(createRasterizer).toHaveBeenNthCalledWith(2, expect.objectContaining({
+            fontFamily: `${stack},sans-serif`,
+            fontWeight: '600'
+        }), expect.any(Number));
+        expect(createRasterizer).toHaveBeenCalledTimes(2);
+        expect(returned[stack].default['图']).toBeTruthy();
+    });
+
+    test('appends the ideograph family to CJK clusters without applying it to Latin clusters', async () => {
+        const stack = 'Open Sans Semibold';
+        const createRasterizer = fakeRasterizer();
+        const manager = createGlyphManager(true, 'serif', undefined, createRasterizer);
+
+        await manager.getGlyphs({[stack]: {default: ['か\u3099', 'a\u0301']}});
+
+        expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
+            fontFamily: `${stack},serif,sans-serif`
+        }), expect.any(Number));
+        expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
+            fontFamily: `${stack},sans-serif`
+        }), expect.any(Number));
+        expect(glyphRangeRequests()).toHaveLength(0);
+    });
+
+    test('keeps the ideograph fallback disabled for false and an empty string', async () => {
+        serveGlyphRanges();
+        const stack = 'Open Sans Semibold';
+        const createRasterizer = fakeRasterizer();
+        const disabledManager = createGlyphManager(true, false, undefined, createRasterizer);
+        const emptyManager = createGlyphManager(true, '', undefined, createRasterizer);
+
+        await disabledManager.getGlyphs({[stack]: {default: ['地']}});
+        await emptyManager.getGlyphs({[stack]: {default: ['地']}});
+
+        expect(glyphRangeRequests()).toHaveLength(2);
+        expect(createRasterizer).not.toHaveBeenCalled();
+
+        disabledManager.setURL(null);
+        emptyManager.setURL(null);
+        await disabledManager.getGlyphs({[stack]: {default: ['图']}});
+        await emptyManager.getGlyphs({[stack]: {default: ['图']}});
+
+        expect(createRasterizer.mock.calls.map(([options]) => options.fontFamily)).toEqual([
+            `${stack},sans-serif`,
+            `${stack},sans-serif`
+        ]);
+    });
+
     test('GlyphManager generates non-BMP CJK PBF locally', async () => {
         const manager = createGlyphManager(true, 'sans-serif');
 
