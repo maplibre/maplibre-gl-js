@@ -79,6 +79,27 @@ const OFFSET_FALLBACK_START = 3;
 /** Miter length at which `line-offset` follows the segment normals alone. */
 const OFFSET_FALLBACK_END = 8;
 
+/**
+ * Returns the vector `line-offset` moves a vertex along when the vertex sits on a segment close to a join.
+ *
+ * Offsetting a join moves its corner along the segment as well as across it, by `line-offset` times the
+ * part of `offsetNormal` that runs along the segment. A vertex near the join has to move along the segment
+ * by the same amount, or a corner offset past it folds the offset line back on itself. The result keeps
+ * the vertex on the offset segment, one `line-offset` away along `normal`, and is no longer than
+ * {@link MAX_OFFSET_MITER_LENGTH} so that it fits in a_offset_normal.
+ *
+ * @param normal - the unit normal of the segment the vertex is on
+ * @param offsetNormal - the vector `line-offset` moves the join along
+ */
+function offsetNormalNearJoin(normal: Point, offsetNormal: Point): Point {
+    const across = offsetNormal.x * normal.x + offsetNormal.y * normal.y;
+    const along = offsetNormal.sub(normal.mult(across));
+    const maxAlong = Math.sqrt(MAX_OFFSET_MITER_LENGTH * MAX_OFFSET_MITER_LENGTH - 1);
+    const alongLength = along.mag();
+    if (alongLength > maxAlong) along._mult(maxAlong / alongLength);
+    return along._add(normal);
+}
+
 // The number of bits that is used to store the line distance in the buffer.
 const LINE_DISTANCE_BUFFER_BITS = 15;
 
@@ -410,7 +431,7 @@ export class LineBucket implements Bucket {
                 if (prevSegmentLength > 2 * sharpCornerOffset) {
                     const newPrevVertex = currentVertex.sub(currentVertex.sub(prevVertex)._mult(sharpCornerOffset / prevSegmentLength)._round());
                     this.updateDistance(prevVertex, newPrevVertex);
-                    this.addCurrentVertex(newPrevVertex, prevNormal, 0, 0, segment);
+                    this.addCurrentVertex(newPrevVertex, prevNormal, 0, 0, segment, false, offsetNormalNearJoin(prevNormal, offsetNormal), offsetFallback);
                     prevVertex = newPrevVertex;
                 }
             }
@@ -534,7 +555,7 @@ export class LineBucket implements Bucket {
                 if (nextSegmentLength > 2 * sharpCornerOffset) {
                     const newCurrentVertex = currentVertex.add(nextVertex.sub(currentVertex)._mult(sharpCornerOffset / nextSegmentLength)._round());
                     this.updateDistance(currentVertex, newCurrentVertex);
-                    this.addCurrentVertex(newCurrentVertex, nextNormal, 0, 0, segment);
+                    this.addCurrentVertex(newCurrentVertex, nextNormal, 0, 0, segment, false, offsetNormalNearJoin(nextNormal, offsetNormal), offsetFallback);
                     currentVertex = newCurrentVertex;
                 }
             }

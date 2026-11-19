@@ -35,6 +35,22 @@ function createLineBucket({id, layout, paint, globalState, availableImages}: Cre
     return new LineBucket({layers: [layer]} as BucketParameters<LineStyleLayer>);
 }
 
+/**
+ * Returns where `line-offset` moves the vertices on one side of the line, in the order they were added.
+ * Positions are in tile units, for an offset of `offset` tile units.
+ */
+function offsetVertexPositions(bucket: LineBucket, up: boolean, offset: number): Point[] {
+    const {int16, int8} = bucket.layoutVertexArray;
+    const positions = [];
+    for (let i = 0; i < bucket.layoutVertexArray.length; i++) {
+        if (((int16[i * 5 + 1] & 1) === 1) !== up) continue;
+        const position = new Point(int16[i * 5] >> 1, int16[i * 5 + 1] >> 1);
+        const offsetNormal = new Point(int8[i * 10 + 8], int8[i * 10 + 9]).div(63);
+        positions.push(position.add(offsetNormal.mult(offset)));
+    }
+    return positions;
+}
+
 describe('LineBucket', () => {
     let sourceLayer: VectorTileLayerLike;
     beforeAll(() => {
@@ -188,6 +204,30 @@ describe('LineBucket', () => {
         expect(bucket.patternFeatures[0].dashes).toEqual({
             test: {min: '3,3,false', mid: '3,3,false', max: '3,3,false'}
         });
+    });
+
+    test('LineBucket keeps an offset line from folding back at a sharp corner', () => {
+        const layer = new LineStyleLayer({id: 'test', type: 'line'} as LayerSpecification, {});
+        layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+        const bucket = new LineBucket({layers: [layer], overscaling: 1} as BucketParameters<LineStyleLayer>);
+        const line = {type: 2, properties: {}} as BucketFeature;
+
+        // A right angle adds a vertex 240 tile units before and after the corner; an offset of 512 moves
+        // the corner on the inside of the turn past both of them.
+        bucket.addLine([
+            new Point(0, 0),
+            new Point(1000, 0),
+            new Point(1000, 1000)
+        ], line, 'miter', 'butt', 2, 1.05, undefined, noSubdivision);
+
+        for (const up of [false, true]) {
+            const positions = offsetVertexPositions(bucket, up, 512);
+            expect(positions).toHaveLength(5);
+            for (let i = 1; i < positions.length; i++) {
+                expect(positions[i].x).toBeGreaterThanOrEqual(positions[i - 1].x - 1);
+                expect(positions[i].y).toBeGreaterThanOrEqual(positions[i - 1].y - 1);
+            }
+        }
     });
 
     test('LineBucket ignores geometry with insufficient unique vertices after trimming duplicates', () => {
