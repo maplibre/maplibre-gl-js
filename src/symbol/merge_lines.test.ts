@@ -55,39 +55,36 @@ describe('mergeLines', () => {
         expect(feature.geometry).toEqual([]);
     });
 
-    test('preserves every component when merging multipart features from the right', () => {
-        const [first, firstRest, second, secondRest] = makeFeatures([['a', 0, 1], ['a', 10, 11], ['a', 1, 2], ['a', 20, 21]]);
-        first.geometry.push(...firstRest.geometry);
-        second.geometry.push(...secondRest.geometry);
+    test('mergeLines keeps the other lines of a multipart feature appended to an earlier line', () => {
+        const first = {text: 'a', id: 1, index: 10, properties: {color: 'green'}, geometry: [[new Point(0, 0), new Point(1, 0)], [new Point(10, 0), new Point(11, 0)]]};
+        const second = {text: 'a', id: 2, index: 20, properties: {color: 'red'}, geometry: [[new Point(1, 0), new Point(2, 0)], [new Point(20, 0), new Point(21, 0)]]};
 
-        const merged = mergeLines([first, second]);
-
-        expect(merged.flatMap(feature => feature.geometry)).toEqual(
-            makeFeatures([['a', 0, 1, 2], ['a', 10, 11], ['a', 20, 21]]).map(feature => feature.geometry[0]));
+        expect(mergeLines([first, second] as any)).toEqual([
+            {text: 'a', id: 1, index: 10, properties: {color: 'green'}, geometry: [[new Point(0, 0), new Point(1, 0), new Point(2, 0)], [new Point(10, 0), new Point(11, 0)]]},
+            {text: 'a', id: 2, index: 20, properties: {color: 'red'}, geometry: [[new Point(20, 0), new Point(21, 0)]]}
+        ]);
     });
 
-    test('preserves every component when merging multipart features from the left', () => {
-        const [first, firstRest, second, secondRest] = makeFeatures([['a', 1, 2], ['a', 10, 11], ['a', 0, 1], ['a', 20, 21]]);
-        first.geometry.push(...firstRest.geometry);
-        second.geometry.push(...secondRest.geometry);
+    test('mergeLines keeps the other lines of a multipart feature prepended to a later line', () => {
+        const first = {text: 'a', id: 1, index: 10, properties: {color: 'green'}, geometry: [[new Point(1, 0), new Point(2, 0)], [new Point(10, 0), new Point(11, 0)]]};
+        const second = {text: 'a', id: 2, index: 20, properties: {color: 'red'}, geometry: [[new Point(0, 0), new Point(1, 0)], [new Point(20, 0), new Point(21, 0)]]};
 
-        const merged = mergeLines([first, second]);
-
-        expect(merged.flatMap(feature => feature.geometry)).toEqual(
-            makeFeatures([['a', 0, 1, 2], ['a', 10, 11], ['a', 20, 21]]).map(feature => feature.geometry[0]));
+        expect(mergeLines([first, second] as any)).toEqual([
+            {text: 'a', id: 1, index: 10, properties: {color: 'green'}, geometry: [[new Point(0, 0), new Point(1, 0), new Point(2, 0)], [new Point(10, 0), new Point(11, 0)]]},
+            {text: 'a', id: 2, index: 20, properties: {color: 'red'}, geometry: [[new Point(20, 0), new Point(21, 0)]]}
+        ]);
     });
 
-    test('preserves every component when merging multipart features from both ends', () => {
-        const [first, firstRest, second, secondRest, third, thirdRest] = makeFeatures(
-            [['a', 0, 1], ['a', 10, 11], ['a', 2, 3], ['a', 20, 21], ['a', 1, 2], ['a', 30, 31]]);
-        first.geometry.push(...firstRest.geometry);
-        second.geometry.push(...secondRest.geometry);
-        third.geometry.push(...thirdRest.geometry);
+    test('mergeLines keeps the other lines of both multipart features joined through a middle line', () => {
+        const left = {text: 'a', id: 1, index: 10, properties: {color: 'green'}, geometry: [[new Point(0, 0), new Point(1, 0)], [new Point(10, 0), new Point(11, 0)]]};
+        const right = {text: 'a', id: 2, index: 20, properties: {color: 'red'}, geometry: [[new Point(2, 0), new Point(3, 0)], [new Point(20, 0), new Point(21, 0)]]};
+        const middle = {text: 'a', id: 3, index: 30, properties: {color: 'blue'}, geometry: [[new Point(1, 0), new Point(2, 0)], [new Point(30, 0), new Point(31, 0)]]};
 
-        const merged = mergeLines([first, second, third]);
-
-        expect(merged.flatMap(feature => feature.geometry)).toEqual(
-            makeFeatures([['a', 0, 1, 2, 3], ['a', 10, 11], ['a', 30, 31], ['a', 20, 21]]).map(feature => feature.geometry[0]));
+        expect(mergeLines([left, right, middle] as any)).toEqual([
+            {text: 'a', id: 1, index: 10, properties: {color: 'green'}, geometry: [[new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(3, 0)], [new Point(10, 0), new Point(11, 0)]]},
+            {text: 'a', id: 3, index: 30, properties: {color: 'blue'}, geometry: [[new Point(30, 0), new Point(31, 0)]]},
+            {text: 'a', id: 2, index: 20, properties: {color: 'red'}, geometry: [[new Point(20, 0), new Point(21, 0)]]}
+        ]);
     });
 
     test('leaves connected components within an unmerged multipart feature intact', () => {
