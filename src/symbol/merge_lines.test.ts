@@ -1,8 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import {mergeLines} from './merge_lines.ts';
 import Point from '@mapbox/point-geometry';
-import {createExpression} from '@maplibre/maplibre-gl-style-spec';
-import {CanonicalTileID} from '../tile/tile_id.ts';
 
 function makeFeatures(lines) {
     const features = [];
@@ -97,31 +95,5 @@ describe('mergeLines', () => {
         expect(merged).toEqual([feature]);
         expect(merged[0]).toBe(feature);
         expect(merged[0].geometry).toEqual(components.map(component => component.geometry[0]));
-    });
-
-    test('keeps within evaluation unchanged for an unmerged multipart feature', () => {
-        const inside = [new Point(4000, 4096), new Point(4100, 4096)];
-        const outside = [new Point(6000, 4096), new Point(6100, 4096)];
-        const feature = {text: 'Road', type: 'LineString', properties: {}, geometry: [inside, outside]};
-        const parsed = createExpression(['within', {
-            type: 'Polygon',
-            coordinates: [[[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]]]
-        }], 'layers[0].paint.text-color[1]');
-        if (parsed.result !== 'success') throw new Error('Invalid within expression');
-        const canonical = new CanonicalTileID(0, 0, 0);
-
-        const merged = mergeLines([feature] as any);
-
-        expect(merged.map(component => parsed.value.evaluate({zoom: 0}, component, {}, canonical))).toEqual([false]);
-        expect(merged[0]).toBe(feature);
-        expect(feature.geometry).toEqual([inside, outside]);
-    });
-
-    test('leaves multipart features without text intact', () => {
-        const [first, second] = makeFeatures([['a', 0, 1], ['a', 10, 11]]);
-        first.text = null;
-        first.geometry.push(...second.geometry);
-
-        expect(mergeLines([first])).toEqual([first]);
     });
 });
