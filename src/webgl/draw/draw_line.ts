@@ -247,7 +247,7 @@ function drawLineTiles(
         program.draw(context, gl.TRIANGLES, depthMode,
             stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
-            layer.paint, frameRenderContext.projectedCamera.zoom, programConfiguration, bucket.layoutVertexBuffer2);
+            layer.paint, frameRenderContext.projectedCamera.zoom, programConfiguration, bucket.layoutVertexBuffer2, bucket.offsetDistanceBuffer);
 
         firstTile = false;
         // once refactored so that bound texture state is managed, we'll also be able to remove this firstTile/programChanged logic
