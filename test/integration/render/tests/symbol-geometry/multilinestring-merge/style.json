@@ -1,0 +1,140 @@
+{
+  "version": 8,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 384,
+      "description": "Keep line labels on every component when multipart features with the same text meet at an endpoint."
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 0,
+  "sources": {
+    "roads": {
+      "type": "geojson",
+      "maxzoom": 0,
+      "tolerance": 0,
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Road",
+              "color": "#167a38"
+            },
+            "geometry": {
+              "type": "MultiLineString",
+              "coordinates": [
+                [
+                  [
+                    -120,
+                    50
+                  ],
+                  [
+                    -10,
+                    50
+                  ]
+                ],
+                [
+                  [
+                    -120,
+                    10
+                  ],
+                  [
+                    100,
+                    10
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "name": "Road",
+              "color": "#b82626"
+            },
+            "geometry": {
+              "type": "MultiLineString",
+              "coordinates": [
+                [
+                  [
+                    -10,
+                    50
+                  ],
+                  [
+                    100,
+                    50
+                  ]
+                ],
+                [
+                  [
+                    -120,
+                    -35
+                  ],
+                  [
+                    100,
+                    -35
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "roads",
+      "type": "line",
+      "source": "roads",
+      "paint": {
+        "line-color": [
+          "get",
+          "color"
+        ],
+        "line-width": 2,
+        "line-opacity": 0.3
+      }
+    },
+    {
+      "id": "labels",
+      "type": "symbol",
+      "source": "roads",
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-spacing": 120,
+        "text-field": [
+          "get",
+          "name"
+        ],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-size": 20,
+        "text-allow-overlap": true,
+        "text-ignore-placement": true
+      },
+      "paint": {
+        "text-color": [
+          "get",
+          "color"
+        ]
+      }
+    }
+  ]
+}
