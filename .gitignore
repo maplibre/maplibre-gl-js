@@ -38,3 +38,5 @@ npm-debug.log
 *.iml
 /.vs/
 .*.swp
+pnpm-lock.yaml
+pnpm-workspace.yaml

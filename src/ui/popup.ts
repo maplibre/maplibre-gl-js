@@ -7,7 +7,7 @@ import {getCameraMath} from '../camera/camera_math_factory.ts';
 import {anchorTranslate, applyAnchorClass} from './anchor.ts';
 import Point from '@mapbox/point-geometry';
 
-import type {MapLibreEvent, MapMouseEvent} from './events.ts';
+import type {MapLibreEvent, MapMouseEvent, MapPointerEvent} from './events.ts';
 import type {PositionAnchor} from './anchor.ts';
 import type {Map} from './map.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
@@ -637,7 +637,7 @@ export class Popup extends Evented<PopupEventType> {
         }
     }
 
-    _update = (event?: MapLibreEvent | MapMouseEvent): void => {
+    _update = (event?: MapLibreEvent | MapMouseEvent | MapPointerEvent): void => {
         const hasPosition = this._lngLat || this._trackPointer;
 
         if (!this._map || !hasPosition || !this._content) { return; }

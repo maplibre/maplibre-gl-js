@@ -317,6 +317,15 @@ describe('map events', () => {
             target.dispatchEvent(new Event('touchmoveWindow'));
             target.dispatchEvent(new Event('touchend'));
             target.dispatchEvent(new Event('touchcancel'));
+
+            target.dispatchEvent(new Event('pointerdown'));
+            target.dispatchEvent(new Event('pointerup'));
+            target.dispatchEvent(new Event('pointermove'));
+            target.dispatchEvent(new Event('pointerover'));
+            target.dispatchEvent(new Event('pointerout'));
+            
+            target.dispatchEvent(new Event('pointerenter'));
+            target.dispatchEvent(new Event('pointerleave'));
         }).not.toThrow();
     });
 });
