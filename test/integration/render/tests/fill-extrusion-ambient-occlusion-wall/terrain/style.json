@@ -1,0 +1,76 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "description": "Building on a slope with 3D terrain. The ground is sampled at each wall corner, so the darkening starts where each wall meets the terrain.",
+      "threshold": 0.02
+    }
+  },
+  "center": [
+    11.43402,
+    47.37045
+  ],
+  "zoom": 14,
+  "pitch": 55,
+  "bearing": 210,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256
+    },
+    "buildings": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [11.43202, 47.3691],
+              [11.43202, 47.3718],
+              [11.43602, 47.3718],
+              [11.43602, 47.3691],
+              [11.43202, 47.3691]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "terrain"
+    },
+    {
+      "id": "building",
+      "type": "fill-extrusion",
+      "source": "buildings",
+      "paint": {
+        "fill-extrusion-color": "#dddddd",
+        "fill-extrusion-height": 150,
+        "fill-extrusion-ambient-occlusion-wall-intensity": 1,
+        "fill-extrusion-ambient-occlusion-wall-radius": 30
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 1
+  }
+}
