@@ -623,8 +623,11 @@ export class Map extends Evented<MapEventType> {
     style: Style;
     painter: Painter;
     _camera: Camera;
-    /** The map's state, which the camera and the other parts of the map keep theirs in, see {@link MapState}. */
-    private readonly _store: MapStore;
+    /**
+     * @internal
+     * The map's state, which the camera and the other parts of the map keep theirs in, see {@link MapState}.
+     */
+    readonly _store: MapStore;
     private _handlerManager: HandlerManager;
     private _eventFactory: MapEventFactory;
     _container: HTMLElement;
