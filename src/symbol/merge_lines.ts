@@ -62,12 +62,19 @@ function mergeFromLeft(merged: MergedLine[], leftIndex: Record<string, number>, 
     return i;
 }
 
+/** Merges equally labeled line components that share directed endpoints. */
 export function mergeLines(features: SymbolFeature[]): SymbolFeature[] {
+    const lineFeatures = features.flatMap(feature => {
+        if (feature.geometry.length > 1 && feature.text && feature.text.toString()) {
+            return feature.geometry.map(points => ({...feature, geometry: [points]}));
+        }
+        return feature;
+    });
     const leftIndex: Record<string, number> = {};
     const rightIndex: Record<string, number> = {};
     const merged: MergedLine[] = [];
 
-    for (const feature of features) {
+    for (const feature of lineFeatures) {
         const text = feature.text ? feature.text.toString() : null;
 
         const chunk: LineChunk = {points: feature.geometry[0], next: null};
