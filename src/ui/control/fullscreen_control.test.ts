@@ -173,4 +173,50 @@ describe('FullscreenControl', () => {
         fullscreen._fullscreenButton.dispatchEvent(click);
         expect(container.classList).not.toContain('maplibregl-pseudo-fullscreen');
     });
+
+    test('removing the control leaves pseudo fullscreen', () => {
+        const map = createMap({cooperativeGestures: true});
+        const mapContainer = map.getContainer();
+        const fullscreen = new FullscreenControl({pseudo: true});
+        const fullscreenend = vi.fn();
+        fullscreen.on('fullscreenend', fullscreenend);
+        map.addControl(fullscreen);
+
+        mapContainer.querySelector('.maplibregl-ctrl-fullscreen').dispatchEvent(new window.Event('click'));
+        expect(mapContainer.classList).toContain('maplibregl-pseudo-fullscreen');
+
+        map.removeControl(fullscreen);
+
+        expect(mapContainer.classList).not.toContain('maplibregl-pseudo-fullscreen');
+        expect(map.cooperativeGestures.isEnabled()).toBe(true);
+        expect(fullscreenend).toHaveBeenCalledTimes(1);
+    });
+
+    test('removing the control leaves native fullscreen', () => {
+        const map = createMap({cooperativeGestures: true});
+        const mapContainer = map.getContainer();
+        mapContainer.requestFullscreen = vi.fn().mockResolvedValue(undefined);
+        const exitFullscreen = vi.fn().mockResolvedValue(undefined);
+        Object.defineProperty(window.document, 'exitFullscreen', {value: exitFullscreen, configurable: true});
+        Object.defineProperty(window.document, 'onfullscreenchange', {value: null, configurable: true});
+        const fullscreen = new FullscreenControl({});
+        const fullscreenend = vi.fn();
+        fullscreen.on('fullscreenend', fullscreenend);
+        map.addControl(fullscreen);
+
+        mapContainer.querySelector('.maplibregl-ctrl-fullscreen').dispatchEvent(new window.Event('click'));
+        Object.defineProperty(window.document, 'fullscreenElement', {value: mapContainer, configurable: true});
+        window.document.dispatchEvent(new window.Event('fullscreenchange'));
+        expect(map.cooperativeGestures.isEnabled()).toBe(false);
+
+        map.removeControl(fullscreen);
+
+        expect(exitFullscreen).toHaveBeenCalledTimes(1);
+        expect(map.cooperativeGestures.isEnabled()).toBe(true);
+        expect(fullscreenend).toHaveBeenCalledTimes(1);
+
+        delete (window.document as any).fullscreenElement;
+        delete (window.document as any).exitFullscreen;
+        delete (window.document as any).onfullscreenchange;
+    });
 });
