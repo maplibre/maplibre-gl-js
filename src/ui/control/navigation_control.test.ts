@@ -278,4 +278,59 @@ describe('NavigationControl', () => {
         expect(zoomOutButton.disabled).toBe(true);
     });
 
+    test('enables zoom in after setMaxZoom raises the maximum above the current zoom', () => {
+        map.remove();
+        map = globalCreateMap({zoom: 10, maxZoom: 10});
+        map.addControl(new NavigationControl());
+
+        const zoomInButton: HTMLButtonElement = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
+        expect(zoomInButton.disabled).toBe(true);
+
+        map.setMaxZoom(18);
+
+        expect(map.getZoom()).toBe(10);
+        expect(zoomInButton.disabled).toBe(false);
+        expect(zoomInButton.getAttribute('aria-disabled')).toBe('false');
+    });
+
+    test('disables zoom in after setMaxZoom lowers the maximum to the current zoom', () => {
+        map.remove();
+        map = globalCreateMap({zoom: 10});
+        map.addControl(new NavigationControl());
+
+        const zoomInButton: HTMLButtonElement = map.getContainer().querySelector('.maplibregl-ctrl-zoom-in');
+        expect(zoomInButton.disabled).toBe(false);
+
+        map.setMaxZoom(10);
+
+        expect(zoomInButton.disabled).toBe(true);
+    });
+
+    test('updates zoom out after setMinZoom changes the minimum without moving the map', () => {
+        map.remove();
+        map = globalCreateMap({zoom: 10});
+        map.addControl(new NavigationControl());
+
+        const zoomOutButton: HTMLButtonElement = map.getContainer().querySelector('.maplibregl-ctrl-zoom-out');
+        expect(zoomOutButton.disabled).toBe(false);
+
+        map.setMinZoom(10);
+        expect(zoomOutButton.disabled).toBe(true);
+
+        map.setMinZoom(null);
+        expect(zoomOutButton.disabled).toBe(false);
+    });
+
+    test('stops updating the zoom buttons after it is removed', () => {
+        map.remove();
+        map = globalCreateMap({zoom: 10, maxZoom: 10});
+        const control = new NavigationControl();
+        map.addControl(control);
+
+        map.removeControl(control);
+
+        // A leftover listener would call into the removed control, which no longer has a map.
+        expect(() => map.setMaxZoom(18)).not.toThrow();
+    });
+
 });

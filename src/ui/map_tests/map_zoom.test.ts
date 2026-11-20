@@ -201,3 +201,40 @@ test('fire move and zoom events when zoom is changed due to maxZoom change', () 
     expect(map.getMaxZoom()).toBe(10);
     expect(handleEvent).toHaveBeenCalledTimes(6);
 });
+
+test('fire zoomlimitschange when minZoom or maxZoom changes without changing the zoom', () => {
+    const map = createMap({minZoom: 0, maxZoom: 20, zoom: 10});
+    const handleLimits = vi.fn();
+    const handleMove = vi.fn();
+    map.on('zoomlimitschange', handleLimits);
+    map.on('move', handleMove);
+
+    map.setMinZoom(5);
+    map.setMaxZoom(15);
+
+    expect(map.getZoom()).toBe(10);
+    expect(handleMove).not.toHaveBeenCalled();
+    expect(handleLimits).toHaveBeenCalledTimes(2);
+});
+
+test('fire zoomlimitschange after the move events when a new limit changes the zoom', () => {
+    const map = createMap({maxZoom: 20, zoom: 20});
+    const events: string[] = [];
+    map.on('moveend', () => events.push('moveend'));
+    map.on('zoomlimitschange', () => events.push('zoomlimitschange'));
+
+    map.setMaxZoom(10);
+
+    expect(events).toEqual(['moveend', 'zoomlimitschange']);
+});
+
+test('do not fire zoomlimitschange when the limits stay the same', () => {
+    const map = createMap({minZoom: 3, maxZoom: 18, zoom: 10});
+    const handleLimits = vi.fn();
+    map.on('zoomlimitschange', handleLimits);
+
+    map.setMinZoom(3);
+    map.setMaxZoom(18);
+
+    expect(handleLimits).not.toHaveBeenCalled();
+});

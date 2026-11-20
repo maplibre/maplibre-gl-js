@@ -123,6 +123,7 @@ export class NavigationControl implements IControl {
             this._setButtonTitle(this._zoomInButton, 'ZoomIn');
             this._setButtonTitle(this._zoomOutButton, 'ZoomOut');
             this._map.on('move', this._updateZoomButtons);
+            this._map.on('zoomlimitschange', this._updateZoomButtons);
             this._updateZoomButtons();
         }
         if (this.options.showCompass) {
@@ -145,6 +146,7 @@ export class NavigationControl implements IControl {
         this._container.remove();
         if (this.options.showZoom) {
             this._map.off('move', this._updateZoomButtons);
+            this._map.off('zoomlimitschange', this._updateZoomButtons);
         }
         if (this.options.showCompass) {
             if (this.options.visualizePitch) {

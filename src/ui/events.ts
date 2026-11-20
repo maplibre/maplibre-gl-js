@@ -444,6 +444,14 @@ export type MapEventType = {
      */
     terrain: MapTerrainEvent;
     /**
+     * Fired when the map's minimum or maximum zoom changes as the result of
+     * {@link Map.setMinZoom} or {@link Map.setMaxZoom}. This fires even if the
+     * current zoom stays the same, so UI that depends on the zoom limits can update.
+     * If the new limit also changes the current zoom, it fires after the `zoomend`
+     * and `moveend` events.
+     */
+    zoomlimitschange: MapLibreEvent;
+    /**
      * Fired whenever the cooperativeGestures option prevents a gesture from being handled by the map.
      * This is useful for showing your own UI when this happens.
      */
