@@ -1,0 +1,95 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 32
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 2,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "promoteId": "id",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "id": "ak1"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                -3,
+                0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "id": "ak2"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                0,
+                0
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "id": "ak3"
+            },
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                3,
+                0
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "byid",
+      "type": "circle",
+      "source": "geojson",
+      "filter": [
+        "in",
+        [
+          "id"
+        ],
+        [
+          "literal",
+          [
+            "ak1",
+            "ak2"
+          ]
+        ]
+      ],
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red"
+      }
+    }
+  ]
+}

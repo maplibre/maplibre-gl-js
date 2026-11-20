@@ -229,6 +229,8 @@ export class FeatureIndex {
         const sourceLayerName = this.sourceLayerCoder.decode(sourceLayerIndex);
         const sourceLayer = this.vtLayers[sourceLayerName];
         const feature = sourceLayer.feature(featureIndex);
+        const id = this.getId(feature, sourceLayerName);
+        this.setPromotedId(feature, sourceLayerName, id);
 
         if (filter.needGeometry) {
             const evaluationFeature = toEvaluationFeature(feature, true);
@@ -238,8 +240,6 @@ export class FeatureIndex {
         } else if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), feature)) {
             return;
         }
-
-        const id = this.getId(feature, sourceLayerName);
 
         for (const layerID of layerIDs) {
 
@@ -338,6 +338,12 @@ export class FeatureIndex {
             }
         }
         return id;
+    }
+
+    setPromotedId(feature: VectorTileFeatureLike, sourceLayerId: string, id: string | number): void {
+        if (this.promoteId && sourceLayerId === GEOJSON_TILE_LAYER_NAME && id !== undefined) {
+            (feature as {id: string | number}).id = id;
+        }
     }
 }
 

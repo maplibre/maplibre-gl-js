@@ -98,6 +98,7 @@ export class WorkerTile {
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
                 const id = featureIndex.getId(feature, sourceLayerId);
+                featureIndex.setPromotedId(feature, sourceLayerId, id);
                 features.push({feature, id, index, sourceLayerIndex});
             }
 
