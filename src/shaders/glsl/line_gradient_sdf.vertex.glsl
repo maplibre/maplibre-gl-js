@@ -15,6 +15,7 @@ layout(location = 1) in uvec4 a_data;
 layout(location = 2) in vec2 a_offset_normal;
 layout(location = 3) in float a_uv_x;
 layout(location = 4) in float a_split_index;
+layout(location = 5) in float a_offset_distance;
 
 uniform vec2 u_translation;
 uniform mediump float u_ratio;
@@ -99,6 +100,8 @@ void main() {
     mediump vec2 offset2 = offset * a_offset_normal * scale * normal.y;
 
     float adjustedThickness = projectLineThickness(pos.y);
+    // dashes are measured along the offset line, which a_offset_distance says is longer or shorter than the line
+    float linesofar = a_linesofar - offset / u_ratio * adjustedThickness * a_offset_distance;
     vec4 projected_no_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation);
     vec4 projected_with_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation + dist / u_ratio * adjustedThickness);
     gl_Position = projected_with_extrude;
@@ -121,7 +124,7 @@ void main() {
     float u_patternscale_b_x = u_tileratio / dasharray_to.w / u_crossfade_to;
     float u_patternscale_b_y = -dasharray_to.z / 2.0 / u_lineatlas_height;
 
-    v_tex_a = vec2(a_linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(dasharray_from.y) + 0.5) / u_lineatlas_height);
-    v_tex_b = vec2(a_linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(dasharray_to.y) + 0.5) / u_lineatlas_height);
+    v_tex_a = vec2(linesofar * u_patternscale_a_x / floorwidth, normal.y * u_patternscale_a_y + (float(dasharray_from.y) + 0.5) / u_lineatlas_height);
+    v_tex_b = vec2(linesofar * u_patternscale_b_x / floorwidth, normal.y * u_patternscale_b_y + (float(dasharray_to.y) + 0.5) / u_lineatlas_height);
     v_width2 = vec2(outset, inset);
 }
