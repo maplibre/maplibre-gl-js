@@ -411,7 +411,7 @@ function drawLayerSymbols(
 
         let uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>;
         if (isSDF) {
-            if (!bucket.iconsInText) {
+            if (!(isText && bucket.iconsInText)) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, projectedCamera,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, hasHalo, pitchedTextRescaling, isOffset, heightAnchorGround);
