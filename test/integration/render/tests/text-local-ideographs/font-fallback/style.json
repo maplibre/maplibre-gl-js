@@ -5,8 +5,8 @@
             "width": 640,
             "height": 400,
             "pixelRatio": 2,
-            "localIdeographFontFamily": "serif",
-            "description": "Top to bottom: default stack; custom semibold stack with server-rendered Latin; explicit sans-serif layer font; decomposed kana and Latin clusters. The serif ideograph fallback applies only to CJK text without a usable layer font."
+            "localIdeographFontFamily": "MapLibre Test CJK Serif",
+            "description": "Top to bottom: default stack; custom semibold stack with server-rendered Latin; explicit smaller layer font; decomposed kana and Latin clusters. Bundled test families distinguish the CJK fallback and layer-font precedence on every platform."
         }
     },
     "zoom": 1,
@@ -61,7 +61,7 @@
             "source": "point",
             "layout": {
                 "text-field": "東京都",
-                "text-font": ["sans-serif"],
+                "text-font": ["MapLibre Test CJK Layer"],
                 "text-size": 42,
                 "text-offset": [0, 1],
                 "text-allow-overlap": true
