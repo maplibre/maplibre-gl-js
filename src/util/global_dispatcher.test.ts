@@ -26,6 +26,15 @@ describe('GlobalDispatcher', () => {
         await expect(resultPromise).rejects.toMatchObject({name: 'AbortError', message: 'The workers were terminated while a message was in flight.'});
     });
 
+    test('drops the aborted controller when the workers terminate', async () => {
+        vi.spyOn(Actor.prototype, 'sendAsync').mockResolvedValue(undefined);
+        await getGlobalDispatcher().broadcast('my-plugin-message', 1);
+
+        await terminateGlobalWorkers();
+
+        expect((getGlobalDispatcher() as any).workersAbortController).toBeUndefined();
+    });
+
     test('registers and unregisters a message handler on the workers', async () => {
         const handler = vi.fn();
         await getGlobalWorkerPool().acquire('map-1');
