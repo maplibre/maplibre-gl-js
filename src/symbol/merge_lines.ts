@@ -62,6 +62,13 @@ function mergeFromLeft(merged: MergedLine[], leftIndex: Record<string, number>, 
     return i;
 }
 
+function keepRemainingLines(merged: MergedLine[], feature: SymbolFeature) {
+    if (feature.geometry.length < 2) return;
+    const geometry = feature.geometry.slice(1);
+    const chunk: LineChunk = {points: geometry[0], next: null};
+    merged.push({feature: {...feature, geometry}, first: chunk, last: chunk});
+}
+
 export function mergeLines(features: SymbolFeature[]): SymbolFeature[] {
     const leftIndex: Record<string, number> = {};
     const rightIndex: Record<string, number> = {};
@@ -90,15 +97,19 @@ export function mergeLines(features: SymbolFeature[]): SymbolFeature[] {
             delete rightIndex[rightKey];
 
             rightIndex[getKey(text, merged[i], true)] = i;
+            keepRemainingLines(merged, feature);
+            keepRemainingLines(merged, merged[j].feature);
             merged[j].feature.geometry = null;
 
         } else if (leftKey in rightIndex) {
             // found mergeable line adjacent to the start of the current line, merge
             mergeFromRight(merged, rightIndex, leftKey, rightKey, line);
+            keepRemainingLines(merged, feature);
 
         } else if (rightKey in leftIndex) {
             // found mergeable line adjacent to the end of the current line, merge
             mergeFromLeft(merged, leftIndex, leftKey, rightKey, line);
+            keepRemainingLines(merged, feature);
 
         } else {
             // no adjacent lines, add as a new item
