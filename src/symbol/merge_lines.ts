@@ -3,6 +3,7 @@ import type {SymbolFeature} from '../data/bucket/symbol_bucket.ts';
 
 type LineChunk = {
     points: Point[];
+    sourceGeometry: Point[][];
     next: LineChunk | null;
 };
 
@@ -18,7 +19,7 @@ function getKey(text: string, line: MergedLine, onRight?: boolean) {
     return `${text}:${point.x}:${point.y}`;
 }
 
-function joinChunks(line: MergedLine): Point[] {
+function joinChunks(line: MergedLine): Point[][] {
     const first = line.first.points;
     let length = first.length;
     for (let chunk = line.first.next; chunk; chunk = chunk.next) {
@@ -37,7 +38,14 @@ function joinChunks(line: MergedLine): Point[] {
             points[at++] = from[i];
         }
     }
-    return points;
+    const geometry = [points, ...line.feature.geometry.slice(1)];
+    for (let chunk = line.first; chunk; chunk = chunk.next) {
+        if (chunk.sourceGeometry === line.feature.geometry) continue;
+        for (let i = 1; i < chunk.sourceGeometry.length; i++) {
+            geometry.push(chunk.sourceGeometry[i]);
+        }
+    }
+    return geometry;
 }
 
 function mergeFromRight(merged: MergedLine[], rightIndex: Record<string, number>, leftKey: string, rightKey: string, line: MergedLine) {
@@ -63,20 +71,14 @@ function mergeFromLeft(merged: MergedLine[], leftIndex: Record<string, number>, 
 }
 
 export function mergeLines(features: SymbolFeature[]): SymbolFeature[] {
-    const lineFeatures = features.flatMap(feature => {
-        if (feature.geometry.length > 1 && feature.text && feature.text.toString()) {
-            return feature.geometry.map(points => ({...feature, geometry: [points]}));
-        }
-        return feature;
-    });
     const leftIndex: Record<string, number> = {};
     const rightIndex: Record<string, number> = {};
     const merged: MergedLine[] = [];
 
-    for (const feature of lineFeatures) {
+    for (const feature of features) {
         const text = feature.text ? feature.text.toString() : null;
 
-        const chunk: LineChunk = {points: feature.geometry[0], next: null};
+        const chunk: LineChunk = {points: feature.geometry[0], sourceGeometry: feature.geometry, next: null};
         const line: MergedLine = {feature, first: chunk, last: chunk};
 
         if (!text) {
@@ -118,7 +120,7 @@ export function mergeLines(features: SymbolFeature[]): SymbolFeature[] {
     for (const line of merged) {
         const feature = line.feature;
         if (!feature.geometry) continue;
-        if (line.first.next) feature.geometry[0] = joinChunks(line);
+        if (line.first.next) feature.geometry = joinChunks(line);
         result.push(feature);
     }
     return result;

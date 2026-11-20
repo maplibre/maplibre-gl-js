@@ -1,6 +1,8 @@
 import {describe, test, expect} from 'vitest';
 import {mergeLines} from './merge_lines.ts';
 import Point from '@mapbox/point-geometry';
+import {createExpression} from '@maplibre/maplibre-gl-style-spec';
+import {CanonicalTileID} from '../tile/tile_id.ts';
 
 function makeFeatures(lines) {
     const features = [];
@@ -53,53 +55,69 @@ describe('mergeLines', () => {
         expect(feature.geometry).toEqual([]);
     });
 
-    test.each([
-        {
-            direction: 'right',
-            parts: [[[0, 1], [10, 11]], [[1, 2], [20, 21]]],
-            expected: [[0, 1, 2], [10, 11], [20, 21]]
-        },
-        {
-            direction: 'left',
-            parts: [[[1, 2], [10, 11]], [[0, 1], [20, 21]]],
-            expected: [[0, 1, 2], [10, 11], [20, 21]]
-        },
-        {
-            direction: 'both ends',
-            parts: [[[0, 1], [10, 11]], [[2, 3], [20, 21]], [[1, 2], [30, 31]]],
-            expected: [[0, 1, 2, 3], [10, 11], [20, 21], [30, 31]]
-        }
-    ])('preserves every component when merging multipart features from $direction', ({parts, expected}) => {
-        const features = parts.map(lines => {
-            const components = makeFeatures(lines.map(line => ['a', ...line]));
-            return {...components[0], geometry: components.flatMap(component => component.geometry)};
-        });
-
-        expect(mergeLines(features)).toEqual(makeFeatures(expected.map(line => ['a', ...line])));
-    });
-
-    test('merges connected components within a multipart feature', () => {
-        const components = makeFeatures([['a', 0, 1], ['a', 1, 2], ['a', 10, 11]]);
-        const feature = {...components[0], geometry: components.flatMap(component => component.geometry)};
-
-        expect(mergeLines([feature])).toEqual(makeFeatures([['a', 0, 1, 2], ['a', 10, 11]]));
-    });
-
-    test('keeps source metadata on disconnected components', () => {
-        const [firstLine, secondLine, disconnected] = makeFeatures([['a', 0, 1], ['a', 1, 2], ['a', 10, 11]]);
-        const first = {...firstLine, id: 100, index: 0, properties: {kind: 'first'}};
-        const second = {...secondLine, id: 200, index: 1, properties: {kind: 'second'},
-            geometry: [...secondLine.geometry, ...disconnected.geometry]};
+    test('preserves every component when merging multipart features from the right', () => {
+        const [first, firstRest, second, secondRest] = makeFeatures([['a', 0, 1], ['a', 10, 11], ['a', 1, 2], ['a', 20, 21]]);
+        first.geometry.push(...firstRest.geometry);
+        second.geometry.push(...secondRest.geometry);
 
         const merged = mergeLines([first, second]);
 
-        expect(merged).toHaveLength(2);
-        expect(merged[1]).toMatchObject({
-            id: 200,
-            index: 1,
-            properties: {kind: 'second'},
-            geometry: disconnected.geometry
-        });
+        expect(merged.flatMap(feature => feature.geometry)).toEqual(
+            makeFeatures([['a', 0, 1, 2], ['a', 10, 11], ['a', 20, 21]]).map(feature => feature.geometry[0]));
+    });
+
+    test('preserves every component when merging multipart features from the left', () => {
+        const [first, firstRest, second, secondRest] = makeFeatures([['a', 1, 2], ['a', 10, 11], ['a', 0, 1], ['a', 20, 21]]);
+        first.geometry.push(...firstRest.geometry);
+        second.geometry.push(...secondRest.geometry);
+
+        const merged = mergeLines([first, second]);
+
+        expect(merged.flatMap(feature => feature.geometry)).toEqual(
+            makeFeatures([['a', 0, 1, 2], ['a', 10, 11], ['a', 20, 21]]).map(feature => feature.geometry[0]));
+    });
+
+    test('preserves every component when merging multipart features from both ends', () => {
+        const [first, firstRest, second, secondRest, third, thirdRest] = makeFeatures(
+            [['a', 0, 1], ['a', 10, 11], ['a', 2, 3], ['a', 20, 21], ['a', 1, 2], ['a', 30, 31]]);
+        first.geometry.push(...firstRest.geometry);
+        second.geometry.push(...secondRest.geometry);
+        third.geometry.push(...thirdRest.geometry);
+
+        const merged = mergeLines([first, second, third]);
+
+        expect(merged.flatMap(feature => feature.geometry)).toEqual(
+            makeFeatures([['a', 0, 1, 2, 3], ['a', 10, 11], ['a', 30, 31], ['a', 20, 21]]).map(feature => feature.geometry[0]));
+    });
+
+    test('leaves connected components within an unmerged multipart feature intact', () => {
+        const components = makeFeatures([['a', 0, 1], ['a', 1, 2], ['a', 10, 11]]);
+        const feature = {...components[0], id: 100, index: 0, properties: {kind: 'road'},
+            geometry: components.flatMap(component => component.geometry)};
+
+        const merged = mergeLines([feature]);
+
+        expect(merged).toEqual([feature]);
+        expect(merged[0]).toBe(feature);
+        expect(merged[0].geometry).toEqual(components.map(component => component.geometry[0]));
+    });
+
+    test('keeps within evaluation unchanged for an unmerged multipart feature', () => {
+        const inside = [new Point(4000, 4096), new Point(4100, 4096)];
+        const outside = [new Point(6000, 4096), new Point(6100, 4096)];
+        const feature = {text: 'Road', type: 'LineString', properties: {}, geometry: [inside, outside]};
+        const parsed = createExpression(['within', {
+            type: 'Polygon',
+            coordinates: [[[-10, -10], [10, -10], [10, 10], [-10, 10], [-10, -10]]]
+        }], 'layers[0].paint.text-color[1]');
+        if (parsed.result !== 'success') throw new Error('Invalid within expression');
+        const canonical = new CanonicalTileID(0, 0, 0);
+
+        const merged = mergeLines([feature] as any);
+
+        expect(merged.map(component => parsed.value.evaluate({zoom: 0}, component, {}, canonical))).toEqual([false]);
+        expect(merged[0]).toBe(feature);
+        expect(feature.geometry).toEqual([inside, outside]);
     });
 
     test('leaves multipart features without text intact', () => {
