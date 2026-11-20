@@ -623,8 +623,11 @@ export class Map extends Evented<MapEventType> {
     style: Style;
     painter: Painter;
     _camera: Camera;
-    /** The map's state, which the camera and the other parts of the map keep theirs in, see {@link MapState}. */
-    private readonly _store: MapStore;
+    /**
+     * @internal
+     * The map's state, which the camera and the other parts of the map keep theirs in, see {@link MapState}.
+     */
+    readonly _store: MapStore;
     private _handlerManager: HandlerManager;
     private _eventFactory: MapEventFactory;
     _container: HTMLElement;
@@ -1856,7 +1859,6 @@ export class Map extends Evented<MapEventType> {
      * If the map's current zoom level is lower than the new minimum,
      * the map will zoom to the new minimum and trigger the following events:
      * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
-     * If the minimum zoom changes, a `zoomlimitschange` event is fired afterwards.
      *
      * It is not always possible to zoom out and reach the set `minZoom`.
      * Other factors such as map height may restrict zooming. For example,
@@ -1878,7 +1880,6 @@ export class Map extends Evented<MapEventType> {
 
         if (minZoom >= defaultMinZoom && minZoom <= this.getMaxZoom()) {
             const zoomBefore = this.getZoom();
-            const minZoomBefore = this.getMinZoom();
             this._camera.applyStateChange((view, context) => setMinZoom(view, context, minZoom));
             this._update();
             if (zoomBefore !== this.getZoom()) {
@@ -1888,9 +1889,6 @@ export class Map extends Evented<MapEventType> {
                     .fire(new MapMovementEvent('movestart'))
                     .fire(new MapMovementEvent('move'))
                     .fire(new MapMovementEvent('moveend'));
-            }
-            if (minZoomBefore !== this.getMinZoom()) {
-                this.fire(new MapLibreEvent('zoomlimitschange'));
             }
 
             return this;
@@ -1919,7 +1917,6 @@ export class Map extends Evented<MapEventType> {
      * If the map's current zoom level is higher than the new maximum,
      * the map will zoom to the new maximum and trigger the following events:
      * `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
-     * If the maximum zoom changes, a `zoomlimitschange` event is fired afterwards.
      *
      * A {@link ErrorEvent} event will be fired if minZoom is out of bounds.
      *
@@ -1936,7 +1933,6 @@ export class Map extends Evented<MapEventType> {
 
         if (maxZoom >= this.getMinZoom()) {
             const zoomBefore = this.getZoom();
-            const maxZoomBefore = this.getMaxZoom();
             this._camera.applyStateChange((view, context) => setMaxZoom(view, context, maxZoom));
             this._update();
             if (zoomBefore !== this.getZoom()) {
@@ -1946,9 +1942,6 @@ export class Map extends Evented<MapEventType> {
                     .fire(new MapMovementEvent('movestart'))
                     .fire(new MapMovementEvent('move'))
                     .fire(new MapMovementEvent('moveend'));
-            }
-            if (maxZoomBefore !== this.getMaxZoom()) {
-                this.fire(new MapLibreEvent('zoomlimitschange'));
             }
 
             return this;
