@@ -4,7 +4,6 @@
 
 ### 🐞 Bug fixes
 
-- Preserve all components of multipart geometries when merging line labels.
 - Fix broken SDF icon rendering when using text with images fitted inside a SDF icon ([#9099](https://github.com/maplibre/maplibre-gl-js/pull/9099))
 - _...Add new stuff here..._
 
