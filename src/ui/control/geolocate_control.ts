@@ -39,6 +39,11 @@ export type GeolocateControlOptions = {
      */
     showUserLocation?: boolean;
     /**
+     * By default a button will be shown on the map to activate the control. Set to `false` to hide the button, so that the control can be activated from a custom button by calling {@link GeolocateControl.trigger}.
+     * @defaultValue true
+     */
+    showButton?: boolean;
+    /**
      * If `true` then map updates from the user's location may also change the map zoom level based on the location update accuracy. If `false` then the map zoom level will not change.
      * Has no effect when `trackUserLocation` is `false`.
      * @defaultValue true
@@ -58,6 +63,7 @@ const defaultOptions: GeolocateControlOptions = {
     trackUserLocation: false,
     showAccuracyCircle: true,
     showUserLocation: true,
+    showButton: true,
     zoomToUserAccuracy: true
 };
 
@@ -665,10 +671,13 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
         }
 
         this._container.addEventListener('contextmenu', (e: MouseEvent) => { e.preventDefault(); });
-        this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
+        this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate');
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
         this._geolocateButton.type = 'button';
         this._geolocateButton.disabled = true;
+        if (this.options.showButton) {
+            this._container.appendChild(this._geolocateButton);
+        }
     };
 
     _finishSetupUI = (supported: boolean): void => {

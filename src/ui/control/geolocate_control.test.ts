@@ -932,4 +932,26 @@ describe('GeolocateControl with no options', () => {
         const geolocateUIelem = await geolocateControl._container.getElementsByClassName('maplibregl-ctrl-geolocate');
         expect(geolocateUIelem).toHaveLength(1);
     });
+
+    test('does not add the button to the container when showButton is false', async () => {
+        const geolocate = new GeolocateControl({showButton: false});
+        map.addControl(geolocate);
+        await sleep(0);
+
+        expect(geolocate._container.getElementsByClassName('maplibregl-ctrl-geolocate')).toHaveLength(0);
+    });
+
+    test('geolocates when triggered and showButton is false', async () => {
+        const geolocate = new GeolocateControl({showButton: false});
+        map.addControl(geolocate);
+        await sleep(0);
+
+        const promise = geolocate.once('geolocate');
+        expect(geolocate.trigger()).toBeTruthy();
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30, timestamp: 40});
+
+        const position = await promise;
+        expect(position.coords.latitude).toBe(10);
+        expect(position.coords.longitude).toBe(20);
+    });
 });

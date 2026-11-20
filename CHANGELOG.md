@@ -1,5 +1,6 @@
 ## main
 ### ✨ Features and improvements
+- Add `showButton` option to `GeolocateControl` to hide the default button and activate the control with `trigger()` from a custom button ([#3103](https://github.com/maplibre/maplibre-gl-js/issues/3103))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
