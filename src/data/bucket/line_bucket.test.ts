@@ -230,6 +230,32 @@ describe('LineBucket', () => {
         }
     });
 
+    test('LineBucket stores how much shorter a dashed offset line is on the inside of a turn', () => {
+        const layer = new LineStyleLayer({id: 'test', type: 'line', source: 'test', paint: {'line-dasharray': [2, 2], 'line-offset': 4}}, {});
+        layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+        const bucket = new LineBucket({layers: [layer], overscaling: 1} as BucketParameters<LineStyleLayer>);
+
+        bucket.addFeature({type: 2, properties: {}} as BucketFeature, [[
+            new Point(0, 0),
+            new Point(1000, 0),
+            new Point(1000, 1000)
+        ]], 0, undefined, {}, {}, noSubdivision);
+
+        // Offsetting a right angle to the inside cuts one offset off each of its two segments. The vertices
+        // around the corner move with it, so the line shortens at the corner and again at the far end.
+        const expected = [0, 0, -1, -1, -1, -1, -1, -1, -2, -2];
+        expect(bucket.offsetDistanceArray).toHaveLength(expected.length);
+        for (let i = 0; i < expected.length; i++) {
+            expect(bucket.offsetDistanceArray.float32[i]).toBeCloseTo(expected[i]);
+        }
+    });
+
+    test('LineBucket stores no offset distances for lines without both dashes and an offset', () => {
+        expect(createLineBucket({id: 'test', paint: {'line-dasharray': [2, 2]}}).offsetDistanceArray).toBeUndefined();
+        expect(createLineBucket({id: 'test', paint: {'line-offset': 4}}).offsetDistanceArray).toBeUndefined();
+        expect(createLineBucket({id: 'test', paint: {'line-dasharray': [2, 2], 'line-offset': 4}}).offsetDistanceArray).toBeDefined();
+    });
+
     test('LineBucket ignores geometry with insufficient unique vertices after trimming duplicates', () => {
         const bucket = createLineBucket({id: 'test'});
 

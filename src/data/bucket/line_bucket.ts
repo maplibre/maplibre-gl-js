@@ -1,7 +1,8 @@
-import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g.ts';
+import {LineLayoutArray, LineExtLayoutArray, LineOffsetLayoutArray} from '../array_types.g.ts';
 import {GEOJSONVT_CLIP_END, GEOJSONVT_CLIP_START} from '@maplibre/geojson-vt';
 import {members as layoutAttributes} from './line_attributes.ts';
 import {members as layoutAttributesExt} from './line_attributes_ext.ts';
+import {members as layoutAttributesOffset} from './line_attributes_offset.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {TriangleIndexArray} from '../array_types.g.ts';
@@ -100,6 +101,12 @@ function offsetNormalNearJoin(normal: Point, offsetNormal: Point): Point {
     return along._add(normal);
 }
 
+/** Whether a layer draws dashes along a `line-offset` line, which needs {@link LineBucket.offsetDistanceArray}. */
+function dashesOffsetLine(layer: LineStyleLayer): boolean {
+    return !!layer.paint.get('line-dasharray').constantOr(1 as any) &&
+        layer.paint.get('line-offset').constantOr(1) !== 0;
+}
+
 // The number of bits that is used to store the line distance in the buffer.
 const LINE_DISTANCE_BUFFER_BITS = 15;
 
@@ -152,6 +159,14 @@ export class LineBucket implements Bucket {
     layoutVertexArray2: LineExtLayoutArray;
     layoutVertexBuffer2: VertexBuffer;
 
+    /**
+     * Per vertex, how much longer the `line-offset` line is than the line itself up to that vertex, per unit of
+     * offset. An offset line is shorter on the inside of a turn and longer on the outside, so dashes measured along
+     * the line itself would be squeezed or stretched there. Filled only when a layer draws dashes with an offset.
+     */
+    offsetDistanceArray?: LineOffsetLayoutArray;
+    offsetDistanceBuffer?: VertexBuffer;
+
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
 
@@ -176,6 +191,8 @@ export class LineBucket implements Bucket {
 
         this.layoutVertexArray = new LineLayoutArray();
         this.layoutVertexArray2 = new LineExtLayoutArray();
+        this.offsetDistanceArray = this.layers.some(dashesOffsetLine) ? new LineOffsetLayoutArray() : undefined;
+        this.offsetDistanceBuffer = undefined;
         this.indexArray = new TriangleIndexArray();
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
         this.segments = new SegmentVector();
@@ -271,6 +288,9 @@ export class LineBucket implements Bucket {
             if (this.layoutVertexArray2.length !== 0) {
                 this.layoutVertexBuffer2 = context.createVertexBuffer(this.layoutVertexArray2, layoutAttributesExt);
             }
+            if (this.offsetDistanceArray?.length) {
+                this.offsetDistanceBuffer = context.createVertexBuffer(this.offsetDistanceArray, layoutAttributesOffset);
+            }
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
         }
@@ -281,6 +301,7 @@ export class LineBucket implements Bucket {
     destroy(): void {
         if (!this.layoutVertexBuffer) return;
         this.layoutVertexBuffer.destroy();
+        this.offsetDistanceBuffer?.destroy();
         this.indexBuffer.destroy();
         this.programConfigurations.destroy();
         this.segments.destroy();
@@ -303,7 +324,9 @@ export class LineBucket implements Bucket {
         this.lineClips = this.lineFeatureClips(feature);
 
         for (const line of geometry) {
+            const start = this.layoutVertexArray.length;
             this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical, subdivisionGranularity);
+            if (this.offsetDistanceArray) this.addOffsetDistances(start);
         }
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, {imagePositions, dashPositions, canonical});
@@ -666,6 +689,45 @@ export class LineBucket implements Bucket {
     updateDistance(prev: Point, next: Point): void {
         this.distance += prev.dist(next);
         this.updateScaledDistance();
+    }
+
+    /**
+     * Fills {@link offsetDistanceArray} for the vertices of the line that {@link addLine} added from `start` on.
+     *
+     * It reads the vertices back rather than tracking the offset line while they are added, so lines without
+     * dashes along an offset pay nothing for it. Between two vertices of one segment, the offset line is longer than
+     * the segment by the offset times the change in how far their offset vectors reach along it. The vertices of a
+     * join share one position and are offset to the same corner, so the offset line gains nothing there.
+     *
+     * @param start - the index of the first vertex of the line in {@link layoutVertexArray}
+     */
+    addOffsetDistances(start: number): void {
+        const {int16, int8} = this.layoutVertexArray;
+        const linesofarPerDistance = this.lineClips ?
+            (this.lineClips.end - this.lineClips.start) * (MAX_LINE_DISTANCE - 1) / this.totalDistance :
+            1;
+
+        let offsetDistance = 0;
+        let x = 0, y = 0, offsetX = 0, offsetY = 0;
+        for (let i = start; i < this.layoutVertexArray.length; i++) {
+            const nextX = int16[i * 5] >> 1;
+            const nextY = int16[i * 5 + 1] >> 1;
+            const side = (int16[i * 5 + 1] & 1) ? -1 : 1;
+            const nextOffsetX = side * int8[i * 10 + 8] / EXTRUDE_SCALE;
+            const nextOffsetY = side * int8[i * 10 + 9] / EXTRUDE_SCALE;
+
+            const dx = nextX - x;
+            const dy = nextY - y;
+            if (i > start && (dx !== 0 || dy !== 0)) {
+                offsetDistance += ((nextOffsetX - offsetX) * dx + (nextOffsetY - offsetY) * dy) / Math.hypot(dx, dy);
+            }
+            this.offsetDistanceArray.emplaceBack(offsetDistance * linesofarPerDistance);
+
+            x = nextX;
+            y = nextY;
+            offsetX = nextOffsetX;
+            offsetY = nextOffsetY;
+        }
     }
 
     private hasLineDasharray(layers: LineStyleLayer[]): boolean {
