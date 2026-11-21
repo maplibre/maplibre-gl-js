@@ -503,7 +503,10 @@ type DelegatedListener = {
 type Delegate<E extends Event = Event> = (e: E) => void;
 
 type StyleSnapshot = {
-    style: StyleSpecification | null;
+    /** The serialized style, or the URL or object a style that has not loaded yet was set from. */
+    style: StyleSpecification | string | null;
+    /** The options a style that has not loaded yet was set with, applied again when it is rebuilt. */
+    options?: StyleSwapOptions & StyleOptions;
     images: {[_: string]: StyleImage};
 };
 
@@ -669,6 +672,12 @@ export class Map extends Evented<MapEventType> {
     _initialGlobalState: Record<string, any>;
     _transformStyle: TransformStyleFunction | undefined;
     _styleUrl: string | null = null;
+    /**
+     * @internal
+     * The style and options of the last {@link Map.setStyle} that created a style, which a context loss before that
+     * style has loaded rebuilds from, since a style serializes to nothing until it has loaded.
+     */
+    _requestedStyle: {style: StyleSpecification | string; options: StyleSwapOptions & StyleOptions} | null = null;
     _requestManager: RequestManager;
     _locale: Record<string, string>;
     _removed: boolean;
@@ -2882,6 +2891,7 @@ export class Map extends Evented<MapEventType> {
             return this;
         } else {
             this.style = new Style(this, options || {});
+            this._requestedStyle = {style, options};
         }
 
         this.style.setEventedParent(this, {style: this.style});
@@ -2979,16 +2989,18 @@ export class Map extends Evented<MapEventType> {
 
     /**
      * @internal
-     * Snapshots the serialized style and cloned images so {@link Map._restoreStyleSnapshot} can rebuild them.
+     * Snapshots the serialized style and cloned images so {@link Map._restoreStyleSnapshot} can rebuild them. A style
+     * that has not loaded yet is snapshotted as the URL or object and the options it was set with, so that it loads
+     * again from the start.
      */
     _takeStyleSnapshot(): StyleSnapshot {
-        if (this.style) {
-            return {
-                style: this.style.serialize(),
-                images: this.style.imageManager.cloneImages()
-            };
+        if (!this.style) return {style: null, images: {}};
+
+        const images = this.style.imageManager.cloneImages();
+        if (!this.style._loaded && this._requestedStyle) {
+            return {...this._requestedStyle, images};
         }
-        return {style: null, images: {}};
+        return {style: this.style.serialize(), images};
     }
 
     /**
@@ -4456,9 +4468,9 @@ export class Map extends Evented<MapEventType> {
      * starts with empty atlases, so images that render themselves with WebGL owe every atlas a
      * fresh render.
      */
-    private _restoreStyleSnapshot({style, images}: StyleSnapshot): void {
+    private _restoreStyleSnapshot({style, options, images}: StyleSnapshot): void {
         if (!style) return;
-        this.setStyle(style, {diff: false});
+        this.setStyle(style, {...options, diff: false});
 
         if (!this.style) return;
         this.style.imageManager.images = images;
