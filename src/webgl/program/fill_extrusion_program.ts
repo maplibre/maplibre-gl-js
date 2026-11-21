@@ -8,9 +8,11 @@ import {
 import {mat3, vec3} from 'gl-matrix';
 import {extend, sphericalToCartesian} from '../../util/util.ts';
 import {getCameraMath} from '../../camera/camera_math_factory.ts';
+import {EXTENT} from '../../data/extent.ts';
+import {latFromMercatorY, mercatorZfromAltitude} from '../../geo/mercator_coordinate.ts';
 
 import type {Context} from '../../webgl/context.ts';
-import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../../tile/tile_id.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 import type {Tile} from '../../tile/tile.ts';
@@ -25,6 +27,8 @@ export type FillExtrusionUniformsType = {
     'u_vertical_gradient': Uniform1f;
     'u_opacity': Uniform1f;
     'u_fill_translate': Uniform2f;
+    'u_ao_wall_intensity': Uniform1f;
+    'u_ao_wall_radius': Uniform1f;
 };
 
 export type FillExtrusionPatternUniformsType = {
@@ -36,6 +40,8 @@ export type FillExtrusionPatternUniformsType = {
     'u_vertical_gradient': Uniform1f;
     'u_opacity': Uniform1f;
     'u_fill_translate': Uniform2f;
+    'u_ao_wall_intensity': Uniform1f;
+    'u_ao_wall_radius': Uniform1f;
     // pattern uniforms:
     'u_texsize': Uniform2f;
     'u_image': Uniform1i;
@@ -43,6 +49,14 @@ export type FillExtrusionPatternUniformsType = {
     'u_pixel_coord_lower': Uniform2f;
     'u_scale': Uniform3f;
     'u_fade': Uniform1f;
+};
+
+export type FillExtrusionGroundOcclusionUniformsType = {
+    'u_ao_ground_intensity': Uniform1f;
+    'u_ao_ground_radius': Uniform1f;
+    'u_ao_depth_band': Uniform1f;
+    'u_tile_units_per_meter': Uniform1f;
+    'u_fill_translate': Uniform2f;
 };
 
 const fillExtrusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionUniformsType => ({
@@ -53,6 +67,8 @@ const fillExtrusionUniforms = (context: Context, locations: UniformLocations): F
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
+    'u_ao_wall_intensity': new Uniform1f(context, locations.u_ao_wall_intensity),
+    'u_ao_wall_radius': new Uniform1f(context, locations.u_ao_wall_radius),
 });
 
 const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocations): FillExtrusionPatternUniformsType => ({
@@ -64,6 +80,8 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_height_factor': new Uniform1f(context, locations.u_height_factor),
     'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
+    'u_ao_wall_intensity': new Uniform1f(context, locations.u_ao_wall_intensity),
+    'u_ao_wall_radius': new Uniform1f(context, locations.u_ao_wall_radius),
     // pattern uniforms
     'u_image': new Uniform1i(context, locations.u_image),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
@@ -73,12 +91,22 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_fade': new Uniform1f(context, locations.u_fade)
 });
 
+const fillExtrusionGroundOcclusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionGroundOcclusionUniformsType => ({
+    'u_ao_ground_intensity': new Uniform1f(context, locations.u_ao_ground_intensity),
+    'u_ao_ground_radius': new Uniform1f(context, locations.u_ao_ground_radius),
+    'u_ao_depth_band': new Uniform1f(context, locations.u_ao_depth_band),
+    'u_tile_units_per_meter': new Uniform1f(context, locations.u_tile_units_per_meter),
+    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
+});
+
 const fillExtrusionUniformValues = (
     projectedCamera: ProjectedCamera,
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
+    aoWallIntensity: number,
+    aoWallRadius: number,
 ): UniformValues<FillExtrusionUniformsType> => {
     const lightPos = sphericalToCartesian(light.position);
     const lightMat = mat3.create();
@@ -98,6 +126,8 @@ const fillExtrusionUniformValues = (
         'u_vertical_gradient': +shouldUseVerticalGradient,
         'u_opacity': opacity,
         'u_fill_translate': translate,
+        'u_ao_wall_intensity': aoWallIntensity,
+        'u_ao_wall_radius': aoWallRadius,
     };
 };
 
@@ -107,20 +137,46 @@ const fillExtrusionPatternUniformValues = (
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
+    aoWallIntensity: number,
+    aoWallRadius: number,
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, opacity, translate),
+    return extend(fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, opacity, translate, aoWallIntensity, aoWallRadius),
         patternUniformValues(crossfade, projectedCamera, tile),
         {
             'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8
         });
 };
 
+/**
+ * Writes the ground occlusion uniforms into `out`. Opacity scales the intensity; meters convert to
+ * tile units at the latitude of the tile's centre.
+ */
+const fillExtrusionGroundOcclusionUniformValues = (
+    out: UniformValues<FillExtrusionGroundOcclusionUniformsType>,
+    intensity: number,
+    opacity: number,
+    radius: number,
+    translate: [number, number],
+    canonical: CanonicalTileID
+): UniformValues<FillExtrusionGroundOcclusionUniformsType> => {
+    const tileCount = Math.pow(2, canonical.z);
+    const latitude = latFromMercatorY((canonical.y + 0.5) / tileCount);
+
+    out['u_ao_ground_intensity'] = intensity * opacity;
+    out['u_ao_ground_radius'] = radius;
+    out['u_tile_units_per_meter'] = mercatorZfromAltitude(1, latitude) * EXTENT * tileCount;
+    out['u_fill_translate'] = translate;
+    return out;
+};
+
 export {
     fillExtrusionUniforms,
     fillExtrusionPatternUniforms,
+    fillExtrusionGroundOcclusionUniforms,
     fillExtrusionUniformValues,
-    fillExtrusionPatternUniformValues
+    fillExtrusionPatternUniformValues,
+    fillExtrusionGroundOcclusionUniformValues
 };

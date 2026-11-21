@@ -102,6 +102,8 @@ export class FrameRenderContext {
     isRenderingToTexture: boolean = false;
     /** Whether a layer composite has already sampled the shared scratch FBO in this frame. */
     layerCompositeSampled: boolean = false;
+    /** The `fill-extrusion` layers that have drawn ground occlusion so far. */
+    groundOcclusionLayers: number = 0;
     readonly projectedCamera: ProjectedCamera;
     /** The world mapping the camera was projected with. */
     readonly worldCoordinateHelper: WorldCoordinateHelper;

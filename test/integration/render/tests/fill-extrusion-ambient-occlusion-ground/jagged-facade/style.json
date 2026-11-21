@@ -1,0 +1,59 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 320,
+      "description": "Facade of short walls with small bends: one smooth band, no light wedges or dark overlaps."
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [0, 0],
+              [0.00002, 0.000003],
+              [0.00004, 0],
+              [0.00006, 0.000004],
+              [0.00008, 0.000001],
+              [0.0001, 0.000004],
+              [0.00012, 0],
+              [0.00012, 0.00006],
+              [0, 0.00006],
+              [0, 0]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "center": [0.00006, 0.00001],
+  "pitch": 45,
+  "zoom": 19.5,
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ddd"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-color": "#88a",
+        "fill-extrusion-height": 15,
+        "fill-extrusion-ambient-occlusion-ground-intensity": 1,
+        "fill-extrusion-ambient-occlusion-ground-radius": 4
+      }
+    }
+  ]
+}
