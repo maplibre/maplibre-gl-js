@@ -81,6 +81,7 @@ export class GlobalDispatcher extends Evented<GlobalDispatcherEventType> {
 
     private handleWorkersTerminated(): void {
         this.workersAbortController?.abort(new Error('The workers were terminated while a message was in flight.'));
+        this.workersAbortController = undefined;
         this.actorsPromise = undefined;
     }
 
