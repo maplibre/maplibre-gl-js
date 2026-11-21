@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Make a building see-through on click</title>
+    <meta property="og:description" content="Use feature state and a data-driven fill-extrusion-opacity to make a clicked 3D building transparent, with the buildings behind it showing through." />
+    <meta property="og:category" content="3D Models & Buildings" />
+    <meta property="og:created" content="2026-11-21" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script type="module">
+    import * as maplibregl from '../../dist/maplibre-gl-dev.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: [-74.00795, 40.70463],
+        zoom: 15.9,
+        pitch: 55,
+        bearing: -60
+    });
+
+    map.on('load', () => {
+        const seeThrough = ['boolean', ['feature-state', 'seeThrough'], false];
+
+        // Only the buildings with a fill-extrusion-opacity of 1 show through a see-through one.
+        // This style has all its buildings at 0.8, so that value moves to
+        // fill-extrusion-layer-opacity, which fades the layer as a whole.
+        map.setPaintProperty('building-3d', 'fill-extrusion-layer-opacity', map.getPaintProperty('building-3d', 'fill-extrusion-opacity'));
+        map.setPaintProperty('building-3d', 'fill-extrusion-opacity', ['case', seeThrough, 0.35, 1]);
+        map.setPaintProperty('building-3d', 'fill-extrusion-color', ['case', seeThrough, '#2a7de1', map.getPaintProperty('building-3d', 'fill-extrusion-color')]);
+
+        map.on('click', 'building-3d', (e) => {
+            const building = {
+                source: e.features[0].source,
+                sourceLayer: e.features[0].sourceLayer,
+                id: e.features[0].id
+            };
+            map.setFeatureState(building, {seeThrough: !map.getFeatureState(building).seeThrough});
+        });
+    });
+</script>
+</body>
+</html>

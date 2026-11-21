@@ -17,13 +17,20 @@ import type {Tile} from '../../tile/tile.ts';
 import type {LightPropsPossiblyEvaluated} from '../../style/light_properties.g.ts';
 import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
+/**
+ * A draw includes the extrusions whose `fill-extrusion-opacity` is in `[from, to)`.
+ * The opacity is at most 1, so a `to` of 2 includes the extrusions at 1.
+ */
+export type OpacityRange = [number, number];
+
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;
     'u_lightpos_globe': Uniform3f;
     'u_lightintensity': Uniform1f;
     'u_lightcolor': Uniform3f;
     'u_vertical_gradient': Uniform1f;
-    'u_opacity': Uniform1f;
+    'u_layer_opacity': Uniform1f;
+    'u_opacity_range': Uniform2f;
     'u_fill_translate': Uniform2f;
 };
 
@@ -34,7 +41,8 @@ export type FillExtrusionPatternUniformsType = {
     'u_lightcolor': Uniform3f;
     'u_height_factor': Uniform1f;
     'u_vertical_gradient': Uniform1f;
-    'u_opacity': Uniform1f;
+    'u_layer_opacity': Uniform1f;
+    'u_opacity_range': Uniform2f;
     'u_fill_translate': Uniform2f;
     // pattern uniforms:
     'u_texsize': Uniform2f;
@@ -51,7 +59,8 @@ const fillExtrusionUniforms = (context: Context, locations: UniformLocations): F
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
-    'u_opacity': new Uniform1f(context, locations.u_opacity),
+    'u_layer_opacity': new Uniform1f(context, locations.u_layer_opacity),
+    'u_opacity_range': new Uniform2f(context, locations.u_opacity_range),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
 });
 
@@ -62,7 +71,8 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_height_factor': new Uniform1f(context, locations.u_height_factor),
-    'u_opacity': new Uniform1f(context, locations.u_opacity),
+    'u_layer_opacity': new Uniform1f(context, locations.u_layer_opacity),
+    'u_opacity_range': new Uniform2f(context, locations.u_opacity_range),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
     // pattern uniforms
     'u_image': new Uniform1i(context, locations.u_image),
@@ -77,7 +87,8 @@ const fillExtrusionUniformValues = (
     projectedCamera: ProjectedCamera,
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
-    opacity: number,
+    layerOpacity: number,
+    opacityRange: OpacityRange,
     translate: [number, number],
 ): UniformValues<FillExtrusionUniformsType> => {
     const lightPos = sphericalToCartesian(light.position);
@@ -96,7 +107,8 @@ const fillExtrusionUniformValues = (
         'u_lightintensity': light.intensity,
         'u_lightcolor': [lightColor.r, lightColor.g, lightColor.b],
         'u_vertical_gradient': +shouldUseVerticalGradient,
-        'u_opacity': opacity,
+        'u_layer_opacity': layerOpacity,
+        'u_opacity_range': opacityRange,
         'u_fill_translate': translate,
     };
 };
@@ -105,13 +117,14 @@ const fillExtrusionPatternUniformValues = (
     projectedCamera: ProjectedCamera,
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
-    opacity: number,
+    layerOpacity: number,
+    opacityRange: OpacityRange,
     translate: [number, number],
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, opacity, translate),
+    return extend(fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, layerOpacity, opacityRange, translate),
         patternUniformValues(crossfade, projectedCamera, tile),
         {
             'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8

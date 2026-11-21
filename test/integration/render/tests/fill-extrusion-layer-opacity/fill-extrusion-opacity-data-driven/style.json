@@ -1,0 +1,191 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 256,
+      "height": 256,
+      "description": "The layer opacity of 0.5 is multiplied with the opacity of each extrusion, and the red one at 1 still shows through the blue one in front of it."
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {
+              "height": 40,
+              "color": "red",
+              "opacity": 1
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.0003,
+                    5e-05
+                  ],
+                  [
+                    -5e-05,
+                    5e-05
+                  ],
+                  [
+                    -5e-05,
+                    0.00025
+                  ],
+                  [
+                    -0.0003,
+                    0.00025
+                  ],
+                  [
+                    -0.0003,
+                    5e-05
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "height": 40,
+              "color": "green",
+              "opacity": 0.7
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    5e-05,
+                    5e-05
+                  ],
+                  [
+                    0.0003,
+                    5e-05
+                  ],
+                  [
+                    0.0003,
+                    0.00025
+                  ],
+                  [
+                    5e-05,
+                    0.00025
+                  ],
+                  [
+                    5e-05,
+                    5e-05
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "height": 20,
+              "color": "blue",
+              "opacity": 0.5
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.0003,
+                    -0.00025
+                  ],
+                  [
+                    0.0003,
+                    -0.00025
+                  ],
+                  [
+                    0.0003,
+                    -5e-05
+                  ],
+                  [
+                    -0.0003,
+                    -5e-05
+                  ],
+                  [
+                    -0.0003,
+                    -0.00025
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {
+              "height": 20,
+              "color": "black",
+              "opacity": 0
+            },
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    -0.0003,
+                    -0.00036
+                  ],
+                  [
+                    0.0003,
+                    -0.00036
+                  ],
+                  [
+                    0.0003,
+                    -0.0003
+                  ],
+                  [
+                    -0.0003,
+                    -0.0003
+                  ],
+                  [
+                    -0.0003,
+                    -0.00036
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "pitch": 60,
+  "zoom": 17.5,
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-height": [
+          "get",
+          "height"
+        ],
+        "fill-extrusion-color": [
+          "get",
+          "color"
+        ],
+        "fill-extrusion-opacity": [
+          "get",
+          "opacity"
+        ],
+        "fill-extrusion-layer-opacity": 0.5
+      }
+    }
+  ]
+}
