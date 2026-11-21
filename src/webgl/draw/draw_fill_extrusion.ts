@@ -20,6 +20,11 @@ const ANY_OPACITY: OpacityRange = [0, 2];
 const FULL_OPACITY: OpacityRange = [1, 2];
 const PARTIAL_OPACITY: OpacityRange = [0, 1];
 
+/**
+ * Draws a fill-extrusion layer.
+ * When `fill-extrusion-opacity` varies by feature, the extrusions at 1 are drawn first and those below 1 after them,
+ * so the ones at 1 show through the others.
+ */
 export function drawFillExtrusion(tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     const layerOpacity = layer.paint.get('fill-extrusion-layer-opacity');
     const opacity = layer.paint.get('fill-extrusion-opacity').constantOr(undefined);
@@ -39,6 +44,12 @@ export function drawFillExtrusion(tileManager: TileManager, layer: FillExtrusion
     }
 }
 
+/**
+ * Draws the extrusions whose opacity is in `opacityRange`.
+ * With `opaque` they are drawn in one pass. Otherwise they are drawn in two passes, so that only the closest surface is drawn.
+ * The first pass writes only the depth buffer. The second colors the fragments with the same depth as the closest one,
+ * and uses the stencil buffer to skip coincident polygons.
+ */
 function drawExtrusionGroup(
     tileManager: TileManager,
     layer: FillExtrusionStyleLayer,
@@ -53,15 +64,10 @@ function drawExtrusionGroup(
         drawExtrusionTiles(tileManager, layer, coords, depthMode, StencilMode.disabled, colorMode, opacityRange, frameRenderContext);
 
     } else {
-        // Draw transparent buildings in two passes so that only the closest surface is drawn.
-        // First draw all the extrusions into only the depth buffer. No colors are drawn.
         drawExtrusionTiles(tileManager, layer, coords, depthMode,
             StencilMode.disabled,
             ColorMode.disabled, opacityRange, frameRenderContext);
 
-        // Then draw all the extrusions a second type, only coloring fragments if they have the
-        // same depth value as the closest fragment in the previous pass. Use the stencil buffer
-        // to prevent the second draw in cases where we have coincident polygons.
         drawExtrusionTiles(tileManager, layer, coords, depthMode,
             frameRenderContext.stencilModeFor3D(),
             frameRenderContext.colorModeForRenderPass(), opacityRange, frameRenderContext);
