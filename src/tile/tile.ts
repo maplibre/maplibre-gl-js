@@ -450,13 +450,14 @@ export class Tile {
 
         for (let i = 0; i < layer.length; i++) {
             const feature = layer.feature(i);
+            const id = featureIndex.getId(feature, sourceLayer);
+            featureIndex.setPromotedId(feature, layer.name, id);
             if (filter.needGeometry) {
                 const evaluationFeature = toEvaluationFeature(feature, true);
                 if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), evaluationFeature, this.tileID.canonical)) continue;
             } else if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), feature)) {
                 continue;
             }
-            const id = featureIndex.getId(feature, sourceLayer);
             const geojsonFeature = new GeoJSONFeature(feature, z, x, y, id, params.worldCoordinateHelper);
             (geojsonFeature as any).tile = coord;
             result.push(geojsonFeature);
