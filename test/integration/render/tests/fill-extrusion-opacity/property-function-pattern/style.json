@@ -4,7 +4,7 @@
     "test": {
       "width": 256,
       "height": 256,
-      "description": "The back left extrusion at 1 shows through the one in front of it, the back right one at 0.7 does not, and the one at 0 in front is not drawn."
+      "description": "The front extrusion at 0.5 hides the two behind it, the map shows through each extrusion at its own opacity, and the one at 0 in front is not drawn."
     }
   },
   "sprite": "local://sprites/emerald",

@@ -4,7 +4,7 @@
     "test": {
       "width": 256,
       "height": 256,
-      "description": "The red extrusion at 1 shows through the blue one in front of it, the green one at 0.7 does not, and the one at 0 in front is not drawn."
+      "description": "The blue extrusion at 0.5 hides the red and the green one behind it, the map shows through each extrusion at its own opacity, and the one at 0 in front is not drawn."
     }
   },
   "sources": {

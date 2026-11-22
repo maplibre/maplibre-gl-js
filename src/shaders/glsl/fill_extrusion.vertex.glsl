@@ -3,8 +3,6 @@ uniform lowp vec3 u_lightpos;
 uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
 uniform float u_vertical_gradient;
-uniform lowp float u_layer_opacity;
-uniform mediump vec2 u_opacity_range;
 uniform vec2 u_fill_translate;
 
 layout(location = 0) in vec2 a_pos;
@@ -30,7 +28,7 @@ void main() {
     #pragma maplibre: initialize highp float opacity
 
     opacity = clamp(opacity, 0.0, 1.0);
-    if (opacity <= 0.0 || opacity < u_opacity_range.x || opacity >= u_opacity_range.y) {
+    if (opacity <= 0.0) {
         gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
         return;
     }
@@ -110,5 +108,5 @@ void main() {
     v_color.r += clamp(color.r * directional * u_lightcolor.r, mix(0.0, 0.3, 1.0 - u_lightcolor.r), 1.0);
     v_color.g += clamp(color.g * directional * u_lightcolor.g, mix(0.0, 0.3, 1.0 - u_lightcolor.g), 1.0);
     v_color.b += clamp(color.b * directional * u_lightcolor.b, mix(0.0, 0.3, 1.0 - u_lightcolor.b), 1.0);
-    v_color *= u_layer_opacity * opacity;
+    v_color *= opacity;
 }
