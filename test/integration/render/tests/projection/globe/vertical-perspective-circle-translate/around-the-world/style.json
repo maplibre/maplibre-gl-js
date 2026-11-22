@@ -1,0 +1,62 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that a circle translated once around the world lands on the circle it started from.",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "projection": {
+    "type": "vertical-perspective"
+  },
+  "zoom": 10,
+  "pitch": 60,
+  "bearing": 31,
+  "center": [-92.3, 0.3],
+  "sky": {
+    "atmosphere-blend": 0
+  },
+  "sources": {
+    "point": {
+      "type": "geojson",
+      "maxzoom": 10,
+      "data": {
+        "type": "Point",
+        "coordinates": [-92.3, 0.3]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "reference",
+      "type": "circle",
+      "source": "point",
+      "paint": {
+        "circle-radius": 40,
+        "circle-color": "red",
+        "circle-pitch-alignment": "map",
+        "circle-pitch-scale": "viewport"
+      }
+    },
+    {
+      "id": "around-the-world",
+      "type": "circle",
+      "source": "point",
+      "paint": {
+        "circle-radius": 20,
+        "circle-color": "blue",
+        "circle-pitch-alignment": "map",
+        "circle-pitch-scale": "viewport",
+        "circle-translate": [524288, 0]
+      }
+    }
+  ]
+}

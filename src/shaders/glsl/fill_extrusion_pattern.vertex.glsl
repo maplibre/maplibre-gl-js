@@ -82,8 +82,8 @@ void main() {
     vec2 posInTile = a_pos + u_fill_translate;
 
     #ifdef GLOBE
-        vec3 spherePos = projectToSphere(posInTile, a_pos);
-        vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
+        vec3 spherePos = projectToSphereOffset(posInTile, a_pos);
+        vec3 elevatedPos = (globeTileOrigin() + spherePos) * (1.0 + elevation / GLOBE_RADIUS);
         v_sphere_pos = elevatedPos;
         gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
     #else

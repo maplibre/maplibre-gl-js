@@ -118,6 +118,16 @@ describe('getProjectionData', () => {
         const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(1, 0, 1, 1, 0), applyGlobeMatrix: true});
         expect(projectionData.projectionTransition).not.toBe(0);
     });
+
+    test('draws a tile relative to the planet center at high zoom too', () => {
+        const zoomedCamera = projectCamera(setZoom(createDefaultState(context), context, 14), context);
+        const tileID = new OverscaledTileID(14, 0, 14, 8192, 8192);
+
+        const projectionData = getCameraMath(zoomedCamera).getProjectionData(zoomedCamera, {overscaledTileID: tileID, applyGlobeMatrix: true, relativeToTile: true});
+        const planetRelative = getCameraMath(zoomedCamera).getProjectionData(zoomedCamera, {overscaledTileID: tileID, applyGlobeMatrix: true});
+
+        expect(projectionData.mainMatrix).toBe(planetRelative.mainMatrix);
+    });
 });
 
 test('getProjectionDataForCustomLayer transition is the in-progress globe transition', () => {

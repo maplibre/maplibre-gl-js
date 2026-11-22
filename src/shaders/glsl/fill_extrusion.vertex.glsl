@@ -54,7 +54,7 @@ void main() {
     vec2 posInTile = a_pos + u_fill_translate;
 
     #ifdef GLOBE
-        vec3 spherePos = projectToSphere(posInTile, a_pos);
+        vec3 spherePos = projectToSphereOffset(posInTile, a_pos);
         gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
     #else
         gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
@@ -74,7 +74,7 @@ void main() {
     float directional = clamp(dot(normalForLighting, u_lightpos), 0.0, 1.0);
 
     #ifdef GLOBE
-        mat3 rotMatrix = globeGetRotationMatrix(spherePos);
+        mat3 rotMatrix = globeGetRotationMatrix(globeTileOrigin() + spherePos);
         normalForLighting = rotMatrix * normalForLighting;
         // Interpolate dot product result instead of normals and light direction
         directional = mix(directional, clamp(dot(normalForLighting, u_lightpos_globe), 0.0, 1.0), u_projection_transition);

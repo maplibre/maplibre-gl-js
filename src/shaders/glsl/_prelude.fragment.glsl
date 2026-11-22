@@ -23,6 +23,8 @@ layout(std140) uniform ProjectionUBO {
     highp mat4 u_projection_fallback_matrix;
     highp vec4 u_projection_tile_mercator_coords;
     highp vec4 u_projection_clipping_plane;
+    highp vec4 u_projection_tile_origin;
+    highp vec2 u_projection_tile_origin_position;
     highp float u_projection_transition;
     highp int u_projection_clip_antimeridian;
 };

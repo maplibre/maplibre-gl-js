@@ -4,6 +4,8 @@
 #ifndef PROJECTION_UBO
 uniform highp vec4 u_projection_tile_mercator_coords;
 uniform highp vec4 u_projection_clipping_plane;
+uniform highp vec4 u_projection_tile_origin;
+uniform highp vec2 u_projection_tile_origin_position;
 uniform highp float u_projection_transition;
 uniform mat4 u_projection_fallback_matrix;
 #endif
@@ -99,13 +101,124 @@ vec3 projectToSphere(vec2 posInTile) {
     return projectToSphere(posInTile, vec2(0.0, 0.0));
 }
 
-float globeComputeClippingZ(vec3 spherePos) {
-    return (1.0 - (dot(spherePos, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w));
+// sin(x) for |x| up to PI / 2, where the builtin loses precision on some GPUs.
+float globeSinSmall(float x) {
+    float x2 = x * x;
+    return x * (1.0 - x2 / 6.0 * (1.0 - x2 / 20.0 * (1.0 - x2 / 42.0 * (1.0 - x2 / 72.0 * (1.0 - x2 / 110.0 * (1.0 - x2 / 156.0))))));
 }
 
+// tan(x) for small angles, see globeSinSmall.
+float globeTanSmall(float x) {
+    if (abs(x) >= 0.5) {
+        return tan(x);
+    }
+    float s = globeSinSmall(x);
+    return s / sqrt(1.0 - s * s);
+}
+
+// exp(x) - 1 without the cancellation for small x.
+float globeExpm1Small(float x) {
+    if (abs(x) >= 0.5) {
+        return exp(x) - 1.0;
+    }
+    return x * (1.0 + x / 2.0 * (1.0 + x / 3.0 * (1.0 + x / 4.0 * (1.0 + x / 5.0 * (1.0 + x / 6.0 * (1.0 + x / 7.0 * (1.0 + x / 8.0)))))));
+}
+
+// The point that sphere positions passed to interpolateProjection are relative to: the tile's origin, its point
+// nearest the camera's center, when u_projection_matrix is relative to it, otherwise the planet center.
+vec3 globeTileOrigin() {
+    if (u_projection_tile_origin.w < 0.5) {
+        return vec3(0.0);
+    }
+    float t = u_projection_tile_origin.z;
+    float denom = t * t + 1.0;
+    float cos_sy = 2.0 * t / denom;
+    return vec3(u_projection_tile_origin.x * cos_sy, (t * t - 1.0) / denom, u_projection_tile_origin.y * cos_sy);
+}
+
+// The angles from the tile origin to translatedPos.
+vec2 globeAnglesFromTileOrigin(vec2 translatedPos) {
+    return u_projection_tile_mercator_coords.zw * (translatedPos - u_projection_tile_origin_position) * (PI * 2.0);
+}
+
+// Whether translatedPos is measured from the tile origin: for tiles drawn relative to it, unless the position is more
+// than a quarter turn away, as the far side of a low zoom tile and large translations are.
+bool globeIsNearTileOrigin(vec2 translatedPos) {
+    if (u_projection_tile_origin.w < 0.5) {
+        return false;
+    }
+    vec2 delta = abs(globeAnglesFromTileOrigin(translatedPos));
+    return delta.x <= PI * 0.5 && delta.y <= PI * 0.5;
+}
+
+// projectToSphere relative to globeTileOrigin(), from differences of nearby angles, so float32 only holds small numbers.
+vec3 projectToSphereOffset(vec2 translatedPos, vec2 rawPos) {
+    if (!globeIsNearTileOrigin(translatedPos)) {
+        return projectToSphere(translatedPos, rawPos) - globeTileOrigin();
+    }
+    if (rawPos.y < -32767.5) {
+        return vec3(0.0, 1.0, 0.0) - globeTileOrigin();
+    }
+    if (rawPos.y > 32766.5) {
+        return vec3(0.0, -1.0, 0.0) - globeTileOrigin();
+    }
+    vec2 delta = globeAnglesFromTileOrigin(translatedPos);
+    float sin_x0 = u_projection_tile_origin.x;
+    float cos_x0 = u_projection_tile_origin.y;
+    float t0 = u_projection_tile_origin.z;
+    float t0_2 = t0 * t0;
+
+    // t = t0 * exp(-delta.y), with sin and cos of spherical_y from t as in projectToSphere.
+    float e = globeExpm1Small(-delta.y);
+    float t = t0 + t0 * e;
+    float denom = (t * t + 1.0) * (t0_2 + 1.0);
+    float d_sin_sy = 2.0 * t0_2 * e * (2.0 + e) / denom;
+    float d_cos_sy = 2.0 * t0 * e * (1.0 - t * t0) / denom;
+    float cos_sy = 2.0 * t0 / (t0_2 + 1.0) + d_cos_sy;
+
+    float sin_dx = globeSinSmall(delta.x);
+    float half_sin_dx = globeSinSmall(delta.x * 0.5);
+    float cos_dx_minus_one = -2.0 * half_sin_dx * half_sin_dx;
+    float d_sin_x = sin_x0 * cos_dx_minus_one + cos_x0 * sin_dx;
+    float d_cos_x = cos_x0 * cos_dx_minus_one - sin_x0 * sin_dx;
+
+    return vec3(
+        sin_x0 * d_cos_sy + d_sin_x * cos_sy,
+        d_sin_sy,
+        cos_x0 * d_cos_sy + d_cos_x * cos_sy
+    );
+}
+
+vec3 projectToSphereOffset(vec2 posInTile) {
+    return projectToSphereOffset(posInTile, vec2(0.0, 0.0));
+}
+
+// globeRotateVector for the position at posInTile, given relative to globeTileOrigin() in offset, returning the result relative to it as well.
+vec3 globeRotateVectorOffset(vec2 posInTile, vec3 offset, vec2 angles) {
+    if (!globeIsNearTileOrigin(posInTile)) {
+        return globeRotateVector(projectToSphere(posInTile), angles) - globeTileOrigin();
+    }
+    vec3 vec = globeTileOrigin() + offset;
+    mat3 axes = globeGetRotationMatrix(vec);
+    vec3 d = axes[0] * globeTanSmall(angles.x) + axes[1] * globeTanSmall(angles.y);
+    float len = sqrt(1.0 + dot(d, d));
+    return offset + (d - vec * (dot(d, d) / (1.0 + len))) / len;
+}
+
+// spherePos is relative to globeTileOrigin(), as u_projection_clipping_plane is.
+// The plane's value is held at one half deep inside the visible side, since z is this value times w only at the
+// corners of a triangle. Inside a large triangle with corners both in front of and behind the camera, as the
+// clipping mask of an overscaled tile has under a pitched camera, differing values put ground close to the camera
+// beyond the far plane.
+float globeComputeClippingZ(vec3 spherePos) {
+    return (1.0 - min(dot(spherePos, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w, 0.5));
+}
+
+// spherePos is relative to globeTileOrigin().
 vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
     v_projection_tile_x = posInTile.x;
-    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
+    vec3 origin = globeTileOrigin();
+    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS) + origin * (elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
     globePosition.z = globeComputeClippingZ(elevatedPos) * globePosition.w;
@@ -135,7 +248,7 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
 // Unlike interpolateProjection, this variant of the function preserves the Z value of the final vector.
 vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation) {
     v_projection_tile_x = posInTile.x;
-    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
+    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS) + globeTileOrigin() * (elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
 
     if (u_projection_transition > 0.999) {
@@ -151,24 +264,24 @@ vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation)
 // and **replaces Z** with a custom value that clips geometry
 // on the backfacing side of the planet.
 vec4 projectTile(vec2 posInTile) {
-    return interpolateProjection(posInTile, projectToSphere(posInTile), 0.0);
+    return interpolateProjection(posInTile, projectToSphereOffset(posInTile), 0.0);
 }
 
 // A variant that supports special pole vertices.
 vec4 projectTile(vec2 posInTile, vec2 rawPos) {
-    return interpolateProjection(posInTile, projectToSphere(posInTile, rawPos), 0.0);
+    return interpolateProjection(posInTile, projectToSphereOffset(posInTile, rawPos), 0.0);
 }
 
 // Uses elevation to compute final screenspace projection
 // and **replaces Z** with a custom value that clips geometry
 // on the backfacing side of the planet.
 vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
-    return interpolateProjection(posInTile, projectToSphere(posInTile), elevation);
+    return interpolateProjection(posInTile, projectToSphereOffset(posInTile), elevation);
 }
 
 // Projects the tile coordinates+elevation while **preserving Z** value from multiplication with the projection matrix.
 // Applies pole vertices.
 vec4 projectTileFor3D(vec2 posInTile, float elevation) {
-    vec3 spherePos = projectToSphere(posInTile, posInTile);
+    vec3 spherePos = projectToSphereOffset(posInTile, posInTile);
     return interpolateProjectionFor3D(posInTile, spherePos, elevation);
 }

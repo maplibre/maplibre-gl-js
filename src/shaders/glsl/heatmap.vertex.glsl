@@ -53,8 +53,8 @@ void main(void) {
 
 #ifdef GLOBE
     vec2 angles = v_extrude * radius * u_globe_extrude_scale;
-    vec3 center_vector = projectToSphere(circle_center);
-    vec3 corner_vector = globeRotateVector(center_vector, angles);
+    vec3 center_vector = projectToSphereOffset(circle_center);
+    vec3 corner_vector = globeRotateVectorOffset(circle_center, center_vector, angles);
     gl_Position = interpolateProjection(circle_center + extrude, corner_vector, 0.0);
 #else
     gl_Position = projectTileFor3D(circle_center + extrude, get_elevation(circle_center));

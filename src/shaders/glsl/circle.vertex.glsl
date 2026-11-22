@@ -38,7 +38,7 @@ void main(void) {
 
     if (u_pitch_with_map) {
 #ifdef GLOBE
-        vec3 center_vector = projectToSphere(circle_center);
+        vec3 center_vector = projectToSphereOffset(circle_center);
 #endif
 
         // This var is only used when globe is enabled and defined.
@@ -64,7 +64,7 @@ void main(void) {
 
 #ifdef GLOBE
         vec2 angles = extrude * angle_scale;
-        vec3 corner_vector = globeRotateVector(center_vector, angles);
+        vec3 corner_vector = globeRotateVectorOffset(circle_center, center_vector, angles);
         gl_Position = interpolateProjection(corner_position, corner_vector, ele);
 #else
         gl_Position = projectTileWithElevation(corner_position, ele);

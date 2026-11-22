@@ -1,0 +1,82 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that the vertical perspective draws its tiles at zoom 20, with straight edges.",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [8.5417, 47.3769],
+  "projection": {
+    "type": "vertical-perspective"
+  },
+  "zoom": 20,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "maxzoom": 22,
+      "data": {
+        "type": "GeometryCollection",
+        "geometries": [
+          {
+            "type": "Polygon",
+            "coordinates": [[[8.54166, 47.37686], [8.54174, 47.37686], [8.54174, 47.37694], [8.54166, 47.37694], [8.54166, 47.37686]]]
+          },
+          {
+            "type": "LineString",
+            "coordinates": [[8.54164, 47.37684], [8.54176, 47.37696]]
+          },
+          {
+            "type": "Point",
+            "coordinates": [8.5417, 47.3769]
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "geojson",
+      "filter": ["==", ["geometry-type"], "Polygon"],
+      "paint": {
+        "fill-color": "lightblue",
+        "fill-outline-color": "blue"
+      }
+    },
+    {
+      "id": "line",
+      "type": "line",
+      "source": "geojson",
+      "filter": ["==", ["geometry-type"], "LineString"],
+      "paint": {
+        "line-color": "red",
+        "line-width": 4
+      }
+    },
+    {
+      "id": "circle",
+      "type": "circle",
+      "source": "geojson",
+      "filter": ["==", ["geometry-type"], "Point"],
+      "paint": {
+        "circle-radius": 20,
+        "circle-color": "green",
+        "circle-pitch-alignment": "map",
+        "circle-pitch-scale": "map"
+      }
+    }
+  ]
+}
