@@ -1,8 +1,8 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat, type LngLatLike} from '../geo/lng_lat.ts';
-import {angularCoordinatesToSurfaceVector, computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from '../geo/projection/globe_utils.ts';
-import {clamp, createVec3f64, differenceOfAnglesDegrees, lerp, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../util/util.ts';
-import {type mat4, vec3} from 'gl-matrix';
+import {computeGlobePanCenter, getGlobeRadiusPixels, getZoomAdjustment, globeDistanceOfLocationsPixels, interpolateLngLatForGlobe} from '../geo/projection/globe_utils.ts';
+import {clamp, createVec3f64, degreesToRadians, differenceOfAnglesDegrees, lerp, remapSaturate, rollPitchBearingEqual, scaleZoom, warnOnce, zoomScale} from '../util/util.ts';
+import {vec3} from 'gl-matrix';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {getCenterPoint, isPaddingEqual} from './camera_view_state.ts';
 import {applyConstrain} from './camera_constrain.ts';
@@ -60,60 +60,69 @@ const SLOWING_RADIUS_STOP = 0.5;
 /** Fraction of the zoom movement that remains once the globe has shrunk to `SLOWING_RADIUS_STOP`. */
 const SLOWING_RADIUS_SLOW_FACTOR = 0.25;
 
+/** How many steps each edge of a box is sampled in when it is fitted on the globe, which draws the edges as curves. */
+const GLOBE_FIT_EDGE_STEPS = 16;
+
+/** The globe fit stops once another pass would move the drawn box by less than this many pixels. */
+const GLOBE_FIT_TOLERANCE_PIXELS = 1e-2;
+
+/** The most passes the globe fit makes, each of which centers the drawn box and zooms it to fill the padded area. */
+const GLOBE_FIT_MAX_PASSES = 16;
+
 /**
- * Computes how much to scale the globe in order for a given point on its surface (a location) to project to a given clip space coordinate in either the X or the Y axis.
- * @param vector - Position of the queried location on the surface of the unit sphere globe.
- * @param toCenter - Position of current camera center on the surface of the unit sphere globe.
- * This is needed because zooming the globe not only changes its scale,
- * but also moves the camera closer or further away along this vector (pitch is disregarded).
- * @param projection - The globe projection matrix.
- * @param targetDimension - The dimension in which the scaled vector must match the target value in clip space.
- * @param targetValue - The target clip space value in the specified dimension to which the queried vector must project.
- * @returns How much to scale the globe.
+ * Locations along the edges of a box, from corner to corner. The globe draws parallels and meridians as curves, so
+ * how far a box reaches on the screen is set by points along its edges as well as by its corners.
  */
-function solveVectorScale(vector: vec3, toCenter: vec3, projection: mat4, targetDimension: 'x' | 'y', targetValue: number): number | null {
-    // We want to compute how much to scale the sphere in order for the input `vector` to project to `targetValue` in the given `targetDimension` (X or Y).
-    const k = targetValue;
-    const columnXorY = targetDimension === 'x' ?
-        [projection[0], projection[4], projection[8], projection[12]] : // X
-        [projection[1], projection[5], projection[9], projection[13]];  // Y
-    const columnZ = [projection[3], projection[7], projection[11], projection[15]];
-
-    const vecDotXY = vector[0] * columnXorY[0] + vector[1] * columnXorY[1] + vector[2] * columnXorY[2];
-    const vecDotZ = vector[0] * columnZ[0] + vector[1] * columnZ[1] + vector[2] * columnZ[2];
-    const toCenterDotXY = toCenter[0] * columnXorY[0] + toCenter[1] * columnXorY[1] + toCenter[2] * columnXorY[2];
-    const toCenterDotZ = toCenter[0] * columnZ[0] + toCenter[1] * columnZ[1] + toCenter[2] * columnZ[2];
-
-    // The following can be derived from writing down what happens to a vector scaled by a parameter ("V * t") when it is multiplied by a projection matrix, then solving for "t".
-    // Or rather, we derive it for a vector "V * t + (1-t) * C". Where V is `vector` and C is `toCenter`. The extra addition is needed because zooming out also moves the camera along "C".
-
-    const t = (toCenterDotXY + columnXorY[3] - k * toCenterDotZ - k * columnZ[3]) / (toCenterDotXY - vecDotXY - k * toCenterDotZ + k * vecDotZ);
-
-    if (
-        toCenterDotXY + k * vecDotZ === vecDotXY + k * toCenterDotZ ||
-        columnZ[3] * (vecDotXY - toCenterDotXY) + columnXorY[3] * (toCenterDotZ - vecDotZ) + vecDotXY * toCenterDotZ === toCenterDotXY * vecDotZ
-    ) {
-        // The computed result is invalid.
-        return null;
+function sampleBoxEdges(bounds: LngLatBounds): LngLat[] {
+    const west = bounds.getWest();
+    const east = bounds.getEast();
+    const north = Math.max(bounds.getNorth(), bounds.getSouth());
+    const south = Math.min(bounds.getNorth(), bounds.getSouth());
+    const samples: LngLat[] = [];
+    for (let step = 0; step <= GLOBE_FIT_EDGE_STEPS; step++) {
+        const lng = west + (east - west) * step / GLOBE_FIT_EDGE_STEPS;
+        const lat = south + (north - south) * step / GLOBE_FIT_EDGE_STEPS;
+        samples.push(new LngLat(lng, north), new LngLat(lng, south), new LngLat(west, lat), new LngLat(east, lat));
     }
-    return t;
+    return samples;
 }
 
-/**
- * Returns `newValue` if it is:
- *
- * - not null AND
- * - not negative AND
- * - smaller than `newValue`,
- *
- * ...otherwise returns `oldValue`.
- */
-function getLesserNonNegativeNonNull(oldValue: number, newValue: number): number {
-    if (newValue !== null && newValue >= 0 && newValue < oldValue) {
-        return newValue;
-    } else {
-        return oldValue;
+/** The screen rectangle a camera draws locations in. */
+function getDrawnExtent(view: CameraViewState, context: CameraContext, locations: LngLat[]): {min: Point; max: Point} {
+    const projectedCamera = projectCamera(view, context);
+    const cameraMath = getCameraMath(projectedCamera);
+    const min = new Point(Infinity, Infinity);
+    const max = new Point(-Infinity, -Infinity);
+    for (const location of locations) {
+        const point = cameraMath.locationToScreenPoint(projectedCamera, context.worldCoordinateHelper, location);
+        min.x = Math.min(min.x, point.x);
+        min.y = Math.min(min.y, point.y);
+        max.x = Math.max(max.x, point.x);
+        max.y = Math.max(max.y, point.y);
     }
+    return {min, max};
+}
+
+/** The location a camera draws at a screen point. */
+function getDrawnLocation(view: CameraViewState, context: CameraContext, point: Point): LngLat {
+    const projectedCamera = projectCamera(view, context);
+    return getCameraMath(projectedCamera).screenPointToLocation(projectedCamera, context.worldCoordinateHelper, point);
+}
+
+/** The camera that draws at `to` the location a camera draws at `from`. */
+function moveDrawnPoint(view: CameraViewState, context: CameraContext, from: Point, to: Point): CameraViewState {
+    return getCameraSolver(context).setLocationAtPoint(view, context, getDrawnLocation(view, context, from), to);
+}
+
+/** The camera zoomed to `zoom` around a screen point, which goes on drawing the location it drew there. */
+function zoomAroundPoint(view: CameraViewState, context: CameraContext, point: Point, zoom: number): CameraViewState {
+    const location = getDrawnLocation(view, context, point);
+    return getCameraSolver(context).setLocationAtPoint(setZoom(view, context, zoom), context, location, point);
+}
+
+/** How many times further an extent can reach from a point before it reaches `room` pixels away, or infinity if it does not reach out from it. */
+function getRoomScale(room: number, extent: number): number {
+    return extent > 0 ? room / extent : Infinity;
 }
 
 /** @internal The {@link CameraMotions} of a camera drawn as a globe, which turns the planet. */
@@ -240,76 +249,56 @@ export class VerticalPerspectiveCameraMotions implements CameraMotions {
         return versorSetLocationAtPoint(view, context, preZoomAroundLoc, anchor, deltas.panDelta);
     }
 
-    /** Takes the center and bearing mercator fits the bounds with, and finds the zoom that fits them on the globe. */
+    /**
+     * Fits the bounds as the globe draws them, starting from the camera mercator fits them with. The globe bends the
+     * edges of the box and scales it unevenly as it zooms, so each pass moves the middle of the drawn box to the middle
+     * of the area inside the padding, then zooms around that point until the box fills the area. Map padding and fit
+     * padding take the same path: map padding moves the point the camera looks at, and both narrow the area.
+     */
     cameraForBoxAndBearing(options: CameraForBoundsOptions, fitPadding: PaddingOptions, mapPadding: PaddingOptions, bounds: LngLatBounds, bearing: number, view: CameraViewState, context: CameraContext): CameraForBoxAndBearingResult {
         const result = this._mercator.cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, view, context);
         if (!result) {
             return undefined;
         }
 
-        // Get clip space bounds including fitPadding
-        const {width, height} = view;
-        const xLeft = (fitPadding.left) / width * 2.0 - 1.0;
-        const xRight = (width - fitPadding.right) / width * 2.0 - 1.0;
-        const yTop = (fitPadding.top) / height * -2.0 + 1.0;
-        const yBottom = (height - fitPadding.bottom) / height * -2.0 + 1.0;
+        const left = mapPadding.left + fitPadding.left;
+        const right = view.width - mapPadding.right - fitPadding.right;
+        const top = mapPadding.top + fitPadding.top;
+        const bottom = view.height - mapPadding.bottom - fitPadding.bottom;
+        const target = new Point((left + right) / 2, (top + bottom) / 2).add(Point.convert(options.offset).rotate(degreesToRadians(-bearing)));
+        const samples = sampleBoxEdges(bounds);
 
-        // Get camera bounds
-        const flipEastWest = differenceOfAnglesDegrees(bounds.getWest(), bounds.getEast()) < 0;
-        const lngWest = flipEastWest ? bounds.getEast() : bounds.getWest();
-        const lngEast = flipEastWest ? bounds.getWest() : bounds.getEast();
-
-        const latNorth = Math.max(bounds.getNorth(), bounds.getSouth()); // "getNorth" doesn't always return north...
-        const latSouth = Math.min(bounds.getNorth(), bounds.getSouth());
-
-        // Additional vectors will be tested for the rectangle midpoints
-        const lngMid = lngWest + differenceOfAnglesDegrees(lngWest, lngEast) * 0.5;
-        const latMid = latNorth + differenceOfAnglesDegrees(latNorth, latSouth) * 0.5;
-
-        // Obtain a globe projection matrix that does not include pitch (unsupported)
         let fitted = setCenter(view, context, result.center);
         fitted = setPadding(fitted, context, mapPadding);
         fitted = setBearing(fitted, result.bearing);
         fitted = setPitch(fitted, 0);
         fitted = setRoll(fitted, 0);
         fitted = setZoom(fitted, context, result.zoom);
-        const matrix = projectCamera(fitted, context).modelViewProjectionMatrix;
 
-        // Vectors to test - the bounds' corners and edge midpoints
-        const testVectors = [
-            angularCoordinatesToSurfaceVector(bounds.getNorthWest()),
-            angularCoordinatesToSurfaceVector(bounds.getNorthEast()),
-            angularCoordinatesToSurfaceVector(bounds.getSouthWest()),
-            angularCoordinatesToSurfaceVector(bounds.getSouthEast()),
-            // Also test edge midpoints
-            angularCoordinatesToSurfaceVector(new LngLat(lngEast, latMid)),
-            angularCoordinatesToSurfaceVector(new LngLat(lngWest, latMid)),
-            angularCoordinatesToSurfaceVector(new LngLat(lngMid, latNorth)),
-            angularCoordinatesToSurfaceVector(new LngLat(lngMid, latSouth))
-        ];
-        const vecToCenter = angularCoordinatesToSurfaceVector(result.center);
+        for (let pass = 0; pass < GLOBE_FIT_MAX_PASSES; pass++) {
+            const drawn = getDrawnExtent(fitted, context, samples);
+            const middle = drawn.min.add(drawn.max).div(2);
+            fitted = moveDrawnPoint(fitted, context, middle, target);
 
-        // Test each vector, measure how much to scale down the globe to satisfy all tested points that they are inside clip space.
-        let smallestNeededScale = Number.POSITIVE_INFINITY;
-        for (const vec of testVectors) {
-            if (xLeft < 0)
-                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'x', xLeft));
-            if (xRight > 0)
-                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'x', xRight));
-            if (yTop > 0)
-                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'y', yTop));
-            if (yBottom < 0)
-                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 'y', yBottom));
+            const centered = getDrawnExtent(fitted, context, samples);
+            const scale = Math.min(
+                getRoomScale(target.x - left, target.x - centered.min.x),
+                getRoomScale(right - target.x, centered.max.x - target.x),
+                getRoomScale(target.y - top, target.y - centered.min.y),
+                getRoomScale(bottom - target.y, centered.max.y - target.y));
+            const zoom = Math.min(fitted.zoom + scaleZoom(scale), options.maxZoom);
+            if (!Number.isFinite(zoom)) {
+                warnBoundsCannotFit();
+                return undefined;
+            }
+
+            const size = Math.max(centered.max.x - centered.min.x, centered.max.y - centered.min.y);
+            const growth = Math.abs(zoomScale(zoom - fitted.zoom) - 1) * size;
+            fitted = zoomAroundPoint(fitted, context, target, zoom);
+            if (middle.dist(target) < GLOBE_FIT_TOLERANCE_PIXELS && growth < GLOBE_FIT_TOLERANCE_PIXELS) break;
         }
 
-        if (!Number.isFinite(smallestNeededScale) || smallestNeededScale === 0) {
-            warnBoundsCannotFit();
-            return undefined;
-        }
-
-        // Compute target zoom from the obtained scale.
-        result.zoom = Math.min(fitted.zoom + scaleZoom(smallestNeededScale), options.maxZoom);
-        return result;
+        return {center: fitted.center, zoom: fitted.zoom, bearing: result.bearing};
     }
 
     /**

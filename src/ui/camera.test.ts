@@ -4074,8 +4074,8 @@ describe('fitBounds globe projection', () => {
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
         camera.fitBounds(bb, {duration: 0});
 
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(2.496);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.232});
+        expect(fixedNum(camera.getZoom(), 3)).toBe(2.503);
     });
 
     test('padding number', () => {
@@ -4083,8 +4083,8 @@ describe('fitBounds globe projection', () => {
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
         camera.fitBounds(bb, {padding: 15, duration: 0});
 
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.7171});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(2.399);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -100.5, lat: 34.2643});
+        expect(fixedNum(camera.getZoom(), 3)).toBe(2.405);
     });
 
     test('padding object', () => {
@@ -4092,7 +4092,7 @@ describe('fitBounds globe projection', () => {
         const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
         camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
 
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -96.5558, lat: 32.0833});
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -95.3421, lat: 31.5392});
     });
 
     test('centers the bounds inside an uneven padding', () => {
@@ -4158,8 +4158,8 @@ describe('fitScreenCoordinates globe projection', () => {
         const bearing = 225;
         camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
 
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8987});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.454);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8366});
+        expect(fixedNum(camera.getZoom(), 3)).toBe(4.462);
         expect(camera.getBearing()).toBe(-135);
     });
 
@@ -4170,8 +4170,8 @@ describe('fitScreenCoordinates globe projection', () => {
         const bearing = 0;
         camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
 
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8987});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.936);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8677});
+        expect(fixedNum(camera.getZoom(), 3)).toBe(4.934);
         expect(camera.getBearing()).toBeCloseTo(0);
     });
 
@@ -4182,8 +4182,8 @@ describe('fitScreenCoordinates globe projection', () => {
         const bearing = 0;
         camera.fitScreenCoordinates(p0, p1, bearing, {duration: 0});
 
-        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8987});
-        expect(fixedNum(camera.getZoom(), 3)).toBe(4.936);
+        expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -5.9948, lat: 5.8677});
+        expect(fixedNum(camera.getZoom(), 3)).toBe(4.934);
         expect(camera.getBearing()).toBeCloseTo(0);
     });
 });
