@@ -26,6 +26,7 @@ import type {MapControlsDeltas} from '../camera/camera_motions.ts';
 import type {CameraViewState} from '../camera/camera_view_state.ts';
 import type {JumpToOptions} from '../../dist/maplibre-gl';
 import type {CameraOptions, PointLike} from '../camera/camera_types.ts';
+import type {PaddingOptions} from '../geo/edge_insets.ts';
 
 beforeEach(() => {
     setMatchMedia();
@@ -92,6 +93,33 @@ async function simulateAllAnimationFrames(stub: ReturnType<typeof vi.spyOn>, cam
         stub.mockImplementation(() => t);
         queue.run();
     }
+}
+
+/**
+ * How far inside the area within `padding` the edges of a lng/lat box are drawn, in pixels, measured along each edge
+ * often enough to catch where a globe bends it furthest out.
+ */
+function getBoundsInsetsWithinPadding(camera: Camera, bounds: [LngLatLike, LngLatLike], padding: Required<PaddingOptions>): Required<PaddingOptions> {
+    const box = LngLatBounds.convert(bounds);
+    const projectedCamera = camera.projectedCamera;
+    const cameraMath = getCameraMath(projectedCamera);
+    let left = Infinity;
+    let right = -Infinity;
+    let top = Infinity;
+    let bottom = -Infinity;
+    for (let step = 0; step <= 64; step++) {
+        const lng = box.getWest() + (box.getEast() - box.getWest()) * step / 64;
+        const lat = box.getSouth() + (box.getNorth() - box.getSouth()) * step / 64;
+        for (const location of [new LngLat(lng, box.getNorth()), new LngLat(lng, box.getSouth()), new LngLat(box.getWest(), lat), new LngLat(box.getEast(), lat)]) {
+            const point = cameraMath.locationToScreenPoint(projectedCamera, camera.context.worldCoordinateHelper, location);
+            left = Math.min(left, point.x);
+            right = Math.max(right, point.x);
+            top = Math.min(top, point.y);
+            bottom = Math.max(bottom, point.y);
+        }
+    }
+    const {width, height} = camera.renderedState;
+    return {top: top - padding.top, right: width - padding.right - right, bottom: height - padding.bottom - bottom, left: left - padding.left};
 }
 
 describe('calculateCameraOptionsFromCameraLngLatAltRotation', () => {
@@ -4065,6 +4093,30 @@ describe('fitBounds globe projection', () => {
         camera.fitBounds(bb, {padding: {top: 10, right: 75, bottom: 50, left: 25}, duration: 0});
 
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -96.5558, lat: 32.0833});
+    });
+
+    test('centers the bounds inside an uneven padding', () => {
+        const {camera} = createCamera(null, true);
+        const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+        const padding = {top: 20, right: 20, bottom: 100, left: 200};
+        camera.fitBounds(bb, {padding, duration: 0});
+
+        const insets = getBoundsInsetsWithinPadding(camera, bb, padding);
+        expect(insets.left).toBeCloseTo(insets.right, 0);
+        expect(insets.top).toBeCloseTo(insets.bottom, 0);
+        expect(Math.min(insets.left, insets.top)).toBeCloseTo(0, 0);
+    });
+
+    test('fits the bounds inside the padding it moves the map to', () => {
+        const {camera} = createCamera(null, true);
+        const bb = [[-133, 16], [-68, 50]] as [LngLatLike, LngLatLike];
+        const padding = {top: 20, right: 20, bottom: 100, left: 200};
+        camera.fitBounds(bb, {padding, absolutePadding: true, duration: 0});
+
+        const insets = getBoundsInsetsWithinPadding(camera, bb, padding);
+        expect(insets.left).toBeCloseTo(insets.right, 0);
+        expect(insets.top).toBeCloseTo(insets.bottom, 0);
+        expect(Math.min(insets.left, insets.top)).toBeCloseTo(0, 0);
     });
 
     test('padding does not get propagated to transform.padding', () => {
