@@ -27,7 +27,7 @@ import type {VertexBuffer} from '../../webgl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
-import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const VERTEX_MIN_VALUE = -32768; // -(2^15)
 
@@ -124,8 +124,11 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
                 sortKey
             };
 
-            bucketFeatures.push(bucketFeature);
-
+            if (sortFeaturesByKey) {
+                bucketFeatures.push(bucketFeature);
+            } else {
+                this.addBucketFeature(bucketFeature, feature, options, canonical, granularity);
+            }
         }
 
         if (sortFeaturesByKey) {
@@ -133,12 +136,21 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         }
 
         for (const bucketFeature of bucketFeatures) {
-            const {geometry, index, sourceLayerIndex} = bucketFeature;
-            const feature = features[index].feature;
-
-            this.addFeature(bucketFeature, geometry, index, canonical, granularity);
-            options.featureIndex.insert(feature, geometry, index, sourceLayerIndex, this.index);
+            this.addBucketFeature(bucketFeature, features[bucketFeature.index].feature, options, canonical, granularity);
         }
+    }
+
+    /**
+     * Adds a feature to the bucket and to the feature index.
+     *
+     * Without a sort key, {@link populate} calls it as soon as a feature is read, so that its geometry can be
+     * garbage collected without waiting for the rest of the layer.
+     */
+    private addBucketFeature(bucketFeature: BucketFeature, feature: VectorTileFeatureLike, options: PopulateParameters, canonical: CanonicalTileID, granularity: CircleGranularity): void {
+        const {geometry, index, sourceLayerIndex} = bucketFeature;
+
+        this.addFeature(bucketFeature, geometry, index, canonical, granularity);
+        options.featureIndex.insert(feature, geometry, index, sourceLayerIndex, this.index);
     }
 
     update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}): void {
