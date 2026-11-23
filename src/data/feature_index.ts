@@ -7,7 +7,7 @@ import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
 import {PbfReader} from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
-import {mapObject, extend} from '../util/util.ts';
+import {mapObject} from '../util/util.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {polygonIntersectsBox} from '../util/intersection_tests.ts';
@@ -257,7 +257,7 @@ export class FeatureIndex {
                 featureState = sourceFeatureState.getState(styleLayer.sourceLayer || GEOJSON_TILE_LAYER_NAME, id);
             }
 
-            const serializedLayer = extend({}, serializedLayers[layerID]);
+            const serializedLayer = {...serializedLayers[layerID]};
 
             serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, feature, featureState, availableImages);
             serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, feature, featureState, availableImages);

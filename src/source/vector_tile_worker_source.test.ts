@@ -12,7 +12,7 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {OverscaledTileID, CanonicalTileID} from '../tile/tile_id.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 
-import type {TileParameters, WorkerTileParameters, WorkerTileResult, WorkerTileWithData} from './worker_source.ts';
+import type {TileParameters, WorkerTileParameters, WorkerTileWithData} from './worker_source.ts';
 import type {IActor} from '../util/actor.ts';
 
 /** Reads a tile fixture into an `ArrayBuffer` of the test's realm, which the fake server accepts as a response body. */
@@ -212,7 +212,7 @@ describe('vector tile worker source', () => {
             .spyOn(WorkerTile.prototype, 'parse')
             .mockImplementation(async () => {
                 await sleep(20);
-                return {} as WorkerTileResult;
+                return {} as WorkerTileWithData;
             });
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);
@@ -241,7 +241,7 @@ describe('vector tile worker source', () => {
             .spyOn(WorkerTile.prototype, 'parse')
             .mockImplementation(async () => {
                 await sleep(20);
-                return {} as WorkerTileResult;
+                return {} as WorkerTileWithData;
             });
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/pbf'}, new ArrayBuffer(0) as any);

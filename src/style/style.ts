@@ -11,7 +11,7 @@ import {GlyphManager} from '../render/glyph_manager.ts';
 import {Light} from './light.ts';
 import {Sky} from './sky.ts';
 import {LineAtlas} from '../render/line_atlas.ts';
-import {clone, ensureError, extend, deepEqual, filterObject, mapObject} from '../util/util.ts';
+import {clone, ensureError, deepEqual, filterObject, mapObject} from '../util/util.ts';
 import {coerceSpriteToArray} from '../util/style.ts';
 import {getJSON, getReferrer} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
@@ -1545,7 +1545,7 @@ export class Style extends Evented<MapEventType> {
     }
 
     getTransition(): {duration: number; delay: number} & TransitionSpecification {
-        return extend({duration: 300, delay: 0}, this.stylesheet?.transition);
+        return {duration: 300, delay: 0, ...this.stylesheet?.transition};
     }
 
     serialize(): StyleSpecification | undefined {
@@ -1772,10 +1772,11 @@ export class Style extends Evented<MapEventType> {
 
         const parameters = {
             now: now(),
-            transition: extend({
+            transition: {
                 duration: 300,
-                delay: 0
-            }, this.stylesheet.transition)
+                delay: 0,
+                ...this.stylesheet.transition,
+            }
         };
 
         this.light.setLight(lightOptions, options);
@@ -1828,10 +1829,11 @@ export class Style extends Evented<MapEventType> {
 
         const parameters = {
             now: now(),
-            transition: extend({
+            transition: {
                 duration: 300,
-                delay: 0
-            }, this.stylesheet.transition)
+                delay: 0,
+                ...this.stylesheet.transition,
+            }
         };
 
         if (!this.sky.setSky(skyOptions, options)) return;

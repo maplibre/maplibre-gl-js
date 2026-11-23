@@ -15,7 +15,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 import type {GlyphMap} from '../style/style_glyph.ts';
 import type {
     WorkerTileParameters,
-    WorkerTileResult,
+    WorkerTileWithData,
 } from './worker_source.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileLike} from '@maplibre/vt-pbf';
@@ -60,7 +60,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
+    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileWithData> {
         this.data = data;
 
         this.collisionBoxArray = new CollisionBoxArray();

@@ -1,12 +1,11 @@
 import {describe, test, expect} from 'vitest';
 import {createStyleLayer} from '../create_style_layer.ts';
-import {extend} from '../../util/util.ts';
 
 import type {LineStyleLayer} from './line_style_layer.ts';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {
-        return extend({
+        return {
             type: 'line',
             source: 'line',
             id: 'line',
@@ -22,8 +21,9 @@ describe('LineStyleLayer', () => {
                     1,
                     'red'
                 ]
-            }
-        }, layer);
+            },
+            ...layer,
+        };
     }
 
     test('updating with valid line-gradient updates this.gradientVersion', () => {

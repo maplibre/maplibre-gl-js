@@ -5,7 +5,7 @@ import {type ExpiryData, getArrayBuffer} from '../util/ajax.ts';
 import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
 import {BoundedLRUCache} from '../tile/tile_cache.ts';
-import {ensureError, extend} from '../util/util.ts';
+import {ensureError} from '../util/util.ts';
 import {RequestPerformance} from '../util/request_performance.ts';
 import {VectorTileOverzoomed, sliceVectorTileLayer} from './vector_tile_overzoomed.ts';
 import {MLTVectorTile} from './vector_tile_mlt.ts';
@@ -21,7 +21,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
-    rawData: ArrayBufferLike;
+    rawData: ArrayBuffer;
 };
 
 /**
@@ -124,7 +124,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     _getEtagUnmodifiedResult(response: ExpiryData, timing: RequestPerformance): WorkerTileResult {
         const cacheControl = this._getExpiryData(response);
         const resourceTiming = this._finishRequestTiming(timing);
-        return extend({etagUnmodified: true as const}, cacheControl, resourceTiming);
+        return {etagUnmodified: true as const, ...cacheControl, ...resourceTiming};
     }
 
     async _parseWorkerTile(workerTile: WorkerTile, params: WorkerTileParameters): Promise<WorkerTileResult> {
@@ -140,13 +140,13 @@ export class VectorTileWorkerSource implements WorkerSource {
             // Overzoomed tiles are always re-encoded to MVT protobuf by _getOverzoomTile
             const encoding = params.overzoomParameters ? 'mvt' : params.encoding;
             // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
-            result = extend({rawTileData: rawData.slice(0), encoding}, result, cacheControl, resourceTiming);
+            result = {rawTileData: rawData.slice(0), encoding, ...result, ...cacheControl, ...resourceTiming};
             this.tileState.removeParsing(workerTile.uid);
         } else if (workerTile.etag) {
             // Reload: return the stored etag since the main thread overwrites the tile's etag with every
             // result (#3309). cacheControl/expires are deliberately not re-sent: the main thread anchors
             // max-age to the time it receives them, and the tile's expiration already survives a reload.
-            result = extend(result, {etag: workerTile.etag});
+            result = {...result, etag: workerTile.etag};
         }
 
         return result;
@@ -165,7 +165,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         return new RequestPerformance(params.request.url);
     }
 
-    _finishRequestTiming(timing: RequestPerformance): {resourceTiming?: any} {
+    _finishRequestTiming(timing: RequestPerformance): {resourceTiming?: PerformanceResourceTiming[]} {
         const timingData = timing?.finish();
         if (!timingData) return {};
 
@@ -201,7 +201,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
         const overzoomedVectorTileResult = {
             vectorTile: overzoomedVectorTile,
-            rawData: fromVectorTileJs(overzoomedVectorTile).buffer
+            rawData: fromVectorTileJs(overzoomedVectorTile).buffer as ArrayBuffer
         };
         this.overzoomedTileResultCache.set(cacheKey, overzoomedVectorTileResult);
 

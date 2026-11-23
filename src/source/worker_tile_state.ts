@@ -2,9 +2,9 @@ import type {ExpiryData} from '../util/ajax.ts';
 import type {WorkerTile} from './worker_tile.ts';
 
 export type ParsingState = {
-    rawData: ArrayBufferLike;
+    rawData: ArrayBuffer;
     cacheControl?: ExpiryData;
-    resourceTiming?: any;
+    resourceTiming?: {resourceTiming?: PerformanceResourceTiming[]};
 };
 
 export class WorkerTileState {

@@ -1,6 +1,6 @@
 import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
-import {ensureError, extend, warnOnce, type ExactlyOne} from '../util/util.ts';
+import {ensureError, warnOnce, type ExactlyOne} from '../util/util.ts';
 import {EXTENT} from '../data/extent.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
@@ -215,7 +215,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         this.setEventedParent(eventedParent);
 
         this._data = typeof options.data === 'string' ? {url: options.data} : {geojson: options.data};
-        this._options = extend({}, options);
+        this._options = {...options};
 
         this._collectResourceTiming = options.collectResourceTiming;
 
@@ -232,7 +232,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         // so that it can load/parse/index the geojson data
         // extending with `options.workerOptions` helps to make it easy for
         // third-party sources to hack/reuse GeoJSONSource.
-        this.workerOptions = extend({
+        this.workerOptions = {
             source: this.id,
             geojsonVtOptions: {
                 buffer: this._pixelsToTileUnits(options.buffer !== undefined ? options.buffer : 128),
@@ -252,9 +252,10 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
                     generateId: options.generateId || false
                 },
             },
-            clusterProperties: options.clusterProperties,
-            filter: options.filter
-        }, options.workerOptions);
+            clusterProperties: options.clusterProperties as GeoJSONWorkerOptions['clusterProperties'],
+            filter: options.filter,
+            ...options.workerOptions,
+        };
     }
 
     /** The `promoteId` property name, when it is a plain string. */
@@ -471,7 +472,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
      * Create the parameters object that will be sent to the worker and used to load GeoJSON.
      */
     private async _getLoadGeoJSONParameters(update: GeoJSONWorkerUpdate): Promise<LoadGeoJSONParameters> {
-        const params: LoadGeoJSONParameters = extend({type: this.type, source: this.id}, this.workerOptions);
+        const params: LoadGeoJSONParameters = {type: this.type, source: this.id, ...this.workerOptions};
         const crs = this._getCRSParameters();
         if (crs) params.crs = crs;
 
@@ -573,7 +574,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         const resourceTiming = timingData.slice(0);
         if (!resourceTiming?.length) return;
 
-        extend(eventData, {resourceTiming});
+        eventData.resourceTiming = resourceTiming;
     }
 
     /**
@@ -714,15 +715,13 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
     }
 
     serialize(): GeoJSONSourceSpecification {
-        return extend({}, this._options, {
-            type: this.type,
+        return {...this._options, type: this.type,
             data: this._data.updateable ?
                 {
                     type: 'FeatureCollection',
                     features: Array.from(this._data.updateable.values())
                 } :
-                this._data.url || this._data.geojson
-        });
+                this._data.url || this._data.geojson};
     }
 
     hasTransition() {

@@ -1,4 +1,3 @@
-import {extend} from '../util/util.ts';
 
 import type {Tile} from '../tile/tile.ts';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
@@ -45,8 +44,7 @@ export class SourceFeatureState {
     updateState(sourceLayer: string, featureId: number | string, newState: any): void {
         const feature = String(featureId);
         this.stateChanges[sourceLayer] ||= {};
-        this.stateChanges[sourceLayer][feature] ||= {};
-        extend(this.stateChanges[sourceLayer][feature], newState);
+        this.stateChanges[sourceLayer][feature] = {...this.stateChanges[sourceLayer][feature], ...newState};
 
         if (this.deletedStates[sourceLayer] === null) {
             this.deletedStates[sourceLayer] = {};
@@ -109,7 +107,7 @@ export class SourceFeatureState {
         const base = this.state[sourceLayer] || {};
         const changes = this.stateChanges[sourceLayer] || {};
 
-        const reconciledState = extend({}, base[feature], changes[feature]);
+        const reconciledState = {...base[feature], ...changes[feature]};
 
         //return empty object if the whole source layer is awaiting deletion
         if (this.deletedStates[sourceLayer] === null) return {};
@@ -138,8 +136,7 @@ export class SourceFeatureState {
             this.state[sourceLayer] ||= {};
             featuresChangedMap[sourceLayer] ||= {};
             for (const feature in this.stateChanges[sourceLayer]) {
-                this.state[sourceLayer][feature] ||= {};
-                extend(this.state[sourceLayer][feature], this.stateChanges[sourceLayer][feature]);
+                this.state[sourceLayer][feature] = {...this.state[sourceLayer][feature], ...this.stateChanges[sourceLayer][feature]};
                 featuresChangedMap[sourceLayer][feature] = this.state[sourceLayer][feature];
             }
         }

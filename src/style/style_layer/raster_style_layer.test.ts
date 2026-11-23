@@ -1,15 +1,15 @@
 import {describe, test, expect} from 'vitest';
 import {createStyleLayer} from '../create_style_layer.ts';
-import {extend} from '../../util/util.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 function createLayerSpec(properties?): LayerSpecification {
-    return extend({
+    return {
         type: 'raster',
         id: 'raster',
-        source: 'rasterSource'
-    }, properties);
+        source: 'rasterSource',
+        ...properties,
+    };
 }
 
 describe('RasterStyleLayer correctly handles "resampling" and "raster-resampling" paint properties', () => {

@@ -2,16 +2,16 @@ import {describe, test, expect, vi} from 'vitest';
 import {ColorReliefStyleLayer} from './color_relief_style_layer.ts';
 import {Color, type LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {createStyleLayer} from '../create_style_layer.ts';
-import {extend} from '../../util/util.ts';
 
 import type {EvaluationParameters} from '../evaluation_parameters.ts';
 
 function createColorReliefLayerSpec(properties?: {paint: {'color-relief-opacity'?: number; 'color-relief-color'?: any[]}}): LayerSpecification {
-    return extend({
+    return {
         type: 'color-relief',
         id: 'colorRelief',
-        source: 'colorReliefSource'
-    } as LayerSpecification, properties);
+        source: 'colorReliefSource',
+        ...properties,
+    } as LayerSpecification;
 }
 
 describe('ColorReliefStyleLayer', () => {
