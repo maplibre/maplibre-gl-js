@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {beforeEach, describe, expect, test} from 'vitest';
 import {PACKED_HIDDEN_OPACITY, PACKED_VISIBLE_OPACITY, Placement, RetainedQueryData} from './placement.ts';
 import {createTestCamera} from '../util/test/util.ts';
@@ -6,12 +8,19 @@ import {CollisionBoxArray, SymbolInstanceArray} from '../data/array_types.g.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {FeatureIndex} from '../data/feature_index.ts';
 import {CrossTileSymbolIndex} from './cross_tile_symbol_index.ts';
-import {createSymbolTile} from '../../test/unit/lib/create_symbol_layer.ts';
-import {loadVectorTile} from '../../test/unit/lib/tile.ts';
+import {createGlyphMap, createSymbolTile} from '../../test/unit/lib/create_symbol_layer.ts';
+import {createPopulateOptions, loadVectorTile} from '../../test/unit/lib/tile.ts';
+import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import {Tile} from '../tile/tile.ts';
+import {DictionaryCoder} from '../util/dictionary_coder.ts';
+import {performSymbolLayout} from './symbol_layout.ts';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings.ts';
 
-import type {IndexedFeature} from '../data/bucket.ts';
-import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import type {BucketParameters, IndexedFeature} from '../data/bucket.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import type {BucketPart} from './placement.ts';
+import type {TestCameraOptions} from '../util/test/util.ts';
+import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const collisionBoxArray = new CollisionBoxArray();
 
@@ -29,6 +38,63 @@ function setupTwoTilesSharingOneLabel() {
     const layer = buckets[0].layers[0];
     new CrossTileSymbolIndex().addLayer(layer, tiles, 0);
     return {tiles, buckets, layer};
+}
+
+/**
+ * A tile holding the fixture's Rochester label, which lies just north-west of the center of the tile, drawn by a symbol
+ * layer with `filter` that always shows it unless the filter hides it. The tile keeps its data, the way a loaded tile
+ * does, so that placement can read the label's feature back.
+ */
+function createFilteredSymbolTile(filter: FilterSpecification) {
+    const tileData = fs.readFileSync(path.resolve(__dirname, '../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
+    const vectorTile = loadVectorTile();
+    const sourceLayerIndex = new DictionaryCoder(Object.keys(vectorTile.layers).sort()).encode('place_label');
+
+    const layer = new SymbolStyleLayer({
+        id: 'test',
+        type: 'symbol',
+        source: 'source',
+        'source-layer': 'place_label',
+        filter,
+        layout: {'text-font': ['Test'], 'text-field': 'abcde', 'text-allow-overlap': true}
+    }, {});
+    layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);
+
+    const bucket = new SymbolBucket({
+        overscaling: 1,
+        zoom: 0,
+        collisionBoxArray,
+        layers: [layer],
+        index: 0,
+        sourceLayerIndex
+    } as BucketParameters<SymbolStyleLayer>);
+    const feature = {feature: vectorTile.layers.place_label.feature(10), index: 10, sourceLayerIndex} as unknown as IndexedFeature;
+    bucket.populate([feature], createPopulateOptions([]), undefined);
+    const glyphMap = createGlyphMap();
+    performSymbolLayout({
+        bucket,
+        glyphMap,
+        glyphPositions: glyphMap,
+        subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
+    } as any);
+
+    const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
+    const tile = new Tile(tileID, 512);
+    tile.latestFeatureIndex = new FeatureIndex(tileID);
+    tile.latestFeatureIndex.rawTileData = tileData.buffer.slice(tileData.byteOffset, tileData.byteOffset + tileData.byteLength);
+    tile.buckets = {test: bucket};
+    tile.collisionBoxArray = collisionBoxArray;
+    new CrossTileSymbolIndex().addLayer(layer, [tile], 0);
+    return {tile, layer, bucket};
+}
+
+/** Whether placing the tile's symbols under a camera with `options` shows the tile's one label. */
+function isLabelPlaced(tile: Tile, layer: SymbolStyleLayer, bucket: SymbolBucket, options: TestCameraOptions): boolean {
+    const placement = new Placement(createTestCamera({width: 512, height: 512, ...options}).projectedCamera, undefined, 0, true);
+    const parts: BucketPart[] = [];
+    placement.getBucketParts(parts, layer, tile, false);
+    for (const part of parts) placement.placeLayerBucketPart(part, {}, false);
+    return placement.placements[bucket.symbolInstances.get(0).crossTileID].text;
 }
 
 /** Written over a packed opacity, so that finding it again means the buffer was not rewritten. */
@@ -64,6 +130,7 @@ describe('placement', () => {
         );
         const bucket = {
             bucketInstanceId,
+            layers: [layer],
             symbolInstances: new SymbolInstanceArray(),
             collisionArrays: {0: new CollisionBoxArray()},
         };
@@ -80,6 +147,21 @@ describe('placement', () => {
                 } as any
             }, {}, false);
         }).not.toThrow();
+    });
+
+    test('shows a symbol only while its filter holds for the camera pitch and the symbol feature', () => {
+        const {tile, layer, bucket} = createFilteredSymbolTile(['all', ['==', ['get', 'name'], 'Rochester'], ['>', ['pitch'], 30]]);
+
+        expect(isLabelPlaced(tile, layer, bucket, {pitch: 0})).toBe(false);
+        expect(isLabelPlaced(tile, layer, bucket, {pitch: 45})).toBe(true);
+    });
+
+    test('measures distance-from-center up the screen in units of its height', () => {
+        // The label sits 245 pixels from the top of a 512 pixel high screen: 0.5 - 245 / 512 = 0.021 above the middle.
+        const {tile, layer, bucket} = createFilteredSymbolTile(['all', ['>', ['distance-from-center'], 0.01], ['<', ['distance-from-center'], 0.03]]);
+
+        expect(isLabelPlaced(tile, layer, bucket, {bearing: 0})).toBe(true);
+        expect(isLabelPlaced(tile, layer, bucket, {bearing: 180})).toBe(false);
     });
 
     test('the first bucket draws the shared label and the second hides it', () => {

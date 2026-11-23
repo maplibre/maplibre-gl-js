@@ -3342,6 +3342,15 @@ describe('Style.setFilter', () => {
         expect(style.getLayer('symbol').serialize()['filter']).toEqual(['==', 'id', 0]);
     });
 
+    test('accepts a filter that reads the camera on a symbol layer', async () => {
+        const style = createStyle();
+        await style.once('style.load');
+
+        style.setFilter('symbol', ['<', ['distance-from-center'], 1]);
+
+        expect(style.getFilter('symbol')).toEqual(['<', ['distance-from-center'], 1]);
+    });
+
     test('fires an error if layer not found', async () => {
         const style = createStyle();
 
