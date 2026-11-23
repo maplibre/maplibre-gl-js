@@ -7,7 +7,8 @@ import {EvaluationParameters} from '../evaluation_parameters.ts';
 import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty, type PossiblyEvaluatedPropertyValue} from '../properties.ts';
 import {isZoomExpression, Step, type Feature, type FeatureState, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
 
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {AllPaintProperties, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {StyleSetterOptions} from '../style.ts';
 import type {Bucket, BucketParameters} from '../../data/bucket.ts';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g.ts';
 
@@ -41,6 +42,9 @@ export class LineStyleLayer extends StyleLayer {
     gradientVersion: number;
     stepInterpolant: boolean;
 
+    /** What {@link offsetsLine} returned when `line-offset` was last set. */
+    _offsetsLine: boolean;
+
     _transitionablePaint: Transitionable<LinePaintProps>;
     _transitioningPaint: Transitioning<LinePaintProps>;
     paint: PossiblyEvaluated<LinePaintProps, LinePaintPropsPossiblyEvaluated>;
@@ -69,6 +73,36 @@ export class LineStyleLayer extends StyleLayer {
 
     gradientExpression(): StylePropertyExpression {
         return this._transitionablePaint._values['line-gradient'].value.expression;
+    }
+
+    /**
+     * Whether `line-offset` moves the line at any zoom or for any feature.
+     *
+     * A tile is drawn at zoom levels other than its own, so an offset that depends on zoom counts if it is non-zero
+     * at any zoom. Between its stops it interpolates between their values, and past them it keeps the value of the
+     * nearest one, so it is non-zero somewhere only if it is non-zero at one of its stops.
+     */
+    offsetsLine(): boolean {
+        const offset = this._transitionablePaint._values['line-offset'].value.expression;
+        if (offset.kind === 'constant') return offset.evaluate({zoom: 0}) !== 0;
+        if (offset.kind === 'camera') return offset.zoomStops.some(zoom => offset.evaluate({zoom}) !== 0);
+        return true;
+    }
+
+    /**
+     * Also asks for the layer's tiles to be laid out again when `line-offset` starts to move a dashed line, because
+     * a tile laid out without an offset leaves out the offset distances that space its dashes evenly.
+     *
+     * The global state an offset reads has already changed by the time a change to it gets here, so whether the line
+     * was offset before is the value {@link _offsetsLine} kept from the last call.
+     */
+    setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): boolean {
+        const requiresRelayout = super.setPaintProperty(name, value, options);
+        if (name !== 'line-offset') return requiresRelayout;
+
+        const offsetLineBefore = this._offsetsLine;
+        this._offsetsLine = this.offsetsLine();
+        return requiresRelayout || (!offsetLineBefore && this._offsetsLine && this.getPaintProperty('line-dasharray') !== undefined);
     }
 
     recalculate(parameters: EvaluationParameters, availableImages: string[]): void {

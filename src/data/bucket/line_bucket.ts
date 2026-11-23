@@ -101,20 +101,9 @@ function offsetNormalNearJoin(normal: Point, offsetNormal: Point): Point {
     return along._add(normal);
 }
 
-/**
- * Whether a layer draws dashes along a `line-offset` line, which needs {@link LineBucket.offsetDistanceArray}.
- *
- * A tile is drawn at zoom levels other than its own, so a `line-offset` that depends on zoom counts if it is
- * non-zero at any zoom. Between its stops it interpolates between their values, and past them it keeps the value
- * of the nearest one, so it is non-zero somewhere only if it is non-zero at one of its stops.
- */
+/** Whether a layer draws dashes along a `line-offset` line, which needs {@link LineBucket.offsetDistanceArray}. */
 function dashesOffsetLine(layer: LineStyleLayer): boolean {
-    if (!layer.paint.get('line-dasharray').constantOr(1 as any)) return false;
-    const offset = layer._transitionablePaint._values['line-offset'].value.expression;
-    if (offset.kind === 'camera') {
-        return offset.zoomStops.some(zoom => offset.evaluate({zoom}) !== 0);
-    }
-    return layer.paint.get('line-offset').constantOr(1) !== 0;
+    return !!layer.paint.get('line-dasharray').constantOr(1 as any) && layer.offsetsLine();
 }
 
 // The number of bits that is used to store the line distance in the buffer.

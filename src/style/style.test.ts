@@ -2521,6 +2521,34 @@ describe('Style.setGlobalStateProperty', () => {
         expect(style.tileManagers['line-source-id'].resume).not.toHaveBeenCalled();
         expect(style.tileManagers['line-source-id'].reload).not.toHaveBeenCalled();
     });
+
+    test('reloads sources when state property makes line-offset offset a dashed line', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            state: {offset: {default: 0}},
+            sources: {
+                'line-source-id': createGeoJSONSource()
+            },
+            layers: [{
+                id: 'first-layer-id',
+                type: 'line',
+                source: 'line-source-id',
+                paint: {
+                    'line-dasharray': [2, 2],
+                    'line-offset': ['global-state', 'offset']
+                }
+            }]
+        }));
+
+        await style.once('style.load');
+
+        style.tileManagers['line-source-id'].reload = vi.fn();
+
+        style.setGlobalStateProperty('offset', 4);
+        style.update(new EvaluationParameters(0));
+
+        expect(style.tileManagers['line-source-id'].reload).toHaveBeenCalled();
+    });
 });
 
 describe('Style.addLayer', () => {

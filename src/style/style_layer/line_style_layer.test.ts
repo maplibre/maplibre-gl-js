@@ -50,4 +50,19 @@ describe('LineStyleLayer', () => {
         expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
     });
 
+    test('setPaintProperty asks for a relayout when line-offset starts to offset a dashed line', () => {
+        const lineLayer = createStyleLayer({type: 'line', source: 'line', id: 'line', paint: {'line-dasharray': [2, 2]}}, {}) as LineStyleLayer;
+
+        expect(lineLayer.setPaintProperty('line-offset', 4)).toBe(true);
+        expect(lineLayer.setPaintProperty('line-offset', 8)).toBe(false);
+        expect(lineLayer.setPaintProperty('line-offset', 0)).toBe(false);
+        expect(lineLayer.setPaintProperty('line-offset', ['interpolate', ['linear'], ['zoom'], 5, 0, 6, 20])).toBe(true);
+    });
+
+    test('setPaintProperty does not ask for a relayout when line-offset starts to offset a line without dashes', () => {
+        const lineLayer = createStyleLayer({type: 'line', source: 'line', id: 'line'}, {}) as LineStyleLayer;
+
+        expect(lineLayer.setPaintProperty('line-offset', 4)).toBe(false);
+    });
+
 });
