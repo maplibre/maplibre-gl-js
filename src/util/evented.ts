@@ -39,7 +39,6 @@ function _removeEventListener<T extends EventTypeMap, K extends EventNames<T>>(t
     }
 }
 
-
 /**
  * Copies the own fields of `data` onto `event`. Each is defined as an own property, so a `__proto__` key in `data`
  * becomes an ordinary field of the event instead of replacing its prototype.
