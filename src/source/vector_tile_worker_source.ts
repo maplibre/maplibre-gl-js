@@ -21,7 +21,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 export type LoadVectorTileResult = {
     vectorTile: VectorTileLike;
-    rawData: ArrayBufferLike;
+    rawData: ArrayBuffer;
 };
 
 /**
@@ -165,7 +165,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         return new RequestPerformance(params.request.url);
     }
 
-    _finishRequestTiming(timing: RequestPerformance): {resourceTiming?: any} {
+    _finishRequestTiming(timing: RequestPerformance): {resourceTiming?: PerformanceResourceTiming[]} {
         const timingData = timing?.finish();
         if (!timingData) return {};
 
@@ -201,7 +201,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
         const overzoomedVectorTileResult = {
             vectorTile: overzoomedVectorTile,
-            rawData: fromVectorTileJs(overzoomedVectorTile).buffer
+            rawData: fromVectorTileJs(overzoomedVectorTile).buffer as ArrayBuffer
         };
         this.overzoomedTileResultCache.set(cacheKey, overzoomedVectorTileResult);
 

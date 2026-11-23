@@ -105,7 +105,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
         return {
             vectorTile: geojsonWrapper,
-            rawData: fromVectorTileJs(geojsonWrapper, JSON_PREFIX).buffer
+            rawData: fromVectorTileJs(geojsonWrapper, JSON_PREFIX).buffer as ArrayBuffer
         };
 
     }
@@ -147,7 +147,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (parseState) {
             const {rawData} = parseState;
             // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
-            result = {rawTileData: rawData.slice(0) as ArrayBuffer, encoding: 'mvt', ...result} as WorkerTileResult;
+            result = {rawTileData: rawData.slice(0), encoding: 'mvt', ...result};
             this.tileState.removeParsing(workerTile.uid);
         }
 
