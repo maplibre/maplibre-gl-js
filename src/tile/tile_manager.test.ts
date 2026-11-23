@@ -19,21 +19,38 @@ import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LoadTileResult} from '../source/vector_tile_source.ts';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+
+/**
+ * The specification a {@link SourceMock} is created from. Besides the fields of a source, it sets how the mock
+ * behaves, and can replace any of the source methods it lists.
+ */
+type SourceMockOptions = Partial<Pick<Source, 'minzoom' | 'maxzoom' | 'tileSize' | 'reparseOverscaled' | 'hasTile' | 'loaded' | 'loadTile' | 'unloadTile' | 'onRemove'>> & {
+    type?: string;
+    /** Makes the mock a raster source. */
+    raster?: boolean;
+    /** The expiry the mock sets on every tile it loads. */
+    expires?: Date;
+    /** Keeps the mock from firing its metadata event when it is added. */
+    noLoad?: boolean;
+    /** The error the mock fires instead of its metadata event when it is added. */
+    error?: Error;
+};
 
 class SourceMock extends Evented implements Source {
     id: string;
     minzoom: number;
     maxzoom: number;
     hasTile: (tileID: OverscaledTileID) => boolean;
-    sourceOptions: any;
+    sourceOptions: SourceMockOptions;
     type: string;
     tileSize: number;
     reparseOverscaled?: boolean;
     onRemove?: (map: Map) => void;
 
-    constructor(id: string, sourceOptions: any, _dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, sourceOptions: SourceMockOptions, _dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
         this.type = sourceOptions.type;
@@ -52,7 +69,7 @@ class SourceMock extends Evented implements Source {
             this.type = 'raster';
         }
     }
-    loadTile(tile: Tile): Promise<void> {
+    loadTile(tile: Tile): Promise<LoadTileResult | void> {
         if (this.sourceOptions.expires) {
             tile.setExpiryData({
                 expires: this.sourceOptions.expires
@@ -72,7 +89,7 @@ class SourceMock extends Evented implements Source {
         }
     }
     async abortTile() {}
-    async unloadTile() {}
+    async unloadTile(_tile: Tile) {}
     serialize() {}
     hasTransition(): boolean {
         return false;
@@ -80,7 +97,7 @@ class SourceMock extends Evented implements Source {
 }
 
 // Add a mocked source type for use in these tests
-function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedParent: Evented) {
+function createSource(id: string, sourceOptions: SourceMockOptions, _dispatcher: Dispatcher, eventedParent: Evented) {
     // allow tests to override mocked methods/properties by providing
     // them in the source definition object that's given to Source.create()
     return new SourceMock(id, sourceOptions, _dispatcher, eventedParent);
@@ -88,14 +105,15 @@ function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedP
 
 addSourceType('mock-source-type', createSource as any);
 
-function createTileManager(options?, used?) {
-    const sc = new TileManager('id', {
+function createTileManager(options?: SourceMockOptions, used?: boolean) {
+    const specification: SourceMockOptions = {
         tileSize: 512,
         minzoom: 0,
         maxzoom: 14,
         type: 'mock-source-type',
         ...options,
-    }, {} as Dispatcher);
+    };
+    const sc = new TileManager('id', specification as unknown as SourceSpecification, {} as Dispatcher);
     sc.used = typeof used === 'boolean' ? used : true;
     return sc;
 }
@@ -458,15 +476,15 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('forward error event', async () => {
-        const tileManager = createTileManager({error: 'Error loading source'});
+        const tileManager = createTileManager({error: new Error('Error loading source')});
         const errorPromise = tileManager.once('error');
         tileManager.onAdd(undefined);
         const err = await errorPromise;
-        expect(err.error).toBe('Error loading source');
+        expect(err.error.message).toBe('Error loading source');
     });
 
     test('suppress 404 errors', () => {
-        const tileManager = createTileManager({status: 404, message: 'Not found'});
+        const tileManager = createTileManager();
         const errorListener = vi.fn();
         tileManager.on('error', errorListener);
         tileManager.onAdd(undefined);
@@ -475,7 +493,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('loaded() true after source error', async () => {
-        const tileManager = createTileManager({error: 'Error loading source'});
+        const tileManager = createTileManager({error: new Error('Error loading source')});
         const errorPromise = tileManager.once('error');
         tileManager.onAdd(undefined);
         await errorPromise;
@@ -504,7 +522,7 @@ describe('TileManager / Source lifecycle', () => {
     });
 
     test('loaded() false after source begins loading following error', async () => {
-        const tileManager = createTileManager({error: 'Error loading source'});
+        const tileManager = createTileManager({error: new Error('Error loading source')});
         const errorPromise = tileManager.once('error');
         tileManager.onAdd(undefined);
         await errorPromise;
@@ -516,7 +534,7 @@ describe('TileManager / Source lifecycle', () => {
 
     test('loaded() false when error occurs while source is not loaded', async () => {
         const tileManager = createTileManager({
-            error: 'Error loading source',
+            error: new Error('Error loading source'),
 
             loaded() {
                 return false;
