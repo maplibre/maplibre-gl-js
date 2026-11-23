@@ -1,4 +1,4 @@
-import {extend, type Subscription} from './util.ts';
+import type {Subscription} from './util.ts';
 
 /**
  * A listener method used as a callback to events
@@ -39,6 +39,18 @@ function _removeEventListener<T extends EventTypeMap, K extends EventNames<T>>(t
     }
 }
 
+
+/**
+ * Copies the own fields of `data` onto `event`. Each is defined as an own property, so a `__proto__` key in `data`
+ * becomes an ordinary field of the event instead of replacing its prototype.
+ */
+function setEventData(event: Event, data: object | undefined): void {
+    if (!data) return;
+    for (const [key, value] of Object.entries(data)) {
+        Object.defineProperty(event, key, {value, writable: true, enumerable: true, configurable: true});
+    }
+}
+
 /**
  * The event class
  */
@@ -51,7 +63,7 @@ export class Event<TType extends string = string> {
     target?: unknown;
 
     constructor(type: TType, data: object = {}) {
-        extend(this, data);
+        setEventData(this, data);
         this.type = type;
     }
 }
@@ -67,7 +79,7 @@ export class ErrorEvent extends Event<'error'> {
     error: ErrorLike;
 
     constructor(error: ErrorLike, data: object = {}) {
-        super('error', extend({error}, data));
+        super('error', {error, ...data});
     }
 }
 
@@ -181,7 +193,7 @@ export abstract class Evented<EventType extends EventTypeMap = EventTypeMap> {
 
             const parent = this._eventedParent;
             if (parent) {
-                extend(
+                setEventData(
                     firedEvent,
                     typeof this._eventedParentData === 'function' ? this._eventedParentData() : this._eventedParentData
                 );

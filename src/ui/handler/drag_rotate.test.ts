@@ -1,5 +1,4 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
-import {extend} from '../../util/util.ts';
 import {Map} from '../map.ts';
 import {DOM} from '../../util/dom.ts';
 import simulate from '../../../test/unit/lib/simulate_interaction.ts';
@@ -7,7 +6,7 @@ import * as timeControl from '../../util/time_control.ts';
 import {beforeMapTest} from '../../util/test/util.ts';
 
 function createMap(options?) {
-    return new Map(extend({container: DOM.create('div', '', window.document.body)}, options));
+    return new Map({container: DOM.create('div', '', window.document.body), ...options});
 }
 
 beforeEach(() => {

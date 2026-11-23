@@ -3,7 +3,6 @@ import {LineBucket} from '../../data/bucket/line_bucket.ts';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests.ts';
 import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils.ts';
 import properties, {type LineLayoutPropsPossiblyEvaluated, type LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g.ts';
-import {extend} from '../../util/util.ts';
 import {EvaluationParameters} from '../evaluation_parameters.ts';
 import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty, type PossiblyEvaluatedPropertyValue} from '../properties.ts';
 import {isZoomExpression, Step, type Feature, type FeatureState, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
@@ -26,7 +25,7 @@ export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     }
 
     evaluate(value: any, globals: EvaluationParameters, feature: Feature, featureState: FeatureState): number {
-        globals = extend({}, globals, {zoom: Math.floor(globals.zoom)});
+        globals = {...globals, zoom: Math.floor(globals.zoom)} as EvaluationParameters;
         return super.evaluate(value, globals, feature, featureState);
     }
 }

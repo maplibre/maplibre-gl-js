@@ -6,7 +6,6 @@ import {CanonicalTileID, OverscaledTileID} from './tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
 import {ErrorEvent, Event, Evented} from '../util/evented.ts';
-import {extend} from '../util/util.ts';
 import {TileBounds} from './tile_bounds.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {beforeMapTest, createMap as globalCreateMap, createPolarStereographicCrs, createTestCamera, sleep, waitForEvent} from '../util/test/util.ts';
@@ -18,7 +17,6 @@ import {resize, setBearing, setCenter, setMaxPitch, setPitch, setZoom} from '../
 import {coveringTiles} from '../geo/projection/covering_tiles.ts';
 import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 
-import type {TileCache} from './tile_cache.ts';
 import type {Map} from '../ui/map.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -32,18 +30,24 @@ class SourceMock extends Evented implements Source {
     sourceOptions: any;
     type: string;
     tileSize: number;
+    reparseOverscaled?: boolean;
+    onRemove?: (map: Map) => void;
 
     constructor(id: string, sourceOptions: any, _dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
-        this.minzoom = 0;
-        this.maxzoom = 22;
-        extend(this, sourceOptions);
+        this.type = sourceOptions.type;
+        this.minzoom = sourceOptions.minzoom ?? 0;
+        this.maxzoom = sourceOptions.maxzoom ?? 22;
+        this.tileSize = sourceOptions.tileSize;
+        this.reparseOverscaled = sourceOptions.reparseOverscaled;
         this.sourceOptions = sourceOptions;
         this.setEventedParent(eventedParent);
-        if (sourceOptions.hasTile) {
-            this.hasTile = sourceOptions.hasTile;
-        }
+        if (sourceOptions.hasTile) this.hasTile = sourceOptions.hasTile;
+        if (sourceOptions.loaded) this.loaded = sourceOptions.loaded;
+        if (sourceOptions.loadTile) this.loadTile = sourceOptions.loadTile;
+        if (sourceOptions.unloadTile) this.unloadTile = sourceOptions.unloadTile;
+        if (sourceOptions.onRemove) this.onRemove = sourceOptions.onRemove;
         if (sourceOptions.raster) {
             this.type = 'raster';
         }
@@ -85,24 +89,15 @@ function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedP
 addSourceType('mock-source-type', createSource as any);
 
 function createTileManager(options?, used?) {
-    const sc = new TileManager('id', extend({
+    const sc = new TileManager('id', {
         tileSize: 512,
         minzoom: 0,
         maxzoom: 14,
-        type: 'mock-source-type'
-    }, options), {} as Dispatcher);
-    return extend(sc, {
-        used: typeof used === 'boolean' ? used : true,
-        addTile(tileID: OverscaledTileID): Tile {
-            return this._addTile(tileID);
-        },
-        getCache(): TileCache {
-            return this._cache;
-        },
-        getTiles(): { [_: string]: Tile } {
-            return this._tiles;
-        }
-    });
+        type: 'mock-source-type',
+        ...options,
+    }, {} as Dispatcher);
+    sc.used = typeof used === 'boolean' ? used : true;
+    return sc;
 }
 
 type MapOptions = {

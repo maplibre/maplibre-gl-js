@@ -1,4 +1,4 @@
-import {ensureError, extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util.ts';
+import {ensureError, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {DOM} from '../util/dom.ts';
@@ -915,7 +915,7 @@ export class Map extends Evented<MapEventType> {
 
             if (resolvedOptions.bounds) {
                 this.resize();
-                this.fitBounds(resolvedOptions.bounds, extend({}, resolvedOptions.fitBoundsOptions, {duration: 0}));
+                this.fitBounds(resolvedOptions.bounds, {...resolvedOptions.fitBoundsOptions, duration: 0});
             }
         }
 
@@ -2789,13 +2789,10 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
-        options = extend({},
-            {
-                localIdeographFontFamily: this._localIdeographFontFamily,
-                validate: this._validateStyle,
-                globalState: this._initialGlobalState,
-                transformStyle: this._transformStyle,
-            }, options);
+        options = {localIdeographFontFamily: this._localIdeographFontFamily,
+            validate: this._validateStyle,
+            globalState: this._initialGlobalState,
+            transformStyle: this._transformStyle, ...options};
         this._styleUrl = typeof style === 'string' ? style : null;
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {

@@ -1,4 +1,4 @@
-import {clone, deepEqual, extend, easeCubicInOut, warnOnce} from '../util/util.ts';
+import {clone, deepEqual, easeCubicInOut, warnOnce} from '../util/util.ts';
 import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
     type Feature,
     type FeatureState,
@@ -134,7 +134,7 @@ class TransitionablePropertyValue<T, R> {
     transitioned(parameters: TransitionParameters, prior: TransitioningPropertyValue<T, R>): TransitioningPropertyValue<T, R> {
         if (prior.value === this.value) return prior;
         return new TransitioningPropertyValue(this.property, this.value, prior,
-            extend({}, parameters.transition, this.transition), parameters.now);
+            {...parameters.transition, ...this.transition}, parameters.now);
     }
 
     untransitioned(): TransitioningPropertyValue<T, R> {

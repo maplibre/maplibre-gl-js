@@ -9,7 +9,6 @@
 'use strict';
 
 import * as fs from 'fs';
-import {extend} from '../src/util/util.ts';
 import {createLayout, viewTypes} from '../src/util/struct_array.ts';
 import posAttributes from '../src/data/pos_attributes.ts';
 import pos3dAttributes from '../src/data/pos3d_attributes.ts';
@@ -61,10 +60,8 @@ function normalizeMembers(members, usedTypes) {
             usedTypes.add(member.type);
         }
 
-        return extend(member, {
-            size: sizeOf(member.type),
-            view: member.type.toLowerCase()
-        });
+        return {...member, size: sizeOf(member.type),
+            view: member.type.toLowerCase()};
     });
 }
 
@@ -104,9 +101,7 @@ function createStructArrayLayoutType({members, size, alignment}) {
     if (!alignment || alignment === 1) members = members.reduce((memo, member) => {
         if (memo.length > 0 && memo[memo.length - 1].type === member.type) {
             const last = memo[memo.length - 1];
-            return memo.slice(0, -1).concat(extend({}, last, {
-                components: last.components + member.components,
-            }));
+            return memo.slice(0, -1).concat({...last, components: last.components + member.components});
         }
         return memo.concat(member);
     }, []);

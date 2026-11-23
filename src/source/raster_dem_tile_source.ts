@@ -1,6 +1,6 @@
 import {ImageRequest} from '../util/image_request.ts';
 import {ResourceType} from '../util/request_manager.ts';
-import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util.ts';
+import {isImageBitmap, readImageUsingVideoFrame} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -12,6 +12,7 @@ import {RGBAImage} from '../util/image.ts';
 import {MessageType} from '../util/actor_messages.ts';
 
 import type {DEMEncoding} from '../data/dem_data.ts';
+import type {LoadTileJsonResponse} from './load_tilejson.ts';
 import type {Source} from './source.ts';
 import type {Dispatcher} from '../util/dispatcher.ts';
 import type {Tile} from '../tile/tile.ts';
@@ -45,12 +46,17 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         super(id, options, dispatcher, eventedParent);
         this.type = 'raster-dem';
         this.maxzoom = 22;
-        this._options = extend({type: 'raster-dem'}, options);
+        this._options = {type: 'raster-dem', ...options};
         this.encoding = options.encoding || 'mapbox';
         this.redFactor = options.redFactor;
         this.greenFactor = options.greenFactor;
         this.blueFactor = options.blueFactor;
         this.baseShift = options.baseShift;
+    }
+
+    override _applyTileJSON(tileJSON: LoadTileJsonResponse): void {
+        super._applyTileJSON(tileJSON);
+        this.encoding = (tileJSON.encoding as DEMEncoding) ?? this.encoding;
     }
 
     override async loadTile(tile: Tile): Promise<void> {

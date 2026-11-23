@@ -3,7 +3,6 @@ import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {GeoJSONSource, type GeoJSONSourceShouldReloadTileOptions, type GeoJSONSourceOptions} from './geojson_source.ts';
 import {EXTENT} from '../data/extent.ts';
-import {extend} from '../util/util.ts';
 import {beforeMapTest, createMap, createPolarStereographicCrs, getWrapDispatcher, sleep, waitForEvent, waitForMetadataEvent} from '../util/test/util.ts';
 import {AbortError} from '../util/abort_error.ts';
 import {type ActorMessage, type ClusterIDAndSource, type GeoJSONWorkerSourceLoadDataResult, MessageType} from '../util/actor_messages.ts';
@@ -24,7 +23,7 @@ const mockDispatcher = wrapDispatcher({
 });
 
 function createSource(opts?: Partial<GeoJSONSourceOptions>) {
-    return new GeoJSONSource('id', extend({}, opts, {data: {}}) as GeoJSONSourceOptions, wrapDispatcher({
+    return new GeoJSONSource('id', {...opts, data: {}} as GeoJSONSourceOptions, wrapDispatcher({
         sendAsync(_message) {
             return new Promise((resolve) => {
                 setTimeout(() => resolve({}), 0);

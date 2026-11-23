@@ -429,28 +429,6 @@ export function keysDifference<S, T>(
     return difference;
 }
 
-/**
- * Given a destination object and optionally many source objects,
- * copy all properties from the source objects into the destination.
- * The last source object given overrides properties from previous
- * source objects.
- *
- * @param dest - destination object
- * @param sources - sources from which properties are pulled
- */
-export function extend<T extends {}, U>(dest: T, source: U): T & U;
-export function extend<T extends {}, U, V>(dest: T, source1: U, source2: V): T & U & V;
-export function extend<T extends {}, U, V, W>(dest: T, source1: U, source2: V, source3: W): T & U & V & W;
-export function extend(dest: object, ...sources: any[]): any;
-export function extend(dest: object, ...sources: any[]): any {
-    for (const src of sources) {
-        for (const k in src) {
-            dest[k] = src[k];
-        }
-    }
-    return dest;
-}
-
 // See https://stackoverflow.com/questions/49401866/all-possible-keys-of-an-union-type
 type KeysOfUnion<T> = T extends T ? keyof T: never;
 

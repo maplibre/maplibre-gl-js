@@ -6,7 +6,7 @@ import {
     Uniform3f
 } from '../uniform_binding.ts';
 import {mat3, vec3} from 'gl-matrix';
-import {extend, sphericalToCartesian} from '../../util/util.ts';
+import {sphericalToCartesian} from '../../util/util.ts';
 import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {Context} from '../../webgl/context.ts';
@@ -104,11 +104,7 @@ const fillExtrusionPatternUniformValues = (
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, translate),
-        patternUniformValues(crossfade, projectedCamera, tile),
-        {
-            'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8
-        });
+    return {...fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, translate), ...patternUniformValues(crossfade, projectedCamera, tile), 'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8};
 };
 
 export {

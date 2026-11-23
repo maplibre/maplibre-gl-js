@@ -7,7 +7,6 @@ import path from 'path';
 import {type Feature, fromVectorTileJs, GeoJSONWrapper} from '@maplibre/vt-pbf';
 import {FeatureIndex, GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
-import {extend} from '../util/util.ts';
 import {serialize, deserialize} from '../util/web_worker_transfer.ts';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
@@ -372,11 +371,12 @@ function createRawTileData() {
 
 function createVectorData(options?) {
     const collisionBoxArray = new CollisionBoxArray();
-    return extend({
+    return {
         collisionBoxArray: deserialize(serialize(collisionBoxArray)),
         featureIndex: deserialize(serialize(new FeatureIndex(new OverscaledTileID(1, 0, 1, 1, 1)))),
-        buckets: []
-    }, options);
+        buckets: [],
+        ...options,
+    };
 }
 
 function createStyle(styleStub = {}): Style {
