@@ -1,6 +1,5 @@
 import {ensureError} from '../util/util.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {loadTileJson, type LoadTileJsonResponse} from './load_tilejson.ts';
@@ -228,7 +227,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
             const response = await ImageRequest.transformAndGetImage(
                 this.map._requestManager,
                 url,
-                ResourceType.Tile,
+                'Tile',
                 tile.abortController,
                 this.map._refreshExpiredTiles,
                 imageBitmapOptions

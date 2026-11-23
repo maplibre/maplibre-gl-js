@@ -14,7 +14,6 @@ import {LineAtlas} from '../render/line_atlas.ts';
 import {clone, ensureError, deepEqual, filterObject, mapObject} from '../util/util.ts';
 import {coerceSpriteToArray} from '../util/style.ts';
 import {getJSON, getReferrer} from '../util/ajax.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {Dispatcher} from '../util/dispatcher.ts';
@@ -459,7 +458,7 @@ export class Style extends Evented<MapEventType> {
         this._loadStyleRequest = new AbortController();
         const abortController = this._loadStyleRequest;
         try {
-            const request = await this.map._requestManager.transformRequest(url, ResourceType.Style);
+            const request = await this.map._requestManager.transformRequest(url, 'Style');
             throwIfAborted(abortController.signal);
 
             const response = await getJSON<StyleSpecification>(request, abortController);

@@ -4,10 +4,10 @@ import {createMap, beforeMapTest, createStyle, createStyleSource, sleep, waitFor
 import {Tile} from '../../tile/tile.ts';
 import {OverscaledTileID} from '../../tile/tile_id.ts';
 import {fixedLngLat} from '../../../test/unit/lib/fixed.ts';
-import {type RequestTransformFunction, ResourceType} from '../../util/request_manager.ts';
 import {MessageType} from '../../util/actor_messages.ts';
 import {Style} from '../../style/style.ts';
 
+import type {RequestTransformFunction} from '../../util/request_manager.ts';
 import type {MapSourceDataEvent} from '../events.ts';
 
 beforeEach(() => {
@@ -72,7 +72,7 @@ describe('Map', () => {
             const transformRequest = vi.fn();
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(null);
-            map._requestManager.transformRequest('', ResourceType.Unknown);
+            map._requestManager.transformRequest('', 'Unknown');
             expect(transformRequest).not.toHaveBeenCalled();
         });
     });

@@ -2,7 +2,6 @@ import {CanonicalTileID} from '../tile/tile_id.ts';
 import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {Texture} from '../webgl/texture.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import {ensureError, MAX_TILE_ZOOM} from '../util/util.ts';
@@ -255,7 +254,7 @@ export class ImageSource extends Evented<SourceEventType> implements Source {
 
         this._abortController = new AbortController();
         try {
-            const image = await ImageRequest.transformAndGetImage(this.map._requestManager, this.url, ResourceType.Image, this._abortController);
+            const image = await ImageRequest.transformAndGetImage(this.map._requestManager, this.url, 'Image', this._abortController);
             this._abortController = null;
             this._loaded = true;
 

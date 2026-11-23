@@ -3,7 +3,6 @@ import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {ensureError} from '../util/util.ts';
 import {loadTileJson, type LoadTileJsonResponse} from './load_tilejson.ts';
 import {TileBounds} from '../tile/tile_bounds.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {MessageType} from '../util/actor_messages.ts';
 import {isAbortError} from '../util/abort_error.ts';
 import {TileManager} from '../tile/tile_manager.ts';
@@ -241,7 +240,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
     async loadTile(tile: Tile): Promise<LoadTileResult | void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
         const params: WorkerTileParameters = {
-            request: await this.map._requestManager.transformRequest(url, ResourceType.Tile),
+            request: await this.map._requestManager.transformRequest(url, 'Tile'),
             uid: tile.uid,
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
@@ -362,7 +361,7 @@ export class VectorTileSource extends Evented<SourceEventType> implements Source
 
     private async _getTileRequest(tileID: CanonicalTileID): Promise<RequestParameters> {
         const url = tileID.url(this.tiles, this.map.getPixelRatio(), this.scheme, this.map.style.projection.worldCoordinateHelper.tileMatrixSet);
-        const request = await this.map._requestManager.transformRequest(url, ResourceType.Tile);
+        const request = await this.map._requestManager.transformRequest(url, 'Tile');
         this._setAcceptHeader(request);
         return request;
     }

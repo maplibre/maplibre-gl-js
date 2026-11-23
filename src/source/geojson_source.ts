@@ -2,7 +2,6 @@ import {ErrorEvent, Evented} from '../util/evented.ts';
 import {MapSourceDataEvent, type SourceEventType} from '../ui/events.ts';
 import {ensureError, warnOnce, type ExactlyOne} from '../util/util.ts';
 import {EXTENT} from '../data/extent.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {applySourceDiff, mergeSourceDiffs, toUpdateable} from './geojson_source_diff.ts';
 import {getGeoJSONBounds} from '../util/geojson_bounds.ts';
@@ -483,7 +482,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
         }
 
         if (typeof update.data === 'string') {
-            params.request = await this.map._requestManager.transformRequest(browser.resolveURL(update.data), ResourceType.Source);
+            params.request = await this.map._requestManager.transformRequest(browser.resolveURL(update.data), 'Source');
             params.request.collectResourceTiming = this._collectResourceTiming;
             return params;
         }

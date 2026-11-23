@@ -3,16 +3,15 @@ import type {RequestParameters} from './ajax.ts';
 /**
  * A type of MapLibre resource.
  */
-export const enum ResourceType {
-    Glyphs = 'Glyphs',
-    Image = 'Image',
-    Source = 'Source',
-    SpriteImage = 'SpriteImage',
-    SpriteJSON = 'SpriteJSON',
-    Style = 'Style',
-    Tile = 'Tile',
-    Unknown = 'Unknown',
-}
+export type ResourceType =
+    | 'Glyphs'
+    | 'Image'
+    | 'Source'
+    | 'SpriteImage'
+    | 'SpriteJSON'
+    | 'Style'
+    | 'Tile'
+    | 'Unknown';
 
 /**
  * This function is used to transform a request.
