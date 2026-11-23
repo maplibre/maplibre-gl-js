@@ -89,7 +89,7 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
 
         this._options = {type: 'raster', ...options};
         this.url = options.url;
-        if ('scheme' in options) this.scheme = options.scheme ?? this.scheme;
+        if ('scheme' in options) this.scheme = options.scheme;
         this.tileSize = options.tileSize ?? this.tileSize;
     }
 
