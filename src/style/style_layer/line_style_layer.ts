@@ -25,7 +25,7 @@ export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     }
 
     evaluate(value: any, globals: EvaluationParameters, feature: Feature, featureState: FeatureState): number {
-        globals = {...globals, zoom: Math.floor(globals.zoom)} as EvaluationParameters;
+        globals = new EvaluationParameters(Math.floor(globals.zoom), globals);
         return super.evaluate(value, globals, feature, featureState);
     }
 }
