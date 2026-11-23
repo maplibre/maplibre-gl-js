@@ -54,6 +54,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.baseShift = options.baseShift;
     }
 
+    /**
+     * @internal
+     * Takes on the encoding the TileJSON sets, as well as the fields a raster source does.
+     */
     override _applyTileJSON(tileJSON: LoadTileJsonResponse): void {
         super._applyTileJSON(tileJSON);
         this.encoding = (tileJSON.encoding as DEMEncoding) ?? this.encoding;

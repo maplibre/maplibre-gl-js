@@ -122,7 +122,10 @@ export class RasterTileSource extends Evented<SourceEventType> implements Source
         }
     }
 
-    /** Takes on the fields the TileJSON sets, keeping the current value of any it leaves out. */
+    /**
+     * @internal
+     * Takes on the fields the TileJSON sets, keeping the current value of any it leaves out.
+     */
     _applyTileJSON(tileJSON: LoadTileJsonResponse): void {
         this.tiles = tileJSON.tiles ?? this.tiles;
         this.minzoom = tileJSON.minzoom ?? this.minzoom;
