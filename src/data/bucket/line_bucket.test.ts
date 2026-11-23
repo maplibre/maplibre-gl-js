@@ -35,6 +35,13 @@ function createLineBucket({id, layout, paint, globalState, availableImages}: Cre
     return new LineBucket({layers: [layer]} as BucketParameters<LineStyleLayer>);
 }
 
+/** Whether a bucket built at `zoom` for a dashed line with `lineOffset` stores offset distances. */
+function hasOffsetDistances(lineOffset: unknown, zoom: number): boolean {
+    const layer = new LineStyleLayer({id: 'test', type: 'line', source: 'test', paint: {'line-dasharray': [2, 2], 'line-offset': lineOffset}} as LayerSpecification, {});
+    layer.recalculate({zoom, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);
+    return new LineBucket({layers: [layer], zoom} as BucketParameters<LineStyleLayer>).offsetDistanceArray !== undefined;
+}
+
 /**
  * Returns where `line-offset` moves the vertices on one side of the line, in the order they were added.
  * Positions are in tile units, for an offset of `offset` tile units.
@@ -254,6 +261,14 @@ describe('LineBucket', () => {
         expect(createLineBucket({id: 'test', paint: {'line-dasharray': [2, 2]}}).offsetDistanceArray).toBeUndefined();
         expect(createLineBucket({id: 'test', paint: {'line-offset': 4}}).offsetDistanceArray).toBeUndefined();
         expect(createLineBucket({id: 'test', paint: {'line-dasharray': [2, 2], 'line-offset': 4}}).offsetDistanceArray).toBeDefined();
+    });
+
+    test('LineBucket stores offset distances when a zoom-dependent line-offset is non-zero at another zoom', () => {
+        // Each offset is 0 at the zoom the bucket is built at.
+        expect(hasOffsetDistances(['interpolate', ['linear'], ['zoom'], 5, 0, 6, 20], 5)).toBe(true);
+        expect(hasOffsetDistances(['step', ['zoom'], 0, 12, 4], 11)).toBe(true);
+        expect(hasOffsetDistances(['step', ['zoom'], 4, 12, 0], 12)).toBe(true);
+        expect(hasOffsetDistances(['interpolate', ['linear'], ['zoom'], 5, 0, 6, 0], 5)).toBe(false);
     });
 
     test('LineBucket ignores geometry with insufficient unique vertices after trimming duplicates', () => {
