@@ -9,6 +9,7 @@ uniform vec3 u_lightcolor;
 uniform lowp vec3 u_lightpos;
 uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
+uniform vec3 u_lightambient;
 
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in ivec4 a_normal_ed;
@@ -106,16 +107,19 @@ void main() {
 
     v_lighting = vec4(0.0, 0.0, 0.0, 1.0);
     float directional = clamp(dot(normal / 16383.0, u_lightpos), 0.0, 1.0);
-    directional = mix((1.0 - u_lightintensity), max((0.5 + u_lightintensity), 1.0), directional);
+    float peak = max(0.5 + u_lightintensity, 1.0);
+    float direct = (peak - (1.0 - u_lightintensity)) * directional;
 
+    float gradient = 1.0;
     if (normal.z == 0.0) {
         // This avoids another branching statement, but multiplies by a constant of 0.84 if no vertical gradient,
         // and otherwise calculates the gradient based on base + height
-        directional *= (
+        gradient =
             (1.0 - u_vertical_gradient) +
-            (u_vertical_gradient * clamp((t + gradient_base) * pow(gradient_height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0)));
+            (u_vertical_gradient * clamp((t + gradient_base) * pow(gradient_height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0));
     }
 
-    v_lighting.rgb += clamp(directional * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
+    vec3 lighting = (u_lightambient + direct) * gradient;
+    v_lighting.rgb += clamp(lighting * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
     v_lighting *= opacity;
 }

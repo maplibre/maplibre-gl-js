@@ -45,10 +45,35 @@ test('Light with stops function', () => {
 test('Light.getLight', () => {
     const defaults = {};
     for (const key in spec) {
-        defaults[key] = spec[key].default;
+        if (spec[key].default !== undefined) defaults[key] = spec[key].default;
     }
 
     expect(new Light(defaults, {}).getLight()).toEqual(defaults);
+});
+
+describe('Light.getEvaluated', () => {
+    test('falls back to 1 - intensity when ambient-intensity is unset', () => {
+        const light = new Light({intensity: 0.3}, {});
+        light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
+
+        expect(light.getEvaluated()['ambient-intensity']).toBeCloseTo(0.7);
+    });
+
+    test('falls back to 1 - intensity while ambient-intensity transitions from unset', () => {
+        const light = new Light({intensity: 0.3}, {});
+        light.setLight({intensity: 0.3, 'ambient-intensity': 0.2, 'ambient-intensity-transition': {duration: 3000}});
+        light.updateTransitions({now: 0, transition: {duration: 3000, delay: 0}});
+        light.recalculate({zoom: 0, zoomHistory: {}, now: 1500} as EvaluationParameters);
+
+        expect(light.getEvaluated()['ambient-intensity']).toBeCloseTo(0.7);
+    });
+
+    test('returns explicit ambient-intensity including zero', () => {
+        const light = new Light({intensity: 0.3, 'ambient-intensity': 0}, {});
+        light.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters);
+
+        expect(light.getEvaluated()['ambient-intensity']).toBe(0);
+    });
 });
 
 describe('Light.setLight', () => {

@@ -22,6 +22,7 @@ export type FillExtrusionUniformsType = {
     'u_lightpos_globe': Uniform3f;
     'u_lightintensity': Uniform1f;
     'u_lightcolor': Uniform3f;
+    'u_lightambient': Uniform3f;
     'u_vertical_gradient': Uniform1f;
     'u_fill_translate': Uniform2f;
 };
@@ -31,6 +32,7 @@ export type FillExtrusionPatternUniformsType = {
     'u_lightpos_globe': Uniform3f;
     'u_lightintensity': Uniform1f;
     'u_lightcolor': Uniform3f;
+    'u_lightambient': Uniform3f;
     'u_height_factor': Uniform1f;
     'u_vertical_gradient': Uniform1f;
     'u_fill_translate': Uniform2f;
@@ -48,6 +50,7 @@ const fillExtrusionUniforms = (context: Context, locations: UniformLocations): F
     'u_lightpos_globe': new Uniform3f(context, locations.u_lightpos_globe),
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
+    'u_lightambient': new Uniform3f(context, locations.u_lightambient),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
 });
@@ -57,6 +60,7 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_lightpos_globe': new Uniform3f(context, locations.u_lightpos_globe),
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
+    'u_lightambient': new Uniform3f(context, locations.u_lightambient),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_height_factor': new Uniform1f(context, locations.u_height_factor),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
@@ -84,12 +88,19 @@ const fillExtrusionUniformValues = (
     const transformedLightPos = getCameraMath(projectedCamera).transformLightDirection(projectedCamera, lightPos);
 
     const lightColor = light.color;
+    const ambientColor = light['ambient-color'];
+    const ambientIntensity = light['ambient-intensity'];
 
     return {
         'u_lightpos': lightPos,
         'u_lightpos_globe': transformedLightPos,
         'u_lightintensity': light.intensity,
         'u_lightcolor': [lightColor.r, lightColor.g, lightColor.b],
+        'u_lightambient': [
+            ambientColor.r * ambientIntensity,
+            ambientColor.g * ambientIntensity,
+            ambientColor.b * ambientIntensity,
+        ],
         'u_vertical_gradient': +shouldUseVerticalGradient,
         'u_fill_translate': translate,
     };
