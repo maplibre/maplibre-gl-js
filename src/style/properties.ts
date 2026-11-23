@@ -1,4 +1,4 @@
-import {clone, deepEqual, easeCubicInOut, warnOnce} from '../util/util.ts';
+import {deepEqual, easeCubicInOut, warnOnce} from '../util/util.ts';
 import {interpolates, type Color, type StylePropertySpecification, normalizePropertyExpression,
     type Feature,
     type FeatureState,
@@ -171,7 +171,7 @@ export class Transitionable<Props> {
     }
 
     getValue<S extends keyof Props, T>(name: S): PropertyValueSpecification<T> | void {
-        return clone(this._values[name].value.value);
+        return structuredClone(this._values[name].value.value);
     }
 
     setValue<S extends keyof Props, T>(name: S, value: PropertyValueSpecification<T> | void): void {
@@ -180,7 +180,7 @@ export class Transitionable<Props> {
         }
         // Note that we do not _remove_ an own property in the case where a value is being reset
         // to the default: the transition might still be non-default.
-        this._values[name].value = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._propertyRootKey(name), this._globalState);
+        this._values[name].value = new PropertyValue(this._values[name].property, value === null ? undefined : structuredClone(value), this._propertyRootKey(name), this._globalState);
     }
 
     /** Applies a whole spec, skipping the values we already hold so they do not transition. */
@@ -196,14 +196,14 @@ export class Transitionable<Props> {
     }
 
     getTransition<S extends keyof Props>(name: S): TransitionSpecification | void {
-        return clone(this._values[name].transition);
+        return structuredClone(this._values[name].transition);
     }
 
     setTransition<S extends keyof Props>(name: S, value: TransitionSpecification | void): void {
         if (!Object.hasOwn(this._values, name)) {
             this._values[name] = new TransitionablePropertyValue(this._values[name].property, this._propertyRootKey(name), this._globalState);
         }
-        this._values[name].transition = clone(value) || undefined;
+        this._values[name].transition = structuredClone(value) || undefined;
     }
 
     /** Keeps the transitions running in `transitioning` on `priorGlobalState` where they read one of `refs` live. */
@@ -402,11 +402,11 @@ export class Layout<Props> {
     }
 
     getValue<S extends keyof Props>(name: S): any {
-        return clone(this._values[name].value);
+        return structuredClone(this._values[name].value);
     }
 
     setValue<S extends keyof Props>(name: S, value: any): void {
-        this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : clone(value), this._propertyRootKey(name), this._globalState) as any;
+        this._values[name] = new PropertyValue(this._values[name].property, value === null ? undefined : structuredClone(value), this._propertyRootKey(name), this._globalState) as any;
     }
 
     serialize(): any {

@@ -511,22 +511,6 @@ export function evaluateZoomSnap(zoom: number, zoomSnap: number, delta?: number)
 }
 
 /**
- * Create an object by mapping all the values of an existing object while
- * preserving their keys.
- */
-export function mapObject<Input extends object, Output>(
-    input: Input,
-    iterator: (value: Input[keyof Input], key: Extract<keyof Input, string>, input: Input) => Output,
-    context?: unknown
-): {[K in keyof Input]: Output} {
-    const output = {} as {[K in keyof Input]: Output};
-    for (const key in input) {
-        output[key] = iterator.call(context || this, input[key], key, input);
-    }
-    return output;
-}
-
-/**
  * Create an object by filtering out values of an existing object.
  */
 export function filterObject(input: any, iterator: Function, context?: any): any {
@@ -563,19 +547,6 @@ export function deepEqual(a?: unknown | null, b?: unknown | null): boolean {
         return true;
     }
     return a === b;
-}
-
-/**
- * Deeply clones two objects.
- */
-export function clone<T>(input: T): T {
-    if (Array.isArray(input)) {
-        return input.map(clone) as any as T;
-    } else if (typeof input === 'object' && input) {
-        return mapObject(input, clone) as T;
-    } else {
-        return input;
-    }
 }
 
 /**

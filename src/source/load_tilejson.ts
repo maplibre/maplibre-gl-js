@@ -23,6 +23,12 @@ export type LoadTileJsonResponse = {
     vectorLayerIds?: string[];
 };
 
+/**
+ * The smallest tile size a tiled source accepts. Halving the tile size quadruples the number of tiles that cover the
+ * viewport, so a tile size of a few pixels asks for millions of them.
+ */
+const MIN_TILE_SIZE = 64;
+
 /** The fields a source's options and its TileJSON can both set, the options taking precedence. */
 type TileJsonFields = Omit<LoadTileJsonResponse, 'vectorLayerIds'>;
 
@@ -56,9 +62,27 @@ export async function loadTileJson(
         sparse: fromOptions.sparse ?? fromTileJSON.sparse,
     };
 
+    validateNumbers(result);
+
     if ('vector_layers' in tileJSON && tileJSON.vector_layers) {
         result.vectorLayerIds = tileJSON.vector_layers.map((layer) => layer.id);
     }
 
     return result;
+}
+
+/**
+ * Throws unless the zoom levels are finite numbers and the tile size is a finite number of at least `MIN_TILE_SIZE`.
+ * A zoom level that is not a number never compares as reached, so the tiles covering the viewport would be split
+ * without end.
+ */
+function validateNumbers({minzoom, maxzoom, tileSize}: LoadTileJsonResponse) {
+    for (const [name, value] of Object.entries({minzoom, maxzoom})) {
+        if (value !== undefined && !Number.isFinite(value)) {
+            throw new Error(`${name} must be a finite number, got ${JSON.stringify(value)}`);
+        }
+    }
+    if (tileSize !== undefined && !(Number.isFinite(tileSize) && tileSize >= MIN_TILE_SIZE)) {
+        throw new Error(`tileSize must be a number of at least ${MIN_TILE_SIZE}, got ${JSON.stringify(tileSize)}`);
+    }
 }

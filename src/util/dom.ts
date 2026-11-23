@@ -38,6 +38,7 @@ type ElementInternals = {
     removeAttribute: Element['removeAttribute'];
     localName: (this: Element) => string;
     namespaceURI: (this: Element) => string;
+    body: (this: Document) => HTMLElement;
 };
 
 let elementInternals: ElementInternals;
@@ -45,7 +46,9 @@ let elementInternals: ElementInternals;
 /**
  * The `Element` members the sanitizer uses, read off the prototype rather than off the element it is looking at.
  * A form control named `children`, `remove` or `localName` shadows the same-named property of its own form element,
- * which would otherwise let untrusted markup pick what the sanitizer walking that tree sees.
+ * which would otherwise let untrusted markup pick what the sanitizer walking that tree sees. A document is exposed to
+ * the same thing: an element named `body` shadows `Document.body`, so the root of the walk is read off the prototype
+ * too.
  *
  * They are read on first use rather than when this module is loaded, since the module is also imported where there
  * is no DOM at all, such as during server side rendering.
@@ -58,7 +61,8 @@ function getElementInternals(): ElementInternals {
         remove: Element.prototype.remove,
         removeAttribute: Element.prototype.removeAttribute,
         localName: Object.getOwnPropertyDescriptor(Element.prototype, 'localName').get as () => string,
-        namespaceURI: Object.getOwnPropertyDescriptor(Element.prototype, 'namespaceURI').get as () => string
+        namespaceURI: Object.getOwnPropertyDescriptor(Element.prototype, 'namespaceURI').get as () => string,
+        body: Object.getOwnPropertyDescriptor(Document.prototype, 'body').get as () => HTMLElement
     };
     return elementInternals;
 }
@@ -153,11 +157,11 @@ export class DOM {
      * a string result lets carefully nested markup mutate into a different - and no longer sanitized - tree.
      */
     public static sanitize(str: string): DocumentFragment {
+        const {querySelectorAll, remove, body: getBody} = getElementInternals();
         const parser = new DOMParser();
         const doc = parser.parseFromString(createTrustedHTML(str), 'text/html');
-        const body = doc.body;
+        const body = getBody.call(doc);
 
-        const {querySelectorAll, remove} = getElementInternals();
         for (const element of Array.from<Element>(querySelectorAll.call(body, '*'))) {
             if (DOM.isAllowedElement(element)) {
                 DOM.removeDisallowedAttributes(element);
