@@ -108,16 +108,17 @@ export class FillBucket implements Bucket {
                 sortKey
             };
 
-            if (sortFeaturesByKey) {
-                bucketFeatures.push(bucketFeature);
-            } else {
+            if (!sortFeaturesByKey) {
                 this.addBucketFeature(bucketFeature, feature, options, canonical);
+                continue;
             }
+
+            bucketFeatures.push(bucketFeature);
         }
 
-        if (sortFeaturesByKey) {
-            bucketFeatures.sort((a, b) => a.sortKey - b.sortKey);
-        }
+        if (!sortFeaturesByKey) return;
+
+        bucketFeatures.sort((a, b) => a.sortKey - b.sortKey);
 
         for (const bucketFeature of bucketFeatures) {
             this.addBucketFeature(bucketFeature, features[bucketFeature.index].feature, options, canonical);
