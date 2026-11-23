@@ -229,6 +229,7 @@ export class Style extends Evented<MapEventType> {
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: string[];
     /**
+     * @internal
      * The tile manager of each source, keyed by source id. A null-prototype object, since a layer names its source with
      * an id from the style, and a `__proto__` id would otherwise resolve to `Object.prototype`.
      */
