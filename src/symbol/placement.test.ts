@@ -156,12 +156,13 @@ describe('placement', () => {
         expect(isLabelPlaced(tile, layer, bucket, {pitch: 45})).toBe(true);
     });
 
-    test('measures distance-from-center up the screen in units of its height', () => {
-        // The label sits 245 pixels from the top of a 512 pixel high screen: 0.5 - 245 / 512 = 0.021 above the middle.
-        const {tile, layer, bucket} = createFilteredSymbolTile(['all', ['>', ['distance-from-center'], 0.01], ['<', ['distance-from-center'], 0.03]]);
+    test('measures distance-from-camera as the depth of a symbol relative to the center', () => {
+        const unpitched = createFilteredSymbolTile(['all', ['>', ['distance-from-camera'], 0.999], ['<', ['distance-from-camera'], 1.001]]);
+        expect(isLabelPlaced(unpitched.tile, unpitched.layer, unpitched.bucket, {pitch: 0})).toBe(true);
 
-        expect(isLabelPlaced(tile, layer, bucket, {bearing: 0})).toBe(true);
-        expect(isLabelPlaced(tile, layer, bucket, {bearing: 180})).toBe(false);
+        const pitched = createFilteredSymbolTile(['<=', ['distance-from-camera'], 1]);
+        expect(isLabelPlaced(pitched.tile, pitched.layer, pitched.bucket, {pitch: 60, bearing: 0})).toBe(false);
+        expect(isLabelPlaced(pitched.tile, pitched.layer, pitched.bucket, {pitch: 60, bearing: 180})).toBe(true);
     });
 
     test('the first bucket draws the shared label and the second hides it', () => {

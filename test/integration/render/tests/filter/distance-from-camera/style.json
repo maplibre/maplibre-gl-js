@@ -82,9 +82,9 @@
       "filter": [
         "<",
         [
-          "distance-from-center"
+          "distance-from-camera"
         ],
-        0.1
+        1.1
       ],
       "layout": {
         "icon-image": "fav-circle-18",

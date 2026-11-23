@@ -1,5 +1,5 @@
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/expression/compound_expression.mjs b/node_modules/@maplibre/maplibre-gl-style-spec/dist/expression/compound_expression.mjs
-index 5542aa0..d059f64 100644
+index 5542aa0..9aca7b7 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/expression/compound_expression.mjs
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/expression/compound_expression.mjs
 @@ -190,6 +190,21 @@ CompoundExpression.register(expressions, {
@@ -16,10 +16,10 @@ index 5542aa0..d059f64 100644
 +		[],
 +		(ctx) => ctx.globals.bearing || 0
 +	],
-+	"distance-from-center": [
++	"distance-from-camera": [
 +		NumberType,
 +		[],
-+		(ctx) => ctx.globals.distanceFromCenter || 0
++		(ctx) => ctx.globals.distanceFromCamera || 0
 +	],
  	"heatmap-density": [
  		NumberType,
@@ -30,12 +30,12 @@ index 5542aa0..d059f64 100644
  		"zoom",
 +		"pitch",
 +		"bearing",
-+		"distance-from-center",
++		"distance-from-camera",
  		"heatmap-density",
  		"elevation",
  		"line-progress",
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/expression/index.mjs b/node_modules/@maplibre/maplibre-gl-style-spec/dist/expression/index.mjs
-index 51a209a..9f1c6d7 100644
+index 51a209a..a1eb596 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/expression/index.mjs
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/expression/index.mjs
 @@ -157,6 +157,11 @@ function createPropertyExpression(expressionInput, rootKey, propertySpec, global
@@ -45,8 +45,8 @@ index 51a209a..9f1c6d7 100644
 +	if (!isGlobalPropertyConstant(parsed, [
 +		"pitch",
 +		"bearing",
-+		"distance-from-center"
-+	])) return error([new ExpressionParsingError("", "\"pitch\", \"bearing\" and \"distance-from-center\" expressions are only supported in symbol layer filters.")]);
++		"distance-from-camera"
++	])) return error([new ExpressionParsingError("", "\"pitch\", \"bearing\" and \"distance-from-camera\" expressions are only supported in symbol layer filters.")]);
  	const zoomCurve = findZoomCurve(parsed);
  	if (!zoomCurve && !isZoomConstant) return error([new ExpressionParsingError("", "\"zoom\" expression may only be used as input to a top-level \"step\" or \"interpolate\" expression.")]);
  	else if (zoomCurve instanceof ExpressionParsingError) return error([zoomCurve]);
@@ -55,17 +55,17 @@ index 51a209a..9f1c6d7 100644
  }
  function addGlobalState(globals, globalState) {
 -	const { zoom, heatmapDensity, elevation, lineProgress, isSupportedScript, accumulated } = globals ?? {};
-+	const { zoom, pitch, bearing, distanceFromCenter, heatmapDensity, elevation, lineProgress, isSupportedScript, accumulated } = globals ?? {};
++	const { zoom, pitch, bearing, distanceFromCamera, heatmapDensity, elevation, lineProgress, isSupportedScript, accumulated } = globals ?? {};
  	return {
  		zoom,
 +		pitch,
 +		bearing,
-+		distanceFromCenter,
++		distanceFromCamera,
  		heatmapDensity,
  		elevation,
  		lineProgress,
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/feature_filter/index.mjs b/node_modules/@maplibre/maplibre-gl-style-spec/dist/feature_filter/index.mjs
-index ac2b243..6411b0b 100644
+index ac2b243..ba516a6 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/feature_filter/index.mjs
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/feature_filter/index.mjs
 @@ -1,4 +1,5 @@
@@ -89,13 +89,13 @@ index ac2b243..6411b0b 100644
 +	needCamera: !isGlobalPropertyConstant(compiled.value.expression, [
 +		"pitch",
 +		"bearing",
-+		"distance-from-center"
++		"distance-from-camera"
 +	]),
  		getGlobalStateRefs: () => findGlobalStateRefs(compiled.value.expression)
  	};
  }
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.cjs b/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.cjs
-index 7393650..d63d162 100644
+index 7393650..f25dfa2 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.cjs
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.cjs
 @@ -1203,7 +1203,7 @@
@@ -103,7 +103,7 @@ index 7393650..d63d162 100644
  			"expression": {
  				"interpolated": false,
 -				"parameters": ["zoom", "feature"]
-+				"parameters": ["zoom", "feature", "pitch", "bearing", "distance-from-center"]
++				"parameters": ["zoom", "feature", "pitch", "bearing", "distance-from-camera"]
  			},
  			"property-type": "data-driven"
  		},
@@ -121,10 +121,10 @@ index 7393650..d63d162 100644
 +			[],
 +			(ctx) => ctx.globals.bearing || 0
 +		],
-+		"distance-from-center": [
++		"distance-from-camera": [
 +			NumberType,
 +			[],
-+			(ctx) => ctx.globals.distanceFromCenter || 0
++			(ctx) => ctx.globals.distanceFromCamera || 0
 +		],
  		"heatmap-density": [
  			NumberType,
@@ -135,7 +135,7 @@ index 7393650..d63d162 100644
  			"zoom",
 +			"pitch",
 +			"bearing",
-+			"distance-from-center",
++			"distance-from-camera",
  			"heatmap-density",
  			"elevation",
  			"line-progress",
@@ -146,8 +146,8 @@ index 7393650..d63d162 100644
 +		if (!isGlobalPropertyConstant(parsed, [
 +			"pitch",
 +			"bearing",
-+			"distance-from-center"
-+		])) return error([new ExpressionParsingError("", "\"pitch\", \"bearing\" and \"distance-from-center\" expressions are only supported in symbol layer filters.")]);
++			"distance-from-camera"
++		])) return error([new ExpressionParsingError("", "\"pitch\", \"bearing\" and \"distance-from-camera\" expressions are only supported in symbol layer filters.")]);
  		const zoomCurve = findZoomCurve(parsed);
  		if (!zoomCurve && !isZoomConstant) return error([new ExpressionParsingError("", "\"zoom\" expression may only be used as input to a top-level \"step\" or \"interpolate\" expression.")]);
  		else if (zoomCurve instanceof ExpressionParsingError) return error([zoomCurve]);
@@ -156,12 +156,12 @@ index 7393650..d63d162 100644
  	}
  	function addGlobalState(globals, globalState) {
 -		const { zoom, heatmapDensity, elevation, lineProgress, isSupportedScript, accumulated } = globals ?? {};
-+		const { zoom, pitch, bearing, distanceFromCenter, heatmapDensity, elevation, lineProgress, isSupportedScript, accumulated } = globals ?? {};
++		const { zoom, pitch, bearing, distanceFromCamera, heatmapDensity, elevation, lineProgress, isSupportedScript, accumulated } = globals ?? {};
  		return {
  			zoom,
 +			pitch,
 +			bearing,
-+			distanceFromCenter,
++			distanceFromCamera,
  			heatmapDensity,
  			elevation,
  			lineProgress,
@@ -180,7 +180,7 @@ index 7393650..d63d162 100644
 +		needCamera: !isGlobalPropertyConstant(compiled.value.expression, [
 +			"pitch",
 +			"bearing",
-+			"distance-from-center"
++			"distance-from-camera"
 +		]),
  			getGlobalStateRefs: () => findGlobalStateRefs(compiled.value.expression)
  		};
@@ -192,8 +192,8 @@ index 7393650..d63d162 100644
 +		if (options.expressionContext === "filter" && options.layerType !== "symbol" && !isGlobalPropertyConstant(expressionObj, [
 +			"pitch",
 +			"bearing",
-+			"distance-from-center"
-+		])) return [new ValidationError(options.key, options.value, "\"pitch\", \"bearing\" and \"distance-from-center\" expressions are only supported in symbol layer filters.")];
++			"distance-from-camera"
++		])) return [new ValidationError(options.key, options.value, "\"pitch\", \"bearing\" and \"distance-from-camera\" expressions are only supported in symbol layer filters.")];
  		if (options.expressionContext && options.expressionContext.indexOf("cluster") === 0) {
  			if (!isGlobalPropertyConstant(expressionObj, ["zoom", "feature-state"])) return [new ValidationError(options.key, options.value, "\"zoom\" and \"feature-state\" expressions are not supported with cluster properties.")];
  			if (options.expressionContext === "cluster-initial" && !isFeatureConstant(expressionObj)) return [new ValidationError(options.key, options.value, "Feature data expressions are not supported with initial expression part of cluster properties.")];
@@ -209,7 +209,7 @@ index 7393650..d63d162 100644
  					return validateObject({
  						layer,
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.d.ts b/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.d.ts
-index 3f5d9af..29deea1 100644
+index 3f5d9af..5f5cbfe 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.d.ts
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/index.d.ts
 @@ -8340,7 +8340,7 @@ type ExpressionSpecification = ['array', ExpressionSpecification] | ['array', 's
@@ -217,7 +217,7 @@ index 3f5d9af..29deea1 100644
  }] | ['object', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] | ['string', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] | ['to-boolean', unknown | ExpressionSpecification] | ['to-color', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] | ['to-number', unknown | ExpressionSpecification, ...(unknown | ExpressionSpecification)[]] | ['to-string', unknown | ExpressionSpecification] | ['typeof', unknown | ExpressionSpecification] | ['accumulated'] | ['feature-state', string | ExpressionSpecification] | ['geometry-type'] | ['id'] | ['line-progress'] | ['properties'] | ['at', number | ExpressionSpecification, ExpressionSpecification] | ['get', string | ExpressionSpecification, ExpressionSpecification?] | ['global-state', string] | ['has', string | ExpressionSpecification, ExpressionSpecification?] | ['in', null | ExpressionInputType | ExpressionSpecification, string | ExpressionSpecification] | ['index-of', null | ExpressionInputType | ExpressionSpecification, string | ExpressionSpecification, (number | ExpressionSpecification)?] | ['length', string | ExpressionSpecification] | ['slice', string | ExpressionSpecification, number | ExpressionSpecification, (number | ExpressionSpecification)?] | ['!', boolean | ExpressionSpecification] | ['!=', null | ExpressionInputType | ExpressionSpecification, null | ExpressionInputType | ExpressionSpecification, (CollatorExpressionSpecification | VariableExpressionSpecification)?] | ['<', string | number | ExpressionSpecification, string | number | ExpressionSpecification, (CollatorExpressionSpecification | VariableExpressionSpecification)?] | ['<=', string | number | ExpressionSpecification, string | number | ExpressionSpecification, (CollatorExpressionSpecification | VariableExpressionSpecification)?] | ['==', null | ExpressionInputType | ExpressionSpecification, null | ExpressionInputType | ExpressionSpecification, (CollatorExpressionSpecification | VariableExpressionSpecification)?] | ['>', string | number | ExpressionSpecification, string | number | ExpressionSpecification, (CollatorExpressionSpecification | VariableExpressionSpecification)?] | ['>=', string | number | ExpressionSpecification, string | number | ExpressionSpecification, (CollatorExpressionSpecification | VariableExpressionSpecification)?] | ['all', ...(boolean | ExpressionSpecification)[]] | ['any', ...(boolean | ExpressionSpecification)[]] | ['case', boolean | ExpressionSpecification, null | ExpressionInputType | ExpressionSpecification, ...(boolean | null | ExpressionInputType | ExpressionSpecification)[], null | ExpressionInputType | ExpressionSpecification] | ['coalesce', ...(ExpressionInputType | ExpressionSpecification)[]] | ['match', string | number | ExpressionSpecification, string | number | string[] | number[], null | ExpressionInputType | ExpressionSpecification, ...(string | number | string[] | number[] | null | ExpressionInputType | ExpressionSpecification)[],
  // repeated as above
 -null | ExpressionInputType | ExpressionSpecification] | ['within', GeoJSON.GeoJSON] | ['interpolate', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification | ProjectionDefinitionSpecification)[]] | ['interpolate-hcl', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-lab', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-oklch', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-oklab', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['step', number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, ...(number | ExpressionInputType | ExpressionSpecification)[]] | ['let', string, ExpressionInputType | ExpressionSpecification, ...(string | ExpressionInputType | ExpressionSpecification)[]] | VariableExpressionSpecification | ['concat', ...(ExpressionInputType | ExpressionSpecification)[]] | ['downcase', string | ExpressionSpecification] | ['is-supported-script', string | ExpressionSpecification] | ['join', string[] | ExpressionSpecification, string | ExpressionSpecification] | ['resolved-locale', CollatorExpressionSpecification] | ['split', string | ExpressionSpecification, string | ExpressionSpecification] | ['upcase', string | ExpressionSpecification] | ['rgb', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification] | ['rgba', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification] | ['to-rgba', ColorSpecification | ExpressionSpecification] | ['-', number | ExpressionSpecification, (number | ExpressionSpecification)?] | ['*', number | ExpressionSpecification, number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['/', number | ExpressionSpecification, number | ExpressionSpecification] | ['%', number | ExpressionSpecification, number | ExpressionSpecification] | ['^', number | ExpressionSpecification, number | ExpressionSpecification] | ['+', ...(number | ExpressionSpecification)[]] | ['abs', number | ExpressionSpecification] | ['acos', number | ExpressionSpecification] | ['asin', number | ExpressionSpecification] | ['atan', number | ExpressionSpecification] | ['ceil', number | ExpressionSpecification] | ['cos', number | ExpressionSpecification] | ['distance', GeoJSON.GeoJSON] | ['e'] | ['floor', number | ExpressionSpecification] | ['ln', number | ExpressionSpecification] | ['ln2'] | ['log10', number | ExpressionSpecification] | ['log2', number | ExpressionSpecification] | ['max', number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['min', number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['pi'] | ['round', number | ExpressionSpecification] | ['sin', number | ExpressionSpecification] | ['sqrt', number | ExpressionSpecification] | ['tan', number | ExpressionSpecification] | ['zoom'] | ['heatmap-density'] | ['elevation'] | ['global-state', string];
-+null | ExpressionInputType | ExpressionSpecification] | ['within', GeoJSON.GeoJSON] | ['interpolate', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification | ProjectionDefinitionSpecification)[]] | ['interpolate-hcl', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-lab', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-oklch', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-oklab', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['step', number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, ...(number | ExpressionInputType | ExpressionSpecification)[]] | ['let', string, ExpressionInputType | ExpressionSpecification, ...(string | ExpressionInputType | ExpressionSpecification)[]] | VariableExpressionSpecification | ['concat', ...(ExpressionInputType | ExpressionSpecification)[]] | ['downcase', string | ExpressionSpecification] | ['is-supported-script', string | ExpressionSpecification] | ['join', string[] | ExpressionSpecification, string | ExpressionSpecification] | ['resolved-locale', CollatorExpressionSpecification] | ['split', string | ExpressionSpecification, string | ExpressionSpecification] | ['upcase', string | ExpressionSpecification] | ['rgb', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification] | ['rgba', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification] | ['to-rgba', ColorSpecification | ExpressionSpecification] | ['-', number | ExpressionSpecification, (number | ExpressionSpecification)?] | ['*', number | ExpressionSpecification, number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['/', number | ExpressionSpecification, number | ExpressionSpecification] | ['%', number | ExpressionSpecification, number | ExpressionSpecification] | ['^', number | ExpressionSpecification, number | ExpressionSpecification] | ['+', ...(number | ExpressionSpecification)[]] | ['abs', number | ExpressionSpecification] | ['acos', number | ExpressionSpecification] | ['asin', number | ExpressionSpecification] | ['atan', number | ExpressionSpecification] | ['ceil', number | ExpressionSpecification] | ['cos', number | ExpressionSpecification] | ['distance', GeoJSON.GeoJSON] | ['e'] | ['floor', number | ExpressionSpecification] | ['ln', number | ExpressionSpecification] | ['ln2'] | ['log10', number | ExpressionSpecification] | ['log2', number | ExpressionSpecification] | ['max', number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['min', number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['pi'] | ['round', number | ExpressionSpecification] | ['sin', number | ExpressionSpecification] | ['sqrt', number | ExpressionSpecification] | ['tan', number | ExpressionSpecification] | ['zoom'] | ['pitch'] | ['bearing'] | ['distance-from-center'] | ['heatmap-density'] | ['elevation'] | ['global-state', string];
++null | ExpressionInputType | ExpressionSpecification] | ['within', GeoJSON.GeoJSON] | ['interpolate', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification | ProjectionDefinitionSpecification)[]] | ['interpolate-hcl', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-lab', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-oklch', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['interpolate-oklab', InterpolationSpecification, number | ExpressionSpecification, ...(number | ColorSpecification | ExpressionSpecification)[]] | ['step', number | ExpressionSpecification, ExpressionInputType | ExpressionSpecification, ...(number | ExpressionInputType | ExpressionSpecification)[]] | ['let', string, ExpressionInputType | ExpressionSpecification, ...(string | ExpressionInputType | ExpressionSpecification)[]] | VariableExpressionSpecification | ['concat', ...(ExpressionInputType | ExpressionSpecification)[]] | ['downcase', string | ExpressionSpecification] | ['is-supported-script', string | ExpressionSpecification] | ['join', string[] | ExpressionSpecification, string | ExpressionSpecification] | ['resolved-locale', CollatorExpressionSpecification] | ['split', string | ExpressionSpecification, string | ExpressionSpecification] | ['upcase', string | ExpressionSpecification] | ['rgb', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification] | ['rgba', number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification, number | ExpressionSpecification] | ['to-rgba', ColorSpecification | ExpressionSpecification] | ['-', number | ExpressionSpecification, (number | ExpressionSpecification)?] | ['*', number | ExpressionSpecification, number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['/', number | ExpressionSpecification, number | ExpressionSpecification] | ['%', number | ExpressionSpecification, number | ExpressionSpecification] | ['^', number | ExpressionSpecification, number | ExpressionSpecification] | ['+', ...(number | ExpressionSpecification)[]] | ['abs', number | ExpressionSpecification] | ['acos', number | ExpressionSpecification] | ['asin', number | ExpressionSpecification] | ['atan', number | ExpressionSpecification] | ['ceil', number | ExpressionSpecification] | ['cos', number | ExpressionSpecification] | ['distance', GeoJSON.GeoJSON] | ['e'] | ['floor', number | ExpressionSpecification] | ['ln', number | ExpressionSpecification] | ['ln2'] | ['log10', number | ExpressionSpecification] | ['log2', number | ExpressionSpecification] | ['max', number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['min', number | ExpressionSpecification, ...(number | ExpressionSpecification)[]] | ['pi'] | ['round', number | ExpressionSpecification] | ['sin', number | ExpressionSpecification] | ['sqrt', number | ExpressionSpecification] | ['tan', number | ExpressionSpecification] | ['zoom'] | ['pitch'] | ['bearing'] | ['distance-from-camera'] | ['heatmap-density'] | ['elevation'] | ['global-state', string];
  type ExpressionFilterSpecification = boolean | ExpressionSpecification;
  type LegacyFilterSpecification = ['has', string] | ['!has', string] | ['==', string, string | number | boolean] | ['!=', string, string | number | boolean] | ['>', string, string | number | boolean] | ['>=', string, string | number | boolean] | ['<', string, string | number | boolean] | ['<=', string, string | number | boolean] | ['in', string, ...(string | number | boolean)[]] | ['!in', string, ...(string | number | boolean)[]] | ['all', ...LegacyFilterSpecification[]] | ['any', ...LegacyFilterSpecification[]] | ['none', ...LegacyFilterSpecification[]];
  type FilterSpecification = ExpressionFilterSpecification | LegacyFilterSpecification;
@@ -230,10 +230,10 @@ index 3f5d9af..29deea1 100644
 +  /** The bearing of the camera in degrees, supplied while symbols are placed. */
 +  bearing?: number;
 +  /**
-+   * How far up the screen a symbol is from its middle, in units of the screen's height: 0.5 at
-+   * the top edge and -0.5 at the bottom edge. Supplied per symbol while symbols are placed.
++   * A symbol's depth along the camera's view divided by the depth of the center of the map.
++   * Supplied per symbol while symbols are placed.
 +   */
-+  distanceFromCenter?: number;
++  distanceFromCamera?: number;
    heatmapDensity?: number;
    elevation?: number;
    lineProgress?: number;
@@ -242,7 +242,7 @@ index 3f5d9af..29deea1 100644
    filter: FilterExpression;
    needGeometry: boolean;
 +  /**
-+   * Whether the filter reads `pitch`, `bearing` or `distance-from-center`, which only symbol
++   * Whether the filter reads `pitch`, `bearing` or `distance-from-camera`, which only symbol
 +   * placement can supply, so the filter has to be evaluated again whenever symbols are placed.
 +   */
 +  needCamera: boolean;
@@ -254,12 +254,12 @@ index 3f5d9af..29deea1 100644
  declare function createVisibility(visibility: VisibilitySpecification, rootKey: string, globalState: Record<string, any>): VisibilityExpression;
  type ExpressionType = 'data-driven' | 'cross-faded' | 'cross-faded-data-driven' | 'color-ramp' | 'data-constant' | 'constant';
 -type ExpressionParameters = Array<'zoom' | 'feature' | 'feature-state' | 'heatmap-density' | 'elevation' | 'line-progress' | 'global-state'>;
-+type ExpressionParameters = Array<'zoom' | 'pitch' | 'bearing' | 'distance-from-center' | 'feature' | 'feature-state' | 'heatmap-density' | 'elevation' | 'line-progress' | 'global-state'>;
++type ExpressionParameters = Array<'zoom' | 'pitch' | 'bearing' | 'distance-from-camera' | 'feature' | 'feature-state' | 'heatmap-density' | 'elevation' | 'line-progress' | 'global-state'>;
  type ExpressionSpecificationDefinition = {
    interpolated: boolean;
    parameters: ExpressionParameters;
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/latest.json b/node_modules/@maplibre/maplibre-gl-style-spec/dist/latest.json
-index 435ae96..c045963 100644
+index 435ae96..05cdf44 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/latest.json
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/latest.json
 @@ -3300,7 +3300,10 @@
@@ -270,7 +270,7 @@ index 435ae96..c045963 100644
 +        "feature",
 +        "pitch",
 +        "bearing",
-+        "distance-from-center"
++        "distance-from-camera"
        ]
      },
      "property-type": "data-driven"
@@ -329,8 +329,8 @@ index 435ae96..c045963 100644
 +          }
 +        }
 +      },
-+      "distance-from-center": {
-+        "doc": "Returns how far up the screen a symbol is from its middle, in units of the screen's height: 0.5 at the top edge, -0.5 at the bottom edge and 0 in the middle. It can be used only in the filter of a symbol layer, where it is evaluated each time symbols are placed.",
++      "distance-from-camera": {
++        "doc": "Returns how far a symbol is from the camera compared with the center of the map: the symbol's depth along the camera's view divided by the depth of the center. It is 1 at the center and everywhere on a map that is not pitched, and 2 where perspective draws a symbol at half its size. It can be used only in the filter of a symbol layer, where it is evaluated each time symbols are placed.",
 +        "syntax": {
 +          "overloads": [
 +            {
@@ -342,9 +342,9 @@ index 435ae96..c045963 100644
 +        "example": [
 +          "<",
 +          [
-+            "distance-from-center"
++            "distance-from-camera"
 +          ],
-+          1
++          2
 +        ],
 +        "group": "Zoom",
 +        "sdk-support": {
@@ -357,7 +357,7 @@ index 435ae96..c045963 100644
          "doc": "Gets the kernel density estimation of a pixel in a heatmap layer, which is a relative measure of how many data points are crowded around a particular pixel. Can only be used in the [`heatmap-color`](layers/#heatmap-color) property.",
          "syntax": {
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/reference/v8.json.mjs b/node_modules/@maplibre/maplibre-gl-style-spec/dist/reference/v8.json.mjs
-index f39afe7..9e7ca33 100644
+index f39afe7..8523530 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/reference/v8.json.mjs
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/reference/v8.json.mjs
 @@ -1199,7 +1199,7 @@ var v8_default = {
@@ -365,12 +365,12 @@ index f39afe7..9e7ca33 100644
  		"expression": {
  			"interpolated": false,
 -			"parameters": ["zoom", "feature"]
-+			"parameters": ["zoom", "feature", "pitch", "bearing", "distance-from-center"]
++			"parameters": ["zoom", "feature", "pitch", "bearing", "distance-from-camera"]
  		},
  		"property-type": "data-driven"
  	},
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/dist/validate/validate_expression.mjs b/node_modules/@maplibre/maplibre-gl-style-spec/dist/validate/validate_expression.mjs
-index 1e7721b..cdf25ca 100644
+index 1e7721b..9e3574a 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/dist/validate/validate_expression.mjs
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/dist/validate/validate_expression.mjs
 @@ -12,6 +12,11 @@ function validateExpression(options) {
@@ -380,8 +380,8 @@ index 1e7721b..cdf25ca 100644
 +	if (options.expressionContext === "filter" && options.layerType !== "symbol" && !isGlobalPropertyConstant(expressionObj, [
 +		"pitch",
 +		"bearing",
-+		"distance-from-center"
-+	])) return [new ValidationError(options.key, options.value, "\"pitch\", \"bearing\" and \"distance-from-center\" expressions are only supported in symbol layer filters.")];
++		"distance-from-camera"
++	])) return [new ValidationError(options.key, options.value, "\"pitch\", \"bearing\" and \"distance-from-camera\" expressions are only supported in symbol layer filters.")];
  	if (options.expressionContext && options.expressionContext.indexOf("cluster") === 0) {
  		if (!isGlobalPropertyConstant(expressionObj, ["zoom", "feature-state"])) return [new ValidationError(options.key, options.value, "\"zoom\" and \"feature-state\" expressions are not supported with cluster properties.")];
  		if (options.expressionContext === "cluster-initial" && !isFeatureConstant(expressionObj)) return [new ValidationError(options.key, options.value, "Feature data expressions are not supported with initial expression part of cluster properties.")];
@@ -401,7 +401,7 @@ index 1c1c32c..4c34cd7 100644
  				return validateObject({
  					layer,
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/compound_expression.ts b/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/compound_expression.ts
-index 1314f3d..328702d 100644
+index 1314f3d..788d6d7 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/compound_expression.ts
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/compound_expression.ts
 @@ -278,6 +278,9 @@ CompoundExpression.register(expressions, {
@@ -410,7 +410,7 @@ index 1314f3d..328702d 100644
      zoom: [NumberType, [], (ctx) => ctx.globals.zoom],
 +    pitch: [NumberType, [], (ctx) => ctx.globals.pitch || 0],
 +    bearing: [NumberType, [], (ctx) => ctx.globals.bearing || 0],
-+    'distance-from-center': [NumberType, [], (ctx) => ctx.globals.distanceFromCenter || 0],
++    'distance-from-camera': [NumberType, [], (ctx) => ctx.globals.distanceFromCamera || 0],
      'heatmap-density': [NumberType, [], (ctx) => ctx.globals.heatmapDensity || 0],
      elevation: [NumberType, [], (ctx) => ctx.globals.elevation || 0],
      'line-progress': [NumberType, [], (ctx) => ctx.globals.lineProgress || 0],
@@ -420,12 +420,12 @@ index 1314f3d..328702d 100644
              'zoom',
 +            'pitch',
 +            'bearing',
-+            'distance-from-center',
++            'distance-from-camera',
              'heatmap-density',
              'elevation',
              'line-progress',
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/index.ts b/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/index.ts
-index 363e120..671b9e6 100644
+index 363e120..0b34d41 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/index.ts
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/src/expression/index.ts
 @@ -99,6 +99,15 @@ export type FeatureState = {[_: string]: any};
@@ -437,10 +437,10 @@ index 363e120..671b9e6 100644
 +    /** The bearing of the camera in degrees, supplied while symbols are placed. */
 +    bearing?: number;
 +    /**
-+     * How far up the screen a symbol is from its middle, in units of the screen's height: 0.5 at
-+     * the top edge and -0.5 at the bottom edge. Supplied per symbol while symbols are placed.
++     * A symbol's depth along the camera's view divided by the depth of the center of the map.
++     * Supplied per symbol while symbols are placed.
 +     */
-+    distanceFromCenter?: number;
++    distanceFromCamera?: number;
      heatmapDensity?: number;
      elevation?: number;
      lineProgress?: number;
@@ -448,11 +448,11 @@ index 363e120..671b9e6 100644
          return error([new ExpressionParsingError('', 'zoom expressions not supported')]);
      }
  
-+    if (!isGlobalPropertyConstant(parsed, ['pitch', 'bearing', 'distance-from-center'])) {
++    if (!isGlobalPropertyConstant(parsed, ['pitch', 'bearing', 'distance-from-camera'])) {
 +        return error([
 +            new ExpressionParsingError(
 +                '',
-+                '"pitch", "bearing" and "distance-from-center" expressions are only supported in symbol layer filters.'
++                '"pitch", "bearing" and "distance-from-camera" expressions are only supported in symbol layer filters.'
 +            )
 +        ]);
 +    }
@@ -470,7 +470,7 @@ index 363e120..671b9e6 100644
 +        zoom,
 +        pitch,
 +        bearing,
-+        distanceFromCenter,
++        distanceFromCamera,
 +        heatmapDensity,
 +        elevation,
 +        lineProgress,
@@ -481,12 +481,12 @@ index 363e120..671b9e6 100644
          zoom,
 +        pitch,
 +        bearing,
-+        distanceFromCenter,
++        distanceFromCamera,
          heatmapDensity,
          elevation,
          lineProgress,
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/src/feature_filter/index.ts b/node_modules/@maplibre/maplibre-gl-style-spec/src/feature_filter/index.ts
-index d1b3593..76c789e 100644
+index d1b3593..f489f23 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/src/feature_filter/index.ts
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/src/feature_filter/index.ts
 @@ -1,4 +1,5 @@
@@ -500,7 +500,7 @@ index d1b3593..76c789e 100644
      filter: FilterExpression;
      needGeometry: boolean;
 +    /**
-+     * Whether the filter reads `pitch`, `bearing` or `distance-from-center`, which only symbol
++     * Whether the filter reads `pitch`, `bearing` or `distance-from-camera`, which only symbol
 +     * placement can supply, so the filter has to be evaluated again whenever symbols are placed.
 +     */
 +    needCamera: boolean;
@@ -528,13 +528,13 @@ index d1b3593..76c789e 100644
 +            needCamera: !isGlobalPropertyConstant(compiled.value.expression, [
 +                'pitch',
 +                'bearing',
-+                'distance-from-center'
++                'distance-from-camera'
 +            ]),
              getGlobalStateRefs: () => findGlobalStateRefs(compiled.value.expression)
          };
      }
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/src/index.ts b/node_modules/@maplibre/maplibre-gl-style-spec/src/index.ts
-index c6404db..2435dd4 100644
+index c6404db..e4da402 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/src/index.ts
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/src/index.ts
 @@ -87,6 +87,9 @@ type ExpressionType =
@@ -543,12 +543,12 @@ index c6404db..2435dd4 100644
      | 'zoom'
 +    | 'pitch'
 +    | 'bearing'
-+    | 'distance-from-center'
++    | 'distance-from-camera'
      | 'feature'
      | 'feature-state'
      | 'heatmap-density'
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/src/reference/v8.json b/node_modules/@maplibre/maplibre-gl-style-spec/src/reference/v8.json
-index 435ae96..c045963 100644
+index 435ae96..05cdf44 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/src/reference/v8.json
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/src/reference/v8.json
 @@ -3300,7 +3300,10 @@
@@ -559,7 +559,7 @@ index 435ae96..c045963 100644
 +        "feature",
 +        "pitch",
 +        "bearing",
-+        "distance-from-center"
++        "distance-from-camera"
        ]
      },
      "property-type": "data-driven"
@@ -618,8 +618,8 @@ index 435ae96..c045963 100644
 +          }
 +        }
 +      },
-+      "distance-from-center": {
-+        "doc": "Returns how far up the screen a symbol is from its middle, in units of the screen's height: 0.5 at the top edge, -0.5 at the bottom edge and 0 in the middle. It can be used only in the filter of a symbol layer, where it is evaluated each time symbols are placed.",
++      "distance-from-camera": {
++        "doc": "Returns how far a symbol is from the camera compared with the center of the map: the symbol's depth along the camera's view divided by the depth of the center. It is 1 at the center and everywhere on a map that is not pitched, and 2 where perspective draws a symbol at half its size. It can be used only in the filter of a symbol layer, where it is evaluated each time symbols are placed.",
 +        "syntax": {
 +          "overloads": [
 +            {
@@ -631,9 +631,9 @@ index 435ae96..c045963 100644
 +        "example": [
 +          "<",
 +          [
-+            "distance-from-center"
++            "distance-from-camera"
 +          ],
-+          1
++          2
 +        ],
 +        "group": "Zoom",
 +        "sdk-support": {
@@ -646,7 +646,7 @@ index 435ae96..c045963 100644
          "doc": "Gets the kernel density estimation of a pixel in a heatmap layer, which is a relative measure of how many data points are crowded around a particular pixel. Can only be used in the [`heatmap-color`](layers/#heatmap-color) property.",
          "syntax": {
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/src/types.g.ts b/node_modules/@maplibre/maplibre-gl-style-spec/src/types.g.ts
-index 5c71549..853962e 100644
+index 5c71549..91ad2bc 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/src/types.g.ts
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/src/types.g.ts
 @@ -147,6 +147,9 @@ export type ExpressionSpecification =
@@ -655,12 +655,12 @@ index 5c71549..853962e 100644
      | ['zoom'] // number
 +    | ['pitch'] // number
 +    | ['bearing'] // number
-+    | ['distance-from-center'] // number
++    | ['distance-from-camera'] // number
      // Heatmap
      | ['heatmap-density'] // number
      // Elevation
 diff --git a/node_modules/@maplibre/maplibre-gl-style-spec/src/validate/validate_expression.ts b/node_modules/@maplibre/maplibre-gl-style-spec/src/validate/validate_expression.ts
-index 6331407..ad03895 100644
+index 6331407..2c3328c 100644
 --- a/node_modules/@maplibre/maplibre-gl-style-spec/src/validate/validate_expression.ts
 +++ b/node_modules/@maplibre/maplibre-gl-style-spec/src/validate/validate_expression.ts
 @@ -63,6 +63,20 @@ export function validateExpression(options: any): Array<ValidationError> {
@@ -670,13 +670,13 @@ index 6331407..ad03895 100644
 +    if (
 +        options.expressionContext === 'filter' &&
 +        options.layerType !== 'symbol' &&
-+        !isGlobalPropertyConstant(expressionObj, ['pitch', 'bearing', 'distance-from-center'])
++        !isGlobalPropertyConstant(expressionObj, ['pitch', 'bearing', 'distance-from-camera'])
 +    ) {
 +        return [
 +            new ValidationError(
 +                options.key,
 +                options.value,
-+                '"pitch", "bearing" and "distance-from-center" expressions are only supported in symbol layer filters.'
++                '"pitch", "bearing" and "distance-from-camera" expressions are only supported in symbol layer filters.'
 +            )
 +        ];
 +    }
