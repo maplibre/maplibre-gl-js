@@ -206,6 +206,20 @@ describe('LineBucket', () => {
         });
     });
 
+    test('LineBucket draws a solid line when a data-driven line-dasharray falls back to its default', () => {
+        const bucket = createLineBucket({id: 'test',
+            paint: {'line-dasharray': ['get', 'dasharray']},
+            availableImages: []
+        });
+
+        bucket.populate(getFeaturesFromLayer(sourceLayer), createPopulateOptions([]), undefined);
+
+        expect(bucket.patternFeatures.length).toBeGreaterThan(0);
+        expect(bucket.patternFeatures[0].dashes).toEqual({
+            test: {min: '1,false', mid: '1,false', max: '1,false'}
+        });
+    });
+
     test('LineBucket keeps an offset line from folding back at a sharp corner', () => {
         const layer = new LineStyleLayer({id: 'test', type: 'line'} as LayerSpecification, {});
         layer.recalculate({zoom: 0, zoomHistory: {} as ZoomHistory} as EvaluationParameters, []);

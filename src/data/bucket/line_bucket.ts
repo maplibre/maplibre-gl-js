@@ -750,16 +750,18 @@ export class LineBucket implements Bucket {
 
             const round = layer.layout.get('line-cap').evaluate(bucketFeature, {}) === 'round';
 
+            // When the expression fails for a feature, it falls back to the property default, which is null for
+            // line-dasharray. Draw those features as a solid line, the same as a layer without line-dasharray.
             const min = {
-                dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}),
+                dasharray: dasharrayProperty.value.evaluate({zoom: zoom - 1}, bucketFeature, {}) ?? [1],
                 round
             };
             const mid = {
-                dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}),
+                dasharray: dasharrayProperty.value.evaluate({zoom}, bucketFeature, {}) ?? [1],
                 round
             };
             const max = {
-                dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}),
+                dasharray: dasharrayProperty.value.evaluate({zoom: zoom + 1}, bucketFeature, {}) ?? [1],
                 round
             };
 
