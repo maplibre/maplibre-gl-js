@@ -88,6 +88,8 @@ export class Painter {
      * Resized in place to match the target dimensions.
      */
     layerCompositeFbo: Framebuffer | null;
+    /** Holds the strongest `fill-extrusion` ground occlusion per pixel. */
+    groundOcclusionFbo: Framebuffer | null;
     /** Copy of the composite target's scissor box, sampled as the backdrop by shader-evaluated `{line,fill}-layer-blend`. */
     layerCompositeBackdrop: {texture: WebGLTexture; width: number; height: number} | null;
     width: number;
@@ -121,6 +123,7 @@ export class Painter {
         this.context = new Context(gl);
         this.programCache = new ProgramCache(this.context);
         this.layerCompositeFbo = null;
+        this.groundOcclusionFbo = null;
         this.layerCompositeBackdrop = null;
         this._tileTextures = {};
         this._rttObjectRecyclePool = [];
@@ -309,6 +312,8 @@ export class Painter {
             this.renderLayer(this, tileManagers[layer.source], layer, coords, frameRenderContext);
         }
 
+        this.drawFunctions.fillExtrusionGroundOcclusion(this, style, coordsDescending, frameRenderContext);
+
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.viewport.set([0, 0, this.width, this.height]);
         this.context.bindFramebuffer.set(null);
@@ -343,6 +348,14 @@ export class Painter {
         frameRenderContext.currentPass = 'translucent';
 
         let globeDepthRendered = false;
+        let lastFillExtrusionLayer = -1;
+        for (let i = layerIds.length - 1; i >= 0; i--) {
+            const layer = style._layers[layerIds[i]];
+            if (isFillExtrusionStyleLayer(layer) && !layer.isHidden(projectedCamera.zoom)) {
+                lastFillExtrusionLayer = i;
+                break;
+            }
+        }
 
         for (frameRenderContext.currentLayer = 0; frameRenderContext.currentLayer < layerIds.length; frameRenderContext.currentLayer++) {
             const layer = style._layers[layerIds[frameRenderContext.currentLayer]];
@@ -367,6 +380,10 @@ export class Painter {
 
             frameRenderContext.renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, tileManager, layer, coords, frameRenderContext);
+
+            if (frameRenderContext.currentLayer === lastFillExtrusionLayer) {
+                this.drawFunctions.fillExtrusionGroundOcclusion(this, style, coordsDescending, frameRenderContext);
+            }
         }
 
         // Render atmosphere, only for Globe projection
@@ -598,6 +615,8 @@ export class Painter {
 
         this.layerCompositeFbo?.destroy();
         this.layerCompositeFbo = null;
+        this.groundOcclusionFbo?.destroy();
+        this.groundOcclusionFbo = null;
 
         if (this.layerCompositeBackdrop) {
             this.context.gl.deleteTexture(this.layerCompositeBackdrop.texture);

@@ -43,6 +43,12 @@ export class FillExtrusionStyleLayer extends StyleLayer {
         return true;
     }
 
+    hasGroundOcclusion(): boolean {
+        return this.paint.get('fill-extrusion-opacity').constantOr(1) > 0 &&
+            this.paint.get('fill-extrusion-ambient-occlusion-ground-intensity') > 0 &&
+            this.paint.get('fill-extrusion-ambient-occlusion-ground-radius') > 0;
+    }
+
     queryIntersectsFeature({
         queryGeometry,
         feature,

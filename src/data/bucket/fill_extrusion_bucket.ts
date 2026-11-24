@@ -36,8 +36,11 @@ import type {SubdivisionGranularitySetting} from '../../render/subdivision_granu
 import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 const FACTOR = Math.pow(2, 13);
+const ROOF_NORMAL_Z = FACTOR * 2;
+const MAX_WALL_LENGTH = 16383;
 
-function addVertex(vertexArray, x, y, nx, ny, nz, t, e) {
+/** `z` is stored as is: {@link ROOF_NORMAL_Z} for roofs, {@link wallEndData} for walls. */
+function addVertex(vertexArray, x, y, nx, ny, z, t, e) {
     vertexArray.emplaceBack(
         // a_pos
         x,
@@ -45,10 +48,42 @@ function addVertex(vertexArray, x, y, nx, ny, nz, t, e) {
         // a_normal_ed: 3-component normal and 1-component edgedistance
         Math.floor(nx * FACTOR) * 2 + t,
         ny * FACTOR * 2,
-        nz * FACTOR * 2,
+        z,
         // edgedistance (used for wrapping patterns around extrusion sides)
         Math.round(e)
     );
+}
+
+/**
+ * Packs the ground occlusion data of one wall end into `a_normal_ed.z`: the sign marks the first end,
+ * bit 0 a convex corner, the other bits the wall's length in tile units.
+ */
+function wallEndData(isFirstEnd: boolean, length: number, isConvex: boolean): number {
+    const data = 2 * Math.min(Math.round(length), MAX_WALL_LENGTH) + (isConvex ? 1 : 0);
+    return isFirstEnd ? data : -data;
+}
+
+/** Whether the outline turns convex at `corner`, i.e. `neighbour` lies on the side `inwardNormal` points to. */
+function isConvexCorner(corner: Point, neighbour: Point | undefined, inwardNormal: Point): boolean {
+    if (!neighbour || isBoundaryEdge(corner, neighbour)) return false;
+    return (neighbour.x - corner.x) * inwardNormal.x + (neighbour.y - corner.y) * inwardNormal.y > 0;
+}
+
+/** The nearest point before (`step = -1`) or after (`step = 1`) `index` that differs from it, wrapping around a closed ring. */
+function distinctNeighbour(geometry: Point[], index: number, step: 1 | -1): Point | undefined {
+    const last = geometry.length - 1;
+    const isRing = last > 0 && geometry[0].equals(geometry[last]);
+    const point = geometry[index];
+    for (let i = index + step, visited = 0; visited < last; i += step, visited++) {
+        if (isRing) {
+            if (i > last) i = 1;
+            else if (i < 0) i = last - 1;
+        } else if (i < 0 || i > last) {
+            return undefined;
+        }
+        if (!geometry[i].equals(point)) return geometry[i];
+    }
+    return undefined;
 }
 
 type CentroidAccumulator = {
@@ -254,7 +289,7 @@ export class FillExtrusionBucket implements Bucket {
 
         fillLargeMeshArrays(
             (x, y) => {
-                addVertex(vertexArray, x, y, 0, 0, 1, 1, 0);
+                addVertex(vertexArray, x, y, 0, 0, ROOF_NORMAL_Z, 1, 0);
             },
             this.segments,
             this.layoutVertexArray,
@@ -290,13 +325,16 @@ export class FillExtrusionBucket implements Bucket {
             const dist = p2.dist(p1);
             if (edgeDistance + dist > 32768) edgeDistance = 0;
 
-            addVertex(this.layoutVertexArray, p1.x, p1.y, end.x, end.y, 0, 0, edgeDistance);
-            addVertex(this.layoutVertexArray, p1.x, p1.y, end.x, end.y, 0, 1, edgeDistance);
+            const firstEnd = wallEndData(true, dist, !wallNormals && isConvexCorner(p1, distinctNeighbour(geometry, p, 1), perp));
+            const secondEnd = wallEndData(false, dist, !wallNormals && isConvexCorner(p2, distinctNeighbour(geometry, p - 1, -1), perp));
+
+            addVertex(this.layoutVertexArray, p1.x, p1.y, end.x, end.y, firstEnd, 0, edgeDistance);
+            addVertex(this.layoutVertexArray, p1.x, p1.y, end.x, end.y, firstEnd, 1, edgeDistance);
 
             edgeDistance += dist;
 
-            addVertex(this.layoutVertexArray, p2.x, p2.y, start.x, start.y, 0, 0, edgeDistance);
-            addVertex(this.layoutVertexArray, p2.x, p2.y, start.x, start.y, 0, 1, edgeDistance);
+            addVertex(this.layoutVertexArray, p2.x, p2.y, start.x, start.y, secondEnd, 0, edgeDistance);
+            addVertex(this.layoutVertexArray, p2.x, p2.y, start.x, start.y, secondEnd, 1, edgeDistance);
 
             const bottomRight = segmentReference.segment.vertexLength;
 

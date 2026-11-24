@@ -2,7 +2,7 @@ type BlendFuncConstant = WebGLRenderingContextBase['ZERO'] | WebGLRenderingConte
 
 export type BlendFuncType = [BlendFuncConstant, BlendFuncConstant];
 
-export type BlendEquationType = WebGLRenderingContextBase['FUNC_ADD'] | WebGLRenderingContextBase['FUNC_SUBTRACT'] | WebGLRenderingContextBase['FUNC_REVERSE_SUBTRACT'];
+export type BlendEquationType = WebGLRenderingContextBase['FUNC_ADD'] | WebGLRenderingContextBase['FUNC_SUBTRACT'] | WebGLRenderingContextBase['FUNC_REVERSE_SUBTRACT'] | WebGL2RenderingContextBase['MAX'];
 
 export type ColorMaskType = [boolean, boolean, boolean, boolean];
 
