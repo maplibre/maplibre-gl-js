@@ -364,6 +364,18 @@ describe('popup', () => {
         expect(popup._lngLat.lng).toBe(-179);
     });
 
+    test('Popup keeps its lng when the view moves past the edge of the world with {renderWorldCopies: false}', () => {
+        const map = createMap({width: 800, renderWorldCopies: false, transformConstrain: (lngLat, zoom) => ({center: lngLat, zoom})});
+        const popup = new Popup()
+            .setLngLat([170, 0])
+            .setText('Test')
+            .addTo(map);
+
+        map.jumpTo({center: [-150, 0], zoom: 1});
+
+        expect(popup.getLngLat().lng).toBe(170);
+    });
+
     test('Popup is repositioned at the specified LngLat', () => {
         const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
         map.terrain = {
