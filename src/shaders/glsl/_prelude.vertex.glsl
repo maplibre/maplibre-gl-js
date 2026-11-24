@@ -191,3 +191,36 @@ layout(std140) uniform FrameUBO {
     highp vec2 u_pixel_extrude_scale;
     highp float u_pitch;
 };
+
+#ifdef AFFINE_LINE
+uniform highp vec4 u_line_camera_affine;
+
+// Normals live in the dual of the tile plane. Normalize them in the adjusted plane,
+// then bring the pixel offset back into tile space for the existing perspective projection.
+vec2 affineLineOffset(vec2 vertex, vec2 join) {
+    mat2 inverseCamera = inverse(mat2(u_line_camera_affine.xy, u_line_camera_affine.zw));
+    mat2 normalMatrix = transpose(inverseCamera);
+    float joinLength = length(join);
+    if (joinLength < 0.01 || dot(vertex, vertex) < 0.0001) return vec2(0.0);
+    vec2 unit = join / joinLength;
+    vec2 tangent = vec2(-unit.y, unit.x);
+    if (joinLength < 1.016) {
+        vec2 n = normalize(normalMatrix * unit);
+        return inverseCamera * (n * dot(vertex, unit) + vec2(-n.y, n.x) * dot(vertex, tangent));
+    }
+    // The stored offset normal is the miter. Its two incident normals have cosine 1 / miterLength
+    // with its bisector. Rebuild their intersection after transforming the two normals.
+    if (distance(vertex, join) < 0.03) {
+        float cosine = min(1.0, 1.0 / joinLength);
+        float sine = sqrt(max(0.0, 1.0 - cosine * cosine));
+        vec2 a = normalize(normalMatrix * (unit * cosine + tangent * sine));
+        vec2 b = normalize(normalMatrix * (unit * cosine - tangent * sine));
+        return inverseCamera * ((a + b) / max(0.0001, 1.0 + dot(a, b)));
+    }
+    return inverseCamera * (normalize(normalMatrix * vertex) * length(vertex));
+}
+
+float affineLineLength(vec2 tileOffset) {
+    return length(mat2(u_line_camera_affine.xy, u_line_camera_affine.zw) * tileOffset);
+}
+#endif

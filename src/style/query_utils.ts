@@ -2,6 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {polygonIntersectsBufferedPoint} from '../util/intersection_tests.ts';
 import {getCameraMath} from '../camera/camera_math_factory.ts';
 
+import type {mat4} from 'gl-matrix';
 import type {PossiblyEvaluatedPropertyValue} from './properties.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {CircleBucket} from '../data/bucket/circle_bucket.ts';
@@ -105,18 +106,23 @@ type CircleIntersectionTestParams = {
     projectedCamera: ProjectedCamera;
     unwrappedTileID: UnwrappedTileID;
     getElevation: GetElevation | undefined;
+    cameraAffine?: mat4;
     pitchAlignment?: 'map' | 'viewport';
     pitchScale?: 'map' | 'viewport';
 };
 
-function intersectionTestMapMap({queryGeometry, size}: CircleIntersectionTestParams, point: Point): boolean {
-    return polygonIntersectsBufferedPoint(queryGeometry, point, size);
+function toCirclePlane(point: Point, affine: mat4 | undefined): Point {
+    return affine ? new Point(affine[0] * point.x + affine[4] * point.y, affine[1] * point.x + affine[5] * point.y) : point;
 }
 
-function intersectionTestMapViewport({queryGeometry, size, projectedCamera, unwrappedTileID, getElevation}: CircleIntersectionTestParams, point: Point): boolean {
+function intersectionTestMapMap({queryGeometry, size, cameraAffine}: CircleIntersectionTestParams, point: Point): boolean {
+    return polygonIntersectsBufferedPoint(queryGeometry, toCirclePlane(point, cameraAffine), size);
+}
+
+function intersectionTestMapViewport({queryGeometry, size, projectedCamera, unwrappedTileID, getElevation, cameraAffine}: CircleIntersectionTestParams, point: Point): boolean {
     const w = getCameraMath(projectedCamera).projectTileCoordinates(projectedCamera, point.x, point.y, unwrappedTileID, getElevation?.(point.x, point.y)).signedDistanceFromCamera;
     const adjustedSize = size * (w / projectedCamera.cameraToCenterDistance);
-    return polygonIntersectsBufferedPoint(queryGeometry, point, adjustedSize);
+    return polygonIntersectsBufferedPoint(queryGeometry, toCirclePlane(point, cameraAffine), adjustedSize);
 }
 
 function intersectionTestViewportMap({queryGeometry, size, projectedCamera, unwrappedTileID, getElevation}: CircleIntersectionTestParams, point: Point): boolean {
@@ -135,6 +141,7 @@ export function circleIntersection({
     projectedCamera,
     unwrappedTileID,
     getElevation,
+    cameraAffine,
     pitchAlignment = 'map',
     pitchScale = 'map'
 }: CircleIntersectionTestParams, geometry: Point[][]): boolean {
@@ -142,7 +149,8 @@ export function circleIntersection({
         ? (pitchScale === 'map' ? intersectionTestMapMap : intersectionTestMapViewport)
         : (pitchScale === 'map' ? intersectionTestViewportMap : intersectionTestViewportViewport);
 
-    const param = {queryGeometry, size, projectedCamera, unwrappedTileID, getElevation} as CircleIntersectionTestParams;
+    const polygon = cameraAffine ? queryGeometry.map(p => toCirclePlane(p, cameraAffine)) : queryGeometry;
+    const param = {queryGeometry: polygon, size, projectedCamera, unwrappedTileID, getElevation, cameraAffine};
     for (const ring of geometry) {
         for (const point of ring) {
             if (intersectionTest(param, point)) {

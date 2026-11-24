@@ -200,6 +200,23 @@ describe('Find offset line intersections', () => {
         expect(intersectionPoint.y).toBeCloseTo(1);
     });
 
+    test('map-pitched labels use reciprocal tile and label planes for an affine camera', () => {
+        const {projectedCamera} = createTestCamera({bearing: 23, pitch: 37});
+        if (projectedCamera.projection !== 'mercator') throw new Error('Expected a planar camera');
+        const affine = mat4.create();
+        affine[0] = 2;
+        affine[4] = 0.5;
+        affine[5] = 3;
+        const camera = {...projectedCamera, cameraAffine: affine, inverseCameraAffine: mat4.invert(mat4.create(), affine)};
+        for (const rotateWithMap of [true, false]) {
+            const toPixels = getPitchedLabelPlaneMatrix(rotateWithMap, camera, 4);
+            const toTile = getGlCoordMatrix(true, rotateWithMap, camera, 4);
+            expectToBeCloseToArray([...mat4.multiply(mat4.create(), toPixels, toTile)], [...mat4.create()], 6);
+            const baseline = getGlCoordMatrix(true, rotateWithMap, projectedCamera, 4);
+            expectToBeCloseToArray([...mat4.multiply(mat4.create(), affine, toTile)], [...baseline], 6);
+        }
+    });
+
     test('getPitchedLabelPlaneMatrix: bearing and roll', () => {
         const {projectedCamera} = createTestCamera({bearing: 0, pitch: 45, roll: 45});
 

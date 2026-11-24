@@ -106,6 +106,16 @@ function queryIncludes3DLayer(layers: Set<string> | undefined, styleLayers: {[_:
     return false;
 }
 
+/** Upper bound on the original tile-plane radius of a screen-space paint width under an affine camera. */
+function queryPaddingScale(camera: ProjectedCamera): number {
+    const pitch = getCameraMath(camera).maxPitchScaleFactor(camera);
+    const m = camera.projection === 'mercator' && camera.cameraAffine;
+    if (!m) return pitch;
+    const a = m[0], b = m[1], c = m[4], d = m[5];
+    const largestScale = (Math.hypot(a + d, b - c) + Math.hypot(a - d, b + c)) / 2;
+    return pitch * Math.max(1, largestScale / (a * d - b * c));
+}
+
 export function queryRenderedFeatures(
     tileManager: TileManager,
     styleLayers: {[_: string]: StyleLayer},
@@ -118,7 +128,7 @@ export function queryRenderedFeatures(
 ): QueryRenderedFeaturesResults {
 
     const has3DLayer = queryIncludes3DLayer(params?.layers ?? null, styleLayers, tileManager.id);
-    const maxPitchScaleFactor = getCameraMath(projectedCamera).maxPitchScaleFactor(projectedCamera);
+    const maxPitchScaleFactor = queryPaddingScale(projectedCamera);
     const tilesIn = tileManager.tilesIn(queryGeometry, maxPitchScaleFactor, has3DLayer, projectedCamera, worldCoordinateHelper);
 
     tilesIn.sort(sortTilesIn);

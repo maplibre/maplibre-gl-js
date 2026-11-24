@@ -1,4 +1,4 @@
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f} from '../uniform_binding.ts';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f} from '../uniform_binding.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 import {translatePosition} from '../../util/util.ts';
 
@@ -13,11 +13,13 @@ import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 export type LineUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
+    'u_line_camera_affine': Uniform4f;
 };
 
 export type LineGradientUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
+    'u_line_camera_affine': Uniform4f;
     'u_image': Uniform1i;
     'u_image_height': Uniform1f;
 };
@@ -26,6 +28,7 @@ export type LinePatternUniformsType = {
     'u_translation': Uniform2f;
     'u_texsize': Uniform2f;
     'u_ratio': Uniform1f;
+    'u_line_camera_affine': Uniform4f;
     'u_image': Uniform1i;
     'u_scale': Uniform3f;
     'u_fade': Uniform1f;
@@ -34,6 +37,7 @@ export type LinePatternUniformsType = {
 export type LineSDFUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
+    'u_line_camera_affine': Uniform4f;
     'u_tileratio': Uniform1f;
     'u_crossfade_from': Uniform1f;
     'u_crossfade_to': Uniform1f;
@@ -46,6 +50,7 @@ export type LineSDFUniformsType = {
 export type LineGradientSDFUniformsType = {
     'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
+    'u_line_camera_affine': Uniform4f;
     'u_image': Uniform1i;
     'u_image_height': Uniform1f;
     'u_tileratio': Uniform1f;
@@ -60,11 +65,13 @@ export type LineGradientSDFUniformsType = {
 const lineUniforms = (context: Context, locations: UniformLocations): LineUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
+    'u_line_camera_affine': new Uniform4f(context, locations.u_line_camera_affine),
 });
 
 const lineGradientUniforms = (context: Context, locations: UniformLocations): LineGradientUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
+    'u_line_camera_affine': new Uniform4f(context, locations.u_line_camera_affine),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_image_height': new Uniform1f(context, locations.u_image_height)
 });
@@ -73,6 +80,7 @@ const linePatternUniforms = (context: Context, locations: UniformLocations): Lin
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
+    'u_line_camera_affine': new Uniform4f(context, locations.u_line_camera_affine),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade)
@@ -81,6 +89,7 @@ const linePatternUniforms = (context: Context, locations: UniformLocations): Lin
 const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDFUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
+    'u_line_camera_affine': new Uniform4f(context, locations.u_line_camera_affine),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_mix': new Uniform1f(context, locations.u_mix),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
@@ -93,6 +102,7 @@ const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDF
 const lineGradientSDFUniforms = (context: Context, locations: UniformLocations): LineGradientSDFUniformsType => ({
     'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
+    'u_line_camera_affine': new Uniform4f(context, locations.u_line_camera_affine),
     'u_image': new Uniform1i(context, locations.u_image),
     'u_image_height': new Uniform1f(context, locations.u_image_height),
     'u_tileratio': new Uniform1f(context, locations.u_tileratio),
@@ -104,6 +114,14 @@ const lineGradientSDFUniforms = (context: Context, locations: UniformLocations):
     'u_lineatlas_height': new Uniform1f(context, locations.u_lineatlas_height)
 });
 
+const identityAffine: [number, number, number, number] = [1, 0, 0, 1];
+
+/** The camera's planar correction in the column order expected by the line vertex shader. */
+function lineCameraAffine(camera: ProjectedCamera): [number, number, number, number] {
+    const m = camera.projection === 'mercator' && camera.cameraAffine;
+    return m ? [m[0], m[1], m[4], m[5]] : identityAffine;
+}
+
 const lineUniformValues = (
     projectedCamera: ProjectedCamera,
     tile: Tile,
@@ -113,6 +131,7 @@ const lineUniformValues = (
     return {
         'u_translation': calculateTranslation(projectedCamera, tile, layer),
         'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, projectedCamera.zoom),
+        'u_line_camera_affine': lineCameraAffine(projectedCamera),
     };
 };
 
@@ -140,6 +159,7 @@ const linePatternUniformValues = (
         'u_texsize': tile.imageAtlasTexture.size,
         // camera zoom ratio
         'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, projectedCamera.zoom),
+        'u_line_camera_affine': lineCameraAffine(projectedCamera),
         'u_image': 0,
         'u_scale': [tileZoomRatio, crossfade.fromScale, crossfade.toScale],
         'u_fade': crossfade.t,

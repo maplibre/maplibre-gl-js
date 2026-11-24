@@ -26,6 +26,7 @@ A registered CRS comes with a square, power-of-two quad tile grid laid over its 
 | `tileMatrixSet.origin` | The CRS coordinates `[x, y]` of the top-left corner of tile 0/0/0, its minimum x and maximum y, in the order `projection.forward` returns. |
 | `tileMatrixSet.extentAtZoom0` | The width, and height, of tile 0/0/0 in CRS units. |
 | `definition` | Optional. The CRS as a string the workers' projection handler accepts, such as WKT or a PROJ string. GeoJSON sources need it, see [GeoJSON sources](#geojson-sources). |
+| `getCameraAffine` | Optional function of the geographic camera center, zoom and viewport size in CSS pixels, returning a linear adjustment of the displayed plane. |
 
 CRS units are taken as meters wherever the map converts meters: altitudes, elevations and the camera distance. That is right for a projected CRS in meters; for the degree-based `identity` projection it means "one unit". The map's center stays inside the tile 0/0/0 square and the zoom is limited only by `minZoom`, since the square is the grid the tile matrix set picked and can be much larger than the area of interest or narrower than the window. Set `maxBounds` to keep the whole view inside an area.
 
@@ -41,6 +42,15 @@ World y grows downwards, like tile rows do, which is why `origin` is the top-lef
 Take `origin` and `extentAtZoom0` from the tile matrix set definition published with the tiles, never from the CRS's area of use. The numbers in your tile server's definition are the ones that count. Tile matrix set documents may list corners northing-first (LINZ's NZTM2000Quad does), so reorder them to `[easting, northing]`.
 
 Two complete pages to start from: [Display a map in a polar stereographic projection](../examples/display-a-map-in-a-polar-stereographic-projection.md) (EPSG:3413, NASA GIBS imagery through the `{bbox}` token) and [Display a map in UTM zone 32N](../examples/display-a-map-in-utm-zone-32n.md) (EPSG:25832, a national mapping agency's WMTS). Swap in the proj4 definition, the tile matrix set and the tile URL of your own service.
+
+### Adjusting the view of the grid
+
+`getCameraAffine({center, zoom, width, height})` may return `[a, b, c, d]` to map an offset
+`(x, y)` from the camera center to `(a * x + c * y, b * x + d * y)` in the tile grid's
+rightward and downward directions. The adjustment takes effect before bearing, pitch and
+perspective. Return `undefined` for the usual view. Coefficients must be finite with a finite
+positive determinant. Map drawing, screen queries and pointer positions share the adjusted view.
+Tile addresses and tile contents stay in the CRS's original grid.
 
 ## Example: NZTM2000 (EPSG:2193) with proj4js
 

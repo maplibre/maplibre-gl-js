@@ -119,6 +119,9 @@ export function getPitchedLabelPlaneMatrix(
         m[4] = skew[2];
         m[5] = skew[3];
     }
+    if (projectedCamera.projection === 'mercator' && projectedCamera.cameraAffine) {
+        mat4.multiply(m, m, projectedCamera.cameraAffine);
+    }
     mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
     return m;
 }
@@ -140,6 +143,9 @@ export function getGlCoordMatrix(
             m[1] = vecEast[1];
             m[4] = vecSouth[0];
             m[5] = vecSouth[1];
+        }
+        if (projectedCamera.projection === 'mercator' && projectedCamera.inverseCameraAffine) {
+            mat4.multiply(m, projectedCamera.inverseCameraAffine, m);
         }
         mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         return m;

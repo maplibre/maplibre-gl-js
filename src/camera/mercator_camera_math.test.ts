@@ -6,7 +6,7 @@ import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../tile/tile_i
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getMercatorHorizon} from '../geo/projection/mercator_utils.ts';
-import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsCamera, createTestCamera, createWrappingWorldCrs} from '../util/test/util.ts';
+import {createCoverageIndex, createDEM, createDEMTerrain, createPainter, createRasterDEMTileManager, createTerrain, expectToBeCloseToArray, createIdentityCrsCamera, createTestCamera, createWrappingWorldCrs, createRotatedCrs} from '../util/test/util.ts';
 import {CRSWorldCoordinateHelper} from '../geo/projection/crs.ts';
 import {Terrain} from '../render/terrain.ts';
 import {EXTENT} from '../data/extent.ts';
@@ -44,6 +44,29 @@ function expectWorldPixelsClose(actual: MercatorCoordinate, expected: MercatorCo
     expect(Math.abs(actual.x - expected.x) * worldSize).toBeLessThan(1e-3);
     expect(Math.abs(actual.y - expected.y) * worldSize).toBeLessThan(1e-3);
 }
+
+describe('projectCamera with a CRS camera affine', () => {
+    test('caches the view correction and uses identity for an omitted or undefined callback', () => {
+        const {state} = createCameraAt(new LngLat(3, 8), 4);
+        const crs = createRotatedCrs();
+        const original = projectMercator(state, createCameraContext({worldCoordinateHelper: new CRSWorldCoordinateHelper(crs)}));
+        const callback = vi.fn(() => undefined);
+        const context = createCameraContext({worldCoordinateHelper: new CRSWorldCoordinateHelper({...crs, getCameraAffine: callback})});
+        const adjusted = projectMercator(state, context);
+        expect(adjusted.modelViewProjectionMatrix).toEqual(original.modelViewProjectionMatrix);
+        expect(adjusted.pixelMatrixInverse).toEqual(original.pixelMatrixInverse);
+        expect(projectMercator(state, context)).toBe(adjusted);
+        expect(callback).toHaveBeenCalledExactlyOnceWith({center: {lng: state.center.lng, lat: state.center.lat}, zoom: 4, width: 512, height: 512});
+    });
+
+    test.each([
+        [1, 0, 0, 0], [1, 0, 0, -1], [1, NaN, 0, 1], [Infinity, 0, 0, 1], [1e300, 0, 0, 1e300]
+    ] as const)('rejects a camera matrix with invalid determinant or coefficients (%s, %s, %s, %s)', (a, b, c, d) => {
+        const {state} = createCameraAt(new LngLat(0, 0), 1);
+        const helper = new CRSWorldCoordinateHelper({...createRotatedCrs(), getCameraAffine: () => [a, b, c, d]});
+        expect(() => projectMercator(state, createCameraContext({worldCoordinateHelper: helper}))).toThrow('camera affine');
+    });
+});
 
 describe('mercator camera', () => {
     test('creates a camera', () => {

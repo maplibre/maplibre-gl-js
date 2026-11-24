@@ -1,3 +1,4 @@
+import Point from '@mapbox/point-geometry';
 import {type QueryIntersectsFeatureParams, StyleLayer} from '../style_layer.ts';
 import {LineBucket} from '../../data/bucket/line_bucket.ts';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests.ts';
@@ -98,13 +99,19 @@ export class LineStyleLayer extends StyleLayer {
         projectedCamera,
         pixelsToTileUnits}: QueryIntersectsFeatureParams
     ): boolean {
-        const translatedPolygon = translate(queryGeometry,
+        let translatedPolygon = translate(queryGeometry,
             this.paint.get('line-translate'),
             this.paint.get('line-translate-anchor'),
             -projectedCamera.bearingInRadians, pixelsToTileUnits);
         const halfWidth = pixelsToTileUnits / 2 * getLineWidth(
             this.paint.get('line-width').evaluate(feature, featureState),
             this.paint.get('line-gap-width').evaluate(feature, featureState));
+        const affine = projectedCamera.projection === 'mercator' && projectedCamera.cameraAffine;
+        if (affine) {
+            const transform = (point: Point) => new Point(affine[0] * point.x + affine[4] * point.y, affine[1] * point.x + affine[5] * point.y);
+            geometry = geometry.map(line => line.map(transform));
+            translatedPolygon = translatedPolygon.map(transform);
+        }
         const lineOffset = this.paint.get('line-offset').evaluate(feature, featureState);
         if (lineOffset) {
             geometry = offsetLine(geometry, lineOffset * pixelsToTileUnits);

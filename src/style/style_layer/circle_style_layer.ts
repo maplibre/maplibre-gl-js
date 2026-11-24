@@ -79,6 +79,7 @@ export class CircleStyleLayer extends StyleLayer {
             projectedCamera,
             unwrappedTileID,
             getElevation,
+            cameraAffine: pitchAlignment === 'map' && projectedCamera.projection === 'mercator' ? projectedCamera.cameraAffine : undefined,
             pitchAlignment,
             pitchScale
         }, geometry);

@@ -78,6 +78,10 @@ type ProjectedCameraFields = CameraMetrics & {
 
 /** @internal A {@link ProjectedCamera} on mercator, or on a registered planar CRS. */
 export type MercatorProjectedCamera = ProjectedCameraFields & {
+    /** World-plane adjustment of this camera, for paint distances expressed in screen pixels. */
+    readonly cameraAffine?: mat4;
+    /** From local painted pixel offsets to unadjusted world-plane offsets. */
+    readonly inverseCameraAffine?: mat4;
     readonly projection: 'mercator';
     /** From mercator coordinates, 0..1 from the northwest corner, to clip space. */
     readonly mercatorMatrix: mat4;

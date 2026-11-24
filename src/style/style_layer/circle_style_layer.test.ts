@@ -2,6 +2,7 @@ import {describe, test, expect} from 'vitest';
 import {CircleStyleLayer} from './circle_style_layer.ts';
 import {type CanonicalTileID, UnwrappedTileID} from '../../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
+import {mat4} from 'gl-matrix';
 import {createTestCamera} from '../../util/test/util.ts';
 
 import type {EvaluationParameters} from '../evaluation_parameters.ts';
@@ -48,6 +49,24 @@ describe('CircleStyleLayer.queryIntersectsFeature', () => {
 
     describe('Mercator projection', () => {
         const {projectedCamera} = createTestCamera({minZoom: 0, maxZoom: 22, minPitch: 0, maxPitch: 85, renderWorldCopies: true, width: 400, height: 300});
+
+        test('an affine camera picks a map-pitched circle in its painted pixel metric', () => {
+            const affine = mat4.create();
+            affine[5] = 2;
+            const camera = {...projectedCamera, cameraAffine: affine};
+            const center = geometry[0][0];
+            const layer = createCircleLayer();
+            const hit = (x: number, y: number) => layer.queryIntersectsFeature({
+                ...params,
+                queryGeometry: [new Point(center.x + x, center.y + y)],
+                projectedCamera: camera,
+                zoom: camera.zoom
+            });
+            // 12 px of painted radius correspond to 192 tile units in x, 96 in y.
+            expect(hit(160, 0)).toBe(true);
+            expect(hit(0, 80)).toBe(true);
+            expect(hit(0, 160)).toBe(false);
+        });
 
         describe('map pitch alignment', () => {
 

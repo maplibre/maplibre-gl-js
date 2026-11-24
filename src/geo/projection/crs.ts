@@ -20,6 +20,24 @@ const EDGE_SEARCH_STEPS = 30;
 
 /**
  * @experimental
+ * Camera position and viewport, in CSS pixels, used by a planar CRS to adjust the view of its tile grid.
+ */
+export type CRSCameraView = {
+    readonly center: Readonly<{lng: number; lat: number}>;
+    readonly zoom: number;
+    readonly width: number;
+    readonly height: number;
+};
+
+/**
+ * @experimental
+ * A linear transformation in the tile grid's XY plane, in column-major order.
+ * An offset `(x, y)` from the center maps to `(a * x + c * y, b * x + d * y)`.
+ */
+export type CRSCameraAffine = readonly [a: number, b: number, c: number, d: number];
+
+/**
+ * @experimental
  * Describes a planar coordinate reference system (CRS) together with the square, power-of-two
  * quad tile grid laid over it, so a map can render tiles that were pre-projected in that CRS.
  * Register one with {@link addProjection} and select it with the style's `projection.type`
@@ -31,6 +49,14 @@ const EDGE_SEARCH_STEPS = 30;
  * and the camera distance.
  */
 export type CRS = {
+    /**
+     * An optional view-dependent linear correction to the tile grid, with x increasing rightwards and y
+     * downwards. The camera applies it around its geographic center before bearing, pitch and perspective.
+     * It changes the display of the plane while leaving tile addresses and projected coordinates intact.
+     * Return `undefined` for the identity. A matrix must be finite and have a finite positive determinant.
+     * The result is cached with the camera view and must depend only on the supplied view and CRS.
+     */
+    getCameraAffine?(view: CRSCameraView): CRSCameraAffine | undefined;
     /**
      * Name used in `projection.type`, e.g. `'EPSG:2193'` or `'custom:floor-plan'`. It must contain a colon: names
      * without one, like `'mercator'`, `'globe'`, `'vertical-perspective'` and the pre-registered `'identity'`, are
@@ -76,6 +102,7 @@ const MAX_MERIDIAN_STRETCH = 10;
  * One world unit is the zoom 0 extent, so meters per world unit is constant across the plane.
  */
 export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
+    readonly getCameraAffine?: CRS['getCameraAffine'];
     private readonly _crs: CRS;
     private readonly _originX: number;
     private readonly _originY: number;
@@ -86,6 +113,7 @@ export class CRSWorldCoordinateHelper implements WorldCoordinateHelper {
 
     constructor(crs: CRS) {
         this._crs = crs;
+        this.getCameraAffine = crs.getCameraAffine?.bind(crs);
         this._originX = crs.tileMatrixSet.origin[0];
         this._originY = crs.tileMatrixSet.origin[1];
         this._extent = crs.tileMatrixSet.extentAtZoom0;

@@ -202,7 +202,8 @@ function drawLineTiles(
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const prevProgram = context.program.get();
-        const program = frameRenderContext.useProgram(programId, programConfiguration);
+        const affine = projectedCamera.projection === 'mercator' && projectedCamera.cameraAffine;
+        const program = frameRenderContext.useProgram(programId, programConfiguration, false, affine ? ['#define AFFINE_LINE'] : []);
         const programChanged = firstTile || program.program !== prevProgram;
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 

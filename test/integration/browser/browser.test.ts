@@ -60,6 +60,63 @@ describe('Browser tests', () => {
         server?.close();
     }, 40000);
 
+    test('draws and picks pixel-sized features in an adjusted tile plane', {timeout: 20000}, async () => {
+        const result = await page.evaluate(async () => {
+            if (!map.loaded()) await map.once('idle');
+            const worker = URL.createObjectURL(new Blob(['self.setProjectionHandler(() => ({forward: p => p, inverse: p => p}))'], {type: 'text/javascript'}));
+            await maplibregl.importScriptInWorkers(worker);
+            maplibregl.addProjection({
+                name: 'test:adjusted-grid', definition: 'identity',
+                projection: {forward: p => p, inverse: p => p},
+                tileMatrixSet: {origin: [-90, 90], extentAtZoom0: 180},
+                getCameraAffine: () => [1.5, 0.2, 0.3, 2]
+            });
+            const idle = map.once('idle');
+            const segments: Array<[[number, number], [number, number]]> = [[[-18, -12], [10, -12]], [[-3, 0], [9, 12]]];
+            map.setStyle({
+                version: 8, projection: {type: 'test:adjusted-grid'},
+                sources: {draw: {type: 'geojson', data: {type: 'FeatureCollection', features: [
+                    {type: 'Feature', id: 7, properties: {}, geometry: {type: 'Point', coordinates: [15, 5]}},
+                    ...segments.map(coordinates => ({type: 'Feature' as const, properties: {}, geometry: {type: 'LineString' as const, coordinates}}))
+                ]}}},
+                layers: [
+                    {id: 'paper', type: 'background', paint: {'background-color': 'white'}},
+                    {id: 'line', type: 'line', source: 'draw', filter: ['==', ['geometry-type'], 'LineString'], paint: {'line-width': 6, 'line-color': 'black'}},
+                    {id: 'point', type: 'circle', source: 'draw', filter: ['==', ['geometry-type'], 'Point'], paint: {'circle-radius': 6}}
+                ]
+            }, {diff: false});
+            map.jumpTo({center: [0, 0], zoom: 1, bearing: 0, pitch: 0});
+            await idle;
+            const origin = map.project([0, 0]);
+            const scale = 1024 / 180;
+            const before: [number, number] = [origin.x + 15 * scale, origin.y - 5 * scale];
+            const after: [number, number] = [origin.x + (1.5 * 15 - 0.3 * 5) * scale, origin.y + (0.2 * 15 - 2 * 5) * scale];
+            const canvas = map.getCanvas();
+            const copy = new OffscreenCanvas(canvas.width, canvas.height).getContext('2d');
+            copy.drawImage(canvas, 0, 0);
+            const dpr = canvas.width / canvas.clientWidth;
+            const edges = segments.map(segment => {
+                const [p, q] = segment.map(pos => map.project(pos));
+                const normal = q.sub(p).unit().perp(), center = p.add(q).div(2);
+                return [1.75, 4.25].map(distance => {
+                    const at = center.add(normal.mult(distance));
+                    return {
+                        hit: map.queryRenderedFeatures(at, {layers: ['line']}).length > 0,
+                        red: copy.getImageData(Math.floor(dpr * at.x), Math.floor(dpr * at.y), 1, 1).data[0]
+                    };
+                });
+            });
+            return {points: [before, after].map(p => map.queryRenderedFeatures(p, {layers: ['point']}).map(f => f.id)), edges};
+        });
+        expect(result.points).toEqual([[], [7]]);
+        for (const [inside, outside] of result.edges) {
+            expect(inside.hit).toBe(true);
+            expect(inside.red).toBeLessThan(32);
+            expect(outside.hit).toBe(false);
+            expect(outside.red).toBeGreaterThan(223);
+        }
+    });
+
     test('Contextmenu event triggered during scrollzoom', {retry: 3, timeout: 20000}, async () => {
         const contextMenuEventFired = await page.evaluate(() => {
             return new Promise<string>((resolve, _reject) => {

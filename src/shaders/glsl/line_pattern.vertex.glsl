@@ -88,6 +88,10 @@ void main() {
     // for a plain vertex, the miter vector of the join for every vertex of a join.
     mediump vec2 offset2 = offset * a_offset_normal * scale * normal.y;
 
+#ifdef AFFINE_LINE
+    dist = outset * affineLineOffset(a_extrude * scale, a_offset_normal * scale);
+    offset2 = offset * normal.y * affineLineOffset(a_offset_normal * scale, a_offset_normal * scale);
+#endif
     float adjustedThickness = projectLineThickness(pos.y);
     vec4 projected_no_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation);
     vec4 projected_with_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation + dist / u_ratio * adjustedThickness);
@@ -100,7 +104,11 @@ void main() {
     #ifdef TERRAIN3D
         v_gamma_scale = 1.0; // not needed, because this is done automatically via the mesh
     #else
-        float extrude_length_without_perspective = length(dist);
+        #ifdef AFFINE_LINE
+            float extrude_length_without_perspective = affineLineLength(dist);
+        #else
+            float extrude_length_without_perspective = length(dist);
+        #endif
         float extrude_length_with_perspective = length((projected_with_extrude.xy - projected_no_extrude.xy) / projected_with_extrude.w * u_units_to_pixels);
         v_gamma_scale = extrude_length_without_perspective / extrude_length_with_perspective;
     #endif

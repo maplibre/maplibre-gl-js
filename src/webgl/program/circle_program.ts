@@ -1,4 +1,4 @@
-import {Uniform1i, Uniform1f, Uniform2f} from '../uniform_binding.ts';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform4f} from '../uniform_binding.ts';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 import {EXTENT} from '../../data/extent.ts';
 
@@ -11,7 +11,7 @@ import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 export type CircleUniformsType = {
     'u_scale_with_map': Uniform1i;
     'u_pitch_with_map': Uniform1i;
-    'u_extrude_scale': Uniform2f;
+    'u_extrude_scale': Uniform4f;
     'u_globe_extrude_scale': Uniform1f;
     'u_translate': Uniform2f;
 };
@@ -19,7 +19,7 @@ export type CircleUniformsType = {
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({
     'u_scale_with_map': new Uniform1i(context, locations.u_scale_with_map),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
-    'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
+    'u_extrude_scale': new Uniform4f(context, locations.u_extrude_scale),
     'u_globe_extrude_scale': new Uniform1f(context, locations.u_globe_extrude_scale),
     'u_translate': new Uniform2f(context, locations.u_translate),
 });
@@ -31,19 +31,23 @@ const circleUniformValues = (
     translate: [number, number],
     radiusCorrectionFactor: number
 ): UniformValues<CircleUniformsType> => {
-    let pitchWithMap: boolean, extrudeScale: [number, number];
+    let pitchWithMap: boolean, extrudeScale: [number, number, number, number];
     let globeExtrudeScale: number = 0;
     if (layer.paint.get('circle-pitch-alignment') === 'map') {
         const pixelRatio = pixelsToTileUnits(tile, 1, projectedCamera.zoom);
         pitchWithMap = true;
-        extrudeScale = [pixelRatio, pixelRatio];
+        const inverse = projectedCamera.projection === 'mercator' && projectedCamera.inverseCameraAffine;
+        extrudeScale = inverse
+            ? [inverse[0] * pixelRatio, inverse[1] * pixelRatio, inverse[4] * pixelRatio, inverse[5] * pixelRatio]
+            : [pixelRatio, 0, 0, pixelRatio];
 
         // For globe rendering we need to know how much to extrude the circle as an *angle*.
         // The calculation: (one pixel in tile units) / (earth circumference in tile units) * (2PI radians) * radiusCorrectionFactor
         globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI * radiusCorrectionFactor;
     } else {
         pitchWithMap = false;
-        extrudeScale = projectedCamera.pixelsToGLUnits;
+        const [x, y] = projectedCamera.pixelsToGLUnits;
+        extrudeScale = [x, 0, 0, y];
     }
 
     return {

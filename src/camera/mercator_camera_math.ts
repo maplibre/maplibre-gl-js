@@ -1,6 +1,6 @@
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
-import {clamp, createMat4f64, createIdentityMat4f32, degreesToRadians, zoomScale, type Mat4f32, type Mat4f64} from '../util/util.ts';
+import {clamp, createIdentityMat4f64, createMat4f64, createIdentityMat4f32, degreesToRadians, zoomScale, type Mat4f32, type Mat4f64} from '../util/util.ts';
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, type CanonicalTileID, calculateTileKey} from '../tile/tile_id.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
@@ -67,6 +67,22 @@ export function getMatrixCache(projectedCamera: MercatorProjectedCamera): Mercat
 const TARGET_WORLD_STEP_PX = 4;
 const MAX_SAMPLES = 512;
 const MERCATOR_BISECT_EPSILON_WORLD_PX = 1e-3;
+/** The camera's world-plane correction about its center, shared by the render and inverse screen matrices. */
+function getCameraAffineMatrix(metrics: CameraMetrics, helper: WorldCoordinateHelper): Mat4f64 | undefined {
+    const affine = helper.getCameraAffine?.({
+        center: {lng: metrics.center.lng, lat: metrics.center.lat}, zoom: metrics.zoom,
+        width: metrics.width, height: metrics.height
+    });
+    if (affine === undefined) return;
+    const determinant = Array.isArray(affine) && affine.length === 4 ? affine[0] * affine[3] - affine[1] * affine[2] : NaN;
+    if (!Number.isFinite(determinant) || determinant <= 0 || !affine.every(Number.isFinite)) {
+        throw new Error(`The camera affine for the projection "${helper.name}" must have four finite coefficients and a finite positive determinant.`);
+    }
+    const matrix = createIdentityMat4f64();
+    [matrix[0], matrix[1], matrix[4], matrix[5]] = affine;
+    return matrix;
+}
+
 /**
  * The clip-space depth of the near clipping plane, where the ray segment through a screen pixel starts for a terrain
  * pick so that it holds all the view shows; see {@link getRaySegmentFromPixel}.
@@ -84,6 +100,7 @@ export function createMercatorProjectedCamera(metrics: CameraMetrics, worldCoord
     const base = {...metrics, projection: 'mercator' as const, clippingPlane: null};
     if (!metrics.width || !metrics.height) return base as MercatorProjectedCamera;
 
+    const cameraAffine = worldCoordinateHelper.getCameraAffine && getCameraAffineMatrix(metrics, worldCoordinateHelper);
     const offset = getCenterOffset(metrics);
     const point = projectToWorldCoordinates(metrics.worldSize, metrics.center, worldCoordinateHelper);
     const x = point.x, y = point.y;
@@ -109,6 +126,7 @@ export function createMercatorProjectedCamera(metrics: CameraMetrics, worldCoord
     mat4.rotateZ(m, m, -metrics.rollInRadians);
     mat4.rotateX(m, m, metrics.pitchInRadians);
     mat4.rotateZ(m, m, -metrics.bearingInRadians);
+    if (cameraAffine) mat4.multiply(m, m, cameraAffine);
     mat4.translate(m, m, [-x, -y, 0]);
 
     // The mercatorMatrix can be used to transform points from mercator coordinates
@@ -145,6 +163,7 @@ export function createMercatorProjectedCamera(metrics: CameraMetrics, worldCoord
     mat4.rotateZ(fogMatrix, fogMatrix, -metrics.rollInRadians);
     mat4.rotateX(fogMatrix, fogMatrix, metrics.pitchInRadians);
     mat4.rotateZ(fogMatrix, fogMatrix, -metrics.bearingInRadians);
+    if (cameraAffine) mat4.multiply(fogMatrix, fogMatrix, cameraAffine);
     mat4.translate(fogMatrix, fogMatrix, [-x, -y, 0]);
     mat4.scale(fogMatrix, fogMatrix, [1, 1, metrics.pixelsPerMeter]);
     mat4.translate(fogMatrix, fogMatrix, [0, 0, -metrics.elevation]); // elevate camera over terrain
@@ -169,7 +188,7 @@ export function createMercatorProjectedCamera(metrics: CameraMetrics, worldCoord
     const pixelMatrixInverse = mat4.invert(new Float64Array(16), pixelMatrix);
     if (!pixelMatrixInverse) throw new Error('failed to invert matrix');
 
-    return {
+    const camera = {
         ...base,
         nearZ,
         farZ,
@@ -185,6 +204,7 @@ export function createMercatorProjectedCamera(metrics: CameraMetrics, worldCoord
         pixelMatrixInverse,
         fogMatrix,
     };
+    return cameraAffine ? {...camera, cameraAffine, inverseCameraAffine: mat4.invert(createMat4f64(), cameraAffine)} : camera;
 }
 
 /** The depth range the mercator projection draws a camera with, from the lowest point it may show to its horizon. */

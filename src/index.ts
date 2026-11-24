@@ -69,7 +69,7 @@ import type {RequestTransformFunction, ResourceType} from './util/request_manage
 import type {OverscaledTileID} from './tile/tile_id.ts';
 import type {PositionAnchor} from './ui/anchor.ts';
 import type {CustomLayerProjectionData, ProjectionData, ProjectionDataParams, ProjectionMatrix, RendererProjectionData} from './geo/projection/projection_data.ts';
-import type {CRS} from './geo/projection/crs.ts';
+import type {CRS, CRSCameraAffine, CRSCameraView} from './geo/projection/crs.ts';
 import type {TileMatrixSet} from './geo/projection/tile_matrix_set.ts';
 import type {WorkerTileResult} from './source/worker_source.ts';
 import type {Actor, IActor, MessageHandler} from './util/actor.ts';
@@ -367,6 +367,8 @@ export {
     type ProjectionMatrix,
     type RendererProjectionData,
     type CRS,
+    type CRSCameraAffine,
+    type CRSCameraView,
     type TileMatrixSet,
     type GeoJSONFeatureId,
     type GeoJSONFeatureDiff,

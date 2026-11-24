@@ -1,6 +1,6 @@
 uniform bool u_scale_with_map;
 uniform bool u_pitch_with_map;
-uniform vec2 u_extrude_scale;
+uniform highp vec4 u_extrude_scale;
 uniform highp float u_globe_extrude_scale;
 uniform vec2 u_translate;
 
@@ -46,9 +46,10 @@ void main(void) {
 
         // Keep track of "2D" corner position to allow smooth interpolation between globe and mercator
         vec2 corner_position = circle_center;
+        vec2 tile_extrude = mat2(u_extrude_scale.xy, u_extrude_scale.zw) * extrude;
         if (u_scale_with_map) {
             angle_scale *= (radius + stroke_width);
-            corner_position += extrude * u_extrude_scale * (radius + stroke_width);
+            corner_position += tile_extrude * (radius + stroke_width);
         } else {
             // Pitching the circle with the map effectively scales it with the map
             // To counteract the effect for pitch-scale: viewport, we rescale the
@@ -58,7 +59,7 @@ void main(void) {
 #else
             vec4 projected_center = projectTileWithElevation(circle_center, ele);
 #endif
-            corner_position += extrude * u_extrude_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
+            corner_position += tile_extrude * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
             angle_scale *= (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
         }
 
@@ -82,9 +83,9 @@ void main(void) {
         }
 
         if (u_scale_with_map) {
-            gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale * u_camera_to_center_distance;
+            gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale.xw * u_camera_to_center_distance;
         } else {
-            gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale * gl_Position.w;
+            gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale.xw * gl_Position.w;
         }
     }
 

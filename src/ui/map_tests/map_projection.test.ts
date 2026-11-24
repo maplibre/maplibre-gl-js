@@ -111,6 +111,37 @@ describe('Map in a CRS registered with addProjection', () => {
     });
 });
 
+describe('Map in a CRS with a camera affine', () => {
+    const custom = {...createRotatedCrs(), name: 'test:camera-affine'};
+    const transform = [1.4, 0.25, -0.3, 0.8] as const;
+
+    beforeEach(() => addProjection({...custom, getCameraAffine: () => transform}));
+    afterEach(() => removeProjection(custom.name));
+
+    test('projects the tile plane about the view center and picks the same location after bearing, pitch and padding', async () => {
+        const map = createMap({style: {version: 8, sources: {}, layers: [], projection: {type: custom.name}}, center: [8, 14], zoom: 2});
+        await map.once('style.load');
+        const center = map.getCenter();
+        const point = new LngLat(9, 16);
+        const [x, y] = custom.projection.forward(point.toArray());
+        const [cx, cy] = custom.projection.forward(center.toArray());
+        const scale = 512 * 2 ** map.getZoom() / custom.tileMatrixSet.extentAtZoom0;
+        const dx = (x - cx) * scale, dy = (cy - y) * scale;
+        const screen = map.project(point), origin = map.project(center);
+        expect(screen.x - origin.x).toBeCloseTo(transform[0] * dx + transform[2] * dy, 9);
+        expect(screen.y - origin.y).toBeCloseTo(transform[1] * dx + transform[3] * dy, 9);
+        map.jumpTo({bearing: 30, pitch: 35, padding: {left: 16, right: 8, top: 12, bottom: 4}});
+        const at = map.project(point), picked = map.unproject(at);
+        expect(picked.lng).toBeCloseTo(point.lng, 9);
+        expect(picked.lat).toBeCloseTo(point.lat, 9);
+        const click = map.once('click');
+        map.getCanvas().dispatchEvent(new MouseEvent('click', {bubbles: true, clientX: Math.round(at.x), clientY: Math.round(at.y)}));
+        const event = await click;
+        expect(map.project(event.lngLat).x).toBeCloseTo(Math.round(at.x), 8);
+        expect(map.project(event.lngLat).y).toBeCloseTo(Math.round(at.y), 8);
+    });
+});
+
 describe('Map in a polar stereographic CRS', () => {
     const crs = createPolarStereographicCrs();
 

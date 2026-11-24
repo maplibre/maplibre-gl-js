@@ -1,5 +1,6 @@
 import type {LngLat} from './lng_lat.ts';
 import type {MercatorCoordinate} from './mercator_coordinate.ts';
+import type {CRS} from './projection/crs.ts';
 import type {TileMatrixSet} from './projection/tile_matrix_set.ts';
 
 /**
@@ -13,6 +14,8 @@ import type {TileMatrixSet} from './projection/tile_matrix_set.ts';
  * and vice versa.
  */
 export interface WorldCoordinateHelper {
+    /** Optional adjustment of the camera's view of a registered planar tile grid. */
+    readonly getCameraAffine?: CRS['getCameraAffine'];
     /**
      * The name of the flat projection whose plane this is: `mercator`, or the `name` of a CRS registered
      * with `addProjection`.
