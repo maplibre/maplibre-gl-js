@@ -27,7 +27,7 @@ export type LoadTileJsonResponse = {
  * The smallest tile size a tiled source accepts. Halving the tile size quadruples the number of tiles that cover the
  * viewport, so a tile size of a few pixels asks for millions of them.
  */
-const MIN_TILE_SIZE = 64;
+const MIN_TILE_SIZE = 16;
 
 /** The fields a source's options and its TileJSON can both set, the options taking precedence. */
 type TileJsonFields = Omit<LoadTileJsonResponse, 'vectorLayerIds'>;

@@ -39,6 +39,7 @@ type ElementInternals = {
     localName: (this: Element) => string;
     namespaceURI: (this: Element) => string;
     body: (this: Document) => HTMLElement;
+    childNodes: (this: Node) => NodeListOf<ChildNode>;
 };
 
 let elementInternals: ElementInternals;
@@ -47,8 +48,8 @@ let elementInternals: ElementInternals;
  * The `Element` members the sanitizer uses, read off the prototype rather than off the element it is looking at.
  * A form control named `children`, `remove` or `localName` shadows the same-named property of its own form element,
  * which would otherwise let untrusted markup pick what the sanitizer walking that tree sees. A document is exposed to
- * the same thing: an element named `body` shadows `Document.body`, so the root of the walk is read off the prototype
- * too.
+ * the same thing: an element named `body` shadows `Document.body`, so the root of the walk and the nodes collected
+ * from it are read off the prototype too.
  *
  * They are read on first use rather than when this module is loaded, since the module is also imported where there
  * is no DOM at all, such as during server side rendering.
@@ -62,7 +63,8 @@ function getElementInternals(): ElementInternals {
         removeAttribute: Element.prototype.removeAttribute,
         localName: Object.getOwnPropertyDescriptor(Element.prototype, 'localName').get as () => string,
         namespaceURI: Object.getOwnPropertyDescriptor(Element.prototype, 'namespaceURI').get as () => string,
-        body: Object.getOwnPropertyDescriptor(Document.prototype, 'body').get as () => HTMLElement
+        body: Object.getOwnPropertyDescriptor(Document.prototype, 'body').get as () => HTMLElement,
+        childNodes: Object.getOwnPropertyDescriptor(Node.prototype, 'childNodes').get as () => NodeListOf<ChildNode>
     };
     return elementInternals;
 }
@@ -157,7 +159,7 @@ export class DOM {
      * a string result lets carefully nested markup mutate into a different - and no longer sanitized - tree.
      */
     public static sanitize(str: string): DocumentFragment {
-        const {querySelectorAll, remove, body: getBody} = getElementInternals();
+        const {querySelectorAll, remove, body: getBody, childNodes} = getElementInternals();
         const parser = new DOMParser();
         const doc = parser.parseFromString(createTrustedHTML(str), 'text/html');
         const body = getBody.call(doc);
@@ -171,7 +173,7 @@ export class DOM {
         }
 
         const fragment = document.createDocumentFragment();
-        fragment.append(...body.childNodes);
+        fragment.append(...childNodes.call(body));
         return fragment;
     }
 

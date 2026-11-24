@@ -152,7 +152,7 @@ describe('loadTileJson', () => {
             tileSize: 0.5,
         } satisfies RasterSourceSpecification;
 
-        await expect(loadTileJson(options, requestManager, new AbortController())).rejects.toThrow('tileSize must be a number of at least 64, got 0.5');
+        await expect(loadTileJson(options, requestManager, new AbortController())).rejects.toThrow('tileSize must be a number of at least 16, got 0.5');
     });
 
     test('the source option for sparse wins over the TileJSON', async () => {
