@@ -1,0 +1,83 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "width": 640,
+            "height": 400,
+            "pixelRatio": 2,
+            "localIdeographFontFamily": "MapLibre Test CJK Serif",
+            "description": "Top to bottom: default stack; custom semibold stack with server-rendered Latin; explicit smaller layer font; decomposed kana and Latin clusters. Bundled test families distinguish the CJK fallback and layer-font precedence on every platform."
+        }
+    },
+    "zoom": 1,
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "sources": {
+        "point": {
+            "type": "geojson",
+            "data": {
+                "type": "Feature",
+                "properties": {},
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [0, 0]
+                }
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "white"
+            }
+        },
+        {
+            "id": "default-stack",
+            "type": "symbol",
+            "source": "point",
+            "layout": {
+                "text-field": "東京都",
+                "text-size": 42,
+                "text-offset": [0, -3],
+                "text-allow-overlap": true
+            }
+        },
+        {
+            "id": "custom-stack",
+            "type": "symbol",
+            "source": "point",
+            "layout": {
+                "text-field": "東京都 ABC",
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-size": 42,
+                "text-offset": [0, -1],
+                "text-allow-overlap": true
+            }
+        },
+        {
+            "id": "layer-font",
+            "type": "symbol",
+            "source": "point",
+            "layout": {
+                "text-field": "東京都",
+                "text-font": ["MapLibre Test CJK Layer"],
+                "text-size": 42,
+                "text-offset": [0, 1],
+                "text-allow-overlap": true
+            }
+        },
+        {
+            "id": "clusters",
+            "type": "symbol",
+            "source": "point",
+            "layout": {
+                "text-field": "か\u3099 a\u0301",
+                "text-font": ["NotoCJK"],
+                "text-size": 42,
+                "text-offset": [0, 3],
+                "text-allow-overlap": true
+            }
+        }
+    ]
+}

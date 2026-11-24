@@ -101,11 +101,11 @@ export type StyleOptions = {
      */
     validate?: boolean;
     /**
-     * Defines a CSS
-     * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
-     * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
-     * Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     * Forces a full update.
+     * Defines a CSS font-family fallback used only for locally generated CJK (Chinese, Japanese and Korean) characters.
+     * The layer's `text-font` families are tried first, then this family, then `sans-serif`.
+     * Set to `false` or an empty string to disable this fallback. Clusters and styles without a `glyphs` URL
+     * can still render locally.
+     * Changing this option forces a full style update.
      */
     localIdeographFontFamily?: string | false;
     /**
