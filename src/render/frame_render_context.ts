@@ -131,8 +131,7 @@ export class FrameRenderContext {
             overscaledTileID: tileID,
             aligned: options.aligned,
             applyGlobeMatrix: !this.isRenderingToTexture,
-            applyTerrainMatrix: options.applyTerrainMatrix ?? true,
-            relativeToTile: true
+            applyTerrainMatrix: options.applyTerrainMatrix ?? true
         });
         if (this.isRenderingToTexture) return projectionData;
 

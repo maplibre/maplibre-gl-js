@@ -123,10 +123,9 @@ describe('getProjectionData', () => {
         const zoomedCamera = projectCamera(setZoom(createDefaultState(context), context, 14), context);
         const tileID = new OverscaledTileID(14, 0, 14, 8192, 8192);
 
-        const projectionData = getCameraMath(zoomedCamera).getProjectionData(zoomedCamera, {overscaledTileID: tileID, applyGlobeMatrix: true, relativeToTile: true});
-        const planetRelative = getCameraMath(zoomedCamera).getProjectionData(zoomedCamera, {overscaledTileID: tileID, applyGlobeMatrix: true});
+        const projectionData = getCameraMath(zoomedCamera).getProjectionData(zoomedCamera, {overscaledTileID: tileID, applyGlobeMatrix: true});
 
-        expect(projectionData.mainMatrix).toBe(planetRelative.mainMatrix);
+        expect(projectionData.tileOrigin).toEqual([0, 0, 0, 0]);
     });
 });
 

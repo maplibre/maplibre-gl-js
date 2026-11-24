@@ -305,8 +305,8 @@ describe('getProjectionData', () => {
         const projectedCamera = projectCamera(createCenteredState(context, new LngLat(8.5417, 47.3769), 20), context);
         const cameraMath = getCameraMath(projectedCamera);
 
-        const tileUnderCamera = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(14, 0, 14, 8580, 5737), applyGlobeMatrix: true, relativeToTile: true});
-        const tileToTheWest = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(14, 0, 14, 8579, 5737), applyGlobeMatrix: true, relativeToTile: true});
+        const tileUnderCamera = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(14, 0, 14, 8580, 5737), applyGlobeMatrix: true});
+        const tileToTheWest = cameraMath.getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(14, 0, 14, 8579, 5737), applyGlobeMatrix: true});
 
         expect(tileUnderCamera.tileOriginPosition).toEqual([6081, 3620]);
         expect(tileToTheWest.tileOriginPosition).toEqual([8192, 3620]);
@@ -316,7 +316,7 @@ describe('getProjectionData', () => {
         const context = createContext();
         const projectedCamera = projectCamera(createCenteredState(context, new LngLat(8.5417, 47.3769), 20), context);
 
-        const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(14, 0, 14, 8580, 5737), applyGlobeMatrix: true, relativeToTile: true});
+        const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(14, 0, 14, 8580, 5737), applyGlobeMatrix: true});
 
         expect(projectionData.clippingPlane[3]).toBeCloseTo(1);
     });
@@ -325,9 +325,9 @@ describe('getProjectionData', () => {
         const context = createContext();
         const projectedCamera = projectCamera(createCenteredState(context, new LngLat(8.5417, 47.3769), 9.9), context);
 
-        const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(9, 0, 9, 268, 179), applyGlobeMatrix: true, relativeToTile: true});
+        const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(9, 0, 9, 268, 179), applyGlobeMatrix: true});
 
-        expect(projectionData.tileOrigin).toBeUndefined();
+        expect(projectionData.tileOrigin).toEqual([0, 0, 0, 0]);
     });
 });
 
@@ -337,6 +337,13 @@ describe('getProjectionDataForCustomLayer', () => {
         const projectedCamera = projectCamera(createCenteredState(context, new LngLat(8.5417, 47.3769), 20), context);
 
         expect(getCameraMath(projectedCamera).getProjectionDataForCustomLayer(projectedCamera).mainMatrix).toBeInstanceOf(Float64Array);
+    });
+
+    test('keeps the default data of custom layers relative to the planet center from zoom 10', () => {
+        const context = createContext();
+        const projectedCamera = projectCamera(createCenteredState(context, new LngLat(8.5417, 47.3769), 20), context);
+
+        expect(getCameraMath(projectedCamera).getProjectionDataForCustomLayer(projectedCamera).tileOrigin).toEqual([0, 0, 0, 0]);
     });
 });
 

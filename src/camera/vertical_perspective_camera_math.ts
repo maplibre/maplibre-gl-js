@@ -99,6 +99,20 @@ function getTileRelativeMatrix(projectedCamera: VerticalPerspectiveProjectedCame
     return entry;
 }
 
+/** The projection data of a tile with positions relative to the planet center, which is what a custom layer's own positions are relative to. */
+function getPlanetRelativeProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, overscaledTileID: OverscaledTileID | null, applyGlobeMatrix: boolean): RendererProjectionData {
+    return {
+        mainMatrix: projectedCamera.modelViewProjectionMatrix32f,
+        tileMercatorCoords: getMercatorTileCoordinates(overscaledTileID),
+        clippingPlane: projectedCamera.clippingPlane as [number, number, number, number],
+        tileOrigin: [0, 0, 0, 0],
+        tileOriginPosition: [0, 0],
+        projectionTransition: applyGlobeMatrix ? 1 : 0,
+        fallbackMatrix: projectedCamera.modelViewProjectionMatrix32f,
+        clipAntimeridian: overscaledTileID?.canonical.z === 0,
+    };
+}
+
 /**
  * @internal
  * Derives the {@link VerticalPerspectiveProjectedCamera} of a camera: the matrices the vertical perspective draws it with.
@@ -458,17 +472,9 @@ export class VerticalPerspectiveCameraMath implements CameraMath {
     }
 
     getProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
-        const {overscaledTileID, applyGlobeMatrix, relativeToTile} = params;
-        const mercatorTileCoordinates = getMercatorTileCoordinates(overscaledTileID);
-        const projectionData: RendererProjectionData = {
-            mainMatrix: projectedCamera.modelViewProjectionMatrix32f,
-            tileMercatorCoords: mercatorTileCoordinates,
-            clippingPlane: projectedCamera.clippingPlane as [number, number, number, number],
-            projectionTransition: applyGlobeMatrix ? 1 : 0,
-            fallbackMatrix: projectedCamera.modelViewProjectionMatrix32f,
-            clipAntimeridian: overscaledTileID?.canonical.z === 0,
-        };
-        const drawsTileRelative = this._tileRelative && applyGlobeMatrix && relativeToTile && overscaledTileID != null && projectedCamera.zoom >= MIN_TILE_RELATIVE_ZOOM;
+        const {overscaledTileID, applyGlobeMatrix} = params;
+        const projectionData = getPlanetRelativeProjectionData(projectedCamera, overscaledTileID, applyGlobeMatrix);
+        const drawsTileRelative = this._tileRelative && applyGlobeMatrix && overscaledTileID != null && projectedCamera.zoom >= MIN_TILE_RELATIVE_ZOOM;
         if (!drawsTileRelative) return projectionData;
 
         const tileRelative = getTileRelativeMatrix(projectedCamera, overscaledTileID.canonical);
@@ -757,7 +763,7 @@ export class VerticalPerspectiveCameraMath implements CameraMath {
     }
 
     getProjectionDataForCustomLayer(projectedCamera: VerticalPerspectiveProjectedCamera, applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
-        const globeData = this.getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
+        const globeData = getPlanetRelativeProjectionData(projectedCamera, new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix);
         const mainMatrix = createMat4f64();
         mat4.copy(mainMatrix, projectedCamera.modelViewProjectionMatrix);
         return {...globeData, mainMatrix, tileMercatorCoords: [0, 0, 1, 1]};

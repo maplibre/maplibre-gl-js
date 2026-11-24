@@ -104,7 +104,8 @@ Each drawn tile gets an origin, which is the tile's point nearest the camera, an
 The shader then only computes the small offset of each vertex from that origin (see `projectToSphereOffset`).
 
 Below zoom 10 float32 is precise enough, so positions stay relative to the planet center.
-The same goes for custom layers, and for the `globe` projection, which is mercator by the zoom where float32 runs out.
+The same goes for the default projection data of custom layers, whose own positions are relative to the planet center, and for the `globe` projection, which is mercator by the zoom where float32 runs out.
+Custom layers that ask for the projection data of a tile get the tile's origin like any other layer, and pass it to the shader.
 
 ## Transition to mercator
 

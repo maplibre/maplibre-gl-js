@@ -30,12 +30,8 @@ function updateProjectionUniformBuffer(buffer: UniformBuffer, projectionData: Pr
     f32.set(projectionData.fallbackMatrix, offsets.u_projection_fallback_matrix);
     f32.set(projectionData.tileMercatorCoords, offsets.u_projection_tile_mercator_coords);
     f32.set(projectionData.clippingPlane, offsets.u_projection_clipping_plane);
-    if (projectionData.tileOrigin) {
-        f32.set(projectionData.tileOrigin, offsets.u_projection_tile_origin);
-        f32.set(projectionData.tileOriginPosition, offsets.u_projection_tile_origin_position);
-    } else {
-        f32.fill(0, offsets.u_projection_tile_origin, offsets.u_projection_transition);
-    }
+    f32.set(projectionData.tileOrigin, offsets.u_projection_tile_origin);
+    f32.set(projectionData.tileOriginPosition, offsets.u_projection_tile_origin_position);
     f32[offsets.u_projection_transition] = projectionData.projectionTransition;
     buffer.pendingWords[offsets.u_projection_clip_antimeridian] = projectionData.clipAntimeridian ? 1 : 0;
     buffer.upload();

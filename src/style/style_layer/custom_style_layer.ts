@@ -161,6 +161,8 @@ export type CustomRenderMethodInput = {
     /**
      * Generates a {@link ProjectionData} instance to be used while rendering a given tile.
      * In custom layers, this function is only needed when rendering tiles in a completely custom way and with shaders that are compatible with both projections.
+     * Pass all of its uniforms to the shader for every tile, including `u_projection_tile_origin` and `u_projection_tile_origin_position`,
+     * since the `vertical-perspective` projection gives positions relative to a point of the tile at high zoom.
      *
      * @see [Add a custom layer with tiles to a globe](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-custom-layer-with-tiles-to-a-globe)
      * @param params - Parameters for the projection data generation.

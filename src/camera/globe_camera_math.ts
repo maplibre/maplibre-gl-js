@@ -45,6 +45,8 @@ export class GlobeCameraMath implements CameraMath {
             mainMatrix: isGlobeRendering(projectedCamera) ? verticalPerspectiveProjectionData.mainMatrix : mercatorProjectionData.mainMatrix,
             clippingPlane: verticalPerspectiveProjectionData.clippingPlane,
             tileMercatorCoords: verticalPerspectiveProjectionData.tileMercatorCoords,
+            tileOrigin: verticalPerspectiveProjectionData.tileOrigin,
+            tileOriginPosition: verticalPerspectiveProjectionData.tileOriginPosition,
             projectionTransition: params.applyGlobeMatrix ? projectedCamera.globeness : 0,
             fallbackMatrix: mercatorProjectionData.fallbackMatrix,
             clipAntimeridian: verticalPerspectiveProjectionData.clipAntimeridian,
