@@ -1,0 +1,117 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 320,
+      "description": "4 m radius. Left: L shape, round convex corners, concave corner not doubled. Middle: courtyard. Right, back: base 5, no occlusion. Right, front: 1 m tall, reach 2 m."
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"base": 0, "height": 15},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0.00006, 0.00012],
+                  [0.00006, 0.0003],
+                  [0.00014, 0.0003],
+                  [0.00014, 0.0002],
+                  [0.00024, 0.0002],
+                  [0.00024, 0.00012],
+                  [0.00006, 0.00012]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"base": 0, "height": 15},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0.00034, 0.00012],
+                  [0.00034, 0.0003],
+                  [0.00052, 0.0003],
+                  [0.00052, 0.00012],
+                  [0.00034, 0.00012]
+                ],
+                [
+                  [0.0004, 0.00018],
+                  [0.00046, 0.00018],
+                  [0.00046, 0.00024],
+                  [0.0004, 0.00024],
+                  [0.0004, 0.00018]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"base": 5, "height": 15},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0.0006, 0.00022],
+                  [0.0006, 0.0003],
+                  [0.00068, 0.0003],
+                  [0.00068, 0.00022],
+                  [0.0006, 0.00022]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"base": 0, "height": 1},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0.0006, 0.00012],
+                  [0.0006, 0.00018],
+                  [0.00068, 0.00018],
+                  [0.00068, 0.00012],
+                  [0.0006, 0.00012]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "center": [0.00037, 0.00021],
+  "pitch": 30,
+  "zoom": 18,
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ddd"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-color": "#88a",
+        "fill-extrusion-height": ["get", "height"],
+        "fill-extrusion-base": ["get", "base"],
+        "fill-extrusion-ambient-occlusion-ground-intensity": 1,
+        "fill-extrusion-ambient-occlusion-ground-radius": 4
+      }
+    }
+  ]
+}

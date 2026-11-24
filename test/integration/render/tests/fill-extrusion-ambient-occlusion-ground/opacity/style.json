@@ -1,0 +1,63 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 320,
+      "description": "Opacity 0.6: ground occlusion is scaled by the opacity and depth-tested behind the walls."
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0.00016, 0.00012],
+                  [0.00016, 0.0003],
+                  [0.00024, 0.0003],
+                  [0.00024, 0.0002],
+                  [0.00034, 0.0002],
+                  [0.00034, 0.00012],
+                  [0.00016, 0.00012]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "center": [0.00025, 0.00021],
+  "pitch": 45,
+  "bearing": 30,
+  "zoom": 18.5,
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ddd"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-color": "#88a",
+        "fill-extrusion-height": 15,
+        "fill-extrusion-opacity": 0.6,
+        "fill-extrusion-ambient-occlusion-ground-intensity": 1,
+        "fill-extrusion-ambient-occlusion-ground-radius": 4
+      }
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "description": "Building on a steep slope with 3D terrain. Ground occlusion is draped into the terrain texture so it follows the slope without depth cutouts.",
+      "threshold": 0.02
+    }
+  },
+  "center": [
+    11.43677,
+    47.37231
+  ],
+  "zoom": 16.5,
+  "pitch": 60,
+  "bearing": 110,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 512
+    },
+    "buildings": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [11.43655, 47.37216],
+              [11.43699, 47.37216],
+              [11.43699, 47.37246],
+              [11.43655, 47.37246],
+              [11.43655, 47.37216]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "terrain"
+    },
+    {
+      "id": "building",
+      "type": "fill-extrusion",
+      "source": "buildings",
+      "paint": {
+        "fill-extrusion-color": "#dddddd",
+        "fill-extrusion-height": 25,
+        "fill-extrusion-ambient-occlusion-ground-intensity": 1,
+        "fill-extrusion-ambient-occlusion-ground-radius": 12
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 1
+  }
+}

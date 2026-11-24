@@ -19,6 +19,7 @@ import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_lay
 import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import type {FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
 import type {Painter, RTTObject} from '../render/painter.ts';
 import type {ProgramCache} from './program_cache.ts';
 
@@ -490,5 +491,81 @@ describe('render to texture', () => {
         expect(symbolTileManager.getVisibleCoordinates).not.toHaveBeenCalled();
         expect(terrain.tileManager.getTerrainCoords).toHaveBeenCalledTimes(1);
         expect(Object.keys(rtt._coordsAscending)).toStrictEqual(['maine']);
+    });
+
+    test('drapes fill-extrusion ground occlusion into the preceding stack and fingerprints its source', () => {
+        const buildingBucket = {
+            programConfigurations: new globalThis.Map([['buildings', {}]]),
+            layoutVertexBuffer: {},
+            indexBuffer: {},
+            segments: {}
+        };
+        const buildingTile = {
+            tileID: tile.tileID,
+            tileSize: 512,
+            getBucket: () => buildingBucket
+        };
+        const buildingLayer = {
+            id: 'buildings',
+            type: 'fill-extrusion',
+            source: 'buildings-src',
+            isHidden: () => false,
+            hasGroundOcclusion: () => true,
+            paint: {
+                get: (prop: string) => ({
+                    'fill-extrusion-ambient-occlusion-ground-intensity': 0.8,
+                    'fill-extrusion-ambient-occlusion-ground-radius': 4,
+                    'fill-extrusion-opacity': 1,
+                    'fill-extrusion-translate': [0, 0],
+                    'fill-extrusion-translate-anchor': 'map'
+                }[prop])
+            }
+        } as any as FillExtrusionStyleLayer;
+        const testStyle = {
+            ...style,
+            tileManagers: {
+                ...style.tileManagers,
+                'buildings-src': {
+                    getVisibleCoordinates: () => [tile.tileID],
+                    getSource: () => ({}),
+                    getState: vi.fn().mockReturnValue({revision: 0}),
+                    getTile: () => buildingTile
+                }
+            },
+            _order: ['maine-fill', 'maine-symbol', 'buildings'],
+            _layers: {
+                ...style._layers,
+                buildings: buildingLayer
+            }
+        } as any as Style;
+
+        rtt.prepareForRender(testStyle, 15, false);
+        expect(Object.keys(rtt._coordsAscending)).toStrictEqual(['maine', 'buildings-src']);
+
+        const frameRenderContext = createFrameRenderContext();
+        const getProgramSpy = vi.spyOn(programCache, 'getProgram');
+        getProgramSpy.mockClear();
+
+        rtt.renderLayer(fillLayer, testStyle, frameRenderContext);
+        rtt.renderLayer(symbolLayer, testStyle, frameRenderContext);
+
+        expect(getProgramSpy).toHaveBeenCalledWith(expect.objectContaining({
+            name: 'fillExtrusionGroundOcclusion',
+            defines: []
+        }));
+        expect(getProgramSpy).toHaveBeenCalledWith(expect.objectContaining({
+            name: 'fillExtrusionGroundOcclusion',
+            defines: ['#define COMPOSITE']
+        }));
+        expect(painter.groundOcclusionFbo?.width).toBe(rtt.rttSize);
+        expect(painter.groundOcclusionFbo?.height).toBe(rtt.rttSize);
+        expect(tile.rttFingerprint['buildings-src']).toBeDefined();
+
+        // Turning ground occlusion off destroys the shared offscreen framebuffer.
+        (buildingLayer as any).hasGroundOcclusion = () => false;
+        const destroySpy = vi.spyOn(painter.groundOcclusionFbo, 'destroy');
+        rtt.prepareForRender(testStyle, 15, false);
+        expect(destroySpy).toHaveBeenCalledTimes(1);
+        expect(painter.groundOcclusionFbo).toBeNull();
     });
 });

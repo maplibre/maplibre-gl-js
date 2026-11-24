@@ -140,6 +140,8 @@ export class NullWebGL2RenderingContext {
     RGBA32F: number = 0x8814;
     R16F: number = 0x822D;
     RG16F: number = 0x822F;
+    R8: number = 0x8229;
+    MAX: number = 0x8008;
     SYNC_GPU_COMMANDS_COMPLETE: number = 0x9117;
     ALREADY_SIGNALED: number = 0x911A;
     TIMEOUT_EXPIRED: number = 0x911B;

@@ -1,0 +1,75 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 384,
+      "description": "Centre: building across four tiles, not darker where tiles overlap. North-east: building 2 m east of a tile edge, its occlusion not cut at the edge."
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-0.00006, -0.00006],
+                  [-0.00006, 0.00006],
+                  [0.00006, 0.00006],
+                  [0.00006, -0.00006],
+                  [-0.00006, -0.00006]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0.000018, 0.00012],
+                  [0.000018, 0.0002],
+                  [0.0001, 0.0002],
+                  [0.0001, 0.00012],
+                  [0.000018, 0.00012]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "center": [0, 0.00006],
+  "pitch": 20,
+  "zoom": 19,
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ddd"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-color": "#88a",
+        "fill-extrusion-height": 10,
+        "fill-extrusion-ambient-occlusion-ground-intensity": 1,
+        "fill-extrusion-ambient-occlusion-ground-radius": 4
+      }
+    }
+  ]
+}
