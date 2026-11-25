@@ -104,6 +104,8 @@ export class FrameRenderContext {
     layerCompositeSampled: boolean = false;
     /** Whether ground occlusion has already sampled its shared offscreen FBO in this frame. */
     groundOcclusionSampled: boolean = false;
+    /** Whether the offscreen ground occlusion FBO holds strips to composite. */
+    groundOcclusionReady: boolean = false;
     readonly projectedCamera: ProjectedCamera;
     /** The world mapping the camera was projected with. */
     readonly worldCoordinateHelper: WorldCoordinateHelper;

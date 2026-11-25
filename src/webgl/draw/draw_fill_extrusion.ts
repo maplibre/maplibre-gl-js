@@ -1,3 +1,4 @@
+import {mat4} from 'gl-matrix';
 import {DepthMode} from '../depth_mode.ts';
 import {StencilMode} from '../stencil_mode.ts';
 import {ColorMode} from '../color_mode.ts';
@@ -7,10 +8,13 @@ import {
     fillExtrusionUniformValues,
     fillExtrusionPatternUniformValues,
     fillExtrusionGroundOcclusionUniformValues,
+    fillExtrusionGroundOcclusionCompositeUniformValues,
 } from '../program/fill_extrusion_program.ts';
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
 import {isFillExtrusionStyleLayer, type FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
+import {getCameraMath} from '../../camera/camera_math_factory.ts';
+import {EXTENT} from '../../data/extent.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
 import type {Painter, RTTObject} from '../../render/painter.ts';
@@ -18,12 +22,16 @@ import type {Style} from '../../style/style.ts';
 import type {TileManager} from '../../tile/tile_manager.ts';
 import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
+import type {RendererProjectionData} from '../../geo/projection/projection_data.ts';
 
 /** Shader defines that switch on wall ambient occlusion. */
 const WALL_AMBIENT_OCCLUSION_DEFINES = ['#define WALL_AMBIENT_OCCLUSION'];
 
 /** Shader defines for the ground occlusion composite pass. */
 const GROUND_OCCLUSION_COMPOSITE_DEFINES = ['#define COMPOSITE'];
+const compositeWorldQuad = new Float64Array(16);
+let mercatorCompositeProjection: RendererProjectionData | null = null;
+let rttCompositeProjection: RendererProjectionData | null = null;
 
 /**
  * Draws a fill-extrusion layer.
@@ -66,7 +74,10 @@ function beginGroundOcclusionPass(painter: Painter, width: number, height: numbe
         fbo?.destroy();
         const texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R8, width, height);
         fbo = painter.groundOcclusionFbo = context.createFramebuffer(width, height, false, false);
         fbo.colorAttachment.set(texture);
@@ -81,38 +92,41 @@ function drawGroundOcclusionLayer(
     tileManager: TileManager,
     layer: FillExtrusionStyleLayer,
     coords: OverscaledTileID[],
-    composite: boolean,
-    depthMode: Readonly<DepthMode>,
-    stencilMode: Readonly<StencilMode>,
-    colorMode: Readonly<ColorMode>,
-    frameRenderContext: FrameRenderContext): void {
+    tuckWorldPixels: number,
+    frameRenderContext: FrameRenderContext): boolean {
     const {context, projectedCamera} = frameRenderContext;
     const gl = context.gl;
     const intensity = layer.paint.get('fill-extrusion-ambient-occlusion-ground-intensity');
     const radius = layer.paint.get('fill-extrusion-ambient-occlusion-ground-radius');
     const translate = layer.paint.get('fill-extrusion-translate');
     const translateAnchor = layer.paint.get('fill-extrusion-translate-anchor');
-    const vertexArrayKey = composite ? `${layer.id}$ground-occlusion-composite` : `${layer.id}$ground-occlusion`;
+    const vertexArrayKey = `${layer.id}$ground-occlusion`;
+    let drewAny = false;
 
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
+        if (bucket.wallSegments?.get().length === 0) continue;
+        const segments = bucket.wallSegments ?? bucket.segments;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = frameRenderContext.useProgram('fillExtrusionGroundOcclusion', programConfiguration, false, composite ? GROUND_OCCLUSION_COMPOSITE_DEFINES : undefined);
+        const program = frameRenderContext.useProgram('fillExtrusionGroundOcclusion', programConfiguration);
         const tileTranslate = translatePosition(projectedCamera, tile, translate, translateAnchor);
-        const uniformValues = fillExtrusionGroundOcclusionUniformValues(intensity, radius, tileTranslate, coord.canonical);
+        const tuckTileUnits = tuckWorldPixels > 0 ? tuckWorldPixels * EXTENT * Math.pow(2, coord.canonical.z) / projectedCamera.worldSize : 0;
+        const uniformValues = fillExtrusionGroundOcclusionUniformValues(intensity, radius, tuckTileUnits, tileTranslate, coord.canonical);
 
-        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
+        program.draw(context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, ColorMode.plusLighter, CullFaceMode.disabled,
             uniformValues, null, frameRenderContext.getProjectionDataForTile(coord),
-            vertexArrayKey, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments, layer.paint, projectedCamera.zoom, programConfiguration);
+            vertexArrayKey, bucket.layoutVertexBuffer, bucket.indexBuffer, segments, layer.paint, projectedCamera.zoom, programConfiguration);
+        drewAny = true;
     }
+    return drewAny;
 }
 
 /**
  * Darkens the ground along the walls of all `fill-extrusion` layers by the strongest strip at each pixel:
- * `MAX`-blended into an offscreen `R8` texture in the offscreen pass, then depth- and stencil-tested in the translucent pass.
+ * `MAX`-blended into a half-resolution `R8` texture in the offscreen pass, then bilinearly composited with a depth-tested ground quad.
  */
 export function drawFillExtrusionGroundOcclusion(
     painter: Painter,
@@ -123,40 +137,76 @@ export function drawFillExtrusionGroundOcclusion(
 
     const {context, projectedCamera} = frameRenderContext;
     const gl = context.gl;
-    const composite = frameRenderContext.currentPass === 'translucent';
-    let depthMode: Readonly<DepthMode> = DepthMode.disabled;
-    let stencilMode: Readonly<StencilMode> = StencilMode.disabled;
-    let colorMode: Readonly<ColorMode> = ColorMode.plusLighter;
+
+    if (frameRenderContext.currentPass === 'translucent') {
+        if (!frameRenderContext.groundOcclusionReady || !painter.groundOcclusionFbo) return;
+        context.activeTexture.set(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, painter.groundOcclusionFbo.colorAttachment.get());
+        const depthMode = new DepthMode(gl.LESS, DepthMode.ReadOnly, frameRenderContext.depthRangeFor3D);
+        const uniformValues = fillExtrusionGroundOcclusionCompositeUniformValues(1 / painter.width, 1 / painter.height);
+        frameRenderContext.useProgram('fillExtrusionGroundOcclusion', null, false, GROUND_OCCLUSION_COMPOSITE_DEFINES).draw(
+            context, gl.TRIANGLES, depthMode, StencilMode.disabled, frameRenderContext.colorModeForRenderPass(),
+            CullFaceMode.disabled, uniformValues, null, mercatorCompositeProjection,
+            'groundOcclusionComposite', painter.viewportBuffer, painter.quadTriangleIndexBuffer, painter.viewportSegments);
+        return;
+    }
+
     let started = false;
+    let minWorldX = Infinity;
+    let minWorldY = Infinity;
+    let maxWorldX = -Infinity;
+    let maxWorldY = -Infinity;
+    const tuckWorldPixels = (2.5 / Math.max(1, frameRenderContext.data.pixelRatio)) / Math.max(0.25, Math.cos(projectedCamera.pitchInRadians));
 
     for (const layerId of style._order) {
         const layer = style._layers[layerId];
         if (!isFillExtrusionStyleLayer(layer) || layer.isHidden(projectedCamera.zoom) || !layer.hasGroundOcclusion()) continue;
+        const coords = coordsDescending[layer.source];
+        if (!coords?.length) continue;
 
         if (!started) {
             started = true;
-            if (composite) {
-                context.activeTexture.set(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, painter.groundOcclusionFbo.colorAttachment.get());
-                depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, frameRenderContext.depthRangeFor3D);
-                stencilMode = frameRenderContext.stencilModeFor3D();
-                colorMode = frameRenderContext.colorModeForRenderPass();
-            } else {
-                beginGroundOcclusionPass(painter, painter.width, painter.height);
-            }
+            beginGroundOcclusionPass(painter, Math.max(1, (painter.width + 1) >> 1), Math.max(1, (painter.height + 1) >> 1));
         }
 
-        drawGroundOcclusionLayer(style.tileManagers[layer.source], layer, coordsDescending[layer.source],
-            composite, depthMode, stencilMode, colorMode, frameRenderContext);
+        if (!drawGroundOcclusionLayer(style.tileManagers[layer.source], layer, coords, tuckWorldPixels, frameRenderContext)) continue;
+
+        const radiusMargin = layer.paint.get('fill-extrusion-ambient-occlusion-ground-radius') * projectedCamera.pixelsPerMeter;
+        for (const coord of coords) {
+            const tile = style.tileManagers[layer.source].getTile(coord);
+            if (!tile.getBucket(layer)) continue;
+            const scale = Math.pow(2, coord.canonical.z);
+            const tileSize = projectedCamera.worldSize / scale;
+            const tileX = (coord.canonical.x + coord.wrap * scale) * tileSize;
+            const tileY = coord.canonical.y * tileSize;
+            const pad = radiusMargin + tileSize * (1024 / EXTENT);
+            if (tileX - pad < minWorldX) minWorldX = tileX - pad;
+            if (tileY - pad < minWorldY) minWorldY = tileY - pad;
+            if (tileX + tileSize + pad > maxWorldX) maxWorldX = tileX + tileSize + pad;
+            if (tileY + tileSize + pad > maxWorldY) maxWorldY = tileY + tileSize + pad;
+        }
     }
 
-    if (composite) return;
-    if (started) {
-        context.blendEquation.set(gl.FUNC_ADD);
+    if (!started) {
+        painter.groundOcclusionFbo?.destroy();
+        painter.groundOcclusionFbo = null;
         return;
     }
-    painter.groundOcclusionFbo?.destroy();
-    painter.groundOcclusionFbo = null;
+
+    context.blendEquation.set(gl.FUNC_ADD);
+    if (minWorldX >= maxWorldX) return;
+
+    if (!mercatorCompositeProjection) {
+        mercatorCompositeProjection = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: null});
+        mercatorCompositeProjection.uniformBufferKey = 'groundOcclusionComposite';
+    }
+    mat4.set(compositeWorldQuad,
+        maxWorldX - minWorldX, 0, 0, 0,
+        0, maxWorldY - minWorldY, 0, 0,
+        0, 0, 1, 0,
+        minWorldX, minWorldY, 0, 1);
+    mat4.multiply(mercatorCompositeProjection.mainMatrix, projectedCamera.modelViewProjectionMatrix, compositeWorldQuad);
+    frameRenderContext.groundOcclusionReady = true;
 }
 
 /** Drapes the ground occlusion of `layerIds` into a terrain tile's RTT texture via the shared `R8` texture. */
@@ -171,6 +221,7 @@ export function drawFillExtrusionGroundOcclusionToTexture(
     const context = frameRenderContext.context;
     const gl = context.gl;
     let started = false;
+    let drewAny = false;
 
     for (const layerId of layerIds) {
         const layer = style._layers[layerId] as FillExtrusionStyleLayer;
@@ -186,28 +237,36 @@ export function drawFillExtrusionGroundOcclusionToTexture(
             beginGroundOcclusionPass(painter, target.size, target.size);
         }
 
-        drawGroundOcclusionLayer(style.tileManagers[layer.source], layer, coords,
-            false, DepthMode.disabled, StencilMode.disabled, ColorMode.plusLighter, frameRenderContext);
+        if (drawGroundOcclusionLayer(style.tileManagers[layer.source], layer, coords, 0, frameRenderContext)) {
+            drewAny = true;
+        }
     }
 
     if (!started) return;
 
     context.blendEquation.set(gl.FUNC_ADD);
+    if (!drewAny) return;
+
     painter.bindRTT(target);
     context.viewport.set([0, 0, target.size, target.size]);
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, painter.groundOcclusionFbo.colorAttachment.get());
 
-    const stencilMode = frameRenderContext.stencilModeFor3D();
-    const colorMode = frameRenderContext.colorModeForRenderPass();
-    for (const layerId of layerIds) {
-        const layer = style._layers[layerId] as FillExtrusionStyleLayer;
-        const coords = coordsBySource[layer.source]?.[tileKey];
-        if (!coords?.length) continue;
-
-        drawGroundOcclusionLayer(style.tileManagers[layer.source], layer, coords,
-            true, DepthMode.disabled, stencilMode, colorMode, frameRenderContext);
+    if (!rttCompositeProjection) {
+        rttCompositeProjection = getCameraMath(frameRenderContext.projectedCamera).getProjectionData(frameRenderContext.projectedCamera, {overscaledTileID: null});
+        rttCompositeProjection.uniformBufferKey = 'groundOcclusionRTT';
+        mat4.set(rttCompositeProjection.mainMatrix,
+            2, 0, 0, 0,
+            0, 2, 0, 0,
+            0, 0, 1, 0,
+            -1, -1, 0, 1);
     }
+
+    const uniformValues = fillExtrusionGroundOcclusionCompositeUniformValues(1 / target.size, 1 / target.size);
+    frameRenderContext.useProgram('fillExtrusionGroundOcclusion', null, false, GROUND_OCCLUSION_COMPOSITE_DEFINES).draw(
+        context, gl.TRIANGLES, DepthMode.disabled, StencilMode.disabled, frameRenderContext.colorModeForRenderPass(),
+        CullFaceMode.disabled, uniformValues, null, rttCompositeProjection,
+        'groundOcclusionRTT', painter.viewportBuffer, painter.quadTriangleIndexBuffer, painter.viewportSegments);
 
     frameRenderContext.groundOcclusionSampled = true;
 }

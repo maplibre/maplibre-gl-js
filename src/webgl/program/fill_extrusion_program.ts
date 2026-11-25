@@ -54,8 +54,10 @@ export type FillExtrusionPatternUniformsType = {
 export type FillExtrusionGroundOcclusionUniformsType = {
     'u_ao_ground_intensity': Uniform1f;
     'u_ao_ground_radius': Uniform1f;
+    'u_ao_ground_tuck': Uniform1f;
     'u_tile_units_per_meter': Uniform1f;
     'u_fill_translate': Uniform2f;
+    'u_inv_size': Uniform2f;
 };
 
 const fillExtrusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionUniformsType => ({
@@ -93,8 +95,10 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
 const fillExtrusionGroundOcclusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionGroundOcclusionUniformsType => ({
     'u_ao_ground_intensity': new Uniform1f(context, locations.u_ao_ground_intensity),
     'u_ao_ground_radius': new Uniform1f(context, locations.u_ao_ground_radius),
+    'u_ao_ground_tuck': new Uniform1f(context, locations.u_ao_ground_tuck),
     'u_tile_units_per_meter': new Uniform1f(context, locations.u_tile_units_per_meter),
-    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
+    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
+    'u_inv_size': new Uniform2f(context, locations.u_inv_size),
 });
 
 const fillExtrusionUniformValues = (
@@ -152,9 +156,12 @@ const fillExtrusionPatternUniformValues = (
     };
 };
 
+const ZERO_VEC2: [number, number] = [0, 0];
+
 const fillExtrusionGroundOcclusionUniformValues = (
     intensity: number,
     radius: number,
+    tuck: number,
     translate: [number, number],
     canonical: CanonicalTileID
 ): UniformValues<FillExtrusionGroundOcclusionUniformsType> => {
@@ -164,10 +171,24 @@ const fillExtrusionGroundOcclusionUniformValues = (
     return {
         'u_ao_ground_intensity': intensity,
         'u_ao_ground_radius': radius,
+        'u_ao_ground_tuck': tuck,
         'u_tile_units_per_meter': mercatorZfromAltitude(1, latitude) * EXTENT * tileCount,
-        'u_fill_translate': translate
+        'u_fill_translate': translate,
+        'u_inv_size': ZERO_VEC2,
     };
 };
+
+const fillExtrusionGroundOcclusionCompositeUniformValues = (
+    invWidth: number,
+    invHeight: number
+): UniformValues<FillExtrusionGroundOcclusionUniformsType> => ({
+    'u_ao_ground_intensity': 0,
+    'u_ao_ground_radius': 0,
+    'u_ao_ground_tuck': 0,
+    'u_tile_units_per_meter': 0,
+    'u_fill_translate': ZERO_VEC2,
+    'u_inv_size': [invWidth, invHeight],
+});
 
 export {
     fillExtrusionUniforms,
@@ -175,5 +196,6 @@ export {
     fillExtrusionGroundOcclusionUniforms,
     fillExtrusionUniformValues,
     fillExtrusionPatternUniformValues,
-    fillExtrusionGroundOcclusionUniformValues
+    fillExtrusionGroundOcclusionUniformValues,
+    fillExtrusionGroundOcclusionCompositeUniformValues
 };

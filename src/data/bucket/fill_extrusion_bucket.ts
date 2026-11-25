@@ -113,6 +113,8 @@ export class FillExtrusionBucket implements Bucket {
     hasDependencies: boolean;
     programConfigurations: ProgramConfigurationSet<FillExtrusionStyleLayer>;
     segments: SegmentVector;
+    /** Subset of {@link segments} covering only wall triangles, placed at the start of each segment in {@link indexArray}. */
+    wallSegments: SegmentVector;
     uploaded: boolean;
     features: BucketFeature[];
 
@@ -168,6 +170,10 @@ export class FillExtrusionBucket implements Bucket {
 
             options.featureIndex.insert(feature, bucketFeature.geometry, index, sourceLayerIndex, this.index, true);
         }
+
+        if (!this.hasDependencies) {
+            this._partitionWalls();
+        }
     }
 
     addFeatures({options, canonical, patternPositions}: BucketDependencyParameters): void {
@@ -175,6 +181,7 @@ export class FillExtrusionBucket implements Bucket {
             const {geometry} = feature;
             this.addFeature(feature, geometry, feature.index, canonical, patternPositions, options.subdivisionGranularity);
         }
+        this._partitionWalls();
     }
 
     update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}): void {
@@ -194,6 +201,7 @@ export class FillExtrusionBucket implements Bucket {
 
     upload(context: Context): void {
         if (!this.uploaded) {
+            if (!this.wallSegments) this._partitionWalls();
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.centroidVertexBuffer = context.createVertexBuffer(this.centroidVertexArray, centroidAttributes.members, true);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
@@ -208,7 +216,61 @@ export class FillExtrusionBucket implements Bucket {
         this.indexBuffer.destroy();
         this.programConfigurations.destroy();
         this.segments.destroy();
+        this.wallSegments?.destroy();
         this.centroidVertexBuffer.destroy();
+    }
+
+    /** Places wall triangles before roof triangles in each segment and records their ranges in {@link wallSegments}. */
+    private _partitionWalls(): void {
+        const wallSegments = new SegmentVector();
+        const int16 = this.layoutVertexArray.int16;
+        const uint16 = this.indexArray.uint16;
+        let scratch: Uint16Array | null = null;
+
+        for (const segment of this.segments.get()) {
+            const primCount = segment.primitiveLength;
+            if (primCount === 0) continue;
+
+            const start = segment.primitiveOffset * 3;
+            const indexCount = primCount * 3;
+            const end = start + indexCount;
+            const vOffset = segment.vertexOffset;
+
+            let wallCount = 0;
+            for (let i = start; i < end; i += 3) {
+                const va = (vOffset + uint16[i]) * 6;
+                if (int16[va + 2] !== 1 || int16[va + 3] !== 0) wallCount++;
+            }
+
+            if (wallCount === 0) continue;
+            if (wallCount < primCount) {
+                if (!scratch || scratch.length < indexCount) scratch = new Uint16Array(indexCount);
+                scratch.set(uint16.subarray(start, end));
+                let wallDst = start;
+                let roofDst = start + wallCount * 3;
+                for (let i = 0; i < indexCount; i += 3) {
+                    const a = scratch[i];
+                    const va = (vOffset + a) * 6;
+                    const isWall = int16[va + 2] !== 1 || int16[va + 3] !== 0;
+                    const dst = isWall ? wallDst : roofDst;
+                    uint16[dst] = a;
+                    uint16[dst + 1] = scratch[i + 1];
+                    uint16[dst + 2] = scratch[i + 2];
+                    if (isWall) wallDst += 3;
+                    else roofDst += 3;
+                }
+            }
+
+            wallSegments.get().push({
+                vertexOffset: vOffset,
+                primitiveOffset: segment.primitiveOffset,
+                vertexLength: segment.vertexLength,
+                primitiveLength: wallCount,
+                vaos: {}
+            });
+        }
+
+        this.wallSegments = wallSegments;
     }
 
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting): void {
