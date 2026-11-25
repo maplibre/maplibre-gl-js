@@ -9,10 +9,50 @@ import Point from '@mapbox/point-geometry';
 import {CRSWorldCoordinateHelper, identityCrs} from '../geo/projection/crs.ts';
 import {createIdentityCrsCamera, createTestCamera} from '../util/test/util.ts';
 
+import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
 
 describe('FeatureIndex', () => {
+    test('lookupSymbolFeatures evaluates symbol properties with tile geometry', () => {
+        const polygon: GeoJSON.Polygon = {type: 'Polygon', coordinates: [[[0, 0], [0, 5], [5, 5], [5, 0], [0, 0]]]};
+        const layer = new SymbolStyleLayer({
+            id: 'layer', type: 'symbol', source: 'source',
+            layout: {
+                'text-field': ['case', ['within', polygon], ['get', 'name'], 'Without'],
+                'text-size': ['distance', polygon]
+            }
+        }, {});
+        layer.recalculate(new EvaluationParameters(0), []);
+        const tile = new GeoJSONWrapper([
+            {type: 1, geometry: [[2070, 2025]], tags: {name: 'Within'}},
+            {type: 1, geometry: [[0, 0]], tags: {name: 'corner'}},
+            {type: 1, geometry: [], tags: {name: 'empty'}}
+        ]);
+        const index = new FeatureIndex(new OverscaledTileID(0, 0, 0, 0, 0));
+        index.rawTileData = fromVectorTileJs({layers: {[GEOJSON_TILE_LAYER_NAME]: tile}}) as unknown as ArrayBuffer;
+        index.bucketLayerIDs = [['layer']];
+
+        const serializedLayers = {layer: layer.serialize() as any};
+        const result = index.lookupSymbolFeatures([0, 1, 2], serializedLayers, 0, 0,
+            {filterSpec: undefined, globalState: {}, worldCoordinateHelper: mercatorWorldCoordinateHelper}, null, [], {layer});
+        const [inside, outside, empty] = result.layer;
+        expect(inside.feature).toMatchObject({layer: {layout: {
+            'text-field': {sections: [{text: 'Within'}]}, 'text-size': 0
+        }}});
+        expect(outside.feature).toMatchObject({layer: {layout: {'text-field': {sections: [{text: 'Without'}]}}}});
+        const size = (outside.feature as any).layer.layout['text-size'];
+        expect(size).toBeGreaterThan(0);
+        expect(Number.isFinite(size)).toBe(true);
+        expect(empty.feature).toMatchObject({layer: {layout: {'text-field': {sections: [{text: 'Without'}]}}}});
+
+        const filtered = index.lookupSymbolFeatures([0, 1, 2], serializedLayers, 0, 0,
+            {filterSpec: ['within', polygon], globalState: {}, worldCoordinateHelper: mercatorWorldCoordinateHelper}, null, [], {layer});
+        expect(filtered.layer.map(hit => hit.featureIndex)).toEqual([0]);
+    });
+
     describe('getId', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
 

@@ -18,7 +18,7 @@ import {Bounds} from '../geo/bounds.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 
 import type Point from '@mapbox/point-geometry';
-import type {OverscaledTileID} from '../tile/tile_id.ts';
+import type {CanonicalTileID, OverscaledTileID} from '../tile/tile_id.ts';
 import type {SourceFeatureState} from '../source/source_state.ts';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
@@ -230,15 +230,13 @@ export class FeatureIndex {
         const sourceLayer = this.vtLayers[sourceLayerName];
         const feature = sourceLayer.feature(featureIndex);
 
-        if (filter.needGeometry) {
-            const evaluationFeature = toEvaluationFeature(feature, true);
-            if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), evaluationFeature, this.tileID.canonical)) {
-                return;
-            }
-        } else if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), feature)) {
+        const canonical = this.tileID.canonical;
+        const filterFeature = filter.needGeometry ? queryEvaluationFeature(feature) : undefined;
+        if (!filter.filter(new EvaluationParameters(this.tileID.overscaledZ), filterFeature ?? feature, canonical)) {
             return;
         }
 
+        const evaluationFeature = filterFeature ?? queryEvaluationFeature(feature);
         const id = this.getId(feature, sourceLayerName);
 
         for (const layerID of layerIDs) {
@@ -259,8 +257,8 @@ export class FeatureIndex {
 
             const serializedLayer = {...serializedLayers[layerID]};
 
-            serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, feature, featureState, availableImages);
-            serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, feature, featureState, availableImages);
+            serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, evaluationFeature, featureState, canonical, availableImages);
+            serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, evaluationFeature, featureState, canonical, availableImages);
 
             const intersectionZ = !intersectionTest || intersectionTest(feature, styleLayer, featureState);
             if (!intersectionZ) {
@@ -347,6 +345,12 @@ register(
     {omit: ['rawTileData', 'sourceLayerCoder']}
 );
 
+/** Supplies geometry to spatial expressions only when the feature contains coordinates. */
+function queryEvaluationFeature(feature: VectorTileFeatureLike): Feature {
+    const evaluated = toEvaluationFeature(feature, true);
+    return evaluated.geometry.some(ring => ring.length > 0) ? evaluated : feature;
+}
+
 /**
  * Whether a possibly-evaluated property still has to be evaluated against a feature, as a
  * data-driven one does.
@@ -372,13 +376,14 @@ function evaluateProperties<Props, PossiblyEvaluatedProps>(
     styleLayerProperties: PossiblyEvaluated<Props, PossiblyEvaluatedProps> | unknown,
     feature: Feature,
     featureState: FeatureState,
+    canonical: CanonicalTileID,
     availableImages: string[]
 ): Record<string, unknown> {
     return mapObject(serializedProperties, (_property, key) => {
         const value = styleLayerProperties instanceof PossiblyEvaluated ?
             styleLayerProperties.get(key as keyof PossiblyEvaluatedProps) :
             null;
-        return needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value;
+        return needsEvaluating(value) ? value.evaluate(feature, featureState, canonical, availableImages) : value;
     });
 }
 
