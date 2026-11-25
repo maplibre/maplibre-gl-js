@@ -308,7 +308,7 @@ export class RenderToTexture {
             }
             frameRenderContext.isRenderingToTexture = false;
             setFrameUniformWorldSize(painter.context.frameUniformBuffer, painter.context.gl.drawingBufferWidth, painter.context.gl.drawingBufferHeight);
-            drawTerrain(this.painter, this.terrain, this._rttTiles, frameRenderContext);
+            drawTerrain(this.painter, this.terrain, this._rttTiles, frameRenderContext, stack === 0);
             this._rttTiles = [];
 
             return renderedToTexture;

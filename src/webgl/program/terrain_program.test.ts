@@ -10,7 +10,7 @@ describe('terrainUniformValues', () => {
         const sky = new Sky({}, {}).getEvaluated();
         const pitch = 45;
         const isGlobeMode = true;
-        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, sky, pitch, isGlobeMode);
+        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, sky, pitch, isGlobeMode, true);
 
         expect(uniformValues['u_fog_ground_blend_opacity']).toBe(0);
         expect(uniformValues['u_ele_delta']).toBe(eleDelta);
@@ -25,7 +25,7 @@ describe('terrainUniformValues', () => {
         const sky = new Sky({}, {}).getEvaluated();
         const pitch = 45;
         const isGlobeMode = false;
-        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, sky, pitch, isGlobeMode);
+        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, sky, pitch, isGlobeMode, true);
         expect(uniformValues['u_fog_ground_blend_opacity']).toBe(calculateFogBlendOpacity(pitch));
     });
 });

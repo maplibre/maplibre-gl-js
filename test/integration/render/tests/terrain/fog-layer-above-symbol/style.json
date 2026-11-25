@@ -1,0 +1,72 @@
+{
+    "version": 8,
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "metadata": {
+        "test": {
+            "description": "The fill layers below and above the symbol layer are draped in two passes and draw nothing, so the terrain is bare. It must still be fogged, and only once.",
+            "height": 128,
+            "width": 128,
+            "maxPitch": 85,
+            "operations": [
+                [
+                    "wait"
+                ]
+            ]
+        }
+    },
+    "center": [
+        35.38,
+        31.55
+    ],
+    "zoom": 15,
+    "pitch": 85,
+    "sources": {
+        "terrain": {
+            "type": "raster-dem",
+            "tiles": [
+                "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+            ],
+            "minzoom": 7,
+            "maxzoom": 12,
+            "tileSize": 256
+        },
+        "overlay": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": []
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "overlay-fill-below",
+            "type": "fill",
+            "source": "overlay"
+        },
+        {
+            "id": "overlay-label",
+            "type": "symbol",
+            "source": "overlay",
+            "layout": {
+                "text-field": "label"
+            }
+        },
+        {
+            "id": "overlay-fill",
+            "type": "fill",
+            "source": "overlay"
+        }
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 1
+    },
+    "sky": {
+        "sky-color": "#199EF3",
+        "fog-color": "#ffffff",
+        "horizon-color": "#ffffff",
+        "sky-horizon-blend": 0,
+        "fog-ground-blend": 0
+    }
+}

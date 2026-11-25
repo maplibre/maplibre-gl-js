@@ -39,7 +39,11 @@ function drawDepth(painter: Painter, terrain: Terrain, frameRenderContext: Frame
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], frameRenderContext: FrameRenderContext): void {
+/**
+ * Draws the textures of one stack of layers onto the terrain.
+ * The first stack fogs the whole terrain, and the stacks above it only fog what they draw.
+ */
+function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], frameRenderContext: FrameRenderContext, isFirstStack: boolean): void {
     const {isRenderingGlobe} = frameRenderContext.data;
     const context = frameRenderContext.context;
     const gl = context.gl;
@@ -59,7 +63,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Tile[], frameRen
         texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_LINEAR);
         const eleDelta = terrain.getSkirtLength(projectedCamera.zoom);
         const fogMatrix = getCameraMath(projectedCamera).calculateFogMatrix(projectedCamera, tile.tileID.toUnwrapped());
-        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, frameRenderContext.data.sky, projectedCamera.pitch, isRenderingGlobe);
+        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, frameRenderContext.data.sky, projectedCamera.pitch, isRenderingGlobe, isFirstStack);
         const projectionData = frameRenderContext.getProjectionDataForTile(tile.tileID, {applyTerrainMatrix: false});
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }

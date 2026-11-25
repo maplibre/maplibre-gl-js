@@ -5,6 +5,7 @@ uniform float u_fog_ground_blend;
 uniform float u_fog_ground_blend_opacity;
 uniform float u_horizon_fog_blend;
 uniform bool u_is_globe_mode;
+uniform bool u_is_first_stack;
 
 in vec2 v_texture_pos;
 in float v_fog_depth;
@@ -28,7 +29,8 @@ void main() {
         float blend_color = smoothstep(0.0, 1.0, max((v_fog_depth - u_horizon_fog_blend) / (1.0 - u_horizon_fog_blend), 0.0));
         vec4 fog_horizon_color_linear = mix(gammaToLinear(u_fog_color), gammaToLinear(u_horizon_color), blend_color);
         float factor_fog = max(v_fog_depth - u_fog_ground_blend, 0.0) / (1.0 - u_fog_ground_blend);
-        fragColor = linearToGamma(mix(surface_color_linear, fog_horizon_color_linear, pow(factor_fog, 2.0) * u_fog_ground_blend_opacity));
+        float fog_coverage = u_is_first_stack ? 1.0 : surface_color_linear.a;
+        fragColor = linearToGamma(mix(surface_color_linear, fog_horizon_color_linear * fog_coverage, pow(factor_fog, 2.0) * u_fog_ground_blend_opacity));
     } else {
         fragColor = surface_color;
     }
