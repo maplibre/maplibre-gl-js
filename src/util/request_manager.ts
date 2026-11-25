@@ -2,6 +2,9 @@ import type {RequestParameters} from './ajax.ts';
 
 /**
  * A type of MapLibre resource.
+ *
+ * The values are title-cased because they are the strings MapLibre passes to
+ * `transformRequest`, so they are part of that callback's public contract.
  */
 export type ResourceType =
     | 'Glyphs'
