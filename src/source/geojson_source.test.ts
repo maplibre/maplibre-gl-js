@@ -1468,6 +1468,23 @@ describe('GeoJSONSource.shoudReloadTile', () => {
         expect(result).toBe(false);
     });
 
+    test('returns false when the diff adds a feature without coordinates', async () => {
+        const diff: GeoJSONSourceDiff = {
+            add: [{id: 1, type: 'Feature', properties: {}, geometry: {type: 'LineString', coordinates: []}}]
+        };
+
+        let shouldReloadTileOptions: GeoJSONSourceShouldReloadTileOptions = undefined;
+        source.on('data', (e) => {
+            if (e.shouldReloadTileOptions) {
+                shouldReloadTileOptions = e.shouldReloadTileOptions;
+            }
+        });
+        await source.updateData(diff);
+        const result = source.shouldReloadTile(tile, shouldReloadTileOptions);
+
+        expect(result).toBe(false);
+    });
+
     test('handles string feature ids and returns no bounds since feature does not exist', async () => {
         const diff: GeoJSONSourceDiff = {remove: ['abc']};
 

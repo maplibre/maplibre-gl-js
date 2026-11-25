@@ -611,6 +611,7 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
 
     /**
      * Get options for use in determining whether to reload a tile based on the modified features.
+     * A geometry without coordinates is on no tile, so it adds no bounds.
      * @param affectedGeometries - The feature geometries affected by the update.
      * @returns A {@link GeoJSONSourceShouldReloadTileOptions} object which contains an array of affected bounds caused by the update.
      */
@@ -619,7 +620,8 @@ export class GeoJSONSource extends Evented<SourceEventType> implements Source {
 
         const affectedBounds = affectedGeometries
             .filter(Boolean)
-            .map(g => getGeoJSONBounds(g));
+            .map(g => getGeoJSONBounds(g))
+            .filter(bounds => !bounds.isEmpty());
 
         return {affectedBounds};
     }
