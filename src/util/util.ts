@@ -550,6 +550,19 @@ export function deepEqual(a?: unknown | null, b?: unknown | null): boolean {
 }
 
 /**
+ * Deeply clones two objects.
+ */
+export function clone<T>(input: T): T {
+    if (Array.isArray(input)) {
+        return input.map(clone) as any as T;
+    } else if (typeof input === 'object' && input) {
+        return Object.fromEntries(Object.entries(input).map(([key, value]) => [key, clone(value)])) as T;
+    } else {
+        return input;
+    }
+}
+
+/**
  * Check if two arrays have at least one common element.
  */
 export function arraysIntersect<T>(a: T[], b: T[]): boolean {

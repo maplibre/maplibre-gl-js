@@ -11,7 +11,7 @@ import {GlyphManager} from '../render/glyph_manager.ts';
 import {Light} from './light.ts';
 import {Sky} from './sky.ts';
 import {LineAtlas} from '../render/line_atlas.ts';
-import {ensureError, deepEqual, filterObject} from '../util/util.ts';
+import {clone, ensureError, deepEqual, filterObject} from '../util/util.ts';
 import {coerceSpriteToArray} from '../util/style.ts';
 import {getJSON, getReferrer} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
@@ -663,14 +663,14 @@ export class Style extends Evented<MapEventType> {
 
         const serializedLayersDictionary = this._serializedAllLayers();
         if (!ids || ids.length === 0) {
-            return returnClone ? Object.values(structuredClone(serializedLayersDictionary)) : Object.values(serializedLayersDictionary);
+            return returnClone ? Object.values(clone(serializedLayersDictionary)) : Object.values(serializedLayersDictionary);
         }
 
         const serializedLayers = [];
         for (const id of ids) {
             // this check will skip all custom layers
             if (serializedLayersDictionary[id]) {
-                const toPush = returnClone ? structuredClone(serializedLayersDictionary[id]) : serializedLayersDictionary[id];
+                const toPush = returnClone ? clone(serializedLayersDictionary[id]) : serializedLayersDictionary[id];
                 serializedLayers.push(toPush);
             }
         }
@@ -895,7 +895,7 @@ export class Style extends Evented<MapEventType> {
         const validate = options.validate ?? true;
         if (validate && validateStyleAndEmit(this, nextState)) return false;
 
-        nextState = structuredClone(nextState);
+        nextState = clone(nextState);
         nextState.layers = derefLayers(nextState.layers);
 
         const changes = diffStyles(serializedStyle, nextState);
@@ -1391,7 +1391,7 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
-        layer.setFilter(structuredClone(filter));
+        layer.setFilter(clone(filter));
         this._updateLayer(layer);
     }
 
@@ -1401,7 +1401,7 @@ export class Style extends Evented<MapEventType> {
      * @returns the layer's filter, if any
      */
     getFilter(layer: string): FilterSpecification | void {
-        return structuredClone(this.getLayer(layer).filter);
+        return clone(this.getLayer(layer).filter);
     }
 
     setLayoutProperty<K extends keyof AllLayoutProperties>(layerId: string, name: K, value: AllLayoutProperties[K],  options: StyleSetterOptions = {}): void {
