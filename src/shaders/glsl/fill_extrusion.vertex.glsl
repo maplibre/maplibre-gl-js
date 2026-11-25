@@ -24,7 +24,7 @@ out vec4 v_color;
     // The lit colour with the ambient part of the lighting removed.
     out vec3 v_color_without_ambient;
     // Height above the ground divided by the radius; 1 on roofs.
-    out highp float v_ao_wall_height;
+    out mediump float v_ao_wall_height;
 #endif
 
 #pragma maplibre: define highp float base
