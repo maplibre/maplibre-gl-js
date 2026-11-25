@@ -8,6 +8,19 @@ function sanitizeToHTML(input: string): string {
     return container.innerHTML;
 }
 
+/**
+ * Makes `document.body` resolve to the element named `body`, as it does in a browser, where a document exposes its
+ * named elements as properties that take precedence over its own. jsdom does not implement that, so this emulates it on
+ * `Document.prototype`, after the sanitizer has read the real getter from there.
+ */
+function shadowDocumentBody() {
+    DOM.sanitize('');
+    const body = Object.getOwnPropertyDescriptor(Document.prototype, 'body').get;
+    vi.spyOn(Document.prototype, 'body', 'get').mockImplementation(function (this: Document) {
+        return this.querySelector('[name="body"]') ?? body.call(this);
+    });
+}
+
 describe('DOM', () => {
 
     describe('sanitize', () => {
@@ -19,11 +32,12 @@ describe('DOM', () => {
 
         function clobberFormProperty(property: string) {
             clobberedProperties.push(property);
-            const inherited = Object.getOwnPropertyDescriptor(Element.prototype, property);
+            const inherited = Object.getOwnPropertyDescriptor(Element.prototype, property) ?? Object.getOwnPropertyDescriptor(Node.prototype, property);
+            const elements = Object.getOwnPropertyDescriptor(HTMLFormElement.prototype, 'elements').get;
             Object.defineProperty(HTMLFormElement.prototype, property, {
                 configurable: true,
                 get(this: HTMLFormElement) {
-                    const named = Element.prototype.querySelectorAll.call(this, `[name="${property}"]`);
+                    const named = Array.from<Element>(elements.call(this)).filter(element => element.getAttribute('name') === property);
                     if (named.length === 0) return inherited.get ? inherited.get.call(this) : inherited.value;
                     return named.length === 1 ? named[0] : named;
                 }
@@ -34,6 +48,7 @@ describe('DOM', () => {
             for (const property of clobberedProperties) delete HTMLFormElement.prototype[property];
             clobberedProperties.length = 0;
             setTrustedTypesPolicy(undefined);
+            vi.restoreAllMocks();
         });
 
         test('should not fail on empty string', () => {
@@ -226,6 +241,13 @@ describe('DOM', () => {
             }
             const input = '<div><form onclick="alert(1)"><input name="remove"><input name="localName"><input name="namespaceURI"><input name="children"><input name="attributes"><input name="querySelectorAll"><img src="x" onerror="alert(1)"></form></div>';
             expect(sanitizeToHTML(input)).toBe('<div></div>');
+        });
+
+        test('should sanitize the whole document when a named element shadows body', () => {
+            shadowDocumentBody();
+            clobberFormProperty('childNodes');
+            const input = '<form id="f" name="body"></form><fieldset form="f" name="childNodes"><img src="x" onerror="alert(1)"></fieldset><fieldset form="f" name="childNodes"></fieldset><b>attribution</b>';
+            expect(sanitizeToHTML(input)).toBe('<b>attribution</b>');
         });
     });
 });
