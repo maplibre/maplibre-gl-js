@@ -1,0 +1,86 @@
+{
+    "version": 8,
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "metadata": {
+        "test": {
+            "description": "The fill layer above the symbol layer is draped in its own pass and is black everywhere. It must be fogged like a single pass would.",
+            "height": 128,
+            "width": 128,
+            "maxPitch": 85,
+            "operations": [
+                [
+                    "wait"
+                ]
+            ]
+        }
+    },
+    "center": [
+        35.38,
+        31.55
+    ],
+    "zoom": 15,
+    "pitch": 85,
+    "sources": {
+        "terrain": {
+            "type": "raster-dem",
+            "tiles": [
+                "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+            ],
+            "minzoom": 7,
+            "maxzoom": 12,
+            "tileSize": 256
+        },
+        "black": {
+            "type": "geojson",
+            "data": {
+                "type": "Feature",
+                "properties": {},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[34.0, 30.0], [36.5, 30.0], [36.5, 34.0], [34.0, 34.0], [34.0, 30.0]]]
+                }
+            }
+        },
+        "overlay": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": []
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "overlay-fill-below",
+            "type": "fill",
+            "source": "overlay"
+        },
+        {
+            "id": "overlay-label",
+            "type": "symbol",
+            "source": "overlay",
+            "layout": {
+                "text-field": "label"
+            }
+        },
+        {
+            "id": "overlay-fill",
+            "type": "fill",
+            "source": "black",
+            "paint": {
+                "fill-color": "#000000"
+            }
+        }
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 1
+    },
+    "sky": {
+        "sky-color": "#199EF3",
+        "fog-color": "#ffffff",
+        "horizon-color": "#ffffff",
+        "sky-horizon-blend": 0,
+        "fog-ground-blend": 0
+    }
+}
