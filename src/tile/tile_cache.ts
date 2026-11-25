@@ -88,6 +88,13 @@ export class TileCache {
     }
 
     /**
+     * Get the value {@link TileCache.getAndRemove} would return for each key, without removing it.
+     */
+    getAllTiles(): Tile[] {
+        return Object.values(this.data).map(entries => entries[0].value);
+    }
+
+    /**
      * Determine whether the value attached to `key` is present
      *
      * @param tileID - the key to be looked-up

@@ -359,6 +359,8 @@ export class TileManager extends Evented<SourceEventType> {
 
     /**
      * Retain the uppermost loaded children of each provided target tile, within a variable covering zoom range.
+     * Where the children in view do not cover a target, loaded children in the out-of-view cache count as well,
+     * see {@link TileManager._addCachedDescendents}, and the ones retained are brought back into view.
      *
      * On pitched maps, different parts of the screen show different zoom levels simultaneously.
      * Ideal tiles are generated using coveringTiles() above, which returns the ideal tile set for
@@ -384,37 +386,71 @@ export class TileManager extends Evented<SourceEventType> {
     _retainLoadedChildren(retainTileMap: Record<string, OverscaledTileID>, idealTilesWithoutData: Set<OverscaledTileID>): Set<OverscaledTileID> {
         const loadedDescendents: Record<string, Tile[]> = this._getLoadedDescendents(idealTilesWithoutData);
         const incomplete = new Set<OverscaledTileID>();
+        let cachedIDs: OverscaledTileID[];
 
         // retain the uppermost descendents of target tiles
         for (const targetID of idealTilesWithoutData) {
-            const descendents = loadedDescendents[targetID.key];
-            if (!descendents?.length) {
-                incomplete.add(targetID);
-                continue;
+            const inViewIDs = loadedDescendents[targetID.key]?.map(t => t.tileID) ?? [];
+            let topIDs = this._getUppermostDescendents(targetID, inViewIDs);
+
+            if (!this._isCovered(targetID, topIDs)) {
+                cachedIDs ||= this._outOfViewCache.getAllTiles().filter(tile => tile.hasData()).map(tile => tile.tileID);
+                topIDs = this._addCachedDescendents(targetID, topIDs, inViewIDs, cachedIDs);
             }
 
-            // find descendents within the max covering zoom range
-            const maxCoveringZoom = targetID.overscaledZ + TileManager.maxOverzooming;
-            const candidates = descendents.filter(t => t.tileID.overscaledZ <= maxCoveringZoom);
-            if (!candidates.length) {
-                incomplete.add(targetID);
-                continue;
-            }
-
-            // retain the uppermost descendents in the topmost zoom below the target tile
-            const topZoom = Math.min(...candidates.map(t => t.tileID.overscaledZ));
-            const topIDs = candidates.filter(t => t.tileID.overscaledZ === topZoom).map(t => t.tileID);
             for (const tileID of topIDs) {
+                this._addTile(tileID);
                 retainTileMap[tileID.key] = tileID;
             }
 
             //determine if the retained generation is fully covered
-            if (!this._areDescendentsComplete(topIDs, topZoom, targetID.overscaledZ)) {
+            if (!this._isCovered(targetID, topIDs)) {
                 incomplete.add(targetID);
             }
         }
 
         return incomplete;
+    }
+
+    /**
+     * Return the descendents in the topmost zoom below the target tile, within the max covering zoom range.
+     */
+    _getUppermostDescendents(targetID: OverscaledTileID, descendentIDs: OverscaledTileID[]): OverscaledTileID[] {
+        const maxCoveringZoom = targetID.overscaledZ + TileManager.maxOverzooming;
+        const candidates = descendentIDs.filter(id => id.overscaledZ <= maxCoveringZoom);
+        const topZoom = Math.min(...candidates.map(id => id.overscaledZ));
+        return candidates.filter(id => id.overscaledZ === topZoom);
+    }
+
+    /**
+     * Return the generation of descendents to retain when cached ones count as well as those in view.
+     *
+     * With nothing in view, or when cached tiles let the uppermost generation cover the target, that
+     * generation is returned. Otherwise the generation in view is only added to, because a shallower
+     * partial one would take the place of finer tiles that are on screen.
+     *
+     * The cache is shared by all world copies, so a cached tile moves to the copy of the target.
+     * `cachedIDs` may name tiles that have since left the cache: those count only while they are in view.
+     */
+    _addCachedDescendents(targetID: OverscaledTileID, inViewTopIDs: OverscaledTileID[], inViewIDs: OverscaledTileID[], cachedIDs: OverscaledTileID[]): OverscaledTileID[] {
+        const cachedDescendentIDs = cachedIDs
+            .map(id => id.wrap === targetID.wrap ? id : id.unwrapTo(targetID.wrap))
+            .filter(id => id.isChildOf(targetID) &&
+                (this._inViewTiles.getTileById(id.key)?.hasData() ?? this._outOfViewCache.has(id)) &&
+                !inViewIDs.some(inViewID => inViewID.key === id.key));
+        const candidates = inViewIDs.concat(cachedDescendentIDs);
+        const topIDs = this._getUppermostDescendents(targetID, candidates);
+
+        if (!inViewTopIDs.length || this._isCovered(targetID, topIDs)) return topIDs;
+        return candidates.filter(id => id.overscaledZ === inViewTopIDs[0].overscaledZ);
+    }
+
+    /**
+     * Determine if a single generation of descendents fully covers the target tile.
+     */
+    _isCovered(targetID: OverscaledTileID, generationIDs: OverscaledTileID[]): boolean {
+        return generationIDs.length > 0 &&
+            this._areDescendentsComplete(generationIDs, generationIDs[0].overscaledZ, targetID.overscaledZ);
     }
 
     /**
@@ -687,7 +723,7 @@ export class TileManager extends Evented<SourceEventType> {
 
     /**
      * Set tiles to be retained on update of the source. For ideal tiles that do not have data, retain their loaded
-     * children so they can be displayed as substitutes pending load of each ideal tile (to reduce flickering).
+     * children, in view or cached, so they can be displayed as substitutes pending load of each ideal tile (to reduce flickering).
      * If no loaded children are available, fallback to seeking loaded parents as an alternative substitute.
      */
     _updateRetainedTiles(idealTileIDs: OverscaledTileID[], zoom: number): Record<string, OverscaledTileID> {
