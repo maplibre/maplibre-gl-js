@@ -11,7 +11,7 @@ import {GlyphManager} from '../render/glyph_manager.ts';
 import {Light} from './light.ts';
 import {Sky} from './sky.ts';
 import {LineAtlas} from '../render/line_atlas.ts';
-import {clone, ensureError, deepEqual, filterObject, mapObject} from '../util/util.ts';
+import {clone, ensureError, deepEqual, filterObject} from '../util/util.ts';
 import {coerceSpriteToArray} from '../util/style.ts';
 import {getJSON, getReferrer} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
@@ -228,7 +228,12 @@ export class Style extends Evented<MapEventType> {
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: string[];
-    tileManagers: {[_: string]: TileManager};
+    /**
+     * @internal
+     * The tile manager of each source, keyed by source id. A null-prototype object, since a layer names its source with
+     * an id from the style, and a `__proto__` id would otherwise resolve to `Object.prototype`.
+     */
+    tileManagers: Record<string, TileManager>;
     zoomHistory: ZoomHistory;
     _loaded: boolean;
     _changed: boolean;
@@ -307,7 +312,7 @@ export class Style extends Evented<MapEventType> {
     private _setInitialValues() {
         this._layers = {};
         this._order = [];
-        this.tileManagers = {};
+        this.tileManagers = Object.create(null);
         this.zoomHistory = new ZoomHistory();
         this._imagesListDirty = false;
         this._initialGlobalState = {};
@@ -792,9 +797,10 @@ export class Style extends Evented<MapEventType> {
             const layer = this._layers[layerId];
 
             layer.recalculate(parameters, availableImages);
-            if (!layer.isHidden(parameters.zoom) && layer.source) {
-                this.tileManagers[layer.source].used = true;
-            }
+            if (layer.isHidden(parameters.zoom) || !layer.source) continue;
+
+            const tileManager = this.tileManagers[layer.source];
+            if (tileManager) tileManager.used = true;
         }
 
         // cross check managersUsedBefore against updated this.tileManagers dictionary
@@ -1555,7 +1561,7 @@ export class Style extends Evented<MapEventType> {
         // calling Style._checkLoaded() first if their validation requires the style to be loaded.
         if (!this._loaded) return;
 
-        const sources = mapObject(this.tileManagers, (source) => source.serialize());
+        const sources = Object.fromEntries(Object.entries(this.tileManagers).map(([id, tileManager]) => [id, tileManager.serialize()]));
         const layers = this._serializeByIds(this._order, true);
         const terrain = this.map.getTerrain() || undefined;
         const myStyleSheet = this.stylesheet;
@@ -2210,7 +2216,7 @@ export class Style extends Evented<MapEventType> {
             tileManager.setEventedParent(null);
             tileManager.onRemove(this.map);
         }
-        this.tileManagers = {};
+        this.tileManagers = Object.create(null);
 
         // Destroy imageManager and clear images
         if (this.imageManager) {
