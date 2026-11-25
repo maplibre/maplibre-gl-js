@@ -7,7 +7,6 @@ import {ensureError, warnOnce} from '../util/util.ts';
 import {getArrayBuffer} from '../util/ajax.ts';
 import {ResourceType} from '../util/request_manager.ts';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
-import {v8} from '@maplibre/maplibre-gl-style-spec';
 
 import type {GlyphMap, GlyphRequests, StyleGlyph} from '../style/style_glyph.ts';
 import type {RequestManager} from '../util/request_manager.ts';
@@ -43,11 +42,7 @@ type GlyphResult = {
 };
 
 /**
- * The style specification hard-codes some last resort fonts as a default fontstack.
- */
-const defaultStack = v8.layout_symbol['text-font'].default.join(',');
-/**
- * The CSS generic font family closest to `defaultStack`.
+ * The final CSS fallback for locally generated glyphs.
  */
 const defaultGenericFontFamily = 'sans-serif';
 
@@ -394,7 +389,8 @@ export class GlyphManager {
      * for the clusters drawn from it, which need a wider canvas.
      *
      * A font file carries its own weight and style, so neither is sniffed out of the family name.
-     * Where no file covers the grapheme, `localIdeographFontFamily` beats the last resort fontstack.
+     * Without a matching font file, qualifying CJK text tries the layer's fonts, then
+     * `localIdeographFontFamily`, then `sans-serif`.
      */
     _getTinySDF(entry: Entry, stack: string, id: string, fontFaceFamily?: string): Promise<Rasterizer> {
         const cluster = isCluster(id);
@@ -407,10 +403,8 @@ export class GlyphManager {
             return entry[cache][fontFaceFamily];
         }
 
-        const usesLocalIdeographFontFamily = stack === defaultStack &&
-            this.localIdeographFontFamily !== '' &&
-            this._charUsesLocalIdeographFontFamily(id.codePointAt(0));
-        const family = usesLocalIdeographFontFamily ? this.localIdeographFontFamily as string : stack;
+        const usesLocalIdeographFontFamily = this._charUsesLocalIdeographFontFamily(id.codePointAt(0));
+        const family = usesLocalIdeographFontFamily ? `${stack},${this.localIdeographFontFamily}` : stack;
 
         if (cluster) {
             entry.clusterTinySDFs ??= {};
