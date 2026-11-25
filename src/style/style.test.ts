@@ -1534,6 +1534,64 @@ describe('Style.setSky', () => {
     });
 });
 
+describe('Style.setLight', () => {
+    test('writes the light it applied to the stylesheet, so getStyle() reports it', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({light: {color: '#00ff00'}}));
+        await style.once('style.load');
+
+        style.setLight({color: '#ff0000'});
+
+        expect(style.getLight()).toEqual({color: '#ff0000'});
+        expect(style.serialize().light).toEqual({color: '#ff0000'});
+    });
+
+    test('writes a partial update merged into the light', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({light: {color: '#00ff00'}}));
+        await style.once('style.load');
+
+        style.setLight({intensity: 0.2});
+
+        expect(style.serialize().light).toEqual({color: '#00ff00', intensity: 0.2});
+    });
+
+    test('setState back to the original light restores it after setLight', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({light: {color: '#00ff00'}}));
+        await style.once('style.load');
+
+        style.setLight({color: '#ff0000'});
+        const changed = style.setState(createStyleJSON({light: {color: '#00ff00'}}));
+
+        expect(changed).toBe(true);
+        expect(style.getLight()).toEqual({color: '#00ff00'});
+        expect(style.serialize().light).toEqual({color: '#00ff00'});
+    });
+
+    test('leaves the stylesheet without a light when setLight is rejected', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        await style.once('style.load');
+
+        style.light.on('error', () => {});
+        style.setLight({color: 'notacolor'});
+
+        expect(style.getLight()).toEqual({});
+        expect(style.serialize().light).toBeUndefined();
+    });
+
+    test('serializes the transition options it was given', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({light: {color: '#00ff00'}}));
+        await style.once('style.load');
+
+        style.setLight({color: '#ff0000', 'color-transition': {duration: 3000}});
+
+        expect(style.serialize().light).toEqual({color: '#ff0000', 'color-transition': {duration: 3000}});
+    });
+});
+
 describe('Style.setGlyphs', () => {
     test('does not mutate original input style JSON', async () => {
         const style = new Style(getStubMap());

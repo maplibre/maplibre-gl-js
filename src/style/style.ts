@@ -1785,7 +1785,8 @@ export class Style extends Evented<MapEventType> {
             }
         };
 
-        this.light.setLight(lightOptions, options);
+        if (!this.light.setLight(lightOptions, options)) return;
+        this.stylesheet.light = this.light.getLight();
         this.light.updateTransitions(parameters);
     }
 

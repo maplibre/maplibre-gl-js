@@ -38,12 +38,17 @@ export class Light extends Evented {
         };
     }
 
-    setLight(light: LightSpecification, options: StyleSetterOptions = {}): void {
+    /**
+     * Validates and applies the light. Returns false, after firing `error`, when
+     * the value was rejected and nothing changed.
+     */
+    setLight(light: LightSpecification, options: StyleSetterOptions = {}): boolean {
         if (this._validate(validateStyle.light, light, options)) {
-            return;
+            return false;
         }
 
         this._transitionable.setValues(light);
+        return true;
     }
 
     updateTransitions(parameters: TransitionParameters): void {
