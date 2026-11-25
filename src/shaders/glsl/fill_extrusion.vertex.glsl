@@ -97,12 +97,10 @@ void main() {
 
     // Add gradient along z axis of side surfaces
     float gradient = 1.0;
-    if (normal.z == 0.0) {
-        // This avoids another branching statement, but multiplies by a constant of 0.84 if no vertical gradient,
-        // and otherwise calculates the gradient based on base + height
+    if (normal.z == 0.0 && u_vertical_gradient > 0.0) {
         gradient =
             (1.0 - u_vertical_gradient) +
-            (u_vertical_gradient * clamp((t + gradient_base) * pow(gradient_height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0));
+            (u_vertical_gradient * clamp((t + gradient_base) * sqrt(gradient_height * (1.0 / 150.0)), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0));
     }
 
     vec3 lighting = (u_lightambient + direct) * gradient;
