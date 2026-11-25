@@ -1,17 +1,11 @@
 {
     "version": 8,
-    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
     "metadata": {
         "test": {
             "description": "The fill layer above the symbol layer is draped in its own pass and is black everywhere. It must be fogged like a single pass would.",
             "height": 128,
             "width": 128,
-            "maxPitch": 85,
-            "operations": [
-                [
-                    "wait"
-                ]
-            ]
+            "maxPitch": 85
         }
     },
     "center": [
@@ -58,10 +52,7 @@
         {
             "id": "overlay-label",
             "type": "symbol",
-            "source": "overlay",
-            "layout": {
-                "text-field": "label"
-            }
+            "source": "overlay"
         },
         {
             "id": "overlay-fill",

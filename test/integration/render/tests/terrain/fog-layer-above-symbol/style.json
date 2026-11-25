@@ -1,17 +1,11 @@
 {
     "version": 8,
-    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
     "metadata": {
         "test": {
             "description": "The fill layers below and above the symbol layer are draped in two passes and draw nothing, so the terrain is bare. It must still be fogged, and only once.",
             "height": 128,
             "width": 128,
-            "maxPitch": 85,
-            "operations": [
-                [
-                    "wait"
-                ]
-            ]
+            "maxPitch": 85
         }
     },
     "center": [
@@ -47,10 +41,7 @@
         {
             "id": "overlay-label",
             "type": "symbol",
-            "source": "overlay",
-            "layout": {
-                "text-field": "label"
-            }
+            "source": "overlay"
         },
         {
             "id": "overlay-fill",
