@@ -1,0 +1,48 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that a fill from a source with a maximum zoom of 14 covers the ground at zoom 20 and pitch 85, where corners of its triangles and of its tile's clipping mask lie behind the camera.",
+      "width": 256,
+      "height": 256,
+      "maxPitch": 85
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [8.5417, 47.3769],
+  "projection": {
+    "type": "vertical-perspective"
+  },
+  "zoom": 20,
+  "pitch": 85,
+  "bearing": 270,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "maxzoom": 14,
+      "data": {
+        "type": "Polygon",
+        "coordinates": [[[8.5377, 47.3729], [8.5457, 47.3729], [8.5457, 47.3809], [8.5377, 47.3809], [8.5377, 47.3729]]]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "geojson",
+      "paint": {
+        "fill-color": "lightblue"
+      }
+    }
+  ]
+}

@@ -8,7 +8,7 @@ The actual projection is done in three steps:
 
 - compute angular spherical coordinates from source web mercator tile data
 - convert spherical coordinates to a 3D vector - a point on the surface of a unit sphere
-- project the 3D vector using a common perspective projection matrix
+- project the 3D vector using a perspective projection matrix, moved to an origin in the drawn tile (see [Floating point precision](#floating-point-precision))
 
 So the globe is a unit sphere from the point of view of projection.
 This also simplifies a lot of math, and is used extensively in the vertical perspective camera math.
@@ -90,17 +90,26 @@ while also not generating too much new geometry and not overflowing the 16 bit v
 Raster tiles in particular need a relative high base granularity, as otherwise they would exhibit
 visible warping and deformations when changing zoom levels.
 
-## Floating point precision & transitioning to mercator
+## Floating point precision
 
 Shaders work with 32 bit floating point numbers (64 bit are possible on some platforms, but very slow).
 The 23 bits of mantissa and 1 sign bit can represent at most around 16 million values,
 but the circumference of the earth is roughly 40 000 km, which works out to
-about one float32 value per 2.5 meters, which is insufficient for a map.
-Thus if we were to use globe projection at all zoom levels, we would unsurprisingly encounter precision issues.
+about one float32 value per 2.5 meters. A position on the whole planet is only that precise in a shader.
 
 ![](assets/floats.png)
 
-To combat this, globe projection automatically switches to mercator projection around zoom level 12.
+From zoom 10, `vertical-perspective` keeps such positions out of the shader, the same way mercator does with its tile matrices.
+Each drawn tile gets an origin, which is the tile's point nearest the camera, and a float64 matrix moved to that origin.
+The shader then only computes the small offset of each vertex from that origin (see `projectToSphereOffset`).
+
+Below zoom 10 float32 is precise enough, so positions stay relative to the planet center.
+The same goes for the default projection data of custom layers, whose own positions are relative to the planet center, and for the `globe` projection, which is mercator by the zoom where float32 runs out.
+Custom layers that ask for the projection data of a tile get the tile's origin like any other layer, and pass it to the shader.
+
+## Transition to mercator
+
+The `globe` projection switches to mercator projection around zoom level 12, while `vertical-perspective` stays a globe at every zoom.
 This transition is smooth, animated and can only be noticed if you look very closely,
 because globe and mercator projections converge at high zoom levels, and around level 12
 they are already very close.
@@ -154,6 +163,11 @@ we compute the distance from this plane and store it in `gl_Position.z`.
 This forces the GPU's clipping hardware to clip geometry beyond the planet's horizon.
 This does not affect MapLibre's custom Z values, since they are set later using
 `glDepthRange`.
+
+At high zoom the camera is only a few meters above the ground, and the distance from the plane becomes too small for float32.
+So for tiles drawn relative to their origin (see [Floating point precision](#floating-point-precision)), the plane is also relative to that origin, and scaled so that the distance is one right below the camera and zero on the horizon.
+The shader also caps the distance at one half.
+Without the cap, a large triangle with corners both in front of and behind the camera, such as the clipping mask of a low zoom tile under a pitched camera, would lose the ground right in front of the camera.
 
 However this approach does not work on some phones due to what is likely a driver bug,
 which applies `glDepthRange` and clipping in the wrong order.

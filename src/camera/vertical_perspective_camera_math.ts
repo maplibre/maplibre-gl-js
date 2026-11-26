@@ -1,9 +1,10 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {earthRadius} from '../geo/lng_lat.ts';
-import {clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce} from '../util/util.ts';
+import {clamp, createIdentityMat4f32, createIdentityMat4f64, createMat4f32, createMat4f64, createVec3f64, createVec4f64, differenceOfAnglesDegrees, MAX_VALID_LATITUDE, pointPlaneSignedDistance, warnOnce, wrap, type Mat4f32} from '../util/util.ts';
 import {OverscaledTileID, UnwrappedTileID, type CanonicalTileID} from '../tile/tile_id.ts';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {EXTENT} from '../data/extent.ts';
+import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../geo/mercator_coordinate.ts';
 import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 import {getMercatorTileCoordinates, tileCoordinatesToMercatorCoordinates} from '../geo/projection/mercator_utils.ts';
 import {angularCoordinatesToSurfaceVector, clampToSphere, getGlobeRadiusPixels, horizonPlaneToCenterAndRadius, mercatorCoordinatesToAngularCoordinatesRadians, planetScaleAtLatitude, projectTileCoordinatesToSphere, raySphereIntersection, sphereSurfacePointToCoordinates} from '../geo/projection/globe_utils.ts';
@@ -37,6 +38,84 @@ type GlobeRay = {
     origin: vec3;
     direction: vec3;
 };
+
+/** The globe matrix of one tile, relative to the tile's origin, and that origin as `ProjectionData` describes it. */
+type TileRelativeMatrix = {
+    matrix: Mat4f32;
+    clippingPlane: [number, number, number, number];
+    tileOrigin: [number, number, number, number];
+    tileOriginPosition: [number, number];
+};
+
+/**
+ * The camera zoom from which tiles are drawn relative to their origin, the zoom at which the globe starts to turn into
+ * mercator. Below it float32 positions relative to the planet center are within a tenth of a pixel.
+ */
+const MIN_TILE_RELATIVE_ZOOM = 10;
+
+/** The tile-relative matrices computed for each projected camera, by tile key, kept for as long as it is. */
+const tileRelativeMatrixCaches = new WeakMap<VerticalPerspectiveProjectedCamera, Map<string, TileRelativeMatrix>>();
+
+/**
+ * The globe matrix moved to the tile's origin, its point nearest the camera's center, on a whole tile unit so the
+ * shader subtracts it from a vertex exactly. It is built in float64, so the float32 copy and the shader only carry
+ * the small offsets of what is drawn around the center, as the mercator tile matrices do for a tile.
+ *
+ * The origin's unit vector gives the values of `tileOrigin`: divided by the cosine of the latitude, its x and z are
+ * the sine and cosine of the longitude, and one plus its y is `tan(PI / 4 + latitude / 2)`.
+ *
+ * The clipping plane moves to the origin too, scaled to give one on the ground below the camera and zero on the
+ * horizon. Unscaled it gives less than a millionth from a few meters up, which float32 loses when the shader
+ * subtracts it from one.
+ */
+function getTileRelativeMatrix(projectedCamera: VerticalPerspectiveProjectedCamera, canonical: CanonicalTileID): TileRelativeMatrix {
+    let cache = tileRelativeMatrixCaches.get(projectedCamera);
+    if (!cache) {
+        cache = new Map();
+        tileRelativeMatrixCaches.set(projectedCamera, cache);
+    }
+    const cached = cache.get(canonical.key);
+    if (cached) return cached;
+
+    const scale = 1 << canonical.z;
+    const centerX = wrap(mercatorXfromLng(projectedCamera.center.lng) * scale - canonical.x, 0.5 - scale / 2, 0.5 + scale / 2);
+    const centerY = mercatorYfromLat(projectedCamera.center.lat) * scale - canonical.y;
+    const x = Math.round(clamp(centerX, 0, 1) * EXTENT);
+    const y = Math.round(clamp(centerY, 0, 1) * EXTENT);
+    const origin = projectTileCoordinatesToSphere(x, y, canonical.x, canonical.y, canonical.z);
+    const cosLat = Math.hypot(origin[0], origin[2]);
+    const matrix = createMat4f32();
+    mat4.translate(matrix, projectedCamera.modelViewProjectionMatrix, origin);
+    const plane = projectedCamera.clippingPlane;
+    const planeBelowCamera = 1 + plane[3];
+    const planeAtOrigin = plane[3] + plane[0] * origin[0] + plane[1] * origin[1] + plane[2] * origin[2];
+    const entry: TileRelativeMatrix = {
+        matrix,
+        clippingPlane: [plane[0] / planeBelowCamera, plane[1] / planeBelowCamera, plane[2] / planeBelowCamera, planeAtOrigin / planeBelowCamera],
+        tileOrigin: [origin[0] / cosLat, origin[2] / cosLat, (1 + origin[1]) / cosLat, 1],
+        tileOriginPosition: [x, y],
+    };
+    cache.set(canonical.key, entry);
+    return entry;
+}
+
+/**
+ * @internal
+ * The projection data of a tile with positions relative to the planet center, which is what a custom layer's own
+ * positions are relative to. The globe draws its tiles with it, since it is mercator by the zoom where float32 runs out.
+ */
+export function getPlanetRelativeProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, overscaledTileID: OverscaledTileID | null, applyGlobeMatrix: boolean): RendererProjectionData {
+    return {
+        mainMatrix: projectedCamera.modelViewProjectionMatrix32f,
+        tileMercatorCoords: getMercatorTileCoordinates(overscaledTileID),
+        clippingPlane: projectedCamera.clippingPlane as [number, number, number, number],
+        tileOrigin: [0, 0, 0, 0],
+        tileOriginPosition: [0, 0],
+        projectionTransition: applyGlobeMatrix ? 1 : 0,
+        fallbackMatrix: projectedCamera.modelViewProjectionMatrix32f,
+        clipAntimeridian: overscaledTileID?.canonical.z === 0,
+    };
+}
 
 /**
  * @internal
@@ -110,8 +189,8 @@ export function createVerticalPerspectiveProjectedCamera(metrics: CameraMetrics,
 
     const clippingPlane = computeClippingPlane(metrics, globeRadiusPixels);
 
-    const matrix = mat4.clone(inverseModelViewProjectionMatrix);
-    mat4.scale(matrix, matrix, [1, 1, -1]);
+    const matrix = createMat4f64();
+    mat4.scale(matrix, inverseModelViewProjectionMatrix, [1, 1, -1]);
     const frustum = createFrustum(matrix, 1, 0, clippingPlane, true);
 
     return {
@@ -388,15 +467,16 @@ function rayParameter(origin: vec3, direction: vec3, point: vec3): number {
 export class VerticalPerspectiveCameraMath implements CameraMath {
     getProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
-        const mercatorTileCoordinates = getMercatorTileCoordinates(overscaledTileID);
-        return {
-            mainMatrix: projectedCamera.modelViewProjectionMatrix32f,
-            tileMercatorCoords: mercatorTileCoordinates,
-            clippingPlane: projectedCamera.clippingPlane as [number, number, number, number],
-            projectionTransition: applyGlobeMatrix ? 1 : 0,
-            fallbackMatrix: projectedCamera.modelViewProjectionMatrix32f,
-            clipAntimeridian: overscaledTileID?.canonical.z === 0,
-        };
+        const projectionData = getPlanetRelativeProjectionData(projectedCamera, overscaledTileID, applyGlobeMatrix);
+        const drawsTileRelative = applyGlobeMatrix && overscaledTileID != null && projectedCamera.zoom >= MIN_TILE_RELATIVE_ZOOM;
+        if (!drawsTileRelative) return projectionData;
+
+        const tileRelative = getTileRelativeMatrix(projectedCamera, overscaledTileID.canonical);
+        projectionData.mainMatrix = tileRelative.matrix;
+        projectionData.clippingPlane = tileRelative.clippingPlane;
+        projectionData.tileOrigin = tileRelative.tileOrigin;
+        projectionData.tileOriginPosition = tileRelative.tileOriginPosition;
+        return projectionData;
     }
 
     /** See {@link CameraMath.isLocationOccluded}. */
@@ -677,9 +757,10 @@ export class VerticalPerspectiveCameraMath implements CameraMath {
     }
 
     getProjectionDataForCustomLayer(projectedCamera: VerticalPerspectiveProjectedCamera, applyGlobeMatrix: boolean = true): CustomLayerProjectionData {
-        const globeData = this.getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix});
-        globeData.tileMercatorCoords = [0, 0, 1, 1];
-        return globeData;
+        const globeData = getPlanetRelativeProjectionData(projectedCamera, new OverscaledTileID(0, 0, 0, 0, 0), applyGlobeMatrix);
+        const mainMatrix = createMat4f64();
+        mat4.copy(mainMatrix, projectedCamera.modelViewProjectionMatrix);
+        return {...globeData, mainMatrix, tileMercatorCoords: [0, 0, 1, 1]};
     }
 
     getFastPathSimpleProjectionMatrix(_data: VerticalPerspectiveProjectedCamera, _tileID: OverscaledTileID): mat4 {

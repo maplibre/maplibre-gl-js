@@ -178,6 +178,17 @@ describe('poles', () => {
     });
 });
 
+describe('high zoom', () => {
+    test('covers the center tile at zoom 17', () => {
+        const context = createCameraContext({projection: 'vertical-perspective'});
+        let view = resize(createCameraViewState(), context, 512, 512);
+        view = setCenter(view, context, new LngLat(8.5417, 47.3769));
+        view = setZoom(view, context, 17);
+
+        expect(coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {tileSize: 512}).map(tileKey)).toContain('17/68645/45899');
+    });
+});
+
 test('computes the bounding volume of a tile again once the terrain under it changes', () => {
     const detailsProvider = new GlobeCoveringTilesDetailsProvider();
     const dem: {minElevation?: number; maxElevation?: number} = {};

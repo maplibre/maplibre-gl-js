@@ -587,6 +587,8 @@ export class MercatorCameraMath implements CameraMath {
             mainMatrix, // Might be set to a custom matrix by different projections.
             tileMercatorCoords: mercatorTileCoordinates,
             clippingPlane: [0, 0, 0, 0],
+            tileOrigin: [0, 0, 0, 0],
+            tileOriginPosition: [0, 0],
             projectionTransition: 0.0, // Range 0..1, where 0 is mercator, 1 is another projection, mostly globe.
             fallbackMatrix: mainMatrix,
             clipAntimeridian: false,
