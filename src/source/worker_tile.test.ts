@@ -8,7 +8,7 @@ import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_s
 import {createFakeActor} from '../util/test/util.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 
-import type {WorkerTileParameters, WorkerTileWithData} from './worker_source.ts';
+import type {WorkerTileParameters} from './worker_source.ts';
 import type {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import type {PossiblyEvaluated} from '../style/properties.ts';
 import type {CirclePaintProps, CirclePaintPropsPossiblyEvaluated} from '../style/style_layer/circle_style_layer_properties.g.ts';
@@ -54,7 +54,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets[0]).toBeTruthy();
         console.warn = originalWarn;
     });
@@ -70,7 +70,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets[0]).toBeTruthy();
         expect(result.buckets[0].layers[0].layout._values['line-join'].value.value).toBe('bevel');
     });
@@ -88,7 +88,7 @@ describe('worker tile', () => {
         const tile = createWorkerTile({
             globalState: {test: 'bevel'}
         });
-        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets[0]).toBeTruthy();
         expect(result.buckets[0].layers[0].layout._values['line-join'].value.value).toBe('bevel');
     });
@@ -106,7 +106,7 @@ describe('worker tile', () => {
         const tile = createWorkerTile({
             globalState: {test: 1}
         });
-        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        const result = await tile.parse(createLineWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets[0]).toBeTruthy();
         expect(result.buckets[0].layers[0].paint._values['fill-extrusion-height'].value.value).toBe(1);
     });
@@ -120,7 +120,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets).toHaveLength(0);
     });
 
@@ -133,7 +133,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse({layers: {}}, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        const result = await tile.parse({layers: {}}, layerIndex, [], {} as any, SubdivisionGranularitySetting.noSubdivision);
         expect(result.buckets).toHaveLength(0);
     });
 
@@ -228,7 +228,7 @@ describe('worker tile', () => {
         const actorMock = {
             sendAsync
         };
-        const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision) as WorkerTileWithData;
+        const result = await tile.parse(data, layerIndex, ['hello'], actorMock, SubdivisionGranularitySetting.noSubdivision);
         expect(result).toBeDefined();
         expect(result.buckets.some((bucket) => bucket.layerIds.includes('test'))).toBe(true);
         expect(sendAsync).toHaveBeenCalledTimes(4); // icons, patterns, glyphs, dashes

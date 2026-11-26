@@ -1,5 +1,4 @@
 import {describe, test, expect} from 'vitest';
-import {mapObject} from '../util/util.ts';
 import {StyleLayerIndex} from './style_layer_index.ts';
 import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 
@@ -22,6 +21,19 @@ describe('StyleLayerIndex', () => {
         index.replace([]);
         expect(index.familiesBySource).toEqual({});
 
+    });
+
+    test('does not write onto Object.prototype for a layer whose source is __proto__', () => {
+        try {
+            const index = new StyleLayerIndex([
+                {id: 'fill', type: 'fill', source: '__proto__', 'source-layer': 'polluted', paint: {'fill-color': 'red'}}
+            ]);
+
+            expect(Object.prototype).not.toHaveProperty('polluted');
+            expect(index.familiesBySource['__proto__']['polluted'][0][0].id).toBe('fill');
+        } finally {
+            delete Object.prototype['polluted'];
+        }
     });
 
     test('StyleLayerIndex.update', () => {
@@ -60,13 +72,9 @@ describe('StyleLayerIndex', () => {
             {id: '6', type: 'background'}
         ]);
 
-        const ids = mapObject(index.familiesBySource, (bySource) => {
-            return mapObject(bySource, (families) => {
-                return families.map((family) => {
-                    return family.map((layer) => layer.id);
-                });
-            });
-        });
+        const ids = Object.fromEntries(Object.entries(index.familiesBySource).map(([source, bySourceLayer]) =>
+            [source, Object.fromEntries(Object.entries(bySourceLayer).map(([sourceLayer, families]) =>
+                [sourceLayer, families.map(family => family.map(layer => layer.id))]))]));
 
         expect(ids).toEqual({
             'A': {

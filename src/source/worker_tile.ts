@@ -1,7 +1,7 @@
 import {FeatureIndex} from '../data/feature_index.ts';
 import {CollisionBoxArray} from '../data/array_types.g.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
-import {warnOnce, mapObject} from '../util/util.ts';
+import {warnOnce} from '../util/util.ts';
 import {ImageAtlas} from '../render/image_atlas.ts';
 import {GlyphAtlas} from '../render/glyph_atlas.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -15,7 +15,7 @@ import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 import type {GlyphMap} from '../style/style_glyph.ts';
 import type {
     WorkerTileParameters,
-    WorkerTileResult,
+    WorkerTileWithData,
 } from './worker_source.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTileLike} from '@maplibre/vt-pbf';
@@ -60,7 +60,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
+    async parse(data: VectorTileLike, layerIndex: StyleLayerIndex, availableImages: string[], actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileWithData> {
         this.data = data;
 
         this.collisionBoxArray = new CollisionBoxArray();
@@ -126,7 +126,8 @@ export class WorkerTile {
             }
         }
 
-        const stacks = mapObject(options.glyphDependencies, variants => mapObject(variants, glyphs => Object.keys(glyphs)));
+        const stacks = Object.fromEntries(Object.entries(options.glyphDependencies).map(([stack, variants]) =>
+            [stack, Object.fromEntries(Object.entries(variants).map(([variant, glyphs]) => [variant, Object.keys(glyphs)]))]));
 
         for (const request of this.inFlightDependencies) {
             request?.abort();

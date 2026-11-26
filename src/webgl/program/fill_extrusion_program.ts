@@ -6,7 +6,7 @@ import {
     Uniform3f
 } from '../uniform_binding.ts';
 import {mat3, vec3} from 'gl-matrix';
-import {extend, sphericalToCartesian} from '../../util/util.ts';
+import {sphericalToCartesian} from '../../util/util.ts';
 import {getCameraMath} from '../../camera/camera_math_factory.ts';
 
 import type {Context} from '../../webgl/context.ts';
@@ -23,7 +23,6 @@ export type FillExtrusionUniformsType = {
     'u_lightintensity': Uniform1f;
     'u_lightcolor': Uniform3f;
     'u_vertical_gradient': Uniform1f;
-    'u_opacity': Uniform1f;
     'u_fill_translate': Uniform2f;
 };
 
@@ -34,7 +33,6 @@ export type FillExtrusionPatternUniformsType = {
     'u_lightcolor': Uniform3f;
     'u_height_factor': Uniform1f;
     'u_vertical_gradient': Uniform1f;
-    'u_opacity': Uniform1f;
     'u_fill_translate': Uniform2f;
     // pattern uniforms:
     'u_texsize': Uniform2f;
@@ -51,7 +49,6 @@ const fillExtrusionUniforms = (context: Context, locations: UniformLocations): F
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
-    'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
 });
 
@@ -62,7 +59,6 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_height_factor': new Uniform1f(context, locations.u_height_factor),
-    'u_opacity': new Uniform1f(context, locations.u_opacity),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
     // pattern uniforms
     'u_image': new Uniform1i(context, locations.u_image),
@@ -77,7 +73,6 @@ const fillExtrusionUniformValues = (
     projectedCamera: ProjectedCamera,
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
-    opacity: number,
     translate: [number, number],
 ): UniformValues<FillExtrusionUniformsType> => {
     const lightPos = sphericalToCartesian(light.position);
@@ -96,7 +91,6 @@ const fillExtrusionUniformValues = (
         'u_lightintensity': light.intensity,
         'u_lightcolor': [lightColor.r, lightColor.g, lightColor.b],
         'u_vertical_gradient': +shouldUseVerticalGradient,
-        'u_opacity': opacity,
         'u_fill_translate': translate,
     };
 };
@@ -105,17 +99,12 @@ const fillExtrusionPatternUniformValues = (
     projectedCamera: ProjectedCamera,
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
-    opacity: number,
     translate: [number, number],
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, opacity, translate),
-        patternUniformValues(crossfade, projectedCamera, tile),
-        {
-            'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8
-        });
+    return {...fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, translate), ...patternUniformValues(crossfade, projectedCamera, tile), 'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8};
 };
 
 export {

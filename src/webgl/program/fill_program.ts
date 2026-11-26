@@ -5,7 +5,6 @@ import {
     Uniform2f,
     Uniform3f,
 } from '../uniform_binding.ts';
-import {extend} from '../../util/util.ts';
 
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
@@ -81,13 +80,11 @@ const fillPatternUniformValues = (
     tile: Tile,
     translate: [number, number],
     isSdfPattern: boolean
-): UniformValues<FillPatternUniformsType> => extend(
-    patternUniformValues(crossfade, projectedCamera, tile),
-    {
-        'u_fill_translate': translate,
-        'u_sdf_pattern': isSdfPattern ? 1 : 0,
-    }
-);
+): UniformValues<FillPatternUniformsType> => ({
+    ...patternUniformValues(crossfade, projectedCamera, tile),
+    'u_fill_translate': translate,
+    'u_sdf_pattern': isSdfPattern ? 1 : 0,
+});
 
 const fillUniformValues = (translate: [number, number]): UniformValues<FillUniformsType> => ({
     'u_fill_translate': translate,

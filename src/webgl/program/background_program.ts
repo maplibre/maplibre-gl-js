@@ -5,7 +5,6 @@ import {
     Uniform2f,
     UniformColor
 } from '../uniform_binding.ts';
-import {extend} from '../../util/util.ts';
 
 import type {PatternAtlas} from '../../render/pattern_atlas.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
@@ -78,12 +77,10 @@ const backgroundPatternUniformValues = (
         tileSize: number;
     },
     crossfade: CrossfadeParameters
-): UniformValues<BackgroundPatternUniformsType> => extend(
-    bgPatternUniformValues(image, crossfade, patternAtlas, projectedCamera, tile),
-    {
-        'u_opacity': opacity
-    }
-);
+): UniformValues<BackgroundPatternUniformsType> => ({
+    ...bgPatternUniformValues(image, crossfade, patternAtlas, projectedCamera, tile),
+    'u_opacity': opacity
+});
 
 export {
     backgroundUniforms,

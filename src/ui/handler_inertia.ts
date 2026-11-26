@@ -1,5 +1,5 @@
 import {now} from '../util/time_control.ts';
-import {bezier, clamp, extend, evaluateZoomSnap} from '../util/util.ts';
+import {bezier, clamp, evaluateZoomSnap} from '../util/util.ts';
 import Point from '@mapbox/point-geometry';
 import {getCameraMotions} from '../camera/camera_motions_factory.ts';
 
@@ -13,25 +13,29 @@ const defaultInertiaOptions = {
     easing: bezier(0, 0, 0.3, 1),
 };
 
-const defaultPanInertiaOptions = extend({
+const defaultPanInertiaOptions = {
     deceleration: 2500,
-    maxSpeed: 1400
-}, defaultInertiaOptions);
+    maxSpeed: 1400,
+    ...defaultInertiaOptions,
+};
 
-const defaultZoomInertiaOptions = extend({
+const defaultZoomInertiaOptions = {
     deceleration: 20,
-    maxSpeed: 1400
-}, defaultInertiaOptions);
+    maxSpeed: 1400,
+    ...defaultInertiaOptions,
+};
 
-const defaultPitchInertiaOptions = extend({
+const defaultPitchInertiaOptions = {
     deceleration: 1000,
-    maxSpeed: 90
-}, defaultInertiaOptions);
+    maxSpeed: 90,
+    ...defaultInertiaOptions,
+};
 
-const defaultRollInertiaOptions = extend({
+const defaultRollInertiaOptions = {
     deceleration: 1000,
-    maxSpeed: 360
-}, defaultInertiaOptions);
+    maxSpeed: 360,
+    ...defaultInertiaOptions,
+};
 
 export type InertiaOptions = {
     linearity: number;
@@ -177,7 +181,7 @@ export class HandlerInertia {
         const easeOptions = {} as any;
 
         if (deltas.pan.mag()) {
-            const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
+            const result = calculateEasing(deltas.pan.mag(), duration, {...defaultPanInertiaOptions, ...(typeof panInertiaOptions === 'object' ? panInertiaOptions : {})});
             const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
             const computedEaseOptions = getCameraMotions(this._camera.context).panInertia(this._camera.projectedCamera, finalPan);
             easeOptions.center = computedEaseOptions.easingCenter;
@@ -220,9 +224,7 @@ export class HandlerInertia {
         }
 
         this.clear();
-        return extend(easeOptions, {
-            noMoveStart: true
-        });
+        return {...easeOptions, noMoveStart: true};
 
     }
 }

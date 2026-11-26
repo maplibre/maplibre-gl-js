@@ -1,4 +1,4 @@
-import {ensureError, extend, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util.ts';
+import {ensureError, warnOnce, uniqueId, isImageBitmap, type Complete, pick, type Subscription} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import {now} from '../util/time_control.ts';
 import {DOM} from '../util/dom.ts';
@@ -348,10 +348,10 @@ export type MapOptions = {
      */
     fitBoundsOptions?: FitBoundsOptions;
     /**
-     * Defines a CSS
-     * font-family for locally overriding generation of Chinese, Japanese, and Korean characters.
-     * For these characters, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
-     * Set to `false`, to enable font settings from the map's style for these glyph ranges.
+     * Defines a CSS font-family fallback used only for locally generated CJK (Chinese, Japanese and Korean) characters.
+     * The layer's `text-font` families are tried first, then this family, then `sans-serif`.
+     * Set to `false` or an empty string to disable this fallback. Clusters and styles without a `glyphs` URL
+     * can still render locally.
      * The purpose of this option is to avoid bandwidth-intensive glyph server requests.
      * @see [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs/)
      * @defaultValue 'sans-serif'
@@ -915,7 +915,7 @@ export class Map extends Evented<MapEventType> {
 
             if (resolvedOptions.bounds) {
                 this.resize();
-                this.fitBounds(resolvedOptions.bounds, extend({}, resolvedOptions.fitBoundsOptions, {duration: 0}));
+                this.fitBounds(resolvedOptions.bounds, {...resolvedOptions.fitBoundsOptions, duration: 0});
             }
         }
 
@@ -2789,13 +2789,10 @@ export class Map extends Evented<MapEventType> {
      * ```
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): this {
-        options = extend({},
-            {
-                localIdeographFontFamily: this._localIdeographFontFamily,
-                validate: this._validateStyle,
-                globalState: this._initialGlobalState,
-                transformStyle: this._transformStyle,
-            }, options);
+        options = {localIdeographFontFamily: this._localIdeographFontFamily,
+            validate: this._validateStyle,
+            globalState: this._initialGlobalState,
+            transformStyle: this._transformStyle, ...options};
         this._styleUrl = typeof style === 'string' ? style : null;
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {

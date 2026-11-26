@@ -9,7 +9,6 @@
 'use strict';
 
 import * as fs from 'fs';
-import {extend} from '../src/util/util.ts';
 import {createLayout, viewTypes} from '../src/util/struct_array.ts';
 import posAttributes from '../src/data/pos_attributes.ts';
 import pos3dAttributes from '../src/data/pos3d_attributes.ts';
@@ -19,6 +18,7 @@ import fillAttributes from '../src/data/bucket/fill_attributes.ts';
 import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes.ts';
 import {lineLayoutAttributes} from '../src/data/bucket/line_attributes.ts';
 import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext.ts';
+import {lineLayoutAttributesOffset} from '../src/data/bucket/line_attributes_offset.ts';
 import {patternAttributes} from '../src/data/bucket/pattern_attributes.ts';
 import {dashAttributes} from '../src/data/bucket/dash_attributes.ts';
 // symbol layer specific arrays
@@ -60,10 +60,8 @@ function normalizeMembers(members, usedTypes) {
             usedTypes.add(member.type);
         }
 
-        return extend(member, {
-            size: sizeOf(member.type),
-            view: member.type.toLowerCase()
-        });
+        return {...member, size: sizeOf(member.type),
+            view: member.type.toLowerCase()};
     });
 }
 
@@ -103,9 +101,7 @@ function createStructArrayLayoutType({members, size, alignment}) {
     if (!alignment || alignment === 1) members = members.reduce((memo, member) => {
         if (memo.length > 0 && memo[memo.length - 1].type === member.type) {
             const last = memo[memo.length - 1];
-            return memo.slice(0, -1).concat(extend({}, last, {
-                components: last.components + member.components,
-            }));
+            return memo.slice(0, -1).concat({...last, components: last.components + member.components});
         }
         return memo.concat(member);
     }, []);
@@ -145,6 +141,7 @@ const layoutAttributes = {
     heatmap: circleAttributes,
     line: lineLayoutAttributes,
     lineExt: lineLayoutAttributesExt,
+    lineOffset: lineLayoutAttributesOffset,
     pattern: patternAttributes,
     dash: dashAttributes
 };

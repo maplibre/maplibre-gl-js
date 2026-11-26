@@ -130,6 +130,21 @@ describe('GlyphManager', () => {
         expect(returnedGlyphs['Arial Unicode MS'].default[char(0x5e73)].metrics.advance).toBe(0.5);
     });
 
+    test('appends the ideograph fallback after custom layer fonts without applying it to Latin', async () => {
+        const stack = 'Open Sans Semibold,Arial Unicode MS Bold';
+        const createRasterizer = fakeRasterizer();
+        const manager = new GlyphManager(identityTransform, 'serif', undefined, createRasterizer);
+
+        await manager.getGlyphs({[stack]: {default: ['地', 'A']}});
+
+        expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
+            fontFamily: `${stack},serif,sans-serif`
+        }), expect.any(Number));
+        expect(createRasterizer).toHaveBeenCalledWith(expect.objectContaining({
+            fontFamily: `${stack},sans-serif`
+        }), expect.any(Number));
+    });
+
     test('GlyphManager generates non-BMP CJK PBF locally', async () => {
         const manager = createGlyphManager(true, 'sans-serif');
 

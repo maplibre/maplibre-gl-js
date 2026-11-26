@@ -131,6 +131,30 @@ describe('loadTileJson', () => {
         expect(result.sparse).toBe(true);
     });
 
+    test('rejects a maxzoom that is not a number', async () => {
+        const options = {
+            type: 'vector',
+            url: 'http://example.com/test.json',
+        } satisfies VectorSourceSpecification;
+        server.respondWith(JSON.stringify({tiles: ['http://example.com/tile/{z}/{x}/{y}.pbf'], maxzoom: 'abc'}));
+
+        const promise = loadTileJson(options, requestManager, new AbortController());
+        await sleep(0);
+        server.respond();
+
+        await expect(promise).rejects.toThrow('maxzoom must be a finite number, got "abc"');
+    });
+
+    test('rejects a tileSize too small to cover the viewport with', async () => {
+        const options = {
+            type: 'raster',
+            tiles: ['http://example.com/tile/{z}/{x}/{y}.png'],
+            tileSize: 0.5,
+        } satisfies RasterSourceSpecification;
+
+        await expect(loadTileJson(options, requestManager, new AbortController())).rejects.toThrow('tileSize must be a number of at least 16, got 0.5');
+    });
+
     test('the source option for sparse wins over the TileJSON', async () => {
         const options = {
             type: 'vector',

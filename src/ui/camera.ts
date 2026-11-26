@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {vec3} from 'gl-matrix';
-import {extend, wrap, defaultEasing, evaluateZoomSnap, lerp, scaleZoom, zoomScale} from '../util/util.ts';
+import {wrap, defaultEasing, evaluateZoomSnap, lerp, scaleZoom, zoomScale} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser.ts';
 import {LngLat, earthRadius} from '../geo/lng_lat.ts';
@@ -569,13 +569,14 @@ export class Camera extends Evented<MapEventType> {
 
     panBy(offset: PointLike, options?: EaseToOptions, eventData?: any): this {
         offset = Point.convert(offset).mult(-1);
-        return this.panTo(this.renderedState.center, extend({offset}, options), eventData);
+        return this.panTo(this.renderedState.center, {offset, ...options}, eventData);
     }
 
     panTo(lnglat: LngLatLike, options?: EaseToOptions, eventData?: any): this {
-        return this.easeTo(extend({
-            center: lnglat
-        }, options), eventData);
+        return this.easeTo({
+            center: lnglat,
+            ...options,
+        }, eventData);
     }
 
     getZoom(): number { return this.renderedState.zoom; }
@@ -586,9 +587,10 @@ export class Camera extends Evented<MapEventType> {
     }
 
     zoomTo(zoom: number, options?: EaseToOptions | null, eventData?: any): this {
-        return this.easeTo(extend({
-            zoom
-        }, options), eventData);
+        return this.easeTo({
+            zoom,
+            ...options,
+        }, eventData);
     }
 
     zoomIn(options?: AnimationOptions, eventData?: any): this {
@@ -637,23 +639,25 @@ export class Camera extends Evented<MapEventType> {
     }
 
     rotateTo(bearing: number, options?: EaseToOptions, eventData?: any): this {
-        return this.easeTo(extend({
-            bearing
-        }, options), eventData);
+        return this.easeTo({
+            bearing,
+            ...options,
+        }, eventData);
     }
 
     resetNorth(options?: AnimationOptions, eventData?: any): this {
-        this.rotateTo(0, extend({duration: 1000}, options), eventData);
+        this.rotateTo(0, {duration: 1000, ...options}, eventData);
         return this;
     }
 
     resetNorthPitch(options?: AnimationOptions, eventData?: any): this {
-        this.easeTo(extend({
+        this.easeTo({
             bearing: 0,
             pitch: 0,
             roll: 0,
-            duration: 1000
-        }, options), eventData);
+            duration: 1000,
+            ...options,
+        }, eventData);
         return this;
     }
 
@@ -718,11 +722,12 @@ export class Camera extends Evented<MapEventType> {
             right: 0,
             left: 0
         };
-        options = extend({
+        options = {
             padding: defaultPadding,
             offset: [0, 0],
-            maxZoom: this.renderedState.maxZoom
-        }, options);
+            maxZoom: this.renderedState.maxZoom,
+            ...options,
+        };
 
         if (typeof options.padding === 'number') {
             const p = options.padding;
@@ -734,13 +739,13 @@ export class Camera extends Evented<MapEventType> {
             };
         }
 
-        const padding = extend(defaultPadding, options.padding) as PaddingOptions;
+        const padding = {...defaultPadding, ...options.padding} as PaddingOptions;
         options.padding = padding;
         const bounds = new LngLatBounds(p0, p1);
 
         const noPadding = {top: 0, bottom: 0, right: 0, left: 0};
         const fitPadding = options.absolutePadding ? noPadding : padding;
-        const mapPadding = options.absolutePadding ? padding : extend(noPadding, this.renderedState.padding) as PaddingOptions;
+        const mapPadding = options.absolutePadding ? padding : {...noPadding, ...this.renderedState.padding} as PaddingOptions;
 
         const result = getCameraMotions(this.context).cameraForBoxAndBearing(options, fitPadding, mapPadding, bounds, bearing, this.renderedState, this.context);
         if (!result) return undefined;
@@ -781,7 +786,7 @@ export class Camera extends Evented<MapEventType> {
         // cameraForBounds warns + returns undefined if unable to fit:
         if (!calculatedOptions) return this;
 
-        options = extend(calculatedOptions, options);
+        options = {...calculatedOptions, ...options};
         if (options.absolutePadding) {
             options.padding = calculatedOptions.padding;
             delete options.absolutePadding;
@@ -908,11 +913,12 @@ export class Camera extends Evented<MapEventType> {
     easeTo(options: EaseToOptions, eventData?: any): this {
         if (!this._scheduler.isContinuedBy(options.easeId)) this._scheduler.interrupt();
 
-        options = extend({
+        options = {
             offset: [0, 0],
             duration: 500,
-            easing: defaultEasing
-        }, options);
+            easing: defaultEasing,
+            ...options,
+        };
 
         if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);
@@ -1514,12 +1520,13 @@ export class Camera extends Evented<MapEventType> {
 
         this._scheduler.interrupt();
 
-        options = extend({
+        options = {
             offset: [0, 0],
             speed: 1.2,
             curve: 1.42,
-            easing: defaultEasing
-        }, options);
+            easing: defaultEasing,
+            ...options,
+        };
 
         if (options.zoom !== undefined && this._zoomSnap) {
             options.zoom = evaluateZoomSnap(options.zoom, this._zoomSnap);

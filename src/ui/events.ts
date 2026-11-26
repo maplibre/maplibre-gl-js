@@ -1,7 +1,6 @@
 import {Event, type ErrorEvent} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import Point from '@mapbox/point-geometry';
-import {extend} from '../util/util.ts';
 
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {Map} from './map.ts';
@@ -669,7 +668,7 @@ export class MapMouseEvent extends MapLibreEvent<MouseEvent> {
         originalEvent = originalEvent instanceof MouseEvent ? originalEvent : new MouseEvent(type, originalEvent);
         const point = DOM.mousePos(map.getCanvas(), originalEvent);
         const lngLat = map.unproject(point);
-        super(type, extend({point, lngLat, originalEvent}, data));
+        super(type, {point, lngLat, originalEvent, ...data});
         this._defaultPrevented = false;
         this.target = map;
     }

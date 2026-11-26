@@ -1,6 +1,6 @@
 import {describe, beforeEach, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util.ts';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate, getEdgeTiles, radiansToDegrees, degreesToRadians, rollPitchBearingToQuat, getRollPitchBearing, getAngleDelta, scaleZoom, zoomScale, threePlaneIntersection, pointPlaneSignedDistance, evaluateZoomSnap} from './util.ts';
 import {Canvas} from 'canvas';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {expectToBeCloseToArray} from './test/util.ts';
@@ -17,10 +17,6 @@ describe('util', () => {
     test('keysDifference', () => {
         expect(keysDifference({a: 1}, {})).toEqual(['a']);
         expect(keysDifference({a: 1}, {a: 1})).toEqual([]);
-    });
-
-    test('extend', () => {
-        expect(extend({a: 1}, {b: 2})).toEqual({a: 1, b: 2});
     });
 
     test('pick', () => {
@@ -82,18 +78,6 @@ describe('util', () => {
         expect(curve(0)).toBe(0);
         expect(curve(1)).toBe(1);
         expect(curve(0.5)).toBe(0.8230854638965502);
-    });
-
-    test('mapObject', () => {
-        expect.assertions(5);
-        expect(mapObject({}, () => expect(false).toBeTruthy())).toEqual({});
-        const that = {};
-        expect(mapObject({map: 'box'}, (value, key, object) => {
-            expect(value).toBe('box');
-            expect(key).toBe('map');
-            expect(object).toEqual({map: 'box'});
-            return 'BOX';
-        }, that)).toEqual({map: 'BOX'});
     });
 
     test('filterObject', () => {
@@ -217,6 +201,21 @@ describe('util clone', () => {
 
     test('deep array', () => {
         const input = {array: [false, 1, 'two']};
+        const output = clone(input);
+        expect(input.array).not.toBe(output.array);
+        expect(input.array).toEqual(output.array);
+    });
+
+    test('__proto__ key', () => {
+        const input = JSON.parse('{"__proto__": {"maxzoom": "abc"}}');
+        const output = clone(input);
+        expect(Object.getPrototypeOf(output)).toBe(Object.prototype);
+        expect(output.maxzoom).toBeUndefined();
+        expect(Object.getOwnPropertyDescriptor(output, '__proto__').value).toEqual({maxzoom: 'abc'});
+    });
+
+    test('proxy', () => {
+        const input = new Proxy({array: [false, 1, 'two']}, {});
         const output = clone(input);
         expect(input.array).not.toBe(output.array);
         expect(input.array).toEqual(output.array);

@@ -1,4 +1,3 @@
-import {extend} from '../util/util.ts';
 import {Event, Evented} from '../util/evented.ts';
 import {DOM} from '../util/dom.ts';
 import {LngLat} from '../geo/lng_lat.ts';
@@ -223,7 +222,7 @@ export class Popup extends Evented<PopupEventType> {
      */
     constructor(options?: PopupOptions) {
         super();
-        this.options = extend(Object.create(defaultOptions), options);
+        this.options = {...defaultOptions, ...options};
     }
 
     /**

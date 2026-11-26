@@ -1,0 +1,117 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 360,
+      "height": 200,
+      "allowed": 0.0005
+    }
+  },
+  "zoom": 5,
+  "center": [
+    0,
+    0
+  ],
+  "sources": {
+    "square": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"dashed": true},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[-3.2, -1.2], [-0.8, -1.2], [-0.8, 1.2], [-3.2, 1.2], [-3.2, -1.2]]]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"dashed": false},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[0.8, -1.2], [3.2, -1.2], [3.2, 1.2], [0.8, 1.2], [0.8, -1.2]]]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "centerline",
+      "type": "line",
+      "source": "square",
+      "paint": {
+        "line-width": 1,
+        "line-color": "#999999"
+      }
+    },
+    {
+      "id": "dashed-inside",
+      "type": "line",
+      "source": "square",
+      "filter": ["==", ["get", "dashed"], true],
+      "layout": {
+        "line-join": "miter"
+      },
+      "paint": {
+        "line-width": 2,
+        "line-color": "#e3211c",
+        "line-dasharray": [2, 2],
+        "line-offset": 32
+      }
+    },
+    {
+      "id": "dashed-outside",
+      "type": "line",
+      "source": "square",
+      "filter": ["==", ["get", "dashed"], true],
+      "layout": {
+        "line-join": "miter"
+      },
+      "paint": {
+        "line-width": 2,
+        "line-color": "#1f78b4",
+        "line-dasharray": [2, 2],
+        "line-offset": -20
+      }
+    },
+    {
+      "id": "solid-inside",
+      "type": "line",
+      "source": "square",
+      "filter": ["==", ["get", "dashed"], false],
+      "layout": {
+        "line-join": "miter"
+      },
+      "paint": {
+        "line-width": 2,
+        "line-color": "#e3211c",
+        "line-offset": 32
+      }
+    },
+    {
+      "id": "solid-outside",
+      "type": "line",
+      "source": "square",
+      "filter": ["==", ["get", "dashed"], false],
+      "layout": {
+        "line-join": "miter"
+      },
+      "paint": {
+        "line-width": 2,
+        "line-color": "#1f78b4",
+        "line-offset": -20
+      }
+    }
+  ]
+}

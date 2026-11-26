@@ -1,7 +1,6 @@
 import {vi, expect, onTestFinished, type Mock} from 'vitest';
 import {Map, type MapOptions} from '../../ui/map.ts';
 import {NullWebGL2RenderingContext, createNullGL} from './null_gl.ts';
-import {extend} from '../../util/util.ts';
 import {MessageType, type ActorMessage, type RequestResponseMessageMap} from '../actor_messages.ts';
 import {Evented} from '../evented.ts';
 import {createCameraViewState} from '../../camera/camera_view_state.ts';
@@ -70,7 +69,7 @@ export class StubMap extends Evented {
 
 export function createMap(options?: Partial<MapOptions> & {deleteStyle?: boolean}): Map {
     const container = window.document.createElement('div');
-    const defaultOptions = {
+    const defaultOptions: MapOptions = {
         container,
         interactive: false,
         attributionControl: false,
@@ -88,7 +87,7 @@ export function createMap(options?: Partial<MapOptions> & {deleteStyle?: boolean
 
     if (options?.deleteStyle) delete defaultOptions.style;
 
-    return new Map(extend(defaultOptions, options));
+    return new Map({...defaultOptions, ...options});
 }
 
 export function equalWithPrecision(

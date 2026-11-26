@@ -7,7 +7,7 @@ import {createExpression, type FilterSpecification} from '@maplibre/maplibre-gl-
 import {isAbortError} from '../util/abort_error.ts';
 import {WorkerTile} from './worker_tile.ts';
 import {WorkerTileState} from './worker_tile_state.ts';
-import {extend, JSON_PREFIX} from '../util/util.ts';
+import {JSON_PREFIX} from '../util/util.ts';
 import {createWorkerCRSHelper} from './projection_handler_worker.ts';
 import {reprojectGeoJSONFromWorld, reprojectGeoJSONSourceDiffToWorld, reprojectGeoJSONToWorld} from '../util/geojson_reproject.ts';
 
@@ -105,7 +105,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features, {version: 2, extent: EXTENT});
         return {
             vectorTile: geojsonWrapper,
-            rawData: fromVectorTileJs(geojsonWrapper, JSON_PREFIX).buffer
+            rawData: fromVectorTileJs(geojsonWrapper, JSON_PREFIX).buffer as ArrayBuffer
         };
 
     }
@@ -147,7 +147,7 @@ export class GeoJSONWorkerSource implements WorkerSource {
         if (parseState) {
             const {rawData} = parseState;
             // Return a copy of rawData to the main thread to avoid clearing the worker's buffer
-            result = extend({rawTileData: rawData.slice(0), encoding: 'mvt'}, result);
+            result = {rawTileData: rawData.slice(0), encoding: 'mvt', ...result};
             this.tileState.removeParsing(workerTile.uid);
         }
 
@@ -344,12 +344,13 @@ export class GeoJSONWorkerSource implements WorkerSource {
  * @param worldCoordinates - whether the data is in the registered projection's world coordinates instead of lng/lat
  */
 export function createGeoJSONIndex(data: GeoJSON.GeoJSON, params: LoadGeoJSONParameters, worldCoordinates: boolean): GeoJSONVT {
-    const options = extend(params.geojsonVtOptions || {}, {
+    const options: GeoJSONVTOptions = {
+        ...params.geojsonVtOptions,
         updateable: true,
         clusterOptions: getSuperclusterOptions(params),
         coordinates: worldCoordinates ? 'unitSquare' : 'lngLat',
         wrap: !worldCoordinates,
-    });
+    };
 
     return new GeoJSONVT(data, options);
 }

@@ -7,7 +7,6 @@ import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
 import {PbfReader} from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
-import {mapObject, extend} from '../util/util.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {polygonIntersectsBox} from '../util/intersection_tests.ts';
@@ -257,7 +256,7 @@ export class FeatureIndex {
                 featureState = sourceFeatureState.getState(styleLayer.sourceLayer || GEOJSON_TILE_LAYER_NAME, id);
             }
 
-            const serializedLayer = extend({}, serializedLayers[layerID]);
+            const serializedLayer = {...serializedLayers[layerID]};
 
             serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, feature, featureState, availableImages);
             serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, feature, featureState, availableImages);
@@ -368,18 +367,18 @@ function needsEvaluating(value: unknown): value is PossiblyEvaluatedPropertyValu
  */
 
 function evaluateProperties<Props, PossiblyEvaluatedProps>(
-    serializedProperties: Record<string, unknown>,
+    serializedProperties: Record<string, unknown> | undefined,
     styleLayerProperties: PossiblyEvaluated<Props, PossiblyEvaluatedProps> | unknown,
     feature: Feature,
     featureState: FeatureState,
     availableImages: string[]
 ): Record<string, unknown> {
-    return mapObject(serializedProperties, (_property, key) => {
+    return Object.fromEntries(Object.keys(serializedProperties ?? {}).map(key => {
         const value = styleLayerProperties instanceof PossiblyEvaluated ?
             styleLayerProperties.get(key as keyof PossiblyEvaluatedProps) :
             null;
-        return needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value;
-    });
+        return [key, needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value];
+    }));
 }
 
 function topDownFeatureComparator(a: number, b: number) {

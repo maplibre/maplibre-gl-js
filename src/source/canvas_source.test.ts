@@ -1,7 +1,6 @@
 import {describe, beforeEach, test, expect, vi, afterEach} from 'vitest';
 import {CanvasSource, type CanvasSourceSpecification} from '../source/canvas_source.ts';
 import {Event, Evented} from '../util/evented.ts';
-import {extend} from '../util/util.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {MercatorProjection} from '../geo/projection/mercator_projection.ts';
@@ -17,10 +16,11 @@ function createSource(options?: { canvas?: any; eventedParent?: any} & Partial<C
     c.width = 20;
     c.height = 20;
 
-    options = extend({
+    options = {
         canvas: 'id',
         coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]],
-    }, options);
+        ...options,
+    };
 
     const source = new CanvasSource('id', options as CanvasSourceSpecification, {} as Dispatcher, options.eventedParent);
 

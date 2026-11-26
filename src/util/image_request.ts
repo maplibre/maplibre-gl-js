@@ -1,5 +1,5 @@
 import {type RequestParameters, makeRequest, sameOrigin, type GetResourceResponse} from './ajax.ts';
-import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, extend, isWorker, isImageBitmap} from './util.ts';
+import {arrayBufferToImageBitmap, arrayBufferToImage, ensureError, isWorker, isImageBitmap} from './util.ts';
 import {config} from './config.ts';
 import {AbortError, throwIfAborted} from './abort_error.ts';
 import {getProtocol} from '../source/protocol_crud.ts';
@@ -143,7 +143,7 @@ export namespace ImageRequest {
         return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
             requestParameters.headers ||= {};
             requestParameters.headers.accept = 'image/webp,*/*';
-            extend(requestParameters, {type: 'image'});
+            requestParameters.type = 'image';
             const request: ImageRequestQueueItem = {
                 abortController,
                 requestParameters,

@@ -2,7 +2,7 @@ import {Event, Evented} from '../util/evented.ts';
 import {MapMovementEvent} from './events.ts';
 import {DOM} from '../util/dom.ts';
 import {HandlerInertia} from './handler_inertia.ts';
-import {extend, isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util.ts';
+import {isPointableEvent, isTouchableEvent, isTouchableOrPointableType} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import Point from '@mapbox/point-geometry';
 import {getCameraMath} from '../camera/camera_math_factory.ts';
@@ -417,7 +417,7 @@ export class HandlerManager extends Evented<MapEventType> {
          * Handlers are responsible for calling it where necessary.
          */
 
-        const mergedHandlerResult: HandlerResult = {needsRenderFrame: false};
+        let mergedHandlerResult: HandlerResult = {needsRenderFrame: false};
         const eventsInProgress: EventsInProgress = {};
         const activeHandlers = {};
 
@@ -441,7 +441,7 @@ export class HandlerManager extends Evented<MapEventType> {
                     } else if (!isTouchableOrPointableType(eventName || e.type)) {
                         data = handler[eventName || e.type](e);
                     }
-                    this.mergeHandlerResult(mergedHandlerResult, eventsInProgress, data, handlerName, inputEvent);
+                    mergedHandlerResult = this.mergeHandlerResult(mergedHandlerResult, eventsInProgress, data, handlerName, inputEvent);
                     if (data?.needsRenderFrame) {
                         this._triggerRenderFrame();
                     }
@@ -484,10 +484,8 @@ export class HandlerManager extends Evented<MapEventType> {
         eventsInProgress: EventsInProgress,
         handlerResult: HandlerResult,
         name: string,
-        e?: UIEvent): void {
-        if (!handlerResult) return;
-
-        extend(mergedHandlerResult, handlerResult);
+        e?: UIEvent): HandlerResult {
+        if (!handlerResult) return mergedHandlerResult;
 
         const eventData = {handlerName: name, originalEvent: handlerResult.originalEvent || e};
 
@@ -508,12 +506,14 @@ export class HandlerManager extends Evented<MapEventType> {
             eventsInProgress.rotate = eventData;
         }
 
+        return {...mergedHandlerResult, ...handlerResult};
+
     }
 
     private _applyChanges(): void {
         const combined: HandlerResult = {};
-        const combinedEventsInProgress: EventsInProgress = {};
-        const combinedDeactivatedHandlers = {};
+        let combinedEventsInProgress: EventsInProgress = {};
+        let combinedDeactivatedHandlers = {};
 
         for (const [change, eventsInProgress, deactivatedHandlers] of this._changes) {
 
@@ -526,8 +526,8 @@ export class HandlerManager extends Evented<MapEventType> {
             if (change.pinchAround !== undefined) combined.pinchAround = change.pinchAround;
             if (change.noInertia) combined.noInertia = change.noInertia;
 
-            extend(combinedEventsInProgress, eventsInProgress);
-            extend(combinedDeactivatedHandlers, deactivatedHandlers);
+            combinedEventsInProgress = {...combinedEventsInProgress, ...eventsInProgress};
+            combinedDeactivatedHandlers = {...combinedDeactivatedHandlers, ...deactivatedHandlers};
         }
 
         this._updateMapCamera(combined, combinedEventsInProgress, combinedDeactivatedHandlers);

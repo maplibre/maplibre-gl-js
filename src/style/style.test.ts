@@ -2,7 +2,6 @@ import {describe, beforeEach, afterEach, test, expect, vi, type MockInstance} fr
 import {Style} from './style.ts';
 import {TileManager} from '../tile/tile_manager.ts';
 import {StyleLayer} from './style_layer.ts';
-import {extend} from '../util/util.ts';
 import {ErrorEvent, Event} from '../util/evented.ts';
 import {MapSourceDataEvent} from '../ui/events.ts';
 import {RGBAImage} from '../util/image.ts';
@@ -31,11 +30,12 @@ import type {BackgroundStyleLayer} from './style_layer/background_style_layer.ts
 import type {WorldCoordinateHelper} from '../geo/world_types.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
-    return extend({
+    return {
         'version': 8,
         'sources': {},
-        'layers': []
-    }, properties);
+        'layers': [],
+        ...properties,
+    };
 }
 
 function createSource() {
@@ -371,14 +371,12 @@ describe('Style.loadJSON', () => {
     test('creates sources', async () => {
         const style = createStyle();
 
-        style.loadJSON(extend(createStyleJSON(), {
-            'sources': {
-                'mapLibre': {
-                    'type': 'vector',
-                    'tiles': []
-                }
+        style.loadJSON({...createStyleJSON(), 'sources': {
+            'mapLibre': {
+                'type': 'vector',
+                'tiles': []
             }
-        }));
+        }});
 
         await style.once('style.load');
         expect(style.tileManagers['mapLibre']).toBeInstanceOf(TileManager);
@@ -411,9 +409,7 @@ describe('Style.loadJSON', () => {
         const transformSpy = vi.spyOn(map._requestManager, 'transformRequest');
         const style = createStyle(map);
 
-        style.loadJSON(extend(createStyleJSON(), {
-            'sprite': 'http://example.com/sprites/bright-v8'
-        }));
+        style.loadJSON({...createStyleJSON(), 'sprite': 'http://example.com/sprites/bright-v8'});
 
         await style.once('style.load');
 
@@ -859,6 +855,21 @@ describe('Style.update', () => {
         expect(setImagesIndex).toBeGreaterThanOrEqual(0);
         expect(updateLayersIndex).toBeGreaterThanOrEqual(0);
         expect(setImagesIndex).toBeLessThan(updateLayersIndex);
+    });
+
+    test('does not mark Object.prototype as used for a layer whose source is __proto__', async () => {
+        const style = createStyle();
+        style.loadJSON(createStyleJSON({
+            layers: [{id: 'fill', type: 'fill', source: '__proto__', 'source-layer': 'layer'}]
+        }));
+        await style.once('style.load');
+
+        try {
+            style.update({} as EvaluationParameters);
+            expect(Object.prototype).not.toHaveProperty('used');
+        } finally {
+            delete Object.prototype['used'];
+        }
     });
 
     test('debounces setImages broadcast for removeImage', async () => {
@@ -2647,14 +2658,12 @@ describe('Style.addLayer', () => {
 
     test('reloads source', async () => {
         const style = createStyle();
-        style.loadJSON(extend(createStyleJSON(), {
-            'sources': {
-                'mapLibre': {
-                    'type': 'vector',
-                    'tiles': []
-                }
+        style.loadJSON({...createStyleJSON(), 'sources': {
+            'mapLibre': {
+                'type': 'vector',
+                'tiles': []
             }
-        }));
+        }});
         const layer = {
             'id': 'symbol',
             'type': 'symbol',
@@ -2674,21 +2683,19 @@ describe('Style.addLayer', () => {
 
     test('#3895 reloads source (instead of clearing) if adding this layer with the same type, immediately after removing it', async () => {
         const style = createStyle();
-        style.loadJSON(extend(createStyleJSON(), {
-            'sources': {
-                'mapLibre': {
-                    'type': 'vector',
-                    'tiles': []
-                }
-            },
-            layers: [{
-                'id': 'my-layer',
-                'type': 'symbol',
-                'source': 'mapLibre',
-                'source-layer': 'libremap',
-                'filter': ['==', 'id', 0]
-            }]
-        }));
+        style.loadJSON({...createStyleJSON(), 'sources': {
+            'mapLibre': {
+                'type': 'vector',
+                'tiles': []
+            }
+        },
+        layers: [{
+            'id': 'my-layer',
+            'type': 'symbol',
+            'source': 'mapLibre',
+            'source-layer': 'libremap',
+            'filter': ['==', 'id', 0]
+        }]});
 
         const layer = {
             'id': 'my-layer',
@@ -2709,21 +2716,19 @@ describe('Style.addLayer', () => {
 
     test('clears source (instead of reloading) if adding this layer with a different type, immediately after removing it', async () => {
         const style = createStyle();
-        style.loadJSON(extend(createStyleJSON(), {
-            'sources': {
-                'mapLibre': {
-                    'type': 'vector',
-                    'tiles': []
-                }
-            },
-            layers: [{
-                'id': 'my-layer',
-                'type': 'symbol',
-                'source': 'mapLibre',
-                'source-layer': 'libremap',
-                'filter': ['==', 'id', 0]
-            }]
-        }));
+        style.loadJSON({...createStyleJSON(), 'sources': {
+            'mapLibre': {
+                'type': 'vector',
+                'tiles': []
+            }
+        },
+        layers: [{
+            'id': 'my-layer',
+            'type': 'symbol',
+            'source': 'mapLibre',
+            'source-layer': 'libremap',
+            'filter': ['==', 'id', 0]
+        }]});
 
         const layer = {
             'id': 'my-layer',
@@ -2826,14 +2831,12 @@ describe('Style.addLayer', () => {
 
     test('fires an error on non-existent source layer', async () => {
         const style = new Style(getStubMap());
-        style.loadJSON(extend(createStyleJSON(), {
-            sources: {
-                dummy: {
-                    type: 'geojson',
-                    data: {type: 'FeatureCollection', features: []}
-                }
+        style.loadJSON({...createStyleJSON(), sources: {
+            dummy: {
+                type: 'geojson',
+                data: {type: 'FeatureCollection', features: []}
             }
-        }));
+        }});
 
         const layer = {
             id: 'dummy',
@@ -3029,21 +3032,19 @@ describe('Style.moveLayer', () => {
 describe('Style.setPaintProperty', () => {
     test('#4738 postpones source reload until layers have been broadcast to workers', async () => {
         const style = new Style(getStubMap());
-        style.loadJSON(extend(createStyleJSON(), {
-            'sources': {
-                'geojson': {
-                    'type': 'geojson',
-                    'data': {'type': 'FeatureCollection', 'features': []}
-                }
-            },
-            'layers': [
-                {
-                    'id': 'circle',
-                    'type': 'circle',
-                    'source': 'geojson'
-                }
-            ]
-        }));
+        style.loadJSON({...createStyleJSON(), 'sources': {
+            'geojson': {
+                'type': 'geojson',
+                'data': {'type': 'FeatureCollection', 'features': []}
+            }
+        },
+        'layers': [
+            {
+                'id': 'circle',
+                'type': 'circle',
+                'source': 'geojson'
+            }
+        ]});
 
         const {projectedCamera} = createTestCamera({width: 512, height: 512});
 
