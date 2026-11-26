@@ -28,6 +28,17 @@ import type {ProjectedCamera} from '../camera/projected_camera.ts';
 import type {GetElevation} from '../geo/world_types.ts';
 import type {FeatureFilter} from '@maplibre/maplibre-gl-style-spec';
 
+/**
+ * The orientations to try a symbol's text in, in order of preference. Text can be set vertically only when the bucket
+ * allows it and the symbol has vertical glyphs and a vertical collision box; every writing mode other than vertical
+ * sets it horizontally.
+ */
+function getTextOrientations(bucket: SymbolBucket, symbolInstance: SymbolInstance, collisionArrays: CollisionArrays): WritingMode[] {
+    const canPlaceVertically = bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && collisionArrays.verticalTextBox;
+    if (!canPlaceVertically) return [WritingMode.horizontal];
+    return bucket.writingModes.map(mode => mode === WritingMode.vertical ? WritingMode.vertical : WritingMode.horizontal);
+}
+
 class OpacityState {
     opacity: number;
     placed: boolean;
@@ -169,6 +180,33 @@ type TileLayerParameters = {
         uSizeT: number;
     };
     collisionGroup: CollisionGroup;
+};
+
+/**
+ * What placing a symbol of a bucket part reads besides the symbol itself: the part's parameters, the layout values
+ * worked out from them once per part, and the state shared by every symbol placed in the same pass.
+ */
+type SymbolPlacementContext = TileLayerParameters & {
+    textOptional: boolean;
+    iconOptional: boolean;
+    textOverlapMode: OverlapMode;
+    textAlwaysOverlap: boolean;
+    iconOverlapMode: OverlapMode;
+    rotateWithMap: boolean;
+    pitchWithMap: boolean;
+    hasIconTextFit: boolean;
+    heightAnchorGround: boolean;
+    /** Whether text is shown even where it could not be placed, because its overlap settings always allow it. */
+    alwaysShowText: boolean;
+    /** Whether an icon is shown even where it could not be placed, because its overlap settings always allow it. */
+    alwaysShowIcon: boolean;
+    tileID: OverscaledTileID;
+    getElevation: GetElevation | undefined;
+    simpleProjectionMatrix: mat4;
+    filter: FeatureFilter;
+    /** The symbols already placed in this pass, so that a label in more than one tile is placed only once. */
+    seenCrossTileIDs: {[k in string | number]: boolean};
+    showCollisionBoxes: boolean;
 };
 
 export type BucketPart = {
@@ -454,19 +492,7 @@ export class Placement {
         [k in string | number]: boolean;
     }, showCollisionBoxes: boolean): void {
 
-        const {
-            bucket,
-            layout,
-            translationText,
-            translationIcon,
-            unwrappedTileID,
-            pitchedLabelPlaneMatrix,
-            textPixelRatio,
-            holdingForFade,
-            collisionBoxArray,
-            partiallyEvaluatedTextSize,
-            collisionGroup
-        } = bucketPart.parameters;
+        const {bucket, layout, collisionBoxArray} = bucketPart.parameters;
 
         const textOptional = layout.get('text-optional');
         const iconOptional = layout.get('icon-optional');
@@ -506,379 +532,25 @@ export class Placement {
         const simpleProjectionMatrix = getCameraMath(this.projectedCamera).getFastPathSimpleProjectionMatrix(this.projectedCamera, tileID);
         const filter = bucket.layers[0]._featureFilter;
 
-        const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays, symbolIndex: number) => {
-            if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
-            if (holdingForFade) {
-                // Mark all symbols from this tile as "not placed", but don't add to seenCrossTileIDs, because we don't
-                // know yet if we have a duplicate in a parent tile that _should_ be placed.
-                this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
-                return;
-            }
-            if (filter.needCamera && !this._passesCameraFilter(filter, bucket, symbolInstance)) {
-                this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
-                seenCrossTileIDs[symbolInstance.crossTileID] = true;
-                return;
-            }
-
-            const symbolHeightOffset = symbolInstance.heightOffset;
-
-            let placeText = false;
-            let placeIcon = false;
-            let offscreen = true;
-            let shift = null;
-
-            let placed: PlacedBox = {box: null, placeable: false, offscreen: null, occluded: false};
-            let placedVerticalText = {box: null, placeable: false, offscreen: null};
-
-            let placedGlyphBoxes: PlacedBox = null;
-            let placedGlyphCircles: PlacedCircles = null;
-            let placedIconBoxes: PlacedBox = null;
-            let textFeatureIndex = 0;
-            let verticalTextFeatureIndex = 0;
-            let iconFeatureIndex = 0;
-
-            if (collisionArrays.textFeatureIndex) {
-                textFeatureIndex = collisionArrays.textFeatureIndex;
-            } else if (symbolInstance.useRuntimeCollisionCircles) {
-                textFeatureIndex = symbolInstance.featureIndex;
-            }
-            if (collisionArrays.verticalTextFeatureIndex) {
-                verticalTextFeatureIndex = collisionArrays.verticalTextFeatureIndex;
-            }
-
-            const textBox = collisionArrays.textBox;
-            if (textBox) {
-
-                const updatePreviousOrientationIfNotPlaced = (isPlaced) => {
-                    let previousOrientation = WritingMode.horizontal;
-                    if (bucket.allowVerticalPlacement && !isPlaced && this.prevPlacement) {
-                        const prevPlacedOrientation = this.prevPlacement.placedOrientations[symbolInstance.crossTileID];
-                        if (prevPlacedOrientation) {
-                            this.placedOrientations[symbolInstance.crossTileID] = prevPlacedOrientation;
-                            previousOrientation = prevPlacedOrientation;
-                            this.markUsedOrientation(bucket, previousOrientation, symbolInstance);
-                        }
-                    }
-                    return previousOrientation;
-                };
-
-                const placeTextForPlacementModes = (placeHorizontalFn, placeVerticalFn) => {
-                    if (bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && collisionArrays.verticalTextBox) {
-                        for (const placementMode of bucket.writingModes) {
-                            if (placementMode === WritingMode.vertical) {
-                                placed = placeVerticalFn();
-                                placedVerticalText = placed;
-                            } else {
-                                placed = placeHorizontalFn();
-                            }
-                            if (placed?.placeable) break;
-                        }
-                    } else {
-                        placed = placeHorizontalFn();
-                    }
-                };
-
-                const textAnchorOffsetStart = symbolInstance.textAnchorOffsetStartIndex;
-                const textAnchorOffsetEnd = symbolInstance.textAnchorOffsetEndIndex;
-
-                // If start+end indices match, text-variable-anchor is not in play.
-                if (textAnchorOffsetEnd === textAnchorOffsetStart) {
-                    const placeBox = (collisionTextBox, orientation) => {
-                        const placedFeature = this.collisionIndex.placeCollisionBox(
-                            collisionTextBox,
-                            textOverlapMode,
-                            textPixelRatio,
-                            tileID,
-                            unwrappedTileID,
-                            pitchWithMap,
-                            rotateWithMap,
-                            translationText,
-                            collisionGroup.predicate,
-                            getElevation,
-                            undefined,
-                            simpleProjectionMatrix,
-                            symbolHeightOffset,
-                            heightAnchorGround,
-                        );
-                        if (placedFeature?.placeable) {
-                            this.markUsedOrientation(bucket, orientation, symbolInstance);
-                            this.placedOrientations[symbolInstance.crossTileID] = orientation;
-                        }
-                        return placedFeature;
-                    };
-
-                    const placeHorizontal = () => {
-                        return placeBox(textBox, WritingMode.horizontal);
-                    };
-
-                    const placeVertical = () => {
-                        const verticalTextBox = collisionArrays.verticalTextBox;
-                        if (bucket.allowVerticalPlacement && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
-                            return placeBox(verticalTextBox, WritingMode.vertical);
-                        }
-                        return {box: null, offscreen: null};
-                    };
-
-                    placeTextForPlacementModes(placeHorizontal, placeVertical);
-                    updatePreviousOrientationIfNotPlaced(placed?.placeable);
-
-                } else {
-                    // If this symbol was in the last placement, prefer placement using same anchor, if it's still available
-                    let prevAnchor = TextAnchorEnum[this.prevPlacement?.variableOffsets[symbolInstance.crossTileID]?.anchor];
-
-                    const placeBoxForVariableAnchors = (collisionTextBox, collisionIconBox, orientation) => {
-                        const width = collisionTextBox.x2 - collisionTextBox.x1;
-                        const height = collisionTextBox.y2 - collisionTextBox.y1;
-                        const textBoxScale = symbolInstance.textBoxScale;
-                        const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
-
-                        let placedBox: PlacedBox = null;
-                        let placementPasses = (textOverlapMode === 'never') ? 1 : 2;
-                        let overlapMode: OverlapMode = 'never';
-
-                        if (prevAnchor) {
-                            placementPasses++;
-                        }
-
-                        for (let pass = 0; pass < placementPasses; pass++) {
-                            for (let i = textAnchorOffsetStart; i < textAnchorOffsetEnd; i++) {
-                                const textAnchorOffset = bucket.textAnchorOffsets.get(i);
-
-                                if (prevAnchor && textAnchorOffset.textAnchor !== prevAnchor) {
-                                    continue;
-                                }
-
-                                const result = this.attemptAnchorPlacement(
-                                    textAnchorOffset, collisionTextBox, width, height,
-                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation, simpleProjectionMatrix, symbolHeightOffset, heightAnchorGround);
-
-                                if (result) {
-                                    placedBox = result.placedGlyphBoxes;
-                                    if (placedBox?.placeable) {
-                                        placeText = true;
-                                        shift = result.shift;
-                                        return placedBox;
-                                    }
-                                }
-                            }
-
-                            if (prevAnchor) {
-                                prevAnchor = null;
-                            } else {
-                                overlapMode = textOverlapMode;
-                            }
-                        }
-
-                        if (!placedBox && (showCollisionBoxes || alwaysShowText)) {
-                            // No box was successfully placed
-                            // Generate bounds for a fake centered box, so that we can at least display something for collision debug,
-                            // and so that text which is always shown is still hidden when the globe occludes it.
-                            const placedFakeGlyphBox = this.collisionIndex.placeCollisionBox(
-                                textBox,
-                                'always', // Skips expensive collision check with already placed boxes
-                                textPixelRatio,
-                                tileID,
-                                unwrappedTileID,
-                                pitchWithMap,
-                                rotateWithMap,
-                                translationText,
-                                collisionGroup.predicate,
-                                getElevation,
-                                undefined,
-                                simpleProjectionMatrix,
-                                symbolHeightOffset,
-                                heightAnchorGround,
-                            );
-                            placedBox = {
-                                box: placedFakeGlyphBox.box,
-                                offscreen: false,
-                                placeable: false,
-                                occluded: placedFakeGlyphBox.occluded,
-                            };
-                        }
-
-                        return placedBox;
-                    };
-
-                    const placeHorizontal = () => {
-                        return placeBoxForVariableAnchors(textBox, collisionArrays.iconBox, WritingMode.horizontal);
-                    };
-
-                    const placeVertical = () => {
-                        const verticalTextBox = collisionArrays.verticalTextBox;
-                        const wasPlaced = placed?.placeable;
-                        if (bucket.allowVerticalPlacement && !wasPlaced && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
-                            return placeBoxForVariableAnchors(verticalTextBox, collisionArrays.verticalIconBox, WritingMode.vertical);
-                        }
-                        return {box: null, occluded: true, offscreen: null};
-                    };
-
-                    placeTextForPlacementModes(placeHorizontal, placeVertical);
-
-                    if (placed) {
-                        placeText = placed.placeable;
-                        offscreen = placed.offscreen;
-                    }
-
-                    const prevOrientation = updatePreviousOrientationIfNotPlaced(placed?.placeable);
-
-                    // If we didn't get placed, we still need to copy our position from the last placement for
-                    // fade animations
-                    if (!placeText && this.prevPlacement) {
-                        const prevOffset = this.prevPlacement.variableOffsets[symbolInstance.crossTileID];
-                        if (prevOffset) {
-                            this.variableOffsets[symbolInstance.crossTileID] = prevOffset;
-                            this.markUsedJustification(bucket, prevOffset.anchor, symbolInstance, prevOrientation);
-                        }
-                    }
-
-                }
-            }
-
-            placedGlyphBoxes = placed;
-            placeText = placedGlyphBoxes?.placeable;
-            offscreen = placedGlyphBoxes?.offscreen;
-
-            if (symbolInstance.useRuntimeCollisionCircles && symbolInstance.centerJustifiedTextSymbolIndex >= 0) {
-                const placedSymbol = bucket.text.placedSymbolArray.get(symbolInstance.centerJustifiedTextSymbolIndex);
-                const fontSize = symbolSize.evaluateSizeForFeature(bucket.textSizeData, partiallyEvaluatedTextSize, placedSymbol);
-
-                const textPixelPadding = layout.get('text-padding');
-                const circlePixelDiameter = symbolInstance.collisionCircleDiameter;
-
-                placedGlyphCircles = this.collisionIndex.placeCollisionCircles(
-                    textOverlapMode,
-                    placedSymbol,
-                    bucket.lineVertexArray,
-                    bucket.glyphOffsetArray,
-                    fontSize,
-                    unwrappedTileID,
-                    pitchedLabelPlaneMatrix,
-                    showCollisionBoxes,
-                    pitchWithMap,
-                    collisionGroup.predicate,
-                    circlePixelDiameter,
-                    textPixelPadding,
-                    translationText,
-                    getElevation
-                );
-
-                if (placedGlyphCircles.circles.length && placedGlyphCircles.collisionDetected && !showCollisionBoxes) {
-                    warnOnce('Collisions detected, but collision boxes are not shown');
-                }
-
-                // If text-overlap is set to 'always', force "placedCircles" to true
-                // In theory there should always be at least one circle placed
-                // in this case, but for now quirks in text-anchor
-                // and text-offset may prevent that from being true.
-                placeText = textAlwaysOverlap || (placedGlyphCircles.circles.length > 0 && !placedGlyphCircles.collisionDetected);
-                offscreen &&= placedGlyphCircles.offscreen;
-            }
-
-            if (collisionArrays.iconFeatureIndex) {
-                iconFeatureIndex = collisionArrays.iconFeatureIndex;
-            }
-
-            if (collisionArrays.iconBox) {
-                const placeIconFeature = iconBox => {
-                    return this.collisionIndex.placeCollisionBox(
-                        iconBox,
-                        iconOverlapMode,
-                        textPixelRatio,
-                        tileID,
-                        unwrappedTileID,
-                        pitchWithMap,
-                        rotateWithMap,
-                        translationIcon,
-                        collisionGroup.predicate,
-                        getElevation,
-                        (hasIconTextFit && shift) ? shift : undefined,
-                        simpleProjectionMatrix,
-                        symbolHeightOffset,
-                        heightAnchorGround,
-                    );
-                };
-
-                if (placedVerticalText && placedVerticalText.placeable && collisionArrays.verticalIconBox) {
-                    placedIconBoxes = placeIconFeature(collisionArrays.verticalIconBox);
-                    placeIcon = placedIconBoxes.placeable;
-                } else {
-                    placedIconBoxes = placeIconFeature(collisionArrays.iconBox);
-                    placeIcon = placedIconBoxes.placeable;
-                }
-                offscreen &&= placedIconBoxes.offscreen;
-            }
-
-            const iconWithoutText = textOptional ||
-                (symbolInstance.numHorizontalGlyphVertices === 0 && symbolInstance.numVerticalGlyphVertices === 0);
-            const textWithoutIcon = iconOptional || symbolInstance.numIconVertices === 0;
-
-            // Combine the scales for icons and text.
-            if (!iconWithoutText && !textWithoutIcon) {
-                placeIcon = placeText = placeIcon && placeText;
-            } else if (!textWithoutIcon) {
-                placeText = placeIcon && placeText;
-            } else if (!iconWithoutText) {
-                placeIcon &&= placeText;
-            }
-
-            const hasTextBox = placeText && placedGlyphBoxes.placeable;
-            const hasIconBox = placeIcon && placedIconBoxes.placeable;
-
-            if (hasTextBox) {
-                if (placedVerticalText && placedVerticalText.placeable && verticalTextFeatureIndex) {
-                    this.collisionIndex.insertCollisionBox(
-                        placedGlyphBoxes.box,
-                        textOverlapMode,
-                        layout.get('text-ignore-placement'),
-                        bucket.bucketInstanceId,
-                        verticalTextFeatureIndex,
-                        collisionGroup.ID);
-                } else {
-                    this.collisionIndex.insertCollisionBox(
-                        placedGlyphBoxes.box,
-                        textOverlapMode,
-                        layout.get('text-ignore-placement'),
-                        bucket.bucketInstanceId,
-                        textFeatureIndex,
-                        collisionGroup.ID);
-                }
-
-            }
-            if (hasIconBox) {
-                this.collisionIndex.insertCollisionBox(
-                    placedIconBoxes.box,
-                    iconOverlapMode,
-                    layout.get('icon-ignore-placement'),
-                    bucket.bucketInstanceId,
-                    iconFeatureIndex,
-                    collisionGroup.ID);
-            }
-            if (placedGlyphCircles) {
-                if (placeText) {
-                    this.collisionIndex.insertCollisionCircles(
-                        placedGlyphCircles.circles,
-                        textOverlapMode,
-                        layout.get('text-ignore-placement'),
-                        bucket.bucketInstanceId,
-                        textFeatureIndex,
-                        collisionGroup.ID);
-                }
-            }
-
-            if (showCollisionBoxes) {
-                this.storeCollisionData(bucket.bucketInstanceId, symbolIndex, collisionArrays, placedGlyphBoxes, placedIconBoxes, placedGlyphCircles);
-            }
-
-            if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
-            if (bucket.bucketInstanceId === 0) throw new Error('bucket.bucketInstanceId can\'t be 0');
-
-            // Do not show text or icons that are occluded by the globe, even if overlap mode is 'always'!
-            const textVisible: boolean = (placeText || alwaysShowText) && !(placedGlyphBoxes?.occluded);
-            const iconVisible = (placeIcon || alwaysShowIcon) && !(placedIconBoxes?.occluded);
-            this.placements[symbolInstance.crossTileID] = new JointPlacement(textVisible, iconVisible, offscreen || bucket.justReloaded);
-            seenCrossTileIDs[symbolInstance.crossTileID] = true;
+        const context: SymbolPlacementContext = {
+            ...bucketPart.parameters,
+            textOptional,
+            iconOptional,
+            textOverlapMode,
+            textAlwaysOverlap,
+            iconOverlapMode,
+            rotateWithMap,
+            pitchWithMap,
+            hasIconTextFit,
+            heightAnchorGround,
+            alwaysShowText,
+            alwaysShowIcon,
+            tileID,
+            getElevation,
+            simpleProjectionMatrix,
+            filter,
+            seenCrossTileIDs,
+            showCollisionBoxes
         };
 
         if (zOrderByViewportY) {
@@ -886,15 +558,410 @@ export class Placement {
             const symbolIndexes = bucket.getSortedSymbolIndexes(-this.projectedCamera.bearingInRadians);
             for (let i = symbolIndexes.length - 1; i >= 0; --i) {
                 const symbolIndex = symbolIndexes[i];
-                placeSymbol(bucket.symbolInstances.get(symbolIndex), bucket.collisionArrays[symbolIndex], symbolIndex);
+                this._placeSymbol(context, bucket.symbolInstances.get(symbolIndex), bucket.collisionArrays[symbolIndex], symbolIndex);
             }
         } else {
             for (let i = bucketPart.symbolInstanceStart; i < bucketPart.symbolInstanceEnd; i++) {
-                placeSymbol(bucket.symbolInstances.get(i), bucket.collisionArrays[i], i);
+                this._placeSymbol(context, bucket.symbolInstances.get(i), bucket.collisionArrays[i], i);
             }
         }
 
         bucket.justReloaded = false;
+    }
+
+    /**
+     * Places one symbol of a bucket part: finds where its text and icon fit, records them in the collision index and
+     * stores the outcome in {@link Placement.placements}.
+     */
+    private _placeSymbol(context: SymbolPlacementContext, symbolInstance: SymbolInstance, collisionArrays: CollisionArrays, symbolIndex: number): void {
+        const {
+            bucket,
+            layout,
+            translationText,
+            translationIcon,
+            unwrappedTileID,
+            pitchedLabelPlaneMatrix,
+            textPixelRatio,
+            holdingForFade,
+            partiallyEvaluatedTextSize,
+            collisionGroup,
+            textOptional,
+            iconOptional,
+            textOverlapMode,
+            textAlwaysOverlap,
+            iconOverlapMode,
+            rotateWithMap,
+            pitchWithMap,
+            hasIconTextFit,
+            heightAnchorGround,
+            alwaysShowText,
+            alwaysShowIcon,
+            tileID,
+            getElevation,
+            simpleProjectionMatrix,
+            filter,
+            seenCrossTileIDs,
+            showCollisionBoxes
+        } = context;
+        if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
+        if (holdingForFade) {
+            // Mark all symbols from this tile as "not placed", but don't add to seenCrossTileIDs, because we don't
+            // know yet if we have a duplicate in a parent tile that _should_ be placed.
+            this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
+            return;
+        }
+        if (filter.needCamera && !this._passesCameraFilter(filter, bucket, symbolInstance)) {
+            this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
+            seenCrossTileIDs[symbolInstance.crossTileID] = true;
+            return;
+        }
+
+        const symbolHeightOffset = symbolInstance.heightOffset;
+
+        let placeText = false;
+        let placeIcon = false;
+        let offscreen = true;
+        let shift = null;
+
+        let placed: PlacedBox = {box: null, placeable: false, offscreen: null, occluded: false};
+        let placedVerticalText = {box: null, placeable: false, offscreen: null};
+
+        let placedGlyphBoxes: PlacedBox = null;
+        let placedGlyphCircles: PlacedCircles = null;
+        let placedIconBoxes: PlacedBox = null;
+        let textFeatureIndex = 0;
+        let verticalTextFeatureIndex = 0;
+        let iconFeatureIndex = 0;
+
+        if (collisionArrays.textFeatureIndex) {
+            textFeatureIndex = collisionArrays.textFeatureIndex;
+        } else if (symbolInstance.useRuntimeCollisionCircles) {
+            textFeatureIndex = symbolInstance.featureIndex;
+        }
+        if (collisionArrays.verticalTextFeatureIndex) {
+            verticalTextFeatureIndex = collisionArrays.verticalTextFeatureIndex;
+        }
+
+        const textBox = collisionArrays.textBox;
+        if (textBox) {
+            // If start+end indices match, text-variable-anchor is not in play.
+            const hasVariableAnchors = symbolInstance.textAnchorOffsetEndIndex !== symbolInstance.textAnchorOffsetStartIndex;
+            // If this symbol was in the last placement, prefer placement using same anchor, if it's still available
+            let prevAnchor = hasVariableAnchors ? TextAnchorEnum[this.prevPlacement?.variableOffsets[symbolInstance.crossTileID]?.anchor] : null;
+
+            for (const orientation of getTextOrientations(bucket, symbolInstance, collisionArrays)) {
+                const isVertical = orientation === WritingMode.vertical;
+                const collisionTextBox = isVertical ? collisionArrays.verticalTextBox : textBox;
+                if (hasVariableAnchors) {
+                    const collisionIconBox = isVertical ? collisionArrays.verticalIconBox : collisionArrays.iconBox;
+                    const result = this._placeTextAtVariableAnchors(context, symbolInstance, textBox, collisionTextBox, collisionIconBox, orientation, prevAnchor);
+                    placed = result.placedBox;
+                    shift = result.shift;
+                    prevAnchor = result.prevAnchor;
+                } else {
+                    placed = this._placeTextBox(context, symbolInstance, collisionTextBox, orientation);
+                }
+                if (isVertical) placedVerticalText = placed;
+                if (placed?.placeable) break;
+            }
+
+            if (hasVariableAnchors) {
+                if (placed) {
+                    placeText = placed.placeable;
+                    offscreen = placed.offscreen;
+                }
+
+                const prevOrientation = this._restorePreviousOrientation(bucket, symbolInstance, placed?.placeable);
+
+                // If we didn't get placed, we still need to copy our position from the last placement for
+                // fade animations
+                if (!placeText && this.prevPlacement) {
+                    const prevOffset = this.prevPlacement.variableOffsets[symbolInstance.crossTileID];
+                    if (prevOffset) {
+                        this.variableOffsets[symbolInstance.crossTileID] = prevOffset;
+                        this.markUsedJustification(bucket, prevOffset.anchor, symbolInstance, prevOrientation);
+                    }
+                }
+            } else {
+                this._restorePreviousOrientation(bucket, symbolInstance, placed?.placeable);
+            }
+        }
+
+        placedGlyphBoxes = placed;
+        placeText = placedGlyphBoxes?.placeable;
+        offscreen = placedGlyphBoxes?.offscreen;
+
+        if (symbolInstance.useRuntimeCollisionCircles && symbolInstance.centerJustifiedTextSymbolIndex >= 0) {
+            const placedSymbol = bucket.text.placedSymbolArray.get(symbolInstance.centerJustifiedTextSymbolIndex);
+            const fontSize = symbolSize.evaluateSizeForFeature(bucket.textSizeData, partiallyEvaluatedTextSize, placedSymbol);
+
+            const textPixelPadding = layout.get('text-padding');
+            const circlePixelDiameter = symbolInstance.collisionCircleDiameter;
+
+            placedGlyphCircles = this.collisionIndex.placeCollisionCircles(
+                textOverlapMode,
+                placedSymbol,
+                bucket.lineVertexArray,
+                bucket.glyphOffsetArray,
+                fontSize,
+                unwrappedTileID,
+                pitchedLabelPlaneMatrix,
+                showCollisionBoxes,
+                pitchWithMap,
+                collisionGroup.predicate,
+                circlePixelDiameter,
+                textPixelPadding,
+                translationText,
+                getElevation
+            );
+
+            if (placedGlyphCircles.circles.length && placedGlyphCircles.collisionDetected && !showCollisionBoxes) {
+                warnOnce('Collisions detected, but collision boxes are not shown');
+            }
+
+            // If text-overlap is set to 'always', force "placedCircles" to true
+            // In theory there should always be at least one circle placed
+            // in this case, but for now quirks in text-anchor
+            // and text-offset may prevent that from being true.
+            placeText = textAlwaysOverlap || (placedGlyphCircles.circles.length > 0 && !placedGlyphCircles.collisionDetected);
+            offscreen &&= placedGlyphCircles.offscreen;
+        }
+
+        if (collisionArrays.iconFeatureIndex) {
+            iconFeatureIndex = collisionArrays.iconFeatureIndex;
+        }
+
+        if (collisionArrays.iconBox) {
+            const placeIconFeature = iconBox => {
+                return this.collisionIndex.placeCollisionBox(
+                    iconBox,
+                    iconOverlapMode,
+                    textPixelRatio,
+                    tileID,
+                    unwrappedTileID,
+                    pitchWithMap,
+                    rotateWithMap,
+                    translationIcon,
+                    collisionGroup.predicate,
+                    getElevation,
+                    (hasIconTextFit && shift) ? shift : undefined,
+                    simpleProjectionMatrix,
+                    symbolHeightOffset,
+                    heightAnchorGround,
+                );
+            };
+
+            if (placedVerticalText && placedVerticalText.placeable && collisionArrays.verticalIconBox) {
+                placedIconBoxes = placeIconFeature(collisionArrays.verticalIconBox);
+                placeIcon = placedIconBoxes.placeable;
+            } else {
+                placedIconBoxes = placeIconFeature(collisionArrays.iconBox);
+                placeIcon = placedIconBoxes.placeable;
+            }
+            offscreen &&= placedIconBoxes.offscreen;
+        }
+
+        const iconWithoutText = textOptional ||
+            (symbolInstance.numHorizontalGlyphVertices === 0 && symbolInstance.numVerticalGlyphVertices === 0);
+        const textWithoutIcon = iconOptional || symbolInstance.numIconVertices === 0;
+
+        // Combine the scales for icons and text.
+        if (!iconWithoutText && !textWithoutIcon) {
+            placeIcon = placeText = placeIcon && placeText;
+        } else if (!textWithoutIcon) {
+            placeText = placeIcon && placeText;
+        } else if (!iconWithoutText) {
+            placeIcon &&= placeText;
+        }
+
+        const hasTextBox = placeText && placedGlyphBoxes.placeable;
+        const hasIconBox = placeIcon && placedIconBoxes.placeable;
+
+        if (hasTextBox) {
+            if (placedVerticalText && placedVerticalText.placeable && verticalTextFeatureIndex) {
+                this.collisionIndex.insertCollisionBox(
+                    placedGlyphBoxes.box,
+                    textOverlapMode,
+                    layout.get('text-ignore-placement'),
+                    bucket.bucketInstanceId,
+                    verticalTextFeatureIndex,
+                    collisionGroup.ID);
+            } else {
+                this.collisionIndex.insertCollisionBox(
+                    placedGlyphBoxes.box,
+                    textOverlapMode,
+                    layout.get('text-ignore-placement'),
+                    bucket.bucketInstanceId,
+                    textFeatureIndex,
+                    collisionGroup.ID);
+            }
+
+        }
+        if (hasIconBox) {
+            this.collisionIndex.insertCollisionBox(
+                placedIconBoxes.box,
+                iconOverlapMode,
+                layout.get('icon-ignore-placement'),
+                bucket.bucketInstanceId,
+                iconFeatureIndex,
+                collisionGroup.ID);
+        }
+        if (placedGlyphCircles) {
+            if (placeText) {
+                this.collisionIndex.insertCollisionCircles(
+                    placedGlyphCircles.circles,
+                    textOverlapMode,
+                    layout.get('text-ignore-placement'),
+                    bucket.bucketInstanceId,
+                    textFeatureIndex,
+                    collisionGroup.ID);
+            }
+        }
+
+        if (showCollisionBoxes) {
+            this.storeCollisionData(bucket.bucketInstanceId, symbolIndex, collisionArrays, placedGlyphBoxes, placedIconBoxes, placedGlyphCircles);
+        }
+
+        if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
+        if (bucket.bucketInstanceId === 0) throw new Error('bucket.bucketInstanceId can\'t be 0');
+
+        // Do not show text or icons that are occluded by the globe, even if overlap mode is 'always'!
+        const textVisible: boolean = (placeText || alwaysShowText) && !(placedGlyphBoxes?.occluded);
+        const iconVisible = (placeIcon || alwaysShowIcon) && !(placedIconBoxes?.occluded);
+        this.placements[symbolInstance.crossTileID] = new JointPlacement(textVisible, iconVisible, offscreen || bucket.justReloaded);
+        seenCrossTileIDs[symbolInstance.crossTileID] = true;
+    }
+
+    /**
+     * Places a symbol's text in one orientation at its single anchor, and records the orientation when it fits.
+     */
+    private _placeTextBox(context: SymbolPlacementContext, symbolInstance: SymbolInstance, collisionTextBox: SingleCollisionBox, orientation: WritingMode): PlacedBox {
+        const placedFeature = this.collisionIndex.placeCollisionBox(
+            collisionTextBox,
+            context.textOverlapMode,
+            context.textPixelRatio,
+            context.tileID,
+            context.unwrappedTileID,
+            context.pitchWithMap,
+            context.rotateWithMap,
+            context.translationText,
+            context.collisionGroup.predicate,
+            context.getElevation,
+            undefined,
+            context.simpleProjectionMatrix,
+            symbolInstance.heightOffset,
+            context.heightAnchorGround,
+        );
+        if (placedFeature?.placeable) {
+            this.markUsedOrientation(context.bucket, orientation, symbolInstance);
+            this.placedOrientations[symbolInstance.crossTileID] = orientation;
+        }
+        return placedFeature;
+    }
+
+    /**
+     * Places a symbol's text in one orientation at the first of its `text-variable-anchor` anchors that fits.
+     *
+     * The anchor the symbol had in the previous placement is tried first, in an extra pass, so that a label does not
+     * jump between anchors while the map moves. That preference is used up once it fails: the returned `prevAnchor` is
+     * what the next orientation's attempt has to start from. When no anchor fits but the box has to be shown anyway,
+     * for the collision debug view or because the text always overlaps, a centred box stands in for it, which still
+     * lets the globe hide the text.
+     */
+    private _placeTextAtVariableAnchors(
+        context: SymbolPlacementContext,
+        symbolInstance: SymbolInstance,
+        textBox: SingleCollisionBox,
+        collisionTextBox: SingleCollisionBox,
+        collisionIconBox: SingleCollisionBox,
+        orientation: WritingMode,
+        prevAnchor: TextAnchorEnum | null
+    ): {placedBox: PlacedBox; shift: Point | null; prevAnchor: TextAnchorEnum | null} {
+        const {bucket, textOverlapMode, textPixelRatio, tileID, unwrappedTileID, pitchWithMap, rotateWithMap, translationText, collisionGroup, getElevation, simpleProjectionMatrix, heightAnchorGround} = context;
+        const width = collisionTextBox.x2 - collisionTextBox.x1;
+        const height = collisionTextBox.y2 - collisionTextBox.y1;
+        const textBoxScale = symbolInstance.textBoxScale;
+        const variableIconBox = context.hasIconTextFit && (context.iconOverlapMode === 'never') ? collisionIconBox : null;
+
+        let placedBox: PlacedBox = null;
+        let placementPasses = (textOverlapMode === 'never') ? 1 : 2;
+        let overlapMode: OverlapMode = 'never';
+
+        if (prevAnchor) {
+            placementPasses++;
+        }
+
+        for (let pass = 0; pass < placementPasses; pass++) {
+            for (let i = symbolInstance.textAnchorOffsetStartIndex; i < symbolInstance.textAnchorOffsetEndIndex; i++) {
+                const textAnchorOffset = bucket.textAnchorOffsets.get(i);
+
+                if (prevAnchor && textAnchorOffset.textAnchor !== prevAnchor) {
+                    continue;
+                }
+
+                const result = this.attemptAnchorPlacement(
+                    textAnchorOffset, collisionTextBox, width, height,
+                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, tileID, unwrappedTileID,
+                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, context.translationIcon, variableIconBox, getElevation, simpleProjectionMatrix, symbolInstance.heightOffset, heightAnchorGround);
+
+                if (result) {
+                    placedBox = result.placedGlyphBoxes;
+                    if (placedBox?.placeable) {
+                        return {placedBox, shift: result.shift, prevAnchor};
+                    }
+                }
+            }
+
+            if (prevAnchor) {
+                prevAnchor = null;
+            } else {
+                overlapMode = textOverlapMode;
+            }
+        }
+
+        if (!placedBox && (context.showCollisionBoxes || context.alwaysShowText)) {
+            const placedFakeGlyphBox = this.collisionIndex.placeCollisionBox(
+                textBox,
+                'always', // Skips expensive collision check with already placed boxes
+                textPixelRatio,
+                tileID,
+                unwrappedTileID,
+                pitchWithMap,
+                rotateWithMap,
+                translationText,
+                collisionGroup.predicate,
+                getElevation,
+                undefined,
+                simpleProjectionMatrix,
+                symbolInstance.heightOffset,
+                heightAnchorGround,
+            );
+            placedBox = {
+                box: placedFakeGlyphBox.box,
+                offscreen: false,
+                placeable: false,
+                occluded: placedFakeGlyphBox.occluded,
+            };
+        }
+
+        return {placedBox, shift: null, prevAnchor};
+    }
+
+    /**
+     * When a symbol that can be set vertically was not placed, keeps the orientation it had in the previous
+     * placement so that it fades out the way it was drawn, and returns that orientation.
+     */
+    private _restorePreviousOrientation(bucket: SymbolBucket, symbolInstance: SymbolInstance, isPlaced: boolean): WritingMode {
+        let previousOrientation = WritingMode.horizontal;
+        if (bucket.allowVerticalPlacement && !isPlaced && this.prevPlacement) {
+            const prevPlacedOrientation = this.prevPlacement.placedOrientations[symbolInstance.crossTileID];
+            if (prevPlacedOrientation) {
+                this.placedOrientations[symbolInstance.crossTileID] = prevPlacedOrientation;
+                previousOrientation = prevPlacedOrientation;
+                this.markUsedOrientation(bucket, previousOrientation, symbolInstance);
+            }
+        }
+        return previousOrientation;
     }
 
     storeCollisionData(bucketInstanceId: number, symbolIndex: number, collisionArrays: CollisionArrays, placedGlyphBoxes: PlacedBox, placedIconBoxes: PlacedBox, placedGlyphCircles: PlacedCircles): void {
