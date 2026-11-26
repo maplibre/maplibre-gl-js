@@ -1,5 +1,6 @@
 import {lerp} from '../util/util.ts';
 import {isGlobeRendering, renderedProjectedCamera} from './projected_camera.ts';
+import {getPlanetRelativeProjectionData} from './vertical_perspective_camera_math.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {mat4, vec3, vec4} from 'gl-matrix';
@@ -40,7 +41,7 @@ export class GlobeCameraMath implements CameraMath {
 
     getProjectionData(projectedCamera: GlobeProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
         const mercatorProjectionData = this._mercator.getProjectionData(projectedCamera.mercator, params);
-        const verticalPerspectiveProjectionData = this._verticalPerspective.getProjectionData(projectedCamera.verticalPerspective, params);
+        const verticalPerspectiveProjectionData = getPlanetRelativeProjectionData(projectedCamera.verticalPerspective, params.overscaledTileID, params.applyGlobeMatrix);
         return {
             mainMatrix: isGlobeRendering(projectedCamera) ? verticalPerspectiveProjectionData.mainMatrix : mercatorProjectionData.mainMatrix,
             clippingPlane: verticalPerspectiveProjectionData.clippingPlane,

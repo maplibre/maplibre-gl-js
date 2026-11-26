@@ -99,8 +99,12 @@ function getTileRelativeMatrix(projectedCamera: VerticalPerspectiveProjectedCame
     return entry;
 }
 
-/** The projection data of a tile with positions relative to the planet center, which is what a custom layer's own positions are relative to. */
-function getPlanetRelativeProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, overscaledTileID: OverscaledTileID | null, applyGlobeMatrix: boolean): RendererProjectionData {
+/**
+ * @internal
+ * The projection data of a tile with positions relative to the planet center, which is what a custom layer's own
+ * positions are relative to. The globe draws its tiles with it, since it is mercator by the zoom where float32 runs out.
+ */
+export function getPlanetRelativeProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, overscaledTileID: OverscaledTileID | null, applyGlobeMatrix: boolean): RendererProjectionData {
     return {
         mainMatrix: projectedCamera.modelViewProjectionMatrix32f,
         tileMercatorCoords: getMercatorTileCoordinates(overscaledTileID),
@@ -461,20 +465,10 @@ function rayParameter(origin: vec3, direction: vec3, point: vec3): number {
 
 /** @internal The {@link CameraMath} of the vertical perspective projection, which draws the planet as a sphere. */
 export class VerticalPerspectiveCameraMath implements CameraMath {
-    private readonly _tileRelative: boolean;
-
-    /**
-     * @param tileRelative - whether tiles may be drawn relative to their origin, see {@link getTileRelativeMatrix}. The
-     * globe has no use for it, since it is mercator by the zoom where float32 runs out.
-     */
-    constructor(tileRelative: boolean = true) {
-        this._tileRelative = tileRelative;
-    }
-
     getProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
         const {overscaledTileID, applyGlobeMatrix} = params;
         const projectionData = getPlanetRelativeProjectionData(projectedCamera, overscaledTileID, applyGlobeMatrix);
-        const drawsTileRelative = this._tileRelative && applyGlobeMatrix && overscaledTileID != null && projectedCamera.zoom >= MIN_TILE_RELATIVE_ZOOM;
+        const drawsTileRelative = applyGlobeMatrix && overscaledTileID != null && projectedCamera.zoom >= MIN_TILE_RELATIVE_ZOOM;
         if (!drawsTileRelative) return projectionData;
 
         const tileRelative = getTileRelativeMatrix(projectedCamera, overscaledTileID.canonical);
