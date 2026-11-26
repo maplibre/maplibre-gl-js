@@ -1,0 +1,76 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 512,
+      "height": 320,
+      "description": "3.3 m alley, 4 m radius: the nearer wall darkens the ground, never both; wall feet are not hidden."
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0, 0.00003],
+                  [0.0001, 0.00003],
+                  [0.0001, 0.0001],
+                  [0, 0.0001],
+                  [0, 0.00003]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [0, -0.00007],
+                  [0.0001, -0.00007],
+                  [0.0001, 0],
+                  [0, 0],
+                  [0, -0.00007]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "center": [0.00009, 0.000015],
+  "pitch": 35,
+  "bearing": 70,
+  "zoom": 19,
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ddd"
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-color": "#88a",
+        "fill-extrusion-height": 8,
+        "fill-extrusion-ambient-occlusion-ground-intensity": 1,
+        "fill-extrusion-ambient-occlusion-ground-radius": 4
+      }
+    }
+  ]
+}

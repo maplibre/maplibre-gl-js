@@ -1,4 +1,4 @@
-import {fillExtrusionUniforms, fillExtrusionPatternUniforms, type FillExtrusionUniformsType, type FillExtrusionPatternUniformsType} from './fill_extrusion_program.ts';
+import {fillExtrusionUniforms, fillExtrusionPatternUniforms, fillExtrusionGroundOcclusionUniforms, type FillExtrusionUniformsType, type FillExtrusionPatternUniformsType, type FillExtrusionGroundOcclusionUniformsType} from './fill_extrusion_program.ts';
 import {fillPatternUniforms, fillOutlineUniforms, fillOutlinePatternUniforms, fillUniforms, type FillUniformsType, type FillPatternUniformsType, type FillOutlineUniformsType, type FillOutlinePatternUniformsType} from './fill_program.ts';
 import {circleUniforms, type CircleUniformsType} from './circle_program.ts';
 import {debugUniforms, type DebugUniformsType} from './debug_program.ts';
@@ -24,6 +24,7 @@ const emptyUniforms = (_: Context, __: UniformLocations): EmptyUniforms => ({});
 export const programUniforms: {
     fillExtrusion: (context: Context, locations: UniformLocations) => FillExtrusionUniformsType;
     fillExtrusionPattern: (context: Context, locations: UniformLocations) => FillExtrusionPatternUniformsType;
+    fillExtrusionGroundOcclusion: (context: Context, locations: UniformLocations) => FillExtrusionGroundOcclusionUniformsType;
     fill: (context: Context, locations: UniformLocations) => FillUniformsType;
     fillPattern: (context: Context, locations: UniformLocations) => FillPatternUniformsType;
     fillOutline: (context: Context, locations: UniformLocations) => FillOutlineUniformsType;
@@ -59,6 +60,7 @@ export const programUniforms: {
 } = {
     fillExtrusion: fillExtrusionUniforms,
     fillExtrusionPattern: fillExtrusionPatternUniforms,
+    fillExtrusionGroundOcclusion: fillExtrusionGroundOcclusionUniforms,
     fill: fillUniforms,
     fillPattern: fillPatternUniforms,
     fillOutline: fillOutlineUniforms,

@@ -1,9 +1,11 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {drawTerrain} from './draw/draw_terrain.ts';
+import {drawFillExtrusionGroundOcclusionToTexture} from './draw/draw_fill_extrusion.ts';
 import {setFrameUniformWorldSize} from './frame_uniform_buffer.ts';
 import {ImageSource} from '../source/image_source.ts';
 import {RTT_DIFFERENCES, RTTFingerprint, type RTTDifference} from './rtt_fingerprint.ts';
 import {isCustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
+import {isFillExtrusionStyleLayer, type FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer.ts';
 
 import type {Tile} from '../tile/tile.ts';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
@@ -42,17 +44,22 @@ function isRenderedToTexture(layer: StyleLayer): boolean {
     return LAYERS_TO_TEXTURES[layer.type] === true;
 }
 
+function drawsGroundOcclusion(layer: StyleLayer): layer is FillExtrusionStyleLayer {
+    return isFillExtrusionStyleLayer(layer) && layer.hasGroundOcclusion();
+}
+
 /**
  * Returns the ids of the layers in each render stack, a run of layers rendered to texture that ends at a layer
- * that is not.
+ * that is not, plus the layers up to the next stack that draw ground occlusion into it.
  */
 function getRenderStacks(style: Style, layerIds: string[]): string[][] {
     const stacks: string[][] = [];
     let prevRenderedToTexture = false;
     for (const layerId of layerIds) {
-        const renderedToTexture = isRenderedToTexture(style._layers[layerId]);
+        const layer = style._layers[layerId];
+        const renderedToTexture = isRenderedToTexture(layer);
         if (renderedToTexture && !prevRenderedToTexture) stacks.push([]);
-        if (renderedToTexture) stacks[stacks.length - 1].push(layerId);
+        if (renderedToTexture || (stacks.length > 0 && drawsGroundOcclusion(layer))) stacks[stacks.length - 1].push(layerId);
         prevRenderedToTexture = renderedToTexture;
     }
     return stacks;
@@ -87,6 +94,8 @@ export class RenderToTexture {
      * not rendered to texture sit between layers which should rendered to texture. e.g. hillshading or symbols
      */
     _stacks: string[][];
+    /** Per render stack, the layers after it that draw ground occlusion into it. */
+    _groundOcclusionLayerIds: string[][];
     /**
      * whether the previous processed layer was rendered to texture, to check if a new stack is needed
      */
@@ -140,13 +149,18 @@ export class RenderToTexture {
         this._renderableTiles = this.terrain.tileManager.getRenderableTiles();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
         const stacks = getRenderStacks(style, this._renderableLayerIds);
+        this._groundOcclusionLayerIds = stacks.map(layerIds => layerIds.filter(id => !isRenderedToTexture(style._layers[id])));
+        if (this.painter.groundOcclusionFbo && !this._groundOcclusionLayerIds.some(ids => ids.length > 0)) {
+            this.painter.groundOcclusionFbo.destroy();
+            this.painter.groundOcclusionFbo = null;
+        }
         const visibleLayerIds = this._renderableLayerIds.join();
 
         const rttSourceIds = new Set<string>();
         for (const layerId of this._renderableLayerIds) {
             const layer = style._layers[layerId];
             const source = layer.source;
-            if (source && LAYERS_TO_TEXTURES[layer.type]) rttSourceIds.add(source);
+            if (source && (LAYERS_TO_TEXTURES[layer.type] || drawsGroundOcclusion(layer))) rttSourceIds.add(source);
         }
 
         this._coordsAscending = {};
@@ -285,6 +299,7 @@ export class RenderToTexture {
         if (this._prevRenderedToTexture || (renderedToTexture && isLastLayer)) {
             this._prevRenderedToTexture = renderedToTexture;
             const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
+            const groundOcclusionLayerIds = this._groundOcclusionLayerIds[stack];
             frameRenderContext.isRenderingToTexture = true;
             setFrameUniformWorldSize(painter.context.frameUniformBuffer, this.rttSize, this.rttSize);
             for (const tile of this._renderableTiles) {
@@ -303,6 +318,13 @@ export class RenderToTexture {
                     painter.renderLayer(painter, style.tileManagers[layer.source], layer, coords, frameRenderContext);
                     const fingerprintKey = rttFingerprintKey(layer);
                     if (fingerprintKey) tile.rttFingerprint[fingerprintKey] = this._rttFingerprints[fingerprintKey][tile.tileID.key];
+                }
+                if (groundOcclusionLayerIds?.length) {
+                    drawFillExtrusionGroundOcclusionToTexture(painter, style, groundOcclusionLayerIds, this._coordsAscending, tile.tileID.key, obj, frameRenderContext);
+                    for (const layerId of groundOcclusionLayerIds) {
+                        const fingerprintKey = rttFingerprintKey(style._layers[layerId]);
+                        if (fingerprintKey) tile.rttFingerprint[fingerprintKey] = this._rttFingerprints[fingerprintKey][tile.tileID.key];
+                    }
                 }
                 obj.texture.generateMipmap();
             }

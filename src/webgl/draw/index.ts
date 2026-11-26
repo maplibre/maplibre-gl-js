@@ -3,7 +3,7 @@ import {drawCircles} from './draw_circle.ts';
 import {drawHeatmap} from './draw_heatmap.ts';
 import {drawLine} from './draw_line.ts';
 import {drawFill} from './draw_fill.ts';
-import {drawFillExtrusion} from './draw_fill_extrusion.ts';
+import {drawFillExtrusion, drawFillExtrusionGroundOcclusion} from './draw_fill_extrusion.ts';
 import {drawHillshade} from './draw_hillshade.ts';
 import {drawColorRelief} from './draw_color_relief.ts';
 import {drawRaster} from './draw_raster.ts';
@@ -13,7 +13,7 @@ import {drawCustom} from './draw_custom.ts';
 import {drawDepth} from './draw_terrain.ts';
 import {drawSky, drawAtmosphere} from './draw_sky.ts';
 
-export {drawSymbols, drawCircles, drawHeatmap, drawLine, drawFill, drawFillExtrusion,
+export {drawSymbols, drawCircles, drawHeatmap, drawLine, drawFill, drawFillExtrusion, drawFillExtrusionGroundOcclusion,
     drawHillshade, drawColorRelief, drawRaster, drawBackground,
     drawDebug, drawDebugPadding, selectDebugSource, drawCustom,
     drawDepth, drawSky, drawAtmosphere};
@@ -25,6 +25,7 @@ export type DrawFunctions = {
     line: typeof drawLine;
     fill: typeof drawFill;
     fillExtrusion: typeof drawFillExtrusion;
+    fillExtrusionGroundOcclusion: typeof drawFillExtrusionGroundOcclusion;
     hillshade: typeof drawHillshade;
     colorRelief: typeof drawColorRelief;
     raster: typeof drawRaster;
@@ -44,6 +45,7 @@ export const webglDrawFunctions: DrawFunctions = {
     line: drawLine,
     fill: drawFill,
     fillExtrusion: drawFillExtrusion,
+    fillExtrusionGroundOcclusion: drawFillExtrusionGroundOcclusion,
     hillshade: drawHillshade,
     colorRelief: drawColorRelief,
     raster: drawRaster,

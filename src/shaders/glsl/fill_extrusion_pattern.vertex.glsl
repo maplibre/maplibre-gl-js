@@ -9,6 +9,11 @@ uniform vec3 u_lightcolor;
 uniform lowp vec3 u_lightpos;
 uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
+uniform vec3 u_lightambient;
+
+#ifdef WALL_AMBIENT_OCCLUSION
+    uniform float u_ao_wall_radius;
+#endif
 
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in ivec4 a_normal_ed;
@@ -25,6 +30,13 @@ out vec2 v_pos_a;
 out vec2 v_pos_b;
 out vec4 v_lighting;
 
+#ifdef WALL_AMBIENT_OCCLUSION
+    // The lighting with its ambient part removed.
+    out vec3 v_lighting_without_ambient;
+    // Height above the ground divided by the radius; 1 on roofs.
+    out mediump float v_ao_wall_height;
+#endif
+
 #pragma maplibre: define lowp float base
 #pragma maplibre: define lowp float height
 #pragma maplibre: define lowp vec4 pattern_from
@@ -32,6 +44,10 @@ out vec4 v_lighting;
 #pragma maplibre: define lowp float pixel_ratio_from
 #pragma maplibre: define lowp float pixel_ratio_to
 #pragma maplibre: define highp float opacity
+
+vec3 shade(vec3 lighting) {
+    return clamp(lighting * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
+}
 
 void main() {
     #pragma maplibre: initialize lowp float base
@@ -57,7 +73,9 @@ void main() {
     float fromScale = u_scale.y;
     float toScale = u_scale.z;
 
-    vec3 normal = vec3(a_normal_ed.xyz);
+    // Walls store ground occlusion data in z; only roofs have xy = (1, 0).
+    bool isRoof = a_normal_ed.x == 1 && a_normal_ed.y == 0;
+    vec3 normal = vec3(a_normal_ed.xy, isRoof ? 16384 : 0);
     float edgedistance = float(a_normal_ed.w);
 
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
@@ -97,7 +115,7 @@ void main() {
         gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
     #endif
 
-    vec2 pos = a_normal_ed.x == 1 && a_normal_ed.y == 0 && a_normal_ed.z == 16384
+    vec2 pos = isRoof
         ? a_pos // extrusion top - note the lack of u_fill_translate, because translation should not affect the pattern
         : vec2(edgedistance, elevation * u_height_factor); // extrusion side
 
@@ -106,16 +124,26 @@ void main() {
 
     v_lighting = vec4(0.0, 0.0, 0.0, 1.0);
     float directional = clamp(dot(normal / 16383.0, u_lightpos), 0.0, 1.0);
-    directional = mix((1.0 - u_lightintensity), max((0.5 + u_lightintensity), 1.0), directional);
+    float peak = max(0.5 + u_lightintensity, 1.0);
+    float direct = (peak - (1.0 - u_lightintensity)) * directional;
 
-    if (normal.z == 0.0) {
-        // This avoids another branching statement, but multiplies by a constant of 0.84 if no vertical gradient,
-        // and otherwise calculates the gradient based on base + height
-        directional *= (
+    float gradient = 1.0;
+    if (normal.z == 0.0 && u_vertical_gradient > 0.0) {
+        gradient =
             (1.0 - u_vertical_gradient) +
-            (u_vertical_gradient * clamp((t + gradient_base) * pow(gradient_height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0)));
+            (u_vertical_gradient * clamp((t + gradient_base) * sqrt(gradient_height * (1.0 / 150.0)), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0));
     }
-
-    v_lighting.rgb += clamp(directional * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
+    vec3 directLighting = vec3(direct * gradient);
+    v_lighting.rgb += shade(u_lightambient * gradient + directLighting);
     v_lighting *= opacity;
+
+    #ifdef WALL_AMBIENT_OCCLUSION
+        #ifdef TERRAIN3D
+            float ground = get_elevation(a_pos);
+        #else
+            float ground = 0.0;
+        #endif
+        v_lighting_without_ambient = shade(directLighting) * opacity;
+        v_ao_wall_height = normal.z == 0.0 ? (elevation - ground) / u_ao_wall_radius : 1.0;
+    #endif
 }

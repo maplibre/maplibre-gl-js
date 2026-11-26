@@ -1,0 +1,51 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 128
+    }
+  },
+  "light": {
+    "intensity": 0.5,
+    "ambient-color": "#3a4a7a",
+    "ambient-intensity": 0.6
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "buffer": 0,
+      "data": {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-0.0002, -0.0002],
+              [-0.0002, 0.0002],
+              [0.0002, 0.0002],
+              [0.0002, -0.0002],
+              [-0.0002, -0.0002]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "sprite": "local://sprites/emerald",
+  "pitch": 60,
+  "bearing": 45,
+  "zoom": 17,
+  "layers": [
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-pattern": "generic_icon",
+        "fill-extrusion-height": 20
+      }
+    }
+  ]
+}

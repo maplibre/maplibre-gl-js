@@ -28,13 +28,17 @@ export class Light extends Evented {
         return this._transitionable.serialize();
     }
 
-    /** The light's values for drawing, as evaluated last. */
+    /** The light's values for drawing; an unset `ambient-intensity` falls back to `1 - intensity`. */
     getEvaluated(): LightPropsPossiblyEvaluated {
+        const intensity = this.properties.get('intensity');
+        const ambientIntensity = this.properties.get('ambient-intensity');
         return {
             anchor: this.properties.get('anchor'),
             position: this.properties.get('position'),
             color: this.properties.get('color'),
-            intensity: this.properties.get('intensity'),
+            intensity,
+            'ambient-color': this.properties.get('ambient-color'),
+            'ambient-intensity': Number.isFinite(ambientIntensity) ? ambientIntensity : 1 - intensity,
         };
     }
 
