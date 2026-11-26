@@ -40,8 +40,8 @@ test('Placement.updateLayerOpacities', async ({bench}) => {
 });
 
 test('Placement.placeLayerBucketPart', async ({bench}) => {
-    // centred on the 8 by 5 tiles at their own zoom, so that labels land on screen at their real size and collide
-    const camera = createTestCamera({width: 1280, height: 900, zoom: 6, center: [-56.25, 34.3]}).projectedCamera;
+    // zoomed out until the 8 by 5 tiles fit the screen, so that every label is on screen and they collide
+    const camera = createTestCamera({width: 1280, height: 900, zoom: 4.3, center: [-56.25, 34.3]}).projectedCamera;
     const collisions = createLayerTiles({});
     const allowOverlap = createLayerTiles({'text-allow-overlap': true});
     const variableAnchors = createLayerTiles({'text-variable-anchor': ['top', 'bottom', 'left', 'right']});
