@@ -35,8 +35,8 @@ export class TouchPanHandler implements Handler {
         return touchesCount < minTouches;
     }
 
-    touchstart(e: TouchEvent, points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
-        return this._calculateTransform(e, points, mapTouches);
+    touchstart(_e: TouchEvent, points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
+        return this._calculateTransform(points, mapTouches);
     }
 
     touchmove(e: TouchEvent, points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
@@ -45,12 +45,13 @@ export class TouchPanHandler implements Handler {
             this._cooperativeGestures.notifyGestureBlocked('touch_pan', e);
             return;
         }
-        e.preventDefault();
-        return this._calculateTransform(e, points, mapTouches);
+        const transform = this._calculateTransform(points, mapTouches);
+        if (transform) e.preventDefault();
+        return transform;
     }
 
-    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
-        this._calculateTransform(e, points, mapTouches);
+    touchend(_e: TouchEvent, points: Point[], mapTouches: Touch[]): void {
+        this._calculateTransform(points, mapTouches);
 
         if (this._active && this._shouldBePrevented(mapTouches.length)) {
             this.reset();
@@ -61,7 +62,7 @@ export class TouchPanHandler implements Handler {
         this.reset();
     }
 
-    _calculateTransform(e: TouchEvent, points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
+    _calculateTransform(points: Point[], mapTouches: Touch[]): {around: Point; panDelta: Point} | void {
         if (mapTouches.length > 0) this._active = true;
 
         const touches = indexTouches(mapTouches, points);
