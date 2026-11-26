@@ -299,12 +299,10 @@ export class Placement {
     }
 
     /**
-     * Whether a symbol passes its layer's filter under this placement's camera.
+     * Whether a symbol passes its layer's filter for the current pitch and bearing.
      *
-     * A filter that reads `pitch` or `bearing` cannot be applied while a tile is laid out, because the camera keeps
-     * moving after that. The bucket keeps every feature such a filter would decide on, and the filter runs here
-     * instead, against the feature read back from the tile, each time symbols are placed. Zoom is the tile's zoom, as
-     * it is for the filters applied while laying out the tile.
+     * Such a filter can't be applied when the tile is built, since the camera keeps moving, so it runs here on every
+     * placement instead. Zoom is still the tile's zoom, as for any other filter.
      */
     private _passesCameraFilter(filter: FeatureFilter, bucket: SymbolBucket, symbolInstance: SymbolInstance): boolean {
         const {featureIndex, sourceLayerIndex, tileID} = this.retainedQueryData[bucket.bucketInstanceId];
