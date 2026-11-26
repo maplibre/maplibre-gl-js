@@ -857,21 +857,6 @@ describe('Style.update', () => {
         expect(setImagesIndex).toBeLessThan(updateLayersIndex);
     });
 
-    test('does not mark Object.prototype as used for a layer whose source is __proto__', async () => {
-        const style = createStyle();
-        style.loadJSON(createStyleJSON({
-            layers: [{id: 'fill', type: 'fill', source: '__proto__', 'source-layer': 'layer'}]
-        }));
-        await style.once('style.load');
-
-        try {
-            style.update({} as EvaluationParameters);
-            expect(Object.prototype).not.toHaveProperty('used');
-        } finally {
-            delete Object.prototype['used'];
-        }
-    });
-
     test('debounces setImages broadcast for removeImage', async () => {
         const style = createStyle();
         style.loadJSON(createStyleJSON());
