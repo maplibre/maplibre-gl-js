@@ -156,15 +156,6 @@ describe('placement', () => {
         expect(isLabelPlaced(tile, layer, bucket, {pitch: 45})).toBe(true);
     });
 
-    test('measures distance-from-camera as the depth of a symbol relative to the center', () => {
-        const unpitched = createFilteredSymbolTile(['all', ['>', ['distance-from-camera'], 0.999], ['<', ['distance-from-camera'], 1.001]]);
-        expect(isLabelPlaced(unpitched.tile, unpitched.layer, unpitched.bucket, {pitch: 0})).toBe(true);
-
-        const pitched = createFilteredSymbolTile(['<=', ['distance-from-camera'], 1]);
-        expect(isLabelPlaced(pitched.tile, pitched.layer, pitched.bucket, {pitch: 60, bearing: 0})).toBe(false);
-        expect(isLabelPlaced(pitched.tile, pitched.layer, pitched.bucket, {pitch: 60, bearing: 180})).toBe(true);
-    });
-
     test('the first bucket draws the shared label and the second hides it', () => {
         const {tiles, buckets, layer} = setupTwoTilesSharingOneLabel();
         placement.updateLayerOpacities(layer, tiles);

@@ -3346,9 +3346,9 @@ describe('Style.setFilter', () => {
         const style = createStyle();
         await style.once('style.load');
 
-        style.setFilter('symbol', ['<', ['distance-from-camera'], 2]);
+        style.setFilter('symbol', ['>', ['pitch'], 45]);
 
-        expect(style.getFilter('symbol')).toEqual(['<', ['distance-from-camera'], 2]);
+        expect(style.getFilter('symbol')).toEqual(['>', ['pitch'], 45]);
     });
 
     test('fires an error if layer not found', async () => {

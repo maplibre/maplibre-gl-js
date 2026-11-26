@@ -263,28 +263,20 @@ export class Placement {
     /**
      * Whether a symbol passes its layer's filter under this placement's camera.
      *
-     * A filter that reads `pitch`, `bearing` or `distance-from-camera` cannot be applied while a tile is laid out,
-     * because the camera keeps moving after that. The bucket keeps every feature such a filter would decide on, and
-     * the filter runs here instead, against the feature read back from the tile, each time symbols are placed. Zoom
-     * is the tile's zoom, as it is for the filters applied while laying out the tile.
-     *
-     * `distance-from-camera` is the depth of the symbol's anchor along the camera's view divided by the depth of the
-     * center of the map, which is how much perspective shrinks the symbol: 1 at the center and on an unpitched map,
-     * 2 where the symbol is drawn at half its size.
+     * A filter that reads `pitch` or `bearing` cannot be applied while a tile is laid out, because the camera keeps
+     * moving after that. The bucket keeps every feature such a filter would decide on, and the filter runs here
+     * instead, against the feature read back from the tile, each time symbols are placed. Zoom is the tile's zoom, as
+     * it is for the filters applied while laying out the tile.
      */
-    private _passesCameraFilter(filter: FeatureFilter, bucket: SymbolBucket, unwrappedTileID: UnwrappedTileID, symbolInstance: SymbolInstance): boolean {
+    private _passesCameraFilter(filter: FeatureFilter, bucket: SymbolBucket, symbolInstance: SymbolInstance): boolean {
         const {featureIndex, sourceLayerIndex, tileID} = this.retainedQueryData[bucket.bucketInstanceId];
         const vtLayers = featureIndex.loadVTLayers();
         const sourceLayer = vtLayers[featureIndex.sourceLayerCoder.decode(sourceLayerIndex)];
         const feature = toEvaluationFeature(sourceLayer.feature(symbolInstance.featureIndex), filter.needGeometry);
-        const {anchorX, anchorY} = symbolInstance;
-        const elevation = this.terrain?.getElevation(tileID, anchorX, anchorY);
-        const projected = getCameraMath(this.projectedCamera).projectTileCoordinates(this.projectedCamera, anchorX, anchorY, unwrappedTileID, elevation);
         const globals = {
             zoom: tileID.overscaledZ,
             pitch: this.projectedCamera.pitch,
-            bearing: this.projectedCamera.bearing,
-            distanceFromCamera: projected.signedDistanceFromCamera / this.projectedCamera.cameraToCenterDistance
+            bearing: this.projectedCamera.bearing
         };
         return filter.filter(globals, feature, tileID.canonical);
     }
@@ -522,7 +514,7 @@ export class Placement {
                 this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
                 return;
             }
-            if (filter.needCamera && !this._passesCameraFilter(filter, bucket, unwrappedTileID, symbolInstance)) {
+            if (filter.needCamera && !this._passesCameraFilter(filter, bucket, symbolInstance)) {
                 this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
                 seenCrossTileIDs[symbolInstance.crossTileID] = true;
                 return;
