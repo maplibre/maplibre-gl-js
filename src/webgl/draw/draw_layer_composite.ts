@@ -24,8 +24,18 @@ type LayerBlend = FillPaintPropsPossiblyEvaluated['fill-layer-blend'];
 const shaderBlendDefines = {
     multiply: ['#define LAYER_BLEND;', '#define LAYER_BLEND_MULTIPLY;'],
     overlay: ['#define LAYER_BLEND;', '#define LAYER_BLEND_OVERLAY;'],
-    color: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_COLOR;'],
-    luminosity: ['#define LAYER_BLEND;', '#define LAYER_BLEND_NONSEPARABLE;']
+    'hard-light': ['#define LAYER_BLEND;', '#define LAYER_BLEND_HARD_LIGHT;'],
+    difference: ['#define LAYER_BLEND;', '#define LAYER_BLEND_DIFFERENCE;'],
+    exclusion: ['#define LAYER_BLEND;', '#define LAYER_BLEND_EXCLUSION;'],
+    darken: ['#define LAYER_BLEND;', '#define LAYER_BLEND_DARKEN;'],
+    lighten: ['#define LAYER_BLEND;', '#define LAYER_BLEND_LIGHTEN;'],
+    'soft-light': ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_SOFT_LIGHT;'],
+    'color-dodge': ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_COLOR_DODGE;'],
+    'color-burn': ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_COLOR_BURN;'],
+    color: ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_COLOR;'],
+    luminosity: ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_LUMINOSITY;'],
+    hue: ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_HUE;'],
+    saturation: ['#define LAYER_BLEND;', '#define LAYER_BLEND_UNPREMULTIPLIED;', '#define LAYER_BLEND_NONSEPARABLE;', '#define LAYER_BLEND_SATURATION;']
 } satisfies Partial<Record<LayerBlend, string[]>>;
 
 type ShaderBlend = keyof typeof shaderBlendDefines;
