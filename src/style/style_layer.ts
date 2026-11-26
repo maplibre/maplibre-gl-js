@@ -1,6 +1,5 @@
 import {filterObject} from '../util/util.ts';
 import {createVisibilityExpression, featureFilter, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
-import {validateStyle, validateAndEmit, type Validator} from './validate_style.ts';
 import {Evented, ErrorEvent, type ErrorEventType} from '../util/evented.ts';
 import {Layout, Transitionable, type Transitioning, type Properties, PossiblyEvaluated, PossiblyEvaluatedPropertyValue, TRANSITION_SUFFIX} from './properties.ts';
 
@@ -21,7 +20,6 @@ import type {EvaluationParameters} from './evaluation_parameters.ts';
 import type {CrossfadeParameters} from './evaluation_parameters.ts';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
 import type {Map} from '../ui/map.ts';
-import type {StyleSetterOptions} from './style.ts';
 import type {UnwrappedTileID} from '../tile/tile_id.ts';
 import type {VectorTileFeatureLike} from '@maplibre/vt-pbf';
 import type {ProjectedCamera} from '../camera/projected_camera.ts';
@@ -143,10 +141,10 @@ export abstract class StyleLayer extends Evented<ErrorEventType> {
             this._transitionablePaint = new Transitionable(properties.paint, `layers[${this.id}].paint`, globalState);
 
             for (const property in layer.paint) {
-                this.setPaintProperty(property as keyof AllPaintProperties, layer.paint[property as keyof typeof layer.paint], {validate: false});
+                this.setPaintProperty(property as keyof AllPaintProperties, layer.paint[property as keyof typeof layer.paint]);
             }
             for (const property in layer.layout) {
-                this.setLayoutProperty(property as keyof AllLayoutProperties, layer.layout[property as keyof typeof layer.layout], {validate: false});
+                this.setLayoutProperty(property as keyof AllLayoutProperties, layer.layout[property as keyof typeof layer.layout]);
             }
 
             this._transitioningPaint = this._transitionablePaint.untransitioned();
@@ -237,7 +235,7 @@ export abstract class StyleLayer extends Evented<ErrorEventType> {
         return this._visibilityExpression.getGlobalStateRefs();
     }
 
-    setLayoutProperty<K extends keyof AllLayoutProperties>(name: K, value: AllLayoutProperties[K], options: StyleSetterOptions = {}): void {
+    setLayoutProperty<K extends keyof AllLayoutProperties>(name: K, value: AllLayoutProperties[K]): void {
         if (name === 'visibility') {
             this.visibility = value as VisibilitySpecification;
             this._visibilityExpression.setValue(value as VisibilitySpecification);
@@ -249,8 +247,6 @@ export abstract class StyleLayer extends Evented<ErrorEventType> {
             this.fire(new ErrorEvent(new Error(name + ERROR_PAINT_NOT_LAYOUT)));
             return;
         }
-
-        if (value !== null && value !== undefined && this._validate(validateStyle.layoutProperty, `layers.${this.id}.layout.${name}`, name, value, options))  return;
 
         this._unevaluatedLayout.setValue(name, value);
     }
@@ -272,13 +268,11 @@ export abstract class StyleLayer extends Evented<ErrorEventType> {
         }
     }
 
-    setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): boolean {
+    setPaintProperty<K extends keyof AllPaintProperties>(name: K, value: AllPaintProperties[K]): boolean {
         if (name as any === 'visibility' || this._unevaluatedLayout?.hasProperty(name)) {
             this.fire(new ErrorEvent(new Error(name + ERROR_LAYOUT_NOT_PAINT)));
             return false;
         }
-
-        if (value !== null && value !== undefined && this._validate(validateStyle.paintProperty, `layers.${this.id}.paint.${name}`, name, value, options)) return false;
 
         if (name.endsWith(TRANSITION_SUFFIX)) {
             this._transitionablePaint.setTransition(name.slice(0, -TRANSITION_SUFFIX.length), (value as any) || undefined);
@@ -372,15 +366,6 @@ export abstract class StyleLayer extends Evented<ErrorEventType> {
                 !(key === 'layout' && !Object.keys(value).length) &&
                 !(key === 'paint' && !Object.keys(value).length);
         });
-    }
-
-    _validate(validate: Validator, key: string, name: string, value: unknown, options: StyleSetterOptions = {}): boolean {
-        return validateAndEmit(this, validate, {
-            key,
-            layerType: this.type,
-            objectKey: name,
-            value
-        }, options);
     }
 
     is3D(): boolean {

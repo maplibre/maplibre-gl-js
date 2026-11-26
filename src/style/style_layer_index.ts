@@ -1,4 +1,4 @@
-import {createStyleLayer} from './create_style_layer.ts';
+import {createWorkerStyleLayer} from './create_worker_style_layer.ts';
 import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
 import {GEOJSON_TILE_LAYER_NAME} from '../data/feature_index.ts';
 
@@ -34,17 +34,20 @@ export class StyleLayerIndex {
 
     update(layerConfigs: LayerSpecification[], removedIds: string[], globalState?: Record<string, any>): void {
         for (const layerConfig of layerConfigs) {
-            this._layerConfigs[layerConfig.id] = layerConfig;
+            const layer = createWorkerStyleLayer(layerConfig, globalState);
+            if (!layer) {
+                this._remove(layerConfig.id);
+                continue;
+            }
 
-            const layer = this._layers[layerConfig.id] = createStyleLayer(layerConfig, globalState);
+            this._layerConfigs[layerConfig.id] = layerConfig;
+            this._layers[layerConfig.id] = layer;
             layer._featureFilter = featureFilter(layer.filter, `layers[${layerConfig.id}].filter`, globalState);
             if (this.keyCache[layerConfig.id])
                 delete this.keyCache[layerConfig.id];
         }
         for (const id of removedIds) {
-            delete this.keyCache[id];
-            delete this._layerConfigs[id];
-            delete this._layers[id];
+            this._remove(id);
         }
 
         this.familiesBySource = Object.create(null);
@@ -69,5 +72,11 @@ export class StyleLayerIndex {
 
             sourceLayerFamilies.push(layers);
         }
+    }
+
+    _remove(id: string): void {
+        delete this.keyCache[id];
+        delete this._layerConfigs[id];
+        delete this._layers[id];
     }
 }
