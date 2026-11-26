@@ -22,8 +22,11 @@ export type FillExtrusionUniformsType = {
     'u_lightpos_globe': Uniform3f;
     'u_lightintensity': Uniform1f;
     'u_lightcolor': Uniform3f;
+    'u_lightambient': Uniform3f;
     'u_vertical_gradient': Uniform1f;
     'u_fill_translate': Uniform2f;
+    'u_ao_wall_intensity': Uniform1f;
+    'u_ao_wall_radius': Uniform1f;
 };
 
 export type FillExtrusionPatternUniformsType = {
@@ -31,9 +34,12 @@ export type FillExtrusionPatternUniformsType = {
     'u_lightpos_globe': Uniform3f;
     'u_lightintensity': Uniform1f;
     'u_lightcolor': Uniform3f;
+    'u_lightambient': Uniform3f;
     'u_height_factor': Uniform1f;
     'u_vertical_gradient': Uniform1f;
     'u_fill_translate': Uniform2f;
+    'u_ao_wall_intensity': Uniform1f;
+    'u_ao_wall_radius': Uniform1f;
     // pattern uniforms:
     'u_texsize': Uniform2f;
     'u_image': Uniform1i;
@@ -48,8 +54,11 @@ const fillExtrusionUniforms = (context: Context, locations: UniformLocations): F
     'u_lightpos_globe': new Uniform3f(context, locations.u_lightpos_globe),
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
+    'u_lightambient': new Uniform3f(context, locations.u_lightambient),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
+    'u_ao_wall_intensity': new Uniform1f(context, locations.u_ao_wall_intensity),
+    'u_ao_wall_radius': new Uniform1f(context, locations.u_ao_wall_radius),
 });
 
 const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocations): FillExtrusionPatternUniformsType => ({
@@ -57,9 +66,12 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_lightpos_globe': new Uniform3f(context, locations.u_lightpos_globe),
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
+    'u_lightambient': new Uniform3f(context, locations.u_lightambient),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
     'u_height_factor': new Uniform1f(context, locations.u_height_factor),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
+    'u_ao_wall_intensity': new Uniform1f(context, locations.u_ao_wall_intensity),
+    'u_ao_wall_radius': new Uniform1f(context, locations.u_ao_wall_radius),
     // pattern uniforms
     'u_image': new Uniform1i(context, locations.u_image),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
@@ -74,6 +86,8 @@ const fillExtrusionUniformValues = (
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     translate: [number, number],
+    aoWallIntensity: number,
+    aoWallRadius: number,
 ): UniformValues<FillExtrusionUniformsType> => {
     const lightPos = sphericalToCartesian(light.position);
     const lightMat = mat3.create();
@@ -84,14 +98,23 @@ const fillExtrusionUniformValues = (
     const transformedLightPos = getCameraMath(projectedCamera).transformLightDirection(projectedCamera, lightPos);
 
     const lightColor = light.color;
+    const ambientColor = light['ambient-color'];
+    const ambientIntensity = light['ambient-intensity'];
 
     return {
         'u_lightpos': lightPos,
         'u_lightpos_globe': transformedLightPos,
         'u_lightintensity': light.intensity,
         'u_lightcolor': [lightColor.r, lightColor.g, lightColor.b],
+        'u_lightambient': [
+            ambientColor.r * ambientIntensity,
+            ambientColor.g * ambientIntensity,
+            ambientColor.b * ambientIntensity,
+        ],
         'u_vertical_gradient': +shouldUseVerticalGradient,
         'u_fill_translate': translate,
+        'u_ao_wall_intensity': aoWallIntensity,
+        'u_ao_wall_radius': aoWallRadius,
     };
 };
 
@@ -100,11 +123,17 @@ const fillExtrusionPatternUniformValues = (
     light: Readonly<LightPropsPossiblyEvaluated>,
     shouldUseVerticalGradient: boolean,
     translate: [number, number],
+    aoWallIntensity: number,
+    aoWallRadius: number,
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return {...fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, translate), ...patternUniformValues(crossfade, projectedCamera, tile), 'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8};
+    return {
+        ...fillExtrusionUniformValues(projectedCamera, light, shouldUseVerticalGradient, translate, aoWallIntensity, aoWallRadius),
+        ...patternUniformValues(crossfade, projectedCamera, tile),
+        'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8
+    };
 };
 
 export {

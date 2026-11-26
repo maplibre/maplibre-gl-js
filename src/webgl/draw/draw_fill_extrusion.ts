@@ -15,6 +15,9 @@ import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusi
 import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
+/** Shader defines that switch on wall ambient occlusion. */
+const WALL_AMBIENT_OCCLUSION_DEFINES = ['#define WALL_AMBIENT_OCCLUSION'];
+
 /**
  * Draws a fill-extrusion layer.
  * Extrusions at a constant opacity of 1 without a pattern are drawn in one pass. Otherwise they are drawn in two passes, so that only the closest surface is drawn.
@@ -62,6 +65,9 @@ function drawExtrusionTiles(
     const crossfade = layer.getCrossfadeParameters();
     const constantPattern = patternProperty.constantOr(null);
     const projectedCamera = frameRenderContext.projectedCamera;
+    const aoWallIntensity = layer.paint.get('fill-extrusion-ambient-occlusion-wall-intensity');
+    const aoWallRadius = layer.paint.get('fill-extrusion-ambient-occlusion-wall-radius');
+    const defines = aoWallIntensity > 0 && aoWallRadius > 0 ? WALL_AMBIENT_OCCLUSION_DEFINES : undefined;
 
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
@@ -70,7 +76,7 @@ function drawExtrusionTiles(
 
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = frameRenderContext.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration);
+        const program = frameRenderContext.useProgram(image ? 'fillExtrusionPattern' : 'fillExtrusion', programConfiguration, false, defines);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);
@@ -90,8 +96,8 @@ function drawExtrusionTiles(
 
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(projectedCamera, frameRenderContext.data.light, shouldUseVerticalGradient, translate, coord, crossfade, tile) :
-            fillExtrusionUniformValues(projectedCamera, frameRenderContext.data.light, shouldUseVerticalGradient, translate);
+            fillExtrusionPatternUniformValues(projectedCamera, frameRenderContext.data.light, shouldUseVerticalGradient, translate, aoWallIntensity, aoWallRadius, coord, crossfade, tile) :
+            fillExtrusionUniformValues(projectedCamera, frameRenderContext.data.light, shouldUseVerticalGradient, translate, aoWallIntensity, aoWallRadius);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,

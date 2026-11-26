@@ -7,6 +7,12 @@ in vec2 v_pos_a;
 in vec2 v_pos_b;
 in vec4 v_lighting;
 
+#ifdef WALL_AMBIENT_OCCLUSION
+    uniform lowp float u_ao_wall_intensity;
+    in vec3 v_lighting_without_ambient;
+    in mediump float v_ao_wall_height;
+#endif
+
 #pragma maplibre: define lowp float base
 #pragma maplibre: define lowp float height
 #pragma maplibre: define lowp vec4 pattern_from
@@ -37,7 +43,18 @@ void main() {
 
     vec4 mixedColor = mix(color1, color2, u_fade);
 
-    fragColor = mixedColor * v_lighting;
+    vec4 lighting = v_lighting;
+
+    #ifdef WALL_AMBIENT_OCCLUSION
+        // (1 - s)^1.5 approximates the share of ambient light the ground blocks within the radius.
+        if (v_ao_wall_height < 1.0) {
+            float oneMinusS = 1.0 - max(v_ao_wall_height, 0.0);
+            float occlusion = u_ao_wall_intensity * oneMinusS * sqrt(oneMinusS);
+            lighting.rgb = mix(v_lighting.rgb, v_lighting_without_ambient, occlusion);
+        }
+    #endif
+
+    fragColor = mixedColor * lighting;
 
     #ifdef OVERDRAW_INSPECTOR
         fragColor = vec4(1.0);

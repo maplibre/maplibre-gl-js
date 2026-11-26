@@ -2,8 +2,13 @@ uniform vec3 u_lightcolor;
 uniform lowp vec3 u_lightpos;
 uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
+uniform vec3 u_lightambient;
 uniform float u_vertical_gradient;
 uniform vec2 u_fill_translate;
+
+#ifdef WALL_AMBIENT_OCCLUSION
+    uniform float u_ao_wall_radius;
+#endif
 
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in ivec4 a_normal_ed;
@@ -15,11 +20,25 @@ layout(location = 1) in ivec4 a_normal_ed;
 
 out vec4 v_color;
 
+#ifdef WALL_AMBIENT_OCCLUSION
+    // The lit colour with the ambient part of the lighting removed.
+    out vec3 v_color_without_ambient;
+    // Height above the ground divided by the radius; 1 on roofs.
+    out mediump float v_ao_wall_height;
+#endif
+
 #pragma maplibre: define highp float base
 #pragma maplibre: define highp float height
 
 #pragma maplibre: define highp vec4 color
 #pragma maplibre: define highp float opacity
+
+// Assign final color based on surface + ambient light color, diffuse light directional, and light color
+// with lower bounds adjusted to hue of light
+// so that shading is tinted with the complementary (opposite) color to the light color
+vec3 shade(vec4 color, vec3 lighting) {
+    return clamp(color.rgb * lighting * u_lightcolor, mix(vec3(0.0), vec3(0.3), 1.0 - u_lightcolor), vec3(1.0));
+}
 
 void main() {
     #pragma maplibre: initialize highp float base
@@ -91,22 +110,27 @@ void main() {
     // the range of values for highlight/shading is narrower
     // with lower light intensity
     // and with lighter/brighter surface colors
-    directional = mix((1.0 - u_lightintensity), max((1.0 - colorvalue + u_lightintensity), 1.0), directional);
+    float peak = max(1.0 - colorvalue + u_lightintensity, 1.0);
+    float direct = (peak - (1.0 - u_lightintensity)) * directional;
 
     // Add gradient along z axis of side surfaces
-    if (normal.z == 0.0) {
-        // This avoids another branching statement, but multiplies by a constant of 0.84 if no vertical gradient,
-        // and otherwise calculates the gradient based on base + height
-        directional *= (
+    float gradient = 1.0;
+    if (normal.z == 0.0 && u_vertical_gradient > 0.0) {
+        gradient =
             (1.0 - u_vertical_gradient) +
-            (u_vertical_gradient * clamp((t + gradient_base) * pow(gradient_height / 150.0, 0.5), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0)));
+            (u_vertical_gradient * clamp((t + gradient_base) * sqrt(gradient_height * (1.0 / 150.0)), mix(0.7, 0.98, 1.0 - u_lightintensity), 1.0));
     }
-
-    // Assign final color based on surface + ambient light color, diffuse light directional, and light color
-    // with lower bounds adjusted to hue of light
-    // so that shading is tinted with the complementary (opposite) color to the light color
-    v_color.r += clamp(color.r * directional * u_lightcolor.r, mix(0.0, 0.3, 1.0 - u_lightcolor.r), 1.0);
-    v_color.g += clamp(color.g * directional * u_lightcolor.g, mix(0.0, 0.3, 1.0 - u_lightcolor.g), 1.0);
-    v_color.b += clamp(color.b * directional * u_lightcolor.b, mix(0.0, 0.3, 1.0 - u_lightcolor.b), 1.0);
+    vec3 directLighting = vec3(direct * gradient);
+    v_color.rgb += shade(color, u_lightambient * gradient + directLighting);
     v_color *= opacity;
+
+    #ifdef WALL_AMBIENT_OCCLUSION
+        #ifdef TERRAIN3D
+            float ground = get_elevation(a_pos);
+        #else
+            float ground = 0.0;
+        #endif
+        v_color_without_ambient = shade(color, directLighting) * opacity;
+        v_ao_wall_height = normal.z == 0.0 ? (elevation - ground) / u_ao_wall_radius : 1.0;
+    #endif
 }
