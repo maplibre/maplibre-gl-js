@@ -1,0 +1,55 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Two \"Main St\" segments meet end to end and only the primary one passes the filter, so only the primary (orange) segment is labeled, also when the filter reads the camera pitch",
+      "width": 512,
+      "height": 64
+    }
+  },
+  "zoom": 3,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "roads": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"name": "Main St", "class": "residential"},
+            "geometry": {"type": "LineString", "coordinates": [[-20, 0], [0, 0]]}
+          },
+          {
+            "type": "Feature",
+            "properties": {"name": "Main St", "class": "primary"},
+            "geometry": {"type": "LineString", "coordinates": [[0, 0], [20, 0]]}
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "roads",
+      "type": "line",
+      "source": "roads",
+      "paint": {
+        "line-width": 20,
+        "line-color": ["match", ["get", "class"], "primary", "#e08a3c", "#bbbbbb"]
+      }
+    },
+    {
+      "id": "labels",
+      "type": "symbol",
+      "source": "roads",
+      "filter": ["all", ["==", ["get", "class"], "primary"], ["<", ["pitch"], 60]],
+      "layout": {
+        "symbol-placement": "line",
+        "symbol-spacing": 60,
+        "text-field": ["get", "name"],
+        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"]
+      }
+    }
+  ]
+}
