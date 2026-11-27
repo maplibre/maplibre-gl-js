@@ -15,29 +15,30 @@ import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusi
 import type {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
+/**
+ * Draws a fill-extrusion layer.
+ * Extrusions at a constant opacity of 1 without a pattern are drawn in one pass. Otherwise they are drawn in two passes, so that only the closest surface is drawn.
+ * The first pass writes only the depth buffer. The second colors the fragments with the same depth as the closest one,
+ * and uses the stencil buffer to skip coincident polygons.
+ */
 export function drawFillExtrusion(tileManager: TileManager, layer: FillExtrusionStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     const opacity = layer.paint.get('fill-extrusion-opacity');
-    if (opacity === 0) {
+    if (opacity.constantOr(1) === 0) {
         return;
     }
 
     if (frameRenderContext.currentPass === 'translucent') {
         const depthMode = new DepthMode(frameRenderContext.context.gl.LEQUAL, DepthMode.ReadWrite, frameRenderContext.depthRangeFor3D);
 
-        if (opacity === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(1 as any)) {
+        if (opacity.constantOr(0) === 1 && !layer.paint.get('fill-extrusion-pattern').constantOr(1 as any)) {
             const colorMode = frameRenderContext.colorModeForRenderPass();
             drawExtrusionTiles(tileManager, layer, coords, depthMode, StencilMode.disabled, colorMode, frameRenderContext);
 
         } else {
-            // Draw transparent buildings in two passes so that only the closest surface is drawn.
-            // First draw all the extrusions into only the depth buffer. No colors are drawn.
             drawExtrusionTiles(tileManager, layer, coords, depthMode,
                 StencilMode.disabled,
                 ColorMode.disabled, frameRenderContext);
 
-            // Then draw all the extrusions a second type, only coloring fragments if they have the
-            // same depth value as the closest fragment in the previous pass. Use the stencil buffer
-            // to prevent the second draw in cases where we have coincident polygons.
             drawExtrusionTiles(tileManager, layer, coords, depthMode,
                 frameRenderContext.stencilModeFor3D(),
                 frameRenderContext.colorModeForRenderPass(), frameRenderContext);
@@ -59,9 +60,8 @@ function drawExtrusionTiles(
     const patternProperty = layer.paint.get(fillPropertyName);
     const image = patternProperty.constantOr(1 as any);
     const crossfade = layer.getCrossfadeParameters();
-    const opacity = layer.paint.get('fill-extrusion-opacity');
     const constantPattern = patternProperty.constantOr(null);
-    const transform = frameRenderContext.transform;
+    const projectedCamera = frameRenderContext.projectedCamera;
 
     for (const coord of coords) {
         const tile = tileManager.getTile(coord);
@@ -82,7 +82,7 @@ function drawExtrusionTiles(
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const translate = translatePosition(
-            transform,
+            projectedCamera,
             tile,
             layer.paint.get('fill-extrusion-translate'),
             layer.paint.get('fill-extrusion-translate-anchor')
@@ -90,12 +90,12 @@ function drawExtrusionTiles(
 
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(transform, frameRenderContext.data.light, shouldUseVerticalGradient, opacity, translate, coord, crossfade, tile) :
-            fillExtrusionUniformValues(transform, frameRenderContext.data.light, shouldUseVerticalGradient, opacity, translate);
+            fillExtrusionPatternUniformValues(projectedCamera, frameRenderContext.data.light, shouldUseVerticalGradient, translate, coord, crossfade, tile) :
+            fillExtrusionUniformValues(projectedCamera, frameRenderContext.data.light, shouldUseVerticalGradient, translate);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
-            bucket.segments, layer.paint, frameRenderContext.transform.zoom,
+            bucket.segments, layer.paint, frameRenderContext.projectedCamera.zoom,
             programConfiguration, frameRenderContext.terrain && bucket.centroidVertexBuffer);
     }
 }

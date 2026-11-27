@@ -38,18 +38,27 @@ const assignEvents = <T extends DragPanResult | DragRotateResult | DragPitchResu
     };
 };
 
+/**
+ * Creates the handler that pans the map with a left button drag.
+ *
+ * A drag with `Ctrl` held is also accepted. When the rotate or pitch handler is enabled, it moves first
+ * (it is added before this handler) and blocks this one, so `Ctrl` + drag rotates as before. When both are
+ * disabled, nothing blocks this handler and the drag pans. A drag with `Ctrl` held becomes active on its
+ * first move rather than on mousedown, so that a `Ctrl` + click (a right click on macOS) does not block
+ * the `contextmenu` event.
+ */
 export function generateMousePanHandler({enable, clickTolerance}: {
     clickTolerance: number;
     enable?: boolean;
 }): MousePanHandler {
     const mouseMoveStateManager = new MouseMoveStateManager({
-        checkCorrectEvent: (e: MouseEvent) => e.button === LEFT_BUTTON && !e.ctrlKey,
+        checkCorrectEvent: (e: MouseEvent) => e.button === LEFT_BUTTON,
     });
     return new DragHandler<DragPanResult, MouseEvent>({
         clickTolerance,
         move: (lastPoint: Point, point: Point) =>
             ({around: point, panDelta: point.sub(lastPoint)}),
-        activateOnStart: true,
+        activateOnStart: (e: MouseEvent) => !e.ctrlKey,
         moveStateManager: mouseMoveStateManager,
         enable,
         assignEvents,

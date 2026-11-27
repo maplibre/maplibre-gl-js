@@ -3,7 +3,6 @@ import {LineBucket} from '../../data/bucket/line_bucket.ts';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests.ts';
 import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils.ts';
 import properties, {type LineLayoutPropsPossiblyEvaluated, type LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g.ts';
-import {extend} from '../../util/util.ts';
 import {EvaluationParameters} from '../evaluation_parameters.ts';
 import {type Transitionable, type Transitioning, type Layout, type PossiblyEvaluated, DataDrivenProperty, type PossiblyEvaluatedPropertyValue} from '../properties.ts';
 import {isZoomExpression, Step, type Feature, type FeatureState, type StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
@@ -26,7 +25,7 @@ export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     }
 
     evaluate(value: any, globals: EvaluationParameters, feature: Feature, featureState: FeatureState): number {
-        globals = extend({}, globals, {zoom: Math.floor(globals.zoom)});
+        globals = new EvaluationParameters(Math.floor(globals.zoom), globals);
         return super.evaluate(value, globals, feature, featureState);
     }
 }
@@ -96,13 +95,13 @@ export class LineStyleLayer extends StyleLayer {
         feature,
         featureState,
         geometry,
-        transform,
+        projectedCamera,
         pixelsToTileUnits}: QueryIntersectsFeatureParams
     ): boolean {
         const translatedPolygon = translate(queryGeometry,
             this.paint.get('line-translate'),
             this.paint.get('line-translate-anchor'),
-            -transform.bearingInRadians, pixelsToTileUnits);
+            -projectedCamera.bearingInRadians, pixelsToTileUnits);
         const halfWidth = pixelsToTileUnits / 2 * getLineWidth(
             this.paint.get('line-width').evaluate(feature, featureState),
             this.paint.get('line-gap-width').evaluate(feature, featureState));

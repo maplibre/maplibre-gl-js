@@ -1,4 +1,4 @@
-import {ensureError, extend, isWorker} from './util.ts';
+import {ensureError, isWorker} from './util.ts';
 import {AbortError, isAbortError, throwIfAborted} from './abort_error.ts';
 import {getProtocol} from '../source/protocol_crud.ts';
 import {MessageType} from './actor_messages.ts';
@@ -266,7 +266,7 @@ export const makeRequest = async function(requestParameters: RequestParameters, 
             const response = await protocolLoadFn(requestParameters, abortController);
             if (!response.data && requestParameters.type === 'arrayBuffer') {
                 // A successful array buffer request should always return data even if empty
-                return extend(response, {data: new ArrayBuffer(0)});
+                return {...response, data: new ArrayBuffer(0)};
             }
             return response;
         }
@@ -286,11 +286,11 @@ export const makeRequest = async function(requestParameters: RequestParameters, 
 };
 
 export const getJSON = <T>(requestParameters: RequestParameters, abortController: AbortController): Promise<{data: T} & ExpiryData> => {
-    return makeRequest(extend(requestParameters, {type: 'json'}), abortController);
+    return makeRequest({...requestParameters, type: 'json'}, abortController);
 };
 
 export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<{data: ArrayBuffer} & ExpiryData> => {
-    return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), abortController);
+    return makeRequest({...requestParameters, type: 'arrayBuffer'}, abortController);
 };
 
 /** 

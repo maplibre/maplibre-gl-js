@@ -104,6 +104,8 @@
         'u_projection_fallback_matrix',
         'u_projection_matrix',
         'u_projection_clipping_plane',
+        'u_projection_tile_origin',
+        'u_projection_tile_origin_position',
         'u_projection_transition',
         'u_projection_tile_mercator_coords',
     ];
@@ -270,6 +272,14 @@
                 gl.uniform4f(
                     locations['u_projection_clipping_plane'],
                     ...projectionData.clippingPlane // vec4
+                );
+                gl.uniform4f(
+                    locations['u_projection_tile_origin'],
+                    ...projectionData.tileOrigin // vec4
+                );
+                gl.uniform2f(
+                    locations['u_projection_tile_origin_position'],
+                    ...projectionData.tileOriginPosition // vec2
                 );
                 gl.uniform1f(
                     locations['u_projection_transition'],

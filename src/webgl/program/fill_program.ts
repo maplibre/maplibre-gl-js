@@ -5,13 +5,12 @@ import {
     Uniform2f,
     Uniform3f,
 } from '../uniform_binding.ts';
-import {extend} from '../../util/util.ts';
 
-import type {IReadonlyTransform} from '../../geo/transform_interface.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import type {Context} from '../../webgl/context.ts';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
 import type {Tile} from '../../tile/tile.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export type FillUniformsType = {
     'u_fill_translate': Uniform2f;
@@ -76,18 +75,16 @@ const fillOutlinePatternUniforms = (context: Context, locations: UniformLocation
 });
 
 const fillPatternUniformValues = (
-    transform: IReadonlyTransform,
+    projectedCamera: ProjectedCamera,
     crossfade: CrossfadeParameters,
     tile: Tile,
     translate: [number, number],
     isSdfPattern: boolean
-): UniformValues<FillPatternUniformsType> => extend(
-    patternUniformValues(crossfade, transform, tile),
-    {
-        'u_fill_translate': translate,
-        'u_sdf_pattern': isSdfPattern ? 1 : 0,
-    }
-);
+): UniformValues<FillPatternUniformsType> => ({
+    ...patternUniformValues(crossfade, projectedCamera, tile),
+    'u_fill_translate': translate,
+    'u_sdf_pattern': isSdfPattern ? 1 : 0,
+});
 
 const fillUniformValues = (translate: [number, number]): UniformValues<FillUniformsType> => ({
     'u_fill_translate': translate,
@@ -98,12 +95,12 @@ const fillOutlineUniformValues = (translate: [number, number]): UniformValues<Fi
 });
 
 const fillOutlinePatternUniformValues = (
-    transform: IReadonlyTransform,
+    projectedCamera: ProjectedCamera,
     crossfade: CrossfadeParameters,
     tile: Tile,
     translate: [number, number],
     isSdfPattern: boolean
-): UniformValues<FillOutlinePatternUniformsType> => fillPatternUniformValues(transform, crossfade, tile, translate, isSdfPattern);
+): UniformValues<FillOutlinePatternUniformsType> => fillPatternUniformValues(projectedCamera, crossfade, tile, translate, isSdfPattern);
 
 export {
     fillUniforms,

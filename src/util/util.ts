@@ -68,7 +68,7 @@ export function createIdentityMat4f32(): Mat4f32 {
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: { bearingInRadians: number; zoom: number },
+    camera: { bearingInRadians: number; zoom: number },
     tile: { tileID: OverscaledTileID; tileSize: number },
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
@@ -77,8 +77,8 @@ export function translatePosition(
     if (!translate[0] && !translate[1]) return [0, 0];
 
     const angle = inViewportPixelUnitsUnits ?
-        (translateAnchor === 'map' ? -transform.bearingInRadians : 0) :
-        (translateAnchor === 'viewport' ? transform.bearingInRadians : 0);
+        (translateAnchor === 'map' ? -camera.bearingInRadians : 0) :
+        (translateAnchor === 'viewport' ? camera.bearingInRadians : 0);
 
     if (angle) {
         const sinA = Math.sin(angle);
@@ -90,8 +90,8 @@ export function translatePosition(
     }
 
     return [
-        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], transform.zoom),
-        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
+        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], camera.zoom),
+        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], camera.zoom)];
 }
 
 /**
@@ -429,28 +429,6 @@ export function keysDifference<S, T>(
     return difference;
 }
 
-/**
- * Given a destination object and optionally many source objects,
- * copy all properties from the source objects into the destination.
- * The last source object given overrides properties from previous
- * source objects.
- *
- * @param dest - destination object
- * @param sources - sources from which properties are pulled
- */
-export function extend<T extends {}, U>(dest: T, source: U): T & U;
-export function extend<T extends {}, U, V>(dest: T, source1: U, source2: V): T & U & V;
-export function extend<T extends {}, U, V, W>(dest: T, source1: U, source2: V, source3: W): T & U & V & W;
-export function extend(dest: object, ...sources: any[]): any;
-export function extend(dest: object, ...sources: any[]): any {
-    for (const src of sources) {
-        for (const k in src) {
-            dest[k] = src[k];
-        }
-    }
-    return dest;
-}
-
 // See https://stackoverflow.com/questions/49401866/all-possible-keys-of-an-union-type
 type KeysOfUnion<T> = T extends T ? keyof T: never;
 
@@ -533,22 +511,6 @@ export function evaluateZoomSnap(zoom: number, zoomSnap: number, delta?: number)
 }
 
 /**
- * Create an object by mapping all the values of an existing object while
- * preserving their keys.
- */
-export function mapObject<Input extends object, Output>(
-    input: Input,
-    iterator: (value: Input[keyof Input], key: Extract<keyof Input, string>, input: Input) => Output,
-    context?: unknown
-): {[K in keyof Input]: Output} {
-    const output = {} as {[K in keyof Input]: Output};
-    for (const key in input) {
-        output[key] = iterator.call(context || this, input[key], key, input);
-    }
-    return output;
-}
-
-/**
  * Create an object by filtering out values of an existing object.
  */
 export function filterObject(input: any, iterator: Function, context?: any): any {
@@ -594,7 +556,7 @@ export function clone<T>(input: T): T {
     if (Array.isArray(input)) {
         return input.map(clone) as any as T;
     } else if (typeof input === 'object' && input) {
-        return mapObject(input, clone) as T;
+        return Object.fromEntries(Object.entries(input).map(([key, value]) => [key, clone(value)])) as T;
     } else {
         return input;
     }

@@ -1,9 +1,9 @@
 import {describe, beforeEach, afterEach, test, expect} from 'vitest';
 import {createMap, beforeMapTest, createStyle, waitForEvent} from '../../util/test/util.ts';
-import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {MessageType} from '../../util/actor_messages.ts';
 
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
 let server: FakeServer;
@@ -20,27 +20,25 @@ afterEach(() => {
 
 test('moveLayer', async () => {
     const map = createMap({
-        style: extend(createStyle(), {
-            sources: {
-                maplibre: {
-                    type: 'vector',
-                    minzoom: 1,
-                    maxzoom: 10,
-                    tiles: ['http://example.com/{z}/{x}/{y}.png']
-                }
-            },
-            layers: [{
-                id: 'layerId1',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }, {
-                id: 'layerId2',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }]
-        })
+        style: {...createStyle(), sources: {
+            maplibre: {
+                type: 'vector',
+                minzoom: 1,
+                maxzoom: 10,
+                tiles: ['http://example.com/{z}/{x}/{y}.png']
+            }
+        },
+        layers: [{
+            id: 'layerId1',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }, {
+            id: 'layerId2',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }]}
     });
 
     await map.once('render');
@@ -50,24 +48,22 @@ test('moveLayer', async () => {
 });
 
 test('getLayer', async () => {
-    const layer = {
+    const layer: LayerSpecification = {
         id: 'layerId',
         type: 'circle',
         source: 'maplibre',
         'source-layer': 'sourceLayer'
     };
     const map = createMap({
-        style: extend(createStyle(), {
-            sources: {
-                maplibre: {
-                    type: 'vector',
-                    minzoom: 1,
-                    maxzoom: 10,
-                    tiles: ['http://example.com/{z}/{x}/{y}.png']
-                }
-            },
-            layers: [layer]
-        })
+        style: {...createStyle(), sources: {
+            maplibre: {
+                type: 'vector',
+                minzoom: 1,
+                maxzoom: 10,
+                tiles: ['http://example.com/{z}/{x}/{y}.png']
+            }
+        },
+        layers: [layer]}
     });
 
     await map.once('render');
@@ -79,22 +75,20 @@ test('getLayer', async () => {
 
 test('removeLayer restores Map.loaded() to true', async () => {
     const map = createMap({
-        style: extend(createStyle(), {
-            sources: {
-                maplibre: {
-                    type: 'vector',
-                    minzoom: 1,
-                    maxzoom: 10,
-                    tiles: ['http://example.com/{z}/{x}/{y}.png']
-                }
-            },
-            layers: [{
-                id: 'layerId',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }]
-        })
+        style: {...createStyle(), sources: {
+            maplibre: {
+                type: 'vector',
+                minzoom: 1,
+                maxzoom: 10,
+                tiles: ['http://example.com/{z}/{x}/{y}.png']
+            }
+        },
+        layers: [{
+            id: 'layerId',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }]}
     });
 
     await map.once('render');
@@ -107,19 +101,17 @@ test('removeLayer restores Map.loaded() to true', async () => {
 describe('getLayersOrder', () => {
     test('returns ids of layers in the correct order', async () => {
         const map = createMap({
-            style: extend(createStyle(), {
-                'sources': {
-                    'raster': {
-                        type: 'raster',
-                        tiles: ['http://tiles.server']
-                    }
-                },
-                'layers': [{
-                    'id': 'raster',
-                    'type': 'raster',
-                    'source': 'raster'
-                }]
-            })
+            style: {...createStyle(), 'sources': {
+                'raster': {
+                    type: 'raster',
+                    tiles: ['http://tiles.server']
+                }
+            },
+            'layers': [{
+                'id': 'raster',
+                'type': 'raster',
+                'source': 'raster'
+            }]}
         });
 
         await map.once('style.load');

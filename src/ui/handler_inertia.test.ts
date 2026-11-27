@@ -39,6 +39,20 @@ function panAndRelease(inertia: HandlerInertia, {frames, frameTime = 16, holdTim
 }
 
 /**
+ * Records a gesture that turns the bearing by `degrees` in each frame, 16 ms apart, and returns the
+ * inertial ease it produces, if any.
+ */
+function turnAndRelease(inertia: HandlerInertia, frames: number[]) {
+    let time = 1000;
+    setNow(time);
+    for (const degrees of frames) {
+        setNow(time += 16);
+        inertia.record({bearingDelta: degrees});
+    }
+    return inertia._onMoveEnd();
+}
+
+/**
  * Returns the horizontal distance the map keeps panning after the gesture ended.
  */
 function panOnDistance(ease: EaseToOptions) {
@@ -52,7 +66,7 @@ describe('HandlerInertia', () => {
     beforeEach(() => {
         beforeMapTest();
         map = new Map({container: DOM.create('div', '', window.document.body)});
-        inertia = new HandlerInertia(map);
+        inertia = new HandlerInertia(map._camera);
     });
 
     afterEach(() => {
@@ -88,5 +102,24 @@ describe('HandlerInertia', () => {
         const ease = panAndRelease(inertia, {frames: [20, 20, 20, null, null, null, null]});
 
         expect(ease).toBeUndefined();
+    });
+
+    test('turns on under friction that halves the speed every 140 ms', () => {
+        // 312.5°/s, which glides on for 0.2 s worth of that speed until it falls below 1°/s
+        const ease = turnAndRelease(inertia, [5, 5, 5, 5, 5]);
+
+        expect(ease.bearing).toBeCloseTo(62.9, 1);
+        expect(ease.duration).toBeCloseTo(1160, -1);
+        expect(ease.easing(1)).toBeCloseTo(1);
+    });
+
+    test('turns on at most as far as a gesture released at 1200°/s', () => {
+        const ease = turnAndRelease(inertia, [90, 90, 90, 90, 90]);
+
+        expect(ease.duration).toBeCloseTo(1432, -1);
+    });
+
+    test('does not turn on when the gesture turned slower than 60°/s', () => {
+        expect(turnAndRelease(inertia, [0.5, 0.5, 0.5, 0.5, 0.5])).toBeUndefined();
     });
 });

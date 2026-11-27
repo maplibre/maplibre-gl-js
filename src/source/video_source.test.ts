@@ -1,6 +1,5 @@
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {beforeMapTest, createMap, getMockDispatcher, waitForEvent} from '../util/test/util.ts';
-import {extend} from '../util/util.ts';
 import {VideoSource} from './video_source.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
@@ -13,7 +12,7 @@ let map: Map;
 function createSource(options) {
     const c = options?.video || window.document.createElement('video');
 
-    options = extend({coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]}, options);
+    options = {coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]], ...options};
 
     const source = new VideoSource('id', options, getMockDispatcher(), options.eventedParent);
 

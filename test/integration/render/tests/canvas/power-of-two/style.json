@@ -7,12 +7,7 @@
             "addFakeCanvas": {
                 "id": "fake-canvas",
                 "image": "./image/64x64.png"
-            },
-            "operations": [
-                [
-                    "wait"
-                ]
-            ]
+            }
         }
     },
     "center": [

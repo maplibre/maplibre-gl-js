@@ -1,21 +1,23 @@
 import {test} from 'vitest';
 import {LngLat} from '../lng_lat.ts';
 import {coveringTiles} from './covering_tiles.ts';
-import {createMercatorTransform} from './mercator_transform.ts';
-import {createGlobeTransform} from './globe_transform.ts';
+import {createCameraViewState} from '../../camera/camera_view_state.ts';
+import {createCameraContext, type CameraProjectionKind} from '../../camera/camera_context.ts';
+import {projectCamera} from '../../camera/project_camera.ts';
+import {resize, setCenter, setMaxPitch, setPitch, setZoom} from '../../camera/camera_updates.ts';
 
-import type {ITransform} from '../transform_interface.ts';
-
-function coverWithPitch(transform: ITransform, pitch: number): void {
-    transform.setCenter(new LngLat(0, 0));
-    transform.setZoom(4);
-    transform.resize(4096, 4096, true);
-    transform.setMaxPitch(pitch);
-    transform.setPitch(pitch);
+function coverWithPitch(projection: CameraProjectionKind, pitch: number): void {
+    const context = createCameraContext({projection});
+    let view = createCameraViewState();
+    view = setCenter(view, context, new LngLat(0, 0));
+    view = setZoom(view, context, 4);
+    view = resize(view, context, 4096, 4096, true);
+    view = setMaxPitch(view, pitch);
+    view = setPitch(view, pitch);
 
     for (let i = 0; i < 40; i++) {
-        transform.setCenter(new LngLat(i * 0.2, 0));
-        coveringTiles(transform, {
+        view = setCenter(view, context, new LngLat(i * 0.2, 0));
+        coveringTiles(projectCamera(view, context), context.worldCoordinateHelper, {
             tileSize: 256,
         });
     }
@@ -24,16 +26,16 @@ function coverWithPitch(transform: ITransform, pitch: number): void {
 test('coveringTiles', async ({bench}) => {
     await bench.compare(
         bench('mercator', () => {
-            coverWithPitch(createMercatorTransform(), 0);
+            coverWithPitch('mercator', 0);
         }),
         bench('mercator pitched', () => {
-            coverWithPitch(createMercatorTransform(), 60);
+            coverWithPitch('mercator', 60);
         }),
         bench('globe', () => {
-            coverWithPitch(createGlobeTransform(), 0);
+            coverWithPitch('globe', 0);
         }),
         bench('globe pitched', () => {
-            coverWithPitch(createGlobeTransform(), 60);
+            coverWithPitch('globe', 60);
         }),
     );
 });

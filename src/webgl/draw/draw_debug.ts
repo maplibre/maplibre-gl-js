@@ -18,19 +18,19 @@ const rightColor = new Color(1, 0, 1, 1);
 const centerColor = new Color(0, 1, 1, 1);
 
 export function drawDebugPadding(frameRenderContext: FrameRenderContext): void {
-    const padding = frameRenderContext.transform.padding;
+    const padding = frameRenderContext.projectedCamera.padding;
     const lineWidth = 3;
     // Top
-    drawHorizontalLine(frameRenderContext, frameRenderContext.transform.height - (padding.top || 0), lineWidth, topColor);
+    drawHorizontalLine(frameRenderContext, frameRenderContext.projectedCamera.height - (padding.top || 0), lineWidth, topColor);
     // Bottom
     drawHorizontalLine(frameRenderContext, padding.bottom || 0, lineWidth, btmColor);
     // Left
     drawVerticalLine(frameRenderContext, padding.left || 0, lineWidth, leftColor);
     // Right
-    drawVerticalLine(frameRenderContext, frameRenderContext.transform.width - (padding.right || 0), lineWidth, rightColor);
+    drawVerticalLine(frameRenderContext, frameRenderContext.projectedCamera.width - (padding.right || 0), lineWidth, rightColor);
     // Center
-    const center = frameRenderContext.transform.centerPoint;
-    drawCrosshair(frameRenderContext, center.x, frameRenderContext.transform.height - center.y, centerColor);
+    const center = frameRenderContext.projectedCamera.centerPoint;
+    drawCrosshair(frameRenderContext, center.x, frameRenderContext.projectedCamera.height - center.y, centerColor);
 }
 
 function drawCrosshair(frameRenderContext: FrameRenderContext, x: number, y: number, color: Color) {
@@ -43,11 +43,11 @@ function drawCrosshair(frameRenderContext: FrameRenderContext, x: number, y: num
 }
 
 function drawHorizontalLine(frameRenderContext: FrameRenderContext, y: number, lineWidth: number, color: Color) {
-    drawDebugSSRect(frameRenderContext, 0, y  + lineWidth / 2, frameRenderContext.transform.width,  lineWidth, color);
+    drawDebugSSRect(frameRenderContext, 0, y  + lineWidth / 2, frameRenderContext.projectedCamera.width,  lineWidth, color);
 }
 
 function drawVerticalLine(frameRenderContext: FrameRenderContext, x: number, lineWidth: number, color: Color) {
-    drawDebugSSRect(frameRenderContext, x - lineWidth / 2, 0, lineWidth,  frameRenderContext.transform.height, color);
+    drawDebugSSRect(frameRenderContext, x - lineWidth / 2, 0, lineWidth,  frameRenderContext.projectedCamera.height, color);
 }
 
 function drawDebugSSRect(frameRenderContext: FrameRenderContext, x: number, y: number, width: number, height: number, color: Color) {
@@ -85,7 +85,7 @@ function drawDebugTile(painter: Painter, tileManager: TileManager, coord: Oversc
     const tileByteLength = (tileRawData?.byteLength) || 0;
     const tileSizeKb = Math.floor(tileByteLength / 1024);
     const tileSize = tileManager.getTile(coord).tileSize;
-    const scaleRatio = (512 / Math.min(tileSize, 512) * (coord.overscaledZ / frameRenderContext.transform.zoom)) * 0.5;
+    const scaleRatio = (512 / Math.min(tileSize, 512) * (coord.overscaledZ / frameRenderContext.projectedCamera.zoom)) * 0.5;
     let tileIdText = coord.canonical.toString();
     if (coord.overscaledZ !== coord.canonical.z) {
         tileIdText += ` => ${coord.overscaledZ}`;

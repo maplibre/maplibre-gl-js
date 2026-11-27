@@ -1,5 +1,4 @@
 import {beforeEach, describe, test, expect, vi} from 'vitest';
-import {mercatorWorldCoordinateHelper} from '../geo/mercator_coordinate.ts';
 import {RenderToTexture} from './render_to_texture.ts';
 import {RTTFingerprint} from './rtt_fingerprint.ts';
 import {FrameRenderContext} from '../render/frame_render_context.ts';
@@ -8,10 +7,9 @@ import {Terrain} from '../render/terrain.ts';
 import {Tile} from '../tile/tile.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
 import {createNullGL} from '../util/test/null_gl.ts';
-import {createFrameRenderData} from '../util/test/util.ts';
+import {createFrameRenderData, createTestCamera} from '../util/test/util.ts';
 
 import type {Style} from '../style/style.ts';
-import type {IReadonlyTransform} from '../geo/transform_interface.ts';
 import type {Map} from '../ui/map.ts';
 import type {TileManager} from '../tile/tile_manager.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -75,7 +73,7 @@ describe('render to texture', () => {
             size
         };
     }
-    const transform = {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) { return {}; }, calculateFogMatrix: () => {}, worldCoordinateHelper: mercatorWorldCoordinateHelper} as any as IReadonlyTransform;
+    const {projectedCamera, context} = createTestCamera({width: 512, height: 512, zoom: 10});
     const painter = {
         context: new Context(gl),
         renderLayer: vi.fn(),
@@ -138,7 +136,7 @@ describe('render to texture', () => {
     });
 
     function createFrameRenderContext(): FrameRenderContext {
-        const frameRenderContext = new FrameRenderContext({transform, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
+        const frameRenderContext = new FrameRenderContext({projectedCamera, worldCoordinateHelper: context.worldCoordinateHelper, terrain, data: createFrameRenderData(), context: painter.context, programCache, currentPass: 'offscreen', projection: null});
         vi.spyOn(frameRenderContext, 'renderTileClippingMasks').mockImplementation(() => {});
         return frameRenderContext;
     }

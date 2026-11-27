@@ -1,9 +1,10 @@
 import {DOM} from '../../util/dom.ts';
+import {Evented} from '../../util/evented.ts';
 import {MapLibreEvent} from '../events.ts';
 
 import type {Event} from '../../util/evented.ts';
 import type {Handler} from '../handler_manager.ts';
-import type {Map} from '../map.ts';
+import type {MapEventType} from '../events.ts';
 
 /**
  * The {@link CooperativeGesturesHandler} options object for the gesture settings
@@ -25,9 +26,10 @@ export type GestureOptions = boolean;
  * ```
  * @see [Example: cooperative gestures](https://maplibre.org/maplibre-gl-js/docs/examples/cooperative-gestures/)
  **/
-export class CooperativeGesturesHandler implements Handler {
+export class CooperativeGesturesHandler extends Evented<MapEventType> implements Handler {
     _options: GestureOptions;
-    _map: Map;
+    _canvasContainer: HTMLElement;
+    _locale: Record<string, string>;
     _container: HTMLElement;
     /**
      * This is the key that will allow to bypass the cooperative gesture protection
@@ -35,8 +37,15 @@ export class CooperativeGesturesHandler implements Handler {
     _bypassKey: 'metaKey' | 'ctrlKey' = navigator.userAgent.includes('Mac') ? 'metaKey' : 'ctrlKey';
     _enabled: boolean;
 
-    constructor(map: Map, options: GestureOptions) {
-        this._map = map;
+    /**
+     * @internal
+     * @param canvasContainer - the map's canvas container, which shows the help message
+     * @param locale - the map's UI strings, for the help message
+     */
+    constructor(canvasContainer: HTMLElement, locale: Record<string, string>, options: GestureOptions) {
+        super();
+        this._canvasContainer = canvasContainer;
+        this._locale = locale;
         this._options = options;
         this._enabled = false;
     }
@@ -47,15 +56,15 @@ export class CooperativeGesturesHandler implements Handler {
 
     _setupUI(): void {
         if (this._container) return;
-        const mapCanvasContainer = this._map.getCanvasContainer();
+        const mapCanvasContainer = this._canvasContainer;
         // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
         mapCanvasContainer.classList.add('maplibregl-cooperative-gestures');
         this._container = DOM.create('div', 'maplibregl-cooperative-gesture-screen', mapCanvasContainer);
-        let desktopMessage = this._map._getUIString('CooperativeGesturesHandler.WindowsHelpText');
+        let desktopMessage = this._locale['CooperativeGesturesHandler.WindowsHelpText'];
         if (this._bypassKey === 'metaKey') {
-            desktopMessage = this._map._getUIString('CooperativeGesturesHandler.MacHelpText');
+            desktopMessage = this._locale['CooperativeGesturesHandler.MacHelpText'];
         }
-        const mobileMessage = this._map._getUIString('CooperativeGesturesHandler.MobileHelpText');
+        const mobileMessage = this._locale['CooperativeGesturesHandler.MobileHelpText'];
         // Create and append the desktop message div
         const desktopDiv = document.createElement('div');
         desktopDiv.className = 'maplibregl-desktop-message';
@@ -73,7 +82,7 @@ export class CooperativeGesturesHandler implements Handler {
     _destroyUI(): void {
         if (this._container) {
             this._container.remove();
-            const mapCanvasContainer = this._map.getCanvasContainer();
+            const mapCanvasContainer = this._canvasContainer;
             mapCanvasContainer.classList.remove('maplibregl-cooperative-gestures');
         }
         delete this._container;
@@ -101,7 +110,7 @@ export class CooperativeGesturesHandler implements Handler {
         if (!this._enabled) return;
 
         // notify subscribers that a cooperative gesture was prevented
-        this._map.fire(new MapLibreEvent('cooperativegestureprevented', {gestureType, originalEvent}));
+        this.fire(new MapLibreEvent('cooperativegestureprevented', {gestureType, originalEvent}));
 
         // Alert user how to scroll/pan
         this._container.classList.add('maplibregl-show');

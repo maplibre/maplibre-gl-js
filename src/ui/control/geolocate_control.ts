@@ -1,6 +1,6 @@
 import {Event, Evented} from '../../util/evented.ts';
 import {DOM} from '../../util/dom.ts';
-import {extend, warnOnce} from '../../util/util.ts';
+import {warnOnce} from '../../util/util.ts';
 import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
 import {Marker} from '../marker.ts';
@@ -376,7 +376,7 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
      */
     constructor(options: GeolocateControlOptions) {
         super();
-        this.options = extend({}, defaultOptions, options);
+        this.options = {...defaultOptions, ...options};
     }
 
     /** {@inheritDoc IControl.onAdd} */
@@ -548,7 +548,7 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
         const eventData = {geolocateSource: true};
 
         if (!this.options.zoomToUserAccuracy) {
-            const options = extend({}, this.options.fitBoundsOptions, {center, bearing, zoom: this._map.getZoom()});
+            const options = {...this.options.fitBoundsOptions, center, bearing, zoom: this._map.getZoom()};
             if (options.linear) {
                 this._map.easeTo(options, eventData);
             } else {
@@ -558,7 +558,7 @@ export class GeolocateControl extends Evented<GeolocateControlEventType> impleme
         }
 
         const radius = position.coords.accuracy;
-        const options = extend({bearing}, this.options.fitBoundsOptions);
+        const options = {bearing, ...this.options.fitBoundsOptions};
         const newBounds = LngLatBounds.fromLngLat(center, radius);
 
         this._map.fitBounds(newBounds, options, eventData);

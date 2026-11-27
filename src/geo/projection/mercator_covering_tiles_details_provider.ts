@@ -4,15 +4,15 @@ import {clamp} from '../../util/util.ts';
 
 import type {LngLat} from '../lng_lat.ts';
 import type {MercatorCoordinate} from '../mercator_coordinate.ts';
-import type {IReadonlyTransform} from '../transform_interface.ts';
 import type {CoveringTilesOptionsInternal} from './covering_tiles.ts';
 import type {CoveringTilesDetailsProvider} from './covering_tiles_details_provider.ts';
 import type {IBoundingVolume} from '../../util/primitives/bounding_volume.ts';
+import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 
 export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetailsProvider {
 
-    getCenter(transform: IReadonlyTransform): LngLat {
-        return transform.center;
+    getCenter(projectedCamera: ProjectedCamera): LngLat {
+        return projectedCamera.center;
     }
 
     distanceToTile2d(pointX: number, pointY: number, _tileID: {x: number; y: number; z: number}, boundingVolume: IBoundingVolume): number {
@@ -47,17 +47,13 @@ export class MercatorCoveringTilesDetailsProvider implements CoveringTilesDetail
             [wrap + (tileID.x + 1) / numTiles, (tileID.y + 1) / numTiles, maxElevation]);
     }
     
-    allowVariableZoom(transform: IReadonlyTransform, options: CoveringTilesOptionsInternal): boolean {
-        const zfov = transform.fov * (Math.abs(Math.cos(transform.rollInRadians)) * transform.height + Math.abs(Math.sin(transform.rollInRadians)) * transform.width) / transform.height;
+    allowVariableZoom(projectedCamera: ProjectedCamera, options: CoveringTilesOptionsInternal): boolean {
+        const zfov = projectedCamera.fov * (Math.abs(Math.cos(projectedCamera.rollInRadians)) * projectedCamera.height + Math.abs(Math.sin(projectedCamera.rollInRadians)) * projectedCamera.width) / projectedCamera.height;
         const maxConstantZoomPitch = clamp(78.5 - zfov / 2, 0.0, 60.0);
-        return (!!options.terrain || transform.pitch > maxConstantZoomPitch);
+        return (!!options.terrain || projectedCamera.pitch > maxConstantZoomPitch);
     }
 
     allowWorldCopies(): boolean {
         return true;
-    }
-
-    prepareNextFrame(): void { 
-        // Do nothing
     }
 }

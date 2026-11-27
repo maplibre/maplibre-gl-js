@@ -1,8 +1,10 @@
-import {afterEach, beforeEach, describe, test, expect} from 'vitest';
+import {afterEach, beforeEach, describe, test, expect, vi} from 'vitest';
 import {createMap, beforeMapTest, createIdentityCrsAnsweringInside, createPolarStereographicCrs, createRotatedCrs, createWidePlateCarreeCrs} from '../../util/test/util.ts';
 import {addProjection, removeProjection} from '../../geo/projection/projection_crud.ts';
 import {MAX_VALID_LATITUDE} from '../../util/util.ts';
 import {LngLat} from '../../geo/lng_lat.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import * as timeControl from '../../util/time_control.ts';
 
 beforeEach(() => {
     beforeMapTest();
@@ -55,6 +57,19 @@ describe('Map in the identity projection', () => {
         map.setCenter([170, 0]);
 
         expect(map.getCenter().lng).toBeCloseTo(90, 6);
+    });
+
+    test('pans by the distance dragged from north of the world square', async () => {
+        const map = createMap({interactive: true, style: {version: 8, sources: {}, layers: [], projection: {type: 'identity'}}, center: [0, 90], zoom: -1});
+        await map.once('style.load');
+        expect(map.project([0, 90]).y).toBeCloseTo(100, 6);
+
+        simulate.mousedown(map.getCanvas(), {buttons: 1, clientX: 100, clientY: 40});
+        simulate.mousemove(window.document.body, {buttons: 1, clientX: 100, clientY: 30});
+        map.redraw();
+        simulate.mouseup(window.document.body);
+
+        expect(map.project([0, 90]).y).toBeCloseTo(90, 6);
     });
 });
 
@@ -177,5 +192,52 @@ describe('Map in a CRS wider than ±180°', () => {
         map.flyTo({center: [200, 0], duration: 0});
 
         expect(map.getCenter().lng).toBeCloseTo(200, 6);
+    });
+});
+
+describe('Map changing its projection to globe during an animation', () => {
+    test('an easeTo ends at the zoom it was asked for', async () => {
+        const map = createMap({center: [10, 40], zoom: 2});
+        await map.once('style.load');
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.easeTo({center: [20, 50], zoom: 5, duration: 1000});
+        now.mockReturnValue(400);
+        map.redraw();
+
+        map.setProjection({type: 'globe'});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getZoom()).toBe(5);
+    });
+
+    test('an easeTo around a point ends at the zoom it was asked for', async () => {
+        const map = createMap({center: [10, 40], zoom: 2});
+        await map.once('style.load');
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.easeTo({around: [20, 50], zoom: 5, duration: 1000});
+        now.mockReturnValue(400);
+        map.redraw();
+
+        map.setProjection({type: 'globe'});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getZoom()).toBe(5);
+    });
+
+    test('a flyTo ends at the zoom it was asked for', async () => {
+        const map = createMap({center: [10, 40], zoom: 2});
+        await map.once('style.load');
+        const now = vi.spyOn(timeControl, 'now').mockReturnValue(0);
+        map.flyTo({center: [20, 50], zoom: 5, duration: 1000});
+        now.mockReturnValue(400);
+        map.redraw();
+
+        map.setProjection({type: 'globe'});
+        now.mockReturnValue(1000);
+        map.redraw();
+
+        expect(map.getZoom()).toBe(5);
     });
 });

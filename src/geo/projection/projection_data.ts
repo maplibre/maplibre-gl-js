@@ -52,6 +52,18 @@ export type ProjectionData<MainMatrix extends mat4 = mat4, FallbackMatrix extend
      */
     clippingPlane: [number, number, number, number];
     /**
+     * The point on the unit sphere that `mainMatrix` projects positions relative to, as the sine and cosine
+     * of its longitude, `tan(PI / 4 + latitude / 2)` and 1. All zeros when positions are relative to the planet center.
+     * Used by globe projection, to keep float32 precision at high zoom.
+     * Uniform name: `u_projection_tile_origin`.
+     */
+    tileOrigin: [number, number, number, number];
+    /**
+     * Where `tileOrigin` lies in the tile, in tile units. It is the tile's point nearest the camera's center.
+     * Uniform name: `u_projection_tile_origin_position`.
+     */
+    tileOriginPosition: [number, number];
+    /**
      * A value in range 0..1 indicating interpolation between mercator (0) and globe (1) projections.
      * Used by globe projection to hide projection transition at high zooms.
      * Uniform name: `u_projection_transition`.
@@ -74,7 +86,7 @@ export type ProjectionData<MainMatrix extends mat4 = mat4, FallbackMatrix extend
 };
 
 /**
- * Parameters object for the transform's `getProjectionData` function.
+ * Parameters object for `getProjectionData` in `camera_math.ts`.
  * Contains the requested tile ID and more.
  */
 export type ProjectionDataParams = {

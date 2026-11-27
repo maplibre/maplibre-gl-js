@@ -3,7 +3,6 @@ uniform lowp vec3 u_lightpos;
 uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
 uniform float u_vertical_gradient;
-uniform lowp float u_opacity;
 uniform vec2 u_fill_translate;
 
 layout(location = 0) in vec2 a_pos;
@@ -20,11 +19,19 @@ out vec4 v_color;
 #pragma maplibre: define highp float height
 
 #pragma maplibre: define highp vec4 color
+#pragma maplibre: define highp float opacity
 
 void main() {
     #pragma maplibre: initialize highp float base
     #pragma maplibre: initialize highp float height
     #pragma maplibre: initialize highp vec4 color
+    #pragma maplibre: initialize highp float opacity
+
+    opacity = clamp(opacity, 0.0, 1.0);
+    if (opacity <= 0.0) {
+        gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
+        return;
+    }
 
     vec3 normal = vec3(a_normal_ed.xyz);
 
@@ -54,7 +61,7 @@ void main() {
     vec2 posInTile = a_pos + u_fill_translate;
 
     #ifdef GLOBE
-        vec3 spherePos = projectToSphere(posInTile, a_pos);
+        vec3 spherePos = projectToSphereOffset(posInTile, a_pos);
         gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
     #else
         gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
@@ -74,7 +81,7 @@ void main() {
     float directional = clamp(dot(normalForLighting, u_lightpos), 0.0, 1.0);
 
     #ifdef GLOBE
-        mat3 rotMatrix = globeGetRotationMatrix(spherePos);
+        mat3 rotMatrix = globeGetRotationMatrix(globeTileOrigin() + spherePos);
         normalForLighting = rotMatrix * normalForLighting;
         // Interpolate dot product result instead of normals and light direction
         directional = mix(directional, clamp(dot(normalForLighting, u_lightpos_globe), 0.0, 1.0), u_projection_transition);
@@ -101,5 +108,5 @@ void main() {
     v_color.r += clamp(color.r * directional * u_lightcolor.r, mix(0.0, 0.3, 1.0 - u_lightcolor.r), 1.0);
     v_color.g += clamp(color.g * directional * u_lightcolor.g, mix(0.0, 0.3, 1.0 - u_lightcolor.g), 1.0);
     v_color.b += clamp(color.b * directional * u_lightcolor.b, mix(0.0, 0.3, 1.0 - u_lightcolor.b), 1.0);
-    v_color *= u_opacity;
+    v_color *= opacity;
 }

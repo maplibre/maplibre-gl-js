@@ -1,23 +1,23 @@
 import {TapRecognizer} from './tap_recognizer.ts';
 import {evaluateZoomSnap} from '../../util/util.ts';
+import {locationOnMapAt} from './handler_util.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {Map} from '../map.ts';
-import type {TransformProvider} from './transform-provider.ts';
-import type {Handler} from '../handler_manager.ts';
+import type {Camera} from '../camera.ts';
+import type {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
  * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping
  */
 export class TapZoomHandler implements Handler {
-    _tr: TransformProvider;
+    _camera: Camera;
     _enabled: boolean;
     _active: boolean;
     _zoomIn: TapRecognizer;
     _zoomOut: TapRecognizer;
 
-    constructor(map: Map, transformProvider: TransformProvider) {
-        this._tr = transformProvider;
+    constructor(camera: Camera) {
+        this._camera = camera;
         this._zoomIn = new TapRecognizer({
             numTouches: 1,
             numTaps: 2
@@ -47,32 +47,33 @@ export class TapZoomHandler implements Handler {
         this._zoomOut.touchmove(e, points, mapTouches);
     }
 
-    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): {cameraAnimation: (map: Map) => Map} | void {
+    touchend(e: TouchEvent, points: Point[], mapTouches: Touch[]): HandlerResult | void {
         const zoomInPoint = this._zoomIn.touchend(e, points, mapTouches);
         const zoomOutPoint = this._zoomOut.touchend(e, points, mapTouches);
-        const tr = this._tr;
+        const {zoom} = this._camera.proposedProjectedCamera;
+        const zoomSnap = this._camera.getZoomSnap();
 
         if (zoomInPoint) {
             this._active = true;
             e.preventDefault();
             setTimeout(() => this.reset(), 0);
             return {
-                cameraAnimation: (map: Map) => map.easeTo({
+                easeTo: {
                     duration: 300,
-                    zoom: evaluateZoomSnap(tr.zoom + 1, map.getZoomSnap()),
-                    around: tr.transform.isPointOnMapSurface(zoomInPoint) ? tr.unproject(zoomInPoint) : undefined
-                }, {originalEvent: e})
+                    zoom: evaluateZoomSnap(zoom + 1, zoomSnap),
+                    around: locationOnMapAt(this._camera, zoomInPoint)
+                }
             };
         } else if (zoomOutPoint) {
             this._active = true;
             e.preventDefault();
             setTimeout(() => this.reset(), 0);
             return {
-                cameraAnimation: (map: Map) => map.easeTo({
+                easeTo: {
                     duration: 300,
-                    zoom: evaluateZoomSnap(tr.zoom - 1, map.getZoomSnap()),
-                    around: tr.transform.isPointOnMapSurface(zoomOutPoint) ? tr.unproject(zoomOutPoint) : undefined
-                }, {originalEvent: e})
+                    zoom: evaluateZoomSnap(zoom - 1, zoomSnap),
+                    around: locationOnMapAt(this._camera, zoomOutPoint)
+                }
             };
         }
     }

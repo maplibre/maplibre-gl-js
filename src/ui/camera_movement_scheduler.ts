@@ -79,11 +79,11 @@ type PendingEvent = {
 
 /**
  * @internal
- * The map's render loop, on which the scheduler runs each frame of a segment.
+ * The map's render loop, on which the scheduler runs each frame of a segment and the handler manager each frame of a gesture.
  */
 export type RenderLoop = {
-    /** Runs the callback before the next frame is rendered, and returns an id to cancel it with. */
-    requestRenderFrame: (callback: () => void) => TaskID;
+    /** Runs the callback with the frame's time stamp before the next frame is rendered, and returns an id to cancel it with. */
+    requestRenderFrame: (callback: (timeStamp: number) => void) => TaskID;
     cancelRenderFrame: (id: TaskID) => void;
 };
 

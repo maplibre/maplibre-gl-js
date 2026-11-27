@@ -12,6 +12,8 @@ function createProjectionData(uniformBufferKey: string, projectionTransition: nu
         fallbackMatrix: new Float32Array(16),
         tileMercatorCoords: [0, 0, 1, 1],
         clippingPlane: [0, 0, 0, 0],
+        tileOrigin: [0, 0, 0, 0],
+        tileOriginPosition: [0, 0],
         projectionTransition,
         clipAntimeridian: false,
         uniformBufferKey

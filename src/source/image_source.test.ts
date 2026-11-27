@@ -1,6 +1,6 @@
 import {describe, beforeEach, afterEach, test, expect, vi, type Mock} from 'vitest';
 import {ImageSource, type Coordinates} from './image_source.ts';
-import {extend, MAX_TILE_ZOOM} from '../util/util.ts';
+import {MAX_TILE_ZOOM} from '../util/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 import {beforeMapTest, createMap, getMockDispatcher, sleep, stubAjaxGetImage, waitForEvent} from '../util/test/util.ts';
 import {Tile} from '../tile/tile.ts';
@@ -17,9 +17,10 @@ import type {Map} from '../ui/map.ts';
 let map: Map;
 
 function createSource(options) {
-    options = extend({
-        coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]
-    }, options);
+    options = {
+        coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]],
+        ...options,
+    };
 
     const source = new ImageSource('id', options, getMockDispatcher(), options.eventedParent);
     source.map = map;

@@ -7,7 +7,6 @@ import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
 import {DictionaryCoder} from '../util/dictionary_coder.ts';
 import {PbfReader} from 'pbf';
 import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
-import {mapObject, extend} from '../util/util.ts';
 import {register} from '../util/web_worker_transfer.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 import {polygonIntersectsBox} from '../util/intersection_tests.ts';
@@ -21,19 +20,20 @@ import type Point from '@mapbox/point-geometry';
 import type {OverscaledTileID} from '../tile/tile_id.ts';
 import type {SourceFeatureState} from '../source/source_state.ts';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
-import type {mat4} from 'gl-matrix';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
 import type {Feature, FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {IReadonlyTransform, GetElevation, WorldCoordinateHelper} from '../geo/transform_interface.ts';
 import type {TileEncoding} from '../source/worker_source.ts';
+import type {ProjectedCamera} from '../camera/projected_camera.ts';
+import type {GetElevation, WorldCoordinateHelper} from '../geo/world_types.ts';
 
 export {GEOJSON_TILE_LAYER_NAME};
 
 type QueryParameters = {
     scale: number;
-    pixelPosMatrix: mat4;
-    transform: IReadonlyTransform;
+    projectedCamera: ProjectedCamera;
+    /** The world mapping of the projection the camera was projected with, which filters on geometry read. */
+    worldCoordinateHelper: WorldCoordinateHelper;
     tileSize: number;
     queryGeometry: Point[];
     cameraQueryGeometry: Point[];
@@ -179,7 +179,7 @@ export class FeatureIndex {
                 params.availableImages,
                 styleLayers,
                 serializedLayers,
-                args.transform.worldCoordinateHelper,
+                args.worldCoordinateHelper,
                 sourceFeatureState,
                 (feature: VectorTileFeatureLike, styleLayer: StyleLayer, featureState: FeatureState) => {
                     featureGeometry ||= loadGeometry(feature);
@@ -190,9 +190,8 @@ export class FeatureIndex {
                         featureState,
                         geometry: featureGeometry,
                         zoom: this.z,
-                        transform: args.transform,
+                        projectedCamera: args.projectedCamera,
                         pixelsToTileUnits,
-                        pixelPosMatrix: args.pixelPosMatrix,
                         unwrappedTileID: this.tileID.toUnwrapped(),
                         getElevation: args.getElevation
                     });
@@ -257,7 +256,7 @@ export class FeatureIndex {
                 featureState = sourceFeatureState.getState(styleLayer.sourceLayer || GEOJSON_TILE_LAYER_NAME, id);
             }
 
-            const serializedLayer = extend({}, serializedLayers[layerID]);
+            const serializedLayer = {...serializedLayers[layerID]};
 
             serializedLayer.paint = evaluateProperties(serializedLayer.paint, styleLayer.paint, feature, featureState, availableImages);
             serializedLayer.layout = evaluateProperties(serializedLayer.layout, styleLayer.layout, feature, featureState, availableImages);
@@ -368,18 +367,18 @@ function needsEvaluating(value: unknown): value is PossiblyEvaluatedPropertyValu
  */
 
 function evaluateProperties<Props, PossiblyEvaluatedProps>(
-    serializedProperties: Record<string, unknown>,
+    serializedProperties: Record<string, unknown> | undefined,
     styleLayerProperties: PossiblyEvaluated<Props, PossiblyEvaluatedProps> | unknown,
     feature: Feature,
     featureState: FeatureState,
     availableImages: string[]
 ): Record<string, unknown> {
-    return mapObject(serializedProperties, (_property, key) => {
+    return Object.fromEntries(Object.keys(serializedProperties ?? {}).map(key => {
         const value = styleLayerProperties instanceof PossiblyEvaluated ?
             styleLayerProperties.get(key as keyof PossiblyEvaluatedProps) :
             null;
-        return needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value;
-    });
+        return [key, needsEvaluating(value) ? value.evaluate(feature, featureState, undefined, availableImages) : value];
+    }));
 }
 
 function topDownFeatureComparator(a: number, b: number) {

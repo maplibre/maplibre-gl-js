@@ -1,0 +1,26 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64
+    }
+  },
+  "zoom": 2,
+  "center": [0, 0],
+  "sources": {},
+  "layers": [
+    {
+      "id": "from-minzoom",
+      "type": "background",
+      "minzoom": 2,
+      "paint": {"background-color": "blue"}
+    },
+    {
+      "id": "until-maxzoom",
+      "type": "background",
+      "maxzoom": 2,
+      "paint": {"background-color": "red"}
+    }
+  ]
+}

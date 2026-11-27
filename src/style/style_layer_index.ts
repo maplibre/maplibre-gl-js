@@ -8,11 +8,12 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 export type LayerConfigs = {[_: string]: LayerSpecification};
 
 export class StyleLayerIndex {
-    familiesBySource: {
-        [source: string]: {
-            [sourceLayer: string]: StyleLayer[][];
-        };
-    };
+    /**
+     * The layer families each source layer of each source draws, keyed by source id and source layer id. Both levels
+     * are null-prototype objects, since the ids come from the style and a `__proto__` id would otherwise resolve to
+     * `Object.prototype` and have the families written onto it.
+     */
+    familiesBySource: Record<string, Record<string, StyleLayer[][]>>;
     keyCache: {[source: string]: string};
 
     _layerConfigs: LayerConfigs;
@@ -46,7 +47,7 @@ export class StyleLayerIndex {
             delete this._layers[id];
         }
 
-        this.familiesBySource = {};
+        this.familiesBySource = Object.create(null);
 
         const groups = groupByLayout(Object.values(this._layerConfigs), this.keyCache);
 
@@ -60,7 +61,7 @@ export class StyleLayerIndex {
 
             const sourceId = layer.source || '';
             let sourceGroup = this.familiesBySource[sourceId];
-            sourceGroup ||= this.familiesBySource[sourceId] = {};
+            sourceGroup ||= this.familiesBySource[sourceId] = Object.create(null);
 
             const sourceLayerId = layer.sourceLayer || GEOJSON_TILE_LAYER_NAME;
             let sourceLayerFamilies = sourceGroup[sourceLayerId];

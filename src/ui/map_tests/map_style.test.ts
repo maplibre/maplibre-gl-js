@@ -4,7 +4,6 @@ import {createMap, beforeMapTest, createStyle, createStyleSource, sleep} from '.
 import {ErrorEvent} from '../../util/evented.ts';
 import {MapSourceDataEvent, MapStyleDataEvent} from '../events.ts';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
-import {extend} from '../../util/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
 import {Style} from '../../style/style.ts';
 import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
@@ -415,27 +414,25 @@ describe('setStyle', () => {
     });
 
     test('transformStyle should copy the source and the layer into next style', async () => {
-        const style = extend(createStyle(), {
-            sources: {
-                maplibre: {
-                    type: 'vector',
-                    minzoom: 1,
-                    maxzoom: 10,
-                    tiles: ['http://example.com/{z}/{x}/{y}.png']
-                }
-            },
-            layers: [{
-                id: 'layerId0',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }, {
-                id: 'layerId1',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }]
-        });
+        const style: StyleSpecification = {...createStyle(), sources: {
+            maplibre: {
+                type: 'vector',
+                minzoom: 1,
+                maxzoom: 10,
+                tiles: ['http://example.com/{z}/{x}/{y}.png']
+            }
+        },
+        layers: [{
+            id: 'layerId0',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }, {
+            id: 'layerId1',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }]};
 
         const map = createMap({style});
         map.setStyle(createStyle(), {
@@ -461,27 +458,25 @@ describe('setStyle', () => {
     });
 
     test('delayed setStyle with transformStyle should copy the source and the layer into next style with diffing', async () => {
-        const style = extend(createStyle(), {
-            sources: {
-                maplibre: {
-                    type: 'vector',
-                    minzoom: 1,
-                    maxzoom: 10,
-                    tiles: ['http://example.com/{z}/{x}/{y}.png']
-                }
-            },
-            layers: [{
-                id: 'layerId0',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }, {
-                id: 'layerId1',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }]
-        });
+        const style: StyleSpecification = {...createStyle(), sources: {
+            maplibre: {
+                type: 'vector',
+                minzoom: 1,
+                maxzoom: 10,
+                tiles: ['http://example.com/{z}/{x}/{y}.png']
+            }
+        },
+        layers: [{
+            id: 'layerId0',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }, {
+            id: 'layerId1',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }]};
 
         const map = createMap({style});
         await sleep(100);
@@ -511,27 +506,25 @@ describe('setStyle', () => {
     test('can asynchronously transform style JSON request specified to setStyle with diffing', async () => {
         server.respondWith('style.json', JSON.stringify(createStyle()));
 
-        const style = extend(createStyle(), {
-            sources: {
-                maplibre: {
-                    type: 'vector',
-                    minzoom: 1,
-                    maxzoom: 10,
-                    tiles: ['http://example.com/{z}/{x}/{y}.png']
-                }
-            },
-            layers: [{
-                id: 'layerId0',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }, {
-                id: 'layerId1',
-                type: 'circle',
-                source: 'maplibre',
-                'source-layer': 'sourceLayer'
-            }]
-        });
+        const style: StyleSpecification = {...createStyle(), sources: {
+            maplibre: {
+                type: 'vector',
+                minzoom: 1,
+                maxzoom: 10,
+                tiles: ['http://example.com/{z}/{x}/{y}.png']
+            }
+        },
+        layers: [{
+            id: 'layerId0',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }, {
+            id: 'layerId1',
+            type: 'circle',
+            source: 'maplibre',
+            'source-layer': 'sourceLayer'
+        }]};
 
         const map = createMap({style});
         const transformRequestSpy = vi.fn(async (url) => ({
@@ -593,7 +586,8 @@ describe('setStyle', () => {
         });
 
         const map = createMap({deleteStyle: true});
-        const initialTransform = map._camera.transform;
+        const initialState = map._camera.renderedState;
+        const initialProjection = map._camera.context.projection;
         const projectionTransitionSpy = vi.fn();
         map.on('projectiontransition', projectionTransitionSpy);
         map.setTransformRequest(() => transformRequest);
@@ -608,7 +602,8 @@ describe('setStyle', () => {
 
         expect(map.style).toBeUndefined();
         expect(projectionTransitionSpy).not.toHaveBeenCalled();
-        expect(map._camera.transform).toBe(initialTransform);
+        expect(map._camera.renderedState).toBe(initialState);
+        expect(map._camera.context.projection).toBe(initialProjection);
     });
 
     test('map load should be fired when transformStyle is used on setStyle after the map is initialised without a style', async () => {
@@ -746,9 +741,7 @@ describe('getStyle', () => {
 
         await map.once('load');
         map.addSource('geojson', createStyleSource());
-        expect(map.getStyle()).toEqual(extend(createStyle(), {
-            sources: {geojson: createStyleSource()}
-        }));
+        expect(map.getStyle()).toEqual({...createStyle(), sources: {geojson: createStyleSource()}});
     });
 
     test('fires an error on checking if non-existent source is loaded', async () => {
@@ -772,9 +765,7 @@ describe('getStyle', () => {
 
         await map.once('load');
         map.addLayer(layer);
-        expect(map.getStyle()).toEqual(extend(createStyle(), {
-            layers: [layer]
-        }));
+        expect(map.getStyle()).toEqual({...createStyle(), layers: [layer]});
     });
 
     test('a layer can be added even if a map is created without a style', () => {
@@ -824,10 +815,8 @@ describe('getStyle', () => {
         await map.once('load');
         map.addSource('fill', source);
         map.addLayer(layer);
-        expect(map.getStyle()).toEqual(extend(createStyle(), {
-            sources: {fill: source},
-            layers: [layer]
-        }));
+        expect(map.getStyle()).toEqual({...createStyle(), sources: {fill: source},
+            layers: [layer]});
     });
 
     test('creates a new Style if diff fails', () => {
