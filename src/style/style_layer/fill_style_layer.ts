@@ -4,7 +4,7 @@ import {polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
 import {translateDistance, translate} from '../query_utils.ts';
 import properties, {type FillLayoutPropsPossiblyEvaluated, type FillPaintPropsPossiblyEvaluated} from './fill_style_layer_properties.g.ts';
 
-import type {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties.ts';
+import type {Transitionable, Transitioning, Layout, PossiblyEvaluated, PropertyValue} from '../properties.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket.ts';
 import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g.ts';
@@ -31,6 +31,15 @@ export class FillStyleLayer extends StyleLayer {
         if (outlineColor.value.kind === 'constant' && outlineColor.value.value === undefined) {
             this.paint._values['fill-outline-color'] = this.paint._values['fill-color'];
         }
+    }
+
+    /**
+     * Asks for the layer's tiles to be rebuilt when `fill-rounded-corner-distance` becomes set or unset,
+     * because whether it is set decides how the bucket lays out its vertices. Changing it from one value
+     * to another only changes what the shader is given, so it needs nothing more than a redraw.
+     */
+    _handleOverridablePaintPropertyUpdate<T, R>(name: string, oldValue: PropertyValue<T, R>, newValue: PropertyValue<T, R>): boolean {
+        return name === 'fill-rounded-corner-distance' && (oldValue.value === undefined) !== (newValue.value === undefined);
     }
 
     createBucket(parameters: BucketParameters<any>): FillBucket {

@@ -15,6 +15,7 @@ import pos3dAttributes from '../src/data/pos3d_attributes.ts';
 import rasterBoundsAttributes from '../src/data/raster_bounds_attributes.ts';
 import circleAttributes from '../src/data/bucket/circle_attributes.ts';
 import fillAttributes from '../src/data/bucket/fill_attributes.ts';
+import fillCornerAttributes from '../src/data/bucket/fill_corner_attributes.ts';
 import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes.ts';
 import {lineLayoutAttributes} from '../src/data/bucket/line_attributes.ts';
 import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext.ts';
@@ -137,6 +138,7 @@ createStructArrayType('raster_bounds', rasterBoundsAttributes);
 const layoutAttributes = {
     circle: circleAttributes,
     fill: fillAttributes,
+    fillCorner: fillCornerAttributes,
     'fill-extrusion': fillExtrusionAttributes,
     heatmap: circleAttributes,
     line: lineLayoutAttributes,

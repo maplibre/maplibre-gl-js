@@ -66,6 +66,15 @@ function createPatternFeature(a: string, b: string): VectorTileFeatureLike {
     };
 }
 
+function ring(...coordinates: Array<[number, number]>): Point[] {
+    return coordinates.map(([x, y]) => new Point(x, y));
+}
+
+function cornerAttributesOf(bucket: FillBucket, vertex: number): number[] {
+    const shortsPerVertex = bucket.cornerVertexArray.bytesPerElement / 2;
+    return Array.from(bucket.cornerVertexArray.int16.subarray(vertex * shortsPerVertex, (vertex + 1) * shortsPerVertex));
+}
+
 describe('FillBucket', () => {
     let sourceLayer: VectorTileLayerLike;
     let canonicalTileID;
@@ -209,5 +218,53 @@ describe('FillBucket', () => {
         expect(bucket.sdfPatterns['mixed-crossfade-layer']).toBe(true);
         expect(warning).toHaveBeenCalled();
         warning.mockRestore();
+    });
+
+    test('keeps no corner attributes when no layer sets fill-rounded-corner-distance', () => {
+        const bucket = createFillBucket({id: 'test', layout: {}});
+
+        bucket.addFeature({} as BucketFeature, [ring([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+
+        expect(bucket.hasRoundedCorners).toBe(false);
+        expect(bucket.cornerVertexArray).toHaveLength(0);
+    });
+
+    test('rounds corners when any of its layers sets fill-rounded-corner-distance, even to zero', () => {
+        const bucket = createFillBucketWithLayers([
+            {id: 'sharp', type: 'fill', source: 'source'},
+            {id: 'rounded', type: 'fill', source: 'source', paint: {'fill-rounded-corner-distance': 0}}
+        ]);
+
+        expect(bucket.hasRoundedCorners).toBe(true);
+    });
+
+    test('gives each fill triangle vertices of its own after the outline, carrying the corners that round it', () => {
+        const bucket = createFillBucket({id: 'test', layout: {}, paint: {'fill-rounded-corner-distance': 10}});
+
+        bucket.addFeature({} as BucketFeature, [ring([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+
+        const outlineVertexCount = bucket.layoutVertexArray.length - 6;
+        expect(bucket.cornerVertexArray).toHaveLength(bucket.layoutVertexArray.length);
+        expect(cornerAttributesOf(bucket, 0)).toEqual(new Array(20).fill(0));
+        expect(Array.from(bucket.indexArray.uint16.subarray(0, bucket.indexArray.length * 3))).toEqual([0, 1, 2, 3, 4, 5].map(i => outlineVertexCount + i));
+        for (let v = outlineVertexCount; v < bucket.layoutVertexArray.length; v++) {
+            expect(cornerAttributesOf(bucket, v).slice(18)).toEqual([3, 0]);
+        }
+        expect(Math.max(...bucket.indexArray2.uint16.subarray(0, bucket.indexArray2.length * 2))).toBeLessThan(outlineVertexCount);
+    });
+
+    test('adds a triangle that draws the arc area of a concave corner', () => {
+        const bucket = createFillBucket({id: 'test', layout: {}, paint: {'fill-rounded-corner-distance': 10}});
+
+        bucket.addFeature({} as BucketFeature, [ring([0, 0], [100, 0], [100, 50], [50, 50], [50, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+
+        const last = bucket.layoutVertexArray.length - 1;
+        expect(cornerAttributesOf(bucket, last)).toEqual([
+            50, 50, 100, 50,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            50, 100, 0, 0,
+            0, 0, 1, 1
+        ]);
     });
 });
