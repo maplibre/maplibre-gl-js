@@ -2638,6 +2638,36 @@ describe('TileManager.onRemove', () => {
         expect(vi.getTimerCount()).toBe(0);
         vi.useRealTimers();
     });
+
+    test('does not leave a reload timer for a tile whose reload is aborted by removal', async () => {
+        vi.useFakeTimers();
+        const transform = createMercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+
+        const tileManager = createTileManager();
+        const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
+            tile.state = 'loaded';
+            tile.setExpiryData({cacheControl: 'max-age=60'});
+        });
+        tileManager.onAdd(undefined);
+        tileManager.update(transform);
+        await vi.advanceTimersByTimeAsync(0);
+
+        let finishReload: () => void;
+        loadTile.mockReturnValueOnce(new Promise<void>((resolve) => {
+            finishReload = resolve;
+        }));
+        tileManager.reload();
+        expect(loadTile).toHaveBeenCalledTimes(2);
+
+        tileManager.onRemove(undefined);
+        finishReload();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(vi.getTimerCount()).toBe(0);
+        vi.useRealTimers();
+    });
 });
 
 describe('TileManager.usedForTerrain', () => {
