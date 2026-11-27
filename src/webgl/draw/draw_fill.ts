@@ -9,6 +9,7 @@ import {
 } from '../program/fill_program.ts';
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
+import {getTileUnitsForMeters} from '../../data/bucket/round_polygon_corners.ts';
 import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
@@ -117,6 +118,7 @@ function drawFillTiles(
 
     const projectedCamera = frameRenderContext.projectedCamera;
 
+    const roundedCornerDistance = layer.paint.get('fill-rounded-corner-distance');
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
 
@@ -157,7 +159,10 @@ function drawFillTiles(
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
+            const roundedCornerDistanceInTileUnits = roundedCornerDistance > 0 ? getTileUnitsForMeters(roundedCornerDistance, coord.canonical) : 0;
+            uniformValues = image ?
+                fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern, roundedCornerDistanceInTileUnits) :
+                fillUniformValues(translateForUniforms, roundedCornerDistanceInTileUnits);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;

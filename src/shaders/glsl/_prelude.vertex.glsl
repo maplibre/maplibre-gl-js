@@ -193,3 +193,64 @@ layout(std140) uniform FrameUBO {
     highp vec2 u_pixel_extrude_scale;
     highp float u_pitch;
 };
+
+#ifdef ROUNDED_CORNERS
+// The distance from each corner, along its edges, that `fill-rounded-corner-distance` replaces with an
+// arc, in tile units.
+uniform highp float u_rounded_corner_distance;
+
+// The fragment's position in tile units, which the arcs of its triangle are measured against.
+out highp vec2 v_rounded_pos;
+// One circle for each corner that rounds the triangle: its centre, its radius, and how far the chord
+// between the two points where the arc meets the edges lies from the centre. A radius of zero leaves
+// the slot unused. Every vertex of a triangle carries the same corners, so this and the varyings below
+// reach each fragment unchanged by interpolation, without the `flat` qualifier that Safari's Metal
+// backend handles slowly.
+out highp vec4 v_rounded_circle0;
+out highp vec4 v_rounded_circle1;
+out highp vec4 v_rounded_circle2;
+// The unit vectors from the first two corners towards their circles' centres.
+out highp vec4 v_rounded_bisector01;
+// The unit vector from the third corner towards its circle's centre, and 1.0 for a triangle that
+// keeps what its arcs leave inside the polygon or -1.0 for one that only draws the area a concave
+// corner's arc adds outside it.
+out highp vec3 v_rounded_bisector2_side;
+
+// Returns the circle that rounds a corner, in the layout of `v_rounded_circle0`, and sets `bisector` to
+// the unit vector from the corner towards the circle's centre. The arc starts at
+// `u_rounded_corner_distance` from the corner along each edge, but never further than half the edge,
+// so the arcs at the two ends of an edge do not overlap.
+highp vec4 rounded_corner_circle(highp vec2 point, highp vec2 prev, highp vec2 next, out highp vec2 bisector) {
+    bisector = vec2(0.0);
+    highp float prevLength = length(prev - point);
+    highp float nextLength = length(next - point);
+    if (prevLength == 0.0 || nextLength == 0.0 || u_rounded_corner_distance <= 0.0) return vec4(0.0);
+
+    highp vec2 towardsPrev = (prev - point) / prevLength;
+    highp vec2 towardsNext = (next - point) / nextLength;
+    highp float cosAngle = dot(towardsPrev, towardsNext);
+    highp float sinHalfAngle = sqrt(max((1.0 - cosAngle) * 0.5, 0.0));
+    highp float cosHalfAngle = sqrt(max((1.0 + cosAngle) * 0.5, 0.0));
+    if (sinHalfAngle < 1e-4 || cosHalfAngle < 1e-4) return vec4(0.0);
+
+    highp float cut = min(u_rounded_corner_distance, 0.5 * min(prevLength, nextLength));
+    highp float radius = cut * sinHalfAngle / cosHalfAngle;
+    bisector = normalize(towardsPrev + towardsNext);
+    return vec4(point + bisector * (radius / sinHalfAngle), radius, radius * sinHalfAngle);
+}
+
+// Passes the corners that round the vertex's triangle on to the fragment shader, unpacked from the
+// attributes `fill_corner_attributes` lays out.
+void prepare_rounded_corners(highp vec2 pos, highp vec4 corner0, highp vec4 corner1, highp vec4 corner2, highp vec4 next01, highp vec4 next2) {
+    v_rounded_pos = pos;
+    highp vec2 bisector0 = vec2(0.0);
+    highp vec2 bisector1 = vec2(0.0);
+    highp vec2 bisector2 = vec2(0.0);
+    highp float count = next2.z;
+    v_rounded_circle0 = count > 0.5 ? rounded_corner_circle(corner0.xy, corner0.zw, next01.xy, bisector0) : vec4(0.0);
+    v_rounded_circle1 = count > 1.5 ? rounded_corner_circle(corner1.xy, corner1.zw, next01.zw, bisector1) : vec4(0.0);
+    v_rounded_circle2 = count > 2.5 ? rounded_corner_circle(corner2.xy, corner2.zw, next2.xy, bisector2) : vec4(0.0);
+    v_rounded_bisector01 = vec4(bisector0, bisector1);
+    v_rounded_bisector2_side = vec3(bisector2, next2.w > 0.5 ? -1.0 : 1.0);
+}
+#endif

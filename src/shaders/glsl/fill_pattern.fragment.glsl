@@ -45,6 +45,12 @@ void main() {
         fragColor = mix(color1, color2, u_fade) * opacity;
     }
 
+#ifdef ROUNDED_CORNERS
+    highp float coverage = rounded_corner_coverage();
+    if (coverage <= 0.0) discard;
+    fragColor *= coverage;
+#endif
+
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
 #endif
