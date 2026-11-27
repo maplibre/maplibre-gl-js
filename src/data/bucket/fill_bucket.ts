@@ -1,7 +1,7 @@
 import {FillCornerLayoutArray, FillLayoutArray} from '../array_types.g.ts';
 import {members as layoutAttributes} from './fill_attributes.ts';
 import {members as cornerAttributes} from './fill_corner_attributes.ts';
-import {cornersAlongOutline, findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles, type FillCorner} from './fill_rounded_corners.ts';
+import {cornersAlongOutline, findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles, type FillCorner, type TriangleMesh} from './fill_rounded_corners.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type.ts';
@@ -235,9 +235,10 @@ export class FillBucket implements Bucket {
         [_: string]: ImagePosition;
     }, subdivisionGranularity: SubdivisionGranularitySetting): void {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
-            const subdivided = subdividePolygon(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
+            const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+            const subdivided = subdividePolygon(polygon, canonical, granularity);
             if (this.hasRoundedCorners) {
-                this.addRoundedPolygon(polygon, subdivided);
+                this.addRoundedPolygon(polygon, subdivided, ring => subdividePolygon([ring], canonical, granularity, false));
                 continue;
             }
 
@@ -267,10 +268,12 @@ export class FillBucket implements Bucket {
      * the triangle and line segments keep counting the same vertices.
      * @param polygon - The exterior ring followed by its holes, as `classifyRings` groups them
      * @param subdivided - The polygon's mesh, as `subdividePolygon` returns it
+     * @param triangulate - Subdivides a ring the way the polygon was, for the triangles that fill its
+     * concave corners
      */
-    private addRoundedPolygon(polygon: Point[][], subdivided: SubdivisionResult): void {
+    private addRoundedPolygon(polygon: Point[][], subdivided: SubdivisionResult, triangulate: (ring: Point[]) => TriangleMesh): void {
         const corners = findRoundableCorners(polygon);
-        const fill = roundedFillTriangles(corners, subdivided.verticesFlattened, subdivided.indicesTriangles);
+        const fill = roundedFillTriangles(corners, subdivided, triangulate);
 
         const lineIndices = subdivided.indicesLineList.flat();
         const outlineCorners = cornersAlongOutline(corners, subdivided.verticesFlattened, lineIndices);

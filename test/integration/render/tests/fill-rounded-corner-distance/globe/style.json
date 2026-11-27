@@ -1,0 +1,88 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 512,
+      "width": 512,
+      "allowed": 0.001
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [-45, 0],
+                  [-5, 0],
+                  [-5, 40],
+                  [-45, 40],
+                  [-45, 0]
+                ],
+                [
+                  [-35, 10],
+                  [-35, 30],
+                  [-15, 30],
+                  [-15, 10],
+                  [-35, 10]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [5, 0],
+                  [45, 0],
+                  [45, 15],
+                  [20, 15],
+                  [20, 40],
+                  [5, 40],
+                  [5, 0]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "zoom": 1.5,
+  "center": [0, 20],
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "geojson",
+      "paint": {
+        "fill-color": "#1f4fa8",
+        "fill-rounded-corner-distance": 400000,
+        "fill-opacity": 0.6
+      }
+    }
+  ],
+  "projection": {
+    "type": "globe"
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  }
+}

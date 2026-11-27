@@ -204,42 +204,58 @@ export type RoundedFillTriangles = {
 };
 
 /**
- * Returns the triangles that draw a polygon with rounded corners: every triangle of its mesh, rounded
- * by the convex corners that reach it, followed by a triangle for each concave corner. That triangle
- * spans the corner and its two neighbours, so its edges lie exactly on the polygon's own and the arc
- * area it adds meets the mesh without a seam.
- * @param corners - The polygon's corners, as {@link findRoundableCorners} returns them
- * @param vertices - The mesh's vertices, flattened as x, y pairs
- * @param triangleIndices - Indices into `vertices`, three per triangle
+ * A triangle mesh, as `subdividePolygon` returns one.
  */
-export function roundedFillTriangles(corners: FillCorner[], vertices: number[], triangleIndices: number[]): RoundedFillTriangles {
-    const meshCorners = cornersReachingTriangles(corners, vertices, triangleIndices);
-    const concave = corners.map((_, c) => c).filter(c => !corners[c].convex);
-    const meshTriangleCount = triangleIndices.length / 3;
+export type TriangleMesh = {
+    /** The mesh's vertices, flattened as x, y pairs. */
+    verticesFlattened: number[];
+    /** Indices into `verticesFlattened`, three per triangle. */
+    indicesTriangles: number[];
+};
 
+/**
+ * Returns the triangles that draw a polygon with rounded corners: every triangle of its mesh, rounded
+ * by the convex corners that reach it, followed by the triangles that fill each concave corner. Those
+ * cover the triangle that spans the corner and its two neighbours, so their edges run along the
+ * polygon's own and the area the arc adds meets the mesh without a seam, provided they are triangulated
+ * the way the mesh was: on the globe a mesh's edges follow the projection only between the vertices
+ * subdivision added, and a single triangle's edges would part from them.
+ * @param corners - The polygon's corners, as {@link findRoundableCorners} returns them
+ * @param mesh - The polygon's mesh
+ * @param triangulate - Triangulates a closed ring the way the polygon's mesh was, winding every
+ * triangle the same way
+ */
+export function roundedFillTriangles(corners: FillCorner[], mesh: TriangleMesh, triangulate: (ring: Point[]) => TriangleMesh): RoundedFillTriangles {
+    const meshes = [mesh];
+    const meshCorners = [cornersReachingTriangles(corners, mesh.verticesFlattened, mesh.indicesTriangles)];
+    for (let c = 0; c < corners.length; c++) {
+        if (corners[c].convex) continue;
+        const {prev, point, next} = corners[c];
+        const fillIn = triangulate([prev, point, next, prev]);
+        meshes.push(fillIn);
+        meshCorners.push(Int32Array.from(
+            {length: fillIn.indicesTriangles.length / 3 * MAX_CORNERS_PER_TRIANGLE},
+            (_, slot) => slot % MAX_CORNERS_PER_TRIANGLE === 0 ? c : -1));
+    }
+
+    const triangleCount = meshes.reduce((sum, m) => sum + m.indicesTriangles.length / 3, 0);
     const result: RoundedFillTriangles = {
-        vertices: new Array((meshTriangleCount + concave.length) * 6),
-        corners: new Int32Array((meshTriangleCount + concave.length) * MAX_CORNERS_PER_TRIANGLE).fill(-1),
-        addsArea: new Array(meshTriangleCount + concave.length).fill(false)
+        vertices: [],
+        corners: new Int32Array(triangleCount * MAX_CORNERS_PER_TRIANGLE),
+        addsArea: []
     };
 
-    for (let i = 0; i < triangleIndices.length; i++) {
-        result.vertices[i * 2] = vertices[triangleIndices[i] * 2];
-        result.vertices[i * 2 + 1] = vertices[triangleIndices[i] * 2 + 1];
-    }
-    result.corners.set(meshCorners);
-
-    for (let k = 0; k < concave.length; k++) {
-        const t = meshTriangleCount + k;
-        const [first, second, third] = windLikeMesh(corners[concave[k]]);
-        result.vertices[t * 6] = first.x;
-        result.vertices[t * 6 + 1] = first.y;
-        result.vertices[t * 6 + 2] = second.x;
-        result.vertices[t * 6 + 3] = second.y;
-        result.vertices[t * 6 + 4] = third.x;
-        result.vertices[t * 6 + 5] = third.y;
-        result.corners[t * MAX_CORNERS_PER_TRIANGLE] = concave[k];
-        result.addsArea[t] = true;
+    let slot = 0;
+    for (let m = 0; m < meshes.length; m++) {
+        const {verticesFlattened, indicesTriangles} = meshes[m];
+        for (const v of indicesTriangles) {
+            result.vertices.push(verticesFlattened[v * 2], verticesFlattened[v * 2 + 1]);
+        }
+        for (let t = 0; t < indicesTriangles.length / 3; t++) {
+            result.addsArea.push(m > 0);
+        }
+        result.corners.set(meshCorners[m], slot);
+        slot += meshCorners[m].length;
     }
     return result;
 }
@@ -312,16 +328,6 @@ function liesAlongCornerEdge(corner: FillCorner, ax: number, ay: number, bx: num
         if (Math.min(alongA, alongB) < maxCutDistance && Math.max(alongA, alongB) > 0) return true;
     }
     return false;
-}
-
-/**
- * Returns a corner and its neighbours in the winding order that `subdividePolygon` gives every triangle
- * of a fill's mesh, which the fill draws with back faces culled.
- * @param corner - The corner whose triangle is wound
- */
-function windLikeMesh({prev, point, next}: FillCorner): [Point, Point, Point] {
-    const cross = (point.x - prev.x) * (next.y - prev.y) - (point.y - prev.y) * (next.x - prev.x);
-    return cross > 0 ? [next, point, prev] : [prev, point, next];
 }
 
 /**

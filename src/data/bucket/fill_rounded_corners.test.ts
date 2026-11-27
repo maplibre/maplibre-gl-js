@@ -1,6 +1,6 @@
-import {describe, test, expect} from 'vitest';
+import {describe, test, expect, vi} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {cornersAlongOutline, cornersReachingTriangles, findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles} from './fill_rounded_corners.ts';
+import {cornersAlongOutline, cornersReachingTriangles, findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles, type TriangleMesh} from './fill_rounded_corners.ts';
 
 function ring(...coordinates: Array<[number, number]>): Point[] {
     return coordinates.map(([x, y]) => new Point(x, y));
@@ -14,6 +14,10 @@ function cornersOfTriangle(assignment: Int32Array, triangle: number): number[] {
     return Array.from(assignment.subarray(triangle * MAX_CORNERS_PER_TRIANGLE, (triangle + 1) * MAX_CORNERS_PER_TRIANGLE))
         .filter(c => c !== -1)
         .sort((a, b) => a - b);
+}
+
+function triangleOfRing(fillIn: Point[]): TriangleMesh {
+    return {verticesFlattened: flatten(fillIn.slice(0, 3)), indicesTriangles: [0, 1, 2]};
 }
 
 function square(): Point[] {
@@ -127,7 +131,7 @@ describe('roundedFillTriangles', () => {
     test('gives every mesh triangle vertices of its own and the corners that reach it', () => {
         const corners = findRoundableCorners([square()]);
 
-        const fill = roundedFillTriangles(corners, flatten(square()), [0, 1, 2, 2, 3, 0]);
+        const fill = roundedFillTriangles(corners, {verticesFlattened: flatten(square()), indicesTriangles: [0, 1, 2, 2, 3, 0]}, triangleOfRing);
 
         expect(fill.vertices).toEqual([0, 0, 100, 0, 100, 100, 100, 100, 0, 100, 0, 0]);
         expect(cornersOfTriangle(fill.corners, 0)).toEqual([0, 1, 2]);
@@ -135,22 +139,19 @@ describe('roundedFillTriangles', () => {
         expect(fill.addsArea).toEqual([false, false]);
     });
 
-    test('adds a triangle for each concave corner, spanning the corner and its neighbours', () => {
+    test('fills a concave corner with every triangle its ring is triangulated into, each rounded by that corner', () => {
         const corners = findRoundableCorners([ring([0, 0], [100, 0], [100, 50], [50, 50], [50, 100], [0, 100], [0, 0])]);
+        const triangulate = vi.fn((fillIn: Point[]) => ({
+            verticesFlattened: [...flatten(fillIn.slice(0, 3)), 75, 75],
+            indicesTriangles: [0, 1, 3, 1, 2, 3]
+        }));
 
-        const fill = roundedFillTriangles(corners, [], []);
+        const fill = roundedFillTriangles(corners, {verticesFlattened: [], indicesTriangles: []}, triangulate);
 
-        expect(fill.vertices).toEqual([100, 50, 50, 50, 50, 100]);
-        expect(cornersOfTriangle(fill.corners, 0)).toEqual([3]);
-        expect(fill.addsArea).toEqual([true]);
-    });
-
-    test('winds the triangle of a concave corner like the mesh when the ring winds the other way', () => {
-        const corners = findRoundableCorners([ring([0, 0], [0, 100], [50, 100], [50, 50], [100, 50], [100, 0], [0, 0])]);
-
-        const fill = roundedFillTriangles(corners, [], []);
-
-        expect(fill.vertices).toEqual([100, 50, 50, 50, 50, 100]);
+        expect(triangulate).toHaveBeenCalledWith(ring([100, 50], [50, 50], [50, 100], [100, 50]));
+        expect(fill.vertices).toEqual([100, 50, 50, 50, 75, 75, 50, 50, 50, 100, 75, 75]);
+        expect([0, 1].map(t => cornersOfTriangle(fill.corners, t))).toEqual([[3], [3]]);
+        expect(fill.addsArea).toEqual([true, true]);
     });
 });
 
