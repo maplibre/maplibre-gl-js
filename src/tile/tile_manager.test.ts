@@ -121,6 +121,7 @@ beforeEach(() => {
 
 afterEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
     restoreNow();
 });
 
@@ -2636,7 +2637,6 @@ describe('TileManager.onRemove', () => {
         await vi.advanceTimersByTimeAsync(0);
 
         expect(vi.getTimerCount()).toBe(0);
-        vi.useRealTimers();
     });
 
     test('does not leave a reload timer for a tile whose reload is aborted by removal', async () => {
@@ -2666,7 +2666,36 @@ describe('TileManager.onRemove', () => {
         await vi.advanceTimersByTimeAsync(0);
 
         expect(vi.getTimerCount()).toBe(0);
-        vi.useRealTimers();
+    });
+
+    test('does not load more tiles when a reload fails with 404 after removal', async () => {
+        vi.useFakeTimers();
+        const transform = createMercatorTransform();
+        transform.resize(511, 511);
+        transform.setZoom(0);
+
+        const tileManager = createTileManager();
+        const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
+            tile.state = 'loaded';
+            tile.setExpiryData({cacheControl: 'max-age=60'});
+        });
+        tileManager.onAdd(undefined);
+        tileManager.update(transform);
+        await vi.advanceTimersByTimeAsync(0);
+
+        let failReload: () => void;
+        loadTile.mockReturnValueOnce(new Promise<void>((_resolve, reject) => {
+            failReload = () => reject({status: 404});
+        }));
+        await vi.advanceTimersByTimeAsync(60 * 1000);
+        expect(loadTile).toHaveBeenCalledTimes(2);
+
+        tileManager.onRemove(undefined);
+        failReload();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(loadTile).toHaveBeenCalledTimes(2);
+        expect(vi.getTimerCount()).toBe(0);
     });
 });
 

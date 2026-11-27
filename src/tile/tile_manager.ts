@@ -201,7 +201,7 @@ export class TileManager extends Evented<SourceEventType> {
 
             if (err.status !== 404) {
                 this._source.fire(new ErrorEvent(ensureError(err), {tile}));
-            } else {
+            } else if (this._inViewTiles.getTileById(id) === tile) {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
                 this.update(this.transform, this.terrain);
             }
