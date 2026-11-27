@@ -5,6 +5,14 @@ uniform vec2 u_fill_translate;
 
 layout(location = 0) in vec2 a_pos;
 
+#ifdef ROUNDED_CORNERS
+in vec4 a_corner0;
+in vec4 a_corner1;
+in vec4 a_corner2;
+in vec4 a_corner_next01;
+in vec4 a_corner_next2;
+#endif
+
 out vec2 v_pos_a;
 out vec2 v_pos_b;
 out vec2 v_pos;
@@ -43,6 +51,10 @@ void main() {
     float toScale = u_scale.z;
 
     gl_Position = projectTile(a_pos + u_fill_translate, a_pos);
+
+#ifdef ROUNDED_CORNERS
+    prepare_rounded_corners(a_pos, a_corner0, a_corner1, a_corner2, a_corner_next01, a_corner_next2);
+#endif
 
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;

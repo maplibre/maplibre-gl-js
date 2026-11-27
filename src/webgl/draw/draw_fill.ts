@@ -21,7 +21,7 @@ import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
 /**
- * The defines that make the `fill` and `fillPattern` programs round the corners a bucket carries.
+ * The defines that make the fill and fill outline programs round the corners a bucket carries.
  */
 const ROUNDED_CORNER_DEFINES = ['#define ROUNDED_CORNERS'];
 
@@ -152,7 +152,8 @@ function drawFillTiles(
 
         const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const roundsCorners = !isOutline && bucket.hasRoundedCorners && roundedCornerDistance > 0;
+        const roundsCorners = bucket.hasRoundedCorners && roundedCornerDistance > 0;
+        const roundedCornerDistanceInTileUnits = roundsCorners ? getTileUnitsForMeters(roundedCornerDistance, coord.canonical) : 0;
         const program = frameRenderContext.useProgram(programName, programConfiguration, false, roundsCorners ? ROUNDED_CORNER_DEFINES : undefined);
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
@@ -171,7 +172,6 @@ function drawFillTiles(
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            const roundedCornerDistanceInTileUnits = roundsCorners ? getTileUnitsForMeters(roundedCornerDistance, coord.canonical) : 0;
             uniformValues = image ?
                 fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern, roundedCornerDistanceInTileUnits) :
                 fillUniformValues(translateForUniforms, roundedCornerDistanceInTileUnits);
@@ -179,8 +179,8 @@ function drawFillTiles(
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern) :
-                fillOutlineUniformValues(translateForUniforms);
+                fillOutlinePatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern, roundedCornerDistanceInTileUnits) :
+                fillOutlineUniformValues(translateForUniforms, roundedCornerDistanceInTileUnits);
         }
 
         const stencil = frameRenderContext.stencilModeForClipping(coord);

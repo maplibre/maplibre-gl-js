@@ -23,6 +23,10 @@ void main() {
     }
     #endif
 
+#ifdef ROUNDED_CORNERS
+    if (!rounded_outline_drawn()) discard;
+#endif
+
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);
 #endif

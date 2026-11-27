@@ -83,4 +83,28 @@ highp float rounded_corner_coverage() {
     highp float pixelSize = 0.7071 * length(fwidth(v_rounded_pos));
     return clamp(0.5 - depth * v_rounded_bisector2_side.z / max(pixelSize, 1e-6), 0.0, 1.0);
 }
+
+// Whether one corner leaves an outline fragment drawn: not between the corner and the points where its
+// arc meets its edges, but beyond them. The corner and those points follow from the circle: the corner
+// lies `radius / sin(half angle)` back along the bisector from the centre, and the arc meets each edge
+// `radius * cos / sin` of the half angle from the corner.
+bool outline_beyond_arc(highp vec4 circle, highp vec2 bisector) {
+    if (circle.z <= 0.0) return true;
+    highp float sinHalfAngle = circle.w / circle.z;
+    highp float cosHalfAngle = sqrt(max(1.0 - sinHalfAngle * sinHalfAngle, 0.0));
+    highp vec2 corner = circle.xy - bisector * (circle.z / sinHalfAngle);
+    highp float arcStart = circle.z * cosHalfAngle / sinHalfAngle;
+    return length(v_rounded_pos - corner) >= arcStart;
+}
+
+// Whether the rounded corners along an outline fragment's segment leave it drawn. The outline traces
+// the polygon's edges as they are, so near a rounded corner it stops where the arc begins and leaves
+// the arc, and its antialiasing, to the fill. The stop is a hard one rather than a fade: along a line
+// primitive the screen-space derivatives a fade is measured with are unreliable on some GPUs, and leave
+// the hidden part of the line half drawn.
+bool rounded_outline_drawn() {
+    return outline_beyond_arc(v_rounded_circle0, v_rounded_bisector01.xy) &&
+        outline_beyond_arc(v_rounded_circle1, v_rounded_bisector01.zw) &&
+        outline_beyond_arc(v_rounded_circle2, v_rounded_bisector2_side.xy);
+}
 #endif

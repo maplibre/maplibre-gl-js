@@ -1,7 +1,7 @@
 import {FillCornerLayoutArray, FillLayoutArray} from '../array_types.g.ts';
 import {members as layoutAttributes} from './fill_attributes.ts';
 import {members as cornerAttributes} from './fill_corner_attributes.ts';
-import {findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles, type FillCorner, type RoundedFillTriangles} from './fill_rounded_corners.ts';
+import {cornersAlongOutline, findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles, type FillCorner} from './fill_rounded_corners.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type.ts';
@@ -261,32 +261,41 @@ export class FillBucket implements Bucket {
     }
 
     /**
-     * Adds a polygon whose corners the shader rounds. Its mesh is laid out as the outline's vertices
-     * followed by three vertices of its own for every triangle of the fill, so that each triangle can
-     * carry the corners that round it, and both are written through one mesh so that the triangle and
-     * line segments keep counting the same vertices.
+     * Adds a polygon whose corners the shader rounds. Its mesh is laid out as two vertices of its own for
+     * every segment of the outline, followed by three for every triangle of the fill, so that each
+     * segment and triangle can carry the corners that shape it. Both are written through one mesh so that
+     * the triangle and line segments keep counting the same vertices.
      * @param polygon - The exterior ring followed by its holes, as `classifyRings` groups them
      * @param subdivided - The polygon's mesh, as `subdividePolygon` returns it
      */
     private addRoundedPolygon(polygon: Point[][], subdivided: SubdivisionResult): void {
         const corners = findRoundableCorners(polygon);
         const fill = roundedFillTriangles(corners, subdivided.verticesFlattened, subdivided.indicesTriangles);
-        const outlineVertexCount = subdivided.verticesFlattened.length / 2;
+
+        const lineIndices = subdivided.indicesLineList.flat();
+        const outlineCorners = cornersAlongOutline(corners, subdivided.verticesFlattened, lineIndices);
+        const outlineVertices = lineIndices.flatMap(v => [subdivided.verticesFlattened[v * 2], subdivided.verticesFlattened[v * 2 + 1]]);
+        const outlineVertexCount = lineIndices.length;
         const fillTriangleIndices = Array.from({length: fill.vertices.length / 2}, (_, i) => outlineVertexCount + i);
 
         fillLargeMeshArrays(
             (x, y, i) => {
                 this.layoutVertexArray.emplaceBack(x, y);
-                emplaceCornerVertex(this.cornerVertexArray, corners, fill, Math.floor((i - outlineVertexCount) / 3));
+                if (i < outlineVertexCount) {
+                    emplaceCornerVertex(this.cornerVertexArray, corners, outlineCorners, Math.floor(i / 2), false);
+                } else {
+                    const triangle = Math.floor((i - outlineVertexCount) / 3);
+                    emplaceCornerVertex(this.cornerVertexArray, corners, fill.corners, triangle, fill.addsArea[triangle]);
+                }
             },
             this.segments,
             this.layoutVertexArray,
             this.indexArray,
-            subdivided.verticesFlattened.concat(fill.vertices),
+            outlineVertices.concat(fill.vertices),
             fillTriangleIndices,
             this.segments2,
             this.indexArray2,
-            subdivided.indicesLineList,
+            [Array.from({length: outlineVertexCount}, (_, i) => i)],
         );
     }
 }
@@ -298,29 +307,30 @@ const EMPTY_CORNER = {point: {x: 0, y: 0}, prev: {x: 0, y: 0}, next: {x: 0, y: 0
 
 /**
  * Appends the corner attributes of one vertex, laid out as `fill_corner_attributes` describes: the
- * corners of the vertex's triangle, how many there are, and whether the triangle adds the arc's area.
+ * corners of the triangle or outline segment the vertex belongs to, how many there are, and whether a
+ * triangle adds the arc's area.
  * @param array - The bucket's corner attributes
  * @param corners - The polygon's corners
- * @param fill - The polygon's fill triangles, which the slots of each triangle index into `corners` from
- * @param triangle - The vertex's triangle in `fill`, or a negative number for a vertex that only draws the outline
+ * @param slots - {@link MAX_CORNERS_PER_TRIANGLE} indices into `corners` for each triangle or segment, -1 where unused
+ * @param entry - The triangle or segment the vertex belongs to
+ * @param addsArea - Whether the vertex's triangle draws the area a concave corner's arc adds
  */
-function emplaceCornerVertex(array: FillCornerLayoutArray, corners: FillCorner[], fill: RoundedFillTriangles, triangle: number): void {
-    const slots: Array<Record<'point' | 'prev' | 'next', Point2D>> = [EMPTY_CORNER, EMPTY_CORNER, EMPTY_CORNER];
+function emplaceCornerVertex(array: FillCornerLayoutArray, corners: FillCorner[], slots: Int32Array, entry: number, addsArea: boolean): void {
+    const used: Array<Record<'point' | 'prev' | 'next', Point2D>> = [EMPTY_CORNER, EMPTY_CORNER, EMPTY_CORNER];
     let count = 0;
-    for (let s = 0; triangle >= 0 && s < MAX_CORNERS_PER_TRIANGLE; s++) {
-        const corner = fill.corners[triangle * MAX_CORNERS_PER_TRIANGLE + s];
+    for (let s = 0; s < MAX_CORNERS_PER_TRIANGLE; s++) {
+        const corner = slots[entry * MAX_CORNERS_PER_TRIANGLE + s];
         if (corner === -1) break;
-        slots[count++] = corners[corner];
+        used[count++] = corners[corner];
     }
-    const [c0, c1, c2] = slots;
-    const addsArea = triangle >= 0 && fill.addsArea[triangle] ? 1 : 0;
+    const [c0, c1, c2] = used;
 
     array.emplaceBack(
         c0.point.x, c0.point.y, c0.prev.x, c0.prev.y,
         c1.point.x, c1.point.y, c1.prev.x, c1.prev.y,
         c2.point.x, c2.point.y, c2.prev.x, c2.prev.y,
         c0.next.x, c0.next.y, c1.next.x, c1.next.y,
-        c2.next.x, c2.next.y, count, addsArea
+        c2.next.x, c2.next.y, count, addsArea ? 1 : 0
     );
 }
 

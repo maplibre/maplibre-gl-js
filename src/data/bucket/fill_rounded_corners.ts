@@ -245,6 +245,76 @@ export function roundedFillTriangles(corners: FillCorner[], vertices: number[], 
 }
 
 /**
+ * How far, in tile units, the ends of an outline segment may lie from the line through a corner's edge
+ * and still count as lying along it. Subdivision rounds the vertices it adds along an edge to the tile
+ * grid, which moves them off the edge by up to half a unit.
+ */
+const ON_EDGE_TOLERANCE = 1;
+
+/**
+ * Returns, for each segment of a polygon's outline, the corners whose arc replaces part of it. The
+ * outline draws the polygon's edges as they are, so the part of an edge between a corner and the point
+ * where its arc begins has to be left out, for concave corners as much as convex ones.
+ *
+ * A corner is assigned to the segments that lie along one of its own two edges and start within
+ * `maxCutDistance` of it. Only those, because an unrelated edge can pass just as close: across a
+ * narrow polygon, say.
+ * @param corners - The polygon's corners, as {@link findRoundableCorners} returns them
+ * @param vertices - The outline's vertices, flattened as x, y pairs
+ * @param lineIndices - Indices into `vertices`, two per segment
+ * @returns {@link MAX_CORNERS_PER_TRIANGLE} indices into `corners` for each segment, in the order of
+ * the segments, with -1 filling the slots a segment does not use.
+ */
+export function cornersAlongOutline(corners: FillCorner[], vertices: number[], lineIndices: number[]): Int32Array {
+    const segmentCount = lineIndices.length / 2;
+    const result = new Int32Array(segmentCount * MAX_CORNERS_PER_TRIANGLE).fill(-1);
+
+    const index = indexCutRegions(corners.map(cutRegion));
+    if (!index) return result;
+
+    for (let s = 0; s < segmentCount; s++) {
+        const a = lineIndices[s * 2];
+        const b = lineIndices[s * 2 + 1];
+        const ax = vertices[a * 2], ay = vertices[a * 2 + 1];
+        const bx = vertices[b * 2], by = vertices[b * 2 + 1];
+
+        const along = index.grid
+            .query(Math.min(ax, bx) - index.originX, Math.min(ay, by) - index.originY, Math.max(ax, bx) - index.originX, Math.max(ay, by) - index.originY)
+            .filter(c => liesAlongCornerEdge(corners[c], ax, ay, bx, by))
+            .slice(0, MAX_CORNERS_PER_TRIANGLE);
+
+        for (let k = 0; k < along.length; k++) {
+            result[s * MAX_CORNERS_PER_TRIANGLE + k] = along[k];
+        }
+    }
+    return result;
+}
+
+/**
+ * Whether a segment lies on the line through one of a corner's edges, within the part of that edge the
+ * corner's arc can replace.
+ * @param corner - The corner
+ * @param ax - X of the segment's first end
+ * @param ay - Y of the segment's first end
+ * @param bx - X of the segment's second end
+ * @param by - Y of the segment's second end
+ */
+function liesAlongCornerEdge(corner: FillCorner, ax: number, ay: number, bx: number, by: number): boolean {
+    const {point, maxCutDistance} = corner;
+    for (const neighbour of [corner.prev, corner.next]) {
+        const direction = neighbour.sub(point)._unit();
+        const offAxisA = direction.x * (ay - point.y) - direction.y * (ax - point.x);
+        const offAxisB = direction.x * (by - point.y) - direction.y * (bx - point.x);
+        if (Math.abs(offAxisA) > ON_EDGE_TOLERANCE || Math.abs(offAxisB) > ON_EDGE_TOLERANCE) continue;
+
+        const alongA = direction.x * (ax - point.x) + direction.y * (ay - point.y);
+        const alongB = direction.x * (bx - point.x) + direction.y * (by - point.y);
+        if (Math.min(alongA, alongB) < maxCutDistance && Math.max(alongA, alongB) > 0) return true;
+    }
+    return false;
+}
+
+/**
  * Returns a corner and its neighbours in the winding order that `subdividePolygon` gives every triangle
  * of a fill's mesh, which the fill draws with back faces culled.
  * @param corner - The corner whose triangle is wound
@@ -255,8 +325,10 @@ function windLikeMesh({prev, point, next}: FillCorner): [Point, Point, Point] {
 }
 
 /**
- * Returns the triangle, flattened as x, y pairs, that holds every area the corner's arc can cut away.
- * @param corner - A convex corner
+ * Returns the triangle, flattened as x, y pairs, spanned by the corner and the two points
+ * `maxCutDistance` along its edges. Whatever the distance, the corner's arc lies within it, and so does
+ * the area the arc cuts away from a convex corner or adds to a concave one.
+ * @param corner - The corner
  */
 function cutRegion(corner: FillCorner): number[] {
     const {point, prev, next, maxCutDistance} = corner;
@@ -278,7 +350,7 @@ type CutRegionIndex = {
 
 /**
  * Indexes the bounds of the cut regions, or returns `null` when there are none.
- * @param cuts - A cut region for each corner, `null` for corners that do not cut into the mesh
+ * @param cuts - A cut region for each corner, `null` for corners the index leaves out
  */
 function indexCutRegions(cuts: Array<number[] | null>): CutRegionIndex | null {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;

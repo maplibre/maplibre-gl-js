@@ -66,6 +66,7 @@
         container: 'map',
         canvasContextAttributes: {antialias: true}
     });
+    window.map = map;
 
     map.on('load', () => {
         const layers = map.getStyle().layers;

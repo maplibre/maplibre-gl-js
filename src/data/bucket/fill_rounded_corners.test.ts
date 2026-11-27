@@ -1,6 +1,6 @@
 import {describe, test, expect} from 'vitest';
 import Point from '@mapbox/point-geometry';
-import {cornersReachingTriangles, findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles} from './fill_rounded_corners.ts';
+import {cornersAlongOutline, cornersReachingTriangles, findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles} from './fill_rounded_corners.ts';
 
 function ring(...coordinates: Array<[number, number]>): Point[] {
     return coordinates.map(([x, y]) => new Point(x, y));
@@ -151,5 +151,32 @@ describe('roundedFillTriangles', () => {
         const fill = roundedFillTriangles(corners, [], []);
 
         expect(fill.vertices).toEqual([100, 50, 50, 50, 50, 100]);
+    });
+});
+
+describe('cornersAlongOutline', () => {
+    test('gives each segment of an outline the corners at its ends', () => {
+        const corners = findRoundableCorners([square()]);
+
+        const assignment = cornersAlongOutline(corners, flatten(square()), [0, 1, 1, 2, 2, 3, 3, 0]);
+
+        expect([0, 1, 2, 3].map(s => cornersOfTriangle(assignment, s))).toEqual([[0, 1], [1, 2], [2, 3], [0, 3]]);
+    });
+
+    test('gives a segment of a subdivided edge the corners whose arcs can reach it', () => {
+        const corners = findRoundableCorners([square()]);
+        const edge = [0, 0, 25, 0, 50, 0, 75, 0, 100, 0];
+
+        const assignment = cornersAlongOutline(corners, edge, [0, 1, 1, 2, 2, 3, 3, 4]);
+
+        expect([0, 1, 2, 3].map(s => cornersOfTriangle(assignment, s))).toEqual([[0], [0], [1], [1]]);
+    });
+
+    test('leaves out a segment that only passes close to a corner', () => {
+        const corners = findRoundableCorners([square()]);
+
+        const assignment = cornersAlongOutline(corners, [0, 5, 40, 5], [0, 1]);
+
+        expect(cornersOfTriangle(assignment, 0)).toEqual([]);
     });
 });

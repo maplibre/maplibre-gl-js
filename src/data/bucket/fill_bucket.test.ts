@@ -245,12 +245,21 @@ describe('FillBucket', () => {
 
         const outlineVertexCount = bucket.layoutVertexArray.length - 6;
         expect(bucket.cornerVertexArray).toHaveLength(bucket.layoutVertexArray.length);
-        expect(cornerAttributesOf(bucket, 0)).toEqual(new Array(20).fill(0));
         expect(Array.from(bucket.indexArray.uint16.subarray(0, bucket.indexArray.length * 3))).toEqual([0, 1, 2, 3, 4, 5].map(i => outlineVertexCount + i));
         for (let v = outlineVertexCount; v < bucket.layoutVertexArray.length; v++) {
             expect(cornerAttributesOf(bucket, v).slice(18)).toEqual([3, 0]);
         }
-        expect(Math.max(...bucket.indexArray2.uint16.subarray(0, bucket.indexArray2.length * 2))).toBeLessThan(outlineVertexCount);
+    });
+
+    test('gives each outline segment vertices of its own, carrying the corners at its ends', () => {
+        const bucket = createFillBucket({id: 'test', layout: {}, paint: {'fill-rounded-corner-distance': 10}});
+
+        bucket.addFeature({} as BucketFeature, [ring([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+
+        expect(Array.from(bucket.indexArray2.uint16.subarray(0, bucket.indexArray2.length * 2))).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+        for (let v = 0; v < 8; v++) {
+            expect(cornerAttributesOf(bucket, v).slice(18)).toEqual([2, 0]);
+        }
     });
 
     test('adds a triangle that draws the arc area of a concave corner', () => {
