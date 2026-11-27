@@ -87,6 +87,25 @@ describe('drag_pan', () => {
         map.remove();
     });
 
+    test('DragPanHandler ends a mouse-triggered drag on a mouseup outside the map', () => {
+        const map = createMap();
+
+        const dragend = vi.fn();
+        map.on('dragend', dragend);
+
+        simulate.mousedown(map.getCanvas());
+        map._renderTaskQueue.run();
+
+        simulate.mousemove(window.document.body, {buttons, clientX: 10, clientY: 10});
+        map._renderTaskQueue.run();
+
+        simulate.mouseup(window.document.body);
+        map._renderTaskQueue.run();
+        expect(dragend).toHaveBeenCalledTimes(1);
+
+        map.remove();
+    });
+
     test('DragPanHandler fires dragstart, drag, and dragend events at appropriate times in response to a touch-triggered drag', () => {
         const map = createMap();
         const target = map.getCanvas();

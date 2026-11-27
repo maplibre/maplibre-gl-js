@@ -33,6 +33,7 @@ const assignEvents = <T extends DragPanResult | DragRotateResult | DragPitchResu
     handler.mousedown = handler.dragStart;
     handler.mousemoveWindow = handler.dragMove;
     handler.mouseup = handler.dragEnd;
+    handler.mouseupWindow = handler.dragEnd;
     handler.contextmenu = (e: MouseEvent) => {
         e.preventDefault();
     };
