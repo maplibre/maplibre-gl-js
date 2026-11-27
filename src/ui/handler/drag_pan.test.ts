@@ -177,6 +177,24 @@ describe('drag_pan', () => {
         map.remove();
     });
 
+    test('DragPanHandler does not prevent the default of a touchmove within the click tolerance', () => {
+        const map = createMap(3);
+        const target = map.getCanvas();
+
+        const touchmove = vi.fn();
+        window.addEventListener('touchmove', touchmove);
+
+        simulate.touchstart(target, {touches: [{target, clientX: 0, clientY: 0}]});
+        simulate.touchmove(target, {cancelable: true, touches: [{target, clientX: 1, clientY: 1}]});
+        simulate.touchmove(target, {cancelable: true, touches: [{target, clientX: 10, clientY: 10}]});
+        simulate.touchend(target);
+
+        expect(touchmove.mock.calls.map(([e]) => e.defaultPrevented)).toEqual([false, true]);
+
+        window.removeEventListener('touchmove', touchmove);
+        map.remove();
+    });
+
     test('DragPanHandler requests a new render frame after each mousemove event', () => {
         const map = createMap();
         const requestFrame = vi.spyOn(map, '_requestRenderFrame');
