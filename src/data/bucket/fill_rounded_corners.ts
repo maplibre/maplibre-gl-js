@@ -4,10 +4,11 @@ import {TransferableGridIndex} from '../../util/transferable_grid_index.ts';
 import type Point from '@mapbox/point-geometry';
 
 /**
- * The most corners that can cut into one triangle of a fill. Each takes its own set of vertex
- * attributes, so a triangle that more corners reach keeps the nearest and leaves the rest sharp.
+ * The most corners that can shape one triangle of a fill or one segment of its outline. Each takes its
+ * own set of vertex attributes, so a triangle that more corners reach keeps the nearest and leaves the
+ * rest sharp.
  */
-export const MAX_CORNERS_PER_TRIANGLE = 3;
+export const CORNER_SLOTS = 3;
 
 /**
  * The share of each adjacent edge that a rounded corner may take up, which keeps the arcs at the two
@@ -144,13 +145,13 @@ function signedArea(vertices: Point[]): number {
  * @param corners - The polygon's corners, as {@link findRoundableCorners} returns them
  * @param vertices - The mesh's vertices, flattened as x, y pairs
  * @param triangleIndices - Indices into `vertices`, three per triangle
- * @returns {@link MAX_CORNERS_PER_TRIANGLE} indices into `corners` for each triangle, in the order of
+ * @returns {@link CORNER_SLOTS} indices into `corners` for each triangle, in the order of
  * the triangles, with -1 filling the slots a triangle does not use. When more corners reach a triangle,
  * the ones nearest its centroid are kept.
  */
 export function cornersReachingTriangles(corners: FillCorner[], vertices: number[], triangleIndices: number[]): Int32Array {
     const triangleCount = triangleIndices.length / 3;
-    const result = new Int32Array(triangleCount * MAX_CORNERS_PER_TRIANGLE).fill(-1);
+    const result = new Int32Array(triangleCount * CORNER_SLOTS).fill(-1);
 
     const cuts = corners.map(corner => corner.convex ? cutRegion(corner) : null);
     const index = indexCutRegions(cuts);
@@ -169,16 +170,16 @@ export function cornersReachingTriangles(corners: FillCorner[], vertices: number
             .query(minX - index.originX, minY - index.originY, maxX - index.originX, maxY - index.originY)
             .filter(c => trianglesOverlap(triangle, cuts[c]));
 
-        if (reaching.length > MAX_CORNERS_PER_TRIANGLE) {
+        if (reaching.length > CORNER_SLOTS) {
             const centroidX = (triangle[0] + triangle[2] + triangle[4]) / 3;
             const centroidY = (triangle[1] + triangle[3] + triangle[5]) / 3;
             const distanceToCentroid = (c: number) => (corners[c].point.x - centroidX) ** 2 + (corners[c].point.y - centroidY) ** 2;
             reaching.sort((a, b) => distanceToCentroid(a) - distanceToCentroid(b));
         }
 
-        const used = Math.min(reaching.length, MAX_CORNERS_PER_TRIANGLE);
+        const used = Math.min(reaching.length, CORNER_SLOTS);
         for (let s = 0; s < used; s++) {
-            result[t * MAX_CORNERS_PER_TRIANGLE + s] = reaching[s];
+            result[t * CORNER_SLOTS + s] = reaching[s];
         }
     }
     return result;
@@ -192,7 +193,7 @@ export type RoundedFillTriangles = {
     /** Three vertices per triangle, flattened as x, y pairs. */
     vertices: number[];
     /**
-     * {@link MAX_CORNERS_PER_TRIANGLE} indices into the polygon's corners for each triangle, with -1
+     * {@link CORNER_SLOTS} indices into the polygon's corners for each triangle, with -1
      * filling the slots a triangle does not use.
      */
     corners: Int32Array;
@@ -234,18 +235,18 @@ export function roundedFillTriangles(corners: FillCorner[], mesh: TriangleMesh, 
         const fillIn = triangulate([prev, point, next, prev]);
         meshes.push(fillIn);
         meshCorners.push(Int32Array.from(
-            {length: fillIn.indicesTriangles.length / 3 * MAX_CORNERS_PER_TRIANGLE},
-            (_, slot) => slot % MAX_CORNERS_PER_TRIANGLE === 0 ? c : -1));
+            {length: fillIn.indicesTriangles.length / 3 * CORNER_SLOTS},
+            (_, slot) => slot % CORNER_SLOTS === 0 ? c : -1));
     }
 
     const triangleCount = meshes.reduce((sum, m) => sum + m.indicesTriangles.length / 3, 0);
     const result: RoundedFillTriangles = {
         vertices: [],
-        corners: new Int32Array(triangleCount * MAX_CORNERS_PER_TRIANGLE),
+        corners: new Int32Array(triangleCount * CORNER_SLOTS),
         addsArea: []
     };
 
-    let slot = 0;
+    let offset = 0;
     for (let m = 0; m < meshes.length; m++) {
         const {verticesFlattened, indicesTriangles} = meshes[m];
         for (const v of indicesTriangles) {
@@ -254,8 +255,8 @@ export function roundedFillTriangles(corners: FillCorner[], mesh: TriangleMesh, 
         for (let t = 0; t < indicesTriangles.length / 3; t++) {
             result.addsArea.push(m > 0);
         }
-        result.corners.set(meshCorners[m], slot);
-        slot += meshCorners[m].length;
+        result.corners.set(meshCorners[m], offset);
+        offset += meshCorners[m].length;
     }
     return result;
 }
@@ -274,16 +275,17 @@ const ON_EDGE_TOLERANCE = 1;
  *
  * A corner is assigned to the segments that lie along one of its own two edges and start within
  * `maxCutDistance` of it. Only those, because an unrelated edge can pass just as close: across a
- * narrow polygon, say.
+ * narrow polygon, say. A segment lies along the edges of the corners at its two ends at most, so it
+ * never has more corners than slots.
  * @param corners - The polygon's corners, as {@link findRoundableCorners} returns them
  * @param vertices - The outline's vertices, flattened as x, y pairs
  * @param lineIndices - Indices into `vertices`, two per segment
- * @returns {@link MAX_CORNERS_PER_TRIANGLE} indices into `corners` for each segment, in the order of
+ * @returns {@link CORNER_SLOTS} indices into `corners` for each segment, in the order of
  * the segments, with -1 filling the slots a segment does not use.
  */
 export function cornersAlongOutline(corners: FillCorner[], vertices: number[], lineIndices: number[]): Int32Array {
     const segmentCount = lineIndices.length / 2;
-    const result = new Int32Array(segmentCount * MAX_CORNERS_PER_TRIANGLE).fill(-1);
+    const result = new Int32Array(segmentCount * CORNER_SLOTS).fill(-1);
 
     const index = indexCutRegions(corners.map(cutRegion));
     if (!index) return result;
@@ -297,10 +299,10 @@ export function cornersAlongOutline(corners: FillCorner[], vertices: number[], l
         const along = index.grid
             .query(Math.min(ax, bx) - index.originX, Math.min(ay, by) - index.originY, Math.max(ax, bx) - index.originX, Math.max(ay, by) - index.originY)
             .filter(c => liesAlongCornerEdge(corners[c], ax, ay, bx, by))
-            .slice(0, MAX_CORNERS_PER_TRIANGLE);
+            .slice(0, CORNER_SLOTS);
 
         for (let k = 0; k < along.length; k++) {
-            result[s * MAX_CORNERS_PER_TRIANGLE + k] = along[k];
+            result[s * CORNER_SLOTS + k] = along[k];
         }
     }
     return result;

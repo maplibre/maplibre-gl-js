@@ -8,7 +8,7 @@ import type {StructArray} from '../util/struct_array.ts';
  * `flattened` array, so a caller that keeps more data per vertex than its coordinates can look that data
  * up. A vertex can be added more than once, when the mesh is split into several segments.
  */
-export type AddVertex = (x: number, y: number, index: number) => void;
+type AddVertex = (x: number, y: number, index: number) => void;
 
 /**
  * This function will take any "mesh" and fill in into vertex buffers, breaking it up into multiple drawcalls as needed

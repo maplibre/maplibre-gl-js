@@ -6,6 +6,7 @@ import {FillBucket} from './fill_bucket.ts';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import {CanonicalTileID} from '../../tile/tile_id.ts';
+import {createRing} from '../../util/test/util.ts';
 
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {EvaluationParameters} from '../../style/evaluation_parameters.ts';
@@ -64,10 +65,6 @@ function createPatternFeature(a: string, b: string): VectorTileFeatureLike {
             new Point(0, 16)
         ]]
     };
-}
-
-function ring(...coordinates: Array<[number, number]>): Point[] {
-    return coordinates.map(([x, y]) => new Point(x, y));
 }
 
 function cornerAttributesOf(bucket: FillBucket, vertex: number): number[] {
@@ -223,7 +220,7 @@ describe('FillBucket', () => {
     test('keeps no corner attributes when no layer sets fill-rounded-corner-distance', () => {
         const bucket = createFillBucket({id: 'test', layout: {}});
 
-        bucket.addFeature({} as BucketFeature, [ring([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+        bucket.addFeature({} as BucketFeature, [createRing([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
 
         expect(bucket.hasRoundedCorners).toBe(false);
         expect(bucket.cornerVertexArray).toHaveLength(0);
@@ -241,7 +238,7 @@ describe('FillBucket', () => {
     test('gives each fill triangle vertices of its own after the outline, carrying the corners that round it', () => {
         const bucket = createFillBucket({id: 'test', layout: {}, paint: {'fill-rounded-corner-distance': 10}});
 
-        bucket.addFeature({} as BucketFeature, [ring([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+        bucket.addFeature({} as BucketFeature, [createRing([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
 
         const outlineVertexCount = bucket.layoutVertexArray.length - 6;
         expect(bucket.cornerVertexArray).toHaveLength(bucket.layoutVertexArray.length);
@@ -254,7 +251,7 @@ describe('FillBucket', () => {
     test('gives each outline segment vertices of its own, carrying the corners at its ends', () => {
         const bucket = createFillBucket({id: 'test', layout: {}, paint: {'fill-rounded-corner-distance': 10}});
 
-        bucket.addFeature({} as BucketFeature, [ring([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+        bucket.addFeature({} as BucketFeature, [createRing([0, 0], [100, 0], [100, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
 
         expect(Array.from(bucket.indexArray2.uint16.subarray(0, bucket.indexArray2.length * 2))).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
         for (let v = 0; v < 8; v++) {
@@ -265,7 +262,7 @@ describe('FillBucket', () => {
     test('adds a triangle that draws the arc area of a concave corner', () => {
         const bucket = createFillBucket({id: 'test', layout: {}, paint: {'fill-rounded-corner-distance': 10}});
 
-        bucket.addFeature({} as BucketFeature, [ring([0, 0], [100, 0], [100, 50], [50, 50], [50, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
+        bucket.addFeature({} as BucketFeature, [createRing([0, 0], [100, 0], [100, 50], [50, 50], [50, 100], [0, 100], [0, 0])], 0, canonicalTileID, {}, SubdivisionGranularitySetting.noSubdivision);
 
         const last = bucket.layoutVertexArray.length - 1;
         expect(cornerAttributesOf(bucket, last)).toEqual([

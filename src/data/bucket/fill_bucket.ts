@@ -1,7 +1,7 @@
 import {FillCornerLayoutArray, FillLayoutArray} from '../array_types.g.ts';
 import {members as layoutAttributes} from './fill_attributes.ts';
 import {members as cornerAttributes} from './fill_corner_attributes.ts';
-import {cornersAlongOutline, findRoundableCorners, MAX_CORNERS_PER_TRIANGLE, roundedFillTriangles, type FillCorner, type TriangleMesh} from './fill_rounded_corners.ts';
+import {cornersAlongOutline, findRoundableCorners, CORNER_SLOTS, roundedFillTriangles, type FillCorner, type TriangleMesh} from './fill_rounded_corners.ts';
 import {SegmentVector} from '../segment.ts';
 import {ProgramConfigurationSet} from '../program_configuration.ts';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type.ts';
@@ -61,8 +61,8 @@ export class FillBucket implements Bucket {
     hasRoundedCorners: boolean;
 
     /**
-     * The corners that round each vertex's triangle, one entry for each entry of `layoutVertexArray`.
-     * Empty unless {@link hasRoundedCorners}.
+     * The corners that shape each vertex's fill triangle or outline segment, one entry for each entry of
+     * `layoutVertexArray`. Empty unless {@link hasRoundedCorners}.
      */
     cornerVertexArray: FillCornerLayoutArray;
     cornerVertexBuffer: VertexBuffer;
@@ -234,11 +234,13 @@ export class FillBucket implements Bucket {
     addFeature(feature: BucketFeature, geometry: Point[][], index: number, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
     }, subdivisionGranularity: SubdivisionGranularitySetting): void {
+        const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+        const triangulate = (ring: Point[]) => subdividePolygon([ring], canonical, granularity, false);
+
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
-            const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
             const subdivided = subdividePolygon(polygon, canonical, granularity);
             if (this.hasRoundedCorners) {
-                this.addRoundedPolygon(polygon, subdivided, ring => subdividePolygon([ring], canonical, granularity, false));
+                this.addRoundedPolygon(polygon, subdivided, triangulate);
                 continue;
             }
 
@@ -314,15 +316,15 @@ const EMPTY_CORNER = {point: {x: 0, y: 0}, prev: {x: 0, y: 0}, next: {x: 0, y: 0
  * triangle adds the arc's area.
  * @param array - The bucket's corner attributes
  * @param corners - The polygon's corners
- * @param slots - {@link MAX_CORNERS_PER_TRIANGLE} indices into `corners` for each triangle or segment, -1 where unused
+ * @param slots - {@link CORNER_SLOTS} indices into `corners` for each triangle or segment, -1 where unused
  * @param entry - The triangle or segment the vertex belongs to
  * @param addsArea - Whether the vertex's triangle draws the area a concave corner's arc adds
  */
 function emplaceCornerVertex(array: FillCornerLayoutArray, corners: FillCorner[], slots: Int32Array, entry: number, addsArea: boolean): void {
     const used: Array<Record<'point' | 'prev' | 'next', Point2D>> = [EMPTY_CORNER, EMPTY_CORNER, EMPTY_CORNER];
     let count = 0;
-    for (let s = 0; s < MAX_CORNERS_PER_TRIANGLE; s++) {
-        const corner = slots[entry * MAX_CORNERS_PER_TRIANGLE + s];
+    for (let s = 0; s < CORNER_SLOTS; s++) {
+        const corner = slots[entry * CORNER_SLOTS + s];
         if (corner === -1) break;
         used[count++] = corners[corner];
     }

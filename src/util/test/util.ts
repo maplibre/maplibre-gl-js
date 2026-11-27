@@ -18,6 +18,7 @@ import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 import {EXTENT} from '../../data/extent.ts';
 import {createFrustum, type Frustum} from '../primitives/frustum.ts';
 import {mat4} from 'gl-matrix';
+import Point from '@mapbox/point-geometry';
 import {DEMData} from '../../data/dem_data.ts';
 import {RGBAImage} from '../image.ts';
 import {shaders} from '../../shaders/shaders.ts';
@@ -604,4 +605,11 @@ export function createFrameRenderData(): FrameRenderData {
         light: undefined,
         sky: undefined
     };
+}
+
+/**
+ * Returns a polygon ring with a point for each pair of tile coordinates.
+ */
+export function createRing(...coordinates: Array<[number, number]>): Point[] {
+    return coordinates.map(([x, y]) => new Point(x, y));
 }

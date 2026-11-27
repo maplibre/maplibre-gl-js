@@ -154,9 +154,8 @@ function drawFillTiles(
 
         const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const roundsCorners = bucket.hasRoundedCorners;
         const roundedCornerDistanceInTileUnits = roundedCornerDistance > 0 ? getTileUnitsForMeters(roundedCornerDistance, coord.canonical) : 0;
-        const program = frameRenderContext.useProgram(programName, programConfiguration, false, roundsCorners ? ROUNDED_CORNER_DEFINES : undefined);
+        const program = frameRenderContext.useProgram(programName, programConfiguration, false, bucket.hasRoundedCorners ? ROUNDED_CORNER_DEFINES : undefined);
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
         if (image) {
@@ -191,6 +190,6 @@ function drawFillTiles(
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, frameRenderContext.projectedCamera.zoom, programConfiguration,
-            roundsCorners ? bucket.cornerVertexBuffer : null);
+            bucket.hasRoundedCorners ? bucket.cornerVertexBuffer : null);
     }
 }
