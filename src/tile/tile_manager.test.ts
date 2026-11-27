@@ -2691,9 +2691,10 @@ describe('TileManager.onRemove', () => {
 
     test('does not leave a reload timer for a tile that finishes reloading after removal', async () => {
         vi.useFakeTimers();
-        const transform = createMercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(0);
+        const context = createCameraContext();
+        let view = createCameraViewState();
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
 
         const tileManager = createTileManager();
         const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
@@ -2701,7 +2702,7 @@ describe('TileManager.onRemove', () => {
             tile.setExpiryData({cacheControl: 'max-age=60'});
         });
         tileManager.onAdd(undefined);
-        tileManager.update(transform);
+        tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await vi.advanceTimersByTimeAsync(0);
 
         let finishReload: () => void;
@@ -2724,9 +2725,10 @@ describe('TileManager.onRemove', () => {
 
     test('does not leave a reload timer for a tile whose reload is aborted by removal', async () => {
         vi.useFakeTimers();
-        const transform = createMercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(0);
+        const context = createCameraContext();
+        let view = createCameraViewState();
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
 
         const tileManager = createTileManager();
         const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
@@ -2734,7 +2736,7 @@ describe('TileManager.onRemove', () => {
             tile.setExpiryData({cacheControl: 'max-age=60'});
         });
         tileManager.onAdd(undefined);
-        tileManager.update(transform);
+        tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await vi.advanceTimersByTimeAsync(0);
 
         let finishReload: () => void;
@@ -2753,9 +2755,10 @@ describe('TileManager.onRemove', () => {
 
     test('does not load more tiles when a reload fails with 404 after removal', async () => {
         vi.useFakeTimers();
-        const transform = createMercatorTransform();
-        transform.resize(511, 511);
-        transform.setZoom(0);
+        const context = createCameraContext();
+        let view = createCameraViewState();
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
 
         const tileManager = createTileManager();
         const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
@@ -2763,7 +2766,7 @@ describe('TileManager.onRemove', () => {
             tile.setExpiryData({cacheControl: 'max-age=60'});
         });
         tileManager.onAdd(undefined);
-        tileManager.update(transform);
+        tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
         await vi.advanceTimersByTimeAsync(0);
 
         let failReload: () => void;
