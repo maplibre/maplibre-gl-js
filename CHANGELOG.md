@@ -5,26 +5,24 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-- fix: iOS bug related to click not firing due to preventDefault call ([#9146](https://github.com/maplibre/maplibre-gl-js/pull/9146)) (by [@HarelM](https://github.com/HarelM))
-- fix: `vertical-perspective` going blank and jagged above zoom 16 ([#9126](https://github.com/maplibre/maplibre-gl-js/pull/9126)) (by [@birkskyum](https://github.com/birkskyum))
-- chore: refactor symbol placement code ([#9148](https://github.com/maplibre/maplibre-gl-js/pull/9148)) (by [@HarelM](https://github.com/HarelM))
-- test: add benchmark for symbol placement ([#9147](https://github.com/maplibre/maplibre-gl-js/pull/9147)) (by [@birkskyum](https://github.com/birkskyum))
-- feat: add the remaining W3C blend modes to `*-layer-blend` ([#9143](https://github.com/maplibre/maplibre-gl-js/pull/9143)) (by [@jo-chemla](https://github.com/jo-chemla))
-- chore: Improve sanitization ([#9128](https://github.com/maplibre/maplibre-gl-js/pull/9128)) (by [@HarelM](https://github.com/HarelM))
-- fix: localIdeographFontFamily fallback for custom font stacks ([#9086](https://github.com/maplibre/maplibre-gl-js/pull/9086)) (by [@JBurkinshaw](https://github.com/JBurkinshaw))
-- chore: remove extend method ([#9114](https://github.com/maplibre/maplibre-gl-js/pull/9114)) (by [@HarelM](https://github.com/HarelM))
-- feat: make `fill-extrusion-opacity` data-driven ([#9109](https://github.com/maplibre/maplibre-gl-js/pull/9109)) (by [@birkskyum](https://github.com/birkskyum))
-- fix: space dashes evenly along `line-offset` lines ([#9094](https://github.com/maplibre/maplibre-gl-js/pull/9094)) (by [@KhadeerBasha1232](https://github.com/KhadeerBasha1232))
-- perf: look up shader programs without building a key string ([#9087](https://github.com/maplibre/maplibre-gl-js/pull/9087)) (by [@birkskyum](https://github.com/birkskyum))
-- fix: keep line labels readable when an overscaled tile holds more than 65535 glyphs ([#9082](https://github.com/maplibre/maplibre-gl-js/pull/9082)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
-- fix: stop drawing and counting clusters on the antimeridian twice (geojson-vt 7.0.1) ([#9080](https://github.com/maplibre/maplibre-gl-js/pull/9080)) (by [@birkskyum](https://github.com/birkskyum))
-- chore(tests): remove unnecessary wait operations from style.json files ([#9076](https://github.com/maplibre/maplibre-gl-js/pull/9076)) (by [@HarelM](https://github.com/HarelM))
 ## 6.20.0
+
 ### ✨ Features and improvements
+
+- Add the remaining W3C blend modes to `*-layer-blend` ([#9143](https://github.com/maplibre/maplibre-gl-js/pull/9143)) (by [@jo-chemla](https://github.com/jo-chemla))
+- Improve sanitization of attribution and tileJSON ([#9128](https://github.com/maplibre/maplibre-gl-js/pull/9128)) (by [@HarelM](https://github.com/HarelM))
+- Make `fill-extrusion-opacity` data-driven ([#9109](https://github.com/maplibre/maplibre-gl-js/pull/9109)) (by [@birkskyum](https://github.com/birkskyum))
+- Performance: look up shader programs without building a key string ([#9087](https://github.com/maplibre/maplibre-gl-js/pull/9087)) (by [@birkskyum](https://github.com/birkskyum))
 
 ### 🐞 Bug fixes
 
-- Fix broken SDF icon rendering when using text with images fitted inside a SDF icon ([#9099](https://github.com/maplibre/maplibre-gl-js/pull/9099))
+- Fix broken SDF icon rendering when using text with images fitted inside a SDF icon ([#9099](https://github.com/maplibre/maplibre-gl-js/pull/9099)) (by [@kubapelc](https://github.com/kubapelc))
+- Fix iOS bug related to click not firing due to preventDefault call ([#9146](https://github.com/maplibre/maplibre-gl-js/pull/9146)) (by [@HarelM](https://github.com/HarelM))
+- Fix `vertical-perspective` going blank and jagged above zoom 16 ([#9126](https://github.com/maplibre/maplibre-gl-js/pull/9126)) (by [@birkskyum](https://github.com/birkskyum))
+- Fix localIdeographFontFamily fallback for custom font stacks ([#9086](https://github.com/maplibre/maplibre-gl-js/pull/9086)) (by [@JBurkinshaw](https://github.com/JBurkinshaw))
+- Fix space dashes evenly along `line-offset` lines ([#9094](https://github.com/maplibre/maplibre-gl-js/pull/9094)) (by [@KhadeerBasha1232](https://github.com/KhadeerBasha1232))
+- Fix keep line labels readable when an overscaled tile holds more than 65535 glyphs ([#9082](https://github.com/maplibre/maplibre-gl-js/pull/9082)) (by [@Syogo-Suganoya](https://github.com/Syogo-Suganoya))
+- Fix stop drawing and counting clusters on the antimeridian twice (geojson-vt 7.0.1) ([#9080](https://github.com/maplibre/maplibre-gl-js/pull/9080)) (by [@birkskyum](https://github.com/birkskyum))
 
 ## 6.19.0
 
