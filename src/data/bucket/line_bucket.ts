@@ -37,7 +37,7 @@ import type {FeatureStates} from '../../source/source_state.ts';
 import type {ImagePosition} from '../../render/image_atlas.ts';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings.ts';
 import type {DashEntry} from '../../render/line_atlas.ts';
-import type {VectorTileLayerLike} from '@maplibre/vt-pbf';
+import type {VectorTileFeatureLike, VectorTileLayerLike} from '@maplibre/vt-pbf';
 
 // NOTE ON EXTRUDE SCALE:
 // scale the extrusion vector so that the normal length is this value.
@@ -230,35 +230,50 @@ export class LineBucket implements Bucket {
                 sortKey
             };
 
+            if (!sortFeaturesByKey) {
+                this.addBucketFeature(bucketFeature, feature, options, canonical);
+                continue;
+            }
+
             bucketFeatures.push(bucketFeature);
         }
 
-        if (sortFeaturesByKey) {
-            bucketFeatures.sort((a, b) => {
-                return (a.sortKey) - (b.sortKey);
-            });
-        }
+        if (!sortFeaturesByKey) return;
+
+        bucketFeatures.sort((a, b) => {
+            return (a.sortKey) - (b.sortKey);
+        });
 
         for (const bucketFeature of bucketFeatures) {
-            const {geometry, index, sourceLayerIndex} = bucketFeature;
+            this.addBucketFeature(bucketFeature, features[bucketFeature.index].feature, options, canonical);
+        }
+    }
 
-            if (this.hasDependencies) {
-                if (hasPattern('line', this.layers, options)) {
-                    addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
-                } else if (this.hasLineDasharray(this.layers)) {
-                    this.addLineDashDependencies(this.layers, bucketFeature, this.zoom, options);
-                }
+    /**
+     * Adds a feature to the bucket, or to the features waiting for their pattern or dash, and to the feature
+     * index.
+     *
+     * Without a sort key, {@link populate} calls it as soon as a feature is read, so that its geometry can be
+     * garbage collected without waiting for the rest of the layer.
+     */
+    private addBucketFeature(bucketFeature: BucketFeature, feature: VectorTileFeatureLike, options: PopulateParameters, canonical: CanonicalTileID): void {
+        const {geometry, index, sourceLayerIndex} = bucketFeature;
 
-                // pattern features are added only once the pattern is loaded into the image atlas
-                // so are stored during populate until later updated with positions by tile worker in addFeatures
-                this.patternFeatures.push(bucketFeature);
-            } else {
-                this.addFeature(bucketFeature, geometry, index, canonical, {}, {}, options.subdivisionGranularity);
+        if (this.hasDependencies) {
+            if (hasPattern('line', this.layers, options)) {
+                addPatternDependencies('line', this.layers, bucketFeature, {zoom: this.zoom}, options);
+            } else if (this.hasLineDasharray(this.layers)) {
+                this.addLineDashDependencies(this.layers, bucketFeature, this.zoom, options);
             }
 
-            const feature = features[index].feature;
-            options.featureIndex.insert(feature, geometry, index, sourceLayerIndex, this.index);
+            // pattern features are added only once the pattern is loaded into the image atlas
+            // so are stored during populate until later updated with positions by tile worker in addFeatures
+            this.patternFeatures.push(bucketFeature);
+        } else {
+            this.addFeature(bucketFeature, geometry, index, canonical, {}, {}, options.subdivisionGranularity);
         }
+
+        options.featureIndex.insert(feature, geometry, index, sourceLayerIndex, this.index);
     }
 
     update(states: FeatureStates, vtLayer: VectorTileLayerLike, imagePositions: {[_: string]: ImagePosition}, dashPositions: {[_: string]: DashEntry}): void {
