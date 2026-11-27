@@ -1,6 +1,6 @@
 # Subscription
 
-Defined in: [util/util.ts:974](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/util.ts#L974>)
+Defined in: [util/util.ts:936](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/util/util.ts#L936>)
 
 Allows to unsubscribe from events without the need to store the method reference.
 
@@ -10,7 +10,7 @@ Allows to unsubscribe from events without the need to store the method reference
 
 > **unsubscribe**(): `void`
 
-Defined in: [util/util.ts:978](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/util.ts#L978>)
+Defined in: [util/util.ts:940](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/util/util.ts#L940>)
 
 Unsubscribes from the event.
 

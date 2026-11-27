@@ -3,7 +3,7 @@
 Toggle between different blending modes to see how a fill layer composites with the basemap.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -54,7 +54,7 @@ map.on('load', () => {
     <meta property="og:created" content="2026-08-02" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -116,13 +116,23 @@ map.on('load', () => {
                 <option value="plus-lighter">plus-lighter</option>
                 <option value="color">color</option>
                 <option value="luminosity">luminosity</option>
+                <option value="difference">difference</option>
+                <option value="exclusion">exclusion</option>
+                <option value="soft-light">soft-light</option>
+                <option value="hard-light">hard-light</option>
+                <option value="darken">darken</option>
+                <option value="lighten">lighten</option>
+                <option value="color-dodge">color-dodge</option>
+                <option value="color-burn">color-burn</option>
+                <option value="hue">hue</option>
+                <option value="saturation">saturation</option>
             </select>
         </fieldset>
     </div>
 </div>
 
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',

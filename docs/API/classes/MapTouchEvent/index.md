@@ -1,6 +1,6 @@
 # MapTouchEvent
 
-Defined in: [ui/events.ts:683](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L683>)
+Defined in: [ui/events.ts:682](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L682>)
 
 `MapTouchEvent` is the event type for touch-related map events.
 
@@ -16,7 +16,7 @@ Defined in: [ui/events.ts:683](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **get** **defaultPrevented**(): `boolean`
 
-Defined in: [ui/events.ts:738](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L738>)
+Defined in: [ui/events.ts:737](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L737>)
 
 `true` if `preventDefault` has been called.
 
@@ -30,7 +30,7 @@ Defined in: [ui/events.ts:738](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **preventDefault**(): `void`
 
-Defined in: [ui/events.ts:731](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L731>)
+Defined in: [ui/events.ts:730](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L730>)
 
 Prevents subsequent default processing of the event by the map.
 
@@ -49,7 +49,7 @@ Calling this method will prevent the following default map behaviors:
 
 > **lngLat**: [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)
 
-Defined in: [ui/events.ts:702](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L702>)
+Defined in: [ui/events.ts:701](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L701>)
 
 The geographic location on the map of the center of the touch event points.
 
@@ -59,7 +59,7 @@ The geographic location on the map of the center of the touch event points.
 
 > **lngLats**: [`LngLat`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLat/index.md>)\[\]
 
-Defined in: [ui/events.ts:720](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L720>)
+Defined in: [ui/events.ts:719](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L719>)
 
 The geographical locations on the map corresponding to a [touch event's `touches`](<https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches>) property.
 
@@ -69,7 +69,7 @@ The geographical locations on the map corresponding to a [touch event's `touches
 
 > **originalEvent**: `TouchEvent`
 
-Defined in: [ui/events.ts:697](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L697>)
+Defined in: [ui/events.ts:696](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L696>)
 
 The DOM event which caused the map event.
 
@@ -83,7 +83,7 @@ The DOM event which caused the map event.
 
 > **point**: `Point`
 
-Defined in: [ui/events.ts:708](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L708>)
+Defined in: [ui/events.ts:707](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L707>)
 
 The pixel coordinates of the center of the touch event points, relative to the map and measured from the top left corner.
 
@@ -93,7 +93,7 @@ The pixel coordinates of the center of the touch event points, relative to the m
 
 > **points**: `Point`\[\]
 
-Defined in: [ui/events.ts:714](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L714>)
+Defined in: [ui/events.ts:713](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L713>)
 
 The array of pixel coordinates corresponding to a [touch event's `touches`](<https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/touches>) property.
 
@@ -103,7 +103,7 @@ The array of pixel coordinates corresponding to a [touch event's `touches`](<htt
 
 > **target**: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)
 
-Defined in: [ui/events.ts:692](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L692>)
+Defined in: [ui/events.ts:691](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L691>)
 
 The `Map` object that fired the event.
 
@@ -117,7 +117,7 @@ The `Map` object that fired the event.
 
 > **type**: `"touchcancel"` | `"touchend"` | `"touchmove"` | `"touchstart"`
 
-Defined in: [ui/events.ts:687](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L687>)
+Defined in: [ui/events.ts:686](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L686>)
 
 The event type.
 

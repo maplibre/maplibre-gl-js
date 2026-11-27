@@ -1,8 +1,8 @@
 # MapLayerMouseEvent
 
-> **MapLayerMouseEvent** = [`MapMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMouseEvent/index.md>) &amp; `object`
+> **MapLayerMouseEvent** = [`MapMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapMouseEvent/index.md>) & `object`
 
-Defined in: [ui/events.ts:18](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L18>)
+Defined in: [ui/events.ts:17](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L17>)
 
 An event from the mouse relevant to a specific layer.
 

@@ -1,8 +1,8 @@
 # EaseToOptions
 
-> **EaseToOptions** = [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>) &amp; [`CameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>) &amp; `object`
+> **EaseToOptions** = [`AnimationOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/AnimationOptions/index.md>) & [`CameraOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CameraOptions/index.md>) & `object`
 
-Defined in: [ui/camera.ts:153](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/camera.ts#L153>)
+Defined in: [ui/camera.ts:153](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/camera.ts#L153>)
 
 The [Map.easeTo](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#easeto>) options object
 

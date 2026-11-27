@@ -2,7 +2,7 @@
 
 > **Offset** = `number` | [`PointLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/PointLike/index.md>) | `{ [_ in PositionAnchor]: PointLike }`
 
-Defined in: [ui/popup.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/popup.ts#L37>)
+Defined in: [ui/popup.ts:36](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/popup.ts#L36>)
 
 A pixel offset specified as:
 

@@ -468,7 +468,7 @@ Display a globe with a fill extrusion layer.](<https://maplibre.org/maplibre-gl-
 
 Explanation of zoom and planet size relation under globe projection and how to account for it when changing the map center and zoom by some delta.](<https://maplibre.org/maplibre-gl-js/docs/examples/zoom-and-planet-size-relation-on-globe/index.md>)
 
-## Annotations &amp; Labels
+## Annotations & Labels
 
 [![Add a default marker to the map.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/add-a-default-marker.webp>)
 
@@ -548,13 +548,13 @@ Use setLayoutProperty to switch languages dynamically.](<https://maplibre.org/ma
 
 ### Locale switching
 
-Show how localization can be applied manually to UI elements. Hover over a control to see the translated tooltip.](<https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/index.md>) [![Set localIdeographFontFamily to override the font used for displaying CJK (Chinese, Japanese and Korean) characters, ignoring the map style. This setting must be a CSS font rule specifying fallbacks of on-device fonts. Set localIdeographFontFamily to false to use server-provided fonts, which is much slower.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/use-locally-generated-ideographs.webp>)
+Show how localization can be applied manually to UI elements. Hover over a control to see the translated tooltip.](<https://maplibre.org/maplibre-gl-js/docs/examples/locale-switching/index.md>) [![Use localIdeographFontFamily to specify CSS font-family fallbacks for CJK (Chinese, Japanese and Korean) map labels, after the style's fonts and before sans-serif.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/use-locally-generated-ideographs.webp>)
 
 ### Use locally generated ideographs
 
-Set localIdeographFontFamily to override the font used for displaying CJK (Chinese, Japanese and Korean) characters, ignoring the map style. This setting must be a CSS font rule specifying fallbacks of on-device fonts. Set localIdeographFontFamily to false to use server-provided fonts, which is much slower.](<https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs/index.md>)
+Use localIdeographFontFamily to specify CSS font-family fallbacks for CJK (Chinese, Japanese and Korean) map labels, after the style's fonts and before sans-serif.](<https://maplibre.org/maplibre-gl-js/docs/examples/use-locally-generated-ideographs/index.md>)
 
-## Interactivity &amp; Extensions
+## Interactivity & Extensions
 
 [![Use queryRenderedFeatures to show properties of hovered-over map elements.](<https://maplibre.org/maplibre-gl-js/docs/assets/examples/get-features-under-the-mouse-pointer.webp>)
 

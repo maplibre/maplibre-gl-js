@@ -1,8 +1,8 @@
 # UpdateImageOptions
 
-> **UpdateImageOptions** = `object` &amp; ({ `url`: `string`; } | { `image`: [`ImageSourceImage`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ImageSourceImage/index.md>); })
+> **UpdateImageOptions** = `object` & ({ `url`: `string`; } | { `image`: [`ImageSourceImage`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/ImageSourceImage/index.md>); })
 
-Defined in: [source/image\_source.ts:98](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/source/image_source.ts#L98>)
+Defined in: [source/image\_source.ts:98](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/source/image_source.ts#L98>)
 
 The options object for the [ImageSource.updateImage](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ImageSource/index.md#updateimage>) method.
 

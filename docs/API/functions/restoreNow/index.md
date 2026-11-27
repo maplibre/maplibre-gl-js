@@ -2,7 +2,7 @@
 
 > **restoreNow**(): `void`
 
-Defined in: [util/time\_control.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/util/time_control.ts#L99>)
+Defined in: [util/time\_control.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/util/time_control.ts#L99>)
 
 Restores normal time flow after freezing with setNow(). Call this after finishing deterministic rendering operations.
 

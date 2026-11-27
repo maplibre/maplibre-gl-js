@@ -1,6 +1,6 @@
 # CustomLayerInterface
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:270](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L270>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:272](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L272>)
 
 Interface for custom style layers. This is a specification for implementers to model: it is not an exported method or class.
 
@@ -75,7 +75,7 @@ map.on('load', () => {
 
 > `optional` **onAdd**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>), `gl`: `WebGL2RenderingContext`): `void`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:328](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L328>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:330](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L330>)
 
 Optional method called when the layer has been added to the Map with [Map.addLayer](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#addlayer>). This gives the layer a chance to initialize gl resources and register event listeners.
 
@@ -96,7 +96,7 @@ Optional method called when the layer has been added to the Map with [Map.addLay
 
 > `optional` **onRemove**(`map`: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>), `gl`: `WebGL2RenderingContext`): `void`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:336](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L336>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:338](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L338>)
 
 Optional method called when the layer has been removed from the Map with [Map.removeLayer](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md#removelayer>). This gives the layer a chance to clean up gl resources and event listeners.
 
@@ -117,7 +117,7 @@ Optional method called when the layer has been removed from the Map with [Map.re
 
 > **id**: `string`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:274](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L274>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:276](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L276>)
 
 A unique layer id.
 
@@ -127,7 +127,7 @@ A unique layer id.
 
 > `optional` **prerender?**: [`CustomRenderMethod`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomRenderMethod/index.md>)
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:305](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L305>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:307](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L307>)
 
 Optional method called during a render frame to allow a layer to prepare resources or render into a texture.
 
@@ -139,7 +139,7 @@ The layer cannot make any assumptions about the current GL state and must bind a
 
 > **render**: [`CustomRenderMethod`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomRenderMethod/index.md>)
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:299](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L299>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:301](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L301>)
 
 Called during a render frame allowing the layer to draw into the GL context.
 
@@ -155,7 +155,7 @@ The blend function is set to `gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)`. Thi
 
 > `optional` **renderingMode?**: `"2d"` | `"3d"`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:282](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L282>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:284](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L284>)
 
 Either `"2d"` or `"3d"`. Defaults to `"2d"`.
 
@@ -165,7 +165,7 @@ Either `"2d"` or `"3d"`. Defaults to `"2d"`.
 
 > `optional` **renderToTerrainTile?**: (`gl`: `WebGL2RenderingContext`, `options`: [`CustomTerrainRenderInput`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/CustomTerrainRenderInput/index.md>)) =\> `void`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:314](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L314>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:316](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L316>)
 
 **`Experimental`**
 
@@ -188,7 +188,7 @@ Optional method called instead of `render` while terrain is enabled, to draw the
 
 > `optional` **terrainTileRevision?**: `number`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:320](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L320>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:322](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L322>)
 
 **`Experimental`**
 
@@ -200,6 +200,6 @@ Optional number that the layer changes when what it draws in [CustomLayerInterfa
 
 > **type**: `"custom"`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:278](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L278>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:280](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L280>)
 
 The layer's type. Must be `"custom"`.

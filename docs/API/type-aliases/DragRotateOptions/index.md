@@ -2,7 +2,7 @@
 
 > **DragRotateOptions** = { `around?`: `"center"`; `movement?`: `"circular"` | `"linear"`; } | { `around`: `"pointer"`; }
 
-Defined in: [ui/handler/shim/drag\_rotate.ts:28](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/shim/drag_rotate.ts#L28>)
+Defined in: [ui/handler/shim/drag\_rotate.ts:28](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler/shim/drag_rotate.ts#L28>)
 
 Options object for [DragRotateHandler.enable](<https://maplibre.org/maplibre-gl-js/docs/API/classes/DragRotateHandler/index.md#enable>). A drag around the pointer always turns the map linearly, so `movement` is only set with `around: 'center'`.
 

@@ -1,6 +1,6 @@
 # MapProjectionEvent
 
-Defined in: [ui/events.ts:841](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L841>)
+Defined in: [ui/events.ts:840](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L840>)
 
 The map projection event
 
@@ -14,7 +14,7 @@ The map projection event
 
 > **newProjection**: `PropertyValueSpecification`\<`ProjectionDefinitionSpecification`\>
 
-Defined in: [ui/events.ts:851](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L851>)
+Defined in: [ui/events.ts:850](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L850>)
 
 Specifies the name of the new projection. For example:
 
@@ -28,7 +28,7 @@ Specifies the name of the new projection. For example:
 
 > **target**: [`Map`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>)
 
-Defined in: [ui/events.ts:492](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L492>)
+Defined in: [ui/events.ts:491](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L491>)
 
 The object that fired the event. Set when the event is fired, and narrowed to a more specific type (e.g. `Map`, `Marker`) by the event subclasses.
 

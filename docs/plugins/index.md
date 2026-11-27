@@ -35,7 +35,7 @@
 - [maplibre-ui-translations](<https://github.com/spwoodcock/maplibre-ui-translations>) - Community translations for the default MapLibre UI.
 - [location-picker](<https://github.com/cyphercodes/location-picker>) - A form field for picking one point: the user pans the map under a fixed pin and the form submits its latitude/longitude. Web component and class with a MapLibre GL JS provider (bring your own `maplibre-gl`). [docs](<https://github.com/cyphercodes/location-picker/blob/master/docs/providers.md#maplibre>)
 
-## Geocoding &amp; Search Plugins
+## Geocoding & Search Plugins
 
 - [mapbox.photon](<https://github.com/watergis/mapbox.photon>) - Adds a control to provide a geocoding feature from Photon API.
 - 💙 [maplibre-gl-geocoder](<https://github.com/maplibre/maplibre-gl-geocoder>) - Adds a geocoder control.
@@ -77,12 +77,13 @@
 - [Allmaps Maplibre](<https://github.com/allmaps/allmaps/tree/main/packages/maplibre>) - A package for displaying georeferenced [IIIF](<https://iiif.io/>) images by loading [Georeference Annotations](<https://preview.iiif.io/api/georef/extension/georef/>) and using WebGL to transform and overlay the images on their correct geographical position.
 - [mapbox-exif-layer](<https://github.com/zwang-geog/mapbox-exif-layer>) - Custom layers for wind particles from JPEG or GeoTIFF, smooth non-blocky weather display, and small whole-file GeoTIFF preview; MapLibre globe supported. [demo](<https://www.mapbox-exif-layer.com/maplibre-gl-js-globe-projection-demo/index.html>)
 - [mapbox-gl-arcgis-featureserver](<https://github.com/rowanwins/mapbox-gl-arcgis-featureserver>) - A library for retrieving features from an ArcGIS FeatureServer or MapServer. This library makes tiled requests rather than simply requesting every feature.
-- [mapbox-gl-esri-sources](<https://github.com/frontiersi/mapbox-gl-esri-sources>) - A library for making it easier to use Esri services in MapLibre GL JS. Supports Esri Map Services (dynamic &amp; tiled), Esri Vector Tile Services &amp; Esri Vector Basemap Styles.
+- [mapbox-gl-esri-sources](<https://github.com/frontiersi/mapbox-gl-esri-sources>) - A library for making it easier to use Esri services in MapLibre GL JS. Supports Esri Map Services (dynamic & tiled), Esri Vector Tile Services & Esri Vector Basemap Styles.
 - [esri-gl](<https://github.com/muimsd/esri-gl>) - A module for making it easier to use Esri services in MapLibre GL JS, alternative to esri-leaflet for WebGL.
 - [mapbox-gl-flatgeobuf](<https://github.com/rowanwins/mapbox-gl-flatgeobuf>) - A library for retrieving features from FlatGeobuf file using a tiled approach. Compatible with MapLibre GL JS and Mapbox GL JS.
 - [mapbox-gl-ogc-feature-collection](<https://github.com/mkeller3/mapbox-gl-ogc-feature-collection>) - A small package for requesting geojson from an OGC Feature API endpoint to serve tiles in MapBox/MapLibre.
 - [maplibre-cog-protocol](<https://github.com/geomatico/maplibre-cog-protocol>) - Custom protocol to load Cloud Optimized GeoTIFFs (COG) in Maplibre GL JS.
 - [maplibre-gl-lidar](<https://github.com/opengeos/maplibre-gl-lidar>) - A MapLibre GL JS plugin for rendering LIDAR point cloud data.
+- [maplibre-gl-dot-density](<https://github.com/zwang-geog/maplibre-gl-dot-density>) - Custom dot density layer painting 1-pixel dots inside polygon vector tiles (PMTiles or XYZ), so populated places look lit and sparsely populated places look dim. [demo](<https://zwang-geog.github.io/maplibre-gl-dot-density/>)
 - [maplibre-gl-pie-charts](<https://github.com/zwang-geog/maplibre-gl-pie-charts>) - Custom layer drawing one pie or donut chart per feature from 2 to 8 numeric attributes, for comparing share patterns across geographic units. [demo](<https://zwang-geog.github.io/maplibre-gl-pie-charts/demos/us-education/>)
 - [maplibre-landmarks](<https://github.com/am2222/maplibre-landmarks>) - 3D [Open Landmarks](<https://open-landmarks.benmaps.fr>) models, real roof shapes, trees, volumetric fog and clouds, rain, snow, animated water and power lines, rendered with [three.js](<https://threejs.org>) as custom layers. [demo](<https://am2222.github.io/maplibre-landmarks/demo/>)
 - [maplibre-google-maps](<https://github.com/traccar/maplibre-google-maps>) - A library for integrating Google Maps as raster layers into MapLibre GL JS. It uses the new Google Map Tiles API.
@@ -129,7 +130,7 @@
 
 #### [Astro](<https://astro.build>)
 
-- [maps-withastro](<https://github.com/roblabs/maps-withastro>) - Bring Leaflet &amp; MapLibre maps directly into Astro.
+- [maps-withastro](<https://github.com/roblabs/maps-withastro>) - Bring Leaflet & MapLibre maps directly into Astro.
 
 #### [Echarts](<https://echarts.apache.org/en/index.html>)
 

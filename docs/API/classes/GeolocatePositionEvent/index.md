@@ -1,6 +1,6 @@
 # GeolocatePositionEvent
 
-Defined in: [ui/control/geolocate\_control.ts:87](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L87>)
+Defined in: [ui/control/geolocate\_control.ts:87](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/control/geolocate_control.ts#L87>)
 
 The event class for the geolocate control `geolocate` and `outofmaxbounds` events. Carries the [Position](<https://developer.mozilla.org/en-US/docs/Web/API/GeolocationPosition>) returned by the Geolocation API.
 
@@ -14,7 +14,7 @@ The event class for the geolocate control `geolocate` and `outofmaxbounds` event
 
 > **coords**: `GeolocationCoordinates`
 
-Defined in: [ui/control/geolocate\_control.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L96>)
+Defined in: [ui/control/geolocate\_control.ts:96](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/control/geolocate_control.ts#L96>)
 
 The geographic position returned by the Geolocation API.
 
@@ -24,7 +24,7 @@ The geographic position returned by the Geolocation API.
 
 > **target**: [`GeolocateControl`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/GeolocateControl/index.md>)
 
-Defined in: [ui/control/geolocate\_control.ts:92](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L92>)
+Defined in: [ui/control/geolocate\_control.ts:92](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/control/geolocate_control.ts#L92>)
 
 The `GeolocateControl` object that fired the event.
 
@@ -38,6 +38,6 @@ The `GeolocateControl` object that fired the event.
 
 > **timestamp**: `number`
 
-Defined in: [ui/control/geolocate\_control.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/control/geolocate_control.ts#L100>)
+Defined in: [ui/control/geolocate\_control.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/control/geolocate_control.ts#L100>)
 
 The time at which the position was acquired, in milliseconds since the Unix epoch.

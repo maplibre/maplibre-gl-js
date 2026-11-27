@@ -1,4 +1,6 @@
 
+
+
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
@@ -11,6 +13,7 @@
       
       
         <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/ProjectionData/">
+      
       
       
         <link rel="describedby" href="../../../llms.txt">
@@ -29,7 +32,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="zensical-0.1.1">
+      <meta name="generator" content="zensical-0.1.3">
     
     
       
@@ -40,12 +43,13 @@
       
         
       
-      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.ebb7f775.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/modern/main.e2cf241e.min.css">
       
         
           
         
         <link rel="stylesheet" href="../../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
       
       
 
@@ -6003,6 +6007,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#tileorigin" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        tileOrigin
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tileoriginposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        tileOriginPosition
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -11378,6 +11404,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#tileorigin" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        tileOrigin
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tileoriginposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        tileOriginPosition
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -11407,7 +11455,7 @@
 <blockquote>
 <p><strong>ProjectionData</strong>&lt;<code>MainMatrix</code> <em>extends</em> <code>mat4</code> = <code>mat4</code>, <code>FallbackMatrix</code> <em>extends</em> <code>mat4</code> = <code>MainMatrix</code>&gt; = <code>object</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/projection/projection_data.ts#L27">geo/projection/projection_data.ts:27</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L27">geo/projection/projection_data.ts:27</a></p>
 <p>This type contains all data necessary to project a tile to screen in MapLibre's shader system.
 Contains data used for both mercator and globe projection.</p>
 <h2 id="type-parameters">Type Parameters</h2>
@@ -11434,7 +11482,7 @@ Contains data used for both mercator and globe projection.</p>
 <blockquote>
 <p><strong>clipAntimeridian</strong>: <code>boolean</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/projection/projection_data.ts#L73">geo/projection/projection_data.ts:73</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L85">geo/projection/projection_data.ts:85</a></p>
 <p>Whether line fragments outside the tile's X extent should be discarded: true for the zoom 0 tile under globe projection, false otherwise.
 The z0 tile covers the whole world, so its buffer wraps around the planet onto the tile itself,
 drawing geometry near the antimeridian twice. Stencil clipping cannot remove this same-pixel overlap,
@@ -11445,7 +11493,7 @@ Uniform name: <code>u_projection_clip_antimeridian</code>.</p>
 <blockquote>
 <p><strong>clippingPlane</strong>: [<code>number</code>, <code>number</code>, <code>number</code>, <code>number</code>]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/projection/projection_data.ts#L53">geo/projection/projection_data.ts:53</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L53">geo/projection/projection_data.ts:53</a></p>
 <p>The plane equation for a plane that intersects the planet's horizon.
 Assumes the planet to be a unit sphere.
 Used by globe projection for clipping.
@@ -11455,7 +11503,7 @@ Uniform name: <code>u_projection_clipping_plane</code>.</p>
 <blockquote>
 <p><strong>fallbackMatrix</strong>: <code>FallbackMatrix</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/projection/projection_data.ts#L65">geo/projection/projection_data.ts:65</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L77">geo/projection/projection_data.ts:77</a></p>
 <p>Fallback matrix that projects the current tile according to mercator projection.
 Used by globe projection to fall back to mercator projection in an animated way.
 Uniform name: <code>u_projection_fallback_matrix</code>.</p>
@@ -11464,7 +11512,7 @@ Uniform name: <code>u_projection_fallback_matrix</code>.</p>
 <blockquote>
 <p><strong>mainMatrix</strong>: <code>MainMatrix</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/projection/projection_data.ts#L33">geo/projection/projection_data.ts:33</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L33">geo/projection/projection_data.ts:33</a></p>
 <p>The main projection matrix. For mercator projection, it usually projects in-tile coordinates 0..EXTENT to screen,
 for globe projection, it projects a unit sphere planet to screen.
 Uniform name: <code>u_projection_matrix</code>.</p>
@@ -11473,7 +11521,7 @@ Uniform name: <code>u_projection_matrix</code>.</p>
 <blockquote>
 <p><strong>projectionTransition</strong>: <code>number</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/projection/projection_data.ts#L59">geo/projection/projection_data.ts:59</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L71">geo/projection/projection_data.ts:71</a></p>
 <p>A value in range 0..1 indicating interpolation between mercator (0) and globe (1) projections.
 Used by globe projection to hide projection transition at high zooms.
 Uniform name: <code>u_projection_transition</code>.</p>
@@ -11482,7 +11530,7 @@ Uniform name: <code>u_projection_transition</code>.</p>
 <blockquote>
 <p><strong>tileMercatorCoords</strong>: [<code>number</code>, <code>number</code>, <code>number</code>, <code>number</code>]</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/projection/projection_data.ts#L46">geo/projection/projection_data.ts:46</a></p>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L46">geo/projection/projection_data.ts:46</a></p>
 <p>The extent of current tile in the mercator square.
 Used by globe projection.
 First two components are X and Y offset, last two are X and Y scale.
@@ -11491,6 +11539,24 @@ Uniform name: <code>u_projection_tile_mercator_coords</code>.</p>
 <h4 id="example">Example</h4>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>vec2 mercator_coords = u_projection_tile_mercator_coords.xy + in_tile.xy * u_projection_tile_mercator_coords.zw;
 </span></code></pre></div>
+<hr />
+<h3 id="tileorigin">tileOrigin</h3>
+<blockquote>
+<p><strong>tileOrigin</strong>: [<code>number</code>, <code>number</code>, <code>number</code>, <code>number</code>]</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L60">geo/projection/projection_data.ts:60</a></p>
+<p>The point on the unit sphere that <code>mainMatrix</code> projects positions relative to, as the sine and cosine
+of its longitude, <code>tan(PI / 4 + latitude / 2)</code> and 1. All zeros when positions are relative to the planet center.
+Used by globe projection, to keep float32 precision at high zoom.
+Uniform name: <code>u_projection_tile_origin</code>.</p>
+<hr />
+<h3 id="tileoriginposition">tileOriginPosition</h3>
+<blockquote>
+<p><strong>tileOriginPosition</strong>: [<code>number</code>, <code>number</code>]</p>
+</blockquote>
+<p>Defined in: <a href="https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/projection/projection_data.ts#L65">geo/projection/projection_data.ts:65</a></p>
+<p>Where <code>tileOrigin</code> lies in the tile, in tile units. It is the tile's point nearest the camera's center.
+Uniform name: <code>u_projection_tile_origin_position</code>.</p>
 
 
 
@@ -11628,7 +11694,8 @@ Uniform name: <code>u_projection_tile_mercator_coords</code>.</p>
       <script id="__config" type="application/json">{"annotate":null,"base":"../../..","features":["content.code.copy","navigation.tabs","navigation.tabs.sticky","toc.follow","search.suggest","navigation.instant","navigation.sections","navigation.top"],"redirect":null,"search":"../../../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.3cb411a8.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.9e76c64c.min.js"></script>
+      
       
     
   </body>

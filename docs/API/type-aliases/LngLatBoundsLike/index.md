@@ -2,7 +2,7 @@
 
 > **LngLatBoundsLike** = [`LngLatBounds`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLatBounds/index.md>) | \[[`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>), [`LngLatLike`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>)\] | \[`number`, `number`, `number`, `number`\]
 
-Defined in: [geo/lng\_lat\_bounds.ts:22](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/geo/lng_lat_bounds.ts#L22>)
+Defined in: [geo/lng\_lat\_bounds.ts:22](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/geo/lng_lat_bounds.ts#L22>)
 
 A [LngLatBounds](<https://maplibre.org/maplibre-gl-js/docs/API/classes/LngLatBounds/index.md>) object, an array of [LngLatLike](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/LngLatLike/index.md>) objects in `[sw, ne]` order, or an array of numbers in `[west, south, east, north]` order.
 

@@ -3,7 +3,7 @@
 Use custom layer to display arbitrary tiles drawn with a custom WebGL shader on a globe.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.mjs';
 
 // This example demonstrates how to draw a custom layer consisting of
 // web mercator tiles with a custom shader.
@@ -72,6 +72,8 @@ const uniforms = [
     'u_projection_fallback_matrix',
     'u_projection_matrix',
     'u_projection_clipping_plane',
+    'u_projection_tile_origin',
+    'u_projection_tile_origin_position',
     'u_projection_transition',
     'u_projection_tile_mercator_coords',
 ];
@@ -239,6 +241,14 @@ const highlightLayer = {
                 locations['u_projection_clipping_plane'],
                 ...projectionData.clippingPlane // vec4
             );
+            gl.uniform4f(
+                locations['u_projection_tile_origin'],
+                ...projectionData.tileOrigin // vec4
+            );
+            gl.uniform2f(
+                locations['u_projection_tile_origin_position'],
+                ...projectionData.tileOriginPosition // vec2
+            );
             gl.uniform1f(
                 locations['u_projection_transition'],
                 projectionData.projectionTransition // float
@@ -288,7 +298,7 @@ map.on('load', () => {
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -316,7 +326,7 @@ map.on('load', () => {
 <br />
 <button id="project">Toggle projection</button>
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.mjs';
 
     // This example demonstrates how to draw a custom layer consisting of
     // web mercator tiles with a custom shader.
@@ -385,6 +395,8 @@ map.on('load', () => {
         'u_projection_fallback_matrix',
         'u_projection_matrix',
         'u_projection_clipping_plane',
+        'u_projection_tile_origin',
+        'u_projection_tile_origin_position',
         'u_projection_transition',
         'u_projection_tile_mercator_coords',
     ];
@@ -551,6 +563,14 @@ map.on('load', () => {
                 gl.uniform4f(
                     locations['u_projection_clipping_plane'],
                     ...projectionData.clippingPlane // vec4
+                );
+                gl.uniform4f(
+                    locations['u_projection_tile_origin'],
+                    ...projectionData.tileOrigin // vec4
+                );
+                gl.uniform2f(
+                    locations['u_projection_tile_origin_position'],
+                    ...projectionData.tileOriginPosition // vec2
                 );
                 gl.uniform1f(
                     locations['u_projection_transition'],

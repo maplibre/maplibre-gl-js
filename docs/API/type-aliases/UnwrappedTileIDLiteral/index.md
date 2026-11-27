@@ -2,7 +2,7 @@
 
 > **UnwrappedTileIDLiteral** = `object`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L13>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:13](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L13>)
 
 Type for an object literal that specifies a map tile.
 
@@ -12,7 +12,7 @@ Type for an object literal that specifies a map tile.
 
 > **canonical**: `object`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:23](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L23>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:23](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L23>)
 
 The tile's XY coordinates and zoom level.
 
@@ -34,6 +34,6 @@ The tile's XY coordinates and zoom level.
 
 > `optional` **wrap?**: `number`
 
-Defined in: [style/style\_layer/custom\_style\_layer.ts:19](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/style/style_layer/custom_style_layer.ts#L19>)
+Defined in: [style/style\_layer/custom\_style\_layer.ts:19](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/style/style_layer/custom_style_layer.ts#L19>)
 
 An optional wrap values. Useful in scenarios when multiple world copies are visible, such as a zoomed out map or a map centered around the antimeridian. Tiles from each world copy should have different wrap values, with wrap increasing for each copy from west to east.

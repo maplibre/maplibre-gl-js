@@ -2,7 +2,7 @@
 
 > **MapLayerEventType** = `object`
 
-Defined in: [ui/events.ts:51](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L51>)
+Defined in: [ui/events.ts:50](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L50>)
 
 `MapLayerEventType` - a mapping between the event name and the event.
 
@@ -29,7 +29,7 @@ map.on('the-event-name', 'poi-label', (e) => {
 
 > **click**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:58](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L58>)
+Defined in: [ui/events.ts:57](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L57>)
 
 Fired when a pointing device (usually a mouse) is pressed and released contains a visible portion of the specified layer.
 
@@ -44,7 +44,7 @@ Fired when a pointing device (usually a mouse) is pressed and released contains 
 
 > **contextmenu**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:117](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L117>)
+Defined in: [ui/events.ts:116](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L116>)
 
 Fired when the right button of the mouse is clicked or the context menu key is pressed within visible portion of the specified layer.
 
@@ -54,7 +54,7 @@ Fired when the right button of the mouse is clicked or the context menu key is p
 
 > **dblclick**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:65](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L65>)
+Defined in: [ui/events.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L64>)
 
 Fired when a pointing device (usually a mouse) is pressed and released twice contains a visible portion of the specified layer.
 
@@ -68,7 +68,7 @@ Fired when a pointing device (usually a mouse) is pressed and released twice con
 
 > **mousedown**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:70](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L70>)
+Defined in: [ui/events.ts:69](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L69>)
 
 Fired when a pointing device (usually a mouse) is pressed while inside a visible portion of the specified layer.
 
@@ -82,7 +82,7 @@ Fired when a pointing device (usually a mouse) is pressed while inside a visible
 
 > **mouseenter**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:93](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L93>)
+Defined in: [ui/events.ts:92](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L92>)
 
 Fired when a pointing device (usually a mouse) enters a visible portion of a specified layer from outside that layer or outside the map canvas.
 
@@ -97,7 +97,7 @@ Fired when a pointing device (usually a mouse) enters a visible portion of a spe
 
 > **mouseleave**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:101](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L101>)
+Defined in: [ui/events.ts:100](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L100>)
 
 Fired when a pointing device (usually a mouse) leaves a visible portion of a specified layer, or leaves the map canvas.
 
@@ -112,7 +112,7 @@ Fired when a pointing device (usually a mouse) leaves a visible portion of a spe
 
 > **mousemove**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:85](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L85>)
+Defined in: [ui/events.ts:84](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L84>)
 
 Fired when a pointing device (usually a mouse) is moved while the cursor is inside a visible portion of the specified layer. As you move the cursor across the layer, the event will fire every time the cursor changes position within that layer.
 
@@ -129,7 +129,7 @@ Fired when a pointing device (usually a mouse) is moved while the cursor is insi
 
 > **mouseout**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:113](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L113>)
+Defined in: [ui/events.ts:112](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L112>)
 
 Fired when a point device (usually a mouse) leaves the visible portion of the specified layer.
 
@@ -139,7 +139,7 @@ Fired when a point device (usually a mouse) leaves the visible portion of the sp
 
 > **mouseover**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:109](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L109>)
+Defined in: [ui/events.ts:108](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L108>)
 
 Fired when a pointing device (usually a mouse) is moved inside a visible portion of the specified layer.
 
@@ -155,7 +155,7 @@ Fired when a pointing device (usually a mouse) is moved inside a visible portion
 
 > **mouseup**: [`MapLayerMouseEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerMouseEvent/index.md>)
 
-Defined in: [ui/events.ts:75](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L75>)
+Defined in: [ui/events.ts:74](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L74>)
 
 Fired when a pointing device (usually a mouse) is released while inside a visible portion of the specified layer.
 
@@ -169,7 +169,7 @@ Fired when a pointing device (usually a mouse) is released while inside a visibl
 
 > **touchcancel**: [`MapLayerTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerTouchEvent/index.md>)
 
-Defined in: [ui/events.ts:132](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L132>)
+Defined in: [ui/events.ts:131](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L131>)
 
 Fired when a [`touchstart`](<https://developer.mozilla.org/en-US/docs/Web/Events/touchstart>) event occurs within the visible portion of the specified layer.
 
@@ -183,7 +183,7 @@ Fired when a [`touchstart`](<https://developer.mozilla.org/en-US/docs/Web/Events
 
 > **touchend**: [`MapLayerTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerTouchEvent/index.md>)
 
-Defined in: [ui/events.ts:127](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L127>)
+Defined in: [ui/events.ts:126](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L126>)
 
 Fired when a [`touchend`](<https://developer.mozilla.org/en-US/docs/Web/Events/touchend>) event occurs within the visible portion of the specified layer.
 
@@ -197,7 +197,7 @@ Fired when a [`touchend`](<https://developer.mozilla.org/en-US/docs/Web/Events/t
 
 > **touchstart**: [`MapLayerTouchEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapLayerTouchEvent/index.md>)
 
-Defined in: [ui/events.ts:122](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L122>)
+Defined in: [ui/events.ts:121](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L121>)
 
 Fired when a [`touchstart`](<https://developer.mozilla.org/en-US/docs/Web/Events/touchstart>) event occurs within the visible portion of the specified layer.
 

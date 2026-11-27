@@ -2,7 +2,7 @@
 
 > **SourceEventType** = `object`
 
-Defined in: [ui/events.ts:466](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L466>)
+Defined in: [ui/events.ts:465](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L465>)
 
 `SourceEventType` - a mapping between the source data event names and their event value. These are the events fired by a [Source](<https://maplibre.org/maplibre-gl-js/docs/API/interfaces/Source/index.md>) as its data loads or changes; they also bubble up to the [Map](<https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/index.md>). See [MapSourceDataEvent](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>) for the event shape.
 
@@ -12,7 +12,7 @@ Defined in: [ui/events.ts:466](<https://github.com/maplibre/maplibre-gl-js/blob/
 
 > **data**: [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>)
 
-Defined in: [ui/events.ts:470](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L470>)
+Defined in: [ui/events.ts:469](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L469>)
 
 Fired when the source's data loads or changes.
 
@@ -22,7 +22,7 @@ Fired when the source's data loads or changes.
 
 > **dataabort**: [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>)
 
-Defined in: [ui/events.ts:478](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L478>)
+Defined in: [ui/events.ts:477](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L477>)
 
 Fired when a request for the source's data is aborted.
 
@@ -32,7 +32,7 @@ Fired when a request for the source's data is aborted.
 
 > **dataloading**: [`MapSourceDataEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/MapSourceDataEvent/index.md>)
 
-Defined in: [ui/events.ts:474](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L474>)
+Defined in: [ui/events.ts:473](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L473>)
 
 Fired when the source begins loading or changing data.
 
@@ -42,6 +42,6 @@ Fired when the source begins loading or changing data.
 
 > **error**: [`ErrorEvent`](<https://maplibre.org/maplibre-gl-js/docs/API/classes/ErrorEvent/index.md>)
 
-Defined in: [ui/events.ts:482](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/events.ts#L482>)
+Defined in: [ui/events.ts:481](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/events.ts#L481>)
 
 Fired when there's an error

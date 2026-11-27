@@ -1,6 +1,6 @@
 # Handler
 
-Defined in: [ui/handler\_manager.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L64>)
+Defined in: [ui/handler\_manager.ts:64](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler_manager.ts#L64>)
 
 Handlers interpret dom events and return camera changes that should be applied to the map (`HandlerResult`s). The camera changes are all deltas. The handler itself should have no knowledge of the map's current state. This makes it easier to merge multiple results and keeps handlers simpler. For example, if there is a mousedown and mousemove, the mousePan handler would return a `panDelta` on the mousemove.
 
@@ -10,7 +10,7 @@ Handlers interpret dom events and return camera changes that should be applied t
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler\_manager.ts:73](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L73>)
+Defined in: [ui/handler\_manager.ts:73](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler_manager.ts#L73>)
 
 This is used to indicate if the handler is currently active or not. In case a handler is active, it will block other handlers from getting the relevant events. There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.
 
@@ -24,7 +24,7 @@ This is used to indicate if the handler is currently active or not. In case a ha
 
 > `optional` **isZooming**(): `boolean`
 
-Defined in: [ui/handler\_manager.ts:104](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L104>)
+Defined in: [ui/handler\_manager.ts:104](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler_manager.ts#L104>)
 
 Whether the handler is zooming the map apart from the zoom deltas it returns, such as a wheel zoom between a wheel event and its first frame.
 
@@ -38,7 +38,7 @@ Whether the handler is zooming the map apart from the zoom deltas it returns, su
 
 > `optional` **onTimeout**(`token`: `unknown`): `void` | [`HandlerResult`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/HandlerResult/index.md>)
 
-Defined in: [ui/handler\_manager.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L110>)
+Defined in: [ui/handler\_manager.ts:110](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler_manager.ts#L110>)
 
 Called by the manager when a timeout the handler asked for runs out, see [HandlerResult.timeout](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/HandlerResult/index.md#timeout>). The manager runs a render frame when the result asks for one. The token is opaque to the manager, so a handler declares the parameter as the type of the tokens it hands out.
 
@@ -58,7 +58,7 @@ Called by the manager when a timeout the handler asked for runs out, see [Handle
 
 > **reset**(): `void`
 
-Defined in: [ui/handler\_manager.ts:77](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L77>)
+Defined in: [ui/handler\_manager.ts:77](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler_manager.ts#L77>)
 
 `reset` can be called by the manager at any time and must reset everything to it's original state
 
@@ -72,7 +72,7 @@ Defined in: [ui/handler\_manager.ts:77](<https://github.com/maplibre/maplibre-gl
 
 > `readonly` `optional` **renderFrame?**: () =\> `void` | [`HandlerResult`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/HandlerResult/index.md>)
 
-Defined in: [ui/handler\_manager.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler_manager.ts#L99>)
+Defined in: [ui/handler\_manager.ts:99](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler_manager.ts#L99>)
 
 `renderFrame` is the only non-dom event. It is called during render frames and can be used to smooth camera changes (see scroll handler).
 

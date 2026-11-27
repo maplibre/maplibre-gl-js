@@ -1,6 +1,6 @@
 # DragPanHandler
 
-Defined in: [ui/handler/shim/drag\_pan.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/shim/drag_pan.ts#L37>)
+Defined in: [ui/handler/shim/drag\_pan.ts:37](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler/shim/drag_pan.ts#L37>)
 
 The `DragPanHandler` allows the user to pan the map by clicking and dragging the cursor.
 
@@ -10,7 +10,7 @@ The `DragPanHandler` allows the user to pan the map by clicking and dragging the
 
 > **disable**(): `void`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:81](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/shim/drag_pan.ts#L81>)
+Defined in: [ui/handler/shim/drag\_pan.ts:81](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler/shim/drag_pan.ts#L81>)
 
 Disables the "drag to pan" interaction.
 
@@ -30,7 +30,7 @@ map.dragPan.disable();
 
 > **enable**(`options?`: `boolean` | [`DragPanOptions`](<https://maplibre.org/maplibre-gl-js/docs/API/type-aliases/DragPanOptions/index.md>)): `void`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/shim/drag_pan.ts#L66>)
+Defined in: [ui/handler/shim/drag\_pan.ts:66](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler/shim/drag_pan.ts#L66>)
 
 Enables the "drag to pan" interaction.
 
@@ -62,7 +62,7 @@ Enables the "drag to pan" interaction.
 
 > **isActive**(): `boolean`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:101](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/shim/drag_pan.ts#L101>)
+Defined in: [ui/handler/shim/drag\_pan.ts:101](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler/shim/drag_pan.ts#L101>)
 
 Returns a Boolean indicating whether the "drag to pan" interaction is active, i.e. currently being used.
 
@@ -78,7 +78,7 @@ Returns a Boolean indicating whether the "drag to pan" interaction is active, i.
 
 > **isEnabled**(): `boolean`
 
-Defined in: [ui/handler/shim/drag\_pan.ts:92](<https://github.com/maplibre/maplibre-gl-js/blob/861a52a6ba19017697d2532c602934cfd19f4de9/src/ui/handler/shim/drag_pan.ts#L92>)
+Defined in: [ui/handler/shim/drag\_pan.ts:92](<https://github.com/maplibre/maplibre-gl-js/blob/0a5b073a639c4b2855901c1ba8e0bb351d768243/src/ui/handler/shim/drag_pan.ts#L92>)
 
 Returns a Boolean indicating whether the "drag to pan" interaction is enabled.
 

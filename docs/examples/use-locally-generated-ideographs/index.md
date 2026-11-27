@@ -1,9 +1,9 @@
 # Use locally generated ideographs
 
-Set localIdeographFontFamily to override the font used for displaying CJK (Chinese, Japanese and Korean) characters, ignoring the map style. This setting must be a CSS font rule specifying fallbacks of on-device fonts. Set localIdeographFontFamily to false to use server-provided fonts, which is much slower.
+Use localIdeographFontFamily to specify CSS font-family fallbacks for CJK (Chinese, Japanese and Korean) map labels, after the style's fonts and before sans-serif.
 
 ```js
-import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.mjs';
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.mjs';
 
 const map = new maplibregl.Map({
     container: 'map',
@@ -19,12 +19,12 @@ const map = new maplibregl.Map({
 <html lang="en">
 <head>
     <title>Use locally generated ideographs</title>
-    <meta property="og:description" content="Set localIdeographFontFamily to override the font used for displaying CJK (Chinese, Japanese and Korean) characters, ignoring the map style. This setting must be a CSS font rule specifying fallbacks of on-device fonts. Set localIdeographFontFamily to false to use server-provided fonts, which is much slower." />
+    <meta property="og:description" content="Use localIdeographFontFamily to specify CSS font-family fallbacks for CJK (Chinese, Japanese and Korean) map labels, after the style's fonts and before sans-serif." />
     <meta property="og:category" content="Internationalization" />
     <meta property="og:created" content="2025-06-25" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.css' />
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.css' />
 
     <style>
         body { margin: 0; padding: 0; }
@@ -35,7 +35,7 @@ const map = new maplibregl.Map({
 <div id="map"></div>
 
 <script type="module">
-    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.19.0/dist/maplibre-gl.mjs';
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.20.0/dist/maplibre-gl.mjs';
 
     const map = new maplibregl.Map({
         container: 'map',
