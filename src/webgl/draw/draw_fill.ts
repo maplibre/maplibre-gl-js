@@ -132,6 +132,7 @@ function drawFillTiles(
     const projectedCamera = frameRenderContext.projectedCamera;
 
     const roundedCornerDistance = layer.paint.get('fill-rounded-corner-distance');
+    const outlinesArcs = layer.paint.get('fill-antialias') && layer.getPaintProperty('fill-outline-color') !== undefined;
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
 
@@ -174,8 +175,8 @@ function drawFillTiles(
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
             uniformValues = image ?
-                fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern, roundedCornerDistanceInTileUnits) :
-                fillUniformValues(translateForUniforms, roundedCornerDistanceInTileUnits);
+                fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern, roundedCornerDistanceInTileUnits, outlinesArcs) :
+                fillUniformValues(translateForUniforms, roundedCornerDistanceInTileUnits, outlinesArcs);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;

@@ -12,10 +12,16 @@ in vec4 a_corner_next2;
 
 #pragma maplibre: define highp vec4 color
 #pragma maplibre: define lowp float opacity
+#ifdef ROUNDED_CORNERS
+#pragma maplibre: define highp vec4 outline_color
+#endif
 
 void main() {
     #pragma maplibre: initialize highp vec4 color
     #pragma maplibre: initialize lowp float opacity
+#ifdef ROUNDED_CORNERS
+    #pragma maplibre: initialize highp vec4 outline_color
+#endif
 
     // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {

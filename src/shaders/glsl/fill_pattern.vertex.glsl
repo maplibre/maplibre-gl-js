@@ -22,6 +22,9 @@ out vec2 v_pos_b;
 #pragma maplibre: define lowp vec4 pattern_to
 #pragma maplibre: define lowp float pixel_ratio_from
 #pragma maplibre: define lowp float pixel_ratio_to
+#ifdef ROUNDED_CORNERS
+#pragma maplibre: define highp vec4 outline_color
+#endif
 
 void main() {
     #pragma maplibre: initialize lowp float opacity
@@ -30,6 +33,9 @@ void main() {
     #pragma maplibre: initialize mediump vec4 pattern_to
     #pragma maplibre: initialize lowp float pixel_ratio_from
     #pragma maplibre: initialize lowp float pixel_ratio_to
+#ifdef ROUNDED_CORNERS
+    #pragma maplibre: initialize highp vec4 outline_color
+#endif
 
     // Move vertex outside clip space to discard triangle when opacity is negligible
     if (opacity < 0.01) {

@@ -15,6 +15,7 @@ import type {ProjectedCamera} from '../../camera/projected_camera.ts';
 export type FillUniformsType = {
     'u_fill_translate': Uniform2f;
     'u_rounded_corner_distance': Uniform1f;
+    'u_rounded_outline': Uniform1f;
 };
 
 export type FillOutlineUniformsType = {
@@ -33,6 +34,7 @@ export type FillPatternUniformsType = {
     'u_sdf_pattern': Uniform1i;
     'u_fill_translate': Uniform2f;
     'u_rounded_corner_distance': Uniform1f;
+    'u_rounded_outline': Uniform1f;
 };
 
 export type FillOutlinePatternUniformsType = {
@@ -50,7 +52,8 @@ export type FillOutlinePatternUniformsType = {
 
 const fillUniforms = (context: Context, locations: UniformLocations): FillUniformsType => ({
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
-    'u_rounded_corner_distance': new Uniform1f(context, locations.u_rounded_corner_distance)
+    'u_rounded_corner_distance': new Uniform1f(context, locations.u_rounded_corner_distance),
+    'u_rounded_outline': new Uniform1f(context, locations.u_rounded_outline)
 });
 
 const fillPatternUniforms = (context: Context, locations: UniformLocations): FillPatternUniformsType => ({
@@ -62,7 +65,8 @@ const fillPatternUniforms = (context: Context, locations: UniformLocations): Fil
     'u_fade': new Uniform1f(context, locations.u_fade),
     'u_sdf_pattern': new Uniform1i(context, locations.u_sdf_pattern),
     'u_fill_translate': new Uniform2f(context, locations.u_fill_translate),
-    'u_rounded_corner_distance': new Uniform1f(context, locations.u_rounded_corner_distance)
+    'u_rounded_corner_distance': new Uniform1f(context, locations.u_rounded_corner_distance),
+    'u_rounded_outline': new Uniform1f(context, locations.u_rounded_outline)
 });
 
 const fillOutlineUniforms = (context: Context, locations: UniformLocations): FillOutlineUniformsType => ({
@@ -85,6 +89,7 @@ const fillOutlinePatternUniforms = (context: Context, locations: UniformLocation
 /**
  * Returns the uniform values of the `fillPattern` program.
  * @param roundedCornerDistance - `fill-rounded-corner-distance`, already converted to the tile's units
+ * @param outlinesArcs - Whether rounded corners draw `fill-outline-color` along their arcs
  */
 const fillPatternUniformValues = (
     projectedCamera: ProjectedCamera,
@@ -92,21 +97,25 @@ const fillPatternUniformValues = (
     tile: Tile,
     translate: [number, number],
     isSdfPattern: boolean,
-    roundedCornerDistance: number
+    roundedCornerDistance: number,
+    outlinesArcs: boolean
 ): UniformValues<FillPatternUniformsType> => ({
     ...patternUniformValues(crossfade, projectedCamera, tile),
     'u_fill_translate': translate,
     'u_sdf_pattern': isSdfPattern ? 1 : 0,
     'u_rounded_corner_distance': roundedCornerDistance,
+    'u_rounded_outline': outlinesArcs ? 1 : 0,
 });
 
 /**
  * Returns the uniform values of the `fill` program.
  * @param roundedCornerDistance - `fill-rounded-corner-distance`, already converted to the tile's units
+ * @param outlinesArcs - Whether rounded corners draw `fill-outline-color` along their arcs
  */
-const fillUniformValues = (translate: [number, number], roundedCornerDistance: number): UniformValues<FillUniformsType> => ({
+const fillUniformValues = (translate: [number, number], roundedCornerDistance: number, outlinesArcs: boolean): UniformValues<FillUniformsType> => ({
     'u_fill_translate': translate,
     'u_rounded_corner_distance': roundedCornerDistance,
+    'u_rounded_outline': outlinesArcs ? 1 : 0,
 });
 
 /**
@@ -129,7 +138,7 @@ const fillOutlinePatternUniformValues = (
     translate: [number, number],
     isSdfPattern: boolean,
     roundedCornerDistance: number
-): UniformValues<FillOutlinePatternUniformsType> => fillPatternUniformValues(projectedCamera, crossfade, tile, translate, isSdfPattern, roundedCornerDistance);
+): UniformValues<FillOutlinePatternUniformsType> => fillPatternUniformValues(projectedCamera, crossfade, tile, translate, isSdfPattern, roundedCornerDistance, false);
 
 export {
     fillUniforms,
