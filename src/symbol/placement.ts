@@ -11,6 +11,7 @@ import {TextAnchorEnum, type TextAnchor} from '../style/style_layer/variable_tex
 import {translatePosition, warnOnce} from '../util/util.ts';
 import {symbolInstance as symbolInstanceLayout} from '../data/bucket/symbol_attributes.ts';
 import {getCameraMath} from '../camera/camera_math_factory.ts';
+import {toEvaluationFeature} from '../data/evaluation_feature.ts';
 
 import type {mat4} from 'gl-matrix';
 import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index.ts';
@@ -25,6 +26,7 @@ import type {OverscaledTileID, UnwrappedTileID} from '../tile/tile_id.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {ProjectedCamera} from '../camera/projected_camera.ts';
 import type {GetElevation} from '../geo/world_types.ts';
+import type {FeatureFilter} from '@maplibre/maplibre-gl-style-spec';
 
 class OpacityState {
     opacity: number;
@@ -193,6 +195,8 @@ type SymbolPlacementContext = TileLayerParameters & {
     /** The symbols already placed in this pass, so that a label in more than one tile is placed only once. */
     seenCrossTileIDs: {[k in string | number]: boolean};
     showCollisionBoxes: boolean;
+    /** The layer's filter, which has to run again at placement when it reads the camera's pitch or bearing. */
+    filter: FeatureFilter;
 };
 
 export type BucketPart = {
@@ -282,6 +286,25 @@ export class Placement {
         const terrain = this.terrain;
         if (!terrain) return undefined;
         return (x: number, y: number) => terrain.getElevation(tileID, x, y);
+    }
+
+    /**
+     * Whether a symbol passes its layer's filter for the current pitch and bearing.
+     *
+     * Such a filter can't be applied when the tile is built, since the camera keeps moving, so it runs here on every
+     * placement instead. Zoom is still the tile's zoom, as for any other filter.
+     */
+    private _passesCameraFilter(filter: FeatureFilter, bucket: SymbolBucket, symbolInstance: SymbolInstance): boolean {
+        const {featureIndex, sourceLayerIndex, tileID} = this.retainedQueryData[bucket.bucketInstanceId];
+        const vtLayers = featureIndex.loadVTLayers();
+        const sourceLayer = vtLayers[featureIndex.sourceLayerCoder.decode(sourceLayerIndex)];
+        const feature = toEvaluationFeature(sourceLayer.feature(symbolInstance.featureIndex), filter.needGeometry);
+        const globals = {
+            zoom: tileID.overscaledZ,
+            pitch: this.projectedCamera.pitch,
+            bearing: this.projectedCamera.bearing
+        };
+        return filter.filter(globals, feature, tileID.canonical);
     }
 
     getBucketParts(results: BucketPart[], styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean): void {
@@ -513,7 +536,8 @@ export class Placement {
             getElevation,
             simpleProjectionMatrix,
             seenCrossTileIDs,
-            showCollisionBoxes
+            showCollisionBoxes,
+            filter: bucket.layers[0]._featureFilter
         };
 
         if (zOrderByViewportY) {
@@ -542,6 +566,11 @@ export class Placement {
             // Mark all symbols from this tile as "not placed", but don't add to seenCrossTileIDs, because we don't
             // know yet if we have a duplicate in a parent tile that _should_ be placed.
             this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
+            return;
+        }
+        if (context.filter.needCamera && !this._passesCameraFilter(context.filter, context.bucket, symbolInstance)) {
+            this.placements[symbolInstance.crossTileID] = new JointPlacement(false, false, false);
+            context.seenCrossTileIDs[symbolInstance.crossTileID] = true;
             return;
         }
 

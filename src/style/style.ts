@@ -1387,7 +1387,7 @@ export class Style extends Evented<MapEventType> {
             return;
         }
 
-        if (this._validate(validateStyle.filter, `layers.${layer.id}.filter`, filter, null, options)) {
+        if (this._validate(validateStyle.filter, `layers.${layer.id}.filter`, filter, {layerType: layer.type}, options)) {
             return;
         }
 

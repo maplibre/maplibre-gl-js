@@ -1,0 +1,88 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 128,
+      "height": 128
+    }
+  },
+  "zoom": 2,
+  "bearing": 90,
+  "sprite": "local://sprites/sprite",
+  "sources": {
+    "north": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                0,
+                4
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "south": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                0,
+                -4
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "turned",
+      "type": "symbol",
+      "source": "north",
+      "filter": [
+        ">",
+        [
+          "bearing"
+        ],
+        45
+      ],
+      "layout": {
+        "icon-image": "fav-circle-18",
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    },
+    {
+      "id": "north-up",
+      "type": "symbol",
+      "source": "south",
+      "filter": [
+        "<",
+        [
+          "bearing"
+        ],
+        45
+      ],
+      "layout": {
+        "icon-image": "fav-star-18",
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true
+      }
+    }
+  ]
+}

@@ -508,9 +508,9 @@ export class SymbolBucket implements Bucket {
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
 
-            const needGeometry = layer._featureFilter.needGeometry;
+            const {needGeometry, needCamera} = layer._featureFilter;
             const evaluationFeature = toEvaluationFeature(feature, needGeometry);
-            if (!layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) {
+            if (!needCamera && !layer._featureFilter.filter(globalProperties, evaluationFeature, canonical)) {
                 continue;
             }
 
