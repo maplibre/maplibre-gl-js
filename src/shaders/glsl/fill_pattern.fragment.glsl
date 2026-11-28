@@ -14,12 +14,18 @@ in vec2 v_pos_b;
 #pragma maplibre: define highp vec4 color
 #pragma maplibre: define lowp vec4 pattern_from
 #pragma maplibre: define lowp vec4 pattern_to
+#ifdef ROUNDED_CORNERS
+#pragma maplibre: define highp vec4 outline_color
+#endif
 
 void main() {
     #pragma maplibre: initialize lowp float opacity
     #pragma maplibre: initialize highp vec4 color
     #pragma maplibre: initialize mediump vec4 pattern_from
     #pragma maplibre: initialize mediump vec4 pattern_to
+#ifdef ROUNDED_CORNERS
+    #pragma maplibre: initialize highp vec4 outline_color
+#endif
 
     vec2 pattern_tl_a = pattern_from.xy;
     vec2 pattern_br_a = pattern_from.zw;
@@ -44,6 +50,10 @@ void main() {
     } else {
         fragColor = mix(color1, color2, u_fade) * opacity;
     }
+
+#ifdef ROUNDED_CORNERS
+    fragColor = rounded_corner_color(fragColor, outline_color * opacity);
+#endif
 
 #ifdef OVERDRAW_INSPECTOR
     fragColor = vec4(1.0);

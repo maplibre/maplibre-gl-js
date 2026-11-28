@@ -9,7 +9,7 @@ import type {CanonicalTileID} from '../tile/tile_id.ts';
 register('SubdivisionGranularityExpression', SubdivisionGranularityExpression);
 register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);
 
-type SubdivisionResult = {
+export type SubdivisionResult = {
     verticesFlattened: number[];
     indicesTriangles: number[];
 

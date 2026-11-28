@@ -9,6 +9,7 @@ import {
 } from '../program/fill_program.ts';
 import {updatePatternPositionsInProgram} from '../../render/update_pattern_positions_in_program.ts';
 import {translatePosition} from '../../util/util.ts';
+import {getTileUnitsForMeters} from '../../data/bucket/round_polygon_corners.ts';
 import {drawLayerComposite, prepareDrawLayerComposite} from './draw_layer_composite.ts';
 
 import type {FrameRenderContext} from '../../render/frame_render_context.ts';
@@ -19,6 +20,18 @@ import type {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import type {FillBucket} from '../../data/bucket/fill_bucket.ts';
 import type {OverscaledTileID} from '../../tile/tile_id.ts';
 
+/**
+ * The defines that make the fill and fill outline programs round the corners a bucket carries. A bucket
+ * with rounded corners is always drawn with them, even at a distance of zero, because it also holds the
+ * triangles that fill concave corners, which only the rounded programs know to leave out then.
+ */
+const ROUNDED_CORNER_DEFINES = ['#define ROUNDED_CORNERS'];
+
+/**
+ * Draws a fill layer. Fills that are opaque throughout are drawn in the opaque pass, which writes
+ * without blending, so a fill whose corners are rounded at the current zoom is left to the translucent
+ * pass: the edge of each arc fades out.
+ */
 export function drawFill(painter: Painter, tileManager: TileManager, layer: FillStyleLayer, coords: OverscaledTileID[], frameRenderContext: FrameRenderContext): void {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
@@ -37,6 +50,7 @@ export function drawFill(painter: Painter, tileManager: TileManager, layer: Fill
     const pattern = layer.paint.get('fill-pattern');
     const fillEligibleForOpaque = frameRenderContext.opaquePassEnabledForLayer() &&
         !pattern.constantOr(1 as any) &&
+        !(layer.paint.get('fill-rounded-corner-distance') > 0) &&
         color.constantOr(Color.transparent).a === 1 &&
         opacity.constantOr(0) === 1;
 
@@ -117,6 +131,8 @@ function drawFillTiles(
 
     const projectedCamera = frameRenderContext.projectedCamera;
 
+    const roundedCornerDistance = layer.paint.get('fill-rounded-corner-distance');
+    const outlinesArcs = layer.paint.get('fill-antialias') && layer.getPaintProperty('fill-outline-color') !== undefined;
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
 
@@ -139,7 +155,8 @@ function drawFillTiles(
 
         const isSdfPattern = bucket.sdfPatterns[layer.id] ?? false;
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = frameRenderContext.useProgram(programName, programConfiguration);
+        const roundedCornerDistanceInTileUnits = roundedCornerDistance > 0 ? getTileUnitsForMeters(roundedCornerDistance, coord.canonical) : 0;
+        const program = frameRenderContext.useProgram(programName, programConfiguration, false, bucket.hasRoundedCorners ? ROUNDED_CORNER_DEFINES : undefined);
         const terrainData = frameRenderContext.getTerrainDataForTile(coord);
 
         if (image) {
@@ -157,13 +174,15 @@ function drawFillTiles(
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern) : fillUniformValues(translateForUniforms);
+            uniformValues = image ?
+                fillPatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern, roundedCornerDistanceInTileUnits, outlinesArcs) :
+                fillUniformValues(translateForUniforms, roundedCornerDistanceInTileUnits, outlinesArcs);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern) :
-                fillOutlineUniformValues(translateForUniforms);
+                fillOutlinePatternUniformValues(projectedCamera, crossfade, tile, translateForUniforms, isSdfPattern, roundedCornerDistanceInTileUnits) :
+                fillOutlineUniformValues(translateForUniforms, roundedCornerDistanceInTileUnits);
         }
 
         const stencil = frameRenderContext.stencilModeForClipping(coord);
@@ -171,6 +190,7 @@ function drawFillTiles(
         program.draw(context, drawMode, depthMode,
             stencil, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, frameRenderContext.projectedCamera.zoom, programConfiguration);
+            layer.paint, frameRenderContext.projectedCamera.zoom, programConfiguration,
+            bucket.hasRoundedCorners ? bucket.cornerVertexBuffer : null);
     }
 }
