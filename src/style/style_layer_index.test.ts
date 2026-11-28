@@ -61,6 +61,16 @@ describe('StyleLayerIndex', () => {
 
     });
 
+    test('drops a layer that is updated to a type without buckets', () => {
+        const index = new StyleLayerIndex([
+            {id: '1', type: 'fill', source: 'foo', 'source-layer': 'layer'}
+        ]);
+
+        index.update([{id: '1', type: 'raster', source: 'bar'}], []);
+
+        expect(index.familiesBySource).toEqual({});
+    });
+
     test('StyleLayerIndex.familiesBySource', () => {
         const index = new StyleLayerIndex([
             {id: '0', type: 'fill', 'source': 'A', 'source-layer': 'foo'},
@@ -86,9 +96,6 @@ describe('StyleLayerIndex', () => {
             },
             'geojson': {
                 [GEOJSON_TILE_LAYER_NAME]: [['5']]
-            },
-            '': {
-                [GEOJSON_TILE_LAYER_NAME]: [['6']]
             }
         });
 

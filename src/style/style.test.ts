@@ -3092,19 +3092,37 @@ describe('Style.setPaintProperty', () => {
         });
 
         await style.once('style.load');
-        const backgroundLayer = style.getLayer('background');
-        const validate = vi.spyOn(backgroundLayer, '_validate');
 
         style.setPaintProperty('background', 'background-color', 'notacolor', {validate: false});
-        expect(validate.mock.calls[0][4]).toEqual({validate: false});
         expect(mockConsoleError).not.toHaveBeenCalled();
+        expect(style.getPaintProperty('background', 'background-color')).toBe('notacolor');
 
         expect(style._changed).toBeTruthy();
         style.update({} as EvaluationParameters);
 
         style.setPaintProperty('background', 'background-color', 'alsonotacolor');
         expect(mockConsoleError).toHaveBeenCalledTimes(1);
-        expect(validate.mock.calls[1][4]).toEqual({});
+        expect(style.getPaintProperty('background', 'background-color')).toBe('notacolor');
+    });
+
+    test('emits on an invalid transition property value', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON({
+            'version': 8,
+            'sources': {},
+            'layers': [
+                {
+                    'id': 'background',
+                    'type': 'background'
+                }
+            ]
+        });
+
+        await style.once('style.load');
+
+        style.setPaintProperty('background', 'background-opacity-transition', {duration: -10});
+        expect(mockConsoleError).toHaveBeenCalledTimes(1);
+        expect(style.getPaintProperty('background', 'background-opacity-transition')).toBeUndefined();
     });
 });
 
@@ -3194,18 +3212,16 @@ describe('Style.setLayoutProperty', () => {
         });
 
         await style.once('style.load');
-        const lineLayer = style.getLayer('line');
-        const validate = vi.spyOn(lineLayer, '_validate');
 
         style.setLayoutProperty('line', 'line-cap', 'invalidcap' as any, {validate: false});
-        expect(validate.mock.calls[0][4]).toEqual({validate: false});
         expect(mockConsoleError).not.toHaveBeenCalled();
+        expect(style.getLayoutProperty('line', 'line-cap')).toBe('invalidcap');
         expect(style._changed).toBeTruthy();
         style.update({} as EvaluationParameters);
 
         style.setLayoutProperty('line', 'line-cap', 'differentinvalidcap' as any);
         expect(mockConsoleError).toHaveBeenCalledTimes(1);
-        expect(validate.mock.calls[1][4]).toEqual({});
+        expect(style.getLayoutProperty('line', 'line-cap')).toBe('invalidcap');
     });
 });
 

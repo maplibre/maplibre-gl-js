@@ -429,7 +429,7 @@ export class Style extends Evented<MapEventType> {
                 }
                 if (paintAffectingGlobalStateRefs.has(ref)) {
                     for (const {name, value} of paintAffectingGlobalStateRefs.get(ref)) {
-                        this._updatePaintProperty(layer, name, value, {validate: false});
+                        this._updatePaintProperty(layer, name, value);
                     }
                 }
                 if (visibilityAffectingGlobalStateRefs?.has(ref)) {
@@ -1415,7 +1415,9 @@ export class Style extends Evented<MapEventType> {
 
         if (deepEqual(layer.getLayoutProperty(name), value)) return;
 
-        layer.setLayoutProperty(name, value, options);
+        if (name !== 'visibility' && value !== null && value !== undefined && this._validateLayerProperty(layer, validateStyle.layoutProperty, `layers.${layer.id}.layout.${name}`, name, value, options)) return;
+
+        layer.setLayoutProperty(name, value);
         this._updateLayer(layer);
     }
 
@@ -1446,11 +1448,13 @@ export class Style extends Evented<MapEventType> {
 
         if (deepEqual(layer.getPaintProperty(name), value)) return;
 
-        this._updatePaintProperty(layer, name, value, options);
+        if (value !== null && value !== undefined && this._validateLayerProperty(layer, validateStyle.paintProperty, `layers.${layer.id}.paint.${name}`, name, value, options)) return;
+
+        this._updatePaintProperty(layer, name, value);
     }
 
-    _updatePaintProperty<K extends keyof AllPaintProperties>(layer: StyleLayer, name: K, value: AllPaintProperties[K], options: StyleSetterOptions = {}): void {
-        const requiresRelayout = layer.setPaintProperty(name, value, options);
+    _updatePaintProperty<K extends keyof AllPaintProperties>(layer: StyleLayer, name: K, value: AllPaintProperties[K]): void {
+        const requiresRelayout = layer.setPaintProperty(name, value);
         if (requiresRelayout) {
             this._updateLayer(layer);
         }
@@ -1871,6 +1875,20 @@ export class Style extends Evented<MapEventType> {
             style: this.serialize(),
             value,
             ...props
+        }, options);
+    }
+
+    /**
+     * @internal
+     * Validates a layout or paint property value of a layer, firing what it finds on the layer.
+     * @returns whether validation failed
+     */
+    _validateLayerProperty(layer: StyleLayer, validate: Validator, key: string, name: string, value: unknown, options: StyleSetterOptions): boolean {
+        return validateAndEmit(layer, validate, {
+            key,
+            layerType: layer.type,
+            objectKey: name,
+            value
         }, options);
     }
 

@@ -94,35 +94,6 @@ describe('StyleLayer.setPaintProperty', () => {
         expect(layer.getPaintProperty('background-color-transition')).toEqual({duration: 400});
     });
 
-    test('emits on an invalid property value', async () => {
-        const layer = createStyleLayer({
-            'id': 'background',
-            'type': 'background'
-        }, {});
-
-        const errorPromise = layer.once('error');
-
-        layer.setPaintProperty('background-opacity', 5);
-
-        await errorPromise;
-        expect(layer.getPaintProperty('background-opacity')).toBeUndefined();
-    });
-
-    test('emits on an invalid transition property value', async () => {
-        const layer = createStyleLayer({
-            'id': 'background',
-            'type': 'background'
-        }, {});
-
-        const errorPromise = layer.once('error');
-
-        layer.setPaintProperty('background-opacity-transition', {
-            duration: -10
-        });
-
-        await expect(errorPromise).resolves.toBeDefined();
-    });
-
     test('can unset fill-outline-color #2886', () => {
         const layer = createStyleLayer({
             id: 'building',
@@ -280,18 +251,6 @@ describe('StyleLayer.setLayoutProperty', () => {
         layer.setLayoutProperty('text-transform', 'lowercase');
 
         expect(layer.getLayoutProperty('text-transform')).toBe('lowercase');
-    });
-
-    test('emits on an invalid property value', async () => {
-        const layer = createStyleLayer({
-            'id': 'symbol',
-            'type': 'symbol'
-        } as LayerSpecification, {});
-
-        const errorPromise = layer.once('error');
-
-        layer.setLayoutProperty('text-transform', 'invalidValue' as any);
-        await expect(errorPromise).resolves.toBeDefined();
     });
 
     test('updates property value', () => {
