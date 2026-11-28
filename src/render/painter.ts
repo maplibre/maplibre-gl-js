@@ -14,6 +14,7 @@ import {Texture} from '../webgl/texture.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {selectDebugSource, webglDrawFunctions, type DrawFunctions} from '../webgl/draw/index.ts';
 import {layerBlendsInShader} from '../webgl/draw/draw_layer_composite.ts';
+import {getLastDrapedLayerIndex, getTerrainFogOpacity} from '../webgl/draw/draw_fog.ts';
 import {Mesh} from './mesh.ts';
 import {FrameRenderContext, type FrameRenderData} from './frame_render_context.ts';
 import {updateFrameUniformBuffer} from '../webgl/frame_uniform_buffer.ts';
@@ -342,6 +343,9 @@ export class Painter {
         // Draw all other layers bottom-to-top.
         frameRenderContext.currentPass = 'translucent';
 
+        const fogOpacity = getTerrainFogOpacity(frameRenderContext);
+        const fogLayerIndex = fogOpacity > 0 ? getLastDrapedLayerIndex(layerIds, style._layers, projectedCamera.zoom) : -1;
+        let fogDrawn = false;
         let globeDepthRendered = false;
 
         for (frameRenderContext.currentLayer = 0; frameRenderContext.currentLayer < layerIds.length; frameRenderContext.currentLayer++) {
@@ -350,6 +354,11 @@ export class Painter {
             const tileManager = tileManagers[layer.source];
 
             if (this.renderToTexture?.renderLayer(layer, style, frameRenderContext)) continue;
+
+            if (fogLayerIndex >= 0 && !fogDrawn && frameRenderContext.currentLayer > fogLayerIndex) {
+                this.drawFunctions.fog(frameRenderContext.terrain, fogOpacity, frameRenderContext);
+                fogDrawn = true;
+            }
 
             if (!frameRenderContext.opaquePassEnabledForLayer() && !globeDepthRendered) {
                 globeDepthRendered = true;
@@ -367,6 +376,10 @@ export class Painter {
 
             frameRenderContext.renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, tileManager, layer, coords, frameRenderContext);
+        }
+
+        if (fogLayerIndex >= 0 && !fogDrawn) {
+            this.drawFunctions.fog(frameRenderContext.terrain, fogOpacity, frameRenderContext);
         }
 
         // Render atmosphere, only for Globe projection

@@ -12,11 +12,12 @@ import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug.ts';
 import {drawCustom} from './draw_custom.ts';
 import {drawDepth} from './draw_terrain.ts';
 import {drawSky, drawAtmosphere} from './draw_sky.ts';
+import {drawFog} from './draw_fog.ts';
 
 export {drawSymbols, drawCircles, drawHeatmap, drawLine, drawFill, drawFillExtrusion,
     drawHillshade, drawColorRelief, drawRaster, drawBackground,
     drawDebug, drawDebugPadding, selectDebugSource, drawCustom,
-    drawDepth, drawSky, drawAtmosphere};
+    drawDepth, drawSky, drawAtmosphere, drawFog};
 
 export type DrawFunctions = {
     symbol: typeof drawSymbols;
@@ -31,6 +32,7 @@ export type DrawFunctions = {
     background: typeof drawBackground;
     sky: typeof drawSky;
     atmosphere: typeof drawAtmosphere;
+    fog: typeof drawFog;
     custom: typeof drawCustom;
     debug: typeof drawDebug;
     debugPadding: typeof drawDebugPadding;
@@ -50,6 +52,7 @@ export const webglDrawFunctions: DrawFunctions = {
     background: drawBackground,
     sky: drawSky,
     atmosphere: drawAtmosphere,
+    fog: drawFog,
     custom: drawCustom,
     debug: drawDebug,
     debugPadding: drawDebugPadding,

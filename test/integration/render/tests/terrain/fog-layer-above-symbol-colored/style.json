@@ -2,7 +2,7 @@
     "version": 8,
     "metadata": {
         "test": {
-            "description": "The fill layer above the symbol layer is draped in its own pass and is black everywhere. It must be fogged like a single pass would.",
+            "description": "A translucent fill above a symbol layer is draped in a second pass over a white background, with a circle layer above it. The fog must match a single draped pass and stay behind the circle.",
             "height": 128,
             "width": 128,
             "maxPitch": 85
@@ -24,7 +24,7 @@
             "maxzoom": 12,
             "tileSize": 256
         },
-        "black": {
+        "shade": {
             "type": "geojson",
             "data": {
                 "type": "Feature",
@@ -41,13 +41,26 @@
                 "type": "FeatureCollection",
                 "features": []
             }
+        },
+        "marker": {
+            "type": "geojson",
+            "data": {
+                "type": "Feature",
+                "properties": {},
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [35.38, 31.60]
+                }
+            }
         }
     },
     "layers": [
         {
-            "id": "overlay-fill-below",
-            "type": "fill",
-            "source": "overlay"
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "#ffffff"
+            }
         },
         {
             "id": "overlay-label",
@@ -57,9 +70,20 @@
         {
             "id": "overlay-fill",
             "type": "fill",
-            "source": "black",
+            "source": "shade",
             "paint": {
-                "fill-color": "#000000"
+                "fill-color": "#000000",
+                "fill-opacity": 0.5
+            }
+        },
+        {
+            "id": "above-fog",
+            "type": "circle",
+            "source": "marker",
+            "paint": {
+                "circle-color": "#ff0000",
+                "circle-pitch-scale": "viewport",
+                "circle-radius": 6
             }
         }
     ],

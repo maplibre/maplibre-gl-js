@@ -73,6 +73,8 @@ import atmosphereFrag from './glsl/atmosphere.fragment.glsl.g.ts';
 import atmosphereVert from './glsl/atmosphere.vertex.glsl.g.ts';
 import skyFrag from './glsl/sky.fragment.glsl.g.ts';
 import skyVert from './glsl/sky.vertex.glsl.g.ts';
+import fogFrag from './glsl/fog.fragment.glsl.g.ts';
+import fogVert from './glsl/fog.vertex.glsl.g.ts';
 
 export type PreparedShader = {
     fragmentSource: string;
@@ -119,6 +121,7 @@ export const shaders: {
     terrainHeight: PreparedShader;
     atmosphere: PreparedShader;
     sky: PreparedShader;
+    fog: PreparedShader;
 } = {
     prelude: prepare(preludeFrag, preludeVert),
     projectionMercator: prepare(projectionMercatorFrag, projectionMercatorVert),
@@ -157,6 +160,7 @@ export const shaders: {
     terrainHeight: prepare(terrainHeightFrag, terrainHeightVert),
     atmosphere: prepare(atmosphereFrag, atmosphereVert),
     sky: prepare(skyFrag, skyVert),
+    fog: prepare(fogFrag, fogVert),
 };
 
 /** Expand #pragmas to #ifdefs, extract attributes and uniforms */
