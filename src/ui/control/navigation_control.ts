@@ -3,6 +3,7 @@ import {DOM} from '../../util/dom.ts';
 import {degreesToRadians, getAngleDelta} from '../../util/util.ts';
 import {DragHandler, type DragMoveHandler, type DragRotateResult} from '../handler/drag_handler.ts';
 import {MouseOrTouchMoveStateManager} from '../handler/drag_move_state_manager.ts';
+import {subscribeToSlice} from '../map_state.ts';
 
 import type {Map} from '../map.ts';
 import type {IControl} from './control.ts';
@@ -57,6 +58,7 @@ export class NavigationControl implements IControl {
     _compass: HTMLButtonElement;
     _compassIcon: HTMLElement;
     _handler: MouseRotateWrapper;
+    _unsubscribeZoomLimits: Array<() => void>;
 
     /**
      * @param options - the control's options
@@ -123,6 +125,11 @@ export class NavigationControl implements IControl {
             this._setButtonTitle(this._zoomInButton, 'ZoomIn');
             this._setButtonTitle(this._zoomOutButton, 'ZoomOut');
             this._map.on('move', this._updateZoomButtons);
+            // setMinZoom and setMaxZoom fire no movement events when the zoom stays the same.
+            this._unsubscribeZoomLimits = [
+                subscribeToSlice(map._store, state => state.camera.view.minZoom, this._updateZoomButtons),
+                subscribeToSlice(map._store, state => state.camera.view.maxZoom, this._updateZoomButtons)
+            ];
             this._updateZoomButtons();
         }
         if (this.options.showCompass) {
@@ -145,6 +152,8 @@ export class NavigationControl implements IControl {
         this._container.remove();
         if (this.options.showZoom) {
             this._map.off('move', this._updateZoomButtons);
+            for (const unsubscribe of this._unsubscribeZoomLimits) unsubscribe();
+            delete this._unsubscribeZoomLimits;
         }
         if (this.options.showCompass) {
             if (this.options.visualizePitch) {
