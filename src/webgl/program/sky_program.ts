@@ -3,6 +3,7 @@ import {getMercatorHorizon} from '../../geo/projection/mercator_utils.ts';
 import {getAtmosphereAltitudeBlend, getGlobeCenterInViewSpace, getGlobeRadiusPixels} from '../../geo/projection/globe_utils.ts';
 import {vec3} from 'gl-matrix';
 import {getCameraMath} from '../../camera/camera_math_factory.ts';
+import {renderedProjectedCamera} from '../../camera/projected_camera.ts';
 
 import type {SkyPropsPossiblyEvaluated} from '../../style/sky_properties.g.ts';
 import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
@@ -35,10 +36,34 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
     'u_atmosphere_blend': new Uniform1f(context, locations.u_atmosphere_blend),
 });
 
+/** Minimum `sin(pitch)` for projecting the ground far plane onto the screen without dividing near 0 or 180 degrees. */
+const MIN_PITCH_SIN = 1e-6;
+
+/** CSS-pixel overlap behind the ground far-clip edge so the sky leaves no transparent 1-pixel crack. */
+const HORIZON_OVERLAP_PX = 1;
+
+/**
+ * Pixel height of the mercator sky horizon above screen center, matching where the ground meets the far clipping
+ * plane when `farZ` reaches past `getMercatorHorizon` (for example at high zoom or pitch above 90 degrees).
+ */
+function getMercatorSkyHorizon(projectedCamera: ProjectedCamera): number {
+    const mercatorHorizon = getMercatorHorizon(projectedCamera);
+    const rendered = renderedProjectedCamera(projectedCamera);
+    if (rendered.projection !== 'mercator') return mercatorHorizon;
+    const sinPitch = Math.sin(rendered.pitchInRadians);
+    if (sinPitch <= MIN_PITCH_SIN) return mercatorHorizon;
+    const cosPitch = Math.cos(rendered.pitchInRadians);
+    const groundElevation = Math.min(0, rendered.elevation, rendered.minElevationForCurrentTile);
+    const cameraHeightPx = rendered.cameraToCenterDistance * cosPitch + (rendered.elevation - groundElevation) * rendered.pixelsPerMeter;
+    if (cameraHeightPx <= 0) return mercatorHorizon;
+    const farHorizon = rendered.cameraToCenterDistance * (cosPitch - cameraHeightPx / rendered.farZ) / sinPitch - HORIZON_OVERLAP_PX;
+    return Math.max(mercatorHorizon, farHorizon);
+}
+
 const skyUniformValues = (sky: Readonly<SkyPropsPossiblyEvaluated>, projectedCamera: ProjectedCamera, pixelRatio: number): UniformValues<SkyUniformsType> => {
     const cosRoll = Math.cos(projectedCamera.rollInRadians);
     const sinRoll = Math.sin(projectedCamera.rollInRadians);
-    const mercatorHorizon  = getMercatorHorizon(projectedCamera);
+    const mercatorHorizon = getMercatorSkyHorizon(projectedCamera);
     const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: null, applyGlobeMatrix: true, applyTerrainMatrix: true});
     const skyBlend = projectionData.projectionTransition;
     const globePosition = getGlobeCenterInViewSpace(projectedCamera);
