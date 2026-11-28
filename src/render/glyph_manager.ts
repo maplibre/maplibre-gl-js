@@ -5,7 +5,6 @@ import {isCluster} from '../util/graphemes.ts';
 import {AlphaImage} from '../util/image.ts';
 import {ensureError, warnOnce} from '../util/util.ts';
 import {getArrayBuffer} from '../util/ajax.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
 
 import type {GlyphMap, GlyphRequests, StyleGlyph} from '../style/style_glyph.ts';
@@ -299,7 +298,7 @@ export class GlyphManager {
 
         const request = await this.requestManager.transformRequest(
             this.url.replace('{fontstack}', fontstack).replace('{range}', `${begin}-${end}`),
-            ResourceType.Glyphs
+            'Glyphs'
         );
 
         const response = await getArrayBuffer(request, new AbortController());

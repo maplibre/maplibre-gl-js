@@ -1,5 +1,4 @@
 import {getJSON} from '../util/ajax.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 
 import type {TileJSON} from '../util/util.ts';
@@ -40,7 +39,7 @@ export async function loadTileJson(
 ): Promise<LoadTileJsonResponse | null> {
     let tileJSON: TileJSON | typeof options = options;
     if (options.url) {
-        const response = await getJSON<TileJSON>(await requestManager.transformRequest(options.url, ResourceType.Source), abortController);
+        const response = await getJSON<TileJSON>(await requestManager.transformRequest(options.url, 'Source'), abortController);
         tileJSON = response.data;
     } else {
         await browser.frameAsync(abortController, targetWindow);

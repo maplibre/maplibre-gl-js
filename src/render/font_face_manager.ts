@@ -1,5 +1,4 @@
 import {getArrayBuffer} from '../util/ajax.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {ensureError, warnOnce} from '../util/util.ts';
 
 import type {FontFacesSpecification, MLFontFace} from '@maplibre/maplibre-gl-style-spec';
@@ -250,7 +249,7 @@ export class FontFaceManager {
      * same way it gets one for a glyph range.
      */
     async _downloadFontFile(url: string): Promise<ArrayBuffer> {
-        const request = await this.requestManager.transformRequest(url, ResourceType.Glyphs);
+        const request = await this.requestManager.transformRequest(url, 'Glyphs');
         const response = await getArrayBuffer(request, new AbortController());
         if (!response?.data) {
             throw new Error(`the response was empty for the font file at ${url}`);

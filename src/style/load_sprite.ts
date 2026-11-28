@@ -1,6 +1,5 @@
 import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {browser} from '../util/browser.ts';
 import {coerceSpriteToArray} from '../util/style.ts';
 
@@ -38,10 +37,10 @@ export async function loadSprite(
     const imagesMap: {[id: string]: Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>>} = {};
 
     for (const {id, url} of spriteArray) {
-        const jsonRequestParameters = await requestManager.transformRequest(normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
+        const jsonRequestParameters = await requestManager.transformRequest(normalizeSpriteURL(url, format, '.json'), 'SpriteJSON');
         jsonsMap[id] = getJSON<SpriteJSON>(jsonRequestParameters, abortController);
 
-        const imageRequestParameters = await requestManager.transformRequest(normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
+        const imageRequestParameters = await requestManager.transformRequest(normalizeSpriteURL(url, format, '.png'), 'SpriteImage');
         imagesMap[id] = ImageRequest.getImage(imageRequestParameters, abortController);
     }
 

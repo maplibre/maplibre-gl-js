@@ -1,5 +1,4 @@
 import {ImageRequest} from '../util/image_request.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {isImageBitmap, readImageUsingVideoFrame} from '../util/util.ts';
 import {browser} from '../util/browser.ts';
 import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported.ts';
@@ -68,7 +67,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
         try {
-            const response = await ImageRequest.transformAndGetImage(this.map._requestManager, url, ResourceType.Tile, tile.abortController, this.map._refreshExpiredTiles, {colorSpaceConversion: 'none'});
+            const response = await ImageRequest.transformAndGetImage(this.map._requestManager, url, 'Tile', tile.abortController, this.map._refreshExpiredTiles, {colorSpaceConversion: 'none'});
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';

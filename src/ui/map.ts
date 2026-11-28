@@ -7,7 +7,7 @@ import {type GetResourceResponse, getJSON} from '../util/ajax.ts';
 import {getGlobalDispatcher} from '../util/global_dispatcher.ts';
 import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
 import {ImageRequest} from '../util/image_request.ts';
-import {RequestManager, ResourceType} from '../util/request_manager.ts';
+import {RequestManager} from '../util/request_manager.ts';
 import {Style, type StyleSwapOptions, type TransformStyleFunction} from '../style/style.ts';
 import {validateStyle, validateAndEmit} from '../style/validate_style.ts';
 import {EvaluationParameters} from '../style/evaluation_parameters.ts';
@@ -44,10 +44,10 @@ import {CanonicalTileID, type OverscaledTileID} from '../tile/tile_id.ts';
 import {isStyleImageWebGLData} from '../style/style_image.ts';
 import {getRegisteredProjection} from '../geo/projection/projection_crud.ts';
 
+import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {PaddingOptions} from '../geo/edge_insets.ts';
 import type {Source} from '../source/source.ts';
 import type {StyleLayer} from '../style/style_layer.ts';
-import type {RequestTransformFunction} from '../util/request_manager.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds.ts';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style.ts';
@@ -2909,7 +2909,7 @@ export class Map extends Evented<MapEventType> {
             this._diffStyleRequest = new AbortController();
             const abortController = this._diffStyleRequest;
             try {
-                const request = await this._requestManager.transformRequest(url, ResourceType.Style);
+                const request = await this._requestManager.transformRequest(url, 'Style');
                 if (abortController.signal.aborted) {
                     this._diffStyleRequest = null;
                     return;
@@ -3532,7 +3532,7 @@ export class Map extends Evented<MapEventType> {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-an-icon-to-the-map/)
      */
     async loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        const response = await ImageRequest.getImage(await this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        const response = await ImageRequest.getImage(await this._requestManager.transformRequest(url, 'Image'), new AbortController());
         if (!response.data) {
             throw new Error(`Could not load image ${url}: the response is empty`);
         }

@@ -1,5 +1,4 @@
 import {getVideo} from '../util/ajax.ts';
-import {ResourceType} from '../util/request_manager.ts';
 import {ImageSource} from './image_source.ts';
 import {Texture} from '../webgl/texture.ts';
 import {ErrorEvent} from '../util/evented.ts';
@@ -75,7 +74,7 @@ export class VideoSource extends ImageSource {
 
         this.urls = [];
         for (const url of options.urls) {
-            this.urls.push((await this.map._requestManager.transformRequest(url, ResourceType.Source)).url);
+            this.urls.push((await this.map._requestManager.transformRequest(url, 'Source')).url);
         }
         try {
             const video = await getVideo(this.urls);
