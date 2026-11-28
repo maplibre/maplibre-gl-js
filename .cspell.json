@@ -138,6 +138,7 @@
     "mlcontour",
     "mousein",
     "mouseup",
+    "pointerup",
     "mozfullscreenchange",
     "MSAA",
     "msvs",

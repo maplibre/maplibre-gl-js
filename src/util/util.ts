@@ -1144,7 +1144,7 @@ export function isPointableEvent(event: Event, eventType: string): event is Mous
     const domEvent = event as globalThis.Event;
     const target = domEvent?.target as Element | null;
     const targetWindow = target?.ownerDocument?.defaultView || window;
-    return domEvent instanceof targetWindow.MouseEvent || domEvent instanceof targetWindow.WheelEvent;
+    return domEvent instanceof targetWindow.MouseEvent || domEvent instanceof targetWindow.WheelEvent || domEvent instanceof targetWindow.PointerEvent;
 }
 
 export function isTouchableOrPointableType(eventType: string): boolean {

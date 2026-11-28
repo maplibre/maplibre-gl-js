@@ -92,6 +92,12 @@ export interface Handler {
     readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
     readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
     readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;
+
+    readonly pointerdown?: (e: PointerEvent, point: Point) => HandlerResult | void;
+    readonly pointerup?: (e: PointerEvent) => void;
+    readonly pointermove?: (e: PointerEvent) => void;
+    readonly pointerover?: (e: PointerEvent) => void;
+    readonly pointerout?: (e: PointerEvent) => void;
     /**
      * `renderFrame` is the only non-dom event. It is called during render
      * frames and can be used to smooth camera changes (see scroll handler).
@@ -306,6 +312,10 @@ export class HandlerManager extends Evented<MapEventType> {
             [el, 'mousemove', undefined],
             [el, 'mouseup', undefined],
 
+            [el, 'pointerdown', undefined],
+            [el, 'pointermove', undefined],
+            [el, 'pointerup', undefined],
+
             // Bind window-level event listeners for move and up/end events. In the absence of
             // the pointer capture API, which is not supported by all necessary platforms,
             // window-level event listeners give us the best shot at capturing events that
@@ -314,10 +324,16 @@ export class HandlerManager extends Evented<MapEventType> {
             [this._ownerDocument, 'mousemove', {capture: true}],
             [this._ownerDocument, 'mouseup', undefined],
 
+            [this._ownerDocument, 'pointermove', {capture: true}],
+            [this._ownerDocument, 'pointerup', undefined],
+
             [el, 'mouseover', undefined],
             [el, 'mouseout', undefined],
             [el, 'dblclick', undefined],
             [el, 'click', undefined],
+
+            [el, 'pointerover', undefined],
+            [el, 'pointerout', undefined],
 
             [el, 'keydown', {capture: false}],
             [el, 'keyup', undefined],

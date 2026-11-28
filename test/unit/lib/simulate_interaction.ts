@@ -1,7 +1,9 @@
 
 function click(target: HTMLElement | Window | Element): void {
     const options = {bubbles: true};
+    target.dispatchEvent(new PointerEvent('pointerdown', options));
     target.dispatchEvent(new MouseEvent('mousedown', options));
+    target.dispatchEvent(new PointerEvent('pointerup', options));
     target.dispatchEvent(new MouseEvent('mouseup', options));
     target.dispatchEvent(new MouseEvent('click', options));
 }
@@ -70,6 +72,13 @@ function mouseFunctionFactory(event: string): (target: HTMLElement | Window, opt
     };
 }
 
+function pointerFunctionFactory(event: string): (target: HTMLElement | Window, options?: PointerEventInit) => void {
+    return (target: HTMLElement | Window, options?: PointerEventInit) => {
+        options = {bubbles: true, ...options};
+        target.dispatchEvent(new MouseEvent(event, options));
+    };
+}
+
 function wheelFunctionFactory(event: string): (target: HTMLElement | Window, options: WheelEventInit) => void {
     return (target: HTMLElement | Window, options: WheelEventInit) => {
         options = {bubbles: true, ...options};
@@ -126,6 +135,12 @@ const events: {
     touchcancel: (target: HTMLElement | Window, options?: LooseTouchEventInit) => void;
     focus: (target: HTMLElement | Window) => void;
     blur: (target: HTMLElement | Window) => void;
+
+    pointerup: (target: HTMLElement | Window, options?: PointerEventInit) => void;
+    pointerdown: (target: HTMLElement | Window, options?: PointerEventInit) => void;
+    pointerover: (target: HTMLElement | Window, options?: PointerEventInit) => void;
+    pointermove: (target: HTMLElement | Window, options?: PointerEventInit) => void;
+    pointerout: (target: HTMLElement | Window, options?: PointerEventInit) => void;
 } = {
     click,
     drag,
@@ -153,7 +168,13 @@ const events: {
     touchmove: touchFunctionFactory('touchmove'),
     touchcancel: touchFunctionFactory('touchcancel'),
     focus: focusBlueFunctionFactory('focus'),
-    blur: focusBlueFunctionFactory('blur')
+    blur: focusBlueFunctionFactory('blur'),
+
+    pointerup: pointerFunctionFactory('pointerup'),
+    pointerdown: pointerFunctionFactory('pointerdown'),
+    pointerover: pointerFunctionFactory('pointerover'),
+    pointermove: pointerFunctionFactory('pointermove'),
+    pointerout: pointerFunctionFactory('pointerout'),
 };
 
 export default events;

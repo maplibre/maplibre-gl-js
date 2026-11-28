@@ -1,4 +1,4 @@
-import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from './events.ts';
+import {MapMouseEvent, MapTouchEvent, MapPointerEvent, MapWheelEvent} from './events.ts';
 
 import type {Map} from './map.ts';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
@@ -18,6 +18,10 @@ export class MapEventFactory {
     /** @param data - the features under the pointer, for an event that a layer's listener receives */
     createMouseEvent(type: string, originalEvent: MouseEvent, data?: {features: MapGeoJSONFeature[]}): MapMouseEvent {
         return new MapMouseEvent(type, this._map, originalEvent, data);
+    }
+
+    createPointerEvent(type: string, originalEvent: PointerEvent, data?: {features: MapGeoJSONFeature[]}): MapPointerEvent {
+        return new MapPointerEvent(type, this._map, originalEvent, data);
     }
 
     createTouchEvent(type: string, originalEvent: TouchEvent): MapTouchEvent {

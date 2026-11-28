@@ -11,7 +11,7 @@ import type {PositionAnchor} from './anchor.ts';
 import type {Map} from './map.ts';
 import type {Popup, Offset} from './popup.ts';
 import type {LngLatLike} from '../geo/lng_lat.ts';
-import type {MapMouseEvent, MapTouchEvent} from './events.ts';
+import type {MapMouseEvent, MapTouchEvent, MapPointerEvent} from './events.ts';
 import type {Terrain} from '../render/terrain.ts';
 import type {PointLike} from '../camera/camera_types.ts';
 
@@ -845,7 +845,7 @@ export class Marker extends Evented<MarkerEventType> {
         return this._element.classList.toggle(className);
     }
 
-    _onMove = (e: MapMouseEvent | MapTouchEvent): void => {
+    _onMove = (e: MapMouseEvent | MapTouchEvent | MapTouchEvent): void => {
         if (!this._isDragging) {
             const clickTolerance = this._clickTolerance || this._map._clickTolerance;
             this._isDragging = e.point.dist(this._pointerdownPos) >= clickTolerance;
@@ -885,7 +885,7 @@ export class Marker extends Evented<MarkerEventType> {
         this._state = 'inactive';
     };
 
-    _addDragHandler = (e: MapMouseEvent | MapTouchEvent): void => {
+    _addDragHandler = (e: MapMouseEvent | MapTouchEvent | MapPointerEvent): void => {
         if (this._element.contains(e.originalEvent.target as any)) {
             e.preventDefault();
 
@@ -902,8 +902,10 @@ export class Marker extends Evented<MarkerEventType> {
             this._state = 'pending';
             this._map.on('mousemove', this._onMove);
             this._map.on('touchmove', this._onMove);
+            this._map.on('pointermove', this._onMove);
             this._map.once('mouseup', this._onUp);
             this._map.once('touchend', this._onUp);
+            this._map.on('pointerup', this._onUp);
         }
     };
 

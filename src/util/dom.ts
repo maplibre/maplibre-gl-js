@@ -123,7 +123,7 @@ export class DOM {
         };
     }
 
-    private static getPoint(el: HTMLElement, scale: ScaleReturnValue, e: MouseEvent | Touch): Point {
+    private static getPoint(el: HTMLElement, scale: ScaleReturnValue, e: MouseEvent | Touch | PointerEvent): Point {
         const rect = scale.boundingClientRect;
         return new Point(
             // rect.left/top values are in page scale (like clientX/Y),
@@ -133,7 +133,7 @@ export class DOM {
         );
     }
 
-    public static mousePos(el: HTMLElement, e: MouseEvent | Touch): Point {
+    public static mousePos(el: HTMLElement, e: MouseEvent | Touch | PointerEvent): Point {
         const scale = DOM.getScale(el);
         return DOM.getPoint(el, scale, e);
     }
