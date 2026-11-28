@@ -76,6 +76,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
     mousedown?: Handler['mousedown'];
     mousemoveWindow?: Handler['mousemoveWindow'];
     mouseup?: Handler['mouseup'];
+    mouseupWindow?: Handler['mouseupWindow'];
     touchstart?: Handler['touchstart'];
     touchmoveWindow?: Handler['touchmoveWindow'];
     touchend?: Handler['touchend'];
