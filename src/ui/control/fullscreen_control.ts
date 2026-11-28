@@ -120,9 +120,26 @@ export class FullscreenControl extends Evented<FullscreenControlEventType> imple
 
     /** {@inheritDoc IControl.onRemove} */
     onRemove(): void {
+        this._leaveFullscreenOnRemove();
         this._controlContainer.remove();
         this._map = null;
         window.document.removeEventListener(this._fullscreenchange, this._onFullscreenChange);
+    }
+
+    /**
+     * Leaves fullscreen when the control is removed while the map is fullscreen, so the map does not
+     * stay stuck over the page with no button to exit it and with cooperative gestures off.
+     *
+     * Native fullscreen ends asynchronously, after the `fullscreenchange` listener has been removed,
+     * so the control's state, `fullscreenend` and cooperative gestures are restored right away.
+     */
+    _leaveFullscreenOnRemove(): void {
+        if (!this._fullscreen) return;
+
+        this._exitFullscreen();
+        if (this._fullscreen) {
+            this._handleFullscreenChange();
+        }
     }
 
     _setupUI(): void {
