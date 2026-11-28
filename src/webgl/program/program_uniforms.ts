@@ -13,6 +13,7 @@ import {backgroundUniforms, backgroundPatternUniforms, type BackgroundUniformsTy
 import {terrainUniforms, terrainDepthUniforms, terrainHeightUniforms, type TerrainUniformsType, type TerrainDepthUniformsType, type TerrainHeightUniformsType} from './terrain_program.ts';
 import {atmosphereUniforms, type atmosphereUniformsType} from './atmosphere_program.ts';
 import {skyUniforms, type SkyUniformsType} from './sky_program.ts';
+import {fogUniforms, type FogUniformsType} from './fog_program.ts';
 
 import type {Context} from '../context.ts';
 import type {UniformLocations} from '../uniform_binding.ts';
@@ -56,6 +57,7 @@ export const programUniforms: {
     terrainHeight: (context: Context, locations: UniformLocations) => TerrainHeightUniformsType;
     atmosphere: (context: Context, locations: UniformLocations) => atmosphereUniformsType;
     sky: (context: Context, locations: UniformLocations) => SkyUniformsType;
+    fog: (context: Context, locations: UniformLocations) => FogUniformsType;
 } = {
     fillExtrusion: fillExtrusionUniforms,
     fillExtrusionPattern: fillExtrusionPatternUniforms,
@@ -90,5 +92,6 @@ export const programUniforms: {
     terrainDepth: terrainDepthUniforms,
     terrainHeight: terrainHeightUniforms,
     atmosphere: atmosphereUniforms,
-    sky: skyUniforms
+    sky: skyUniforms,
+    fog: fogUniforms
 };

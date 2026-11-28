@@ -37,7 +37,7 @@ function rttFingerprintKey(layer: StyleLayer): string | undefined {
  * Whether the layer is drawn into the terrain tiles' textures rather than onto the map: the layer types above, and
  * custom layers that implement `renderToTerrainTile`.
  */
-function isRenderedToTexture(layer: StyleLayer): boolean {
+export function isRenderedToTexture(layer: StyleLayer): boolean {
     if (isCustomStyleLayer(layer)) return layer.implementation.renderToTerrainTile !== undefined;
     return LAYERS_TO_TEXTURES[layer.type] === true;
 }
