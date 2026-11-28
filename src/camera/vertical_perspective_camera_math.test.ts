@@ -4,6 +4,7 @@ import {EXTENT} from '../data/extent.ts';
 import {LngLat, earthRadius} from '../geo/lng_lat.ts';
 import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 import {OverscaledTileID} from '../tile/tile_id.ts';
+import {createIdentityMat4f32} from '../util/util.ts';
 import {createDEM, createDEMTerrain, createTestCamera} from '../util/test/util.ts';
 import {createCameraViewState} from './camera_view_state.ts';
 import {createCameraContext} from './camera_context.ts';
@@ -328,6 +329,17 @@ describe('getProjectionData', () => {
         const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: new OverscaledTileID(9, 0, 9, 268, 179), applyGlobeMatrix: true});
 
         expect(projectionData.tileOrigin).toEqual([0, 0, 0, 0]);
+    });
+
+    test('draws a tile into the terrain with its terrain matrix', () => {
+        const context = createContext();
+        const projectedCamera = projectCamera(createCenteredState(context, new LngLat(8.5417, 47.3769), 9.9), context);
+        const tileID = new OverscaledTileID(9, 0, 9, 268, 179);
+        tileID.terrainRttPosMatrix32f = createIdentityMat4f32();
+
+        const projectionData = getCameraMath(projectedCamera).getProjectionData(projectedCamera, {overscaledTileID: tileID, applyTerrainMatrix: true});
+
+        expect(projectionData.fallbackMatrix).toBe(tileID.terrainRttPosMatrix32f);
     });
 });
 

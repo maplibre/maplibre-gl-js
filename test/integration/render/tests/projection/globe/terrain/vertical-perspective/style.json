@@ -1,0 +1,68 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Layers draped on terrain show on vertical-perspective, where globe draws them.",
+      "height": 256,
+      "width": 256
+    }
+  },
+  "center": [
+    11.3,
+    47.3
+  ],
+  "zoom": 8.9,
+  "pitch": 70,
+  "bearing": -20,
+  "sources": {
+    "terrain": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256,
+      "bounds": [
+        10.55,
+        47.05,
+        11.95,
+        47.98
+      ]
+    },
+    "hillshade": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "maxzoom": 12,
+      "tileSize": 256,
+      "bounds": [
+        10.55,
+        47.05,
+        11.95,
+        47.98
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#e8e4d8"
+      }
+    },
+    {
+      "id": "hillshade",
+      "type": "hillshade",
+      "source": "hillshade"
+    }
+  ],
+  "terrain": {
+    "source": "terrain",
+    "exaggeration": 2
+  },
+  "projection": {
+    "type": "vertical-perspective"
+  }
+}

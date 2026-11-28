@@ -466,8 +466,9 @@ function rayParameter(origin: vec3, direction: vec3, point: vec3): number {
 /** @internal The {@link CameraMath} of the vertical perspective projection, which draws the planet as a sphere. */
 export class VerticalPerspectiveCameraMath implements CameraMath {
     getProjectionData(projectedCamera: VerticalPerspectiveProjectedCamera, params: ProjectionDataParams): RendererProjectionData {
-        const {overscaledTileID, applyGlobeMatrix} = params;
+        const {overscaledTileID, applyGlobeMatrix, applyTerrainMatrix} = params;
         const projectionData = getPlanetRelativeProjectionData(projectedCamera, overscaledTileID, applyGlobeMatrix);
+        if (overscaledTileID?.terrainRttPosMatrix32f && applyTerrainMatrix) projectionData.fallbackMatrix = overscaledTileID.terrainRttPosMatrix32f;
         const drawsTileRelative = applyGlobeMatrix && overscaledTileID != null && projectedCamera.zoom >= MIN_TILE_RELATIVE_ZOOM;
         if (!drawsTileRelative) return projectionData;
 
