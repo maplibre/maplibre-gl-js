@@ -1,7 +1,7 @@
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {TileManager} from './tile_manager.ts';
 import {addSourceType, type Source} from '../source/source.ts';
-import {FadingDirections, FadingRoles, Tile} from './tile.ts';
+import {FadingDirections, FadingRoles, Tile, type TileState} from './tile.ts';
 import {CanonicalTileID, OverscaledTileID} from './tile_id.ts';
 import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
@@ -116,6 +116,14 @@ function createTileManager(options?: SourceMockOptions, used?: boolean) {
     const sc = new TileManager('id', specification as unknown as SourceSpecification, {} as Dispatcher);
     sc.used = typeof used === 'boolean' ? used : true;
     return sc;
+}
+
+function addCachedTile(tileManager: TileManager, tileID: OverscaledTileID, state: TileState = 'loaded'): Tile {
+    const tile = new Tile(tileID, undefined);
+    tile.state = state;
+    tileManager._outOfViewCache.setMaxSize(100);
+    tileManager._outOfViewCache.add(tileID, tile, undefined);
+    return tile;
 }
 
 type MapOptions = {
@@ -1893,6 +1901,172 @@ describe('TileManager._updateRetainedTiles', () => {
 
     });
 
+    test('brings cached children back into view instead of seeking a parent', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTile = new OverscaledTileID(2, 0, 2, 1, 1);
+        const children = idealTile.children(14);
+        const cachedTiles = children.map(id => addCachedTile(tileManager, id));
+
+        const getTileSpy = vi.spyOn(tileManager, 'getTile');
+        const retained = tileManager._updateRetainedTiles([idealTile], 2);
+
+        expect(getTileSpy).not.toHaveBeenCalled();
+        expect(Object.keys(retained).sort()).toEqual([idealTile, ...children].map(id => id.key).sort());
+        expect(children.map(id => tileManager.getTile(id))).toEqual(cachedTiles);
+        expect(children.filter(id => tileManager._outOfViewCache.has(id))).toEqual([]);
+    });
+
+    test('uses a cached generation no deeper than maxOverzooming and seeks a parent for the uncovered part', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTile = new OverscaledTileID(2, 0, 2, 0, 0);
+        const withinRange = new OverscaledTileID(5, 0, 5, 0, 0);
+        const tooDeep = new OverscaledTileID(6, 0, 6, 8, 0);
+        addCachedTile(tileManager, withinRange);
+        addCachedTile(tileManager, tooDeep);
+
+        const getTileSpy = vi.spyOn(tileManager, 'getTile');
+        const retained = tileManager._updateRetainedTiles([idealTile], 2);
+
+        expect(Object.keys(retained).sort()).toEqual([idealTile, withinRange].map(id => id.key).sort());
+        expect(tileManager._outOfViewCache.has(tooDeep)).toBe(true);
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toEqual([
+            new OverscaledTileID(1, 0, 1, 0, 0),
+            new OverscaledTileID(0, 0, 0, 0, 0)
+        ]);
+    });
+
+    test('completes a partially loaded generation in view with cached siblings', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTile = new OverscaledTileID(2, 0, 2, 1, 1);
+        const [inViewChild, ...cachedChildren] = idealTile.children(14);
+        tileManager._inViewTiles.setTile(inViewChild.key, new Tile(inViewChild, undefined));
+        tileManager._inViewTiles.getTileById(inViewChild.key).state = 'loaded';
+        for (const id of cachedChildren) addCachedTile(tileManager, id);
+
+        const getTileSpy = vi.spyOn(tileManager, 'getTile');
+        const retained = tileManager._updateRetainedTiles([idealTile], 2);
+
+        expect(getTileSpy).not.toHaveBeenCalled();
+        expect(Object.keys(retained).sort()).toEqual([idealTile, inViewChild, ...cachedChildren].map(id => id.key).sort());
+    });
+
+    test('leaves cached tiles alone when a generation in view covers the ideal tile', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTile = new OverscaledTileID(2, 0, 2, 1, 1);
+        const grandchildren = idealTile.children(14).flatMap(id => id.children(14));
+        for (const id of grandchildren) {
+            tileManager._inViewTiles.setTile(id.key, new Tile(id, undefined));
+            tileManager._inViewTiles.getTileById(id.key).state = 'loaded';
+        }
+        const cachedChild = idealTile.children(14)[0];
+        addCachedTile(tileManager, cachedChild);
+
+        const retained = tileManager._updateRetainedTiles([idealTile], 2);
+
+        expect(Object.keys(retained).sort()).toEqual([idealTile, ...grandchildren].map(id => id.key).sort());
+        expect(tileManager._outOfViewCache.has(cachedChild)).toBe(true);
+    });
+
+    test('gives a cached child to one world copy only', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTiles = [new OverscaledTileID(1, 1, 1, 0, 0), new OverscaledTileID(1, 2, 1, 0, 0)];
+        const cachedTile = addCachedTile(tileManager, new OverscaledTileID(2, 0, 2, 0, 0));
+
+        const retained = tileManager._updateRetainedTiles(idealTiles, 1);
+
+        const firstCopy = new OverscaledTileID(2, 1, 2, 0, 0);
+        const secondCopy = new OverscaledTileID(2, 2, 2, 0, 0);
+        expect(retained[firstCopy.key]).toEqual(firstCopy);
+        expect(tileManager.getTile(firstCopy)).toBe(cachedTile);
+        expect(cachedTile.tileID).toEqual(firstCopy);
+        expect(retained[secondCopy.key]).toBeUndefined();
+        expect(tileManager.getTile(secondCopy)).toBeUndefined();
+    });
+
+    test('does not count a child still loading in view as covered by the cached tile of another world copy', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTile = new OverscaledTileID(1, 1, 1, 0, 0);
+        const children = idealTile.children(14);
+        const loadingTile = new Tile(children[0], undefined);
+        loadingTile.state = 'loading';
+        tileManager._inViewTiles.setTile(children[0].key, loadingTile);
+        for (const id of children) addCachedTile(tileManager, id.unwrapTo(0));
+
+        const getTileSpy = vi.spyOn(tileManager, 'getTile');
+        const retained = tileManager._updateRetainedTiles([idealTile], 1);
+
+        expect(retained[children[0].key]).toBeUndefined();
+        expect(getTileSpy.mock.calls.map((c) => c[0])).toContainEqual(new OverscaledTileID(0, 1, 0, 0, 0));
+    });
+
+    test('does not replace a partial generation in view with a shallower cached one', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTile = new OverscaledTileID(2, 0, 2, 1, 1);
+        const [, ...grandchildren] = idealTile.children(14).flatMap(id => id.children(14));
+        for (const id of grandchildren) {
+            tileManager._inViewTiles.setTile(id.key, new Tile(id, undefined));
+            tileManager._inViewTiles.getTileById(id.key).state = 'loaded';
+        }
+        const cachedChild = idealTile.children(14)[0];
+        addCachedTile(tileManager, cachedChild);
+
+        const retained = tileManager._updateRetainedTiles([idealTile], 2);
+
+        expect(Object.keys(retained).sort()).toEqual([idealTile, ...grandchildren].map(id => id.key).sort());
+        expect(tileManager._outOfViewCache.has(cachedChild)).toBe(true);
+    });
+
+    test('brings back one cached generation when an ideal tile is listed twice', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTiles = [new OverscaledTileID(2, 0, 2, 1, 1), new OverscaledTileID(2, 0, 2, 1, 1)];
+        const children = idealTiles[0].children(14);
+        const grandchildren = children.flatMap(id => id.children(14));
+        for (const id of [...children, ...grandchildren]) addCachedTile(tileManager, id);
+
+        const retained = tileManager._updateRetainedTiles(idealTiles, 2);
+
+        expect(Object.keys(retained).sort()).toEqual([idealTiles[0], ...children].map(id => id.key).sort());
+        expect(grandchildren.every(id => tileManager._outOfViewCache.has(id))).toBe(true);
+    });
+
+    test('does not use cached children without data', () => {
+        const tileManager = createTileManager();
+        tileManager._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+        const idealTile = new OverscaledTileID(1, 0, 1, 0, 0);
+        const child = new OverscaledTileID(2, 0, 2, 0, 0);
+        addCachedTile(tileManager, child, 'errored');
+
+        const retained = tileManager._updateRetainedTiles([idealTile], 1);
+
+        expect(Object.keys(retained)).toEqual([idealTile.key]);
+        expect(tileManager._outOfViewCache.has(child)).toBe(true);
+    });
 });
 
 describe('TileManager.clearTiles', () => {
