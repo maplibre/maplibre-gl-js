@@ -136,6 +136,7 @@ beforeEach(() => {
 
 afterEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
     restoreNow();
 });
 
@@ -2686,6 +2687,101 @@ describe('TileManager.onRemove', () => {
         tileManager.onRemove(undefined);
 
         expect(sourceOnRemove).toHaveBeenCalled();
+    });
+
+    test('does not leave a reload timer for a tile that finishes reloading after removal', async () => {
+        vi.useFakeTimers();
+        const context = createCameraContext();
+        let view = createCameraViewState();
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
+
+        const tileManager = createTileManager();
+        const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
+            tile.state = 'loaded';
+            tile.setExpiryData({cacheControl: 'max-age=60'});
+        });
+        tileManager.onAdd(undefined);
+        tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
+        await vi.advanceTimersByTimeAsync(0);
+
+        let finishReload: () => void;
+        loadTile.mockImplementationOnce((tile) => new Promise<void>((resolve) => {
+            finishReload = () => {
+                tile.state = 'loaded';
+                tile.setExpiryData({cacheControl: 'max-age=60'});
+                resolve();
+            };
+        }));
+        await vi.advanceTimersByTimeAsync(60 * 1000);
+        expect(loadTile).toHaveBeenCalledTimes(2);
+
+        tileManager.onRemove(undefined);
+        finishReload();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
+    test('does not leave a reload timer for a tile whose reload is aborted by removal', async () => {
+        vi.useFakeTimers();
+        const context = createCameraContext();
+        let view = createCameraViewState();
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
+
+        const tileManager = createTileManager();
+        const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
+            tile.state = 'loaded';
+            tile.setExpiryData({cacheControl: 'max-age=60'});
+        });
+        tileManager.onAdd(undefined);
+        tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
+        await vi.advanceTimersByTimeAsync(0);
+
+        let finishReload: () => void;
+        loadTile.mockReturnValueOnce(new Promise<void>((resolve) => {
+            finishReload = resolve;
+        }));
+        tileManager.reload();
+        expect(loadTile).toHaveBeenCalledTimes(2);
+
+        tileManager.onRemove(undefined);
+        finishReload();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
+    test('does not load more tiles when a reload fails with 404 after removal', async () => {
+        vi.useFakeTimers();
+        const context = createCameraContext();
+        let view = createCameraViewState();
+        view = resize(view, context, 511, 511);
+        view = setZoom(view, context, 0);
+
+        const tileManager = createTileManager();
+        const loadTile = vi.spyOn(tileManager.getSource(), 'loadTile').mockImplementation(async (tile) => {
+            tile.state = 'loaded';
+            tile.setExpiryData({cacheControl: 'max-age=60'});
+        });
+        tileManager.onAdd(undefined);
+        tileManager.update(projectCamera(view, context), context.worldCoordinateHelper);
+        await vi.advanceTimersByTimeAsync(0);
+
+        let failReload: () => void;
+        loadTile.mockReturnValueOnce(new Promise<void>((_resolve, reject) => {
+            failReload = () => reject({status: 404});
+        }));
+        await vi.advanceTimersByTimeAsync(60 * 1000);
+        expect(loadTile).toHaveBeenCalledTimes(2);
+
+        tileManager.onRemove(undefined);
+        failReload();
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(loadTile).toHaveBeenCalledTimes(2);
+        expect(vi.getTimerCount()).toBe(0);
     });
 });
 
